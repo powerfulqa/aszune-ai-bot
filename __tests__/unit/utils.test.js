@@ -1,6 +1,6 @@
 // __tests__/utils.test.js
 
-const { cleanText, formatReply } = require('../utils');
+const { cleanText, formatReply } = require('../../utils');
 
 describe('cleanText', () => {
   test('removes extra spaces and trims', () => {

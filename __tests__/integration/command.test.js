@@ -1,4 +1,4 @@
-const createMockMessage = require('./mocks/discordMessageMock');
+const createMockMessage = require('../../__mocks__/discordMessageMock');
 const { Client } = require('discord.js');
 const client = new Client({ intents: [] }); // not used, just placeholder
 
