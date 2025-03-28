@@ -1,124 +1,186 @@
 # Aszune AI Bot
 
-Aszune AI Bot is a Discord bot that specializes in gaming lore, game logic, guides, and advice. It uses the Perplexity API with the **sonar** model to generate chat completions and maintains a short conversation history for each user. The bot also adds fun emoji reactions based on keywords found in messages.
+**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages.
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Setup Steps](#setup-steps)
+- [Usage](#usage)
+  - [Running the Bot Manually](#running-the-bot-manually)
+  - [Running with PM2 (for Production)](#running-with-pm2-for-production)
+- [Bot Commands](#bot-commands)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Future Enhancements](#future-enhancements)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Features
 
-- **Chat Completions:** Uses the Perplexity API's `chat/completions` endpoint with the **sonar** model.
-- **Conversation History:** Maintains a history of user interactions (up to 10 message pairs) for contextual responses.
-- **Clear History Command:** Users can reset their conversation history with `!clearhistory`.
-- **Emoji Reactions:** Automatically reacts with emojis based on keywords in messages.
-- **Environment-based Configuration:** Uses a `.env` file to manage sensitive keys.
+- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar** model.
+- 🧠 **Context Awareness:** Remembers recent user messages with a configurable history length.
+- 🔁 **Command Support:** Users can clear their history at any time.
+- 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc.
+- 🔒 **Secure Configuration:** `.env` based token and key management (keeps secrets out of code).
+
+---
 
 ## Installation
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v14 or later recommended)
-- A Discord Bot account (see [Discord Developer Portal](https://discord.com/developers/applications))
-- A valid Perplexity API Key (ensure your API tier supports the endpoint you're using)
+- Node.js (v14 or later)
+- A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
+- A valid [Perplexity AI API key](https://www.perplexity.ai/)
 
 ### Setup Steps
 
-1. **Clone the Repository:**
+1. **Clone the repository**
 
    ```bash
    git clone https://github.com/chrishaycock/aszune-ai-bot.git
    cd aszune-ai-bot
-Install Dependencies:
+   ```
 
-bash
-Copy
-npm install
-Configure Environment Variables:
+2. **Install dependencies**
 
-Create a file named .env in the root directory of the project and add your keys:
+   ```bash
+   npm install
+   ```
 
-env
-Copy
-DISCORD_BOT_TOKEN=your_discord_bot_token_here
-PERPLEXITY_API_KEY=your_perplexity_api_key_here
-Important: Do not commit your .env file to public repositories as it contains sensitive information.
+3. **Create a `.env` file**
 
-Usage
-Running the Bot
-Manually:
+   ```env
+   DISCORD_BOT_TOKEN=your_discord_bot_token_here
+   PERPLEXITY_API_KEY=your_perplexity_api_key_here
+   ```
 
-From your project directory, run:
+---
 
-bash
-Copy
+## Usage
+
+### Running the Bot Manually
+
+```bash
 node index.js
-Using PM2 for Production:
+```
 
-If you want to keep the bot running in the background, use PM2.
+You should see:
 
-(Optional) Create an ecosystem.config.js file:
+```
+Discord bot is online!
+```
 
-js
-Copy
-module.exports = {
-  apps: [
-    {
-      name: 'aszune-ai',
-      script: 'index.js',
-      env: {
-        DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
-        PERPLEXITY_API_KEY: 'your_perplexity_api_key_here'
-      }
-    }
-  ]
-};
-Start the bot with PM2:
+Your bot should now appear online in your Discord server.
 
-bash
-Copy
-pm2 start ecosystem.config.js
-View logs:
+---
 
-bash
-Copy
-pm2 logs aszune-ai
-Bot Commands
-!clearhistory
-Clears your conversation history with the bot.
+### Running with PM2 (for Production)
 
-Project Structure
-index.js: Main bot code, which handles message events, calls the Perplexity API for chat completions, and sends responses.
+PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
 
-ecosystem.config.js: (Optional) PM2 configuration file for running the bot as a background service.
+#### Option A: Using an Ecosystem File
 
-.gitignore: Lists files and directories to be ignored by Git (e.g., node_modules/, .env, and log files).
+1. Create a file called `ecosystem.config.js`:
 
-package.json / package-lock.json: Project metadata and dependency definitions.
+   ```js
+   module.exports = {
+     apps: [
+       {
+         name: 'aszune-ai',
+         script: 'index.js',
+         env: {
+           DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
+           PERPLEXITY_API_KEY: 'your_perplexity_api_key_here'
+         }
+       }
+     ]
+   };
+   ```
 
-Troubleshooting
-Bot Offline / TokenInvalid Error:
+2. Start your bot:
 
-Ensure that the .env file is in the same directory as index.js.
+   ```bash
+   pm2 start ecosystem.config.js
+   pm2 logs aszune-ai
+   ```
 
-Verify that DISCORD_BOT_TOKEN in .env is the actual bot token (obtained from the Bot tab, not General Information) and contains two periods.
+#### Option B: Inline Environment Variables
 
-When running with PM2, ensure that environment variables are properly passed (via an ecosystem file or inline).
+```bash
+DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity_api_key_here pm2 start index.js --name aszune-ai
+```
 
-Perplexity API Errors (e.g., 400 Bad Request):
+---
 
-Ensure your API key is valid and that your account tier supports the endpoint/model you're using.
+## Bot Commands
 
-Double-check the request body format.
+| Command         | Description                             |
+|-----------------|-----------------------------------------|
+| `!clearhistory` | Clears your conversation history        |
 
-Future Enhancements
-Retrieve and Display Sources:
-Implement a retrieval-augmented pipeline that automatically adds clickable hyperlinks to sources in responses.
+---
 
-Slash Commands:
-Add support for Discord slash commands for improved user interaction.
+## Project Structure
 
-Enhanced Error Handling:
-Add robust logging and error handling to manage API failures gracefully.
+```
+aszune-ai-bot/
+├── index.js               # Main bot logic
+├── package.json           # Project metadata
+├── package-lock.json      # Dependency lock file
+├── ecosystem.config.js    # PM2 deployment config (optional)
+├── .env                   # Environment secrets (not committed)
+└── .gitignore             # Ignored files
+```
 
-Contributing
-Contributions are welcome! If you have ideas for improvements or run into issues, feel free to open an issue or submit a pull request.
+---
 
-License
-Include your license information here if applicable.
+## Troubleshooting
+
+### 🔴 Bot Offline or Invalid Token
+
+- Double-check your `DISCORD_BOT_TOKEN` in `.env`
+- Confirm the token has not been regenerated or revoked
+- Ensure your bot has permission to join and read messages in your server
+
+### 🔴 Perplexity API Errors (400 / 401)
+
+- Validate your API key is current and supports the `chat/completions` endpoint
+- Ensure model name is `"sonar"` and the format of your payload is correct
+- Test the same key using a tool like Postman or curl
+
+---
+
+## Future Enhancements
+
+- [ ] Add clickable sources and reference links from Perplexity results
+- [ ] Introduce slash command support (`/ask`, `/clear`, etc.)
+- [ ] Add retry/backoff logic for API rate limits
+- [ ] Web dashboard for usage monitoring and history
+
+---
+
+## Contributing
+
+Pull requests and ideas are always welcome! Please:
+
+1. Fork the repository
+2. Create a new branch
+3. Submit a PR with your changes
+
+---
+
+## License
+
+MIT — feel free to use, modify, and share ✨
+
+---
+
+**Made with ❤️ for the gaming community. Powered by Discord, Perplexity, and Node.js.**
