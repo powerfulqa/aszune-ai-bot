@@ -31,6 +31,10 @@
 - 🔁 **Command Support:** Users can clear their history at any time.
 - 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc.
 - 🔒 **Secure Configuration:** `.env` based token and key management (keeps secrets out of code).
+- 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between messages.
+- 📝 **Help Command:** `!help` command lists all available commands and usage.
+- 🧾 **Conversation Summary:** `!summary` command generates a summary of your current conversation using UK English.
+- 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
 
 ---
 
@@ -124,9 +128,11 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ## Bot Commands
 
-| Command         | Description                             |
-|-----------------|-----------------------------------------|
-| `!clearhistory` | Clears your conversation history        |
+| Command         | Description                                               |
+|-----------------|-----------------------------------------------------------|
+| `!help`         | Shows a list of available commands and usage              |
+| `!clearhistory` | Clears your conversation history                          |
+| `!summary`      | Summarises your current conversation in UK English        |
 
 ---
 
