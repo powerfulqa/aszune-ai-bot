@@ -17,6 +17,7 @@
   - [Running with PM2 (for Production)](#running-with-pm2-for-production)
 - [Bot Commands](#bot-commands)
 - [Project Structure](#project-structure)
+- [Testing & Coverage](#testing--coverage)
 - [Troubleshooting](#troubleshooting)
 - [Future Enhancements](#future-enhancements)
 - [Contributing](#contributing)
@@ -149,8 +150,29 @@ aszune-ai-bot/
 ├── package-lock.json      # Dependency lock file
 ├── ecosystem.config.js    # PM2 deployment config (optional)
 ├── .env                   # Environment secrets (not committed)
-└── .gitignore             # Ignored files
+├── .gitignore             # Ignored files
+├── utils/                 # Utility modules (emoji, text formatting, etc.)
+├── __tests__/             # Unit and integration tests
+└── coverage/              # Code coverage output (Codecov)
 ```
+
+---
+
+## Testing & Coverage
+
+- **Automated Tests:**  
+  The project uses [Jest](https://jestjs.io/) for unit and integration testing.  
+  Run all tests with:
+  ```bash
+  npm test
+  ```
+- **Coverage Reporting:**  
+  Code coverage is collected automatically and uploaded to [Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot) via GitHub Actions.
+  To generate a local coverage report:
+  ```bash
+  npm test -- --coverage
+  ```
+  Coverage includes utility modules, command handling, emoji logic, error handling, and more.
 
 ---
 

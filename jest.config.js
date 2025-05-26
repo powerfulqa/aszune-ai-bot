@@ -1,5 +1,11 @@
 module.exports = {
   collectCoverage: true,
   coverageDirectory: "coverage",
-  testEnvironment: "node"
+  testEnvironment: "node",
+  collectCoverageFrom: [
+    "**/*.js",
+    "!**/node_modules/**",
+    "!**/__tests__/**",
+    "!**/coverage/**"
+  ]
 };
