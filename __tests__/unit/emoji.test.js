@@ -19,4 +19,21 @@ describe('appendEmoji', () => {
   it('can add multiple emojis', () => {
     expect(appendEmoji('Thanks and congratulations')).toBe('Thanks and congratulations 🎉 🙏');
   });
+
+  it('does not add emoji for keywords inside other words', () => {
+    expect(appendEmoji('helpful person')).toBe('helpful person');
+    expect(appendEmoji('sadly, it happened')).toBe('sadly, it happened');
+  });
+
+  it('adds all matching emojis in correct order', () => {
+    expect(appendEmoji('happy love sad')).toBe('happy love sad 😊 ❤️ 😢');
+  });
+
+  it('handles empty string', () => {
+    expect(appendEmoji('')).toBe('');
+  });
+
+  it('handles string with only emojis as keywords', () => {
+    expect(appendEmoji('happy sad')).toBe('happy sad 😊 😢');
+  });
 });

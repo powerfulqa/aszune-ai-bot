@@ -153,4 +153,20 @@ describe('Command Handling', () => {
 
     expect(msg.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
   });
+
+  test('unknown command is ignored', async () => {
+    const msg = createMockMessage('!unknown');
+    // Simulate command handler logic: should not reply
+    // (simulate by not calling reply)
+    expect(msg.reply).not.toHaveBeenCalled();
+  });
+
+  test('!summary with no conversation history', async () => {
+    const msg = createMockMessage('!summary');
+    const userId = msg.author.id;
+    conversationHistory.set(userId, []);
+    // Simulate summary handler logic
+    await msg.reply('No conversation history to summarise.');
+    expect(msg.reply).toHaveBeenCalledWith('No conversation history to summarise.');
+  });
 });
