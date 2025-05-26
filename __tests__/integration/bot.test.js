@@ -1,5 +1,19 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-jest.mock('discord.js');
+jest.mock('discord.js', () => {
+  const actual = jest.requireActual('discord.js');
+  return {
+    ...actual,
+    GatewayIntentBits: {
+      Guilds: 1,
+      GuildMessages: 2,
+      MessageContent: 4,
+    },
+    Client: jest.fn().mockImplementation(() => ({
+      on: jest.fn(),
+      login: jest.fn(),
+    })),
+  };
+});
 const axios = require('axios');
 jest.mock('axios');
 
