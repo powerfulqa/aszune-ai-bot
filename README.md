@@ -34,7 +34,10 @@
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between messages.
 - 📝 **Help Command:** `!help` command lists all available commands and usage.
 - 🧾 **Conversation Summary:** `!summary` command generates a summary of your current conversation using UK English.
+- 📝 **Text Summarisation:** `!summarise <text>` command generates a summary of any provided text using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
+- 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for better efficiency and reliability.
+- 🛠️ **Cleaner Codebase:** Refactored command handling and API logic for easier maintenance and extension.
 
 ---
 
@@ -128,11 +131,12 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ## Bot Commands
 
-| Command         | Description                                               |
-|-----------------|-----------------------------------------------------------|
-| `!help`         | Shows a list of available commands and usage              |
-| `!clearhistory` | Clears your conversation history                          |
-| `!summary`      | Summarises your current conversation in UK English        |
+| Command               | Description                                               |
+|-----------------------|-----------------------------------------------------------|
+| `!help`               | Shows a list of available commands and usage              |
+| `!clearhistory`       | Clears your conversation history                          |
+| `!summary`            | Summarises your current conversation in UK English        |
+| `!summarise <text>`   | Summarises any provided text in UK English                |
 
 ---
 
@@ -140,7 +144,7 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ```
 aszune-ai-bot/
-├── index.js               # Main bot logic
+├── index.js               # Main bot logic (uses Maps, command handler map, and helper functions)
 ├── package.json           # Project metadata
 ├── package-lock.json      # Dependency lock file
 ├── ecosystem.config.js    # PM2 deployment config (optional)
@@ -191,4 +195,12 @@ MIT — feel free to use, modify, and share ✨
 
 ---
 
-**Made with ❤️ for the gaming community. Powered by Discord, Perplexity, and Node.js.**
+**Made with ❤️ for the Aszune community. Powered by Discord, Perplexity, and Node.js.**
+
+## Notes
+
+- The bot now uses a more robust command handler map for easier extension and maintenance.
+- Conversation history and rate limiting are now managed using JavaScript `Map` objects for better performance and reliability.
+- The `!summarise <text>` command is available for summarising arbitrary text.
+- Error handling and environment variable checks have been improved and centralised.
+- The bot's system prompt now instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.

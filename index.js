@@ -41,10 +41,58 @@ client.on('messageCreate', async (message) => {
   }
   lastMessageTimestamps[userId] = now;
 
-  // Handle clear history command
+  // Handle !clearhistory command
   if (message.content === '!clearhistory') {
     conversationHistory[userId] = [];
     return message.reply('Your conversation history has been cleared.');
+  }
+
+  // Handle !help command
+  if (message.content === '!help') {
+    return message.reply(
+      "**Aszai Bot Commands:**\n" +
+      "`!help` - Show this help message\n" +
+      "`!clearhistory` - Clear your conversation history\n" +
+      "`!summary` - Summarise your current conversation\n" +
+      "Simply chat as normal to talk to the bot!"
+    );
+  }
+
+  // Handle !summary command
+  if (message.content === '!summary') {
+    if (!conversationHistory[userId] || conversationHistory[userId].length === 0) {
+      return message.reply('No conversation history to summarise.');
+    }
+    message.channel.sendTyping();
+    try {
+      const summaryResponse = await axios.post('https://api.perplexity.ai/chat/completions', {
+        model: 'sonar',
+        messages: [
+          {
+            role: 'system',
+            content: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
+          },
+          ...conversationHistory[userId],
+        ],
+        max_tokens: 256,
+        temperature: 0.2,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      const summary = summaryResponse.data.choices[0].message.content;
+      return message.reply({ embeds: [{
+        color: parseInt('0099ff', 16),
+        title: 'Conversation Summary',
+        description: summary,
+        footer: { text: 'Powered by Sonar' }
+      }]});
+    } catch (error) {
+      console.error('Summary Error:', error?.response?.data || error.message || error);
+      return message.reply('There was an error generating the summary.');
+    }
   }
 
   // Ignore other commands starting with '!'
@@ -68,7 +116,7 @@ client.on('messageCreate', async (message) => {
       messages: [
         {
           role: 'system',
-          content: 'Aszune AI is a bot that specializes in gaming lore, game logic, guides, and advice.',
+          content: 'Aszai is a bot that specialises in gaming lore, game logic, guides, and advice. If you do not know the answer to a question, clearly say "I don\'t know" rather than attempting to make up an answer.',
         },
         ...conversationHistory[userId],
       ],
