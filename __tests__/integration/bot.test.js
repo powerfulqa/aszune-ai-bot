@@ -165,8 +165,7 @@ describe('Bot integration', () => {
 
   it('handles empty message gracefully', async () => {
     message.content = '';
-    await handleMessage(message);
-    expect(message.reply).not.toThrow;
+    await expect(handleMessage(message)).resolves.not.toThrow();
   });
 
   it('truncates very long conversation history', async () => {
