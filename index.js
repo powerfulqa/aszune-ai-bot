@@ -165,6 +165,7 @@ async function handleMessage(message) {
     sad: '😢',
     awesome: '😎',
     love: '❤️',
+    happy: '😊', // Added happy reaction
   };
   for (const [keyword, reactionEmoji] of Object.entries(reactions)) {
     if (message.content.toLowerCase().includes(keyword)) {

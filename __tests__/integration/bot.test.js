@@ -1,3 +1,7 @@
+process.env.PERPLEXITY_API_KEY = 'test';
+process.env.DISCORD_BOT_TOKEN = 'test';
+jest.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit called'); });
+
 const { Client, GatewayIntentBits } = require('discord.js');
 jest.mock('discord.js', () => {
   const actual = jest.requireActual('discord.js');
@@ -20,6 +24,10 @@ const { handleMessage, conversationHistory, lastMessageTimestamps } = require('.
 
 describe('Bot integration', () => {
   let client, message;
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(() => {
     client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -125,9 +133,9 @@ describe('Bot integration', () => {
       data: { choices: [{ message: { content: 'Hi there!' } }] }
     });
     await handleMessage(message);
-    expect(message.react).toHaveBeenCalledWith('😊');
-    expect(message.react).toHaveBeenCalledWith('❤️');
-    expect(message.react).toHaveBeenCalledWith('😢');
+    const calledEmojis = message.react.mock.calls.map(call => call[0]);
+    expect(calledEmojis).toEqual(expect.arrayContaining(['😊', '❤️', '😢']));
+    expect(calledEmojis.length).toBe(3);
   });
 
   it('rate limits user messages', async () => {
@@ -176,12 +184,14 @@ describe('Bot integration', () => {
   });
 
   it('handles missing environment variables gracefully', () => {
+    // Remove env vars before requiring index.js
     const originalEnv = { ...process.env };
     delete process.env.PERPLEXITY_API_KEY;
     delete process.env.DISCORD_BOT_TOKEN;
     let exited = false;
     const oldExit = process.exit;
     process.exit = () => { exited = true; throw new Error('exit'); };
+    jest.resetModules();
     try {
       require('../../index.js');
     } catch (e) {
