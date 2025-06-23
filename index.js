@@ -23,11 +23,7 @@ let conversationHistory = {};
 const RATE_LIMIT_WINDOW = 5000; // 5 seconds
 let lastMessageTimestamps = {}; // userId: timestamp
 
-client.on('ready', () => {
-  console.log('Discord bot is online!');
-});
-
-client.on('messageCreate', async (message) => {
+async function handleMessage(message) {
   if (message.author.bot) return;
 
   // Rate limiting per user
@@ -153,7 +149,7 @@ client.on('messageCreate', async (message) => {
     const embed = {
       color: parseInt('0099ff', 16),
       description: reply,
-      footer: { text: 'Powered by Sonar' }, // Updated footer
+      footer: { text: 'Powered by Sonar' },
     };
 
     await message.reply({ embeds: [embed] });
@@ -169,6 +165,7 @@ client.on('messageCreate', async (message) => {
     sad: '😢',
     awesome: '😎',
     love: '❤️',
+    happy: '😊', // Added happy reaction
   };
   for (const [keyword, reactionEmoji] of Object.entries(reactions)) {
     if (message.content.toLowerCase().includes(keyword)) {
@@ -179,6 +176,14 @@ client.on('messageCreate', async (message) => {
       }
     }
   }
+}
+
+client.on('messageCreate', handleMessage);
+
+client.on('ready', () => {
+  console.log('Discord bot is online!');
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
+module.exports = { handleMessage, conversationHistory, lastMessageTimestamps };
