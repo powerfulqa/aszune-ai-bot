@@ -72,6 +72,14 @@ async function handleMessage(message) {
     if (!conversationHistory[userId] || conversationHistory[userId].length === 0) {
       return message.reply('No conversation history to summarise.');
     }
+    // Ensure last message is from user or tool
+    let history = [...conversationHistory[userId]];
+    while (history.length > 0 && history[history.length - 1].role === 'assistant') {
+      history.pop();
+    }
+    if (history.length === 0) {
+      return message.reply('No conversation history to summarise.');
+    }
     message.channel.sendTyping();
     try {
       const summaryResponse = await axios.post('https://api.perplexity.ai/chat/completions', {
@@ -81,7 +89,7 @@ async function handleMessage(message) {
             role: 'system',
             content: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
           },
-          ...conversationHistory[userId],
+          ...history,
         ],
         max_tokens: 256,
         temperature: 0.2,
@@ -242,6 +250,14 @@ client.on('interactionCreate', async (interaction) => {
     if (!conversationHistory[userId] || conversationHistory[userId].length === 0) {
       return interaction.reply('No conversation history to summarise.');
     }
+    // Ensure last message is from user or tool
+    let history = [...conversationHistory[userId]];
+    while (history.length > 0 && history[history.length - 1].role === 'assistant') {
+      history.pop();
+    }
+    if (history.length === 0) {
+      return interaction.reply('No conversation history to summarise.');
+    }
     await interaction.deferReply();
     try {
       const summaryResponse = await axios.post('https://api.perplexity.ai/chat/completions', {
@@ -251,7 +267,7 @@ client.on('interactionCreate', async (interaction) => {
             role: 'system',
             content: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
           },
-          ...conversationHistory[userId],
+          ...history,
         ],
         max_tokens: 256,
         temperature: 0.2,
