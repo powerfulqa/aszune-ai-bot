@@ -1,6 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 // Check for required environment variables
 if (!process.env.PERPLEXITY_API_KEY || !process.env.DISCORD_BOT_TOKEN) {
@@ -22,6 +22,7 @@ const MAX_HISTORY = 20; // Increased from 10 to 20
 let conversationHistory = {};
 const RATE_LIMIT_WINDOW = 5000; // 5 seconds
 let lastMessageTimestamps = {}; // userId: timestamp
+let userStats = {}; // userId: { messages: number, summaries: number }
 
 async function handleMessage(message) {
   if (message.author.bot) return;
@@ -29,6 +30,7 @@ async function handleMessage(message) {
   // Rate limiting per user
   const userId = message.author.id;
   const now = Date.now();
+  if (!userStats[userId]) userStats[userId] = { messages: 0, summaries: 0 };
   if (
     lastMessageTimestamps[userId] &&
     now - lastMessageTimestamps[userId] < RATE_LIMIT_WINDOW
@@ -50,7 +52,18 @@ async function handleMessage(message) {
       "`!help` - Show this help message\n" +
       "`!clearhistory` - Clear your conversation history\n" +
       "`!summary` - Summarise your current conversation\n" +
+      "`!stats` - Show your usage stats\n" +
       "Simply chat as normal to talk to the bot!"
+    );
+  }
+
+  // Handle !stats command
+  if (message.content === '!stats') {
+    const stats = userStats[userId];
+    return message.reply(
+      `**Your Aszai Bot Stats:**\n` +
+      `Messages sent: ${stats.messages}\n` +
+      `Summaries requested: ${stats.summaries}`
     );
   }
 
@@ -79,6 +92,7 @@ async function handleMessage(message) {
         }
       });
       const summary = summaryResponse.data.choices[0].message.content;
+      userStats[userId].summaries++;
       return message.reply({ embeds: [{
         color: parseInt('0099ff', 16),
         title: 'Conversation Summary',
@@ -93,6 +107,8 @@ async function handleMessage(message) {
 
   // Ignore other commands starting with '!'
   if (message.content.startsWith('!')) return;
+
+  userStats[userId].messages++;
 
   if (!conversationHistory[userId]) {
     conversationHistory[userId] = [];
@@ -177,6 +193,95 @@ async function handleMessage(message) {
     }
   }
 }
+
+// Register slash commands on startup
+async function registerSlashCommands() {
+  const commands = [
+    new SlashCommandBuilder().setName('help').setDescription('Show help for Aszai Bot'),
+    new SlashCommandBuilder().setName('clearhistory').setDescription('Clear your conversation history'),
+    new SlashCommandBuilder().setName('summary').setDescription('Summarise your current conversation'),
+    new SlashCommandBuilder().setName('stats').setDescription('Show your usage stats'),
+  ].map(cmd => cmd.toJSON());
+
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+  try {
+    await rest.put(
+      Routes.applicationCommands(client.user.id),
+      { body: commands },
+    );
+    console.log('Slash commands registered.');
+  } catch (error) {
+    console.error('Error registering slash commands:', error);
+  }
+}
+
+client.once('ready', async () => {
+  console.log('Discord bot is online!');
+  await registerSlashCommands();
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  const userId = interaction.user.id;
+  if (!conversationHistory[userId]) conversationHistory[userId] = [];
+  if (!userStats[userId]) userStats[userId] = { messages: 0, summaries: 0 };
+
+  if (interaction.commandName === 'help') {
+    await interaction.reply(
+      "**Aszai Bot Commands:**\n" +
+      "`/help` or `!help` - Show this help message\n" +
+      "`/clearhistory` or `!clearhistory` - Clear your conversation history\n" +
+      "`/summary` or `!summary` - Summarise your current conversation\n" +
+      "`/stats` or `!stats` - Show your usage stats\n" +
+      "Simply chat as normal to talk to the bot!"
+    );
+  } else if (interaction.commandName === 'clearhistory') {
+    conversationHistory[userId] = [];
+    await interaction.reply('Your conversation history has been cleared.');
+  } else if (interaction.commandName === 'summary') {
+    if (!conversationHistory[userId] || conversationHistory[userId].length === 0) {
+      return interaction.reply('No conversation history to summarise.');
+    }
+    await interaction.deferReply();
+    try {
+      const summaryResponse = await axios.post('https://api.perplexity.ai/chat/completions', {
+        model: 'sonar',
+        messages: [
+          {
+            role: 'system',
+            content: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
+          },
+          ...conversationHistory[userId],
+        ],
+        max_tokens: 256,
+        temperature: 0.2,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      const summary = summaryResponse.data.choices[0].message.content;
+      userStats[userId].summaries++;
+      await interaction.editReply({ embeds: [{
+        color: parseInt('0099ff', 16),
+        title: 'Conversation Summary',
+        description: summary,
+        footer: { text: 'Powered by Sonar' }
+      }] });
+    } catch (error) {
+      console.error('Summary Error:', error?.response?.data || error.message || error);
+      await interaction.editReply('There was an error generating the summary.');
+    }
+  } else if (interaction.commandName === 'stats') {
+    const stats = userStats[userId];
+    await interaction.reply(
+      `**Your Aszai Bot Stats:**\n` +
+      `Messages sent: ${stats.messages}\n` +
+      `Summaries requested: ${stats.summaries}`
+    );
+  }
+});
 
 client.on('messageCreate', handleMessage);
 

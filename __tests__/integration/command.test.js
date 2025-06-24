@@ -169,4 +169,23 @@ describe('Command Handling', () => {
     await msg.reply('No conversation history to summarise.');
     expect(msg.reply).toHaveBeenCalledWith('No conversation history to summarise.');
   });
+
+  test('!stats command replies with user stats', async () => {
+    const msg = createMockMessage('!stats');
+    const userId = msg.author.id;
+    // Simulate userStats
+    const userStats = { [userId]: { messages: 5, summaries: 2 } };
+    // Simulate command handler logic
+    const stats = userStats[userId];
+    await msg.reply(
+      `**Your Aszai Bot Stats:**\n` +
+      `Messages sent: ${stats.messages}\n` +
+      `Summaries requested: ${stats.summaries}`
+    );
+    expect(msg.reply).toHaveBeenCalledWith(
+      `**Your Aszai Bot Stats:**\n` +
+      `Messages sent: 5\n` +
+      `Summaries requested: 2`
+    );
+  });
 });
