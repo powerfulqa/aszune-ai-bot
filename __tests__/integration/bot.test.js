@@ -14,6 +14,7 @@ jest.mock('discord.js', () => {
     },
     Client: jest.fn().mockImplementation(() => ({
       on: jest.fn(),
+      once: jest.fn(), // <-- add this line to mock .once
       login: jest.fn(),
     })),
   };
