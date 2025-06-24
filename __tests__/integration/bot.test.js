@@ -60,6 +60,7 @@ describe('Bot integration', () => {
       '`!help` - Show this help message\n' +
       '`!clearhistory` - Clear your conversation history\n' +
       '`!summary` - Summarise your current conversation\n' +
+      '`!stats` - Show your usage stats\n' +
       'Simply chat as normal to talk to the bot!'
     );
   });
