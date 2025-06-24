@@ -2,7 +2,7 @@
 ![CI](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/test.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages.
+**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands.
 
 ---
 
@@ -33,12 +33,14 @@
 - 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc.
 - 🔒 **Secure Configuration:** `.env` based token and key management (keeps secrets out of code).
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between messages.
-- 📝 **Help Command:** `!help` command lists all available commands and usage.
-- 🧾 **Conversation Summary:** `!summary` command generates a summary of your current conversation using UK English.
+- 📝 **Help Command:** `!help` and `/help` commands list all available commands and usage.
+- 🧾 **Conversation Summary:** `!summary` and `/summary` commands generate a summary of your current conversation using UK English. (Now robust to API requirements: last message must be from user/tool)
 - 📝 **Text Summarisation:** `!summarise <text>` command generates a summary of any provided text using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
 - 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for better efficiency and reliability.
-- 🛠️ **Cleaner Codebase:** Refactored command handling and API logic for easier maintenance and extension.
+- 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
+- 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
+- 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
 
 ---
 
@@ -134,10 +136,11 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 | Command               | Description                                               |
 |-----------------------|-----------------------------------------------------------|
-| `!help`               | Shows a list of available commands and usage              |
-| `!clearhistory`       | Clears your conversation history                          |
-| `!summary`            | Summarises your current conversation in UK English        |
+| `!help` / `/help`               | Shows a list of available commands and usage              |
+| `!clearhistory` / `/clearhistory`       | Clears your conversation history                          |
+| `!summary` / `/summary`            | Summarises your current conversation in UK English        |
 | `!summarise <text>`   | Summarises any provided text in UK English                |
+| `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
 
 ---
 
@@ -217,7 +220,7 @@ MIT — feel free to use, modify, and share ✨
 
 ---
 
-**Made with ❤️ for the Aszune community. Powered by Discord, Perplexity, and Node.js.**
+**Made for the Aszune community. Powered by Discord, Perplexity, and Node.js.**
 
 ## Notes
 
