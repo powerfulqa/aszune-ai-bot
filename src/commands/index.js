@@ -111,14 +111,16 @@ async function handleTextCommand(message) {
   for (const [name, command] of Object.entries(commands)) {
     if (commandText === command.textCommand) {
       try {
-        // Create a reply wrapper to mimic interaction.reply
-        const replyWrapper = {
+        // Create a mock interaction object for text commands
+        const mockInteraction = {
+          user: message.author,
+          channel: message.channel,
           reply: (content) => message.reply(content),
           deferReply: async () => message.channel.sendTyping(),
           editReply: (content) => message.reply(content)
         };
         
-        return await command.execute(replyWrapper);
+        return await command.execute(mockInteraction);
       } catch (error) {
         logger.error(`Error executing text command ${name}:`, error);
         return message.reply('There was an error executing this command.');

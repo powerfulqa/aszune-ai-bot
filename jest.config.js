@@ -12,6 +12,7 @@ module.exports = {
     "!ecosystem.config.js",
     "!jest.setup.js",
     "!index.js", // Original index file
+    "!index-compat.js", // Compatibility layer
     "!index copy.js"
   ],
   // Use the Jest setup file
