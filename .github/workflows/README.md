@@ -4,27 +4,11 @@ This directory contains the GitHub Actions workflows for the Aszune AI Bot proje
 
 ## Workflow Files
 
-### Current (Legacy) Workflows
+### Unified Workflow
 
-These workflows are being phased out in favor of the unified workflow:
+- **unified-ci.yml**: A consolidated workflow that handles building, testing, and code coverage reporting
 
-- **ci.yml**: Original CI workflow that runs tests and uploads coverage to QLTY and Codecov
-- **test.yml**: Alternative workflow for running tests and uploading coverage to Codecov
-- **fix-coverage.yml**: Simplified workflow just for running tests with the --forceExit flag
-
-### New Unified Workflow
-
-- **unified-ci.yml**: Consolidated workflow that replaces all the above workflows with a more structured approach
-
-## Migration Plan
-
-We are in the process of migrating to the unified workflow. The legacy workflows will be kept temporarily to ensure backward compatibility, but they should be removed once the unified workflow has been tested and confirmed to be working correctly.
-
-To complete the migration:
-
-1. Review the unified workflow to ensure it meets all requirements
-2. Test the unified workflow on a feature branch
-3. Once confirmed working, remove the legacy workflow files
+## Workflow Features
 
 ## Workflow Features
 
