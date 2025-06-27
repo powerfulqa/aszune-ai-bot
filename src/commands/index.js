@@ -71,7 +71,7 @@ const commands = {
             color: config.COLORS.PRIMARY,
             title: 'Conversation Summary',
             description: summary,
-            footer: { text: 'Powered by Sonar' }
+            footer: { text: 'Aszune AI Bot' }
           }]
         });
       } catch (error) {
