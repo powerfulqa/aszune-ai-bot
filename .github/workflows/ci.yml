@@ -27,12 +27,14 @@ jobs:
 
     - name: Upload coverage to QLTY
       uses: qltysh/qlty-action/coverage@v1
+      continue-on-error: true
       with:
         token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
         files: coverage/lcov.info # Correct path to the coverage file
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
+      continue-on-error: true
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage/lcov.info
