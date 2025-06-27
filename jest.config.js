@@ -3,13 +3,31 @@ module.exports = {
   coverageDirectory: "coverage",
   testEnvironment: "node",
   collectCoverageFrom: [
-    "**/*.js",
+    "src/**/*.js",
     "!**/node_modules/**",
     "!**/__tests__/**",
     "!**/coverage/**",
-    "!ecosystem.config.js", // Exclude config files that are not code
-    "!index copy.js"        // Exclude backup or unused files
+    "!**/logs/**",
+    "!**/data/**",
+    "!ecosystem.config.js",
+    "!jest.setup.js",
+    "!index.js", // Original index file
+    "!index-compat.js", // Compatibility layer
+    "!index copy.js"
   ],
-  // Add this to ensure coverage is reported for files not required in tests
-  coverageProvider: "v8"
+  // Use the Jest setup file
+  setupFilesAfterEnv: ['./jest.setup.js'],
+  // Use v8 coverage provider for better reporting
+  coverageProvider: "v8",
+  // Configure coverage thresholds
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
+  // Output verbose coverage info
+  verbose: true
 };

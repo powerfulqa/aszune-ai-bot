@@ -1,6 +1,7 @@
 # Aszune AI Bot  
-![CI](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/test.yml/badge.svg)
+![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
+[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/chrishaycock/projects/aszune-ai-bot)
 
 **Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands.
 
@@ -142,6 +143,8 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 | `!summarise <text>`   | Summarises any provided text in UK English                |
 | `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
 
+> **Note:** While `!summarise` exists as a text command, the `/summarise` slash command equivalent may not be fully implemented yet.
+
 ---
 
 ## Project Structure
@@ -198,9 +201,9 @@ aszune-ai-bot/
 ## Future Enhancements
 
 - [ ] Add clickable sources and reference links from Perplexity results
-- [ ] Introduce slash command support (`/ask`, `/clear`, etc.)
-- [ ] Add retry/backoff logic for API rate limits
-- [ ] Web dashboard for usage monitoring and history
+- [ ] Enhance error handling with retry/backoff logic for API rate limits
+- [ ] Web dashboard for usage monitoring and conversation history
+- [ ] Implement AI-powered content moderation for safer interactions
 
 ---
 
