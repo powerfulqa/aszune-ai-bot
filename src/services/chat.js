@@ -50,7 +50,7 @@ async function handleChatMessage(message) {
     const embed = {
       color: config.COLORS.PRIMARY,
       description: enhancedReply,
-      footer: { text: 'Powered by Sonar' },
+      footer: { text: 'Aszune AI Bot' },
     };
     
     await message.reply({ embeds: [embed] });

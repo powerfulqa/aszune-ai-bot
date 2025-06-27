@@ -167,7 +167,7 @@ class ConversationManager {
       }
     }
     
-    console.log(`Cleaned up conversation history for inactive users. Active users: ${this.conversations.size}`);
+    logger.info(`Cleaned up conversation history for inactive users. Active users: ${this.conversations.size}`);
   }
   
   /**

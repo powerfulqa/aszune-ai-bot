@@ -73,18 +73,28 @@ client.on('warn', (info) => {
 });
 
 // Handle shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('Shutting down...');
-  client.destroy();
-  conversationManager.destroy();
-  process.exit(0);
+  try {
+    await client.destroy();
+    await conversationManager.destroy();
+  } catch (error) {
+    logger.error('Error during shutdown:', error);
+  } finally {
+    process.exit(0);
+  }
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('Shutting down...');
-  client.destroy();
-  conversationManager.destroy();
-  process.exit(0);
+  try {
+    await client.destroy();
+    await conversationManager.destroy();
+  } catch (error) {
+    logger.error('Error during shutdown:', error);
+  } finally {
+    process.exit(0);
+  }
 });
 
 // Handle unhandled promise rejections
