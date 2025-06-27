@@ -3,7 +3,7 @@ const { EventEmitter } = require('events');
 const mockClientInstance = new EventEmitter();
 mockClientInstance.user = { id: 'test-user-id', tag: 'test-user#1234' };
 mockClientInstance.login = jest.fn().mockResolvedValue('Logged in');
-mockClientInstance.destroy = jest.fn();
+mockClientInstance.destroy = jest.fn().mockResolvedValue();
 
 // This will hold the mock `put` function from the REST instance, allowing us to track its usage
 let mockPutMethod;
@@ -57,7 +57,9 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn(),
   handleSlashCommand: jest.fn(),
 }));
-jest.mock('../../src/utils/conversation');
+jest.mock('../../src/utils/conversation', () => ({
+  destroy: jest.fn().mockResolvedValue(),
+}));
 jest.mock('../../src/utils/logger');
 
 
@@ -156,23 +158,35 @@ describe('Bot Main Entry Point (index.js)', () => {
   });
 
   describe('Process Signal Handlers', () => {
-    it('should handle SIGINT', () => {
+    it('should handle SIGINT', async () => {
       const sigintHandler = processHandlers.get('SIGINT');
       expect(sigintHandler).toBeDefined();
-      sigintHandler();
+      await sigintHandler();
       expect(logger.info).toHaveBeenCalledWith('Shutting down...');
       expect(mockClientInstance.destroy).toHaveBeenCalled();
       expect(conversationManager.destroy).toHaveBeenCalled();
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should handle SIGTERM', () => {
+    it('should handle SIGTERM', async () => {
       const sigtermHandler = processHandlers.get('SIGTERM');
       expect(sigtermHandler).toBeDefined();
-      sigtermHandler();
+      await sigtermHandler();
       expect(logger.info).toHaveBeenCalledWith('Shutting down...');
       expect(mockClientInstance.destroy).toHaveBeenCalled();
       expect(conversationManager.destroy).toHaveBeenCalled();
+      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+
+    it('should handle errors during shutdown for SIGINT', async () => {
+      const error = new Error('Shutdown error');
+      mockClientInstance.destroy.mockRejectedValueOnce(error);
+      
+      const sigintHandler = processHandlers.get('SIGINT');
+      expect(sigintHandler).toBeDefined();
+      await sigintHandler();
+      
+      expect(logger.error).toHaveBeenCalledWith('Error during shutdown:', error);
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
