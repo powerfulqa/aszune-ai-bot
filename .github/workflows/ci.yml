@@ -23,7 +23,7 @@ jobs:
       run: npm install
 
     - name: Run tests and generate coverage
-      run: npm test -- --coverage
+      run: npm test -- --coverage --forceExit
 
     - name: Upload coverage to QLTY
       uses: qltysh/qlty-action/coverage@v1
