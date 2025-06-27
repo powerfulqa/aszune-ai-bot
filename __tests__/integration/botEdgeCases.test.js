@@ -59,17 +59,22 @@ describe('Bot Edge Cases', () => {
     const originalEnv = { ...process.env };
     delete process.env.PERPLEXITY_API_KEY;
     delete process.env.DISCORD_BOT_TOKEN;
-    // Simulate startup check
-    let exited = false;
-    const oldExit = process.exit;
-    process.exit = () => { exited = true; throw new Error('exit'); };
-    try {
-      require('../../index.js');
-    } catch (e) {
-      // expected
-    }
-    process.exit = oldExit;
+
+    const exitSpy = jest.spyOn(process, 'exit').mockImplementationOnce(() => {
+      throw new Error('process.exit() was called.');
+    });
+
+    jest.resetModules();
+
+    expect(() => {
+      require('../../src/index.js');
+    }).toThrow('process.exit() was called.');
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+
+    // Cleanup
+    exitSpy.mockRestore();
     process.env = originalEnv;
-    expect(exited).toBe(true);
+    jest.resetModules();
   });
 });

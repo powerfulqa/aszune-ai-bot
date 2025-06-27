@@ -14,7 +14,7 @@ const commandHandler = require('../commands');
  * @returns {Promise<void>}
  */
 async function handleChatMessage(message) {
-  if (message.author.bot) return;
+  if (message.author.bot || !message.content) return;
   
   const userId = message.author.id;
   

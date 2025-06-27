@@ -25,7 +25,7 @@ class ConversationManager {
     this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
     
     // Set up stats save interval (every 5 minutes)
-    this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
+    // (Removed duplicate setInterval call to prevent orphaned timers)
   }
   
   /**
