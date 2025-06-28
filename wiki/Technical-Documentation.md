@@ -56,8 +56,8 @@ The main entry point initializes the Discord client, sets up event handlers, and
 
 ```javascript
 // Simplified example
-const { Client, IntentsBitField } = require('discord.js');
-const commandHandler = require('./commands');
+const { Client, IntentsBitField } = require("discord.js");
+const commandHandler = require("./commands");
 
 const client = new Client({
   intents: [
@@ -67,15 +67,15 @@ const client = new Client({
   ],
 });
 
-client.on('ready', () => {
-  console.log('Discord bot is online!');
+client.on("ready", () => {
+  console.log("Discord bot is online!");
 });
 
-client.on('messageCreate', async (message) => {
+client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  
+
   // Handle command or send to conversation handler
-  if (message.content.startsWith('!')) {
+  if (message.content.startsWith("!")) {
     commandHandler.handleCommand(message);
   } else if (message.mentions.has(client.user)) {
     // Handle mention
@@ -92,21 +92,21 @@ Processes user commands and routes them to the appropriate handler function.
 ```javascript
 // Simplified example of command handler
 const commands = {
-  help: require('./commands/help'),
-  clearhistory: require('./commands/clearHistory'),
-  summary: require('./commands/summary'),
-  summarise: require('./commands/summarise'),
-  stats: require('./commands/stats'),
+  help: require("./commands/help"),
+  clearhistory: require("./commands/clearHistory"),
+  summary: require("./commands/summary"),
+  summarise: require("./commands/summarise"),
+  stats: require("./commands/stats"),
 };
 
 function handleCommand(message) {
   const args = message.content.slice(1).trim().split(/ +/);
   const command = args.shift().toLowerCase();
-  
+
   if (commands[command]) {
     commands[command].execute(message, args);
   } else {
-    message.reply('Unknown command. Use !help to see available commands.');
+    message.reply("Unknown command. Use !help to see available commands.");
   }
 }
 ```
@@ -117,27 +117,27 @@ Manages communication with the Perplexity AI API.
 
 ```javascript
 // Simplified example
-const axios = require('axios');
+const axios = require("axios");
 
 async function sendChatCompletion(messages) {
   try {
     const response = await axios.post(
-      'https://api.perplexity.ai/chat/completions',
+      "https://api.perplexity.ai/chat/completions",
       {
-        model: 'sonar',
+        model: "sonar",
         messages: messages,
       },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-        }
-      }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+        },
+      },
     );
-    
+
     return response.data.choices[0].message.content;
   } catch (error) {
-    console.error('Error calling Perplexity API:', error);
+    console.error("Error calling Perplexity API:", error);
     throw error;
   }
 }
@@ -156,10 +156,10 @@ function addMessageToHistory(userId, role, content) {
   if (!userConversations.has(userId)) {
     userConversations.set(userId, []);
   }
-  
+
   const history = userConversations.get(userId);
   history.push({ role, content });
-  
+
   // Trim history if it exceeds maximum length
   if (history.length > MAX_HISTORY_LENGTH) {
     history.shift();
@@ -187,11 +187,11 @@ const COOLDOWN_PERIOD = 3000; // 3 seconds
 function isRateLimited(userId) {
   const now = Date.now();
   const lastMessageTime = userCooldowns.get(userId) || 0;
-  
+
   if (now - lastMessageTime < COOLDOWN_PERIOD) {
     return true;
   }
-  
+
   userCooldowns.set(userId, now);
   return false;
 }
@@ -212,17 +212,17 @@ The project uses Jest for testing, with separate test files for each module:
 
 ```javascript
 // Example test for the emoji utility
-const { addEmojiReactions } = require('../src/utils/emojiUtils');
+const { addEmojiReactions } = require("../src/utils/emojiUtils");
 
-describe('Emoji Utilities', () => {
+describe("Emoji Utilities", () => {
   test('should add correct emoji for keyword "hello"', async () => {
     const message = {
-      content: 'Hello everyone!',
-      react: jest.fn().mockResolvedValue(true)
+      content: "Hello everyone!",
+      react: jest.fn().mockResolvedValue(true),
     };
-    
+
     await addEmojiReactions(message);
-    expect(message.react).toHaveBeenCalledWith('👋');
+    expect(message.react).toHaveBeenCalledWith("👋");
   });
 });
 ```

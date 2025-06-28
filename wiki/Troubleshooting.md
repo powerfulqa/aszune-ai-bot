@@ -7,6 +7,7 @@ This guide covers common issues you might encounter while setting up and running
 ### Bot Not Coming Online
 
 **Symptoms:**
+
 - Bot appears offline in Discord
 - No "Discord bot is online!" message in console
 
@@ -32,6 +33,7 @@ This guide covers common issues you might encounter while setting up and running
 ### Bot Connects but Doesn't Respond to Commands
 
 **Symptoms:**
+
 - Bot shows online, but doesn't respond to commands
 
 **Possible Causes and Solutions:**
@@ -53,6 +55,7 @@ This guide covers common issues you might encounter while setting up and running
 ### Perplexity API Errors
 
 **Symptoms:**
+
 - Messages like "Error communicating with Perplexity API" in the console
 - Bot replies with error messages instead of AI responses
 
@@ -97,10 +100,12 @@ This guide covers common issues you might encounter while setting up and running
 ### Memory Leaks
 
 **Symptoms:**
+
 - Bot memory usage grows over time
 - Bot becomes unresponsive after running for a while
 
 **Solutions:**
+
 - Restart the bot regularly using a cron job or PM2's restart feature
 - Check the conversation history size and consider reducing the maximum history length
 - Look for memory leaks in the code, especially with event listeners or timers
@@ -114,6 +119,7 @@ Error: Cannot find module 'xyz'
 ```
 
 **Solution:**
+
 - Run `npm install` to install all dependencies
 - If targeting a specific missing module: `npm install xyz`
 
@@ -124,6 +130,7 @@ Error [DisallowedIntents]: Privileged intent provided is not enabled or whitelis
 ```
 
 **Solution:**
+
 - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
 - Select your application
 - Go to "Bot" section
@@ -136,6 +143,7 @@ DiscordAPIError: Missing Permissions
 ```
 
 **Solution:**
+
 - Ensure the bot has proper permissions in the channel
 - Re-invite the bot with the correct permissions
 
@@ -144,20 +152,24 @@ DiscordAPIError: Missing Permissions
 For more detailed troubleshooting:
 
 1. **Enable Debug Mode**
-   
-   Add to your `.env` file:   ```env
+
+   Add to your `.env` file: ```env
    DEBUG=true
+
+   ```
+
    ```
 
 2. **Check Logs**
-   
+
    If using PM2:
+
    ```bash
    pm2 logs aszune-ai
    ```
 
 3. **Increase Log Verbosity**
-   
+
    Modify your logging level in the code or configuration.
 
 ## Getting Help

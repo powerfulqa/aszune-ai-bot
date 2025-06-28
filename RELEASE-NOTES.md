@@ -39,7 +39,7 @@
   - Improved reliability by updating to `codecov/codecov-action@v4`.
   - Added `persist-credentials: false` to checkout step.
   - Enabled `fail_ci_if_error: true` for Codecov upload.
-- **Workflow Maintenance:**  
+- **Workflow Maintenance:**
   - Addressed warnings and errors in the GitHub Actions workflow by upgrading the Codecov action and following new setup recommendations.
   - Reduced retry/backoff issues and improved CI reliability.
 - **Additional Tests Added:**

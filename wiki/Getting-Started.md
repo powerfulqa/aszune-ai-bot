@@ -39,7 +39,6 @@ Follow these steps to set up the Aszune AI Bot:
    Replace the placeholder values with your actual tokens and keys.
 
 4. **Invite the bot to your server**
-
    - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
    - Select your application
    - Go to OAuth2 > URL Generator

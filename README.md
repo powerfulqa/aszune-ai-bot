@@ -1,4 +1,5 @@
-# Aszune AI Bot  
+# Aszune AI Bot
+
 ![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/chrishaycock/projects/aszune-ai-bot)
@@ -107,14 +108,14 @@ PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
    module.exports = {
      apps: [
        {
-         name: 'aszune-ai',
-         script: 'src/index.js',
+         name: "aszune-ai",
+         script: "src/index.js",
          env: {
-           DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
-           PERPLEXITY_API_KEY: 'your_perplexity_api_key_here'
-         }
-       }
-     ]
+           DISCORD_BOT_TOKEN: "your_discord_bot_token_here",
+           PERPLEXITY_API_KEY: "your_perplexity_api_key_here",
+         },
+       },
+     ],
    };
    ```
 
@@ -135,12 +136,12 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ## Bot Commands
 
-| Command               | Description                                               |
-|-----------------------|-----------------------------------------------------------|
-| `!help` / `/help`               | Shows a list of available commands and usage              |
-| `!clearhistory` / `/clearhistory`       | Clears your conversation history                          |
-| `!summary` / `/summary`            | Summarises your current conversation in UK English        |
-| `!summarise <text>`   | Summarises any provided text in UK English                |
+| Command                           | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| `!help` / `/help`                 | Shows a list of available commands and usage                |
+| `!clearhistory` / `/clearhistory` | Clears your conversation history                            |
+| `!summary` / `/summary`           | Summarises your current conversation in UK English          |
+| `!summarise <text>`               | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
 
 > **Note:** While `!summarise` exists as a text command, the `/summarise` slash command equivalent may not be fully implemented yet.

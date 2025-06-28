@@ -12,14 +12,10 @@ describe('Bot integration', () => {
     let mockDestroy;
     let axios;
     let messageCreateHandler;
-    let message;
-    let conversation;
+    let message;    let conversation;
     let consoleLogSpy, consoleErrorSpy;
-    let originalProcessOn;
-
+    
     beforeAll(() => {
-        // Save original process.on function
-        originalProcessOn = process.on;
         // Mock process.on to prevent MaxListenersExceededWarning
         process.on = jest.fn();
     });

@@ -11,7 +11,7 @@ Please be respectful and considerate when contributing to this project. We welco
 ### Development Environment Setup
 
 1. **Fork the Repository**
-   
+
    Start by forking the repository to your GitHub account.
 
 2. **Clone Your Fork**

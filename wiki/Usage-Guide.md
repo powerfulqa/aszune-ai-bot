@@ -11,13 +11,13 @@ Aszune AI Bot can be interacted with in two ways:
 
 ## Available Commands
 
-| Command                | Description                                              |
-|------------------------|----------------------------------------------------------|
-| `!help` / `/help`      | Shows a list of available commands and usage             |
-| `!clearhistory` / `/clearhistory` | Clears your conversation history              |
-| `!summary` / `/summary`| Summarises your current conversation in UK English       |
-| `!summarise <text>`    | Summarises any provided text in UK English               |
-| `!stats` / `/stats`    | Shows your usage stats (messages sent, summaries requested) |
+| Command                           | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| `!help` / `/help`                 | Shows a list of available commands and usage                |
+| `!clearhistory` / `/clearhistory` | Clears your conversation history                            |
+| `!summary` / `/summary`           | Summarises your current conversation in UK English          |
+| `!summarise <text>`               | Summarises any provided text in UK English                  |
+| `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
 
 ## Asking Questions
 
@@ -90,6 +90,7 @@ or
 ## Emoji Reactions
 
 The bot will automatically add emoji reactions to your messages based on keywords it detects. For example:
+
 - "hello" might get a 👋 reaction
 - "funny" might get a 😄 reaction
 - "love" might get a ❤️ reaction

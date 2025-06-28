@@ -1,4 +1,5 @@
-# Aszune AI Bot - Improved Structure  
+# Aszune AI Bot - Improved Structure
+
 ![CI](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/test.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
 

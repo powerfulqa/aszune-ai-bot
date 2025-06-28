@@ -30,19 +30,21 @@ For better management, create an ecosystem configuration file:
 
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'aszune-ai',
-    script: 'src/index.js',
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '512M',
-    env: {
-      NODE_ENV: 'production',
-      DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
-      PERPLEXITY_API_KEY: 'your_perplexity_api_key_here'
-    }
-  }]
+  apps: [
+    {
+      name: "aszune-ai",
+      script: "src/index.js",
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "512M",
+      env: {
+        NODE_ENV: "production",
+        DISCORD_BOT_TOKEN: "your_discord_bot_token_here",
+        PERPLEXITY_API_KEY: "your_perplexity_api_key_here",
+      },
+    },
+  ],
 };
 ```
 
@@ -88,7 +90,7 @@ CMD ["node", "src/index.js"]
 #### Create a docker-compose.yml file
 
 ```yaml
-version: '3'
+version: "3"
 
 services:
   bot:
@@ -112,11 +114,13 @@ You can deploy the bot to various cloud platforms:
 #### Heroku
 
 1. Create a `Procfile` in the root directory:
+
    ```
    worker: node src/index.js
    ```
 
 2. Set environment variables in Heroku dashboard or using Heroku CLI:
+
    ```bash
    heroku config:set DISCORD_BOT_TOKEN=your_token
    heroku config:set PERPLEXITY_API_KEY=your_key
@@ -166,11 +170,13 @@ pm2 save
 ## Updating Your Bot
 
 1. Pull the latest code:
+
    ```bash
    git pull origin main
    ```
 
 2. Install any new dependencies:
+
    ```bash
    npm install
    ```

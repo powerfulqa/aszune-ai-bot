@@ -1,5 +1,10 @@
+// filepath: c:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\utils\testUtils.test.js
 /**
- * Tests for test utilities
+ * DEPRECATED - THIS FILE IS DUPLICATED AND HAS BEEN CONSOLIDATED
+ * 
+ * These tests have been consolidated into __tests__/unit/testUtils.test.js
+ * to eliminate code duplication. This file is kept temporarily for reference
+ * but should be removed.
  */
 const { 
   createMockMessage, 

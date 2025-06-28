@@ -1,12 +1,17 @@
 /**
  * Test the utility functions for testing
+ * 
+ * This is the test file for src/utils/testUtils.js
+ * Previously, tests were duplicated in __tests__/utils/testUtils.test.js,
+ * but they have been consolidated here to eliminate code duplication
  */
 const { 
   createMockMessage, 
   createMockInteraction, 
   resetMocks, 
   mockReply, 
-  mockReact 
+  mockReact,
+  mockSendTyping
 } = require('../../src/utils/testUtils');
 
 describe('Test Utilities', () => {
@@ -22,7 +27,8 @@ describe('Test Utilities', () => {
       expect(message.author.id).toBe('12345');
       expect(message.reply).toBe(mockReply);
       expect(message.react).toBe(mockReact);
-      expect(message.channel.sendTyping).toBeDefined();
+      expect(message.channel.sendTyping).toBe(mockSendTyping);
+      expect(typeof message.channel.sendTyping).toBe('function');
     });
 
     it('allows custom options', () => {
@@ -46,6 +52,8 @@ describe('Test Utilities', () => {
       expect(interaction.commandName).toBe('help');
       expect(interaction.isChatInputCommand()).toBe(true);
       expect(interaction.reply).toBe(mockReply);
+      expect(typeof interaction.deferReply).toBe('function');
+      expect(typeof interaction.editReply).toBe('function');
     });
 
     it('allows custom options', () => {
@@ -62,15 +70,23 @@ describe('Test Utilities', () => {
 
   describe('resetMocks', () => {
     it('resets all mocks', () => {
+      // Set up mocks with values
       mockReply('test');
       mockReact('test');
+      mockSendTyping('test');
+      
+      // Verify they've been called
       expect(mockReply).toHaveBeenCalled();
       expect(mockReact).toHaveBeenCalled();
+      expect(mockSendTyping).toHaveBeenCalled();
       
+      // Reset mocks
       resetMocks();
       
+      // Verify they've been reset
       expect(mockReply).not.toHaveBeenCalled();
       expect(mockReact).not.toHaveBeenCalled();
+      expect(mockSendTyping).not.toHaveBeenCalled();
     });
   });
 });

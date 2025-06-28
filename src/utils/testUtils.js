@@ -1,7 +1,7 @@
 /**
  * Test utilities and mocks
  * This file contains utility functions for testing the Discord bot
- * See unit/testUtils.test.js for tests of these utilities
+ * See __tests__/unit/testUtils.test.js for the consolidated tests of these utilities
  */
 const mockReply = jest.fn().mockResolvedValue({});
 const mockReact = jest.fn().mockResolvedValue({});
