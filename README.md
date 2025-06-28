@@ -82,7 +82,7 @@
 ### Running the Bot Manually
 
 ```bash
-node index.js
+node src/index.js
 ```
 
 You should see:
@@ -108,7 +108,7 @@ PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
      apps: [
        {
          name: 'aszune-ai',
-         script: 'index.js',
+         script: 'src/index.js',
          env: {
            DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
            PERPLEXITY_API_KEY: 'your_perplexity_api_key_here'
@@ -128,7 +128,7 @@ PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
 #### Option B: Inline Environment Variables
 
 ```bash
-DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity_api_key_here pm2 start index.js --name aszune-ai
+DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity_api_key_here pm2 start src/index.js --name aszune-ai
 ```
 
 ---
@@ -151,14 +151,21 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ```
 aszune-ai-bot/
-├── index.js               # Main bot logic (uses Maps, command handler map, and helper functions)
+├── src/
+│   ├── index.js           # Main entry point
+│   ├── commands/          # Command handlers
+│   ├── config/            # Configuration settings
+│   ├── services/          # API and core services
+│   └── utils/             # Utility functions and helpers
 ├── package.json           # Project metadata
 ├── package-lock.json      # Dependency lock file
-├── ecosystem.config.js    # PM2 deployment config (optional)
+├── ecosystem.config.js    # PM2 deployment config
 ├── .env                   # Environment secrets (not committed)
 ├── .gitignore             # Ignored files
-├── utils/                 # Utility modules (emoji, text formatting, etc.)
 ├── __tests__/             # Unit and integration tests
+├── __mocks__/             # Test mocks
+├── jest.config.js         # Jest test configuration
+├── jest.setup.js          # Jest setup file
 └── coverage/              # Code coverage output (Codecov)
 ```
 
@@ -227,8 +234,9 @@ MIT — feel free to use, modify, and share ✨
 
 ## Notes
 
-- The bot now uses a more robust command handler map for easier extension and maintenance.
-- Conversation history and rate limiting are now managed using JavaScript `Map` objects for better performance and reliability.
+- The codebase has been completely refactored to use a modular structure under the `src/` directory.
+- The bot uses a robust command handler for easier extension and maintenance.
+- Conversation history and rate limiting are managed using JavaScript `Map` objects for better performance and reliability.
 - The `!summarise <text>` command is available for summarising arbitrary text.
-- Error handling and environment variable checks have been improved and centralised.
-- The bot's system prompt now instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.
+- Error handling and environment variable checks have been improved and centralized.
+- The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.
