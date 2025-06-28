@@ -122,9 +122,7 @@ describe('Bot integration', () => {
         expect(axios.post).toHaveBeenCalled();
         // Bot now replies with an embed
         expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'Hi there!' })] });
-    });
-
-    it('replies to !help command', async () => {
+    });    it('replies to !help command', async () => {
         message.content = '!help';
         await messageCreateHandler(message);
         // The text command handler for simple commands replies with a string
@@ -132,6 +130,7 @@ describe('Bot integration', () => {
             "`/help` or `!help` - Show this help message\n" +
             "`/clearhistory` or `!clearhistory` - Clear your conversation history\n" +
             "`/summary` or `!summary` - Summarise your current conversation\n" +
+            "`/summarise` or `!summarise <text>` - Summarise provided text\n" +
             "`/stats` or `!stats` - Show your usage stats\n" +
             "Simply chat as normal to talk to the bot!";
         expect(message.reply).toHaveBeenCalledWith(helpReply);
