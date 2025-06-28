@@ -162,10 +162,11 @@ async function handleTextCommand(message) {
   const commandText = message.content.trim();
   
   for (const [name, command] of Object.entries(commands)) {
-    // Check if the command text matches the main command or any aliases
-    const isMainCommand = commandText === command.textCommand;
+    // Check if the command text starts with the main command or any aliases
+    const commandPrefix = commandText.split(/\s+/)[0].toLowerCase(); // Get just the command part
+    const isMainCommand = commandPrefix === command.textCommand;
     const hasAliases = command.aliases && Array.isArray(command.aliases);
-    const isAliasCommand = hasAliases && command.aliases.includes(commandText);
+    const isAliasCommand = hasAliases && command.aliases.includes(commandPrefix);
     
     if (isMainCommand || isAliasCommand) {
       try {
