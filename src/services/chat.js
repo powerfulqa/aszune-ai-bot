@@ -45,12 +45,11 @@ async function handleChatMessage(message) {
     
     // Add bot's reply to the conversation history
     conversationManager.addMessage(userId, 'assistant', enhancedReply);
-    
-    // Create an embed for the reply
+      // Create an embed for the reply
     const embed = {
       color: config.COLORS.PRIMARY,
       description: enhancedReply,
-      footer: { text: 'Aszune AI Bot' },
+      footer: { text: 'Aszai Bot' },
     };
     
     await message.reply({ embeds: [embed] });

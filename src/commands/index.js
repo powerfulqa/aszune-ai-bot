@@ -65,13 +65,12 @@ const commands = {  help: {
       try {
         const summary = await perplexityService.generateSummary(cleanHistory);
         conversationManager.updateUserStats(userId, 'summaries');
-        
-        return interaction.editReply({ 
+          return interaction.editReply({ 
           embeds: [{
             color: config.COLORS.PRIMARY,
             title: 'Conversation Summary',
             description: summary,
-            footer: { text: 'Aszune AI Bot' }
+            footer: { text: 'Aszai Bot' }
           }]
         });
       } catch (error) {
@@ -112,10 +111,9 @@ const commands = {  help: {
       // Handle both text commands and slash commands
       if (interaction.options) {
         // This is a slash command
-        text = interaction.options.getString('text');
-      } else {
+        text = interaction.options.getString('text');      } else {
         // This is a text command
-        const commandText = interaction.channel ? interaction.channel.lastMessage.content : '';
+        const commandText = interaction.content || '';
         const match = commandText.match(/^!summarise\s+(.+)/i);
         text = match ? match[1] : '';
       }
@@ -136,13 +134,12 @@ const commands = {  help: {
         
         const summary = await perplexityService.generateTextSummary(messages);
         conversationManager.updateUserStats(interaction.user.id, 'summaries');
-        
-        return interaction.editReply({ 
+          return interaction.editReply({ 
           embeds: [{
             color: config.COLORS.PRIMARY,
             title: 'Text Summary',
             description: summary,
-            footer: { text: 'Aszune AI Bot' }
+            footer: { text: 'Aszai Bot' }
           }]
         });
       } catch (error) {
