@@ -8,8 +8,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 
 // Command definitions
-const commands = {
-  help: {
+const commands = {  help: {
     data: new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show help for Aszai Bot'),
@@ -19,6 +18,7 @@ const commands = {
         "`/help` or `!help` - Show this help message\n" +
         "`/clearhistory` or `!clearhistory` - Clear your conversation history\n" +
         "`/summary` or `!summary` - Summarise your current conversation\n" +
+        "`/summarise` or `!summarise <text>` - Summarise provided text\n" +
         "`/stats` or `!stats` - Show your usage stats\n" +
         "Simply chat as normal to talk to the bot!"
       );
@@ -65,13 +65,12 @@ const commands = {
       try {
         const summary = await perplexityService.generateSummary(cleanHistory);
         conversationManager.updateUserStats(userId, 'summaries');
-        
-        return interaction.editReply({ 
+          return interaction.editReply({ 
           embeds: [{
             color: config.COLORS.PRIMARY,
             title: 'Conversation Summary',
             description: summary,
-            footer: { text: 'Aszune AI Bot' }
+            footer: { text: 'Aszai Bot' }
           }]
         });
       } catch (error) {
@@ -81,22 +80,74 @@ const commands = {
     },
     textCommand: '!summary'
   },
-  
-  stats: {
+    stats: {
     data: new SlashCommandBuilder()
       .setName('stats')
       .setDescription('Show your usage stats'),
     async execute(interaction) {
       const userId = interaction.user.id;
       const stats = conversationManager.getUserStats(userId);
-      
-      return interaction.reply(
+        return interaction.reply(
         `**Your Aszai Bot Stats:**\n` +
         `Messages sent: ${stats.messages}\n` +
         `Summaries requested: ${stats.summaries}`
       );
     },
     textCommand: '!stats'
+  },
+
+  summarise: {
+    data: new SlashCommandBuilder()
+      .setName('summarise')
+      .setDescription('Summarise provided text')
+      .addStringOption(option => 
+        option.setName('text')
+          .setDescription('The text to summarise')
+          .setRequired(true)
+      ),
+    async execute(interaction) {
+      let text;
+      
+      // Handle both text commands and slash commands
+      if (interaction.options) {
+        // This is a slash command
+        text = interaction.options.getString('text');      } else {
+        // This is a text command
+        const commandText = interaction.content || '';
+        const match = commandText.match(/^!summarise\s+(.+)/i);
+        text = match ? match[1] : '';
+      }
+      
+      if (!text || text.trim().length === 0) {
+        return interaction.reply('Please provide the text you want summarised. Usage: `!summarise <text>`');
+      }
+      
+      await interaction.deferReply();
+      
+      try {        // Create a message array with the text to summarize
+        const messages = [
+          {
+            role: 'user', 
+            content: text
+          }
+        ];
+        
+        const summary = await perplexityService.generateTextSummary(messages);
+        conversationManager.updateUserStats(interaction.user.id, 'summaries');
+          return interaction.editReply({ 
+          embeds: [{
+            color: config.COLORS.PRIMARY,
+            title: 'Text Summary',
+            description: summary,
+            footer: { text: 'Aszai Bot' }
+          }]
+        });
+      } catch (error) {
+        const errorMessage = logger.handleError(error, 'text summary generation');
+        return interaction.editReply(errorMessage);
+      }
+    },
+    textCommand: '!summarise'
   }
 };
 

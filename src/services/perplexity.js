@@ -50,8 +50,7 @@ class PerplexityService {
       throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
     }
   }
-  
-  /**
+    /**
    * Generate a summary from conversation history
    * @param {Array} history - The conversation history
    * @returns {Promise<String>} - The summary text
@@ -74,6 +73,33 @@ class PerplexityService {
       return response.choices[0].message.content;
     } catch (error) {
       console.error('Summary Generation Error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Generate a summary of provided text
+   * @param {Array} messages - The messages containing text to summarize
+   * @returns {Promise<String>} - The summary text
+   */
+  async generateTextSummary(messages) {
+    try {
+      const fullMessages = [
+        {
+          role: 'system',
+          content: config.SYSTEM_MESSAGES.TEXT_SUMMARY,
+        },
+        ...messages,
+      ];
+      
+      const response = await this.sendChatRequest(fullMessages, {
+        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
+        temperature: 0.2,
+      });
+      
+      return response.choices[0].message.content;
+    } catch (error) {
+      console.error('Text Summary Generation Error:', error);
       throw error;
     }
   }

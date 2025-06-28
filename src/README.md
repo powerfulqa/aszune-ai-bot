@@ -30,7 +30,7 @@
 All existing features from the main branch, plus:
 
 - 🔧 **Modular Architecture:** Restructured into services, utilities, and commands for better separation of concerns
-- 📂 **Configuration Management:** Centralized configuration file for all constants and settings
+- 📂 **Configuration Management:** Centralised configuration file for all constants and settings
 - 📊 **Persistent Stats Storage:** User stats are now saved to disk and loaded on startup
 - 🗄️ **Data Access Layer:** Abstracted data storage operations for better maintainability
 - 🛡️ **Improved Error Handling:** Robust error handling and logging throughout the application
@@ -63,7 +63,7 @@ src/
 
 ### Error Handling & Logging
 
-- Centralized error handling with custom error messages
+- Centralised error handling with custom error messages
 - Structured logging with timestamps and log levels
 - Different handling strategies for different error types
 
