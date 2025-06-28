@@ -7,13 +7,9 @@ module.exports = {
     "!**/node_modules/**",
     "!**/__tests__/**",
     "!**/coverage/**",
-    "!**/logs/**",
-    "!**/data/**",
+    "!**/logs/**",    "!**/data/**",
     "!ecosystem.config.js",
-    "!jest.setup.js",
-    "!index.js", // Original index file
-    "!index-compat.js", // Compatibility layer
-    "!index copy.js"
+    "!jest.setup.js"
   ],
   // Use the Jest setup file
   setupFilesAfterEnv: ['./jest.setup.js'],
