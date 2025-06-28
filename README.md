@@ -37,7 +37,7 @@
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between messages.
 - 📝 **Help Command:** `!help` and `/help` commands list all available commands and usage.
 - 🧾 **Conversation Summary:** `!summary` and `/summary` commands generate a summary of your current conversation using UK English. (Now robust to API requirements: last message must be from user/tool)
-- 📝 **Text Summarisation:** `!summarise <text>` command generates a summary of any provided text using UK English.
+- 📝 **Text Summarisation:** `!summarise <text>` or `!summerise <text>` command generates a summary of any provided text using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
 - 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for better efficiency and reliability.
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
@@ -136,15 +136,15 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity
 
 ## Bot Commands
 
-| Command                           | Description                                                 |
-| --------------------------------- | ----------------------------------------------------------- |
-| `!help` / `/help`                 | Shows a list of available commands and usage                |
-| `!clearhistory` / `/clearhistory` | Clears your conversation history                            |
-| `!summary` / `/summary`           | Summarises your current conversation in UK English          |
-| `!summarise <text>`               | Summarises any provided text in UK English                  |
-| `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
+| Command                                  | Description                                                 |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `!help` / `/help`                        | Shows a list of available commands and usage                |
+| `!clearhistory` / `/clearhistory`        | Clears your conversation history                            |
+| `!summary` / `/summary`                  | Summarises your current conversation in UK English          |
+| `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
+| `!stats` / `/stats`                      | Shows your usage stats (messages sent, summaries requested) |
 
-> **Note:** While `!summarise` exists as a text command, the `/summarise` slash command equivalent may not be fully implemented yet.
+> **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash command equivalent may not be fully implemented yet.
 
 ---
 

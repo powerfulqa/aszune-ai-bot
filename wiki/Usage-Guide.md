@@ -16,7 +16,7 @@ Aszune AI Bot can be interacted with in two ways:
 | `!help` / `/help`                 | Shows a list of available commands and usage                |
 | `!clearhistory` / `/clearhistory` | Clears your conversation history                            |
 | `!summary` / `/summary`           | Summarises your current conversation in UK English          |
-| `!summarise <text>`               | Summarises any provided text in UK English                  |
+| `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
 
 ## Asking Questions
@@ -69,6 +69,12 @@ You can also ask the bot to summarize any text:
 
 ```text
 !summarise <your text here>
+```
+
+or
+
+```text
+!summerise <your text here>
 ```
 
 The bot will generate a concise summary in UK English.

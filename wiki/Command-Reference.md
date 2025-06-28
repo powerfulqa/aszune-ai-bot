@@ -34,7 +34,7 @@ Available commands:
 !help - Show this help message
 !clearhistory - Clear your conversation history
 !summary - Summarise your current conversation
-!summarise <text> - Summarise the provided text
+!summarise <text> or !summerise <text> - Summarise the provided text
 !stats - Show your usage statistics
 ```
 
@@ -99,6 +99,7 @@ Generates a summary of your current conversation with the bot in UK English.
 **Usage:**
 
 - `!summarise <text>`
+- `!summerise <text>`
 
 **Description:**
 Summarises any provided text in UK English. This command accepts arbitrary text and generates a concise summary.

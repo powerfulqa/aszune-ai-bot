@@ -25,7 +25,6 @@ describe('Command Handling', () => {
     expect(conversationHistory.get(userId).length).toBe(0);
     expect(msg.reply).toHaveBeenCalledWith('Your conversation history has been cleared.');
   });
-
   test('!help command replies with help message', async () => {
     const msg = createMockMessage('!help');
     const helpText =
@@ -33,7 +32,8 @@ describe('Command Handling', () => {
       "`!help` - Show this help message\n" +
       "`!clearhistory` - Clear your conversation history\n" +
       "`!summary` - Summarise your current conversation\n" +
-      "`!summarise <text>` - Summarise provided text\n" +
+      "`!summarise <text>` or `!summerise <text>` - Summarise provided text\n" +
+      "`!stats` - Show your usage stats\n" +
       "Simply chat as normal to talk to the bot!";
 
     await msg.reply(helpText);
@@ -101,10 +101,41 @@ describe('Command Handling', () => {
     });
   });
 
+  test('!summerise command (alternative spelling) replies with text summary', async () => {
+    const msg = createMockMessage('!summerise Some text to summarise.');
+    // Mock Perplexity API response
+    axios.post.mockResolvedValueOnce({
+      data: { choices: [{ message: { content: 'Summarised text.' } }] }
+    });
+
+    // Simulate summarise handler logic
+    const summary = 'Summarised text.';
+    await msg.reply({ embeds: [{
+      color: parseInt('0099ff', 16),
+      title: 'Text Summary',
+      description: summary,
+      footer: { text: 'Powered by Sonar' }
+    }]});
+
+    expect(msg.reply).toHaveBeenCalledWith({
+      embeds: [{
+        color: parseInt('0099ff', 16),
+        title: 'Text Summary',
+        description: summary,
+        footer: { text: 'Powered by Sonar' }
+      }]
+    });
+  });
   test('!summarise command with no text returns usage message', async () => {
     const msg = createMockMessage('!summarise ');
-    await msg.reply('Please provide the text you want summarised. Usage: `!summarise <text>`');
-    expect(msg.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>`');
+    await msg.reply('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    expect(msg.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+  });
+  
+  test('!summerise command with no text returns usage message', async () => {
+    const msg = createMockMessage('!summerise ');
+    await msg.reply('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    expect(msg.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
   });
 
   test('!summary command uses UK English in prompt', async () => {

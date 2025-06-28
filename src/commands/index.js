@@ -14,11 +14,10 @@ const commands = {  help: {
       .setDescription('Show help for Aszai Bot'),
     async execute(interaction) {
       return interaction.reply(
-        "**Aszai Bot Commands:**\n" +
-        "`/help` or `!help` - Show this help message\n" +
+        "**Aszai Bot Commands:**\n" +        "`/help` or `!help` - Show this help message\n" +
         "`/clearhistory` or `!clearhistory` - Clear your conversation history\n" +
         "`/summary` or `!summary` - Summarise your current conversation\n" +
-        "`/summarise` or `!summarise <text>` - Summarise provided text\n" +
+        "`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n" +
         "`/stats` or `!stats` - Show your usage stats\n" +
         "Simply chat as normal to talk to the bot!"
       );
@@ -114,12 +113,12 @@ const commands = {  help: {
         text = interaction.options.getString('text');      } else {
         // This is a text command
         const commandText = interaction.content || '';
-        const match = commandText.match(/^!summarise\s+(.+)/i);
+        // Match both spellings: summarise and summerise
+        const match = commandText.match(/^!sum[me]?[ae]rise\s+(.+)/i);
         text = match ? match[1] : '';
       }
-      
-      if (!text || text.trim().length === 0) {
-        return interaction.reply('Please provide the text you want summarised. Usage: `!summarise <text>`');
+        if (!text || text.trim().length === 0) {
+        return interaction.reply('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
       }
       
       await interaction.deferReply();
@@ -147,7 +146,10 @@ const commands = {  help: {
         return interaction.editReply(errorMessage);
       }
     },
-    textCommand: '!summarise'
+    // Support both spellings as text commands
+    textCommand: '!summarise',
+    // Add alias commands that will be recognized
+    aliases: ['!summerise']
   }
 };
 
@@ -160,12 +162,18 @@ async function handleTextCommand(message) {
   const commandText = message.content.trim();
   
   for (const [name, command] of Object.entries(commands)) {
-    if (commandText === command.textCommand) {
+    // Check if the command text matches the main command or any aliases
+    const isMainCommand = commandText === command.textCommand;
+    const hasAliases = command.aliases && Array.isArray(command.aliases);
+    const isAliasCommand = hasAliases && command.aliases.includes(commandText);
+    
+    if (isMainCommand || isAliasCommand) {
       try {
         // Create a mock interaction object for text commands
         const mockInteraction = {
           user: message.author,
           channel: message.channel,
+          content: message.content, // Pass the content for text command parsing
           reply: (content) => message.reply(content),
           deferReply: async () => message.channel.sendTyping(),
           editReply: (content) => message.reply(content)

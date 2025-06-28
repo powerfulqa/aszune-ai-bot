@@ -126,7 +126,7 @@ describe('Bot integration', () => {
             "`/help` or `!help` - Show this help message\n" +
             "`/clearhistory` or `!clearhistory` - Clear your conversation history\n" +
             "`/summary` or `!summary` - Summarise your current conversation\n" +
-            "`/summarise` or `!summarise <text>` - Summarise provided text\n" +
+            "`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n" +
             "`/stats` or `!stats` - Show your usage stats\n" +
             "Simply chat as normal to talk to the bot!";
         expect(message.reply).toHaveBeenCalledWith(helpReply);
