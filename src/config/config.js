@@ -41,11 +41,11 @@ module.exports = {
   COLORS: {
     PRIMARY: parseInt('0099ff', 16)
   },
-  
-  // System Messages
+    // System Messages
   SYSTEM_MESSAGES: {
     CHAT: 'Aszai is a bot that specialises in gaming lore, game logic, guides, and advice. If you do not know the answer to a question, clearly say "I don\'t know" rather than attempting to make up an answer.',
-    SUMMARY: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.'
+    SUMMARY: 'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
+    TEXT_SUMMARY: 'Summarise the following text in a concise paragraph, using UK English.'
   },
   
   // Emojis for reactions
