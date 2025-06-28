@@ -24,7 +24,8 @@ Aszune AI Bot can be interacted with in two ways:
 To ask the bot a question about gaming lore, game logic, guides, or advice:
 
 1. **Direct mention**: Mention the bot followed by your question
-   ```
+
+   ```text
    @AszuneBot What's the best build for a mage in Elden Ring?
    ```
 
@@ -38,13 +39,13 @@ The bot maintains a conversation history for each user, allowing it to remember 
 
 If you want to start a new conversation or clear your history:
 
-```
+```text
 !clearhistory
 ```
 
 or
 
-```
+```text
 /clearhistory
 ```
 
@@ -52,13 +53,13 @@ or
 
 You can ask the bot to summarize your current conversation:
 
-```
+```text
 !summary
 ```
 
 or
 
-```
+```text
 /summary
 ```
 
@@ -66,7 +67,7 @@ or
 
 You can also ask the bot to summarize any text:
 
-```
+```text
 !summarise <your text here>
 ```
 
@@ -76,7 +77,7 @@ The bot will generate a concise summary in UK English.
 
 To see how many messages you've sent to the bot and how many summaries you've requested:
 
-```
+```text
 !stats
 ```
 

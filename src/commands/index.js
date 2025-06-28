@@ -88,8 +88,7 @@ const commands = {  help: {
     async execute(interaction) {
       const userId = interaction.user.id;
       const stats = conversationManager.getUserStats(userId);
-      
-      return interaction.reply(
+        return interaction.reply(
         `**Your Aszai Bot Stats:**\n` +
         `Messages sent: ${stats.messages}\n` +
         `Summaries requested: ${stats.summaries}`

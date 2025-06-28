@@ -109,7 +109,7 @@ This guide covers common issues you might encounter while setting up and running
 
 ### "Cannot find module 'xyz'"
 
-```
+```bash
 Error: Cannot find module 'xyz'
 ```
 
@@ -119,7 +119,7 @@ Error: Cannot find module 'xyz'
 
 ### "Error: Disallowed intents specified"
 
-```
+```bash
 Error [DisallowedIntents]: Privileged intent provided is not enabled or whitelisted.
 ```
 
@@ -131,7 +131,7 @@ Error [DisallowedIntents]: Privileged intent provided is not enabled or whitelis
 
 ### "DiscordAPIError: Missing Permissions"
 
-```
+```bash
 DiscordAPIError: Missing Permissions
 ```
 
@@ -145,8 +145,7 @@ For more detailed troubleshooting:
 
 1. **Enable Debug Mode**
    
-   Add to your `.env` file:
-   ```
+   Add to your `.env` file:   ```env
    DEBUG=true
    ```
 

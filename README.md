@@ -238,5 +238,5 @@ MIT — feel free to use, modify, and share ✨
 - The bot uses a robust command handler for easier extension and maintenance.
 - Conversation history and rate limiting are managed using JavaScript `Map` objects for better performance and reliability.
 - The `!summarise <text>` command is available for summarising arbitrary text.
-- Error handling and environment variable checks have been improved and centralized.
+- Error handling and environment variable checks have been improved and centralised.
 - The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.
