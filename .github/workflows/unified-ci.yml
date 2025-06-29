@@ -49,6 +49,8 @@ jobs:
           files: coverage/lcov.info
           flags: unittests
           slug: powerfulqa/aszune-ai-bot
+          override_branch: feature/smart-cache
+          override_commit: ${{ github.sha }}
           name: codecov-coverage-report
           fail_ci_if_error: false
 
