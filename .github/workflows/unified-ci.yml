@@ -58,8 +58,11 @@ jobs:
           curl -Os https://cli.codecov.io/latest/linux/codecov
           chmod +x codecov
           
+          # Show available commands
+          ./codecov --help
+          
           # Use our wrapper to run the CLI with the correct environment variables
-          ./codecov-wrapper.sh ./codecov -v upload -t ${{ secrets.CODECOV_TOKEN }} -f coverage/lcov.info -F unittests -R powerfulqa/aszune-ai-bot -C ${{ github.sha }} -B feature/smart-cache
+          ./codecov-wrapper.sh ./codecov -v do-upload -t ${{ secrets.CODECOV_TOKEN }} -f coverage/lcov.info -F unittests -R powerfulqa/aszune-ai-bot -C ${{ github.sha }} -B feature/smart-cache
 
   simple-test:
     name: Simple Test (No Coverage)
