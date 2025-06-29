@@ -11,26 +11,33 @@ const config = require('../config/config');
 // Cache settings
 const CACHE_REFRESH_THRESHOLD = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 const SIMILARITY_THRESHOLD = 0.85; // Minimum similarity score to consider a cache hit
-const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'question_cache.json');
+const DEFAULT_CACHE_PATH = path.join(process.cwd(), 'data', 'question_cache.json');
 
 class CacheService {
   constructor() {
     this.cache = {};
     this.initialized = false;
+    this.cachePath = DEFAULT_CACHE_PATH;
   }
 
   /**
    * Initialize the cache from disk
+   * @param {string} customPath - Optional custom path for the cache file (used for testing)
    */
-  init() {
+  init(customPath) {
     if (this.initialized) return;
+    
+    // Allow using a custom path for testing
+    if (customPath) {
+      this.cachePath = customPath;
+    }
     
     try {
       // Create cache file if it doesn't exist
-      if (!fs.existsSync(CACHE_FILE_PATH)) {
+      if (!fs.existsSync(this.cachePath)) {
         this.saveCache();
       } else {
-        const cacheData = fs.readFileSync(CACHE_FILE_PATH, 'utf8');
+        const cacheData = fs.readFileSync(this.cachePath, 'utf8');
         this.cache = JSON.parse(cacheData);
       }
       this.initialized = true;
@@ -40,6 +47,7 @@ class CacheService {
       // Create an empty cache if there was an error
       this.cache = {};
       this.saveCache();
+      this.initialized = true; // Make sure to set initialized to true even after an error
     }
   }
 
@@ -48,7 +56,7 @@ class CacheService {
    */
   saveCache() {
     try {
-      fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(this.cache, null, 2));
+      fs.writeFileSync(this.cachePath, JSON.stringify(this.cache, null, 2));
       logger.debug('Cache saved successfully');
     } catch (error) {
       logger.error('Error saving cache:', error);

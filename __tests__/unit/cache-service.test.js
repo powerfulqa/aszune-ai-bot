@@ -43,7 +43,7 @@ describe('Cache Service', () => {
   
   describe('init()', () => {
     it('initializes the cache from disk', () => {
-      cacheService.init();
+      cacheService.init(mockCachePath);
       
       expect(fs.existsSync).toHaveBeenCalledWith(mockCachePath);
       expect(fs.readFileSync).toHaveBeenCalledWith(mockCachePath, 'utf8');
@@ -54,7 +54,7 @@ describe('Cache Service', () => {
     it('creates a new cache if file does not exist', () => {
       fs.existsSync.mockReturnValue(false);
       
-      cacheService.init();
+      cacheService.init(mockCachePath);
       
       expect(fs.writeFileSync).toHaveBeenCalled();
       expect(cacheService.initialized).toBe(true);
@@ -65,7 +65,7 @@ describe('Cache Service', () => {
         throw new Error('Read error');
       });
       
-      cacheService.init();
+      cacheService.init(mockCachePath);
       
       expect(cacheService.initialized).toBe(true);
       expect(fs.writeFileSync).toHaveBeenCalled();
