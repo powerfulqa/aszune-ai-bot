@@ -48,6 +48,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
           flags: unittests
+          slug: powerfulqa/aszune-ai-bot
           name: codecov-coverage-report
           fail_ci_if_error: false
 
