@@ -31,6 +31,9 @@ jobs:
 
       - name: Run tests with coverage
         run: npm test -- --coverage --forceExit
+        
+      - name: Debug repository info
+        run: node debug-codecov.js
 
       - name: Upload coverage to QLTY
         uses: qltysh/qlty-action/coverage@v1
@@ -44,6 +47,10 @@ jobs:
         uses: codecov/codecov-action@v4
         continue-on-error: true
         if: github.event_name == 'push' || github.event_name == 'pull_request'
+        env:
+          CODECOV_NAME: powerfulqa/aszune-ai-bot
+          CODECOV_SLUG: powerfulqa/aszune-ai-bot
+          GITHUB_REPOSITORY: powerfulqa/aszune-ai-bot
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
@@ -51,8 +58,8 @@ jobs:
           slug: powerfulqa/aszune-ai-bot
           override_branch: feature/smart-cache
           override_commit: ${{ github.sha }}
-          name: codecov-coverage-report
           fail_ci_if_error: false
+          verbose: true
 
   simple-test:
     name: Simple Test (No Coverage)
