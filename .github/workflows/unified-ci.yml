@@ -56,28 +56,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  simple-test:
-    name: Simple Test (No Coverage)
-    runs-on: ubuntu-latest
-    # Only run this job for feature branches that are not PRs
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feature/')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests without coverage
-        run: npm test -- --forceExit
-
 # When ready to deploy the bot, you can uncomment and customize this job
 #  deploy:
 #    name: Deploy
