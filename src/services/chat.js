@@ -17,7 +17,13 @@ const cacheService = require('../services/cache');
 async function handleChatMessage(message) {
   if (message.author.bot || !message.content) return;
   
+  // Ensure userId is extracted from message.author.id
   const userId = message.author.id;
+  if (!userId) {
+    logger.warn('Missing userId in message object:', message.author);
+    // Use a fallback ID if needed or return early
+    return message.reply('Unable to process your request due to a system error.');
+  }
   
   // Check for rate limiting
   if (conversationManager.isRateLimited(userId)) {
@@ -76,7 +82,9 @@ async function handleChatMessage(message) {
       if (cacheResult.needsRefresh) {
         logger.debug('Refreshing stale cache entry in the background');
         // Don't await this to avoid delaying the response
-        refreshCacheEntry(userQuestion, userId)
+        // Ensure userId is explicitly extracted from message.author.id before passing
+        const authorId = message.author.id; // Explicitly extract again to ensure we have it
+        refreshCacheEntry(userQuestion, authorId)
           .catch(error => logger.error('Background cache refresh failed:', error));
       }
     } else {
@@ -138,6 +146,12 @@ async function handleChatMessage(message) {
 async function refreshCacheEntry(question, userId, retryCount = 0) {
   const MAX_RETRIES = 2;
   const RETRY_DELAY = 2000; // Wait 2 seconds before retrying
+  
+  // Validate the userId parameter
+  if (!userId) {
+    logger.error('Missing userId in refreshCacheEntry function call');
+    return false;
+  }
   
   try {
     // Get the current history - this includes the question we just processed
