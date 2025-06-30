@@ -195,6 +195,13 @@ aszune-ai-bot/
   npm test -- --coverage
   ```
   Coverage includes utility modules, command handling, emoji logic, error handling, and more.
+- **JUnit Reporting:**  
+  Test results are also generated in JUnit XML format, which can be used by CI/CD systems to display test results.
+  ```bash
+  npm test -- --testResultsProcessor=jest-junit
+  ```
+- **Codecov Integration:**  
+  The project integrates with Codecov for coverage reporting and includes the Codecov AI Reviewer in the CI workflow, which provides automated code reviews on pull requests.
 
 ---
 

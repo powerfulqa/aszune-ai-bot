@@ -195,4 +195,46 @@ It's recommended to regularly backup your bot's data:
 cp -r data/ backup/data_$(date +%Y%m%d)/
 ```
 
-For more advanced deployment scenarios, consider setting up CI/CD pipelines with GitHub Actions, GitLab CI, or other continuous integration tools.
+## CI/CD Pipeline
+
+The project includes a configured CI/CD pipeline using GitHub Actions. The pipeline is defined in `.github/workflows/unified-ci.yml`.
+
+### Pipeline Features
+
+1. **Automated Testing**:
+   - Runs the full test suite with coverage on every push and pull request
+   - Generates JUnit test reports for better visibility into test results
+
+2. **Coverage Reporting**:
+   - Uploads coverage data to Codecov
+   - Shows coverage trends and changes over time
+   - Provides a coverage badge for the README.md
+
+3. **Codecov Integration**:
+   - Uses Codecov AI Reviewer for automated code reviews on pull requests
+   - Uploads test results for analysis
+
+### Using GitHub Actions for Deployment
+
+You can extend the existing GitHub Actions workflow to automatically deploy your bot when changes are pushed to the main branch:
+
+1. Uncomment the deployment job in `.github/workflows/unified-ci.yml`
+2. Add your specific deployment commands
+3. Add any required secrets to your GitHub repository
+
+```yaml
+deploy:
+  name: Deploy
+  needs: build-and-test
+  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  runs-on: ubuntu-latest
+  
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Deploy to production
+      run: echo "Add your deployment steps here"
+      env:
+        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+```

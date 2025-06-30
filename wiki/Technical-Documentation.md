@@ -391,6 +391,55 @@ describe("Emoji Utilities", () => {
 - Rate limiting prevents abuse
 - Input validation is performed before processing commands
 
+## CI/CD Integration
+
+The project uses GitHub Actions for Continuous Integration and Continuous Deployment, configured in `.github/workflows/unified-ci.yml`.
+
+### Key CI/CD Features
+
+1. **Automated Testing**: All tests are run automatically on push and pull requests.
+2. **Code Coverage**:
+   - Coverage reports are generated using Jest
+   - Reports are uploaded to Codecov
+   - A coverage badge is displayed in the README.md
+
+3. **Test Results Reporting**:
+   - Test results are generated in JUnit XML format
+   - Results are uploaded to Codecov using the test-results-action
+   - Results are available for analysis in the Codecov dashboard
+
+4. **Codecov AI Reviewer**:
+   - Automatically reviews code changes in pull requests
+   - Identifies potential issues and suggests improvements
+   - Provides feedback on test coverage
+
+5. **Branch-specific Workflows**:
+   - Full tests with coverage for main branch and pull requests
+   - Simplified tests for feature branches
+
+### GitHub Actions Workflow
+
+```yaml
+# Example of the key parts in the workflow
+- name: Run tests with coverage
+  run: npm test -- --coverage --forceExit --testResultsProcessor=jest-junit
+  env:
+    JEST_JUNIT_OUTPUT_DIR: ./test-results/
+    JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v3
+  with:
+    token: ${{ secrets.CODECOV_TOKEN }}
+    file: coverage/lcov.info
+    fail_ci_if_error: false
+    
+- name: Upload test results to Codecov
+  uses: codecov/test-results-action@v1
+  with:
+    token: ${{ secrets.CODECOV_TOKEN }}
+```
+
 ## Future Technical Enhancements
 
 - Database integration for persistent conversation storage
