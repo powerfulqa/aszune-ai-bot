@@ -18,9 +18,11 @@ comment:
 github_checks:
   annotations: false
 
-# Enable AI features for PR reviews
-ai:
-  features:
-    - review
-    - tests
-  show_help: true
+# Enable Codecov AI Reviewer for PR reviews
+feature:
+  ai:
+    review:
+      enabled: true
+    tests:
+      enabled: true
+    show_help: true
