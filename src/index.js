@@ -55,6 +55,11 @@ client.once('ready', async () => {
   // Initialize the cache service
   cacheService.init();
   
+  // Set up periodic cache saving (every 5 minutes)
+  setInterval(() => {
+    cacheService.saveIfDirty();
+  }, 5 * 60 * 1000);
+  
   // Register slash commands
   await registerSlashCommands();
 });
@@ -82,6 +87,8 @@ client.on('warn', (info) => {
 process.on('SIGINT', async () => {
   logger.info('Shutting down...');
   try {
+    // Save cache if needed before shutting down
+    cacheService.saveIfDirty();
     await client.destroy();
     await conversationManager.destroy();
   } catch (error) {
@@ -94,6 +101,8 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   logger.info('Shutting down...');
   try {
+    // Save cache if needed before shutting down
+    cacheService.saveIfDirty();
     await client.destroy();
     await conversationManager.destroy();
   } catch (error) {

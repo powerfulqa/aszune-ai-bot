@@ -18,6 +18,7 @@ class CacheService {
     this.cache = {};
     this.initialized = false;
     this.cachePath = DEFAULT_CACHE_PATH;
+    this.isDirty = false; // Track if cache has been modified and needs saving
   }
 
   /**
@@ -58,8 +59,19 @@ class CacheService {
     try {
       fs.writeFileSync(this.cachePath, JSON.stringify(this.cache, null, 2));
       logger.debug('Cache saved successfully');
+      this.isDirty = false; // Reset dirty flag after saving
     } catch (error) {
       logger.error('Error saving cache:', error);
+    }
+  }
+  
+  /**
+   * Save the cache to disk if it has been modified
+   * This method can be called periodically to batch writes
+   */
+  saveIfDirty() {
+    if (this.isDirty) {
+      this.saveCache();
     }
   }
 
@@ -127,7 +139,7 @@ class CacheService {
       // Update access metrics
       entry.accessCount += 1;
       entry.lastAccessed = Date.now();
-      this.saveCache();
+      this.isDirty = true; // Mark cache as modified
       
       // If the entry is stale, return it but mark for refresh
       if (this.isStale(entry)) {
@@ -151,7 +163,7 @@ class CacheService {
         // Update access metrics
         entry.accessCount += 1;
         entry.lastAccessed = Date.now();
-        this.saveCache();
+        this.isDirty = true; // Mark cache as modified
         
         // If the entry is stale, return it but mark for refresh
         if (this.isStale(entry)) {
@@ -191,7 +203,8 @@ class CacheService {
       lastAccessed: now
     };
     
-    this.saveCache();
+    this.isDirty = true; // Mark cache as modified
+    this.saveIfDirty(); // We'll save immediately for new entries
     logger.debug(`Added new entry to cache: "${question.substring(0, 30)}..."`);
   }
 
@@ -263,7 +276,8 @@ class CacheService {
     }
     
     if (removedCount > 0) {
-      this.saveCache();
+      this.isDirty = true; // Mark cache as modified
+      this.saveIfDirty(); // Save immediately after pruning
       logger.info(`Pruned ${removedCount} entries from cache`);
     }
     

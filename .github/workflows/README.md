@@ -10,12 +10,9 @@ This directory contains the GitHub Actions workflows for the Aszune AI Bot proje
 
 ## Workflow Features
 
-## Workflow Features
-
 The unified workflow includes the following features:
 
 - **Build and Test**: Runs tests with coverage and uploads results to QLTY and Codecov
-- **Simple Test**: A faster test job for feature branches that doesn't generate coverage
 - **Deploy** (commented out): Placeholder for future deployment automation
 
 ## Notes

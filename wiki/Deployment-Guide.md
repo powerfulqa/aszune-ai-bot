@@ -197,9 +197,9 @@ cp -r data/ backup/data_$(date +%Y%m%d)/
 
 ## CI/CD Pipeline
 
-The project includes a configured CI/CD pipeline using GitHub Actions. The pipeline is defined in `.github/workflows/unified-ci.yml`.
+The project includes a configured CI/CD pipeline using GitHub Actions. The pipeline is defined in `.github/workflows/unified-ci.yml`. For comprehensive technical details about the code architecture and implementation, please refer to the [Technical Documentation](Technical-Documentation.md).
 
-### Pipeline Features
+### CI/CD Pipeline
 
 1. **Automated Testing**:
    - Runs the full test suite with coverage on every push and pull request

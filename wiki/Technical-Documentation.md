@@ -393,7 +393,7 @@ describe("Emoji Utilities", () => {
 
 ## CI/CD Integration
 
-The project uses GitHub Actions for Continuous Integration and Continuous Deployment, configured in `.github/workflows/unified-ci.yml`.
+The project uses GitHub Actions for Continuous Integration and Continuous Deployment, configured in `.github/workflows/unified-ci.yml`. For detailed deployment information and pipeline configuration, please refer to the [Deployment Guide](Deployment-Guide.md#cicd-pipeline).
 
 ### Key CI/CD Features
 
@@ -412,10 +412,6 @@ The project uses GitHub Actions for Continuous Integration and Continuous Deploy
    - Automatically reviews code changes in pull requests
    - Identifies potential issues and suggests improvements
    - Provides feedback on test coverage
-
-5. **Branch-specific Workflows**:
-   - Full tests with coverage for main branch and pull requests
-   - Simplified tests for feature branches
 
 ### GitHub Actions Workflow
 
