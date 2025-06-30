@@ -58,15 +58,17 @@ jobs:
           curl -Os https://cli.codecov.io/latest/linux/codecov
           chmod +x codecov
           
-          # Show available commands
-          ./codecov --help
+          # Run the debug script to capture environment info
+          node debug-codecov.js > codecov-debug-output.txt
+          
+          # Show available commands and CLI version
+          ./codecov --version
           
           # Use our wrapper to run the CLI with the correct environment variables
-          # The newer CLI has different parameter syntax
           ./codecov-wrapper.sh ./codecov -v do-upload \
             --token ${{ secrets.CODECOV_TOKEN }} \
             --file coverage/lcov.info \
-            --flags unittests \
+            --flag unittests \
             --slug powerfulqa/aszune-ai-bot \
             --commit ${{ github.sha }} \
             --branch feature/smart-cache
