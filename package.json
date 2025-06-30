@@ -9,9 +9,15 @@
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage --ci --forceExit --testResultsProcessor=jest-junit",
+    "test:property": "jest -t 'Property-based tests'",
+    "lint": "eslint src __tests__",
+    "lint:fix": "eslint src __tests__ --fix",
     "format:md": "prettier --write '**/*.md'",
     "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
-    "security": "npm audit --audit-level moderate"
+    "format:check": "prettier --check 'src/**/*.js' '__tests__/**/*.js'",
+    "security": "npm audit --audit-level moderate",
+    "security:prod": "npm audit --audit-level high --production",
+    "prepare": "husky install || echo 'Husky is not supported in this environment'"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +25,7 @@
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/powerfulqa/aszune-ai-bot"
+    "url": "git+https://github.com/powerfulqa/aszune-ai-bot.git"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -27,9 +33,13 @@
     "dotenv": "^16.4.7"
   },
   "devDependencies": {
-    "codecov": "^3.8.2",
+    "codecov": "^4.0.0",
+    "eslint": "^8.57.0",
+    "fast-check": "^3.15.1",
+    "husky": "^9.0.11",
     "jest": "^29.7.0",
     "jest-junit": "^16.0.0",
+    "lint-staged": "^15.2.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.6.2"
   }

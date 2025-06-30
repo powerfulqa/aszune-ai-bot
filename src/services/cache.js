@@ -3,27 +3,85 @@
  * Reduces API token usage by serving cached responses when possible
  */
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
 const config = require('../config/config');
+const { 
+  CacheError, 
+  CacheInitializationError, 
+  CacheSaveError, 
+  CacheReadError, 
+  CacheValueError 
+} = require('../utils/errors');
 
-// Cache settings
-const CACHE_REFRESH_THRESHOLD = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
-const SIMILARITY_THRESHOLD = 0.85; // Minimum similarity score to consider a cache hit
+// Cache settings from config
 const DEFAULT_CACHE_PATH = path.join(process.cwd(), 'data', 'question_cache.json');
 
-// New configurable cache size limits
-const MAX_CACHE_SIZE = parseInt(process.env.ASZUNE_MAX_CACHE_SIZE, 10) || 10000; // Default 10K entries
-const LRU_PRUNE_THRESHOLD = parseInt(process.env.ASZUNE_LRU_PRUNE_THRESHOLD, 10) || 9000; // When to trigger auto-prune
-const LRU_PRUNE_TARGET = parseInt(process.env.ASZUNE_LRU_PRUNE_TARGET, 10) || 7500; // Target size after pruning
+// Use config values with fallbacks
+const CACHE_REFRESH_THRESHOLD = config.CACHE?.REFRESH_THRESHOLD_MS || (30 * 24 * 60 * 60 * 1000);
+const SIMILARITY_THRESHOLD = config.CACHE?.SIMILARITY_THRESHOLD || 0.85;
+const MAX_CACHE_SIZE = config.CACHE?.MAX_SIZE || 10000;
+const LRU_PRUNE_THRESHOLD = config.CACHE?.LRU_PRUNE_THRESHOLD || 9000;
+const LRU_PRUNE_TARGET = config.CACHE?.LRU_PRUNE_TARGET || 7500;
+
+// Simple LRU cache implementation for in-memory caching
+class LRUCache {
+  constructor(capacity = 100) {
+    this.capacity = capacity;
+    this.cache = new Map(); // Map preserves insertion order
+  }
+  
+  get(key) {
+    if (!this.cache.has(key)) return undefined;
+    
+    // Move to end (most recently used)
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+  
+  set(key, value) {
+    // If key exists, delete it first
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    }
+    // If at capacity, delete oldest (first) item
+    else if (this.cache.size >= this.capacity) {
+      this.cache.delete(this.cache.keys().next().value);
+    }
+    
+    // Add new item at the end (most recently used)
+    this.cache.set(key, value);
+    return true;
+  }
+  
+  has(key) {
+    return this.cache.has(key);
+  }
+  
+  clear() {
+    this.cache.clear();
+  }
+  
+  get size() {
+    return this.cache.size;
+  }
+}
 
 class CacheService {
   constructor() {
+    // Persistent cache
     this.cache = {};
     this.initialized = false;
     this.cachePath = DEFAULT_CACHE_PATH;
     this.isDirty = false; // Track if cache has been modified and needs saving
+    
+    // In-memory LRU cache for fast lookups
+    const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
+    this.memoryCache = new LRUCache(memCacheSize);
     
     // Cache statistics metrics
     this.metrics = {
@@ -31,6 +89,7 @@ class CacheService {
       misses: 0,
       exactMatches: 0,
       similarityMatches: 0,
+      memoryHits: 0,
       errors: 0,
       lastReset: Date.now()
     };
@@ -39,8 +98,79 @@ class CacheService {
   /**
    * Initialize the cache from disk
    * @param {string} customPath - Optional custom path for the cache file (used for testing)
+   * @returns {Promise<void>} - Promise that resolves when initialization is complete
    */
-  init(customPath) {
+  async init(customPath) {
+    if (this.initialized) return;
+    
+    // Allow using a custom path for testing
+    if (customPath) {
+      this.cachePath = customPath;
+    }
+    
+    try {
+      // Ensure the directory exists
+      const dir = path.dirname(this.cachePath);
+      try {
+        await fsPromises.access(dir);
+      } catch (dirErr) {
+        // Directory doesn't exist, create it
+        await fsPromises.mkdir(dir, { recursive: true });
+        logger.info(`Created cache directory: ${dir}`);
+      }
+      
+      try {
+        // Try to access the cache file
+        await fsPromises.access(this.cachePath);
+        
+        // File exists, read it
+        try {
+          const cacheData = await fsPromises.readFile(this.cachePath, 'utf8');
+          this.cache = JSON.parse(cacheData);
+        } catch (parseErr) {
+          // File exists but couldn't be parsed
+          throw new CacheReadError(`Failed to parse cache file: ${parseErr.message}`, {
+            cause: parseErr,
+            path: this.cachePath
+          });
+        }
+      } catch (accessErr) {
+        // File doesn't exist, create a new one
+        await this.saveCacheAsync();
+      }
+      
+      this.initialized = true;
+      logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
+    } catch (error) {
+      const errorDetails = {
+        originalError: error,
+        path: this.cachePath
+      };
+      
+      if (error instanceof CacheError) {
+        logger.error(`Cache initialization error: ${error.message}`, error.details);
+      } else {
+        logger.error('Error initializing cache:', error);
+      }
+      
+      // Create an empty cache if there was an error
+      this.cache = {};
+      try {
+        await this.saveCacheAsync();
+      } catch (saveErr) {
+        // If we can't even save an empty cache, log but continue
+        logger.error('Failed to save empty cache during initialization:', saveErr);
+      }
+      
+      this.initialized = true; // Make sure to set initialized to true even after an error
+    }
+  }
+  
+  /**
+   * Synchronous initialization for backward compatibility
+   * @param {string} customPath - Optional custom path for the cache file (used for testing)
+   */
+  initSync(customPath) {
     if (this.initialized) return;
     
     // Allow using a custom path for testing
@@ -75,7 +205,78 @@ class CacheService {
   }
 
   /**
-   * Save the cache to disk with robust error handling
+   * Save the cache to disk asynchronously with robust error handling
+   * @returns {Promise<void>}
+   */
+  async saveCacheAsync() {
+    try {
+      // Ensure directory exists
+      const dir = path.dirname(this.cachePath);
+      try {
+        await fsPromises.access(dir);
+      } catch (dirErr) {
+        // Directory doesn't exist, create it
+        await fsPromises.mkdir(dir, { recursive: true });
+      }
+      
+      // Create backup before overwriting
+      try {
+        await fsPromises.access(this.cachePath);
+        // File exists, create backup
+        try {
+          await fsPromises.copyFile(this.cachePath, `${this.cachePath}.backup`);
+        } catch (backupError) {
+          logger.warn('Failed to create backup before saving cache:', backupError);
+          // Continue with save attempt even if backup fails
+        }
+      } catch (accessErr) {
+        // File doesn't exist, no need for backup
+      }
+      
+      // Write to a temporary file first, then rename for atomic-like operation
+      const tempPath = `${this.cachePath}.temp`;
+      await fsPromises.writeFile(tempPath, JSON.stringify(this.cache, null, 2));
+      
+      // In Windows, we need to unlink first before rename to avoid EPERM error
+      try {
+        await fsPromises.unlink(this.cachePath);
+      } catch (unlinkErr) {
+        // File might not exist, that's okay
+      }
+      
+      await fsPromises.rename(tempPath, this.cachePath);
+      
+      logger.debug('Cache saved successfully');
+      this.isDirty = false; // Reset dirty flag after saving
+      return true;
+    } catch (error) {
+      const saveError = new CacheSaveError(`Failed to save cache: ${error.message}`, {
+        originalError: error,
+        path: this.cachePath
+      });
+      
+      logger.error('Error saving cache:', saveError);
+      
+      // Restore from backup if available
+      try {
+        const backupPath = `${this.cachePath}.backup`;
+        await fsPromises.access(backupPath);
+        try {
+          await fsPromises.copyFile(backupPath, this.cachePath);
+          logger.info('Cache restored from backup after failed save');
+        } catch (restoreError) {
+          logger.error('Failed to restore cache from backup:', restoreError);
+        }
+      } catch (accessErr) {
+        // No backup available
+      }
+      
+      throw saveError;
+    }
+  }
+  
+  /**
+   * Save the cache to disk synchronously with robust error handling (legacy method)
    */
   saveCache() {
     try {
@@ -109,7 +310,12 @@ class CacheService {
       logger.debug('Cache saved successfully');
       this.isDirty = false; // Reset dirty flag after saving
     } catch (error) {
-      logger.error('Error saving cache:', error);
+      const saveError = new CacheSaveError(`Failed to save cache: ${error.message}`, {
+        originalError: error,
+        path: this.cachePath
+      });
+      
+      logger.error('Error saving cache:', saveError);
       
       // Restore from backup if available
       const backupPath = `${this.cachePath}.backup`;
@@ -127,33 +333,57 @@ class CacheService {
   /**
    * Save the cache to disk if it has been modified
    * This method can be called periodically to batch writes
+   * @returns {Promise<boolean>} True if save was performed
+   */
+  async saveIfDirtyAsync() {
+    if (this.isDirty) {
+      await this.saveCacheAsync();
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * Synchronous version of saveIfDirty for backward compatibility
+   * @returns {boolean} True if save was performed
    */
   saveIfDirty() {
     if (this.isDirty) {
       this.saveCache();
+      return true;
     }
+    return false;
   }
 
   /**
    * Generate a hash for a question to use as a cache key
    * @param {string} question - The question text
    * @returns {string} - A hash of the question
-   * @throws {Error} - If question is invalid
+   * @throws {CacheValueError} - If question is invalid
    */
   generateHash(question) {
     // Input validation - make sure to explicitly check all edge cases including empty strings
     if (question === null || question === undefined) {
-      throw new Error('Question cannot be null or undefined');
+      throw new CacheValueError('Question cannot be null or undefined', {
+        value: question,
+        type: typeof question
+      });
     }
     
     if (typeof question !== 'string') {
-      throw new Error(`Question must be a string, got ${typeof question}`);
+      throw new CacheValueError(`Question must be a string, got ${typeof question}`, {
+        value: question,
+        type: typeof question
+      });
     }
     
     // Check for empty strings or strings with only whitespace
     // The trim is needed to check for strings with only spaces
     if (question === '' || question.trim() === '') {
-      throw new Error('Question cannot be an empty string');
+      throw new CacheValueError('Question cannot be an empty string', {
+        value: question,
+        length: question.length
+      });
     }
     
     // Normalize the question: lowercase, trim whitespace, normalize spaces, remove only specific punctuation
@@ -169,33 +399,89 @@ class CacheService {
   }
 
   /**
-   * Calculate text similarity between two strings using Jaccard similarity
+   * Calculate text similarity between two strings using optimized Jaccard similarity
    * with filtering for short tokens to improve quality
    * @param {string} str1 - First string to compare
    * @param {string} str2 - Second string to compare
    * @returns {number} - Similarity score between 0 and 1
    */
   calculateSimilarity(str1, str2) {
-    if (!str1 || !str2) return 0;
-    
-    // Normalize and tokenize, filtering out short words (less than 3 chars)
-    const tokens1 = str1.toLowerCase().trim().split(/\s+/).filter(token => token.length > 2);
-    const tokens2 = str2.toLowerCase().trim().split(/\s+/).filter(token => token.length > 2);
-    
-    // Edge cases
-    if (tokens1.length === 0 && tokens2.length === 0) return 1;
-    if (tokens1.length === 0 || tokens2.length === 0) return 0;
-    
-    // Create sets for more efficient comparison
-    const set1 = new Set(tokens1);
-    const set2 = new Set(tokens2);
-    
-    // Calculate intersection and union directly using Set operations
-    const intersection = new Set([...set1].filter(x => set2.has(x)));
-    const union = new Set([...set1, ...set2]);
-    
-    // Calculate Jaccard similarity coefficient
-    return intersection.size / union.size;
+    try {
+      // Quick equality check for exact match
+      if (str1 === str2) return 1.0;
+      
+      // Basic validation
+      if (!str1 || !str2) return 0;
+      if (typeof str1 !== 'string' || typeof str2 !== 'string') return 0;
+      
+      // Early rejection for very different lengths (common in large caches)
+      // If one string is more than twice as long as the other, they're likely very different
+      const lenRatio = Math.max(str1.length, str2.length) / Math.min(str1.length || 1, str2.length || 1);
+      if (lenRatio > 3) return 0;
+      
+      // Keywords - optimize by focusing on meaningful terms
+      // Normalize and tokenize, filtering out short words (less than 3 chars)
+      // and common stop words that don't add much meaning
+      const stopWords = new Set(['the', 'and', 'for', 'but', 'that', 'with', 'this', 'from', 'what', 'how']);
+      const tokens1 = str1.toLowerCase().trim().split(/\s+/)
+        .filter(token => token.length > 2 && !stopWords.has(token));
+      const tokens2 = str2.toLowerCase().trim().split(/\s+/)
+        .filter(token => token.length > 2 && !stopWords.has(token));
+      
+      // Edge cases
+      if (tokens1.length === 0 && tokens2.length === 0) return 1;
+      if (tokens1.length === 0 || tokens2.length === 0) return 0;
+      
+      // Performance optimization for very large tokens
+      // For large token sets, use a sample to estimate similarity
+      const MAX_TOKENS = 200; // Limit for performance reasons
+      let sampledTokens1 = tokens1;
+      let sampledTokens2 = tokens2;
+      
+      if (tokens1.length > MAX_TOKENS || tokens2.length > MAX_TOKENS) {
+        // Sample tokens evenly from throughout the token list
+        const sampleSize = MAX_TOKENS;
+        const sample = (tokens, count) => {
+          if (tokens.length <= count) return tokens;
+          const result = [];
+          const step = tokens.length / count;
+          for (let i = 0; i < count; i++) {
+            result.push(tokens[Math.min(Math.floor(i * step), tokens.length - 1)]);
+          }
+          return result;
+        };
+        
+        sampledTokens1 = sample(tokens1, sampleSize);
+        sampledTokens2 = sample(tokens2, sampleSize);
+      }
+      
+      // Create sets for more efficient comparison
+      const set1 = new Set(sampledTokens1);
+      const set2 = new Set(sampledTokens2);
+      
+      // Calculate intersection size
+      let intersectionSize = 0;
+      
+      // Use the smaller set for the loop to optimize
+      const [smallerSet, largerSet] = set1.size <= set2.size ? [set1, set2] : [set2, set1];
+      
+      for (const item of smallerSet) {
+        if (largerSet.has(item)) {
+          intersectionSize++;
+        }
+      }
+      
+      // Calculate union size: A + B - intersection
+      const unionSize = set1.size + set2.size - intersectionSize;
+      
+      // Calculate weighted Jaccard similarity coefficient
+      // We could weight important terms higher (like named entities, nouns)
+      // but for now we use the simple version
+      return intersectionSize / unionSize;
+    } catch (error) {
+      logger.error('Error calculating similarity:', error);
+      return 0; // Fail gracefully
+    }
   }
 
   /**
@@ -215,7 +501,7 @@ class CacheService {
    * @returns {Object|null} - The cache hit or null if no match found
    */
   findInCache(question, gameContext = null) {
-    if (!this.initialized) this.init();
+    if (!this.initialized) this.initSync();
     
     try {
       // Check if we need to prune the cache based on size
@@ -229,6 +515,18 @@ class CacheService {
       if (!question || typeof question !== 'string' || question.trim().length === 0) {
         logger.warn('Invalid question provided to findInCache');
         return null;
+      }
+      
+      // Create a memory cache key (question + gameContext)
+      const memCacheKey = `${question}${gameContext ? `::${gameContext}` : ''}`;
+      
+      // Check memory cache first (fastest)
+      const memCacheResult = this.memoryCache.get(memCacheKey);
+      if (memCacheResult) {
+        this.metrics.hits++;
+        this.metrics.memoryHits++;
+        logger.debug(`Memory cache hit for: "${question.substring(0, 30)}..."`);
+        return memCacheResult;
       }
     
       // First try direct hash lookup (most efficient)
@@ -245,18 +543,22 @@ class CacheService {
           entry.lastAccessed = Date.now();
           this.isDirty = true; // Mark cache as modified
           
-          // If the entry is stale, return it but mark for refresh
-          if (this.isStale(entry)) {
-            return { 
-              ...entry, 
-              needsRefresh: true 
-            };
-          }
-          return entry;
+          const result = this.isStale(entry) 
+            ? { ...entry, needsRefresh: true } 
+            : entry;
+          
+          // Add to memory cache
+          this.memoryCache.set(memCacheKey, result);
+          
+          return result;
         }
       } catch (hashError) {
-        this.metrics.errors++;
-        logger.warn('Error generating hash for cache lookup:', hashError);
+        if (hashError instanceof CacheValueError) {
+          logger.warn(`Cache validation error: ${hashError.message}`, hashError.details);
+        } else {
+          this.metrics.errors++;
+          logger.warn('Error generating hash for cache lookup:', hashError);
+        }
         // Continue to similarity matching even if hash lookup fails
       }
       
@@ -265,21 +567,39 @@ class CacheService {
       let bestMatch = null;
       let bestSimilarity = SIMILARITY_THRESHOLD;
       
-      for (const key of Object.keys(this.cache)) {
-        const entry = this.cache[key];
-        try {
-          const similarity = this.calculateSimilarity(question, entry.question);
-          
-          // Check similarity and game context if provided
-          if (similarity > bestSimilarity && 
-              (!gameContext || !entry.gameContext || entry.gameContext === gameContext)) {
+      // Only do similarity search if the cache isn't too large
+      // For very large caches, similarity search becomes too expensive
+      const MAX_SIMILARITY_SEARCH_SIZE = 5000;
+      if (cacheSize <= MAX_SIMILARITY_SEARCH_SIZE) {
+        const keys = Object.keys(this.cache);
+        
+        // Improved algorithm - first filter by question length for efficiency
+        // Only compare strings of roughly similar length
+        const questionLength = question.length;
+        const candidateKeys = keys.filter(key => {
+          const entry = this.cache[key];
+          const entryLength = entry.question.length;
+          // Compare lengths: within 50% either way
+          return entryLength >= questionLength * 0.5 && entryLength <= questionLength * 1.5;
+        });
+        
+        // Then compute similarity only for these candidates
+        for (const key of candidateKeys) {
+          const entry = this.cache[key];
+          try {
+            const similarity = this.calculateSimilarity(question, entry.question);
             
-            bestMatch = entry;
-            bestSimilarity = similarity;
+            // Check similarity and game context if provided
+            if (similarity > bestSimilarity && 
+                (!gameContext || !entry.gameContext || entry.gameContext === gameContext)) {
+              
+              bestMatch = entry;
+              bestSimilarity = similarity;
+            }
+          } catch (similarityError) {
+            // Skip this entry if similarity calculation fails
+            continue;
           }
-        } catch (similarityError) {
-          // Skip this entry if similarity calculation fails
-          continue;
         }
       }
       
@@ -293,15 +613,14 @@ class CacheService {
         bestMatch.lastAccessed = Date.now();
         this.isDirty = true; // Mark cache as modified
         
-        // If the entry is stale, return it but mark for refresh
-        if (this.isStale(bestMatch)) {
-          return { 
-            ...bestMatch, 
-            needsRefresh: true,
-            similarity: bestSimilarity 
-          };
-        }
-        return { ...bestMatch, similarity: bestSimilarity };
+        const result = this.isStale(bestMatch)
+          ? { ...bestMatch, needsRefresh: true, similarity: bestSimilarity }
+          : { ...bestMatch, similarity: bestSimilarity };
+        
+        // Add to memory cache
+        this.memoryCache.set(memCacheKey, result);
+        
+        return result;
       }
       
       // No match found

@@ -56,7 +56,7 @@ client.once('ready', async () => {
   cacheService.init();
   
   // Set up periodic cache saving (configurable interval)
-  const CACHE_SAVE_INTERVAL = parseInt(process.env.ASZUNE_CACHE_SAVE_INTERVAL, 10) || 5 * 60 * 1000; // Default 5 minutes
+  const CACHE_SAVE_INTERVAL = config.CACHE.SAVE_INTERVAL_MS;
   logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
   
   setInterval(() => {
