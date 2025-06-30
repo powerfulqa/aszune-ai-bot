@@ -307,31 +307,44 @@ async function handleChatMessage(message) {
     let reply;
     let fromCache = false;
     
-    // Try to find the question in the cache first
-    const cacheResult = cacheService.findInCache(userQuestion);
-    
-    if (cacheResult) {
-      // Cache hit!
-      reply = cacheResult.answer;
-      fromCache = true;
+    try {
+      // Try to find the question in the cache first with robust error handling
+      const cacheResult = cacheService.findInCache(userQuestion);
       
-      // If the entry needs a refresh (is stale), update it in the background
-      if (cacheResult.needsRefresh) {
-        // Don't await this to avoid delaying the response
-        refreshCacheEntry(userQuestion, userId);
+      if (cacheResult) {
+        // Cache hit!
+        reply = cacheResult.answer;
+        fromCache = true;
+        
+        // If the entry needs a refresh (is stale), update it in the background
+        if (cacheResult.needsRefresh) {
+          // Don't await this to avoid delaying the response
+          refreshCacheEntry(userQuestion, userId);
+        }
+      } else {
+        // Cache miss - call the API
+        const history = conversationManager.getHistory(userId);
+        reply = await perplexityService.generateChatResponse(history);
+        
+        // Add the new Q&A pair to the cache with validation checks
+        if (reply) {
+          const added = cacheService.addToCache(userQuestion, reply);
+          if (!added) {
+            logger.debug('Failed to add entry to cache');
+          }
+        }
       }
-    } else {
-      // Cache miss - call the API
+    } catch (cacheError) {
+      // Handle cache specific errors gracefully
+      logger.warn(`Cache error: ${cacheError.message}`);
+      // Fall back to API call if cache operation fails
       const history = conversationManager.getHistory(userId);
       reply = await perplexityService.generateChatResponse(history);
-      
-      // Add the new Q&A pair to the cache
-      cacheService.addToCache(userQuestion, reply);
     }
     
     // ... continue with response formatting and sending ...
   } catch (error) {
-    // ... error handling ...
+    // ... general error handling ...
   }
 }
 ```
@@ -339,14 +352,58 @@ async function handleChatMessage(message) {
 #### Key Features of the Cache System:
 
 1. **Hash-based Storage**: Questions are hashed for efficient lookup
-2. **Similarity Matching**: Can find similar questions using word overlap algorithm
-3. **Access Metrics**: Tracks usage patterns (frequency, last accessed)
-4. **Automatic Refreshing**: Stale entries get refreshed in the background
-5. **Pruning Capability**: Rarely accessed and old entries can be removed
-6. **Persistent Storage**: Cache is saved to disk for use across bot restarts
-7. **Performance First**: Cache hits are served immediately with background refreshing
+2. **Robust Input Validation**: Comprehensive validation for empty, null, or invalid inputs
+3. **Question Normalization**: Questions are normalized (lowercase, whitespace normalization, punctuation removal) before hashing to improve hit rate
+4. **Similarity Matching**: Can find similar questions using word overlap algorithm with Jaccard similarity
+5. **Access Metrics**: Tracks usage patterns (frequency, last accessed)
+6. **Automatic Refreshing**: Stale entries get refreshed in the background
+7. **Pruning Capability**: Rarely accessed and old entries can be removed with LRU (Least Recently Used) eviction
+8. **Persistent Storage**: Cache is saved to disk for use across bot restarts
+9. **Performance First**: Cache hits are served immediately with background refreshing
+10. **Error Resilience**: Robust error handling for all edge cases including file system errors
 
 This caching system significantly reduces API token usage for frequently asked questions while maintaining response freshness through background updates of stale entries.
+
+#### Enhanced Hash Generation and Normalization
+
+The cache system uses an enhanced question normalization and hash generation approach to improve cache hit rates and handle edge cases:
+
+```javascript
+/**
+ * Generate a hash for a question to use as a cache key
+ * @param {string} question - The question text
+ * @returns {string} - A hash of the question
+ * @throws {Error} - If question is invalid
+ */
+generateHash(question) {
+  // Input validation - explicitly check all edge cases including empty strings
+  if (question === null || question === undefined) {
+    throw new Error('Question cannot be null or undefined');
+  }
+  
+  if (typeof question !== 'string') {
+    throw new Error(`Question must be a string, got ${typeof question}`);
+  }
+  
+  // Check for empty strings or strings with only whitespace
+  if (question === '' || question.trim() === '') {
+    throw new Error('Question cannot be an empty string');
+  }
+  
+  // Normalize the question: lowercase, trim whitespace, normalize spaces, remove specific punctuation
+  const normalizedQuestion = question
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ') // normalize multiple spaces to single space
+    .replace(/[.,!?;:]/g, '') // only remove sentence punctuation, keep meaningful chars
+    .replace(/["'`]/g, ''); // remove quote marks
+    
+  // Use SHA-256 for better collision resistance
+  return crypto.createHash('sha256').update(normalizedQuestion).digest('hex');
+}
+```
+
+This normalization process ensures that similar questions (with different capitalization, punctuation, or extra spaces) will hash to the same value, increasing cache hit rates. The explicit error handling for invalid inputs ensures robustness against common edge cases.
 
 ## Environment Configuration
 
@@ -384,12 +441,20 @@ describe("Emoji Utilities", () => {
 - Implements proper error handling for API calls
 - Uses async/await for non-blocking operations
 
-## Security Considerations
+## Security and Error Handling Considerations
 
 - Sensitive information is stored in environment variables, not in code
 - API keys and tokens are never exposed in responses
 - Rate limiting prevents abuse
-- Input validation is performed before processing commands
+- Comprehensive input validation is performed throughout the codebase
+- Robust error handling for edge cases:
+  - Empty, null, or undefined inputs
+  - Non-string inputs
+  - Unicode and special characters
+  - Extremely long questions
+  - File system errors (disk full, permission issues)
+  - Cache corruption or invalid data
+  - LRU eviction when cache size limits are reached
 
 ## CI/CD Integration
 

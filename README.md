@@ -43,7 +43,7 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🆕 **Smart Answer Cache:** Stores and serves answers to frequently asked questions to reduce API token usage, with similarity matching and automatic refreshing of stale entries.
+- 🆕 **Smart Answer Cache:** Stores and serves answers to frequently asked questions to reduce API token usage, with robust error handling, question normalization, similarity matching, and automatic refreshing of stale entries.
 
 ---
 

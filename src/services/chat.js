@@ -43,12 +43,31 @@ async function handleChatMessage(message) {
     let reply;
     let fromCache = false;
     
+    // Statistics for logging
+    let cacheAttempt = false;
+    let cacheHit = false;
+    let cacheError = false;
+    let similarityScore = null;
+    
     // Try to find the question in the cache first
-    const cacheResult = cacheService.findInCache(userQuestion);
+    let cacheResult = null;
+    try {
+      cacheAttempt = true;
+      cacheResult = cacheService.findInCache(userQuestion);
+      
+      if (cacheResult) {
+        cacheHit = true;
+        similarityScore = cacheResult.similarity;
+      }
+    } catch (cacheError) {
+      logger.warn('Cache lookup failed, falling back to API:', cacheError);
+      cacheError = true;
+    }
     
     if (cacheResult) {
       // Cache hit!
-      logger.info(`Cache hit for question: "${userQuestion.substring(0, 30)}..."`);
+      const hitType = cacheResult.similarity ? `similar (${cacheResult.similarity.toFixed(2)})` : 'exact';
+      logger.info(`Cache hit (${hitType}) for question: "${userQuestion.substring(0, 30)}..."`);
       reply = cacheResult.answer;
       fromCache = true;
       
@@ -57,7 +76,8 @@ async function handleChatMessage(message) {
       if (cacheResult.needsRefresh) {
         logger.debug('Refreshing stale cache entry in the background');
         // Don't await this to avoid delaying the response
-        refreshCacheEntry(userQuestion, userId);
+        refreshCacheEntry(userQuestion, userId)
+          .catch(error => logger.error('Background cache refresh failed:', error));
       }
     } else {
       // Cache miss - call the API
@@ -66,8 +86,25 @@ async function handleChatMessage(message) {
       reply = await perplexityService.generateChatResponse(history);
       
       // Add the new Q&A pair to the cache
-      cacheService.addToCache(userQuestion, reply);
+      try {
+        const added = cacheService.addToCache(userQuestion, reply);
+        if (!added) {
+          logger.warn('Failed to add response to cache');
+        }
+      } catch (cacheSaveError) {
+        logger.error('Error adding to cache:', cacheSaveError);
+        // Continue even if cache save fails - we already have the reply for the user
+      }
     }
+    
+    // Log cache statistics
+    const stats = {
+      attempted: cacheAttempt,
+      hit: cacheHit,
+      error: cacheError,
+      similarity: similarityScore
+    };
+    logger.debug('Cache request stats:', stats);
     
     // Add emojis based on reply content
     const enhancedReply = emojiManager.addEmojisToResponse(reply);
@@ -96,8 +133,12 @@ async function handleChatMessage(message) {
  * Refresh a stale cache entry in the background
  * @param {string} question - The original question
  * @param {string} userId - The user ID for conversation history
+ * @returns {Promise<boolean>} - True if refresh was successful
  */
-async function refreshCacheEntry(question, userId) {
+async function refreshCacheEntry(question, userId, retryCount = 0) {
+  const MAX_RETRIES = 2;
+  const RETRY_DELAY = 2000; // Wait 2 seconds before retrying
+  
   try {
     // Get the current history - this includes the question we just processed
     const history = conversationManager.getHistory(userId);
@@ -105,12 +146,48 @@ async function refreshCacheEntry(question, userId) {
     // Generate a fresh response from the API
     const freshReply = await perplexityService.generateChatResponse(history);
     
+    if (!freshReply || typeof freshReply !== 'string' || freshReply.trim().length === 0) {
+      throw new Error('Empty or invalid response from API during cache refresh');
+    }
+    
     // Update the cache with the fresh response
-    cacheService.addToCache(question, freshReply);
+    const added = cacheService.addToCache(question, freshReply);
+    
+    if (!added) {
+      throw new Error('Failed to add refreshed response to cache');
+    }
+    
     logger.debug(`Refreshed cache entry for: "${question.substring(0, 30)}..."`);
+    return true;
   } catch (error) {
-    logger.error('Error refreshing cache entry:', error);
-    // Failed refresh doesn't affect the user experience, so just log it
+    logger.error(`Error refreshing cache entry (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error);
+    
+    // Implement exponential backoff retry for transient errors
+    if (retryCount < MAX_RETRIES) {
+      logger.info(`Retrying cache refresh in ${RETRY_DELAY}ms...`);
+      return new Promise(resolve => {
+        setTimeout(async () => {
+          const result = await refreshCacheEntry(question, userId, retryCount + 1);
+          resolve(result);
+        }, RETRY_DELAY);
+      });
+    }
+    
+    // Mark this entry for manual review or future retry
+    try {
+      // Get the current entry and mark it for later refresh
+      const hash = cacheService.generateHash(question);
+      if (cacheService.cache[hash]) {
+        cacheService.cache[hash].refreshFailed = true;
+        cacheService.cache[hash].lastRefreshAttempt = Date.now();
+        cacheService.isDirty = true;
+        cacheService.scheduleSave();
+      }
+    } catch (markingError) {
+      logger.error('Failed to mark cache entry after refresh failure:', markingError);
+    }
+    
+    return false;
   }
 }
 

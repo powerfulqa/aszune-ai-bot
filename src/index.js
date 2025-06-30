@@ -55,10 +55,13 @@ client.once('ready', async () => {
   // Initialize the cache service
   cacheService.init();
   
-  // Set up periodic cache saving (every 5 minutes)
+  // Set up periodic cache saving (configurable interval)
+  const CACHE_SAVE_INTERVAL = parseInt(process.env.ASZUNE_CACHE_SAVE_INTERVAL, 10) || 5 * 60 * 1000; // Default 5 minutes
+  logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
+  
   setInterval(() => {
     cacheService.saveIfDirty();
-  }, 5 * 60 * 1000);
+  }, CACHE_SAVE_INTERVAL);
   
   // Register slash commands
   await registerSlashCommands();

@@ -29,8 +29,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Security audit
+        run: npm run security
+        continue-on-error: true
+
       - name: Run tests with coverage
-        run: npm test -- --coverage --forceExit --testResultsProcessor=jest-junit
+        run: npm run test:ci
         env:
           JEST_JUNIT_OUTPUT_DIR: ./test-results/
           JEST_JUNIT_OUTPUT_NAME: junit.xml

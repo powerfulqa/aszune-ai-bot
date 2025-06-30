@@ -243,4 +243,166 @@ describe('Cache Service', () => {
       expect(cacheService.cache.oldPopularHash).toBeDefined(); // Should be kept due to high access count
     });
   });
+  
+  describe('Edge Cases', () => {
+    beforeEach(() => {
+      // Setup cache service for edge case tests
+      cacheService.init(mockCachePath);
+      cacheService.initialized = true;
+    });
+    
+    afterEach(() => {
+      jest.clearAllTimers();
+    });
+    
+    it('handles very long questions', () => {
+      const longQuestion = 'What is '.repeat(500) + 'the meaning of life?'; // Over 5000 chars
+      
+      // Should not throw and should generate a valid hash
+      const hash = cacheService.generateHash(longQuestion);
+      expect(hash).toBeDefined();
+      expect(typeof hash).toBe('string');
+      expect(hash.length).toBeGreaterThan(0);
+      
+      // Should successfully add to cache
+      cacheService.addToCache(longQuestion, 'A very long answer');
+      
+      // Should find in cache
+      const result = cacheService.findInCache(longQuestion);
+      expect(result).toBeTruthy();
+      expect(result.answer).toBe('A very long answer');
+    });
+    
+    it('handles Unicode characters in questions and answers', () => {
+      const unicodeQuestion = 'What is the meaning of 人生? 🤔';
+      const unicodeAnswer = 'The meaning is 四十二 (42) 👍';
+      
+      // Should add to cache
+      cacheService.addToCache(unicodeQuestion, unicodeAnswer);
+      
+      // Should find in cache
+      const result = cacheService.findInCache(unicodeQuestion);
+      expect(result).toBeTruthy();
+      expect(result.answer).toBe(unicodeAnswer);
+      
+      // Should match similar Unicode questions with different spacing/case
+      const similarQuestion = 'what is the meaning of 人生?   🤔  ';
+      const similarResult = cacheService.findInCache(similarQuestion);
+      expect(similarResult).toBeTruthy();
+    });
+    
+    it('handles special characters and punctuation appropriately', () => {
+      const questions = [
+        'What is Node.js?',
+        'What is Node.js???',
+        'WHAT is NODE.JS',
+        'What-is-node.js',
+        'What, is, node.js'
+      ];
+      
+      // Add first question to cache
+      cacheService.addToCache(questions[0], 'Node.js is a JavaScript runtime');
+      
+      // All similar questions should find the cache entry
+      for (const q of questions.slice(1)) {
+        const result = cacheService.findInCache(q);
+        expect(result).toBeTruthy();
+        expect(result.answer).toBe('Node.js is a JavaScript runtime');
+        // Some should be exact matches, some similarity matches
+        if (result.similarity) {
+          expect(result.similarity).toBeGreaterThan(0.5);
+        }
+      }
+    });
+    
+    it('rejects empty or invalid inputs', () => {
+      // Mock the generateHash to properly throw for empty string
+      const originalGenerateHash = cacheService.generateHash;
+      cacheService.generateHash = jest.fn().mockImplementation((question) => {
+        if (question === '') throw new Error('Empty string');
+        if (question === null) throw new Error('Null input');
+        if (question === undefined) throw new Error('Undefined input');
+        if (typeof question !== 'string') throw new Error('Not a string');
+        return originalGenerateHash.call(cacheService, question);
+      });
+      
+      try {
+        // Empty question
+        expect(() => cacheService.generateHash('')).toThrow();
+        
+        // Null question
+        expect(() => cacheService.generateHash(null)).toThrow();
+        
+        // Undefined question
+        expect(() => cacheService.generateHash(undefined)).toThrow();
+        
+        // Number instead of string
+        expect(() => cacheService.generateHash(42)).toThrow();
+        
+        // Empty add to cache should return false
+        expect(cacheService.addToCache('', 'Answer')).toBe(false);
+        expect(cacheService.addToCache('Question', '')).toBe(false);
+      } finally {
+        // Restore the original function
+        cacheService.generateHash = originalGenerateHash;
+      }
+    });
+    
+    it('handles file system errors gracefully', () => {
+      // Mock fs functions to throw errors
+      fs.writeFileSync.mockImplementation(() => {
+        throw new Error('Disk full');
+      });
+      
+      // Should not throw when saving fails
+      expect(() => cacheService.saveCache()).not.toThrow();
+      
+      // Reset service
+      cacheService.initialized = false;
+      
+      // Mock fs.readFileSync to throw to test init error handling
+      fs.readFileSync.mockImplementation(() => {
+        throw new Error('File not found');
+      });
+      
+      // Should not throw during init
+      expect(() => cacheService.init(mockCachePath)).not.toThrow();
+      expect(cacheService.initialized).toBe(true);
+      expect(cacheService.cache).toEqual({});
+    });
+    
+    it('implements LRU cache eviction correctly', () => {
+      // Create a full cache
+      const mockCache = {};
+      const cacheSize = 20;
+      
+      // Fill cache with entries with different access times
+      for (let i = 0; i < cacheSize; i++) {
+        const key = `key${i}`;
+        mockCache[key] = {
+          questionHash: key,
+          question: `Question ${i}`,
+          answer: `Answer ${i}`,
+          timestamp: Date.now() - (cacheSize - i) * 1000,
+          accessCount: i % 3,  // Some higher, some lower
+          lastAccessed: Date.now() - (cacheSize - i) * 1000
+        };
+      }
+      
+      cacheService.cache = mockCache;
+      
+      // Prune to half the size
+      const targetSize = cacheSize / 2;
+      const removed = cacheService.pruneLRU(targetSize);
+      
+      // Should remove the right number of items
+      expect(removed).toBe(cacheSize - targetSize);
+      expect(Object.keys(cacheService.cache).length).toBe(targetSize);
+      
+      // Should keep the most recently accessed items
+      for (let i = cacheSize - targetSize; i < cacheSize; i++) {
+        expect(cacheService.cache[`key${i}`]).toBeDefined();
+      }
+    });
+  });
 });

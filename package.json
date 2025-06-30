@@ -6,8 +6,12 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage --ci --forceExit --testResultsProcessor=jest-junit",
     "format:md": "prettier --write '**/*.md'",
-    "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'"
+    "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
+    "security": "npm audit --audit-level moderate"
   },
   "keywords": [],
   "author": "",
