@@ -62,7 +62,14 @@ jobs:
           ./codecov --help
           
           # Use our wrapper to run the CLI with the correct environment variables
-          ./codecov-wrapper.sh ./codecov -v do-upload -t ${{ secrets.CODECOV_TOKEN }} -f coverage/lcov.info -F unittests -R powerfulqa/aszune-ai-bot -C ${{ github.sha }} -B feature/smart-cache
+          # The newer CLI has different parameter syntax
+          ./codecov-wrapper.sh ./codecov -v do-upload \
+            --token ${{ secrets.CODECOV_TOKEN }} \
+            --file coverage/lcov.info \
+            --flags unittests \
+            --slug powerfulqa/aszune-ai-bot \
+            --commit ${{ github.sha }} \
+            --branch feature/smart-cache
 
   simple-test:
     name: Simple Test (No Coverage)
