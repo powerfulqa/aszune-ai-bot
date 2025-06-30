@@ -70,7 +70,7 @@ jobs:
             --file coverage/lcov.info \
             --flag unittests \
             --slug powerfulqa/aszune-ai-bot \
-            --commit ${{ github.sha }} \
+            --commit-sha ${{ github.sha }} \
             --branch feature/smart-cache
 
   simple-test:

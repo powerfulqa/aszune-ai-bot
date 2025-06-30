@@ -39,7 +39,7 @@ EOL
 
 # Set additional environment variables for the CLI
 export CODECOV_YML="codecov-local-override.yml"
-export CODECOV_OVERRIDE_COMMIT=${GITHUB_SHA:-$GITHUB_SHA}
+export CODECOV_OVERRIDE_COMMIT_SHA=${GITHUB_SHA:-$GITHUB_SHA}
 export CODECOV_OVERRIDE_BRANCH=${GITHUB_REF_NAME:-"feature/smart-cache"}
 
 # Print the command we're about to execute

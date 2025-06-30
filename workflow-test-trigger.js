@@ -6,8 +6,8 @@
  * Date: ${new Date().toISOString()}
  * 
  * Changes made:
- * 1. Fixed CLI commands in workflow file
- * 2. Enhanced wrapper script with better error handling and debugging
+ * 1. Fixed CLI parameter --commit to --commit-sha per CLI requirements
+ * 2. Updated wrapper script to use CODECOV_OVERRIDE_COMMIT_SHA
  * 3. Added debug output to workflow for better troubleshooting
  */
 
