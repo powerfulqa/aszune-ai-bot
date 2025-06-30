@@ -25,5 +25,13 @@ module.exports = {
     }
   },
   // Output verbose coverage info
-  verbose: true
+  verbose: true,
+  // Configure JUnit reporter
+  reporters: [
+    "default",
+    ["jest-junit", {
+      outputDirectory: "./test-results",
+      outputName: "junit.xml"
+    }]
+  ]
 };

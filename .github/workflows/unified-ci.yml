@@ -30,7 +30,10 @@ jobs:
         run: npm install
 
       - name: Run tests with coverage
-        run: npm test -- --coverage --forceExit
+        run: npm test -- --coverage --forceExit --testResultsProcessor=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./test-results/
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
         
       - name: Upload coverage to QLTY
         uses: qltysh/qlty-action/coverage@v1
@@ -46,6 +49,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: coverage/lcov.info
           fail_ci_if_error: false
+          
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   simple-test:
     name: Simple Test (No Coverage)
