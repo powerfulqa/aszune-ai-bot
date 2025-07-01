@@ -64,9 +64,15 @@ async function handleChatMessage(message) {
       if (cacheResult) {
         cacheHit = true;
         similarityScore = cacheResult.similarity;
+        
+        // Track memory cache stats if available
+        if (cacheService.metrics && cacheService.metrics.memoryHits > 0) {
+          logger.debug(`Memory cache hit ratio: ${cacheService.metrics.memoryHits}/${cacheService.metrics.hits}`);
+        }
       }
-    } catch (cacheError) {
-      logger.warn('Cache lookup failed, falling back to API:', cacheError);
+    } catch (error) {
+      const errMsg = error.name === 'CacheValueError' ? error.message : 'Cache lookup failed';
+      logger.warn(`${errMsg}, falling back to API:`, error);
       cacheError = true;
     }
     
@@ -195,14 +201,78 @@ async function refreshCacheEntry(question, userId, retryCount = 0) {
         cacheService.cache[hash].refreshFailed = true;
         cacheService.cache[hash].lastRefreshAttempt = Date.now();
         cacheService.isDirty = true;
-        cacheService.scheduleSave();
+        
+        // Use the new scheduleSave method which handles errors better
+        if (typeof cacheService.scheduleSave === 'function') {
+          cacheService.scheduleSave();
+        } else {
+          // Fall back to saveIfDirty if scheduleSave isn't available
+          cacheService.saveIfDirty();
+        }
       }
     } catch (markingError) {
-      logger.error('Failed to mark cache entry after refresh failure:', markingError);
+      const errName = markingError.name || 'Error';
+      const errMsg = markingError.message || 'Unknown error';
+      logger.error(`Failed to mark cache entry after refresh failure (${errName}): ${errMsg}`);
     }
     
     return false;
   }
 }
 
-module.exports = handleChatMessage;
+/**
+ * Process a question with caching layer
+ * This method is used primarily for testing and internal use
+ * @param {string} question - The question to process
+ * @returns {Promise<string>} - The answer
+ */
+async function processQuestion(question) {
+  // First, try to find in cache
+  try {
+    const cacheResult = cacheService.findInCache(question);
+    
+    if (cacheResult) {
+      const answer = cacheResult.answer;
+      
+      // If the entry needs a refresh (is stale), update it in the background
+      // but still serve the cached response immediately
+      if (cacheResult.needsRefresh) {
+        logger.debug('Refreshing stale cache entry in the background');
+        // Don't await this to avoid delaying the response
+        setTimeout(async () => {
+          try {
+            const newAnswer = await perplexityService.askQuestion(question);
+            cacheService.addToCache(question, newAnswer);
+            await cacheService.saveIfDirtyAsync();
+          } catch (error) {
+            logger.error('Background cache refresh failed:', error);
+          }
+        }, 0);
+      }
+      
+      return answer;
+    }
+  } catch (error) {
+    // Log cache error but continue to API call
+    logger.warn(`Cache error: ${error.message}, falling back to API`);
+  }
+  
+  // Cache miss or error, use the API
+  try {
+    const answer = await perplexityService.askQuestion(question);
+    // Add to cache for future use
+    cacheService.addToCache(question, answer);
+    await cacheService.saveIfDirtyAsync();
+    return answer;
+  } catch (error) {
+    // Wrap API errors in our custom error type
+    const { ChatError } = require('../utils/errors');
+    throw new ChatError(`Failed to get answer: ${error.message}`, { originalError: error });
+  }
+}
+
+module.exports = {
+  handleChatMessage,
+  refreshCacheEntry,
+  processQuestion
+};

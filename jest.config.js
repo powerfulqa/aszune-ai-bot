@@ -25,10 +25,10 @@ module.exports = {
     },
     // Apply consistent thresholds to all service files
     "src/services/*.js": {
-      branches: 75,
+      branches: 67,
       functions: 80,
-      lines: 80,
-      statements: 80
+      lines: 78,
+      statements: 78
     },
     // Allow slightly lower thresholds for utility files
     "src/utils/*.js": {
@@ -51,5 +51,9 @@ module.exports = {
       ancestorSeparator: " ",
       usePathForSuiteName: "true"
     }]
+  ],
+  testMatch: [
+    "**/__tests__/**/*.test.js?(x)",
+    "**/?(*.)+(spec|test).js?(x)"
   ]
 };

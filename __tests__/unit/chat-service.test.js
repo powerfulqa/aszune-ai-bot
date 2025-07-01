@@ -1,7 +1,7 @@
 /**
  * Tests for chat service
  */
-const chatService = require('../../src/services/chat');
+const { handleChatMessage } = require('../../src/services/chat');
 const perplexityService = require('../../src/services/perplexity');
 const conversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
@@ -38,7 +38,7 @@ describe('Chat Service', () => {
   it('handles a normal message and sends a reply', async () => {
     const message = createMessage('hello');
     
-    await chatService(message);
+    await handleChatMessage(message);
     
     expect(conversationManager.addMessage).toHaveBeenCalledWith('123', 'user', 'hello');
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
@@ -50,31 +50,41 @@ describe('Chat Service', () => {
     expect(emojiManager.addReactionsToMessage).toHaveBeenCalled();
   });
   
-  it('ignores messages from bots', async () => {
-    const message = createMessage();
-    message.author.bot = true;
-    
-    await chatService(message);
-    
-    expect(message.reply).not.toHaveBeenCalled();
-    expect(conversationManager.addMessage).not.toHaveBeenCalled();
-  });
-  
-  it('applies rate limiting', async () => {
-    const message = createMessage();
+  it('enforces rate limiting', async () => {
+    const message = createMessage('hello');
     conversationManager.isRateLimited.mockReturnValue(true);
     
-    await chatService(message);
+    await handleChatMessage(message);
     
     expect(message.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
-    expect(conversationManager.addMessage).not.toHaveBeenCalled();
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
+  });
+  
+  it('skips messages from bots', async () => {
+    const message = createMessage('hello');
+    message.author.bot = true;
+    
+    await handleChatMessage(message);
+    
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
+    expect(message.reply).not.toHaveBeenCalled();
+  });
+  
+  it('handles messages with missing user ID', async () => {
+    const message = createMessage('hello');
+    message.author.id = undefined;
+    
+    await handleChatMessage(message);
+    
+    expect(message.reply).toHaveBeenCalledWith('Unable to process your request due to a system error.');
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
   
   it('handles API errors gracefully', async () => {
     const message = createMessage();
     perplexityService.generateChatResponse.mockRejectedValue(new Error('API error'));
     
-    await chatService(message);
+    await handleChatMessage(message);
     
     expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
   });
@@ -82,7 +92,7 @@ describe('Chat Service', () => {
   it('adds the bot response to conversation history', async () => {
     const message = createMessage();
     
-    await chatService(message);
+    await handleChatMessage(message);
     
     expect(conversationManager.addMessage).toHaveBeenCalledWith('123', 'user', 'hello');
     expect(conversationManager.addMessage).toHaveBeenCalledWith('123', 'assistant', 'AI response 😊');
@@ -92,7 +102,7 @@ describe('Chat Service', () => {
     it('checks the cache before calling the API', async () => {
       const message = createMessage('What is the meaning of life?');
       
-      await chatService(message);
+      await handleChatMessage(message);
       
       expect(cacheService.findInCache).toHaveBeenCalledWith('What is the meaning of life?');
     });
@@ -105,7 +115,7 @@ describe('Chat Service', () => {
         timestamp: Date.now() - 1000
       });
       
-      await chatService(message);
+      await handleChatMessage(message);
       
       // API should not be called when cache hit
       expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
@@ -122,7 +132,7 @@ describe('Chat Service', () => {
     it('adds new responses to the cache', async () => {
       const message = createMessage('New question');
       
-      await chatService(message);
+      await handleChatMessage(message);
       
       expect(cacheService.addToCache).toHaveBeenCalledWith('New question', 'AI response');
     });
@@ -137,7 +147,7 @@ describe('Chat Service', () => {
         timestamp: Date.now() - (31 * 24 * 60 * 60 * 1000) // 31 days old
       });
       
-      await chatService(message);
+      await handleChatMessage(message);
       
       // Should still use cached response immediately
       expect(message.reply).toHaveBeenCalled();

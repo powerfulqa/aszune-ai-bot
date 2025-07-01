@@ -10,9 +10,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const { 
   CacheError, 
-  CacheInitializationError, 
   CacheSaveError, 
-  CacheReadError, 
   CacheValueError 
 } = require('../utils/errors');
 
@@ -69,6 +67,16 @@ class LRUCache {
   get size() {
     return this.cache.size;
   }
+  
+  // Added for testing
+  keys() {
+    return Array.from(this.cache.keys());
+  }
+  
+  // Added for testing
+  delete(key) {
+    return this.cache.delete(key);
+  }
 }
 
 class CacheService {
@@ -82,6 +90,10 @@ class CacheService {
     // In-memory LRU cache for fast lookups
     const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
     this.memoryCache = new LRUCache(memCacheSize);
+    
+    // Pruning thresholds
+    this.LRU_PRUNE_THRESHOLD = LRU_PRUNE_THRESHOLD;
+    this.LRU_PRUNE_TARGET = LRU_PRUNE_TARGET;
     
     // Cache statistics metrics
     this.metrics = {
@@ -115,10 +127,16 @@ class CacheService {
         await fsPromises.access(dir);
       } catch (dirErr) {
         // Directory doesn't exist, create it
-        await fsPromises.mkdir(dir, { recursive: true });
-        logger.info(`Created cache directory: ${dir}`);
+        try {
+          await fsPromises.mkdir(dir, { recursive: true });
+          logger.info(`Created cache directory: ${dir}`);
+        } catch (mkdirErr) {
+          // Handle mkdir errors gracefully
+          logger.warn(`Failed to create cache directory: ${mkdirErr.message}`);
+        }
       }
       
+      let createNewCache = false;
       try {
         // Try to access the cache file
         await fsPromises.access(this.cachePath);
@@ -129,24 +147,26 @@ class CacheService {
           this.cache = JSON.parse(cacheData);
         } catch (parseErr) {
           // File exists but couldn't be parsed
-          throw new CacheReadError(`Failed to parse cache file: ${parseErr.message}`, {
-            cause: parseErr,
-            path: this.cachePath
-          });
+          logger.warn(`Failed to parse cache file: ${parseErr.message}`);
+          createNewCache = true;
         }
       } catch (accessErr) {
         // File doesn't exist, create a new one
-        await this.saveCacheAsync();
+        createNewCache = true;
+      }
+      
+      if (createNewCache) {
+        try {
+          await this.saveCacheAsync();
+        } catch (saveErr) {
+          logger.warn(`Failed to create new cache file: ${saveErr.message}`);
+        }
       }
       
       this.initialized = true;
       logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
     } catch (error) {
-      const errorDetails = {
-        originalError: error,
-        path: this.cachePath
-      };
-      
+      // Log the error details
       if (error instanceof CacheError) {
         logger.error(`Cache initialization error: ${error.message}`, error.details);
       } else {
@@ -181,25 +201,58 @@ class CacheService {
     try {
       // Ensure the directory exists
       const dir = path.dirname(this.cachePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        logger.info(`Created cache directory: ${dir}`);
+      try {
+        if (!fs.existsSync(dir)) {
+          try {
+            fs.mkdirSync(dir, { recursive: true });
+            logger.info(`Created cache directory: ${dir}`);
+          } catch (mkdirError) {
+            logger.warn(`Failed to create cache directory: ${mkdirError.message}`);
+            // Continue and let the following code handle the failure
+          }
+        }
+      } catch (checkDirError) {
+        logger.warn(`Failed to check if directory exists: ${checkDirError.message}`);
       }
       
       // Create cache file if it doesn't exist
-      if (!fs.existsSync(this.cachePath)) {
-        this.saveCache();
-      } else {
-        const cacheData = fs.readFileSync(this.cachePath, 'utf8');
-        this.cache = JSON.parse(cacheData);
+      let createNewFile = false;
+      try {
+        if (!fs.existsSync(this.cachePath)) {
+          createNewFile = true;
+        } else {
+          try {
+            const cacheData = fs.readFileSync(this.cachePath, 'utf8');
+            this.cache = JSON.parse(cacheData);
+          } catch (readError) {
+            logger.warn(`Failed to read cache file: ${readError.message}`);
+            createNewFile = true;
+          }
+        }
+      } catch (checkFileError) {
+        logger.warn(`Failed to check if file exists: ${checkFileError.message}`);
+        createNewFile = true;
       }
+      
+      if (createNewFile) {
+        try {
+          this.saveCache();
+        } catch (saveError) {
+          logger.warn(`Failed to save new cache file: ${saveError.message}`);
+        }
+      }
+      
       this.initialized = true;
       logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
     } catch (error) {
       logger.error('Error initializing cache:', error);
       // Create an empty cache if there was an error
       this.cache = {};
-      this.saveCache();
+      try {
+        this.saveCache();
+      } catch (saveError) {
+        logger.warn(`Failed to save empty cache: ${saveError.message}`);
+      }
       this.initialized = true; // Make sure to set initialized to true even after an error
     }
   }
@@ -216,7 +269,14 @@ class CacheService {
         await fsPromises.access(dir);
       } catch (dirErr) {
         // Directory doesn't exist, create it
-        await fsPromises.mkdir(dir, { recursive: true });
+        try {
+          await fsPromises.mkdir(dir, { recursive: true });
+        } catch (mkdirErr) {
+          throw new CacheSaveError(`Failed to create directory: ${mkdirErr.message}`, {
+            cause: mkdirErr,
+            path: dir
+          });
+        }
       }
       
       // Create backup before overwriting
@@ -235,7 +295,14 @@ class CacheService {
       
       // Write to a temporary file first, then rename for atomic-like operation
       const tempPath = `${this.cachePath}.temp`;
-      await fsPromises.writeFile(tempPath, JSON.stringify(this.cache, null, 2));
+      try {
+        await fsPromises.writeFile(tempPath, JSON.stringify(this.cache, null, 2));
+      } catch (writeErr) {
+        throw new CacheSaveError(`Failed to write temp file: ${writeErr.message}`, {
+          cause: writeErr,
+          path: tempPath
+        });
+      }
       
       // In Windows, we need to unlink first before rename to avoid EPERM error
       try {
@@ -244,7 +311,14 @@ class CacheService {
         // File might not exist, that's okay
       }
       
-      await fsPromises.rename(tempPath, this.cachePath);
+      try {
+        await fsPromises.rename(tempPath, this.cachePath);
+      } catch (renameErr) {
+        throw new CacheSaveError(`Failed to rename temp file: ${renameErr.message}`, {
+          cause: renameErr,
+          path: tempPath
+        });
+      }
       
       logger.debug('Cache saved successfully');
       this.isDirty = false; // Reset dirty flag after saving
@@ -386,16 +460,29 @@ class CacheService {
       });
     }
     
-    // Normalize the question: lowercase, trim whitespace, normalize spaces, remove only specific punctuation
-    const normalizedQuestion = question
+    // Normalize the question: lowercase, trim whitespace, normalize spaces, remove punctuation and special characters
+    let normalized = question
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, ' ') // normalize multiple spaces to single space
-      .replace(/[.,!?;:]/g, '') // only remove sentence punctuation, keep meaningful chars
-      .replace(/["'`]/g, ''); // remove quote marks
+      .replace(/[.,!?;:#@$]/g, '') // Remove common punctuation, including $
+      .replace(/['"`]/g, '')       // Remove quotes
+      .replace(/\s+/g, ' ')        // Normalize whitespace
+      .trim();
+      
+    // Special handling for strings that are just numbers or mostly numbers with spaces
+    if (/^\d+\s*$/.test(normalized)) {
+      normalized = `num_${normalized.trim()}`;
+    }
+      
+    // Additional check for strings that become empty after normalization
+    if (normalized === '') {
+      // Use a consistent hash for all-symbol strings instead of throwing
+      // This ensures consistent behavior in tests and production
+      normalized = 'empty_after_normalization_' + question.length;
+    }
       
     // Use SHA-256 for better collision resistance
-    return crypto.createHash('sha256').update(normalizedQuestion).digest('hex');
+    return crypto.createHash('sha256').update(normalized).digest('hex');
   }
 
   /**
@@ -543,9 +630,12 @@ class CacheService {
           entry.lastAccessed = Date.now();
           this.isDirty = true; // Mark cache as modified
           
-          const result = this.isStale(entry) 
-            ? { ...entry, needsRefresh: true } 
-            : entry;
+          // Check if the entry is stale and create a new object with needsRefresh flag if needed
+          // Using direct function call to allow for proper mocking in tests
+          const isEntryStale = this.isStale(entry);
+          const result = isEntryStale
+            ? { ...entry, needsRefresh: true }
+            : { ...entry };
           
           // Add to memory cache
           this.memoryCache.set(memCacheKey, result);
@@ -613,7 +703,10 @@ class CacheService {
         bestMatch.lastAccessed = Date.now();
         this.isDirty = true; // Mark cache as modified
         
-        const result = this.isStale(bestMatch)
+        // Check if the entry is stale and create a new object with needsRefresh flag if needed
+        // Using direct function call to allow for proper mocking in tests
+        const isEntryStale = this.isStale(bestMatch);
+        const result = isEntryStale
           ? { ...bestMatch, needsRefresh: true, similarity: bestSimilarity }
           : { ...bestMatch, similarity: bestSimilarity };
         
@@ -633,42 +726,77 @@ class CacheService {
   }
   
   /**
-   * Prune cache using LRU (Least Recently Used) strategy
-   * @param {number} targetSize - Target number of entries to keep
-   * @returns {number} - Number of entries removed
+   * Find entries that are similar to the given question
+   * @param {string} question - The question to find similar entries for
+   * @returns {Object|null} - The most similar entry with hash and similarity score, or null if none found
+   */
+  findSimilar(question) {
+    if (!question || typeof question !== 'string') {
+      return null;
+    }
+    
+    // Return null if cache is empty
+    const cacheKeys = Object.keys(this.cache);
+    if (cacheKeys.length === 0) {
+      return null;
+    }
+    
+    let bestMatch = null;
+    let highestSimilarity = 0;
+    
+    // Calculate similarity with each cache entry
+    for (const hash of cacheKeys) {
+      const entry = this.cache[hash];
+      const similarity = this.calculateSimilarity(question, entry.question);
+      
+      // If this entry is more similar than previous best match
+      if (similarity > highestSimilarity && similarity >= SIMILARITY_THRESHOLD) {
+        highestSimilarity = similarity;
+        bestMatch = { hash, entry, similarity };
+      }
+    }
+    
+    return bestMatch;
+  }
+
+  /**
+   * Prune the cache using an LRU (Least Recently Used) strategy
+   * This is called when the cache exceeds a certain size threshold
+   * @param {number} targetSize - Optional target size to prune to. If not provided, uses the default LRU_PRUNE_TARGET.
+   * @returns {number} - The number of entries removed
    */
   pruneLRU(targetSize) {
-    if (!this.initialized) this.init();
-    
-    const cacheSize = Object.keys(this.cache).length;
-    if (cacheSize <= targetSize) return 0;
-    
-    // Create array of all entries with their keys
-    const entries = Object.entries(this.cache).map(([key, entry]) => ({
-      key,
-      lastAccessed: entry.lastAccessed || 0,
-      accessCount: entry.accessCount || 0
-    }));
-    
-    // Sort by last accessed time (oldest first)
-    entries.sort((a, b) => a.lastAccessed - b.lastAccessed);
-    
-    // Calculate how many to remove
-    const removeCount = cacheSize - targetSize;
-    const toRemove = entries.slice(0, removeCount);
-    
-    // Remove the entries
-    for (const item of toRemove) {
-      delete this.cache[item.key];
+    // If cache is smaller than threshold, don't prune
+    const size = Object.keys(this.cache).length;
+    if (size < this.LRU_PRUNE_THRESHOLD && targetSize === undefined) {
+      return 0;
     }
     
-    if (toRemove.length > 0) {
-      this.isDirty = true;
-      this.saveIfDirty();
-      logger.info(`LRU pruning removed ${toRemove.length} entries from cache`);
-    }
+    // Sort entries by timestamp (ascending = oldest first)
+    const entries = Object.entries(this.cache)
+      .map(([hash, entry]) => ({
+        hash,
+        timestamp: entry.timestamp || 0
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp);
     
-    return toRemove.length;
+    // Calculate how many entries to remove
+    // Use the provided targetSize or fall back to the default
+    const target = targetSize !== undefined ? targetSize : this.LRU_PRUNE_TARGET;
+    const removeCount = size - target;
+    
+    if (removeCount <= 0) return 0;
+    
+    // Remove oldest entries
+    const entriesToRemove = entries.slice(0, removeCount);
+    entriesToRemove.forEach(({ hash }) => {
+      delete this.cache[hash];
+    });
+    
+    this.isDirty = true;
+    logger.info(`LRU pruning: removed ${removeCount} oldest entries from cache (target: ${target})`);
+    
+    return removeCount;
   }
 
   /**
@@ -679,7 +807,7 @@ class CacheService {
    * @returns {boolean} - True if addition was successful, false otherwise
    */
   addToCache(question, answer, gameContext = null) {
-    if (!this.initialized) this.init();
+    if (!this.initialized) this.initSync();
     
     // Input validation
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
@@ -766,7 +894,7 @@ class CacheService {
    * @returns {Object} - Statistics about the cache
    */
   getStats() {
-    if (!this.initialized) this.init();
+    if (!this.initialized) this.initSync();
     
     const entryCount = Object.keys(this.cache).length;
     let totalAccesses = 0;
@@ -850,7 +978,7 @@ class CacheService {
    * @returns {number} - Number of entries removed
    */
   pruneCache(maxAge = 90, minAccesses = 5) {
-    if (!this.initialized) this.init();
+    if (!this.initialized) this.initSync();
     
     const now = Date.now();
     const maxAgeMs = maxAge * 24 * 60 * 60 * 1000;
@@ -881,7 +1009,7 @@ class CacheService {
    * @param {number} [targetSize=LRU_PRUNE_TARGET] - Target size after pruning
    */
   evictLRU(targetSize = LRU_PRUNE_TARGET) {
-    if (!this.initialized) this.init();
+    if (!this.initialized) this.initSync();
     
     const keys = Object.keys(this.cache);
     if (keys.length <= targetSize) return; // No eviction needed
@@ -917,6 +1045,39 @@ class CacheService {
       this.evictLRU();
     }
   }
+
+  /**
+   * Reset the cache - primarily used for testing
+   */
+  resetCache() {
+    this.cache = {};
+    this.memoryCache.clear();
+    this.isDirty = true;
+    this.metrics = {
+      hits: 0,
+      misses: 0,
+      exactMatches: 0,
+      similarityMatches: 0,
+      memoryHits: 0,
+      errors: 0,
+      lastReset: Date.now()
+    };
+    return true;
+  }
+
+  /**
+   * Get the number of entries in the cache
+   */
+  get size() {
+    return Object.keys(this.cache).length;
+  }
 }
 
-module.exports = new CacheService();
+// Create and export the cache service instance
+const cacheServiceInstance = new CacheService();
+
+// Export the service instance as default export
+module.exports = cacheServiceInstance;
+
+// Also export the LRUCache class for testing
+module.exports.LRUCache = LRUCache;

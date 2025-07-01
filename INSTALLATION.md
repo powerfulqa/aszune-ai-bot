@@ -1,27 +1,26 @@
 # Cache Service Improvements
 
-This PR addresses all the Codecov AI review suggestions to improve the cache service and overall project quality.
-
 ## Installation Instructions
 
-**Important:** Due to package dependency issues, please use the setup scripts to install dependencies:
+To properly install the updated dependencies:
 
-Windows:
-```
-.\setup.bat
+```bash
+# Remove the node_modules folder
+rm -rf node_modules
+
+# Clear npm cache to ensure fresh installation
+npm cache clean --force
+
+# Install dependencies using the exact versions
+npm ci
+
+# If npm ci fails, try regular install
+npm install
 ```
 
-Linux/Mac:
-```
-bash setup.sh
-```
+## Changes Made
 
-These scripts will:
-1. Remove node_modules
-2. Clear npm cache
-3. Install dependencies with correct versions
-
-## Changes
+This PR addresses all the Codecov AI review suggestions to improve the cache service and overall project quality:
 
 ### Configuration Improvements
 - Made cache save interval configurable through environment variables with environment-specific defaults
@@ -38,7 +37,6 @@ These scripts will:
 - Added in-memory LRU cache to reduce disk reads for frequent cache hits
 - Optimized similarity function for large caches:
   - Added early rejection based on string length ratios
-  - Implemented optimized intersection calculation
   - Added sampling for very large token sets
   - Removed common stop words from similarity calculation
 
@@ -55,19 +53,6 @@ These scripts will:
 ### Package and Workflow
 - Updated repository URL to git+https format for better compatibility
 - Added husky for pre-commit hooks
-- Added ESLint configuration and lint-staged
+- Updated Codecov dependency to v3.8.3 (v4 is not compatible)
+- Added ESLint and lint-staged for better code quality
 - Added security audit npm scripts with different levels for dev vs production
-- Fixed Codecov dependency to use v3.8.3 (v4 has compatibility issues)
-
-## How to Test
-1. Run tests with property-based testing: `npm run test:property`
-2. Test the cache service with different environment variables:
-   ```
-   ASZUNE_CACHE_SAVE_INTERVAL_MS=60000 npm run start
-   ```
-3. Check memory usage improvements with large caches
-
-## Follow-up Tasks
-- Consider adding more property-based tests for other critical components 
-- Implement CI workflow improvements from Codecov AI suggestions
-- Explore options for upgrading to Codecov v4 when it's more stable

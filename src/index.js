@@ -6,7 +6,7 @@
  */
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const config = require('./config/config');
-const handleChatMessage = require('./services/chat');
+const { handleChatMessage } = require('./services/chat');
 const commandHandler = require('./commands');
 const conversationManager = require('./utils/conversation');
 const logger = require('./utils/logger');
@@ -52,11 +52,11 @@ async function registerSlashCommands() {
 client.once('ready', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
   
-  // Initialize the cache service
-  cacheService.init();
+  // Initialize the cache service (use initSync for backward compatibility)
+  cacheService.initSync();
   
   // Set up periodic cache saving (configurable interval)
-  const CACHE_SAVE_INTERVAL = config.CACHE.SAVE_INTERVAL_MS;
+  const CACHE_SAVE_INTERVAL = config.CACHE?.SAVE_INTERVAL_MS || 60000; // Default to 60 seconds if not set
   logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
   
   setInterval(() => {
