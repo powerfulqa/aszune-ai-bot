@@ -23,20 +23,21 @@ aszune-ai-bot/
 ├── src/
 │   ├── index.js           # Main entry point
 │   ├── commands/          # Command handlers
-│   │   ├── clearHistory.js
-│   │   ├── help.js
-│   │   ├── stats.js
-│   │   ├── summarise.js
-│   │   └── summary.js
 │   ├── config/            # Configuration settings
-│   │   └── config.js      # Global configuration
 │   ├── services/          # API and core services
-│   │   ├── perplexityService.js
-│   │   └── conversationService.js
+│   │   ├── cache.js       # Smart answer cache service
+│   │   ├── chat.js        # Chat message handling
+│   │   ├── fallback.js    # Fallback service for error handling
+│   │   ├── perplexity.js  # Perplexity API client
+│   │   └── storage.js     # User stats storage
 │   └── utils/             # Utility functions and helpers
-│       ├── emojiUtils.js
-│       ├── rateLimiter.js
-│       └── stringUtils.js
+│       ├── conversation.js # Conversation management
+│       ├── emoji.js        # Emoji reaction handling
+│       ├── errors.js       # Custom error types
+│       └── logger.js       # Logging utility
+├── data/
+│   ├── user_stats.json    # User statistics data
+│   └── question_cache.json # Smart answer cache data
 ├── package.json           # Project metadata
 ├── package-lock.json      # Dependency lock file
 ├── ecosystem.config.js    # PM2 deployment config
