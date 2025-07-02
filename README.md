@@ -160,14 +160,9 @@ aszune-ai-bot/
 │   ├── services/          # API and core services
 │   │   ├── cache.js       # Smart answer cache service
 │   │   ├── chat.js        # Chat message handling
-│   │   ├── fallback.js    # Fallback service for error handling
 │   │   ├── perplexity.js  # Perplexity API client
 │   │   └── storage.js     # User stats storage
 │   └── utils/             # Utility functions and helpers
-│       ├── conversation.js # Conversation management
-│       ├── emoji.js        # Emoji reaction handling
-│       ├── errors.js       # Custom error types
-│       └── logger.js       # Logging utility
 ├── data/
 │   ├── user_stats.json    # User statistics data
 │   └── question_cache.json # Smart answer cache data

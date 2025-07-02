@@ -14,17 +14,10 @@ describe('Bot integration', () => {
     let messageCreateHandler;
     let message;    let conversation;
     let consoleLogSpy, consoleErrorSpy;
-    let originalProcessOn;
     
     beforeAll(() => {
         // Mock process.on to prevent MaxListenersExceededWarning
-        originalProcessOn = process.on;
         process.on = jest.fn();
-    });
-
-    afterAll(() => {
-        process.on = originalProcessOn;
-        jest.restoreAllMocks();
     });
 
     beforeEach(() => {
@@ -112,12 +105,10 @@ describe('Bot integration', () => {
         consoleLogSpy.mockRestore();
         consoleErrorSpy.mockRestore();
         // Ensure no lingering timers
-        jest.clearAllTimers();
         jest.useRealTimers();
     });
 
     afterAll(() => {
-        process.on = originalProcessOn;
         jest.restoreAllMocks();
     });
 

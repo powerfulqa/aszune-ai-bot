@@ -68,67 +68,52 @@ aszune-ai-bot/
 
 ### Making Changes
 
-1.  **Create a New Branch**
+1. **Create a New Branch**
 
-    ```bash
-    git checkout -b feature/your-feature
-    ```
+   ```bash
+   git checkout -b feature/your-feature
+   ```
 
-2.  **Make Your Changes**
+2. **Make Your Changes**
 
-    Follow the coding standards (described below) while implementing your changes.
+   Follow the coding standards (described below) while implementing your changes.
 
-3.  **Write Tests**
+3. **Write Tests**
 
-    Add tests for your changes in the `__tests__` directory.
+   Add tests for your changes in the `__tests__` directory.
 
-4.  **Run Tests**
+4. **Run Tests**
 
-    ```bash
-    npm test
-    ```
+   ```bash
+   npm test
+   ```
 
-5.  **Lint and Format Your Code**
+5. **Commit Your Changes**
 
-    Before committing, make sure to lint and format your code to maintain consistency across the project.
+   Follow conventional commits format for commit messages:
 
-    ```bash
-    # Run ESLint to catch any linting errors
-    npm run lint
+   ```bash
+   git commit -m "feat: add new command for xyz"
+   ```
 
-    # Automatically fix linting errors
-    npm run lint:fix
+   Common prefixes:
+   - `feat:` - New feature
+   - `fix:` - Bug fix
+   - `docs:` - Documentation change
+   - `style:` - Formatting, missing semicolons, etc (no code change)
+   - `refactor:` - Code refactoring
+   - `test:` - Adding or updating tests
+   - `chore:` - Updating build tasks, package manager configs, etc
 
-    # Format your code with Prettier
-    npm run format
-    ```
+6. **Push Your Changes**
 
-6.  **Commit Your Changes**
+   ```bash
+   git push origin feature/your-feature
+   ```
 
-    Follow conventional commits format for commit messages:
+7. **Create a Pull Request**
 
-    ```bash
-    git commit -m "feat: add new command for xyz"
-    ```
-
-    Common prefixes:
-    - `feat:` - New feature
-    - `fix:` - Bug fix
-    - `docs:` - Documentation change
-    - `style:` - Formatting, missing semicolons, etc (no code change)
-    - `refactor:` - Code refactoring
-    - `test:` - Adding or updating tests
-    - `chore:` - Updating build tasks, package manager configs, etc
-
-7.  **Push Your Changes**
-
-    ```bash
-    git push origin feature/your-feature
-    ```
-
-8.  **Create a Pull Request**
-
-    Open a pull request against the `develop` branch with a clear description of the changes and any relevant issue numbers.
+   Open a pull request against the `develop` branch with a clear description of the changes and any relevant issue numbers.
 
 ## Coding Standards
 
@@ -192,14 +177,11 @@ __tests__/unit/commands/help.test.js
 # Run all tests
 npm test
 
-# Run all tests with coverage
-npm run test:coverage
-
-# Run tests in watch mode
-npm run test:watch
-
 # Run specific tests
-npm test -- path/to/your.test.js
+npm test -- commands/help.test.js
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ## Pull Request Process

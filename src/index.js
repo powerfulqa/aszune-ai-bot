@@ -55,15 +55,13 @@ client.once('ready', async () => {
   // Initialize the cache service (use initSync for backward compatibility)
   cacheService.initSync();
   
-  // Set up periodic cache saving (configurable interval), but not in test environment
-  if (process.env.NODE_ENV !== 'test') {
-    const CACHE_SAVE_INTERVAL = config.CACHE?.SAVE_INTERVAL_MS || 60000; // Default to 60 seconds if not set
-    logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
-    
-    setInterval(() => {
-      cacheService.saveIfDirty();
-    }, CACHE_SAVE_INTERVAL);
-  }
+  // Set up periodic cache saving (configurable interval)
+  const CACHE_SAVE_INTERVAL = config.CACHE?.SAVE_INTERVAL_MS || 60000; // Default to 60 seconds if not set
+  logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
+  
+  setInterval(() => {
+    cacheService.saveIfDirty();
+  }, CACHE_SAVE_INTERVAL);
   
   // Register slash commands
   await registerSlashCommands();

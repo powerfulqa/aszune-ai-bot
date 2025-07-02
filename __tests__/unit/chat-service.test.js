@@ -159,8 +159,4 @@ describe('Chat Service', () => {
       jest.useRealTimers();
     });
   });
-  
-  afterAll(() => {
-    conversationManager.destroy();
-  });
 });
