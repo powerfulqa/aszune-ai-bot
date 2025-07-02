@@ -198,4 +198,8 @@ describe('Bot Main Entry Point (index.js)', () => {
       expect(logger.error).toHaveBeenCalledWith('Unhandled promise rejection:', error);
     });
   });
+
+  afterAll(() => {
+    conversationManager.destroy();
+  });
 });

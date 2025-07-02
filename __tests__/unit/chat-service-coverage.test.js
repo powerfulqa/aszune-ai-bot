@@ -4,6 +4,7 @@
 const chatService = require('../../src/services/chat');
 const cacheService = require('../../src/services/cache');
 const perplexityService = require('../../src/services/perplexity');
+const conversation = require('../../src/utils/conversation');
 const { ChatError } = require('../../src/utils/errors');
 
 // Mock dependencies
@@ -117,5 +118,9 @@ describe('Chat Service Additional Tests', () => {
       expect(result).toBe('API fallback answer');
       expect(perplexityService.askQuestion).toHaveBeenCalledWith('What is a test?');
     });
+  });
+
+  afterAll(() => {
+    conversation.destroy();
   });
 });
