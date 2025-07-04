@@ -1,7 +1,7 @@
 # Aszune AI Bot
 
 ![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
-[![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
+[![codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/graph/badge.svg?token=gM0DJC7j9y)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/chrishaycock/projects/aszune-ai-bot)
 
 **Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands.
@@ -43,6 +43,7 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
+- 🆕 **Smart Answer Cache:** Stores and serves answers to frequently asked questions to reduce API token usage, with robust error handling, question normalization, similarity matching, and automatic refreshing of stale entries.
 
 ---
 
@@ -157,7 +158,14 @@ aszune-ai-bot/
 │   ├── commands/          # Command handlers
 │   ├── config/            # Configuration settings
 │   ├── services/          # API and core services
+│   │   ├── cache.js       # Smart answer cache service
+│   │   ├── chat.js        # Chat message handling
+│   │   ├── perplexity.js  # Perplexity API client
+│   │   └── storage.js     # User stats storage
 │   └── utils/             # Utility functions and helpers
+├── data/
+│   ├── user_stats.json    # User statistics data
+│   └── question_cache.json # Smart answer cache data
 ├── package.json           # Project metadata
 ├── package-lock.json      # Dependency lock file
 ├── ecosystem.config.js    # PM2 deployment config
@@ -187,6 +195,13 @@ aszune-ai-bot/
   npm test -- --coverage
   ```
   Coverage includes utility modules, command handling, emoji logic, error handling, and more.
+- **JUnit Reporting:**  
+  Test results are also generated in JUnit XML format, which can be used by CI/CD systems to display test results.
+  ```bash
+  npm test -- --testResultsProcessor=jest-junit
+  ```
+- **Codecov Integration:**  
+  The project integrates with Codecov for coverage reporting and includes the Codecov AI Reviewer in the CI workflow, which provides automated code reviews on pull requests.
 
 ---
 
@@ -208,10 +223,12 @@ aszune-ai-bot/
 
 ## Future Enhancements
 
+- [x] Smart caching system for frequently asked questions (implemented)
 - [ ] Add clickable sources and reference links from Perplexity results
 - [ ] Enhance error handling with retry/backoff logic for API rate limits
 - [ ] Web dashboard for usage monitoring and conversation history
 - [ ] Implement AI-powered content moderation for safer interactions
+- [ ] Admin commands to view cache statistics and manually prune the cache
 
 ---
 

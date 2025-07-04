@@ -1,5 +1,23 @@
 # Release Notes
 
+## Latest Updates
+
+### Cache Service Improvements - June 30, 2025
+
+- Enhanced input validation in the `generateHash` function:
+  - Added explicit checks for null, undefined, non-string, and empty string inputs
+  - Now throws specific error messages for each invalid input type
+- Improved question normalization before hashing:
+  - Case normalization (lowercase)
+  - Whitespace normalization (trim and replace multiple spaces)
+  - Punctuation removal (sentence marks and quotes)
+- Increased robustness for edge cases:
+  - Unicode characters and special symbols
+  - Extremely long questions
+  - Improved error handling throughout the cache service
+- Updated technical documentation to reflect these changes
+- All unit and integration tests now pass, including edge cases
+
 ---
 
 ## Initial Release

@@ -24,3 +24,20 @@ afterAll(() => {
 
 // Global test timeouts
 jest.setTimeout(10000);
+
+// Create output directory for JUnit test results
+const fs = require('fs');
+const path = require('path');
+
+// Define JUnit output directory
+const junitOutputDir = process.env.JEST_JUNIT_OUTPUT_DIR || './test-results';
+
+// Create the directory if it doesn't exist
+try {
+  if (!fs.existsSync(junitOutputDir)) {
+    fs.mkdirSync(junitOutputDir, { recursive: true });
+    console.log(`Created JUnit output directory: ${junitOutputDir}`);
+  }
+} catch (error) {
+  console.error(`Error creating JUnit output directory: ${error.message}`);
+}
