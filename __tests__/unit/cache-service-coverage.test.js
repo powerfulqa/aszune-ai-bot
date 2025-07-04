@@ -1,7 +1,8 @@
 /**
  * Additional tests for cache service to improve coverage
  */
-const cacheService = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache');
+const LRUCache = require('lru-cache');
 
 // Mock dependencies
 jest.mock('fs', () => ({
@@ -30,15 +31,17 @@ jest.mock('path', () => ({
 }));
 
 describe('Cache Service Additional Tests', () => {
+  let cacheService;
   beforeEach(() => {
     jest.clearAllMocks();
+    cacheService = new CacheService();
     cacheService.resetCache(); // Reset between tests
   });
 
   describe('LRU Cache Operations', () => {
     it('should prune entries when cache exceeds max size', () => {
       // Setup cache
-      const testCache = new cacheService.LRUCache(5);
+      const testCache = new LRUCache(5);
       
       // Fill cache beyond capacity
       for (let i = 0; i < 10; i++) {
@@ -52,7 +55,7 @@ describe('Cache Service Additional Tests', () => {
     });
     
     it('should return the keys in the cache', () => {
-      const testCache = new cacheService.LRUCache(3);
+      const testCache = new LRUCache(3);
       testCache.set('key1', 'value1');
       testCache.set('key2', 'value2');
       
@@ -62,7 +65,7 @@ describe('Cache Service Additional Tests', () => {
     });
     
     it('should delete keys from the cache', () => {
-      const testCache = new cacheService.LRUCache(3);
+      const testCache = new LRUCache(3);
       testCache.set('key1', 'value1');
       testCache.set('key2', 'value2');
       

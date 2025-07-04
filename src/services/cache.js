@@ -2,82 +2,26 @@
  * Cache service for storing and retrieving frequently asked questions
  * Reduces API token usage by serving cached responses when possible
  */
-const fs = require('fs');
-const fsPromises = require('fs').promises;
-const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const fsPromises = fs.promises;
+const { LRUCache } = require('lru-cache');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const { 
-  CacheError, 
-  CacheSaveError, 
-  CacheValueError 
+  CacheError,
+  CacheSaveError,
+  CacheValueError
 } = require('../utils/errors');
 
-// Cache settings from config
-const DEFAULT_CACHE_PATH = path.join(process.cwd(), 'data', 'question_cache.json');
-
-// Use config values with fallbacks
+// Constants
+const DEFAULT_CACHE_PATH = path.join(__dirname, '../../data/question_cache.json');
 const CACHE_REFRESH_THRESHOLD = config.CACHE?.REFRESH_THRESHOLD_MS || (30 * 24 * 60 * 60 * 1000);
 const SIMILARITY_THRESHOLD = config.CACHE?.SIMILARITY_THRESHOLD || 0.85;
 const MAX_CACHE_SIZE = config.CACHE?.MAX_SIZE || 10000;
 const LRU_PRUNE_THRESHOLD = config.CACHE?.LRU_PRUNE_THRESHOLD || 9000;
 const LRU_PRUNE_TARGET = config.CACHE?.LRU_PRUNE_TARGET || 7500;
-
-// Simple LRU cache implementation for in-memory caching
-class LRUCache {
-  constructor(capacity = 100) {
-    this.capacity = capacity;
-    this.cache = new Map(); // Map preserves insertion order
-  }
-  
-  get(key) {
-    if (!this.cache.has(key)) return undefined;
-    
-    // Move to end (most recently used)
-    const value = this.cache.get(key);
-    this.cache.delete(key);
-    this.cache.set(key, value);
-    return value;
-  }
-  
-  set(key, value) {
-    // If key exists, delete it first
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    }
-    // If at capacity, delete oldest (first) item
-    else if (this.cache.size >= this.capacity) {
-      this.cache.delete(this.cache.keys().next().value);
-    }
-    
-    // Add new item at the end (most recently used)
-    this.cache.set(key, value);
-    return true;
-  }
-  
-  has(key) {
-    return this.cache.has(key);
-  }
-  
-  clear() {
-    this.cache.clear();
-  }
-  
-  get size() {
-    return this.cache.size;
-  }
-  
-  // Added for testing
-  keys() {
-    return Array.from(this.cache.keys());
-  }
-  
-  // Added for testing
-  delete(key) {
-    return this.cache.delete(key);
-  }
-}
 
 class CacheService {
   constructor() {
@@ -89,7 +33,7 @@ class CacheService {
     
     // In-memory LRU cache for fast lookups
     const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
-    this.memoryCache = new LRUCache(memCacheSize);
+    this.memoryCache = new LRUCache({ max: memCacheSize });
     
     // Pruning thresholds
     this.LRU_PRUNE_THRESHOLD = LRU_PRUNE_THRESHOLD;
@@ -185,9 +129,9 @@ class CacheService {
       this.initialized = true; // Make sure to set initialized to true even after an error
     }
   }
-  
+
   /**
-   * Synchronous initialization for backward compatibility
+   * Initialize the cache from disk synchronously - for backward compatibility
    * @param {string} customPath - Optional custom path for the cache file (used for testing)
    */
   initSync(customPath) {
@@ -202,57 +146,64 @@ class CacheService {
       // Ensure the directory exists
       const dir = path.dirname(this.cachePath);
       try {
-        if (!fs.existsSync(dir)) {
-          try {
-            fs.mkdirSync(dir, { recursive: true });
-            logger.info(`Created cache directory: ${dir}`);
-          } catch (mkdirError) {
-            logger.warn(`Failed to create cache directory: ${mkdirError.message}`);
-            // Continue and let the following code handle the failure
-          }
+        fs.accessSync(dir);
+      } catch (dirErr) {
+        // Directory doesn't exist, create it
+        try {
+          fs.mkdirSync(dir, { recursive: true });
+          logger.info(`Created cache directory: ${dir}`);
+        } catch (mkdirErr) {
+          // Handle mkdir errors gracefully
+          logger.warn(`Failed to create cache directory: ${mkdirErr.message}`);
         }
-      } catch (checkDirError) {
-        logger.warn(`Failed to check if directory exists: ${checkDirError.message}`);
       }
       
-      // Create cache file if it doesn't exist
-      let createNewFile = false;
+      let createNewCache = false;
       try {
-        if (!fs.existsSync(this.cachePath)) {
-          createNewFile = true;
-        } else {
-          try {
-            const cacheData = fs.readFileSync(this.cachePath, 'utf8');
-            this.cache = JSON.parse(cacheData);
-          } catch (readError) {
-            logger.warn(`Failed to read cache file: ${readError.message}`);
-            createNewFile = true;
-          }
+        // Try to access the cache file
+        fs.accessSync(this.cachePath);
+        
+        // File exists, read it
+        try {
+          const cacheData = fs.readFileSync(this.cachePath, 'utf8');
+          this.cache = JSON.parse(cacheData);
+        } catch (parseErr) {
+          // File exists but couldn't be parsed
+          logger.warn(`Failed to parse cache file: ${parseErr.message}`);
+          createNewCache = true;
         }
-      } catch (checkFileError) {
-        logger.warn(`Failed to check if file exists: ${checkFileError.message}`);
-        createNewFile = true;
+      } catch (accessErr) {
+        // File doesn't exist, create a new one
+        createNewCache = true;
       }
       
-      if (createNewFile) {
+      if (createNewCache) {
         try {
           this.saveCache();
-        } catch (saveError) {
-          logger.warn(`Failed to save new cache file: ${saveError.message}`);
+        } catch (saveErr) {
+          logger.warn(`Failed to create new cache file: ${saveErr.message}`);
         }
       }
       
       this.initialized = true;
       logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
     } catch (error) {
-      logger.error('Error initializing cache:', error);
+      // Log the error details
+      if (error instanceof CacheError) {
+        logger.error(`Cache initialization error: ${error.message}`, error.details);
+      } else {
+        logger.error('Error initializing cache:', error);
+      }
+      
       // Create an empty cache if there was an error
       this.cache = {};
       try {
         this.saveCache();
-      } catch (saveError) {
-        logger.warn(`Failed to save empty cache: ${saveError.message}`);
+      } catch (saveErr) {
+        // If we can't even save an empty cache, log but continue
+        logger.error('Failed to save empty cache during initialization:', saveErr);
       }
+      
       this.initialized = true; // Make sure to set initialized to true even after an error
     }
   }
@@ -330,59 +281,51 @@ class CacheService {
       });
       
       logger.error('Error saving cache:', saveError);
-      
-      // Restore from backup if available
-      try {
-        const backupPath = `${this.cachePath}.backup`;
-        await fsPromises.access(backupPath);
-        try {
-          await fsPromises.copyFile(backupPath, this.cachePath);
-          logger.info('Cache restored from backup after failed save');
-        } catch (restoreError) {
-          logger.error('Failed to restore cache from backup:', restoreError);
-        }
-      } catch (accessErr) {
-        // No backup available
-      }
-      
-      throw saveError;
+      throw saveError; // Re-throw the error to allow for proper handling by the caller
     }
   }
   
   /**
-   * Save the cache to disk synchronously with robust error handling (legacy method)
+   * Save the cache to disk synchronously - for backward compatibility
    */
   saveCache() {
     try {
       // Ensure directory exists
       const dir = path.dirname(this.cachePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      try {
+        fs.accessSync(dir);
+      } catch (dirErr) {
+        // Directory doesn't exist, create it
+        try {
+          fs.mkdirSync(dir, { recursive: true });
+        } catch (mkdirErr) {
+          throw new CacheSaveError(`Failed to create directory: ${mkdirErr.message}`, {
+            cause: mkdirErr,
+            path: dir
+          });
+        }
       }
       
       // Create backup before overwriting
-      if (fs.existsSync(this.cachePath)) {
+      try {
+        fs.accessSync(this.cachePath);
+        // File exists, create backup
         try {
           fs.copyFileSync(this.cachePath, `${this.cachePath}.backup`);
         } catch (backupError) {
           logger.warn('Failed to create backup before saving cache:', backupError);
           // Continue with save attempt even if backup fails
         }
+      } catch (accessErr) {
+        // File doesn't exist, no need for backup
       }
       
-      // Write to a temporary file first, then rename for atomic-like operation
-      const tempPath = `${this.cachePath}.temp`;
-      fs.writeFileSync(tempPath, JSON.stringify(this.cache, null, 2));
-      
-      // In Windows, we need to unlink first before rename to avoid EPERM error
-      if (fs.existsSync(this.cachePath)) {
-        fs.unlinkSync(this.cachePath);
-      }
-      
-      fs.renameSync(tempPath, this.cachePath);
+      // Write cache to file
+      fs.writeFileSync(this.cachePath, JSON.stringify(this.cache, null, 2));
       
       logger.debug('Cache saved successfully');
       this.isDirty = false; // Reset dirty flag after saving
+      return true;
     } catch (error) {
       const saveError = new CacheSaveError(`Failed to save cache: ${error.message}`, {
         originalError: error,
@@ -390,17 +333,7 @@ class CacheService {
       });
       
       logger.error('Error saving cache:', saveError);
-      
-      // Restore from backup if available
-      const backupPath = `${this.cachePath}.backup`;
-      if (fs.existsSync(backupPath)) {
-        try {
-          fs.copyFileSync(backupPath, this.cachePath);
-          logger.info('Cache restored from backup after failed save');
-        } catch (restoreError) {
-          logger.error('Failed to restore cache from backup:', restoreError);
-        }
-      }
+      throw saveError; // Re-throw the error to allow for proper handling by the caller
     }
   }
   
@@ -416,9 +349,9 @@ class CacheService {
     }
     return false;
   }
-  
+
   /**
-   * Synchronous version of saveIfDirty for backward compatibility
+   * Save the cache to disk if it has been modified (synchronous version)
    * @returns {boolean} True if save was performed
    */
   saveIfDirty() {
@@ -464,7 +397,7 @@ class CacheService {
     let normalized = question
       .toLowerCase()
       .trim()
-      .replace(/[.,!?;:#@$]/g, '') // Remove common punctuation, including $
+      .replace(/[.,!?;:#@$]/g, '') // Remove common punctuation, keep hyphens
       .replace(/['"`]/g, '')       // Remove quotes
       .replace(/\s+/g, ' ')        // Normalize whitespace
       .trim();
@@ -478,7 +411,7 @@ class CacheService {
     if (normalized === '') {
       // Use a consistent hash for all-symbol strings instead of throwing
       // This ensures consistent behavior in tests and production
-      normalized = 'empty_after_normalization_' + question.length;
+      return crypto.createHash('sha256').update('empty_after_normalization_' + question.length).digest('hex');
     }
       
     // Use SHA-256 for better collision resistance
@@ -1008,76 +941,9 @@ class CacheService {
    * Evict least recently used entries if cache size exceeds limit
    * @param {number} [targetSize=LRU_PRUNE_TARGET] - Target size after pruning
    */
-  evictLRU(targetSize = LRU_PRUNE_TARGET) {
-    if (!this.initialized) this.initSync();
-    
-    const keys = Object.keys(this.cache);
-    if (keys.length <= targetSize) return; // No eviction needed
-    
-    // Sort keys by last accessed time (least recently used first)
-    keys.sort((a, b) => this.cache[a].lastAccessed - this.cache[b].lastAccessed);
-    
-    // Evict entries until we reach the target size
-    let removedCount = 0;
-    while (keys.length > targetSize) {
-      const keyToRemove = keys.shift(); // Remove the oldest key
-      delete this.cache[keyToRemove];
-      removedCount++;
-    }
-    
-    if (removedCount > 0) {
-      this.isDirty = true; // Mark cache as modified
-      this.saveIfDirty(); // Save immediately after eviction
-      logger.info(`Evicted ${removedCount} LRU entries from cache`);
-    }
-  }
-
-  /**
-   * Periodic maintenance to optimize cache
-   * This should be called regularly to perform background tasks
-   */
-  maintain() {
-    this.saveIfDirty();
-    
-    // Evict LRU entries if configured
-    const currentSize = Object.keys(this.cache).length;
-    if (currentSize > LRU_PRUNE_THRESHOLD) {
-      this.evictLRU();
-    }
-  }
-
-  /**
-   * Reset the cache - primarily used for testing
-   */
-  resetCache() {
-    this.cache = {};
-    this.memoryCache.clear();
-    this.isDirty = true;
-    this.metrics = {
-      hits: 0,
-      misses: 0,
-      exactMatches: 0,
-      similarityMatches: 0,
-      memoryHits: 0,
-      errors: 0,
-      lastReset: Date.now()
-    };
-    return true;
-  }
-
-  /**
-   * Get the number of entries in the cache
-   */
-  get size() {
-    return Object.keys(this.cache).length;
-  }
 }
 
-// Create and export the cache service instance
+// Create a singleton instance
 const cacheServiceInstance = new CacheService();
 
-// Export the service instance as default export
 module.exports = cacheServiceInstance;
-
-// Also export the LRUCache class for testing
-module.exports.LRUCache = LRUCache;

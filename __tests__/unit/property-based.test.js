@@ -3,11 +3,14 @@
  * Using fast-check to generate random test inputs
  */
 const fc = require('fast-check');
-const cacheService = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache');
+
+let cacheService;
 
 describe('Property-based tests', () => {
   beforeAll(() => {
     // Initialize the cache service
+    cacheService = new CacheService();
     cacheService.initSync();
   });
   
@@ -41,50 +44,20 @@ describe('Property-based tests', () => {
         fc.string({ minLength: 1, maxLength: 100 }),
         (baseQuestion) => {
           // A function to check if a string becomes empty after normalization
-          const isEffectivelyEmpty = (str) => {
-            const normalized = str
-              .toLowerCase()
-              .trim()
-              .replace(/[.,!?;:#@]/g, '')
-              .replace(/['"`]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim();
-            return normalized.length === 0;
+          const isNotEmptyAfterNormalization = (str) => {
+            return str.replace(/[\s\p{P}]+/gu, '').length > 0;
           };
 
-          // Skip strings that would be empty after normalization
-          if (isEffectivelyEmpty(baseQuestion)) return true;
-          
-          try {
-            // Create valid variations of the question
-            const validVariations = [
-              baseQuestion,
-              baseQuestion.toUpperCase(),
-              ` ${baseQuestion} `,
-              baseQuestion.replace(/\s+/g, '   '),
-            ];
-          
-            if (validVariations.length === 0) return true;
-          
-            // Generate hashes for all valid variations
-            const hashes = validVariations.map(v => {
-              try {
-                return cacheService.generateHash(v);
-              } catch (e) {
-                // If any variation throws an error, skip this test case
-                return null;
-              }
-            }).filter(h => h !== null);
-          
-            // If all variations failed to generate a hash, test passes
-            if (hashes.length === 0) return true;
-          
-            // All valid hashes should be the same
-            return hashes.every(h => h === hashes[0]);
-          } catch (e) {
-            // If the test throws, consider it passing (we're not testing error handling)
-            return true;
-          }
+          // Ensure the base question is not empty after normalization
+          fc.pre(isNotEmptyAfterNormalization(baseQuestion));
+
+          const q1 = `  ${baseQuestion.toUpperCase()}?`;
+          const q2 = `${baseQuestion.toLowerCase().trim()}!`;
+
+          const hash1 = cacheService.generateHash(q1);
+          const hash2 = cacheService.generateHash(q2);
+
+          return hash1 === hash2;
         }
       ));
     });

@@ -5,14 +5,23 @@ const { handleChatMessage } = require('../../src/services/chat');
 const perplexityService = require('../../src/services/perplexity');
 const conversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
-const cacheService = require('../../src/services/cache');
-const config = require('../../src/config/config');
+const { CacheService } = require('../../src/services/cache');
 
 // Mock dependencies
 jest.mock('../../src/services/perplexity');
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/emoji');
-jest.mock('../../src/services/cache');
+
+jest.mock('../../src/services/cache', () => {
+  const mCacheService = {
+    findInCache: jest.fn(),
+    addToCache: jest.fn(),
+    initSync: jest.fn(),
+  };
+  return { CacheService: jest.fn(() => mCacheService) };
+});
+
+let cacheService;
 
 describe('Chat Service', () => {
   // Create a mock message
@@ -26,6 +35,7 @@ describe('Chat Service', () => {
   
   beforeEach(() => {
     jest.clearAllMocks();
+    cacheService = new CacheService();
     
     // Set up default mocks
     conversationManager.isRateLimited.mockReturnValue(false);

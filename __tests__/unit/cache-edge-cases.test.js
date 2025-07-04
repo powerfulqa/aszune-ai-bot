@@ -1,7 +1,7 @@
 /**
  * Tests for edge cases in cache service
  */
-const cacheService = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache');
 const fs = require('fs');
 const path = require('path');
 
@@ -26,16 +26,18 @@ jest.mock('fs', () => ({
 }));
 jest.mock('path');
 
+let cacheService;
+
 describe('Cache Service Edge Cases', () => {
   const mockCachePath = '/mock/path/question_cache.json';
   
   beforeEach(() => {
     jest.clearAllMocks();
     
+    cacheService = new CacheService();
     // Reset the service state
-    cacheService.cache = {};
-    cacheService.initialized = false;
-    cacheService.memoryCache.clear();
+    // cacheService.cache = {}; // This is handled by the constructor
+    // cacheService.initialized = false; // This is handled by the constructor
     
     // Mock path.join to return our mock cache path
     path.join.mockReturnValue(mockCachePath);
