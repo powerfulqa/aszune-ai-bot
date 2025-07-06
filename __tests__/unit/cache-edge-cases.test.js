@@ -7,7 +7,7 @@ const path = require('path');
 
 // Mock dependencies
 jest.mock('fs', () => ({
-  existsSync: jest.fn(),
+  accessSync: jest.fn(),
   readFileSync: jest.fn(),
   writeFileSync: jest.fn(),
   mkdirSync: jest.fn(),
@@ -45,8 +45,8 @@ describe('Cache Service Edge Cases', () => {
     // Mock process.cwd
     process.cwd = jest.fn().mockReturnValue('/mock/path');
     
-    // Default mock for fs.existsSync
-    fs.existsSync.mockReturnValue(true);
+    // Default mock for fs.accessSync (success)
+    fs.accessSync.mockImplementation(() => {});
     
     // Default mock for fs.readFileSync
     fs.readFileSync.mockReturnValue(JSON.stringify({
@@ -120,12 +120,19 @@ describe('Cache Service Edge Cases', () => {
     });
     
     it('does not save the cache if it is not dirty', () => {
+      // First, clear any previous calls to writeFileSync
+      fs.writeFileSync.mockClear();
+      
+      // Mock the implementation of saveCache to do nothing
+      jest.spyOn(cacheService, 'saveCache').mockImplementation(() => {});
+      
       cacheService.initSync();
       cacheService.isDirty = false;
       
       cacheService.saveIfDirty();
       
-      expect(fs.writeFileSync).not.toHaveBeenCalled();
+      // Now we're checking that saveCache wasn't called
+      expect(cacheService.saveCache).not.toHaveBeenCalled();
       expect(cacheService.isDirty).toBe(false);
     });
   });

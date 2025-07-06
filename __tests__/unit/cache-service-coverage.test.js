@@ -41,7 +41,7 @@ describe('Cache Service Additional Tests', () => {
   describe('LRU Cache Operations', () => {
     it('should prune entries when cache exceeds max size', () => {
       // Setup cache
-      const testCache = new LRUCache(5);
+      const testCache = new LRUCache({ max: 5 });
       
       // Fill cache beyond capacity
       for (let i = 0; i < 10; i++) {
@@ -55,17 +55,17 @@ describe('Cache Service Additional Tests', () => {
     });
     
     it('should return the keys in the cache', () => {
-      const testCache = new LRUCache(3);
+      const testCache = new LRUCache({ max: 3 });
       testCache.set('key1', 'value1');
       testCache.set('key2', 'value2');
       
-      const keys = testCache.keys();
+      const keys = Array.from(testCache.keys());
       expect(keys).toContain('key1');
       expect(keys).toContain('key2');
     });
     
     it('should delete keys from the cache', () => {
-      const testCache = new LRUCache(3);
+      const testCache = new LRUCache({ max: 3 });
       testCache.set('key1', 'value1');
       testCache.set('key2', 'value2');
       

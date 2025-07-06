@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const fsPromises = fs.promises;
-const { LRUCache } = require('lru-cache');
+const LRUCache = require('lru-cache');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const { 
@@ -19,7 +19,7 @@ const {
 const DEFAULT_CACHE_PATH = path.join(__dirname, '../../data/question_cache.json');
 const CACHE_REFRESH_THRESHOLD = config.CACHE?.REFRESH_THRESHOLD_MS || (30 * 24 * 60 * 60 * 1000);
 const SIMILARITY_THRESHOLD = config.CACHE?.SIMILARITY_THRESHOLD || 0.85;
-const MAX_CACHE_SIZE = config.CACHE?.MAX_SIZE || 10000;
+// LRU pruning threshold and target size
 const LRU_PRUNE_THRESHOLD = config.CACHE?.LRU_PRUNE_THRESHOLD || 9000;
 const LRU_PRUNE_TARGET = config.CACHE?.LRU_PRUNE_TARGET || 7500;
 
@@ -30,6 +30,7 @@ class CacheService {
     this.initialized = false;
     this.cachePath = DEFAULT_CACHE_PATH;
     this.isDirty = false; // Track if cache has been modified and needs saving
+    this.size = 0;
     
     // In-memory LRU cache for fast lookups
     const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
@@ -186,7 +187,8 @@ class CacheService {
       }
       
       this.initialized = true;
-      logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
+      this.size = Object.keys(this.cache).length;
+      logger.info(`Cache initialized with ${this.size} entries`);
     } catch (error) {
       // Log the error details
       if (error instanceof CacheError) {
@@ -726,12 +728,72 @@ class CacheService {
       delete this.cache[hash];
     });
     
+    // Update the size property after pruning
+    this.size = Object.keys(this.cache).length;
     this.isDirty = true;
     logger.info(`LRU pruning: removed ${removeCount} oldest entries from cache (target: ${target})`);
     
     return removeCount;
   }
 
+  /**
+   * Evict least recently used entries if cache size exceeds limit
+   * @param {number} [targetSize=LRU_PRUNE_TARGET] - Target size after pruning
+   */
+  evictLRU(targetSize = LRU_PRUNE_TARGET) {
+    const entries = Object.entries(this.cache);
+    if (entries.length <= targetSize) return 0;
+
+    // Sort by lastAccessed timestamp (oldest first)
+    entries.sort(([, a], [, b]) => (a.lastAccessed || 0) - (b.lastAccessed || 0));
+    
+    // Determine how many to remove
+    const removeCount = entries.length - targetSize;
+    
+    // Remove the oldest entries
+    let removed = 0;
+    for (let i = 0; i < removeCount; i++) {
+      const [key] = entries[i];
+      delete this.cache[key];
+      removed++;
+    }
+    
+    if (removed > 0) {
+      // Update the size property after removing entries
+      this.size = Object.keys(this.cache).length;
+      this.isDirty = true;
+      logger.info(`LRU pruning: removed ${removed} oldest entries from cache (target: ${targetSize})`);
+    }
+    
+    return removed;
+  }
+
+  /**
+   * Perform maintenance tasks on the cache
+   * - Prune LRU entries if needed
+   * - Save cache if dirty
+   */
+  maintain() {
+    // Check if we need to evict LRU entries
+    if (Object.keys(this.cache).length > this.LRU_PRUNE_THRESHOLD) {
+      this.evictLRU();
+    }
+    
+    // Save if dirty
+    this.saveIfDirty();
+  }
+  
+  /**
+   * Reset cache to empty state (mainly for testing)
+   */
+  resetCache() {
+    this.cache = {};
+    this.size = 0;
+    this.memoryCache.clear();
+    this.isDirty = false;
+    this.initialized = false;
+  }
+  
   /**
    * Add or update a question-answer pair in the cache
    * @param {string} question - The question
@@ -766,9 +828,9 @@ class CacheService {
       const now = Date.now();
       
       // Check cache size limit
-      if (Object.keys(this.cache).length >= MAX_CACHE_SIZE) {
+      if (this.size >= this.LRU_PRUNE_THRESHOLD) {
         // Remove least recently used entries to make space
-        this.pruneLRU(MAX_CACHE_SIZE - 1);
+        this.pruneLRU();
       }
       
       // Prevent race condition by checking if a newer entry exists
@@ -789,6 +851,7 @@ class CacheService {
       };
       
       this.isDirty = true; // Mark cache as modified
+      this.size = Object.keys(this.cache).length;
       
       // For large answers, defer saving to batch operations
       const shouldSaveImmediately = answer.length < 1000;
@@ -925,6 +988,7 @@ class CacheService {
       if (age > maxAgeMs && entry.accessCount < minAccesses) {
         delete this.cache[key];
         removedCount++;
+        this.size--;
       }
     }
     
@@ -936,14 +1000,17 @@ class CacheService {
     
     return removedCount;
   }
-
-  /**
-   * Evict least recently used entries if cache size exceeds limit
-   * @param {number} [targetSize=LRU_PRUNE_TARGET] - Target size after pruning
-   */
 }
 
 // Create a singleton instance
 const cacheServiceInstance = new CacheService();
 
-module.exports = cacheServiceInstance;
+// Export the singleton instance with the class for testing purposes
+const cacheService = cacheServiceInstance;
+cacheService.CacheService = CacheService;
+
+// Explicitly expose the key methods for direct access
+cacheService.findInCache = cacheServiceInstance.findInCache.bind(cacheServiceInstance);
+cacheService.addToCache = cacheServiceInstance.addToCache.bind(cacheServiceInstance);
+
+module.exports = cacheService;

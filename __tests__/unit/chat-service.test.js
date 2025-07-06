@@ -5,23 +5,22 @@ const { handleChatMessage } = require('../../src/services/chat');
 const perplexityService = require('../../src/services/perplexity');
 const conversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
-const { CacheService } = require('../../src/services/cache');
 
 // Mock dependencies
 jest.mock('../../src/services/perplexity');
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/emoji');
 
+// Mock the CacheService implementation
 jest.mock('../../src/services/cache', () => {
-  const mCacheService = {
+  return {
     findInCache: jest.fn(),
     addToCache: jest.fn(),
     initSync: jest.fn(),
   };
-  return { CacheService: jest.fn(() => mCacheService) };
 });
 
-let cacheService;
+const cacheService = require('../../src/services/cache');
 
 describe('Chat Service', () => {
   // Create a mock message
@@ -35,7 +34,6 @@ describe('Chat Service', () => {
   
   beforeEach(() => {
     jest.clearAllMocks();
-    cacheService = new CacheService();
     
     // Set up default mocks
     conversationManager.isRateLimited.mockReturnValue(false);
@@ -112,22 +110,31 @@ describe('Chat Service', () => {
     it('checks the cache before calling the API', async () => {
       const message = createMessage('What is the meaning of life?');
       
+      // Mock cache miss
+      cacheService.findInCache.mockReturnValue(null);
+      
       await handleChatMessage(message);
       
+      // Test behavior - API is called when cache doesn't have content
       expect(cacheService.findInCache).toHaveBeenCalledWith('What is the meaning of life?');
+      expect(perplexityService.generateChatResponse).toHaveBeenCalled();
     });
     
     it('uses cached response when available', async () => {
       const message = createMessage('What is the meaning of life?');
+      
+      // Mock a cache hit
       cacheService.findInCache.mockReturnValue({
         answer: 'Cached answer: 42',
         accessCount: 5,
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
+        needsRefresh: false
       });
       
       await handleChatMessage(message);
       
       // API should not be called when cache hit
+      expect(cacheService.findInCache).toHaveBeenCalledWith('What is the meaning of life?');
       expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
       expect(emojiManager.addEmojisToResponse).toHaveBeenCalledWith('Cached answer: 42');
       expect(message.reply).toHaveBeenCalledWith({
@@ -142,19 +149,29 @@ describe('Chat Service', () => {
     it('adds new responses to the cache', async () => {
       const message = createMessage('New question');
       
+      // Mock cache miss
+      cacheService.findInCache.mockReturnValue(null);
+      
       await handleChatMessage(message);
       
-      expect(cacheService.addToCache).toHaveBeenCalledWith('New question', 'AI response');
+      // Check that addToCache was called with correct parameters
+      expect(cacheService.addToCache).toHaveBeenCalledWith(
+        'New question', 
+        'AI response'
+      );
     });
     
     it('refreshes stale cache entries in the background', async () => {
       jest.useFakeTimers();
       
       const message = createMessage('What is the meaning of life?');
+      
+      // Mock a stale cache entry
       cacheService.findInCache.mockReturnValue({
         answer: 'Cached answer: 42',
-        needsRefresh: true, // Stale entry
-        timestamp: Date.now() - (31 * 24 * 60 * 60 * 1000) // 31 days old
+        accessCount: 5,
+        timestamp: Date.now() - (31 * 24 * 60 * 60 * 1000), // 31 days old
+        needsRefresh: true
       });
       
       await handleChatMessage(message);
