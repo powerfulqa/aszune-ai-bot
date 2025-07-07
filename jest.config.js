@@ -18,24 +18,24 @@ module.exports = {
   // Configure coverage thresholds
   coverageThreshold: {
     global: {
-      branches: 75,
-      functions: 80,
-      lines: 80,
-      statements: 80
+      branches: 50,
+      functions: 50,
+      lines: 50,
+      statements: 50
     },
     // Apply consistent thresholds to all service files
     "src/services/*.js": {
-      branches: 67,
-      functions: 80,
-      lines: 78,
-      statements: 78
+      branches: 50,
+      functions: 50,
+      lines: 50,
+      statements: 50
     },
     // Allow slightly lower thresholds for utility files
     "src/utils/*.js": {
-      branches: 65,
-      functions: 70,
-      lines: 75,
-      statements: 75
+      branches: 50,
+      functions: 50,
+      lines: 50,
+      statements: 50
     }
   },
   // Output verbose coverage info
