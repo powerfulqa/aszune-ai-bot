@@ -268,6 +268,7 @@ class CacheService {
 - **Automatic pruning**: Removes old or rarely accessed entries to keep the cache size manageable
 - **Stale entry refreshing**: Automatically refreshes cached answers that are older than a configured threshold
 - **Configurable thresholds**: Adjustable settings for memory usage, disk usage, similarity threshold, etc.
+- **Optional feature**: Can be completely disabled via environment variable `ASZUNE_ENABLE_SMART_CACHE=false`
 
 #### Raspberry Pi Optimization
 
@@ -277,4 +278,3 @@ For users running the bot on Raspberry Pi devices with limited resources, we pro
 - Smaller maximum cache size (2,000 entries instead of 10,000)
 - More aggressive LRU pruning thresholds
 - Increased save interval to reduce disk writes
-````

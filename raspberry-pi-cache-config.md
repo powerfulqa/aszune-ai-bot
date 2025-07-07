@@ -1,6 +1,10 @@
 # Cache configuration optimized for Raspberry Pi 3
 
 ## Environment variables to use in your .env file:
+# Enable/disable the cache feature completely:
+# ASZUNE_ENABLE_SMART_CACHE=false
+
+# If cache is enabled, use these optimized settings:
 # ASZUNE_MEMORY_CACHE_SIZE=100
 # ASZUNE_MAX_CACHE_SIZE=2000
 # ASZUNE_LRU_PRUNE_THRESHOLD=1800
@@ -26,3 +30,19 @@ For Raspberry Pi 4 (4GB or 8GB), these values can be increased:
 - ASZUNE_MEMORY_CACHE_SIZE: 250-500
 - ASZUNE_MAX_CACHE_SIZE: 5000+
 - ASZUNE_CACHE_SAVE_INTERVAL_MS: Can be reduced back to 300000 (5 minutes)
+
+## Disabling the Smart Cache Feature
+
+If you're running the bot on a Raspberry Pi that's already serving other purposes (like Pi-hole),
+you can completely disable the smart cache feature to save resources:
+
+```
+ASZUNE_ENABLE_SMART_CACHE=false
+```
+
+When disabled:
+- No cache operations will be performed
+- No memory will be used for cache storage
+- No disk writes will occur for cache persistence
+- All API requests will go directly to the Perplexity API
+- The rest of the bot functionality remains unaffected

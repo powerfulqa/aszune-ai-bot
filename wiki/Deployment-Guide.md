@@ -184,7 +184,11 @@ Aszune AI Bot can be deployed on a Raspberry Pi with some optimizations for bett
    DISCORD_BOT_TOKEN=your_discord_bot_token_here
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
    
-   # Cache configuration optimized for Raspberry Pi
+   # Enable/disable smart cache feature (set to "false" to disable)
+   # Disabling is recommended for Raspberry Pi 3 running other services like Pi-hole
+   ASZUNE_ENABLE_SMART_CACHE=true
+   
+   # Cache configuration optimized for Raspberry Pi (only used if smart cache is enabled)
    # For Pi 3 use these conservative settings:
    ASZUNE_MEMORY_CACHE_SIZE=100
    ASZUNE_MAX_CACHE_SIZE=2000

@@ -180,6 +180,32 @@ This guide covers common issues you might encounter while setting up and running
      pm2 start src/index.js --name aszune-ai --max-memory-restart 300M
      ```
 
+### Resource Constraints on Raspberry Pi
+
+**Symptoms:**
+
+- High memory usage
+- System running slow
+- Bot becoming unresponsive
+- Pi-hole or other services affected
+
+**Solution:**
+
+1. **Disable the Smart Cache Feature**
+   - Edit your `.env` file and set:
+     ```
+     ASZUNE_ENABLE_SMART_CACHE=false
+     ```
+   - Restart the bot
+   - This will completely disable the caching system while keeping all other bot functionality
+
+2. **Monitor Resource Usage**
+   - Run `htop` to see real-time memory usage
+   - If the bot is still using too many resources even with cache disabled, consider:
+     - Running on a separate Raspberry Pi
+     - Using PM2's memory limit: `pm2 start src/index.js --name aszune-ai --max-memory-restart 300M`
+     - Setting up a cron job to restart the bot daily
+
 ## Common Error Messages
 
 ### "Cannot find module 'xyz'"
@@ -225,8 +251,6 @@ For more detailed troubleshooting:
 
    Add to your `.env` file: ```env
    DEBUG=true
-
-   ```
 
    ```
 

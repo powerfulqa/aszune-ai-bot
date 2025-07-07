@@ -27,6 +27,8 @@ module.exports = {
   
   // Cache Configuration
   CACHE: {
+    // Enable or disable smart cache
+    ENABLED: process.env.ASZUNE_ENABLE_SMART_CACHE !== 'false', // Enabled by default unless explicitly set to 'false'
     // Cache save interval in milliseconds (configurable via env vars)
     SAVE_INTERVAL_MS: parseInt(process.env.ASZUNE_CACHE_SAVE_INTERVAL_MS, 10) || 
                       (isProduction ? 300000 : 60000), // 5 min in prod, 1 min in dev

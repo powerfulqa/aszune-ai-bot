@@ -25,6 +25,18 @@ const LRU_PRUNE_TARGET = config.CACHE?.LRU_PRUNE_TARGET || 7500;
 
 class CacheService {
   constructor() {
+    // Check if cache is enabled in config
+    this.enabled = config.CACHE?.ENABLED !== false;
+    
+    if (!this.enabled) {
+      logger.info('Smart cache is disabled via configuration. Cache operations will be no-ops.');
+      // Initialize minimal properties when disabled
+      this.cache = {};
+      this.initialized = true;
+      this.metrics = { disabled: true };
+      return;
+    }
+    
     // Persistent cache
     this.cache = {};
     this.initialized = false;
@@ -58,6 +70,12 @@ class CacheService {
    * @returns {Promise<void>} - Promise that resolves when initialization is complete
    */
   async init(customPath) {
+    // If cache is disabled, mark as initialized and return
+    if (!this.enabled) {
+      this.initialized = true;
+      return;
+    }
+    
     if (this.initialized) return;
     
     // Allow using a custom path for testing
@@ -134,6 +152,12 @@ class CacheService {
    * @param {string} customPath - Optional custom path for the cache file (used for testing)
    */
   initSync(customPath) {
+    // If cache is disabled, mark as initialized and return
+    if (!this.enabled) {
+      this.initialized = true;
+      return;
+    }
+    
     if (this.initialized) return;
     
     if (customPath) {
@@ -490,6 +514,11 @@ class CacheService {
    * @returns {Object|null} - The cache hit or null if no match found
    */
   findInCache(question, gameContext = null) {
+    // If cache is disabled, always return null (cache miss)
+    if (!this.enabled) {
+      return null;
+    }
+    
     if (!this.initialized) this.initSync();
     
     try {
@@ -769,6 +798,11 @@ class CacheService {
    * @returns {boolean} - True if addition was successful, false otherwise
    */
   addToCache(question, answer, gameContext = null) {
+    // If cache is disabled, return false to indicate not added to cache
+    if (!this.enabled) {
+      return false;
+    }
+    
     if (!this.initialized) this.initSync();
     
     // Input validation
