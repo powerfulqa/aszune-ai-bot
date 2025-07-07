@@ -19,7 +19,7 @@ class EmojiManager {
     for (const [keyword, emoji] of Object.entries(this.reactions)) {
       // Match whole words only by using word boundary regex
       const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-      if (regex.test(content.toLowerCase())) {
+      if (regex.test(content)) {
         modifiedContent += ` ${emoji}`;
       }
     }
@@ -38,7 +38,7 @@ class EmojiManager {
     for (const [keyword, emoji] of Object.entries(this.reactions)) {
       // Match whole words only by using word boundary regex
       const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-      if (regex.test(content.toLowerCase())) {
+      if (regex.test(content)) {
         reactEmojis.push(emoji);
       }
     }

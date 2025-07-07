@@ -4,7 +4,6 @@
 const chatService = require('../../src/services/chat');
 const cacheService = require('../../src/services/cache');
 const perplexityService = require('../../src/services/perplexity');
-const { ChatError } = require('../../src/utils/errors');
 
 // Mock dependencies
 jest.mock('../../src/services/cache', () => ({
@@ -96,7 +95,7 @@ describe('Chat Service Additional Tests', () => {
       
       // Execute and expect error
       await expect(chatService.processQuestion('What is a test?'))
-        .rejects.toThrow(ChatError);
+        .rejects.toThrow('Failed to get answer: API Error');
     });
   });
 

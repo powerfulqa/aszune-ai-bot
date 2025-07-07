@@ -32,6 +32,16 @@ class CacheReadError extends CacheError {}
 class CacheValueError extends CacheError {}
 
 /**
+ * Chat-related errors
+ */
+class ChatError extends AszaiBotError {
+  constructor(message, details = {}) {
+    super(message);
+    this.details = details;
+  }
+}
+
+/**
  * API-related errors 
  */
 class ApiError extends AszaiBotError {
@@ -59,6 +69,7 @@ module.exports = {
   CacheSaveError,
   CacheReadError,
   CacheValueError,
+  ChatError,
   ApiError,
   RateLimitError
 };

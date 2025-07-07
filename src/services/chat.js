@@ -8,6 +8,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const commandHandler = require('../commands');
 const cacheService = require('../services/cache');
+const { ChatError } = require('../utils/errors');
 
 /**
  * Handle an incoming chat message
