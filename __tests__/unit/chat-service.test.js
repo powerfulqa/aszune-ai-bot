@@ -179,6 +179,9 @@ describe('Chat Service', () => {
       // Should still use cached response immediately
       expect(message.reply).toHaveBeenCalled();
       
+      // Run all scheduled timers to ensure background refresh occurs
+      jest.runAllTimers();
+      
       // API called asynchronously to refresh the cache
       await Promise.resolve(); // Wait for microtask queue
       expect(perplexityService.generateChatResponse).toHaveBeenCalled();

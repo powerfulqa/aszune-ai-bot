@@ -1,37 +1,175 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="212" failures="0" errors="0" time="6.151">
-  <testsuite name="__tests__\unit\storage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.178" tests="9">
-    <testcase classname="DataStorage init" name="DataStorage init should create data directory if it does not exist" time="0.013">
+<testsuites name="jest tests" tests="212" failures="0" errors="0" time="6.598">
+  <testsuite name="__tests__\unit\testUtils-helper.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="1.235" tests="3">
+    <testcase classname="Test Utils Helper createMockObject" name="Test Utils Helper createMockObject creates mock functions for all methods in an object" time="0.013">
+    </testcase>
+    <testcase classname="Test Utils Helper delay" name="Test Utils Helper delay returns a promise that resolves after specified time" time="0.066">
+    </testcase>
+    <testcase classname="Test Utils Helper deepClone" name="Test Utils Helper deepClone creates a deep clone of an object" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\storage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="1.267" tests="9">
+    <testcase classname="DataStorage init" name="DataStorage init should create data directory if it does not exist" time="0.012">
     </testcase>
     <testcase classname="DataStorage init" name="DataStorage init should not create directory if already initialized" time="0.001">
     </testcase>
-    <testcase classname="DataStorage init" name="DataStorage init should throw and log error if mkdir fails" time="0.019">
+    <testcase classname="DataStorage init" name="DataStorage init should throw and log error if mkdir fails" time="0.017">
     </testcase>
-    <testcase classname="DataStorage saveUserStats" name="DataStorage saveUserStats should save user stats to file" time="0.001">
+    <testcase classname="DataStorage saveUserStats" name="DataStorage saveUserStats should save user stats to file" time="0.004">
     </testcase>
     <testcase classname="DataStorage saveUserStats" name="DataStorage saveUserStats should log error if writeFile fails" time="0.001">
     </testcase>
-    <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should load user stats from file" time="0.003">
+    <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should load user stats from file" time="0.001">
     </testcase>
-    <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should return empty object if file does not exist" time="0">
+    <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should return empty object if file does not exist" time="0.001">
     </testcase>
     <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should return empty object and log error if readFile fails for other reasons" time="0.001">
     </testcase>
     <testcase classname="DataStorage loadUserStats" name="DataStorage loadUserStats should return empty object and log error if JSON parsing fails" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\testUtils-helper.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.19" tests="3">
-    <testcase classname="Test Utils Helper createMockObject" name="Test Utils Helper createMockObject creates mock functions for all methods in an object" time="0.014">
+  <testsuite name="__tests__\integration\error.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="1.441" tests="2">
+    <testcase classname="Error handling" name="Error handling handles failed Perplexity API response" time="0.237">
     </testcase>
-    <testcase classname="Test Utils Helper delay" name="Test Utils Helper delay returns a promise that resolves after specified time" time="0.062">
-    </testcase>
-    <testcase classname="Test Utils Helper deepClone" name="Test Utils Helper deepClone creates a deep clone of an object" time="0.002">
+    <testcase classname="Error handling" name="Error handling handles failed summary API response" time="0.037">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\cache-service-coverage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.367" tests="8">
-    <testcase classname="Cache Service Additional Tests LRU Cache Operations" name="Cache Service Additional Tests LRU Cache Operations should prune entries when cache exceeds max size" time="0.021">
+  <testsuite name="__tests__\unit\logger.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:56" time="0.224" tests="9">
+    <testcase classname="Logger" name="Logger logs debug messages" time="0.002">
     </testcase>
-    <testcase classname="Cache Service Additional Tests LRU Cache Operations" name="Cache Service Additional Tests LRU Cache Operations should return the keys in the cache" time="0.003">
+    <testcase classname="Logger" name="Logger logs debug messages with data" time="0">
+    </testcase>
+    <testcase classname="Logger" name="Logger logs info messages" time="0">
+    </testcase>
+    <testcase classname="Logger" name="Logger logs warning messages" time="0.001">
+    </testcase>
+    <testcase classname="Logger" name="Logger logs error messages" time="0">
+    </testcase>
+    <testcase classname="Logger" name="Logger logs error messages with error object" time="0.018">
+    </testcase>
+    <testcase classname="Logger" name="Logger handles API errors" time="0.001">
+    </testcase>
+    <testcase classname="Logger" name="Logger provides user-friendly error messages" time="0.003">
+    </testcase>
+    <testcase classname="Logger" name="Logger customizes error messages based on error type" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\config.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.234" tests="1">
+    <testcase classname="Config" name="Config exports required configuration settings" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\perplexity-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="1.56" tests="4">
+    <testcase classname="Perplexity Service sendChatRequest" name="Perplexity Service sendChatRequest sends a request to the API with correct parameters" time="0.018">
+    </testcase>
+    <testcase classname="Perplexity Service sendChatRequest" name="Perplexity Service sendChatRequest throws an error when API request fails" time="0.115">
+    </testcase>
+    <testcase classname="Perplexity Service generateSummary" name="Perplexity Service generateSummary generates a summary with correct system prompt" time="0.002">
+    </testcase>
+    <testcase classname="Perplexity Service generateChatResponse" name="Perplexity Service generateChatResponse generates a chat response with correct system prompt" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\testUtils.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.211" tests="5">
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage creates a default mock message with expected properties" time="0.002">
+    </testcase>
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage allows custom options" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction creates a default mock interaction with expected properties" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction allows custom options" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities resetMocks" name="Test Utilities resetMocks resets all mocks" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\emoji-manager.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.229" tests="7">
+    <testcase classname="EmojiManager" name="EmojiManager adds emojis to response based on keywords" time="0.002">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager adds multiple emojis when multiple keywords are found" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager does not add emojis when no keywords are found" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager gets reactions for a message based on keywords" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager returns empty array when no reaction keywords are found" time="0">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager adds reactions to a message" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager handles errors when adding reactions" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\conversation-manager.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.32" tests="13">
+    <testcase classname="Conversation Manager getHistory" name="Conversation Manager getHistory returns empty array for new users" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager getHistory" name="Conversation Manager getHistory returns conversation history for existing users" time="0">
+    </testcase>
+    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage adds a message to conversation history" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage updates user stats when adding a user message" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage trims conversation history when it exceeds the maximum length" time="0">
+    </testcase>
+    <testcase classname="Conversation Manager clearHistory" name="Conversation Manager clearHistory clears conversation history for a user" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns false for users with no recent messages" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns true for users with recent messages" time="0">
+    </testcase>
+    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns false after the rate limit window passes" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager getUserStats" name="Conversation Manager getUserStats returns default stats for new users" time="0">
+    </testcase>
+    <testcase classname="Conversation Manager getUserStats" name="Conversation Manager getUserStats returns user stats for existing users" time="0.003">
+    </testcase>
+    <testcase classname="Conversation Manager updateUserStats" name="Conversation Manager updateUserStats increments message count" time="0.001">
+    </testcase>
+    <testcase classname="Conversation Manager updateUserStats" name="Conversation Manager updateUserStats increments summary count" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\utils\testUtils.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.279" tests="8">
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a default mock message" time="0.002">
+    </testcase>
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message with custom content" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message from a bot" time="0">
+    </testcase>
+    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message with a custom user ID" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a default mock interaction" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a mock interaction with a custom user ID" time="0.001">
+    </testcase>
+    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a mock interaction with a custom command name" time="0">
+    </testcase>
+    <testcase classname="Test Utilities resetMocks" name="Test Utilities resetMocks should reset all mocks" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\errors.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.227" tests="11">
+    <testcase classname="Error Classes AszaiBotError" name="Error Classes AszaiBotError creates a base error with proper name" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes CacheError" name="Error Classes CacheError creates a cache error with details" time="0.003">
+    </testcase>
+    <testcase classname="Error Classes CacheError" name="Error Classes CacheError handles missing details" time="0.023">
+    </testcase>
+    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheInitializationError" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheSaveError" time="0">
+    </testcase>
+    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheReadError" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheValueError" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes ApiError" name="Error Classes ApiError creates an API error with status code and response" time="0">
+    </testcase>
+    <testcase classname="Error Classes ApiError" name="Error Classes ApiError handles missing response" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes RateLimitError" name="Error Classes RateLimitError creates a rate limit error with retry-after value" time="0.001">
+    </testcase>
+    <testcase classname="Error Classes RateLimitError" name="Error Classes RateLimitError handles missing retry-after value" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\cache-service-coverage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.124" tests="8">
+    <testcase classname="Cache Service Additional Tests LRU Cache Operations" name="Cache Service Additional Tests LRU Cache Operations should prune entries when cache exceeds max size" time="0.016">
+    </testcase>
+    <testcase classname="Cache Service Additional Tests LRU Cache Operations" name="Cache Service Additional Tests LRU Cache Operations should return the keys in the cache" time="0.001">
     </testcase>
     <testcase classname="Cache Service Additional Tests LRU Cache Operations" name="Cache Service Additional Tests LRU Cache Operations should delete keys from the cache" time="0.001">
     </testcase>
@@ -43,15 +181,41 @@
     </testcase>
     <testcase classname="Cache Service Additional Tests Cache Search Functions" name="Cache Service Additional Tests Cache Search Functions should return null if no similar entries are found" time="0">
     </testcase>
-    <testcase classname="Cache Service Additional Tests Cache Maintenance" name="Cache Service Additional Tests Cache Maintenance should perform LRU pruning when cache exceeds threshold" time="0.131">
+    <testcase classname="Cache Service Additional Tests Cache Maintenance" name="Cache Service Additional Tests Cache Maintenance should perform LRU pruning when cache exceeds threshold" time="0.134">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\cache-edge-cases.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.421" tests="9">
-    <testcase classname="Cache Service Edge Cases Memory Cache" name="Cache Service Edge Cases Memory Cache uses memory cache for subsequent lookups" time="0.135">
+  <testsuite name="__tests__\unit\fallback-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.295" tests="1">
+    <testcase classname="Fallback Service" name="Fallback Service should return a fallback response with the provided error message" time="0.001">
     </testcase>
-    <testcase classname="Cache Service Edge Cases saveIfDirtyAsync" name="Cache Service Edge Cases saveIfDirtyAsync saves the cache if it is dirty" time="0.016">
+  </testsuite>
+  <testsuite name="__tests__\integration\messageFlow.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.199" tests="1">
+    <testcase classname="Message flow" name="Message flow adds user and assistant messages to conversationHistory" time="0.001">
     </testcase>
-    <testcase classname="Cache Service Edge Cases saveIfDirtyAsync" name="Cache Service Edge Cases saveIfDirtyAsync does not save the cache if it is not dirty" time="0.002">
+  </testsuite>
+  <testsuite name="__tests__\unit\emoji.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:57" time="0.2" tests="8">
+    <testcase classname="EmojiManager" name="EmojiManager adds the correct emoji for known keywords" time="0.002">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager does not modify the text if no keyword is present" time="0">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager is case-insensitive" time="0">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager can add multiple emojis" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager does not add emoji for keywords inside other words" time="0">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager adds all matching emojis" time="0.001">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager handles empty string" time="0">
+    </testcase>
+    <testcase classname="EmojiManager" name="EmojiManager can get reactions for a message" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\unit\cache-edge-cases.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.306" tests="9">
+    <testcase classname="Cache Service Edge Cases Memory Cache" name="Cache Service Edge Cases Memory Cache uses memory cache for subsequent lookups" time="0.172">
+    </testcase>
+    <testcase classname="Cache Service Edge Cases saveIfDirtyAsync" name="Cache Service Edge Cases saveIfDirtyAsync saves the cache if it is dirty" time="0.003">
+    </testcase>
+    <testcase classname="Cache Service Edge Cases saveIfDirtyAsync" name="Cache Service Edge Cases saveIfDirtyAsync does not save the cache if it is not dirty" time="0.004">
     </testcase>
     <testcase classname="Cache Service Edge Cases saveIfDirty" name="Cache Service Edge Cases saveIfDirty saves the cache if it is dirty" time="0.004">
     </testcase>
@@ -59,273 +223,123 @@
     </testcase>
     <testcase classname="Cache Service Edge Cases getHitRateStats" name="Cache Service Edge Cases getHitRateStats returns correct hit rate statistics" time="0.003">
     </testcase>
-    <testcase classname="Cache Service Edge Cases resetMetrics" name="Cache Service Edge Cases resetMetrics resets all metrics to zero" time="0.005">
+    <testcase classname="Cache Service Edge Cases resetMetrics" name="Cache Service Edge Cases resetMetrics resets all metrics to zero" time="0.007">
     </testcase>
-    <testcase classname="Cache Service Edge Cases maintain" name="Cache Service Edge Cases maintain calls saveIfDirty when maintenance runs" time="0.002">
+    <testcase classname="Cache Service Edge Cases maintain" name="Cache Service Edge Cases maintain calls saveIfDirty when maintenance runs" time="0.005">
     </testcase>
-    <testcase classname="Cache Service Edge Cases maintain" name="Cache Service Edge Cases maintain evicts LRU entries when cache exceeds threshold" time="0.015">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\conversation-manager.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.194" tests="13">
-    <testcase classname="Conversation Manager getHistory" name="Conversation Manager getHistory returns empty array for new users" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager getHistory" name="Conversation Manager getHistory returns conversation history for existing users" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage adds a message to conversation history" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage updates user stats when adding a user message" time="0">
-    </testcase>
-    <testcase classname="Conversation Manager addMessage" name="Conversation Manager addMessage trims conversation history when it exceeds the maximum length" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager clearHistory" name="Conversation Manager clearHistory clears conversation history for a user" time="0.003">
-    </testcase>
-    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns false for users with no recent messages" time="0">
-    </testcase>
-    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns true for users with recent messages" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager isRateLimited" name="Conversation Manager isRateLimited returns false after the rate limit window passes" time="0">
-    </testcase>
-    <testcase classname="Conversation Manager getUserStats" name="Conversation Manager getUserStats returns default stats for new users" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager getUserStats" name="Conversation Manager getUserStats returns user stats for existing users" time="0">
-    </testcase>
-    <testcase classname="Conversation Manager updateUserStats" name="Conversation Manager updateUserStats increments message count" time="0.001">
-    </testcase>
-    <testcase classname="Conversation Manager updateUserStats" name="Conversation Manager updateUserStats increments summary count" time="0">
+    <testcase classname="Cache Service Edge Cases maintain" name="Cache Service Edge Cases maintain evicts LRU entries when cache exceeds threshold" time="0.028">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\emoji-manager.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.191" tests="7">
-    <testcase classname="EmojiManager" name="EmojiManager adds emojis to response based on keywords" time="0.002">
+  <testsuite name="__tests__\unit\cache-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.412" tests="23">
+    <testcase classname="Cache Service initSync()" name="Cache Service initSync() initializes the cache from disk" time="0.103">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager adds multiple emojis when multiple keywords are found" time="0.001">
+    <testcase classname="Cache Service initSync()" name="Cache Service initSync() creates a new cache if file does not exist" time="0.02">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager does not add emojis when no keywords are found" time="0">
-    </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager gets reactions for a message based on keywords" time="0.001">
-    </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager returns empty array when no reaction keywords are found" time="0.001">
-    </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager adds reactions to a message" time="0.002">
-    </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager handles errors when adding reactions" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\integration\error.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.458" tests="2">
-    <testcase classname="Error handling" name="Error handling handles failed Perplexity API response" time="0.244">
-    </testcase>
-    <testcase classname="Error handling" name="Error handling handles failed summary API response" time="0.028">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\index.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.547" tests="12">
-    <testcase classname="Bot Main Entry Point (index.js)" name="Bot Main Entry Point (index.js) should create a Discord client with the correct intents" time="0.31">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js)" name="Bot Main Entry Point (index.js) should log in the client" time="0.004">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;ready&quot; event and register slash commands" time="0.005">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;messageCreate&quot; event" time="0.004">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;interactionCreate&quot; event for a slash command" time="0.006">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should ignore non-slash command interactions" time="0.005">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;error&quot; event" time="0.008">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;warn&quot; event" time="0.012">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle SIGINT" time="0.006">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle SIGTERM" time="0.005">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle errors during shutdown for SIGINT" time="0.005">
-    </testcase>
-    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle unhandledRejection" time="0.003">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\errors.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.157" tests="11">
-    <testcase classname="Error Classes AszaiBotError" name="Error Classes AszaiBotError creates a base error with proper name" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes CacheError" name="Error Classes CacheError creates a cache error with details" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes CacheError" name="Error Classes CacheError handles missing details" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheInitializationError" time="0">
-    </testcase>
-    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheSaveError" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheReadError" time="0">
-    </testcase>
-    <testcase classname="Error Classes Specific Cache Errors" name="Error Classes Specific Cache Errors creates a CacheValueError" time="0">
-    </testcase>
-    <testcase classname="Error Classes ApiError" name="Error Classes ApiError creates an API error with status code and response" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes ApiError" name="Error Classes ApiError handles missing response" time="0.001">
-    </testcase>
-    <testcase classname="Error Classes RateLimitError" name="Error Classes RateLimitError creates a rate limit error with retry-after value" time="0">
-    </testcase>
-    <testcase classname="Error Classes RateLimitError" name="Error Classes RateLimitError handles missing retry-after value" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\cache-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.565" tests="23">
-    <testcase classname="Cache Service initSync()" name="Cache Service initSync() initializes the cache from disk" time="0.129">
-    </testcase>
-    <testcase classname="Cache Service initSync()" name="Cache Service initSync() creates a new cache if file does not exist" time="0.006">
-    </testcase>
-    <testcase classname="Cache Service initSync()" name="Cache Service initSync() handles read errors gracefully" time="0.01">
+    <testcase classname="Cache Service initSync()" name="Cache Service initSync() handles read errors gracefully" time="0.018">
     </testcase>
     <testcase classname="Cache Service generateHash()" name="Cache Service generateHash() creates consistent hashes for the same question" time="0.001">
     </testcase>
     <testcase classname="Cache Service generateHash()" name="Cache Service generateHash() creates different hashes for different questions" time="0.001">
     </testcase>
-    <testcase classname="Cache Service calculateSimilarity()" name="Cache Service calculateSimilarity() returns 1 for identical strings" time="0.002">
+    <testcase classname="Cache Service calculateSimilarity()" name="Cache Service calculateSimilarity() returns 1 for identical strings" time="0.001">
     </testcase>
     <testcase classname="Cache Service calculateSimilarity()" name="Cache Service calculateSimilarity() returns 0 for completely different strings" time="0.001">
     </testcase>
-    <testcase classname="Cache Service calculateSimilarity()" name="Cache Service calculateSimilarity() returns a value between 0 and 1 for partially similar strings" time="0.002">
+    <testcase classname="Cache Service calculateSimilarity()" name="Cache Service calculateSimilarity() returns a value between 0 and 1 for partially similar strings" time="0">
     </testcase>
-    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() finds an exact match by hash" time="0.006">
+    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() finds an exact match by hash" time="0.004">
     </testcase>
-    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() finds a similar match" time="0.002">
+    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() finds a similar match" time="0.004">
     </testcase>
-    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() returns null when no match is found" time="0.002">
+    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() returns null when no match is found" time="0.003">
     </testcase>
-    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() marks stale entries for refresh" time="0.003">
+    <testcase classname="Cache Service findInCache()" name="Cache Service findInCache() marks stale entries for refresh" time="0.007">
     </testcase>
-    <testcase classname="Cache Service addToCache()" name="Cache Service addToCache() adds a new entry to the cache" time="0.004">
+    <testcase classname="Cache Service addToCache()" name="Cache Service addToCache() adds a new entry to the cache" time="0.017">
     </testcase>
-    <testcase classname="Cache Service addToCache()" name="Cache Service addToCache() includes game context when provided" time="0.004">
+    <testcase classname="Cache Service addToCache()" name="Cache Service addToCache() includes game context when provided" time="0.03">
     </testcase>
     <testcase classname="Cache Service getStats()" name="Cache Service getStats() returns accurate statistics" time="0.003">
     </testcase>
-    <testcase classname="Cache Service pruneCache()" name="Cache Service pruneCache() removes old, rarely accessed entries" time="0.006">
+    <testcase classname="Cache Service pruneCache()" name="Cache Service pruneCache() removes old, rarely accessed entries" time="0.004">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles very long questions" time="0.005">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles very long questions" time="0.008">
     </testcase>
     <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles Unicode characters in questions and answers" time="0.003">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles special characters and punctuation appropriately" time="0.008">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles special characters and punctuation appropriately" time="0.005">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases rejects empty or invalid inputs" time="0.054">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases rejects empty or invalid inputs" time="0.043">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles file system errors gracefully" time="0.041">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases handles file system errors gracefully" time="0.048">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases should handle read errors gracefully when restoring from backup" time="0.025">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases should handle read errors gracefully when restoring from backup" time="0.021">
     </testcase>
-    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases should implement LRU cache eviction correctly" time="0.005">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\perplexity-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.561" tests="4">
-    <testcase classname="Perplexity Service sendChatRequest" name="Perplexity Service sendChatRequest sends a request to the API with correct parameters" time="0.013">
-    </testcase>
-    <testcase classname="Perplexity Service sendChatRequest" name="Perplexity Service sendChatRequest throws an error when API request fails" time="0.105">
-    </testcase>
-    <testcase classname="Perplexity Service generateSummary" name="Perplexity Service generateSummary generates a summary with correct system prompt" time="0.001">
-    </testcase>
-    <testcase classname="Perplexity Service generateChatResponse" name="Perplexity Service generateChatResponse generates a chat response with correct system prompt" time="0.001">
+    <testcase classname="Cache Service Edge Cases" name="Cache Service Edge Cases should implement LRU cache eviction correctly" time="0.004">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\emoji.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.153" tests="8">
-    <testcase classname="EmojiManager" name="EmojiManager adds the correct emoji for known keywords" time="0.001">
+  <testsuite name="__tests__\unit\index.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.421" tests="12">
+    <testcase classname="Bot Main Entry Point (index.js)" name="Bot Main Entry Point (index.js) should create a Discord client with the correct intents" time="1.133">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager does not modify the text if no keyword is present" time="0">
+    <testcase classname="Bot Main Entry Point (index.js)" name="Bot Main Entry Point (index.js) should log in the client" time="0.009">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager is case-insensitive" time="0.001">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;ready&quot; event and register slash commands" time="0.015">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager can add multiple emojis" time="0">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;messageCreate&quot; event" time="0.003">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager does not add emoji for keywords inside other words" time="0">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;interactionCreate&quot; event for a slash command" time="0.004">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager adds all matching emojis" time="0">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should ignore non-slash command interactions" time="0.004">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager handles empty string" time="0">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;error&quot; event" time="0.011">
     </testcase>
-    <testcase classname="EmojiManager" name="EmojiManager can get reactions for a message" time="0.001">
+    <testcase classname="Bot Main Entry Point (index.js) Event Handlers" name="Bot Main Entry Point (index.js) Event Handlers should handle the &quot;warn&quot; event" time="0.007">
     </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\logger.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.237" tests="9">
-    <testcase classname="Logger" name="Logger logs debug messages" time="0.002">
+    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle SIGINT" time="0.004">
     </testcase>
-    <testcase classname="Logger" name="Logger logs debug messages with data" time="0.002">
+    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle SIGTERM" time="0.004">
     </testcase>
-    <testcase classname="Logger" name="Logger logs info messages" time="0.001">
+    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle errors during shutdown for SIGINT" time="0.003">
     </testcase>
-    <testcase classname="Logger" name="Logger logs warning messages" time="0">
-    </testcase>
-    <testcase classname="Logger" name="Logger logs error messages" time="0.001">
-    </testcase>
-    <testcase classname="Logger" name="Logger logs error messages with error object" time="0.015">
-    </testcase>
-    <testcase classname="Logger" name="Logger handles API errors" time="0">
-    </testcase>
-    <testcase classname="Logger" name="Logger provides user-friendly error messages" time="0.001">
-    </testcase>
-    <testcase classname="Logger" name="Logger customizes error messages based on error type" time="0.002">
+    <testcase classname="Bot Main Entry Point (index.js) Process Signal Handlers" name="Bot Main Entry Point (index.js) Process Signal Handlers should handle unhandledRejection" time="0.003">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\utils\testUtils.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.184" tests="8">
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a default mock message" time="0.002">
+  <testsuite name="__tests__\unit\property-based.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.655" tests="9">
+    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should handle common variations consistently" time="0.017">
     </testcase>
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message with custom content" time="0.001">
+    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should normalize similar inputs to the same hash" time="0.028">
     </testcase>
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message from a bot" time="0">
+    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should generate different hashes for different questions" time="0.012">
     </testcase>
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage should create a mock message with a custom user ID" time="0">
+    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should handle special characters appropriately" time="0.013">
     </testcase>
-    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a default mock interaction" time="0.001">
+    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should always return a value between 0 and 1" time="0.003">
     </testcase>
-    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a mock interaction with a custom user ID" time="0">
+    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should be symmetric (sim(a,b) === sim(b,a))" time="0.003">
     </testcase>
-    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction should create a mock interaction with a custom command name" time="0">
+    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should return 1 for identical strings" time="0.002">
     </testcase>
-    <testcase classname="Test Utilities resetMocks" name="Test Utilities resetMocks should reset all mocks" time="0.002">
+    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should handle special cases appropriately" time="0.001">
     </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\testUtils.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.206" tests="5">
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage creates a default mock message with expected properties" time="0.002">
-    </testcase>
-    <testcase classname="Test Utilities createMockMessage" name="Test Utilities createMockMessage allows custom options" time="0.001">
-    </testcase>
-    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction creates a default mock interaction with expected properties" time="0.002">
-    </testcase>
-    <testcase classname="Test Utilities createMockInteraction" name="Test Utilities createMockInteraction allows custom options" time="0">
-    </testcase>
-    <testcase classname="Test Utilities resetMocks" name="Test Utilities resetMocks resets all mocks" time="0.001">
+    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should produce higher similarity for more similar strings" time="0.003">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\fallback-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.156" tests="1">
-    <testcase classname="Fallback Service" name="Fallback Service should return a fallback response with the provided error message" time="0.001">
+  <testsuite name="__tests__\integration\botEdgeCases.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.821" tests="6">
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles empty message" time="0.02">
+    </testcase>
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles very long message and truncates history" time="0.002">
+    </testcase>
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles API failure for chat completions" time="0.002">
+    </testcase>
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases reacts with correct emoji for hello" time="0.001">
+    </testcase>
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases does not react for non-keyword" time="0">
+    </testcase>
+    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles missing environment variables gracefully" time="1.368">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\config.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.208" tests="1">
-    <testcase classname="Config" name="Config exports required configuration settings" time="0.003">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\integration\messageFlow.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:53" time="0.143" tests="1">
-    <testcase classname="Message flow" name="Message flow adds user and assistant messages to conversationHistory" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\property-based.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="1.948" tests="9">
-    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should handle common variations consistently" time="0.02">
-    </testcase>
-    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should normalize similar inputs to the same hash" time="0.017">
-    </testcase>
-    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should generate different hashes for different questions" time="0.008">
-    </testcase>
-    <testcase classname="Property-based tests Hash generation properties" name="Property-based tests Hash generation properties should handle special characters appropriately" time="0.02">
-    </testcase>
-    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should always return a value between 0 and 1" time="0.006">
-    </testcase>
-    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should be symmetric (sim(a,b) === sim(b,a))" time="0.006">
-    </testcase>
-    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should return 1 for identical strings" time="0.003">
-    </testcase>
-    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should handle special cases appropriately" time="0.002">
-    </testcase>
-    <testcase classname="Property-based tests Similarity calculation properties" name="Property-based tests Similarity calculation properties should produce higher similarity for more similar strings" time="0.007">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\integration\command.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="2.275" tests="12">
-    <testcase classname="Command Handling" name="Command Handling responds to !clearhistory and clears the conversation history" time="0.012">
+  <testsuite name="__tests__\integration\command.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.843" tests="12">
+    <testcase classname="Command Handling" name="Command Handling responds to !clearhistory and clears the conversation history" time="0.014">
     </testcase>
     <testcase classname="Command Handling" name="Command Handling !help command replies with help message" time="0.001">
     </testcase>
@@ -335,13 +349,13 @@
     </testcase>
     <testcase classname="Command Handling" name="Command Handling !summerise command (alternative spelling) replies with text summary" time="0.001">
     </testcase>
-    <testcase classname="Command Handling" name="Command Handling !summarise command with no text returns usage message" time="0">
+    <testcase classname="Command Handling" name="Command Handling !summarise command with no text returns usage message" time="0.001">
     </testcase>
-    <testcase classname="Command Handling" name="Command Handling !summerise command with no text returns usage message" time="0.001">
+    <testcase classname="Command Handling" name="Command Handling !summerise command with no text returns usage message" time="0">
     </testcase>
     <testcase classname="Command Handling" name="Command Handling !summary command uses UK English in prompt" time="0.001">
     </testcase>
-    <testcase classname="Command Handling" name="Command Handling rate limiting prevents spam" time="0.001">
+    <testcase classname="Command Handling" name="Command Handling rate limiting prevents spam" time="0">
     </testcase>
     <testcase classname="Command Handling" name="Command Handling unknown command is ignored" time="0.001">
     </testcase>
@@ -350,28 +364,28 @@
     <testcase classname="Command Handling" name="Command Handling !stats command replies with user stats" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\chat-service-coverage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="2.347" tests="5">
-    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should process a question with cache hit" time="0.014">
+  <testsuite name="__tests__\unit\chat-service-coverage.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.852" tests="5">
+    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should process a question with cache hit" time="0.015">
     </testcase>
-    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should process a question with cache hit but stale entry" time="0.068">
+    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should process a question with cache hit but stale entry" time="0.076">
     </testcase>
     <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should process a question with cache miss" time="0.001">
     </testcase>
-    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should handle API errors gracefully" time="0.017">
+    <testcase classname="Chat Service Additional Tests Question Processing" name="Chat Service Additional Tests Question Processing should handle API errors gracefully" time="0.015">
     </testcase>
-    <testcase classname="Chat Service Additional Tests Error Handling" name="Chat Service Additional Tests Error Handling should handle cache errors gracefully" time="0.008">
+    <testcase classname="Chat Service Additional Tests Error Handling" name="Chat Service Additional Tests Error Handling should handle cache errors gracefully" time="0.007">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\unit\commands.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="2.347" tests="20">
+  <testsuite name="__tests__\unit\commands.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="2.888" tests="20">
     <testcase classname="Command Handlers getSlashCommandsData" name="Command Handlers getSlashCommandsData should return an array of slash command data" time="0.013">
     </testcase>
-    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !help command" time="0.002">
+    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !help command" time="0.003">
     </testcase>
-    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !clearhistory command" time="0">
+    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !clearhistory command" time="0.001">
     </testcase>
     <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !summary command with history" time="0.002">
     </testcase>
-    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !summary command with no history" time="0">
+    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !summary command with no history" time="0.001">
     </testcase>
     <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !summary command with only assistant messages in history" time="0.001">
     </testcase>
@@ -381,13 +395,13 @@
     </testcase>
     <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should handle !stats command" time="0">
     </testcase>
-    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should return null for unknown command" time="0.001">
+    <testcase classname="Command Handlers handleTextCommand" name="Command Handlers handleTextCommand should return null for unknown command" time="0">
     </testcase>
     <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle /help command" time="0">
     </testcase>
     <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle /clearhistory command" time="0.001">
     </testcase>
-    <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle /summary command with history" time="0.001">
+    <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle /summary command with history" time="0">
     </testcase>
     <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle /summary command API error" time="0.001">
     </testcase>
@@ -404,74 +418,60 @@
     <testcase classname="Command Handlers handleSlashCommand" name="Command Handlers handleSlashCommand should handle command execution error" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\botEdgeCases.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="2.446" tests="6">
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles empty message" time="0.016">
-    </testcase>
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles very long message and truncates history" time="0">
-    </testcase>
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles API failure for chat completions" time="0.002">
-    </testcase>
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases reacts with correct emoji for hello" time="0.001">
-    </testcase>
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases does not react for non-keyword" time="0.001">
-    </testcase>
-    <testcase classname="Bot Edge Cases" name="Bot Edge Cases handles missing environment variables gracefully" time="0.986">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\unit\chat-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="2.5" tests="10">
-    <testcase classname="Chat Service" name="Chat Service handles a normal message and sends a reply" time="0.088">
+  <testsuite name="__tests__\unit\chat-service.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="3.043" tests="10">
+    <testcase classname="Chat Service" name="Chat Service handles a normal message and sends a reply" time="0.07">
     </testcase>
     <testcase classname="Chat Service" name="Chat Service enforces rate limiting" time="0.001">
     </testcase>
-    <testcase classname="Chat Service" name="Chat Service skips messages from bots" time="0.001">
+    <testcase classname="Chat Service" name="Chat Service skips messages from bots" time="0">
     </testcase>
-    <testcase classname="Chat Service" name="Chat Service handles messages with missing user ID" time="0.008">
+    <testcase classname="Chat Service" name="Chat Service handles messages with missing user ID" time="0.005">
     </testcase>
-    <testcase classname="Chat Service" name="Chat Service handles API errors gracefully" time="0.023">
+    <testcase classname="Chat Service" name="Chat Service handles API errors gracefully" time="0.018">
     </testcase>
-    <testcase classname="Chat Service" name="Chat Service adds the bot response to conversation history" time="0.007">
+    <testcase classname="Chat Service" name="Chat Service adds the bot response to conversation history" time="0.006">
     </testcase>
-    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration checks the cache before calling the API" time="0.006">
+    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration checks the cache before calling the API" time="0.004">
     </testcase>
-    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration uses cached response when available" time="0.004">
+    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration uses cached response when available" time="0.003">
     </testcase>
-    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration adds new responses to the cache" time="0.004">
+    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration adds new responses to the cache" time="0.003">
     </testcase>
-    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration refreshes stale cache entries in the background" time="0.016">
+    <testcase classname="Chat Service Cache Integration" name="Chat Service Cache Integration refreshes stale cache entries in the background" time="0.021">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\bot.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T22:44:52" time="5.148" tests="16">
-    <testcase classname="Bot integration" name="Bot integration should have attached the messageCreate handler" time="1.166">
+  <testsuite name="__tests__\integration\bot.test.js" errors="0" failures="0" skipped="0" timestamp="2025-07-07T23:40:55" time="5.603" tests="16">
+    <testcase classname="Bot integration" name="Bot integration should have attached the messageCreate handler" time="1.575">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration handles a normal message and replies" time="0.285">
+    <testcase classname="Bot integration" name="Bot integration handles a normal message and replies" time="0.286">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration replies to !help command" time="0.195">
+    <testcase classname="Bot integration" name="Bot integration replies to !help command" time="0.192">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration replies to !clearhistory command" time="0.19">
+    <testcase classname="Bot integration" name="Bot integration replies to !clearhistory command" time="0.189">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration replies to !summary with history" time="0.193">
+    <testcase classname="Bot integration" name="Bot integration replies to !summary with history" time="0.183">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration replies to !summary with no history" time="0.171">
+    <testcase classname="Bot integration" name="Bot integration replies to !summary with no history" time="0.168">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration ignores unknown command" time="0.171">
+    <testcase classname="Bot integration" name="Bot integration ignores unknown command" time="0.183">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration ignores messages from bots" time="0.17">
+    <testcase classname="Bot integration" name="Bot integration ignores messages from bots" time="0.168">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration adds emoji reactions for keywords" time="0.168">
+    <testcase classname="Bot integration" name="Bot integration adds emoji reactions for keywords" time="0.166">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration adds multiple emoji reactions for multiple keywords" time="0.17">
+    <testcase classname="Bot integration" name="Bot integration adds multiple emoji reactions for multiple keywords" time="0.164">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration rate limits user messages" time="0.179">
+    <testcase classname="Bot integration" name="Bot integration rate limits user messages" time="0.164">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration handles API error when replying" time="0.183">
+    <testcase classname="Bot integration" name="Bot integration handles API error when replying" time="0.182">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration handles API error when summarising" time="0.165">
+    <testcase classname="Bot integration" name="Bot integration handles API error when summarising" time="0.164">
     </testcase>
     <testcase classname="Bot integration" name="Bot integration handles empty message gracefully" time="0.166">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration truncates very long conversation history" time="0.168">
+    <testcase classname="Bot integration" name="Bot integration truncates very long conversation history" time="0.162">
     </testcase>
-    <testcase classname="Bot integration" name="Bot integration handles missing environment variables gracefully" time="0.325">
+    <testcase classname="Bot integration" name="Bot integration handles missing environment variables gracefully" time="0.315">
     </testcase>
   </testsuite>
 </testsuites>

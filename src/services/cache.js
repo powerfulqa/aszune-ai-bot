@@ -19,6 +19,7 @@ const {
 const DEFAULT_CACHE_PATH = path.join(__dirname, '../../data/question_cache.json');
 const CACHE_REFRESH_THRESHOLD = config.CACHE?.REFRESH_THRESHOLD_MS || (30 * 24 * 60 * 60 * 1000);
 const SIMILARITY_THRESHOLD = config.CACHE?.SIMILARITY_THRESHOLD || 0.85;
+const CACHE_MAX_SIZE = config.CACHE?.MAX_SIZE || 10000;
 // LRU pruning threshold and target size
 const LRU_PRUNE_THRESHOLD = config.CACHE?.LRU_PRUNE_THRESHOLD || 9000;
 const LRU_PRUNE_TARGET = config.CACHE?.LRU_PRUNE_TARGET || 7500;
@@ -43,6 +44,7 @@ class CacheService {
     this.cachePath = DEFAULT_CACHE_PATH;
     this.isDirty = false; // Track if cache has been modified and needs saving
     this.size = 0;
+    this.maxSize = CACHE_MAX_SIZE; // Store the max size limit
     
     // In-memory LRU cache for fast lookups
     const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
@@ -129,7 +131,14 @@ class CacheService {
       }
       
       this.initialized = true;
-      logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
+      this.size = Object.keys(this.cache).length;
+      logger.info(`Cache initialized with ${this.size} entries`);
+      
+      // Check if we need to enforce size limit
+      if (this.size > this.maxSize) {
+        logger.info(`Cache size (${this.size}) exceeds maximum size (${this.maxSize}), enforcing limit`);
+        this.pruneCache();
+      }
       
     } catch (error) {
       // Catch-all error handler
@@ -223,7 +232,14 @@ class CacheService {
       }
       
       this.initialized = true;
-      logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
+      this.size = Object.keys(this.cache).length;
+      logger.info(`Cache initialized with ${this.size} entries`);
+      
+      // Check if we need to enforce size limit
+      if (this.size > this.maxSize) {
+        logger.info(`Cache size (${this.size}) exceeds maximum size (${this.maxSize}), enforcing limit`);
+        this.pruneCache();
+      }
     } catch (error) {
       // Log error details
       logger.error(`Error initializing cache: ${error.message || 'Unknown error'}`);
@@ -829,7 +845,11 @@ class CacheService {
       const now = Date.now();
       
       // Check cache size limit
-      if (this.size >= this.LRU_PRUNE_THRESHOLD) {
+      if (this.size >= CACHE_MAX_SIZE) {
+        // If size exceeds MAX_SIZE, we need to prune
+        logger.info(`Cache size (${this.size}) exceeds maximum size (${CACHE_MAX_SIZE}), enforcing limit`);
+        this.pruneCache();
+      } else if (this.size >= this.LRU_PRUNE_THRESHOLD) {
         // Remove least recently used entries to make space
         this.pruneLRU();
       }
