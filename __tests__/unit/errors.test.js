@@ -2,7 +2,7 @@
  * Tests for custom error classes
  */
 const { 
-  AszuneBotError,
+  AszaiBotError,
   CacheError,
   CacheInitializationError,
   CacheSaveError,
@@ -13,11 +13,11 @@ const {
 } = require('../../src/utils/errors');
 
 describe('Error Classes', () => {
-  describe('AszuneBotError', () => {
+  describe('AszaiBotError', () => {
     it('creates a base error with proper name', () => {
-      const error = new AszuneBotError('Test error');
+      const error = new AszaiBotError('Test error');
       expect(error).toBeInstanceOf(Error);
-      expect(error.name).toBe('AszuneBotError');
+      expect(error.name).toBe('AszaiBotError');
       expect(error.message).toBe('Test error');
     });
   });
@@ -26,7 +26,7 @@ describe('Error Classes', () => {
     it('creates a cache error with details', () => {
       const details = { key: 'value' };
       const error = new CacheError('Cache failed', details);
-      expect(error).toBeInstanceOf(AszuneBotError);
+      expect(error).toBeInstanceOf(AszaiBotError);
       expect(error.name).toBe('CacheError');
       expect(error.message).toBe('Cache failed');
       expect(error.details).toEqual(details);
@@ -69,7 +69,7 @@ describe('Error Classes', () => {
     it('creates an API error with status code and response', () => {
       const response = { error: 'Not found' };
       const error = new ApiError('API error', 404, response);
-      expect(error).toBeInstanceOf(AszuneBotError);
+      expect(error).toBeInstanceOf(AszaiBotError);
       expect(error.name).toBe('ApiError');
       expect(error.statusCode).toBe(404);
       expect(error.response).toEqual(response);

@@ -5,7 +5,7 @@
 /**
  * Base error class for the application
  */
-class AszuneBotError extends Error {
+class AszaiBotError extends Error {
   constructor(message) {
     super(message);
     this.name = this.constructor.name;
@@ -16,7 +16,7 @@ class AszuneBotError extends Error {
 /**
  * Cache-related errors
  */
-class CacheError extends AszuneBotError {
+class CacheError extends AszaiBotError {
   constructor(message, details = {}) {
     super(message);
     this.details = details;
@@ -34,7 +34,7 @@ class CacheValueError extends CacheError {}
 /**
  * API-related errors 
  */
-class ApiError extends AszuneBotError {
+class ApiError extends AszaiBotError {
   constructor(message, statusCode, response = null) {
     super(message);
     this.statusCode = statusCode;
@@ -53,7 +53,7 @@ class RateLimitError extends ApiError {
 }
 
 module.exports = {
-  AszuneBotError,
+  AszaiBotError,
   CacheError,
   CacheInitializationError,
   CacheSaveError,
