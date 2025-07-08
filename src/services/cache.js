@@ -5,12 +5,10 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const fsPromises = fs.promises;
 const LRUCache = require('lru-cache');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const { 
-  CacheError,
   CacheSaveError,
   CacheValueError
 } = require('../utils/errors');
@@ -845,9 +843,9 @@ class CacheService {
       const now = Date.now();
       
       // Check cache size limit
-      if (this.size >= CACHE_MAX_SIZE) {
-        // If size exceeds MAX_SIZE, we need to prune
-        logger.info(`Cache size (${this.size}) exceeds maximum size (${CACHE_MAX_SIZE}), enforcing limit`);
+      if (this.size >= this.maxSize) {
+        // If size exceeds maxSize, we need to prune
+        logger.info(`Cache size (${this.size}) exceeds maximum size (${this.maxSize}), enforcing limit`);
         this.pruneCache();
       } else if (this.size >= this.LRU_PRUNE_THRESHOLD) {
         // Remove least recently used entries to make space
@@ -1027,6 +1025,7 @@ class CacheService {
     const maxAgeMs = maxAge * 24 * 60 * 60 * 1000;
     let removedCount = 0;
     
+    // First pass: Remove old, rarely accessed entries
     for (const key in this.cache) {
       const entry = this.cache[key];
       const age = now - entry.timestamp;
@@ -1039,10 +1038,43 @@ class CacheService {
       }
     }
     
+    // Second pass: If still above max size, forcibly evict LRU entries
+    if (this.size > this.maxSize) {
+      logger.info(`Cache still exceeds maximum size (${this.size}/${this.maxSize}) after age-based pruning. Forcing LRU eviction.`);
+      
+      // Sort entries by lastAccessed timestamp (oldest first)
+      const entries = Object.entries(this.cache)
+        .map(([hash, entry]) => ({
+          hash,
+          lastAccessed: entry.lastAccessed || entry.timestamp || 0,
+          accessCount: entry.accessCount || 0
+        }))
+        .sort((a, b) => {
+          // Prioritize access count first, then lastAccessed time
+          if (a.accessCount !== b.accessCount) {
+            return a.accessCount - b.accessCount; // Remove least accessed first
+          }
+          return a.lastAccessed - b.lastAccessed; // Then oldest accessed
+        });
+      
+      // Calculate how many entries to remove to get under the limit
+      const excessEntries = Math.max(0, this.size - Math.floor(this.maxSize * 0.9)); // Remove 10% extra to avoid immediate pruning
+      
+      // Remove the oldest entries
+      const entriesToRemove = entries.slice(0, excessEntries);
+      entriesToRemove.forEach(({ hash }) => {
+        delete this.cache[hash];
+        removedCount++;
+        this.size--;
+      });
+      
+      logger.info(`Force-removed ${excessEntries} least used entries to enforce cache size limit`);
+    }
+    
     if (removedCount > 0) {
       this.isDirty = true; // Mark cache as modified
       this.saveIfDirty(); // Save immediately after pruning
-      logger.info(`Pruned ${removedCount} entries from cache`);
+      logger.info(`Pruned total of ${removedCount} entries from cache, new size: ${this.size}/${this.maxSize}`);
     }
     
     return removedCount;
