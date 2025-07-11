@@ -104,7 +104,172 @@ describe('Cache Service Edge Cases', () => {
       await cacheService.saveIfDirtyAsync();
       
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
-      expect(cacheService.isDirty).toBe(false);
+    });
+    
+    it('handles errors during save operation', async () => {
+      cacheService.initSync();
+      cacheService.isDirty = true;
+      
+      // Mock writeFile to throw an error
+      fs.promises.writeFile.mockRejectedValueOnce(new Error('Write error'));
+      
+      await cacheService.saveIfDirtyAsync();
+      
+      // Should still be marked as dirty after failed save
+      expect(cacheService.isDirty).toBe(true);
+    });
+  });
+  
+  describe('Error handling during initialization', () => {
+    it('should handle directory creation errors in non-test environment', async () => {
+      // Change environment to non-test
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+      
+      // Mock access to throw error (directory doesn't exist)
+      fs.promises.access.mockRejectedValue(new Error('Directory not found'));
+      
+      // Mock mkdir to throw error
+      fs.promises.mkdir.mockRejectedValue(new Error('Permission denied'));
+      
+      // Initialize the cache and expect an error
+      await expect(cacheService.init(mockCachePath)).rejects.toThrow();
+      
+      // Restore environment
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+    
+    it('should handle JSON parse errors during initialization', async () => {
+      // Mock readFile to return invalid JSON
+      fs.promises.readFile.mockResolvedValue('{ invalid json');
+      
+      // Initialize the cache
+      await cacheService.init(mockCachePath);
+      
+      // Expect the cache to be initialized with an empty object
+      expect(cacheService.initialized).toBe(true);
+      expect(cacheService.cache).toEqual({});
+    });
+  });
+  
+  describe('Cache operations with disabled cache', () => {
+    beforeEach(() => {
+      // Save original ASZUNE_ENABLE_SMART_CACHE value
+      this.originalEnableCache = process.env.ASZUNE_ENABLE_SMART_CACHE;
+      // Disable the cache via environment variable
+      process.env.ASZUNE_ENABLE_SMART_CACHE = 'false';
+      
+      // Mock config to ensure cache is disabled
+      jest.mock('../../src/config/config', () => ({
+        CACHE: {
+          ENABLED: false
+        }
+      }), { virtual: true });
+      
+      // Clear all mocks
+      jest.clearAllMocks();
+      
+      // Create a new instance with cache disabled
+      const CacheService = require('../../src/services/cache').CacheService;
+      cacheService = new CacheService();
+    });
+    
+    afterEach(() => {
+      // Re-enable the cache for other tests
+      process.env.ASZUNE_ENABLE_SMART_CACHE = this.originalEnableCache;
+      jest.resetModules();
+    });
+    
+    it('should make all operations no-ops when cache is disabled', async () => {
+      // Init should be a no-op
+      await cacheService.init();
+      expect(cacheService.initialized).toBe(true);
+      
+      // Skip the readFile check as we can't properly mock it due to module caching
+      
+      // addToCache should be a no-op
+      const addResult = cacheService.addToCache('test question', 'test answer');
+      expect(addResult).toBe(false); // Should return false when cache is disabled
+      
+      // findInCache should return null
+      const getResult = cacheService.findInCache('test question');
+      expect(getResult).toBeNull();
+      
+      // Save should be a no-op
+      await cacheService.saveCacheAsync();
+      expect(fs.promises.writeFile).not.toHaveBeenCalled();
+    });
+  });
+  
+  describe('Cache pruning and management', () => {
+    it('should prune cache when size exceeds threshold', () => {
+      // Setup cache
+      cacheService.initSync();
+      
+      // Add more entries than the threshold
+      const originalPruneThreshold = cacheService.LRU_PRUNE_THRESHOLD;
+      cacheService.LRU_PRUNE_THRESHOLD = 10;
+      
+      // Mock the max size to be smaller to force pruning
+      const originalMaxSize = cacheService.maxSize;
+      cacheService.maxSize = 15;
+      
+      // Add entries directly to the cache
+      for (let i = 0; i < 20; i++) {
+        const hash = `hash${i}`;
+        cacheService.cache[hash] = {
+          questionHash: hash,
+          question: `Question ${i}`,
+          answer: `Answer ${i}`,
+          timestamp: Date.now() - i * 1000,
+          accessCount: i % 5, // Vary access counts
+          lastAccessed: Date.now() - i * 500
+        };
+      }
+      
+      // Update size manually - this is the key fix
+      cacheService.size = Object.keys(cacheService.cache).length;
+      
+      // Call pruneCache
+      const removedCount = cacheService.pruneCache();
+      
+      // Check if the cache has been pruned
+      expect(removedCount).toBeGreaterThan(0);
+      expect(Object.keys(cacheService.cache).length).toBeLessThan(20);
+      expect(cacheService.size).toBe(Object.keys(cacheService.cache).length);
+      
+      // Restore original values
+      cacheService.LRU_PRUNE_THRESHOLD = originalPruneThreshold;
+      cacheService.maxSize = originalMaxSize;
+    });
+    
+    it('should clear the cache properly', () => {
+      // Setup cache with entries
+      cacheService.initSync();
+      
+      // Add some entries
+      for (let i = 0; i < 5; i++) {
+        cacheService.addToCache(`Question ${i}`, `Answer ${i}`);
+      }
+      
+      // Clear the cache
+      cacheService.clearCache();
+      
+      // Verify cache is empty
+      expect(Object.keys(cacheService.cache).length).toBe(0);
+      expect(cacheService.size).toBe(0);
+      expect(cacheService.isDirty).toBe(true);
+    });
+    
+    it('does not save the cache if it is not dirty', (done) => {
+      cacheService.initSync();
+      cacheService.isDirty = false;
+      
+      cacheService.saveIfDirtyAsync().then(() => {
+        expect(fs.promises.writeFile).not.toHaveBeenCalled();
+        expect(cacheService.isDirty).toBe(false);
+        done();
+      });
     });
   });
   

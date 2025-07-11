@@ -38,15 +38,13 @@ async function handleChatMessage(message) {
     return commandResult;
   }
   
-  // Add message to history
-  conversationManager.addMessage(userId, 'user', message.content);
-  
   // Show typing indicator
   message.channel.sendTyping();
   
   try {
     // Extract the user's question
     const userQuestion = message.content;
+    
     let reply;
     let fromCache = false;
     
@@ -55,6 +53,9 @@ async function handleChatMessage(message) {
     let cacheHit = false;
     let cacheError = false;
     let similarityScore = null;
+    
+    // Add message to conversation history before cache lookup
+    conversationManager.addMessage(userId, "user", userQuestion);
     
     // Try to find the question in the cache first
     let cacheResult = null;

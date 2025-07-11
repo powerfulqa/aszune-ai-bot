@@ -90,6 +90,7 @@ class CacheService {
       const dir = path.dirname(this.cachePath);
       try {
         await fs.promises.access(dir);
+        logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
@@ -97,8 +98,11 @@ class CacheService {
           logger.info(`Created cache directory: ${dir}`);
         } catch (mkdirErr) {
           logger.warn(`Failed to create cache directory: ${mkdirErr.message}`);
+          // In test environment, just use in-memory cache without error
           if (!isTestEnv) {
             throw new CacheSaveError(`Failed to create directory: ${mkdirErr.message}`);
+          } else {
+            logger.info('Using in-memory cache for tests (no filesystem access)');
           }
         }
       }
@@ -108,6 +112,7 @@ class CacheService {
         const data = await fs.promises.readFile(this.cachePath, 'utf8');
         try {
           this.cache = JSON.parse(data);
+          logger.debug(`Successfully parsed cache file from: ${this.cachePath}`);
         } catch (parseErr) {
           logger.warn(`Failed to parse cache file: ${parseErr.message}`);
           this.cache = {};
@@ -122,9 +127,16 @@ class CacheService {
         
         this.cache = {};
         
-        // Save an empty cache file
+        // Save an empty cache file if not in test environment
         if (!isTestEnv) {
-          await this.saveCacheAsync();
+          try {
+            await this.saveCacheAsync();
+            logger.debug('Created new empty cache file');
+          } catch (saveErr) {
+            logger.warn(`Failed to create new cache file: ${saveErr.message}`);
+            // Continue with in-memory cache
+            logger.info('Continuing with in-memory cache only');
+          }
         }
       }
       
@@ -179,6 +191,7 @@ class CacheService {
       const dir = path.dirname(this.cachePath);
       try {
         fs.accessSync(dir);
+        logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
@@ -186,8 +199,11 @@ class CacheService {
           logger.info(`Created cache directory: ${dir}`);
         } catch (mkdirErr) {
           logger.warn(`Failed to create cache directory: ${mkdirErr.message}`);
+          // In test environment, just use in-memory cache without error
           if (!isTestEnv) {
             throw new CacheSaveError(`Failed to create directory: ${mkdirErr.message}`);
+          } else {
+            logger.info('Using in-memory cache for tests (no filesystem access)');
           }
         }
       }
@@ -200,6 +216,7 @@ class CacheService {
           // File exists, read it
           const cacheData = fs.readFileSync(this.cachePath, 'utf8');
           this.cache = JSON.parse(cacheData);
+          logger.debug(`Successfully parsed cache file from: ${this.cachePath}`);
         } catch (readErr) {
           // Failed to read or parse the file
           logger.warn(`Failed to read or parse cache file: ${readErr.message}`);
@@ -208,6 +225,7 @@ class CacheService {
           // Always try to save the empty cache for test expectations
           try {
             fs.writeFileSync(this.cachePath, JSON.stringify(this.cache, null, 2), 'utf8');
+            logger.debug('Created new empty cache file');
           } catch (writeErr) {
             if (!isTestEnv) {
               throw writeErr;
@@ -222,6 +240,7 @@ class CacheService {
         // Always try to create a new empty cache file for test expectations
         try {
           fs.writeFileSync(this.cachePath, JSON.stringify(this.cache, null, 2), 'utf8');
+          logger.debug('Created new empty cache file');
         } catch (writeErr) {
           if (!isTestEnv) {
             throw writeErr;
@@ -264,6 +283,7 @@ class CacheService {
       const dir = path.dirname(this.cachePath);
       try {
         await fs.promises.access(dir);
+        logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
@@ -303,6 +323,7 @@ class CacheService {
       const dir = path.dirname(this.cachePath);
       try {
         fs.accessSync(dir);
+        logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
@@ -538,9 +559,9 @@ class CacheService {
     try {
       // Check if we need to prune the cache based on size
       const cacheSize = Object.keys(this.cache).length;
-      if (cacheSize > LRU_PRUNE_THRESHOLD) {
-        logger.info(`Cache size (${cacheSize}) exceeded threshold (${LRU_PRUNE_THRESHOLD}), pruning...`);
-        this.pruneLRU(LRU_PRUNE_TARGET);
+      if (cacheSize > this.LRU_PRUNE_THRESHOLD) {
+        logger.info(`Cache size (${cacheSize}) exceeded threshold (${this.LRU_PRUNE_THRESHOLD}), pruning...`);
+        this.pruneLRU(this.LRU_PRUNE_TARGET);
       }
       
       // Input validation
@@ -707,7 +728,7 @@ class CacheService {
   /**
    * Prune the cache using an LRU (Least Recently Used) strategy
    * This is called when the cache exceeds a certain size threshold
-   * @param {number} targetSize - Optional target size to prune to. If not provided, uses the default LRU_PRUNE_TARGET.
+   * @param {number} targetSize - Optional target size to prune to. If not provided, uses the default this.LRU_PRUNE_TARGET.
    * @returns {number} - The number of entries removed
    */
   pruneLRU(targetSize) {
@@ -748,9 +769,9 @@ class CacheService {
 
   /**
    * Evict least recently used entries if cache size exceeds limit
-   * @param {number} [targetSize=LRU_PRUNE_TARGET] - Target size after pruning
+   * @param {number} [targetSize=this.LRU_PRUNE_TARGET] - Target size after pruning
    */
-  evictLRU(targetSize = LRU_PRUNE_TARGET) {
+  evictLRU(targetSize = this.LRU_PRUNE_TARGET) {
     const entries = Object.entries(this.cache);
     if (entries.length <= targetSize) return 0;
 
@@ -1079,6 +1100,21 @@ class CacheService {
     
     return removedCount;
   }
+  
+  /**
+   * Clear all entries from the cache
+   * @returns {void}
+   */
+  clearCache() {
+    if (!this.enabled) return;
+    
+    this.cache = {};
+    this.size = 0;
+    this.memoryCache.clear();
+    this.isDirty = true;
+    logger.info('Cache cleared');
+  }
+
 }
 
 // Create a singleton instance
