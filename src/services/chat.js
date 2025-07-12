@@ -149,15 +149,23 @@ async function handleChatMessage(message) {
  * Refresh a stale cache entry in the background
  * @param {string} question - The original question
  * @param {string} userId - The user ID for conversation history
+ * @param {number} retryCount - Current retry attempt (default: 0)
  * @returns {Promise<boolean>} - True if refresh was successful
  */
 async function refreshCacheEntry(question, userId, retryCount = 0) {
   const MAX_RETRIES = 2;
   const RETRY_DELAY = 2000; // Wait 2 seconds before retrying
+  const MAX_RETRY_DELAY = 10000; // Maximum delay cap
   
   // Validate the userId parameter
   if (!userId) {
     logger.error('Missing userId in refreshCacheEntry function call');
+    return false;
+  }
+  
+  // Safety check: prevent excessive recursion
+  if (retryCount > MAX_RETRIES) {
+    logger.warn(`Exceeded maximum retries (${MAX_RETRIES}) for refreshing cache entry`);
     return false;
   }
   
@@ -184,14 +192,19 @@ async function refreshCacheEntry(question, userId, retryCount = 0) {
   } catch (error) {
     logger.error(`Error refreshing cache entry (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error);
     
-    // Implement exponential backoff retry for transient errors
+    // Implement exponential backoff retry for transient errors with jitter
     if (retryCount < MAX_RETRIES) {
-      logger.info(`Retrying cache refresh in ${RETRY_DELAY}ms...`);
+      // Calculate exponential backoff with jitter to avoid thundering herd
+      const baseDelay = RETRY_DELAY * Math.pow(2, retryCount);
+      const jitter = Math.floor(Math.random() * 1000); // Add random jitter up to 1s
+      const delay = Math.min(baseDelay + jitter, MAX_RETRY_DELAY);
+      
+      logger.info(`Retrying cache refresh in ${delay}ms...`);
       return new Promise(resolve => {
         setTimeout(async () => {
           const result = await refreshCacheEntry(question, userId, retryCount + 1);
           resolve(result);
-        }, RETRY_DELAY);
+        }, delay);
       });
     }
     
@@ -275,6 +288,6 @@ async function processQuestion(question) {
 
 module.exports = {
   handleChatMessage,
-  refreshCacheEntry,
-  processQuestion
+  refreshCacheEntry, // Export for testing
+  processQuestion   // Export for test coverage
 };

@@ -44,7 +44,11 @@ module.exports = {
     LRU_PRUNE_THRESHOLD: parseInt(process.env.ASZUNE_LRU_PRUNE_THRESHOLD, 10) || 
                         (isProduction ? 9000 : (isTest ? 90 : 900)),
     LRU_PRUNE_TARGET: parseInt(process.env.ASZUNE_LRU_PRUNE_TARGET, 10) || 
-                     (isProduction ? 7500 : (isTest ? 75 : 750))
+                     (isProduction ? 7500 : (isTest ? 75 : 750)),
+    // Maximum question length for caching
+    MAX_QUESTION_LENGTH: parseInt(process.env.ASZUNE_MAX_QUESTION_LENGTH, 10) || 10000,
+    // Memory cache size (number of entries)
+    MEMORY_CACHE_SIZE: parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500
   },
   
   // API Configuration

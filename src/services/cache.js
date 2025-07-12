@@ -9,7 +9,10 @@ const LRUCache = require('lru-cache');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const { 
+  CacheError,
+  CacheInitializationError,
   CacheSaveError,
+  CacheReadError,
   CacheValueError
 } = require('../utils/errors');
 
@@ -28,14 +31,30 @@ class CacheService {
     this.enabled = config.CACHE?.ENABLED !== false;
     
     if (!this.enabled) {
-      logger.info('Smart cache is disabled via configuration. Cache operations will be no-ops.');
-      // Initialize minimal properties when disabled
-      this.cache = {};
-      this.initialized = true;
-      this.metrics = { disabled: true };
-      return;
+      this._initializeDisabledMode();
+    } else {
+      this._initializeEnabledMode();
+      this._initializeMetrics();
     }
-    
+  }
+  
+  /**
+   * Initialize the cache service in disabled mode
+   * @private
+   */
+  _initializeDisabledMode() {
+    logger.info('Smart cache is disabled via configuration. Cache operations will be no-ops.');
+    // Initialize minimal properties when disabled
+    this.cache = {};
+    this.initialized = true;
+    this.metrics = { disabled: true };
+  }
+  
+  /**
+   * Initialize the cache service in enabled mode
+   * @private
+   */
+  _initializeEnabledMode() {
     // Persistent cache
     this.cache = {};
     this.initialized = false;
@@ -46,15 +65,23 @@ class CacheService {
     
     // Write lock to prevent concurrent saves
     this._saveLock = false;
+    this._addToCache_inProgress = false; // Lock for addToCache operations
     
     // In-memory LRU cache for fast lookups
-    const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
-    this.memoryCache = new LRUCache({ max: memCacheSize });
+    // Ensure config.CACHE exists and has MEMORY_CACHE_SIZE property
+    const memoryCacheSize = (config.CACHE && config.CACHE.MEMORY_CACHE_SIZE) || 100;
+    this.memoryCache = new LRUCache({ max: memoryCacheSize });
     
     // Pruning thresholds
     this.LRU_PRUNE_THRESHOLD = LRU_PRUNE_THRESHOLD;
     this.LRU_PRUNE_TARGET = LRU_PRUNE_TARGET;
-    
+  }
+  
+  /**
+   * Initialize cache metrics
+   * @private
+   */
+  _initializeMetrics() {
     // Cache statistics metrics
     this.metrics = {
       hits: 0,
@@ -92,12 +119,12 @@ class CacheService {
       // Ensure the directory exists
       const dir = path.dirname(this.cachePath);
       try {
-        await fs.promises.access(dir);
+        await this._fileOperation('access', dir);
         logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
-          await fs.promises.mkdir(dir, { recursive: true });
+          await this._fileOperation('mkdir', dir);
           logger.info(`Created cache directory: ${dir}`);
         } catch (mkdirErr) {
           logger.warn(`Failed to create cache directory: ${mkdirErr.message}`);
@@ -112,7 +139,7 @@ class CacheService {
       
       try {
         // Try to read the cache file
-        const data = await fs.promises.readFile(this.cachePath, 'utf8');
+        const data = await this._fileOperation('read', this.cachePath);
         try {
           // Parse the data
           const cacheData = JSON.parse(data);
@@ -312,13 +339,14 @@ class CacheService {
     try {      
       // Ensure directory exists
       const dir = path.dirname(this.cachePath);
+      
       try {
-        await fs.promises.access(dir);
+        await this._fileOperation('access', dir);
         logger.debug(`Cache directory exists: ${dir}`);
       } catch (dirErr) {
         // Directory doesn't exist, create it
         try {
-          await fs.promises.mkdir(dir, { recursive: true });
+          await this._fileOperation('mkdir', dir);
           logger.info(`Created cache directory: ${dir}`);
         } catch (mkdirErr) {
           logger.warn(`Failed to create directory: ${mkdirErr.message}`);
@@ -328,7 +356,7 @@ class CacheService {
       
       // Write the cache file
       try {
-        await fs.promises.writeFile(this.cachePath, JSON.stringify(this.cache, null, 2), 'utf8');
+        await this._fileOperation('write', this.cachePath, JSON.stringify(this.cache, null, 2));
         this.isDirty = false;
         logger.debug('Cache saved successfully');
         return true;
@@ -350,6 +378,7 @@ class CacheService {
   /**
    * Save the cache to disk synchronously - for backward compatibility
    * @returns {boolean} - Returns true if save was successful, false otherwise
+   * @deprecated Use saveCacheAsync instead
    */
   saveCache() {
     // Check for concurrent save operation
@@ -399,6 +428,44 @@ class CacheService {
       // Always release the lock when done
       this._saveLock = false;
     }
+  }
+  
+  /**
+   * Converts all synchronous file operations to asynchronous
+   * Should be used for all file I/O operations
+   * @param {string} filePath - The file path to operate on
+   * @returns {Promise} - Promise that resolves when operation is complete
+   */
+  async _fileOperation(operation, filePath, data = null) {
+    return new Promise((resolve, reject) => {
+      setImmediate(async () => {
+        try {
+          let result;
+          switch (operation) {
+            case 'read':
+              result = await fs.promises.readFile(filePath, 'utf8');
+              break;
+            case 'write':
+              await fs.promises.writeFile(filePath, data, 'utf8');
+              result = true;
+              break;
+            case 'access':
+              await fs.promises.access(filePath);
+              result = true;
+              break;
+            case 'mkdir':
+              await fs.promises.mkdir(filePath, { recursive: true });
+              result = true;
+              break;
+            default:
+              throw new Error(`Unknown file operation: ${operation}`);
+          }
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
   }
   
   /**
@@ -773,6 +840,102 @@ class CacheService {
   }
 
   /**
+   * Create an inverted index for faster similarity matching
+   * @private
+   */
+  _buildInvertedIndex() {
+    if (!this.enabled || !this.initialized) return;
+    
+    logger.debug('Building inverted index for cache entries');
+    
+    // Initialize the inverted index
+    this.invertedIndex = {};
+    let entryCount = 0;
+    
+    // Iterate through all cache entries
+    for (const [hash, entry] of Object.entries(this.cache)) {
+      // Skip metadata entries
+      if (hash.startsWith('_')) continue;
+      
+      if (!entry || !entry.question) continue;
+      entryCount++;
+      
+      // Get tokens (words) from the question
+      const tokens = this._getTokensFromText(entry.question);
+      
+      // Add each token to the inverted index
+      tokens.forEach(token => {
+        if (!this.invertedIndex[token]) {
+          this.invertedIndex[token] = [];
+        }
+        if (!this.invertedIndex[token].includes(hash)) {
+          this.invertedIndex[token].push(hash);
+        }
+      });
+    }
+    
+    logger.debug(`Built inverted index with ${Object.keys(this.invertedIndex).length} terms for ${entryCount} entries`);
+  }
+  
+  /**
+   * Extract meaningful tokens from text for indexing
+   * @param {string} text - The text to tokenize
+   * @returns {string[]} - Array of tokens
+   * @private
+   */
+  _getTokensFromText(text) {
+    if (!text) return [];
+    
+    // Convert to lowercase and split by non-alphanumeric chars
+    const tokens = text.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(token => 
+        // Remove stop words and short tokens (less than 3 chars)
+        token.length >= 3 && 
+        !['the', 'and', 'for', 'but', 'this', 'that', 'with', 'from', 'what', 'how'].includes(token)
+      );
+      
+    return [...new Set(tokens)]; // Remove duplicates
+  }
+  
+  /**
+   * Find similar questions using the inverted index
+   * @param {string} question - The question to find similar entries for
+   * @param {number} threshold - Similarity threshold (0-1)
+   * @returns {Array} - Array of candidate entries that may be similar
+   * @private
+   */
+  _findCandidatesUsingIndex(question) {
+    if (!this.invertedIndex) {
+      this._buildInvertedIndex();
+    }
+    
+    const tokens = this._getTokensFromText(question);
+    const candidates = {};
+    
+    // Find entries that share tokens with our question
+    tokens.forEach(token => {
+      if (this.invertedIndex[token]) {
+        this.invertedIndex[token].forEach(hash => {
+          candidates[hash] = (candidates[hash] || 0) + 1;
+        });
+      }
+    });
+    
+    // Convert to array and sort by match count (descending)
+    return Object.entries(candidates)
+      .map(([hash, matchCount]) => ({
+        hash,
+        score: matchCount / Math.max(tokens.length, 1) // Normalize by query length
+      }))
+      .filter(item => item.score > 0.3) // Initial filtering
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10) // Limit to top 10 candidates for detailed comparison
+      .map(item => item.hash);
+  }
+
+  /**
    * Prune the cache using an LRU (Least Recently Used) strategy
    * This is called when the cache exceeds a certain size threshold
    * @param {number} targetSize - Optional target size to prune to. If not provided, uses the default this.LRU_PRUNE_TARGET.
@@ -898,13 +1061,23 @@ class CacheService {
       return false;
     }
     
-    // Increased limit for question length to handle test cases (was 2000)
-    // This is a reasonable limit for real-world questions while preventing abuse
-    const MAX_QUESTION_LENGTH = 10000;
-    if (question.length > MAX_QUESTION_LENGTH) {
+    // Use configurable max question length
+    if (question.length > config.CACHE.MAX_QUESTION_LENGTH) {
       logger.warn(`Question too long for cache (${question.length} chars)`);
       return false;
     }
+    
+    // Use a mutex-like approach to prevent race conditions
+    // This ensures only one addToCache operation can proceed at a time
+    if (this._addToCache_inProgress) {
+      logger.debug('Another addToCache operation is in progress, queueing');
+      // Add to queue for processing when current operation completes
+      // For now, we'll just return false to avoid concurrency issues
+      return false;
+    }
+    
+    // Set the lock
+    this._addToCache_inProgress = true;
     
     try {
       const hash = this.generateHash(question);
@@ -920,9 +1093,10 @@ class CacheService {
         this.pruneLRU();
       }
       
-      // Prevent race condition by checking if a newer entry exists
+      // Enhanced race condition prevention with timestamp comparison
       if (this.cache[hash] && this.cache[hash].timestamp > now - 5000) {
         logger.debug(`Skipping cache update for recent entry: "${question.substring(0, 30)}..."`);
+        this._addToCache_inProgress = false; // Release the lock
         return false;
       }
       
@@ -951,6 +1125,7 @@ class CacheService {
           logger.debug(`Test mode: Non-critical error writing cache: ${error.message}`);
         }
         logger.debug(`Added new entry to cache: "${question.substring(0, 20)}..."`);
+        this._addToCache_inProgress = false; // Release the lock
         return true;
       }
       
@@ -966,9 +1141,11 @@ class CacheService {
       }
       
       logger.debug(`Added new entry to cache: "${question.substring(0, 30)}..."`);
+      this._addToCache_inProgress = false; // Release the lock
       return true;
     } catch (error) {
       logger.error('Error adding to cache:', error);
+      this._addToCache_inProgress = false; // Always release the lock, even on error
       return false;
     }
   }
@@ -1162,7 +1339,86 @@ class CacheService {
     this.isDirty = true;
     logger.info('Cache cleared');
   }
+  
+  /**
+   * Perform cleanup tasks when the service is being destroyed
+   * Should be called when application is shutting down
+   * @returns {Promise<void>}
+   */
+  async cleanup() {
+    logger.info('Performing cache service cleanup...');
+    
+    // Save any pending changes
+    if (this.isDirty) {
+      try {
+        await this.saveCacheAsync();
+        logger.info('Cache saved during cleanup');
+      } catch (error) {
+        logger.error(`Failed to save cache during cleanup: ${error.message}`);
+      }
+    }
+    
+    // Clear memory cache
+    if (this.memoryCache) {
+      this.memoryCache.clear();
+      logger.debug('Memory cache cleared');
+    }
+    
+    logger.info('Cache service cleanup completed');
+  }
 
+  /**
+   * Helper method for consistent error handling
+   * @param {string} operation - The operation that failed
+   * @param {Error} error - The original error
+   * @param {boolean} shouldRethrow - Whether to rethrow the error
+   * @returns {Error} - A consistently formatted error
+   * @private
+   */
+  _handleError(operation, error, shouldRethrow = false) {
+    // Map error types to appropriate custom errors
+    let customError;
+    
+    if (error instanceof CacheError) {
+      // Already a custom error, just use it
+      customError = error;
+    } else if (operation === 'save') {
+      customError = new CacheSaveError(
+        `Failed to save cache: ${error.message || 'Unknown error'}`, 
+        { cause: error }
+      );
+    } else if (operation === 'read') {
+      customError = new CacheReadError(
+        `Failed to read cache: ${error.message || 'Unknown error'}`,
+        { cause: error }
+      );
+    } else if (operation === 'init') {
+      customError = new CacheInitializationError(
+        `Failed to initialize cache: ${error.message || 'Unknown error'}`,
+        { cause: error }
+      );
+    } else if (operation === 'validation') {
+      customError = new CacheValueError(
+        `Cache validation failed: ${error.message || 'Unknown error'}`,
+        { cause: error }
+      );
+    } else {
+      customError = new CacheError(
+        `Cache operation '${operation}' failed: ${error.message || 'Unknown error'}`,
+        { cause: error }
+      );
+    }
+    
+    // Log the error
+    logger.error(`${customError.name}: ${customError.message}`);
+    
+    // Rethrow if required
+    if (shouldRethrow) {
+      throw customError;
+    }
+    
+    return customError;
+  }
 }
 
 // Create a singleton instance
