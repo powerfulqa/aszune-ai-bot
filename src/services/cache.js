@@ -44,6 +44,9 @@ class CacheService {
     this.size = 0;
     this.maxSize = CACHE_MAX_SIZE; // Store the max size limit
     
+    // Write lock to prevent concurrent saves
+    this._saveLock = false;
+    
     // In-memory LRU cache for fast lookups
     const memCacheSize = parseInt(process.env.ASZUNE_MEMORY_CACHE_SIZE, 10) || 500;
     this.memoryCache = new LRUCache({ max: memCacheSize });
@@ -111,7 +114,26 @@ class CacheService {
         // Try to read the cache file
         const data = await fs.promises.readFile(this.cachePath, 'utf8');
         try {
-          this.cache = JSON.parse(data);
+          // Parse the data
+          const cacheData = JSON.parse(data);
+          
+          // Validate that we got an object
+          if (typeof cacheData !== 'object' || cacheData === null) {
+            throw new Error('Invalid cache format: expected an object');
+          }
+          
+          // Add cache version validation
+          const CACHE_VERSION = '1.0.0';
+          
+          // If this is a new version format with metadata
+          if (cacheData._version && cacheData._version !== CACHE_VERSION) {
+            logger.info(`Cache version mismatch (${cacheData._version} vs ${CACHE_VERSION}), resetting cache`);
+            this.cache = { _version: CACHE_VERSION };
+          } else {
+            this.cache = cacheData;
+            // Ensure version is set
+            this.cache._version = CACHE_VERSION;
+          }
           logger.debug(`Successfully parsed cache file from: ${this.cachePath}`);
         } catch (parseErr) {
           logger.warn(`Failed to parse cache file: ${parseErr.message}`);
@@ -278,6 +300,15 @@ class CacheService {
    * @returns {Promise<boolean>} - Promise that resolves to true if save was successful
    */
   async saveCacheAsync() {
+    // Check for concurrent save operation
+    if (this._saveLock) {
+      logger.debug('Save operation already in progress, skipping');
+      return false;
+    }
+    
+    // Set lock
+    this._saveLock = true;
+    
     try {      
       // Ensure directory exists
       const dir = path.dirname(this.cachePath);
@@ -310,6 +341,9 @@ class CacheService {
         throw error;
       }
       throw new CacheSaveError(`Failed to save cache: ${error.message || error}`);
+    } finally {
+      // Always release the lock when done
+      this._saveLock = false;
     }
   }
   
@@ -318,6 +352,15 @@ class CacheService {
    * @returns {boolean} - Returns true if save was successful, false otherwise
    */
   saveCache() {
+    // Check for concurrent save operation
+    if (this._saveLock) {
+      logger.debug('Save operation already in progress, skipping');
+      return false;
+    }
+    
+    // Set lock
+    this._saveLock = true;
+    
     try {      
       // Ensure directory exists
       const dir = path.dirname(this.cachePath);
@@ -352,6 +395,9 @@ class CacheService {
       const errorMessage = `Failed to save cache: ${error.message || 'Unknown error'}`;
       logger.error(errorMessage);
       throw new CacheSaveError(errorMessage);
+    } finally {
+      // Always release the lock when done
+      this._saveLock = false;
     }
   }
   
@@ -439,7 +485,8 @@ class CacheService {
     if (normalized === '') {
       // Use a consistent hash for all-symbol strings instead of throwing
       // This ensures consistent behavior in tests and production
-      return crypto.createHash('sha256').update('empty_after_normalization_' + question.length).digest('hex');
+      const metadata = { type: 'empty_after_normalization', originalLength: question.length };
+      return crypto.createHash('sha256').update(JSON.stringify(metadata)).digest('hex');
     }
       
     // Use SHA-256 for better collision resistance
@@ -1055,7 +1102,6 @@ class CacheService {
       if (age > maxAgeMs && entry.accessCount < minAccesses) {
         delete this.cache[key];
         removedCount++;
-        this.size--;
       }
     }
     
@@ -1086,8 +1132,10 @@ class CacheService {
       entriesToRemove.forEach(({ hash }) => {
         delete this.cache[hash];
         removedCount++;
-        this.size--;
       });
+      
+      // Recalculate size at the end of the method
+      this.size = Object.keys(this.cache).length;
       
       logger.info(`Force-removed ${excessEntries} least used entries to enforce cache size limit`);
     }
