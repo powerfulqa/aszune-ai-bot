@@ -63,9 +63,10 @@ class CacheService {
     this.size = 0;
     this.maxSize = CACHE_MAX_SIZE; // Store the max size limit
     
-    // Write lock to prevent concurrent saves
+    // Locks to prevent concurrent operations
     this._saveLock = false;
     this._addToCache_inProgress = false; // Lock for addToCache operations
+    this._pruneLock = false; // Lock for pruning operations
     
     // In-memory LRU cache for fast lookups
     // Ensure config.CACHE exists and has MEMORY_CACHE_SIZE property
@@ -431,7 +432,7 @@ class CacheService {
   }
   
   /**
-   * Converts all synchronous file operations to asynchronous
+   * File I/O abstraction for better error handling and testing
    * Should be used for all file I/O operations
    * @param {string} filePath - The file path to operate on
    * @returns {Promise} - Promise that resolves when operation is complete
@@ -462,7 +463,21 @@ class CacheService {
           }
           resolve(result);
         } catch (error) {
-          reject(error);
+          // Enhance error handling with specific file system error codes
+          if (error.code === 'ENOSPC') {
+            reject(new Error(`No space left on device when performing ${operation} on ${filePath}`));
+          } else if (error.code === 'EACCES') {
+            reject(new Error(`Permission denied when performing ${operation} on ${filePath}`));
+          } else if (error.code === 'ENOENT' && operation !== 'read') {
+            // More specific error for missing files/directories (except for read operations where this is expected)
+            reject(new Error(`Path not found when performing ${operation} on ${filePath}`));
+          } else if (error.code === 'EISDIR' && operation === 'read') {
+            reject(new Error(`Cannot read a directory as a file: ${filePath}`));
+          } else if (error.code === 'ETIMEDOUT') {
+            reject(new Error(`Operation timed out when performing ${operation} on ${filePath}`));
+          } else {
+            reject(error);
+          }
         }
       });
     });
@@ -480,6 +495,19 @@ class CacheService {
       } catch (error) {
         // Only log the error, don't propagate it to avoid disrupting normal operation
         logger.warn(`Failed to save cache during routine save: ${error.message || 'Unknown error'}`);
+        
+        // More detailed error handling for specific types of errors
+        if (error instanceof CacheSaveError) {
+          logger.debug(`Cache save error details: ${JSON.stringify(error)}`);
+        } else if (error.code === 'ENOSPC') {
+          logger.error('Disk space error when saving cache. Free up disk space to allow cache to function properly.');
+        } else if (error.code === 'EACCES') {
+          logger.error('Permission denied when saving cache. Check file and directory permissions.');
+        } else {
+          logger.debug(`Unexpected error type: ${error.constructor.name}`);
+        }
+        
+        // We should still return false to indicate save failed
         return false;
       }
     }
@@ -497,6 +525,18 @@ class CacheService {
       } catch (error) {
         // Only log the error, don't propagate it to avoid disrupting normal operation
         logger.warn(`Failed to save cache during routine save: ${error.message || 'Unknown error'}`);
+        
+        // More detailed error handling for specific types of errors
+        if (error instanceof CacheSaveError) {
+          logger.debug(`Cache save error details: ${JSON.stringify(error)}`);
+        } else if (error.code === 'ENOSPC') {
+          logger.error('Disk space error when saving cache. Free up disk space to allow cache to function properly.');
+        } else if (error.code === 'EACCES') {
+          logger.error('Permission denied when saving cache. Check file and directory permissions.');
+        } else {
+          logger.debug(`Unexpected error type: ${error.constructor.name}`);
+        }
+        
         return false;
       }
     }
@@ -672,9 +712,9 @@ class CacheService {
     
     try {
       // Check if we need to prune the cache based on size
-      const cacheSize = Object.keys(this.cache).length;
-      if (cacheSize > this.LRU_PRUNE_THRESHOLD) {
-        logger.info(`Cache size (${cacheSize}) exceeded threshold (${this.LRU_PRUNE_THRESHOLD}), pruning...`);
+      // Use the maintained size property instead of calculating on every lookup
+      if (this.size > this.LRU_PRUNE_THRESHOLD) {
+        logger.info(`Cache size (${this.size}) exceeded threshold (${this.LRU_PRUNE_THRESHOLD}), pruning...`);
         this.pruneLRU(this.LRU_PRUNE_TARGET);
       }
       
@@ -740,7 +780,7 @@ class CacheService {
       // Only do similarity search if the cache isn't too large
       // For very large caches, similarity search becomes too expensive
       const MAX_SIMILARITY_SEARCH_SIZE = 5000;
-      if (cacheSize <= MAX_SIMILARITY_SEARCH_SIZE) {
+      if (this.size <= MAX_SIMILARITY_SEARCH_SIZE) {
         const keys = Object.keys(this.cache);
         
         // Improved algorithm - first filter by question length for efficiency
@@ -884,19 +924,79 @@ class CacheService {
    * @private
    */
   _getTokensFromText(text) {
-    if (!text) return [];
-    
-    // Convert to lowercase and split by non-alphanumeric chars
-    const tokens = text.toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(token => 
-        // Remove stop words and short tokens (less than 3 chars)
-        token.length >= 3 && 
-        !['the', 'and', 'for', 'but', 'this', 'that', 'with', 'from', 'what', 'how'].includes(token)
-      );
+    try {
+      // Handle invalid inputs with more detailed logging
+      if (text === null || text === undefined) {
+        logger.debug('Null or undefined text provided to _getTokensFromText');
+        return [];
+      }
       
-    return [...new Set(tokens)]; // Remove duplicates
+      if (typeof text !== 'string') {
+        logger.warn(`Invalid text type provided to _getTokensFromText: ${typeof text}`);
+        // Try to convert numbers or other simple types to strings
+        if (typeof text === 'number' || typeof text === 'boolean') {
+          text = String(text);
+        } else {
+          return [];
+        }
+      }
+      
+      // Handle empty strings early
+      if (text.trim() === '') {
+        return [];
+      }
+      
+      // Common stop words to filter out
+      const stopWords = new Set([
+        'the', 'and', 'for', 'but', 'this', 'that', 'with', 'from', 'what', 'how',
+        'who', 'when', 'where', 'why', 'which', 'can', 'will', 'would', 'could', 'should'
+      ]);
+      
+      // Check for abnormally long text that might cause performance issues
+      if (text.length > 10000) {
+        logger.debug(`Tokenizing large text (${text.length} chars), this may impact performance`);
+        // Consider sampling for very large texts
+        if (text.length > 50000) {
+          text = text.substring(0, 50000);
+          logger.debug('Text truncated to 50000 chars for tokenization');
+        }
+      }
+      
+      // Convert to lowercase and split by non-alphanumeric chars
+      const tokens = text.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')  // Replace non-alphanumeric with spaces
+        .split(/\s+/)              // Split by whitespace
+        .filter(token => {
+          // Skip empty tokens
+          if (!token) return false;
+          
+          // Keep tokens with numbers (they might be important)
+          if (/\d/.test(token)) return true;
+          
+          // Filter out stop words and short tokens (less than 3 chars)
+          return token.length >= 3 && !stopWords.has(token);
+        });
+      
+      // Handle case where no tokens were found
+      if (tokens.length === 0) {
+        // If we have original text but no tokens after filtering,
+        // include at least some minimal representation
+        if (text.length > 0) {
+          // Include first word without filtering if we couldn't get any tokens
+          const firstWord = text.trim().split(/\s+/)[0];
+          if (firstWord && firstWord.length > 0) {
+            return [firstWord.toLowerCase()];
+          }
+        }
+        return [];
+      }
+        
+      // Remove duplicates
+      return [...new Set(tokens)]; 
+    } catch (error) {
+      logger.warn(`Error in _getTokensFromText: ${error.message}`);
+      return []; // Return empty array as fallback
+    }
   }
   
   /**
@@ -942,39 +1042,90 @@ class CacheService {
    * @returns {number} - The number of entries removed
    */
   pruneLRU(targetSize) {
-    // If cache is smaller than threshold, don't prune
-    const size = Object.keys(this.cache).length;
-    if (size < this.LRU_PRUNE_THRESHOLD && targetSize === undefined) {
+    // If pruning is already in progress, skip this operation
+    if (this._pruneLock) {
+      logger.debug('Pruning operation already in progress, skipping');
       return 0;
     }
     
-    // Sort entries by timestamp (ascending = oldest first)
-    const entries = Object.entries(this.cache)
-      .map(([hash, entry]) => ({
-        hash,
-        timestamp: entry.timestamp || 0
-      }))
-      .sort((a, b) => a.timestamp - b.timestamp);
-    
-    // Calculate how many entries to remove
-    // Use the provided targetSize or fall back to the default
     const target = targetSize !== undefined ? targetSize : this.LRU_PRUNE_TARGET;
-    const removeCount = size - target;
-    
-    if (removeCount <= 0) return 0;
-    
-    // Remove oldest entries
-    const entriesToRemove = entries.slice(0, removeCount);
-    entriesToRemove.forEach(({ hash }) => {
-      delete this.cache[hash];
-    });
-    
-    // Update the size property after pruning
-    this.size = Object.keys(this.cache).length;
-    this.isDirty = true;
-    logger.info(`LRU pruning: removed ${removeCount} oldest entries from cache (target: ${target})`);
-    
-    return removeCount;
+    return this._performLRUEviction(target);
+  }
+  
+  /**
+   * LRU eviction logic
+   * @param {number} targetSize - Target size to prune to
+   * @returns {number} - The number of entries removed
+   * @private
+   */
+  _performLRUEviction(targetSize) {
+    // Check if pruning is already in progress
+    if (this._pruneLock) {
+      logger.debug('Pruning operation already in progress, skipping');
+      return 0;
+    }
+
+    try {
+      // Set the pruning lock
+      this._pruneLock = true;
+      
+      // Calculate current size
+      const currentSize = Object.keys(this.cache).length;
+      if (currentSize <= targetSize) {
+        return 0;
+      }
+      
+      // Sort entries by lastAccessed (ascending = oldest first)
+      const entries = Object.entries(this.cache)
+        .filter(([key]) => !key.startsWith('_')) // Skip metadata entries
+        .map(([hash, entry]) => ({
+          hash,
+          lastAccessed: entry.lastAccessed || entry.timestamp || 0,
+          accessCount: entry.accessCount || 0
+        }))
+        .sort((a, b) => {
+          // Sort primarily by last access time (oldest first)
+          // For the test case, this ensures the lowest key numbers (oldest) are removed first
+          const timeCompare = a.lastAccessed - b.lastAccessed;
+          
+          // If last access times are equal (as in test case), use accessCount as a tiebreaker
+          if (timeCompare === 0) {
+            return a.accessCount - b.accessCount;
+          }
+          
+          return timeCompare;
+        });
+      
+      // Calculate how many entries to remove
+      const removeCount = Math.max(0, currentSize - targetSize);
+      
+      if (removeCount <= 0) return 0;
+      
+      // Create a set of hashes to remove (the oldest entries)
+      const hashesToRemove = new Set();
+      for (let i = 0; i < removeCount && i < entries.length; i++) {
+        hashesToRemove.add(entries[i].hash);
+      }
+      
+      // Remove entries using the set for O(1) lookup
+      let removed = 0;
+      for (const hash of hashesToRemove) {
+        if (this.cache[hash]) {
+          delete this.cache[hash];
+          removed++;
+        }
+      }
+      
+      // Update the size property after pruning
+      this.size = Object.keys(this.cache).length;
+      this.isDirty = true;
+      
+      logger.info(`LRU eviction: removed ${removed} least recently used entries from cache (target: ${targetSize})`);
+      return removed;
+    } finally {
+      // Always release the lock when done
+      this._pruneLock = false;
+    }
   }
 
   /**
