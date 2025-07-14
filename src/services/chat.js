@@ -65,7 +65,8 @@ async function handleChatMessage(message) {
       
       if (cacheResult) {
         cacheHit = true;
-        similarityScore = cacheResult.similarity;
+        // Default to 1.0 similarity for exact cache hits, otherwise use the returned similarity score
+        similarityScore = cacheResult.exact ? 1.0 : cacheResult.similarity;
         
         // Track memory cache stats if available
         if (cacheService.metrics && cacheService.metrics.memoryHits > 0) {
@@ -160,6 +161,18 @@ async function refreshCacheEntry(question, userId, retryCount = 0) {
   // Validate the userId parameter
   if (!userId) {
     logger.error('Missing userId in refreshCacheEntry function call');
+    return false;
+  }
+  
+  // Ensure userId is a valid string to avoid errors in conversation manager
+  if (typeof userId !== 'string') {
+    logger.error(`Invalid userId type in refreshCacheEntry: ${typeof userId}`);
+    return false;
+  }
+  
+  // Additional validation for userId format
+  if (userId.trim() === '') {
+    logger.error('Empty userId in refreshCacheEntry function call');
     return false;
   }
   

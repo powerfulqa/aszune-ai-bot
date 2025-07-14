@@ -59,8 +59,14 @@ client.once('ready', async () => {
   const CACHE_SAVE_INTERVAL = config.CACHE?.SAVE_INTERVAL_MS || 60000; // Default to 60 seconds if not set
   logger.info(`Setting cache save interval to ${CACHE_SAVE_INTERVAL/1000} seconds`);
   
-  setInterval(() => {
-    cacheService.saveIfDirty();
+  setInterval(async () => {
+    try {
+      // Use async version to avoid blocking the event loop
+      await cacheService.saveIfDirtyAsync();
+    } catch (error) {
+      // Log error but don't crash the application
+      logger.warn('Error during scheduled cache save:', error);
+    }
   }, CACHE_SAVE_INTERVAL);
   
   // Register slash commands
@@ -90,8 +96,8 @@ client.on('warn', (info) => {
 process.on('SIGINT', async () => {
   logger.info('Shutting down...');
   try {
-    // Save cache if needed before shutting down
-    cacheService.saveIfDirty();
+    // Save cache if needed before shutting down (use async version)
+    await cacheService.saveIfDirtyAsync();
     await client.destroy();
     await conversationManager.destroy();
   } catch (error) {
@@ -104,8 +110,8 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   logger.info('Shutting down...');
   try {
-    // Save cache if needed before shutting down
-    cacheService.saveIfDirty();
+    // Save cache if needed before shutting down (use async version)
+    await cacheService.saveIfDirtyAsync();
     await client.destroy();
     await conversationManager.destroy();
   } catch (error) {
