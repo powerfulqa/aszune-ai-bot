@@ -18,7 +18,7 @@ const {
 } = require('../utils/errors');
 
 // Constants
-const DEFAULT_CACHE_PATH = path.join(__dirname, '../../data/question_cache.json');
+const DEFAULT_CACHE_PATH = process.env.CACHE_PATH || path.join(__dirname, '../../data/question_cache.json');
 const CACHE_REFRESH_THRESHOLD = config.CACHE?.REFRESH_THRESHOLD_MS || (30 * 24 * 60 * 60 * 1000);
 const SIMILARITY_THRESHOLD = config.CACHE?.SIMILARITY_THRESHOLD || 0.85;
 const CACHE_MAX_SIZE = config.CACHE?.MAX_SIZE || 10000;
@@ -548,66 +548,35 @@ class CacheService {
    * @returns {string} - A hash of the question
    * @throws {CacheValueError} - If question is invalid
    */
+  /**
+   * Generate a hash for a question with simplified error handling
+   * @param {string} question - The question to hash
+   * @returns {string} - The hash
+   * @throws {Error} - If inputs are invalid
+   */
   generateHash(question) {
-    // Defensive programming - return consistent values instead of throwing exceptions
-    try {
-      // Input validation - handle all edge cases including null, undefined, and non-strings
-      if (question === null || question === undefined) {
-        logger.warn('generateHash called with null or undefined question');
-        return crypto.createHash('sha256').update('null_or_undefined_question').digest('hex');
-      }
-      
-      if (typeof question !== 'string') {
-        logger.warn(`generateHash called with non-string question type: ${typeof question}`);
-        // Convert to string if possible, or use a placeholder
-        try {
-          question = String(question);
-        } catch (err) {
-          return crypto.createHash('sha256').update(`non_string_type_${typeof question}`).digest('hex');
-        }
-      }
-      
-      // Check for empty strings or strings with only whitespace
-      if (question === '' || question.trim() === '') {
-        logger.debug('generateHash called with empty string');
-        return crypto.createHash('sha256').update('empty_string_question').digest('hex');
-      }
-      
-      // Normalize the question: lowercase, trim whitespace, normalize spaces, remove punctuation and special characters
-      let normalized = question
-        .toLowerCase()
-        .trim()
-        .replace(/[.,!?;:#@$]/g, '') // Remove common punctuation, keep hyphens
-        .replace(/['"`]/g, '')       // Remove quotes
-        .replace(/\s+/g, ' ')        // Normalize whitespace
-        .trim();
-        
-      // Special handling for strings that are just numbers or mostly numbers with spaces
-      if (/^\d+\s*$/.test(normalized)) {
-        normalized = `num_${normalized.trim()}`;
-      }
-        
-      // Additional check for strings that become empty after normalization
-      if (normalized === '') {
-        // Use a consistent hash for all-symbol strings
-        const metadata = { type: 'empty_after_normalization', originalLength: question.length };
-        return crypto.createHash('sha256').update(JSON.stringify(metadata)).digest('hex');
-      }
-        
-      // Testing special case - return specific hashes for test expectations
-      if (process.env.NODE_ENV === 'test') {
-        if (question === 'New question') return 'newHash';
-        if (question === 'Game question') return 'contextHash';
-      }
-      
-      // Use SHA-256 for better collision resistance
-      return crypto.createHash('sha256').update(normalized).digest('hex');
-    } catch (error) {
-      // Catch any unexpected errors to ensure this function never throws
-      logger.error('Unexpected error in generateHash:', error);
-      // Return a fallback hash that indicates an error occurred
-      return crypto.createHash('sha256').update(`error_generating_hash_${Date.now()}`).digest('hex');
+    // Basic validation
+    if (!question || typeof question !== 'string') {
+      throw new CacheValueError(`Invalid question type: ${typeof question}`);
     }
+    
+    // Normalize the question: lowercase, trim whitespace, normalize spaces, remove punctuation
+    let normalized = question
+      .toLowerCase()
+      .trim()
+      .replace(/[.,!?;:#@$]/g, '') // Remove common punctuation
+      .replace(/['"`]/g, '')       // Remove quotes
+      .replace(/\s+/g, ' ')        // Normalize whitespace
+      .trim();
+    
+    // Handle edge case for empty strings after normalization
+    if (normalized === '') {
+      normalized = 'empty_normalized_string';
+    }
+    
+    // Use SHA-256 for better collision resistance
+    return crypto.createHash('sha256').update(normalized).digest('hex');
+  }
   }
 
   /**
@@ -1238,24 +1207,9 @@ class CacheService {
       return false;
     }
     
-    // Special case for tests to make them pass
-    if (process.env.NODE_ENV === 'test') {
-      // Handle the empty string cases specifically
-      if (question === '' || answer === '') {
-        return false;
-      }
-    
-      // Special test cases handling
-      if (question === 'what is node.js') {
-        return true;
-      }
-      
-      if (question && question.includes('(') && question.includes(')')) {
-        return true;
-      }
-      
-      const hash = this.generateHash(question);
-      const now = Date.now();
+    // Process the cache addition
+    const hash = this.generateHash(question);
+    const now = Date.now();
       
       this.cache[hash] = {
         questionHash: hash,
@@ -1650,15 +1604,11 @@ class CacheService {
   }
 }
 
-// Create a singleton instance
-const cacheServiceInstance = new CacheService();
+// Export the CacheService class directly
+module.exports = CacheService;
 
-// Export the singleton instance with the class for testing purposes
-const cacheService = cacheServiceInstance;
-cacheService.CacheService = CacheService;
-
-// Explicitly expose the key methods for direct access
-cacheService.findInCache = cacheServiceInstance.findInCache.bind(cacheServiceInstance);
-cacheService.addToCache = cacheServiceInstance.addToCache.bind(cacheServiceInstance);
-
-module.exports = cacheService;
+// Note: The application entry point should create the singleton instance
+// Example in app/index.js:
+// const CacheService = require('./services/cache');
+// const cacheService = new CacheService();
+// global.cacheService = cacheService; // if you need global access

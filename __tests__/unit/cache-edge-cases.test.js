@@ -1,7 +1,7 @@
 /**
  * Tests for edge cases in cache service
  */
-const { CacheService } = require('../../src/services/cache');
+const CacheService = require('../../src/services/cache');
 const fs = require('fs');
 const path = require('path');
 
