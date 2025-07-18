@@ -10,6 +10,7 @@ const { handleChatMessage } = require('./services/chat');
 const commandHandler = require('./commands');
 const conversationManager = require('./utils/conversation');
 const logger = require('./utils/logger');
+// Import the pre-instantiated CacheService singleton
 const cacheService = require('./services/cache');
 
 // Create Discord client

@@ -7,9 +7,8 @@ const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const commandHandler = require('../commands');
-const CacheService = require('../services/cache');
-// Create singleton instance for this module
-const cacheService = new CacheService();
+// Import the pre-instantiated CacheService singleton
+const cacheService = require('../services/cache');
 
 /**
  * Handle an incoming chat message

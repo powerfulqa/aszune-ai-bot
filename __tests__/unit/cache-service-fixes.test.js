@@ -3,7 +3,8 @@
  */
 const path = require('path');
 const fs = require('fs');
-const cacheService = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache');
+const cacheService = new CacheService();
 const { promisify } = require('util');
 
 // Mock fs writeFile for testing race conditions

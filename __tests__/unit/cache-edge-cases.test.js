@@ -1,7 +1,7 @@
 /**
  * Tests for edge cases in cache service
  */
-const CacheService = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache');
 const fs = require('fs');
 const path = require('path');
 
@@ -170,7 +170,7 @@ describe('Cache Service Edge Cases', () => {
       jest.clearAllMocks();
       
       // Create a new instance with cache disabled
-      const CacheService = require('../../src/services/cache').CacheService;
+      const { CacheService } = require('../../src/services/cache');
       cacheService = new CacheService();
     });
     
