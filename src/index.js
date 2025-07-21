@@ -129,11 +129,13 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit here, just log
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
+  // Always exit with error code on uncaught exceptions
   shutdown('uncaughtException');
 });
 
