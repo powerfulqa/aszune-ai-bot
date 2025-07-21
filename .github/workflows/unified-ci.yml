@@ -61,6 +61,7 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./test-results/junit.xml
 
 # When ready to deploy the bot, you can uncomment and customize this job
 #  deploy:

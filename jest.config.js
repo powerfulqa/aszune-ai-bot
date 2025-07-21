@@ -21,6 +21,14 @@ module.exports = {
     "/node_modules/",
     "/__tests__/utils/undici-mock-helpers.js"
   ],
+  // Generate JUnit XML test report for CodeCov
+  reporters: [
+    "default",
+    ["jest-junit", {
+      outputDirectory: "test-results",
+      outputName: "junit.xml"
+    }]
+  ],
   // Use the Jest setup file
   setupFilesAfterEnv: ['./jest.setup.js'],
   // Use v8 coverage provider for better reporting
