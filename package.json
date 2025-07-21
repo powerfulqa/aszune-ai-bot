@@ -6,6 +6,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
+    "test:ci": "jest --ci --coverage",
+    "security": "npm audit",
     "format:md": "prettier --write '**/*.md'",
     "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'"
   },
