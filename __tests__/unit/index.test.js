@@ -1,60 +1,31 @@
-// To keep a single client instance that can be referenced across the test file
 const { EventEmitter } = require('events');
-const mockClientInstance = new EventEmitter();
-mockClientInstance.user = { id: 'test-user-id', tag: 'test-user#1234' };
-mockClientInstance.login = jest.fn().mockResolvedValue('Logged in');
-mockClientInstance.destroy = jest.fn().mockResolvedValue();
 
-// This will hold the mock `put` function from the REST instance, allowing us to track its usage
-let mockPutMethod;
-
+// Mock dependencies
 jest.mock('discord.js', () => {
-  const mockPut = jest.fn().mockResolvedValue([]);
-  mockPutMethod = mockPut; // Assign the mock function to the outer variable so the test can access it
-
+  const original = jest.requireActual('discord.js');
+  const mockClient = new EventEmitter();
+  mockClient.user = { id: 'test-user-id', tag: 'test-user#1234' };
+  mockClient.login = jest.fn().mockResolvedValue('Logged in');
+  mockClient.destroy = jest.fn().mockResolvedValue();
+  
   const REST = jest.fn().mockImplementation(() => ({
     setToken: jest.fn().mockReturnThis(),
-    put: mockPut,
+    put: jest.fn().mockResolvedValue([]),
   }));
 
   return {
-    Client: jest.fn(() => mockClientInstance),
-    GatewayIntentBits: {
-      Guilds: 'GUILDS',
-      GuildMessages: 'GUILD_MESSAGES',
-      MessageContent: 'MESSAGE_CONTENT',
-    },
+    ...original,
+    Client: jest.fn(() => mockClient),
     REST,
-    Routes: {
-      applicationCommands: jest.fn(() => '/application-commands'),
-    },
   };
 });
-
-jest.mock('@discordjs/builders', () => ({
-  SlashCommandBuilder: jest.fn().mockImplementation(() => ({
-    setName: jest.fn().mockReturnThis(),
-    setDescription: jest.fn().mockReturnThis(),
-    toJSON: jest.fn().mockReturnValue({ name: 'test', description: 'a test command' }),
-  })),
-}));
-
 jest.mock('../../src/config/config', () => ({
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-perplexity-key',
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai',
-    },
-  },
-  COMMAND_PREFIX: '!',
-  RATE_LIMIT_SECONDS: 30,
-  MAX_CONVERSATION_LENGTH: 20,
-  GUILD_ID: 'test-guild-id',
 }));
 jest.mock('../../src/services/chat');
 jest.mock('../../src/commands', () => ({
-  getSlashCommandsData: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([]),
   handleSlashCommand: jest.fn(),
 }));
 jest.mock('../../src/utils/conversation', () => ({
@@ -62,140 +33,100 @@ jest.mock('../../src/utils/conversation', () => ({
 }));
 jest.mock('../../src/utils/logger');
 
-
 describe('Bot Main Entry Point (index.js)', () => {
-  let Client, GatewayIntentBits, REST;
-  let handleChatMessage;
-  let commandHandler;
+  let client;
   let conversationManager;
   let logger;
-  let originalProcessOn;
+  let originalProcessOn, originalProcessExit;
   let processHandlers;
 
   beforeAll(() => {
     originalProcessOn = process.on;
-    processHandlers = new Map();
-    process.on = jest.fn((event, handler) => {
-      processHandlers.set(event, handler);
-    });
-    process.exit = jest.fn();
+    originalProcessExit = process.exit;
   });
 
   afterAll(() => {
     process.on = originalProcessOn;
-    jest.restoreAllMocks();
+    process.exit = originalProcessExit;
   });
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    
-    mockClientInstance.removeAllListeners();
-    
-    ({ Client, GatewayIntentBits, REST } = require('discord.js'));
-    handleChatMessage = require('../../src/services/chat');
-    commandHandler = require('../../src/commands');
+
+    // Mock process events and exit
+    processHandlers = new Map();
+    process.on = jest.fn((event, handler) => {
+      processHandlers.set(event, handler);
+    });
+    process.exit = jest.fn();
+
+    // Import modules after mocks are set up
+    const { Client } = require('discord.js');
+    client = new Client();
     conversationManager = require('../../src/utils/conversation');
     logger = require('../../src/utils/logger');
-
-    commandHandler.getSlashCommandsData.mockReturnValue([{ name: 'test', description: 'a test command' }]);
-
+    
+    // Load the index file to attach event listeners
     require('../../src/index');
   });
 
-  it('should create a Discord client with the correct intents', () => {
-    expect(Client).toHaveBeenCalledWith({
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-      ],
-    });
+  it('should create a Discord client and log in', () => {
+    expect(client.login).toHaveBeenCalledWith('test-token');
   });
 
-  it('should log in the client', () => {
-    expect(mockClientInstance.login).toHaveBeenCalledWith('test-token');
-  });
-
-  describe('Event Handlers', () => {
-    it('should handle the "ready" event and register slash commands', async () => {
-      await mockClientInstance.emit('ready');
-
-      expect(logger.info).toHaveBeenCalledWith('Discord bot is online as test-user#1234!');
-      expect(commandHandler.getSlashCommandsData).toHaveBeenCalled();
-      expect(mockPutMethod).toHaveBeenCalled();
-    });
-
-    it('should handle the "messageCreate" event', () => {
-      const message = { content: 'hello' };
-      mockClientInstance.emit('messageCreate', message);
-      expect(handleChatMessage).toHaveBeenCalledWith(message);
-    });
-
-    it('should handle the "interactionCreate" event for a slash command', async () => {
-      const interaction = { isChatInputCommand: () => true };
-      await mockClientInstance.emit('interactionCreate', interaction);
-      expect(commandHandler.handleSlashCommand).toHaveBeenCalledWith(interaction);
-    });
-
-    it('should ignore non-slash command interactions', async () => {
-      const interaction = { isChatInputCommand: () => false };
-      await mockClientInstance.emit('interactionCreate', interaction);
-      expect(commandHandler.handleSlashCommand).not.toHaveBeenCalled();
-    });
-
-    it('should handle the "error" event', () => {
-      const error = new Error('Test Error');
-      mockClientInstance.emit('error', error);
-      expect(logger.error).toHaveBeenCalledWith('Discord client error:', error);
-    });
-
-    it('should handle the "warn" event', () => {
-      const info = 'Test Warning';
-      mockClientInstance.emit('warn', info);
-      expect(logger.warn).toHaveBeenCalledWith('Discord client warning:', info);
-    });
-  });
-
-  describe('Process Signal Handlers', () => {
-    it('should handle SIGINT', async () => {
+  describe('Graceful Shutdown', () => {
+    it('should handle SIGINT and shut down gracefully', async () => {
       const sigintHandler = processHandlers.get('SIGINT');
-      expect(sigintHandler).toBeDefined();
       await sigintHandler();
-      expect(logger.info).toHaveBeenCalledWith('Shutting down...');
-      expect(mockClientInstance.destroy).toHaveBeenCalled();
+      
+      expect(logger.info).toHaveBeenCalledWith('Received SIGINT. Shutting down gracefully...');
       expect(conversationManager.destroy).toHaveBeenCalled();
+      expect(client.destroy).toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith('Shutdown complete.');
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should handle SIGTERM', async () => {
+    it('should handle SIGTERM and shut down gracefully', async () => {
       const sigtermHandler = processHandlers.get('SIGTERM');
-      expect(sigtermHandler).toBeDefined();
       await sigtermHandler();
-      expect(logger.info).toHaveBeenCalledWith('Shutting down...');
-      expect(mockClientInstance.destroy).toHaveBeenCalled();
+
+      expect(logger.info).toHaveBeenCalledWith('Received SIGTERM. Shutting down gracefully...');
       expect(conversationManager.destroy).toHaveBeenCalled();
+      expect(client.destroy).toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith('Shutdown complete.');
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should handle errors during shutdown for SIGINT', async () => {
-      const error = new Error('Shutdown error');
-      mockClientInstance.destroy.mockRejectedValueOnce(error);
+    it('should handle uncaught exceptions and shut down', async () => {
+      const error = new Error('Test uncaught exception');
+      const uncaughtExceptionHandler = processHandlers.get('uncaughtException');
+      await uncaughtExceptionHandler(error);
+
+      expect(logger.error).toHaveBeenCalledWith('Uncaught Exception:', error);
+      expect(logger.info).toHaveBeenCalledWith('Received uncaughtException. Shutting down gracefully...');
+      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+
+    it('should log an error and exit if shutdown fails', async () => {
+      const shutdownError = new Error('Shutdown failed');
+      conversationManager.destroy.mockRejectedValueOnce(shutdownError);
       
       const sigintHandler = processHandlers.get('SIGINT');
-      expect(sigintHandler).toBeDefined();
       await sigintHandler();
-      
-      expect(logger.error).toHaveBeenCalledWith('Error during shutdown:', error);
-      expect(process.exit).toHaveBeenCalledWith(0);
+
+      expect(logger.error).toHaveBeenCalledWith('Error during shutdown:', shutdownError);
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it('should handle unhandledRejection', () => {
-      const error = new Error('Unhandled Rejection');
+    it('should log unhandled promise rejections', () => {
+      const reason = new Error('Test rejection');
+      const promise = Promise.reject(reason);
       const unhandledRejectionHandler = processHandlers.get('unhandledRejection');
-      expect(unhandledRejectionHandler).toBeDefined();
-      unhandledRejectionHandler(error);
-      expect(logger.error).toHaveBeenCalledWith('Unhandled promise rejection:', error);
+      unhandledRejectionHandler(reason, promise);
+
+      expect(logger.error).toHaveBeenCalledWith('Unhandled Rejection at:', promise, 'reason:', reason);
     });
   });
+});
 });

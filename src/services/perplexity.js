@@ -1,7 +1,7 @@
 /**
  * Service for interacting with the Perplexity API
  */
-const axios = require('axios');
+const { request } = require('undici');
 const config = require('../config/config');
 
 /**
@@ -34,16 +34,24 @@ class PerplexityService {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     
     try {
-      const response = await axios.post(endpoint, {
-        model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
-        messages: messages,
-        max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
-        temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
-      }, {
-        headers: this._getHeaders()
+      const { body, statusCode } = await request(endpoint, {
+        method: 'POST',
+        headers: this._getHeaders(),
+        body: JSON.stringify({
+          model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
+          messages: messages,
+          max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
+          temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
+        }),
       });
       
-      return response.data;
+      if (statusCode !== 200) {
+        const errorDetails = await body.json();
+        console.error('Perplexity API Error:', errorDetails);
+        throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
+      }
+      
+      return await body.json();
     } catch (error) {
       const errorDetails = error?.response?.data || error.message || error;
       console.error('Perplexity API Error:', errorDetails);

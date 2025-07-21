@@ -56,10 +56,10 @@ describe('Bot integration', () => {
             };
         });
         
-        jest.doMock('axios', () => ({
-            post: jest.fn(),
+        jest.doMock('undici', () => ({
+            request: jest.fn(),
         }));
-        axios = require('axios'); 
+        const { request } = require('undici');
 
         conversation = require('../../src/utils/conversation');
 
@@ -109,13 +109,17 @@ describe('Bot integration', () => {
     });
 
     it('handles a normal message and replies', async () => {
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'Hi there!' } }] }
+        const { request } = require('undici');
+        request.mockResolvedValueOnce({
+            body: {
+                json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }),
+            },
+            statusCode: 200,
         });
 
         await messageCreateHandler(message);
         expect(message.channel.sendTyping).toHaveBeenCalled();
-        expect(axios.post).toHaveBeenCalled();
+        expect(request).toHaveBeenCalled();
         // Bot now replies with an embed
         expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'Hi there!' })] });
     });    it('replies to !help command', async () => {
@@ -140,11 +144,13 @@ describe('Bot integration', () => {
     });
 
     it('replies to !summary with history', async () => {
+        const { request } = require('undici');
         jest.useFakeTimers();
         // First, add some history
         message.content = 'Hello there';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'General Kenobi!' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'General Kenobi!' } }] }) },
+            statusCode: 200,
         });
         await messageCreateHandler(message);
         // The first reply is an embed
@@ -153,8 +159,9 @@ describe('Bot integration', () => {
 
         // Now, ask for summary
         message.content = '!summary';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'A summary of the conversation.' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'A summary of the conversation.' } }] }) },
+            statusCode: 200,
         });
 
         // Advance timers to bypass rate limit
@@ -174,24 +181,28 @@ describe('Bot integration', () => {
     });
 
     it('ignores unknown command', async () => {
+        const { request } = require('undici');
         message.content = '!foobar';
         await messageCreateHandler(message);
         // It should just do nothing, not even try to talk to perplexity
-        expect(axios.post).not.toHaveBeenCalled();
+        expect(request).not.toHaveBeenCalled();
         expect(message.reply).not.toHaveBeenCalled();
     });
 
     it('ignores messages from bots', async () => {
+        const { request } = require('undici');
         message.author.bot = true;
         await messageCreateHandler(message);
-        expect(axios.post).not.toHaveBeenCalled();
+        expect(request).not.toHaveBeenCalled();
         expect(message.reply).not.toHaveBeenCalled();
     });
 
     it('adds emoji reactions for keywords', async () => {
+        const { request } = require('undici');
         message.content = 'hello this is awesome';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'Indeed it is!' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Indeed it is!' } }] }) },
+            statusCode: 200,
         });
         await messageCreateHandler(message);
         expect(message.react).toHaveBeenCalledWith('👋');
@@ -199,9 +210,11 @@ describe('Bot integration', () => {
     });
 
     it('adds multiple emoji reactions for multiple keywords', async () => {
+        const { request } = require('undici');
         message.content = 'happy sad love';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'Feelings...' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Feelings...' } }] }) },
+            statusCode: 200,
         });
         await messageCreateHandler(message);
         expect(message.react).toHaveBeenCalledWith('😊');
@@ -210,9 +223,11 @@ describe('Bot integration', () => {
     });
 
     it('rate limits user messages', async () => {
+        const { request } = require('undici');
         message.content = 'first message';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'response 1' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'response 1' } }] }) },
+            statusCode: 200,
         });
         await messageCreateHandler(message);
         // The first reply is an embed
@@ -223,24 +238,26 @@ describe('Bot integration', () => {
         await messageCreateHandler(secondMessage);
         // Rate limit message is a plain string
         expect(message.reply).toHaveBeenLastCalledWith('Please wait a few seconds before sending another message.');
-        expect(axios.post).toHaveBeenCalledTimes(1);
+        expect(request).toHaveBeenCalledTimes(1);
     });
 
     it('handles API error when replying', async () => {
+        const { request } = require('undici');
         message.content = 'hello';
-        axios.post.mockRejectedValueOnce(new Error('API Error'));
+        request.mockRejectedValueOnce(new Error('API Error'));
         await messageCreateHandler(message);
         // Error message is a plain string
         expect(message.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
     });
 
     it('handles API error when summarising', async () => {
+        const { request } = require('undici');
         // Add history
         conversation.addMessage(message.author.id, 'user', 'question');
         conversation.addMessage(message.author.id, 'assistant', 'answer');
 
         message.content = '!summary';
-        axios.post.mockRejectedValueOnce(new Error('Summary API Error'));
+        request.mockRejectedValueOnce(new Error('Summary API Error'));
         await messageCreateHandler(message);
         // The error is now sent as a plain string
         expect(message.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
@@ -255,6 +272,7 @@ describe('Bot integration', () => {
     });
 
     it('truncates very long conversation history', async () => {
+        const { request } = require('undici');
         const config = require('../../src/config/config');
         // Populate history with more messages than the limit
         for (let i = 0; i < 25; i++) { // 25 pairs = 50 messages
@@ -263,13 +281,14 @@ describe('Bot integration', () => {
         }
         
         message.content = 'hello';
-        axios.post.mockResolvedValueOnce({
-            data: { choices: [{ message: { content: 'Hi there!' } }] }
+        request.mockResolvedValueOnce({
+            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }) },
+            statusCode: 200,
         });
         
         await messageCreateHandler(message);
         
-        const calledWith = axios.post.mock.calls[0][1];
+        const calledWith = JSON.parse(request.mock.calls[0][1].body);
         // The history passed to perplexity should be truncated to MAX_HISTORY * 2 (40)
         // plus the system prompt (1).
         expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2 + 1);
@@ -277,23 +296,18 @@ describe('Bot integration', () => {
 
     it('handles missing environment variables gracefully', () => {
         const originalEnv = { ...process.env };
-        const exitSpy = jest.spyOn(process, 'exit').mockImplementationOnce(() => {
-          throw new Error('process.exit() was called.');
-        });
     
         delete process.env.PERPLEXITY_API_KEY;
         delete process.env.DISCORD_BOT_TOKEN;
         
         jest.resetModules();
         
+        // The config now throws an error instead of calling process.exit
         expect(() => {
           require('../../src/index.js');
-        }).toThrow('process.exit() was called.');
+        }).toThrow('Missing PERPLEXITY_API_KEY, DISCORD_BOT_TOKEN in environment variables.');
         
-        expect(exitSpy).toHaveBeenCalledWith(1);
-    
-        // Cleanup
-        exitSpy.mockRestore();
+        // Restore environment variables
         process.env = originalEnv;
     });
 });

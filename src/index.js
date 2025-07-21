@@ -72,34 +72,33 @@ client.on('warn', (info) => {
   logger.warn('Discord client warning:', info);
 });
 
-// Handle shutdown
-process.on('SIGINT', async () => {
-  logger.info('Shutting down...');
+// Centralized shutdown function
+const shutdown = async (signal) => {
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
   try {
-    await client.destroy();
     await conversationManager.destroy();
+    client.destroy();
+    logger.info('Shutdown complete.');
+    process.exit(0);
   } catch (error) {
     logger.error('Error during shutdown:', error);
-  } finally {
-    process.exit(0);
+    process.exit(1);
   }
-});
+};
 
-process.on('SIGTERM', async () => {
-  logger.info('Shutting down...');
-  try {
-    await client.destroy();
-    await conversationManager.destroy();
-  } catch (error) {
-    logger.error('Error during shutdown:', error);
-  } finally {
-    process.exit(0);
-  }
-});
+// Handle shutdown signals
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (error) => {
-  logger.error('Unhandled promise rejection:', error);
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  shutdown('uncaughtException');
 });
 
 // Log in to Discord

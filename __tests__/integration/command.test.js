@@ -1,7 +1,7 @@
 const createMockMessage = require('../../__mocks__/discordMessageMock');
 const { Client } = require('discord.js');
-const axios = require('axios');
-jest.mock('axios');
+const { request } = require('undici');
+jest.mock('undici');
 
 let conversationHistory;
 
@@ -52,8 +52,9 @@ describe('Command Handling', () => {
     ]);
 
     // Mock Perplexity API response
-    axios.post.mockResolvedValueOnce({
-      data: { choices: [{ message: { content: 'Summary in UK English.' } }] }
+    request.mockResolvedValueOnce({
+      body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Summary in UK English.' } }] }) },
+      statusCode: 200,
     });
 
     // Simulate summary handler logic
@@ -78,8 +79,9 @@ describe('Command Handling', () => {
   test('!summarise command replies with text summary', async () => {
     const msg = createMockMessage('!summarise Some text to summarise.');
     // Mock Perplexity API response
-    axios.post.mockResolvedValueOnce({
-      data: { choices: [{ message: { content: 'Summarised text.' } }] }
+    request.mockResolvedValueOnce({
+      body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Summarised text.' } }] }) },
+      statusCode: 200,
     });
 
     // Simulate summarise handler logic
@@ -104,8 +106,9 @@ describe('Command Handling', () => {
   test('!summerise command (alternative spelling) replies with text summary', async () => {
     const msg = createMockMessage('!summerise Some text to summarise.');
     // Mock Perplexity API response
-    axios.post.mockResolvedValueOnce({
-      data: { choices: [{ message: { content: 'Summarised text.' } }] }
+    request.mockResolvedValueOnce({
+      body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Summarised text.' } }] }) },
+      statusCode: 200,
     });
 
     // Simulate summarise handler logic
@@ -147,10 +150,12 @@ describe('Command Handling', () => {
       { role: 'assistant', content: 'Hi there!' },
     ]);
 
-    axios.post.mockImplementationOnce((url, payload) => {
-      expect(payload.messages[0].content).toMatch(/UK English/);
+    request.mockImplementationOnce((url, options) => {
+      const body = JSON.parse(options.body);
+      expect(body.messages[0].content).toMatch(/UK English/);
       return Promise.resolve({
-        data: { choices: [{ message: { content: 'Summary in UK English.' } }] }
+        body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Summary in UK English.' } }] }) },
+        statusCode: 200,
       });
     });
 

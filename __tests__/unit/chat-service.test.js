@@ -5,12 +5,13 @@ const chatService = require('../../src/services/chat');
 const perplexityService = require('../../src/services/perplexity');
 const conversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
-const config = require('../../src/config/config');
+const commandHandler = require('../../src/commands');
 
 // Mock dependencies
 jest.mock('../../src/services/perplexity');
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/emoji');
+jest.mock('../../src/commands');
 
 describe('Chat Service', () => {
   // Create a mock message
@@ -30,6 +31,7 @@ describe('Chat Service', () => {
     conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
+    commandHandler.handleTextCommand.mockResolvedValue();
   });
   
   it('handles a normal message and sends a reply', async () => {
@@ -37,6 +39,7 @@ describe('Chat Service', () => {
     
     await chatService(message);
     
+    expect(commandHandler.handleTextCommand).not.toHaveBeenCalled();
     expect(conversationManager.addMessage).toHaveBeenCalledWith('123', 'user', 'hello');
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalledWith({
@@ -45,6 +48,15 @@ describe('Chat Service', () => {
       })]
     });
     expect(emojiManager.addReactionsToMessage).toHaveBeenCalled();
+  });
+
+  it('calls command handler for messages starting with "!"', async () => {
+    const message = createMessage('!help');
+    
+    await chatService(message);
+    
+    expect(commandHandler.handleTextCommand).toHaveBeenCalledWith(message);
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
   
   it('ignores messages from bots', async () => {

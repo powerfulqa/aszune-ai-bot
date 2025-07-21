@@ -1,57 +1,62 @@
 /**
  * Tests for perplexity service
  */
-const axios = require('axios');
-const perplexityService = require('../../src/services/perplexity');
+const { request } = require('undici');
+const PerplexityService = require('../../src/services/perplexity');
 const config = require('../../src/config/config');
 
-jest.mock('axios');
+jest.mock('undici', () => ({
+  request: jest.fn(),
+}));
 
 describe('Perplexity Service', () => {
+  let perplexityService;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    perplexityService = new PerplexityService();
   });
   
   describe('sendChatRequest', () => {
     it('sends a request to the API with correct parameters', async () => {
       const mockResponse = {
-        data: {
-          choices: [{ message: { content: 'Mock response' } }]
-        }
+        choices: [{ message: { content: 'Mock response' } }]
       };
       
-      axios.post.mockResolvedValueOnce(mockResponse);
+      request.mockResolvedValueOnce({
+        body: {
+          json: jest.fn().mockResolvedValue(mockResponse),
+        },
+        statusCode: 200,
+      });
       
       const messages = [{ role: 'user', content: 'Hello' }];
       const response = await perplexityService.sendChatRequest(messages);
       
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(request).toHaveBeenCalledWith(
         expect.stringContaining('/chat/completions'),
         expect.objectContaining({
-          model: config.API.PERPLEXITY.DEFAULT_MODEL,
-          messages: messages,
-          max_tokens: config.API.PERPLEXITY.MAX_TOKENS.CHAT
-        }),
-        expect.objectContaining({
+          method: 'POST',
           headers: expect.objectContaining({
             'Authorization': expect.stringContaining(config.PERPLEXITY_API_KEY),
             'Content-Type': 'application/json'
-          })
+          }),
+          body: expect.any(String),
         })
       );
       
-      expect(response).toEqual(mockResponse.data);
+      expect(response).toEqual(mockResponse);
     });
     
     it('throws an error when API request fails', async () => {
-      const mockError = {
-        response: {
-          status: 400,
-          data: { error: 'Bad request' }
-        }
-      };
+      const mockError = { error: 'Bad request' };
       
-      axios.post.mockRejectedValueOnce(mockError);
+      request.mockResolvedValueOnce({
+        body: {
+          json: jest.fn().mockResolvedValue(mockError),
+        },
+        statusCode: 400,
+      });
       
       await expect(perplexityService.sendChatRequest([{ role: 'user', content: 'Hello' }]))
         .rejects.toThrow('API request failed');
@@ -64,7 +69,6 @@ describe('Perplexity Service', () => {
         choices: [{ message: { content: 'Summary text' } }]
       };
       
-      // Mock the sendChatRequest method to return our mock response
       jest.spyOn(perplexityService, 'sendChatRequest').mockResolvedValueOnce(mockResponse);
       
       const history = [{ role: 'user', content: 'Hello' }];
@@ -85,19 +89,32 @@ describe('Perplexity Service', () => {
     });
   });
   
-  describe('generateChatResponse', () => {
-    it('generates a chat response with correct system prompt', async () => {
-      const mockResponse = {
-        choices: [{ message: { content: 'Chat response' } }]
-      };
-      
-      // Mock the sendChatRequest method to return our mock response
-      jest.spyOn(perplexityService, 'sendChatRequest').mockResolvedValueOnce(mockResponse);
-      
-      const history = [{ role: 'user', content: 'Hello' }];
-      const response = await perplexityService.generateChatResponse(history);
-      
-      expect(perplexityService.sendChatRequest).toHaveBeenCalledWith(
+  describe('generateTextSummary', () => {
+    it('generates a text summary with correct system prompt', async () => {
+        const mockResponse = {
+            choices: [{ message: { content: 'Text summary' } }]
+        };
+
+        jest.spyOn(perplexityService, 'sendChatRequest').mockResolvedValueOnce(mockResponse);
+
+        const messages = [{ role: 'user', content: 'Some text to summarize' }];
+        const summary = await perplexityService.generateTextSummary(messages);
+
+        expect(perplexityService.sendChatRequest).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                { role: 'system', content: config.SYSTEM_MESSAGES.TEXT_SUMMARY },
+                ...messages
+            ]),
+            expect.objectContaining({
+                maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
+                temperature: 0.2
+            })
+        );
+
+        expect(summary).toBe('Text summary');
+    });
+  });
+});
         expect.arrayContaining([
           { role: 'system', content: config.SYSTEM_MESSAGES.CHAT },
           ...history

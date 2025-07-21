@@ -60,20 +60,13 @@ describe('Bot Edge Cases', () => {
     delete process.env.PERPLEXITY_API_KEY;
     delete process.env.DISCORD_BOT_TOKEN;
 
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementationOnce(() => {
-      throw new Error('process.exit() was called.');
-    });
-
     jest.resetModules();
 
     expect(() => {
-      require('../../src/index.js');
-    }).toThrow('process.exit() was called.');
-
-    expect(exitSpy).toHaveBeenCalledWith(1);
+      require('../../src/config/config.js');
+    }).toThrow('Missing PERPLEXITY_API_KEY, DISCORD_BOT_TOKEN in environment variables.');
 
     // Cleanup
-    exitSpy.mockRestore();
     process.env = originalEnv;
     jest.resetModules();
   });
