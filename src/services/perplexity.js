@@ -55,12 +55,14 @@ class PerplexityService {
     } catch (error) {
       let errorDetails;
       
+      // Since we can't use async methods here, we need to handle the error differently
       if (error.body) {
-        try {
-          errorDetails = await error.body.json();
-        } catch (parseError) {
-          errorDetails = { message: 'Failed to parse error body', originalError: error.message };
-        }
+        // We can't use await here, so use a simpler approach
+        errorDetails = { 
+          message: 'Error with request body', 
+          originalError: error.message,
+          statusCode: error.statusCode || 'unknown'
+        };
       } else {
         errorDetails = { message: error.message || 'Unknown error', originalError: error };
       }
@@ -147,4 +149,6 @@ class PerplexityService {
   }
 }
 
-module.exports = new PerplexityService();
+// Export the singleton instance for direct use
+const perplexityServiceInstance = new PerplexityService();
+module.exports = perplexityServiceInstance;
