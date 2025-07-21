@@ -34,7 +34,7 @@ class PerplexityService {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     
     try {
-      const { body, statusCode } = await request(endpoint, {
+      const { body, statusCode, headers } = await request(endpoint, {
         method: 'POST',
         headers: this._getHeaders(),
         body: JSON.stringify({
@@ -44,6 +44,9 @@ class PerplexityService {
           temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
         }),
       });
+      
+      // First check content-type to determine appropriate parsing method
+      const contentType = headers.get('content-type') || '';
       
       // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
@@ -60,22 +63,30 @@ class PerplexityService {
         throw new Error(`API request failed with status ${statusCode}`);
       }
       
-      // Parse successful response
-      return await body.json().catch(error => {
-        console.error('Failed to parse successful response as JSON:', error);
-        throw new Error('Failed to parse API response');
-      });
+      // Parse successful response based on content type
+      if (contentType.includes('application/json')) {
+        return await body.json().catch(error => {
+          console.error('Failed to parse successful response as JSON:', error);
+          throw new Error('Failed to parse API response');
+        });
+      } else {
+        // For non-JSON responses, return as text
+        const responseText = await body.text();
+        try {
+          // Attempt to parse as JSON anyway in case content-type is incorrect
+          return JSON.parse(responseText);
+        } catch (e) {
+          // Return as-is if not JSON
+          return { text: responseText };
+        }
+      }
     } catch (error) {
-      // Create a simplified error object that's safe to stringify
-      // Properly validate error object structure to prevent undefined property access
-      const errorDetails = {
-        message: typeof error === 'object' && error !== null && 'message' in error ? 
-                 error.message : 'Unknown API error'
-      };
-      
       // Log the original error for debugging
       console.error('Perplexity API Error:', error);
-      throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
+      
+      // Create a more readable error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown API error';
+      throw new Error(`API request failed: ${errorMessage}`);
     }
   }
     /**

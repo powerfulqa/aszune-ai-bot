@@ -5,7 +5,13 @@
  * powered by the Perplexity API.
  */
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
-const config = require('./config/config');
+let config;
+try {
+  config = require('./config/config');
+} catch (error) {
+  console.error('Failed to load configuration:', error.message);
+  process.exit(1);
+}
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
 const conversationManager = require('./utils/conversation');
@@ -78,27 +84,37 @@ const shutdown = async (signal) => {
   
   // Track any errors that occur during shutdown
   const errors = [];
+  let shutdownStatus = true;
   
   // Step 1: Shutdown conversation manager
   try {
+    logger.debug('Shutting down conversation manager...');
     await conversationManager.destroy();
+    logger.debug('Conversation manager shutdown successful');
   } catch (convError) {
+    shutdownStatus = false;
     logger.error('Error shutting down conversation manager:', convError);
     errors.push(convError);
   }
   
-  // Step 2: Shutdown Discord client
+  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
   try {
+    logger.debug('Shutting down Discord client...');
     // Use await to ensure proper cleanup of connections
     await client.destroy();
+    logger.debug('Discord client shutdown successful');
   } catch (clientError) {
+    shutdownStatus = false;
     logger.error('Error shutting down Discord client:', clientError);
     errors.push(clientError);
   }
   
-  // Log completion and exit
+  // Log individual errors for easier debugging
   if (errors.length > 0) {
-    logger.error('Fatal error during shutdown process:', errors.length === 1 ? errors[0] : errors);
+    errors.forEach((err, index) => {
+      logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
+    });
+    logger.error(`Shutdown completed with ${errors.length} error(s)`);
     process.exit(1);
   } else {
     logger.info('Shutdown complete.');

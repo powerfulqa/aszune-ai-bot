@@ -176,7 +176,8 @@ describe('Bot Main Entry Point (index.js)', () => {
       await sigintHandler();
 
       expect(logger.error).toHaveBeenCalledWith('Error shutting down conversation manager:', shutdownError);
-      expect(logger.error).toHaveBeenCalledWith('Fatal error during shutdown process:', shutdownError);
+      expect(logger.error).toHaveBeenCalledWith('Shutdown error 1/1:', shutdownError);
+      expect(logger.error).toHaveBeenCalledWith('Shutdown completed with 1 error(s)');
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 

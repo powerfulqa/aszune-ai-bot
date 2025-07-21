@@ -144,10 +144,8 @@ describe('Bot integration', () => {
         jest.useFakeTimers();
         // First, add some history
         message.content = 'Hello there';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'General Kenobi!' } }] }) },
-            statusCode: 200,
-        });
+        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'General Kenobi!' } }] }));
         await messageCreateHandler(message);
         // The first reply is an embed
         expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'General Kenobi!' })] });
@@ -155,10 +153,7 @@ describe('Bot integration', () => {
 
         // Now, ask for summary
         message.content = '!summary';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'A summary of the conversation.' } }] }) },
-            statusCode: 200,
-        });
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'A summary of the conversation.' } }] }));
 
         // Advance timers to bypass rate limit
         jest.advanceTimersByTime(30000);
@@ -196,10 +191,8 @@ describe('Bot integration', () => {
     it('adds emoji reactions for keywords', async () => {
         const { request } = require('undici');
         message.content = 'hello this is awesome';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Indeed it is!' } }] }) },
-            statusCode: 200,
-        });
+        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Indeed it is!' } }] }));
         await messageCreateHandler(message);
         expect(message.react).toHaveBeenCalledWith('👋');
         expect(message.react).toHaveBeenCalledWith('😎');
@@ -208,10 +201,8 @@ describe('Bot integration', () => {
     it('adds multiple emoji reactions for multiple keywords', async () => {
         const { request } = require('undici');
         message.content = 'happy sad love';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Feelings...' } }] }) },
-            statusCode: 200,
-        });
+        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Feelings...' } }] }));
         await messageCreateHandler(message);
         expect(message.react).toHaveBeenCalledWith('😊');
         expect(message.react).toHaveBeenCalledWith('😢');
@@ -221,10 +212,8 @@ describe('Bot integration', () => {
     it('rate limits user messages', async () => {
         const { request } = require('undici');
         message.content = 'first message';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'response 1' } }] }) },
-            statusCode: 200,
-        });
+        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'response 1' } }] }));
         await messageCreateHandler(message);
         // The first reply is an embed
         expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'response 1' })] });

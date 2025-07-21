@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.js",
     "test": "jest",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
-    "security": "npm audit",
+    "security": "npm audit --audit-level=high",
     "format:md": "prettier --write '**/*.md'",
     "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'"
   },

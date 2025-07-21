@@ -10,8 +10,12 @@
 const mockSuccessResponse = (responseData) => ({
   body: {
     json: jest.fn().mockResolvedValue(responseData),
+    text: jest.fn().mockResolvedValue(JSON.stringify(responseData)),
   },
   statusCode: 200,
+  headers: {
+    get: jest.fn(key => key.toLowerCase() === 'content-type' ? 'application/json' : null)
+  },
 });
 
 /**
@@ -23,8 +27,12 @@ const mockSuccessResponse = (responseData) => ({
 const mockErrorResponse = (errorData, statusCode = 400) => ({
   body: {
     text: jest.fn().mockResolvedValue(JSON.stringify(errorData)),
+    json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
   },
   statusCode,
+  headers: {
+    get: jest.fn(key => key.toLowerCase() === 'content-type' ? 'application/json' : null)
+  },
 });
 
 module.exports = {
