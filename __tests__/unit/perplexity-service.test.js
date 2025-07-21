@@ -52,6 +52,7 @@ describe('Perplexity Service', () => {
     it('throws an error when API request fails', async () => {
       const mockError = { error: 'Bad request' };
       
+      // Mock a proper error response with non-200 status code
       request.mockResolvedValueOnce({
         body: {
           json: jest.fn().mockResolvedValue(mockError),
@@ -60,7 +61,7 @@ describe('Perplexity Service', () => {
       });
       
       await expect(perplexityService.sendChatRequest([{ role: 'user', content: 'Hello' }]))
-        .rejects.toThrow('API request failed');
+        .rejects.toThrow('API request failed with status 400');
     });
   });
   

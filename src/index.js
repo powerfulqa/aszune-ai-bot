@@ -75,26 +75,33 @@ client.on('warn', (info) => {
 // Centralized shutdown function
 const shutdown = async (signal) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
+  
+  // Track any errors that occur during shutdown
+  const errors = [];
+  
+  // Step 1: Shutdown conversation manager
   try {
-    try {
-      await conversationManager.destroy();
-    } catch (convError) {
-      logger.error('Error shutting down conversation manager:', convError);
-      throw convError;
-    }
-    
-    try {
-      client.destroy();
-    } catch (clientError) {
-      logger.error('Error shutting down Discord client:', clientError);
-      throw clientError;
-    }
-    
+    await conversationManager.destroy();
+  } catch (convError) {
+    logger.error('Error shutting down conversation manager:', convError);
+    errors.push(convError);
+  }
+  
+  // Step 2: Shutdown Discord client
+  try {
+    client.destroy();
+  } catch (clientError) {
+    logger.error('Error shutting down Discord client:', clientError);
+    errors.push(clientError);
+  }
+  
+  // Log completion and exit
+  if (errors.length > 0) {
+    logger.error('Fatal error during shutdown process:', errors.length === 1 ? errors[0] : errors);
+    process.exit(1);
+  } else {
     logger.info('Shutdown complete.');
     process.exit(0);
-  } catch (error) {
-    logger.error('Fatal error during shutdown process:', error);
-    process.exit(1);
   }
 };
 
