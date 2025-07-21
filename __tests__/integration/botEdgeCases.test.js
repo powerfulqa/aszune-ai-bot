@@ -38,7 +38,7 @@ describe('Bot Edge Cases', () => {
   });
 
   it('handles API failure for chat completions', async () => {
-    axios.post.mockRejectedValueOnce(new Error('API Down'));
+    request.mockRejectedValueOnce(new Error('API Down'));
     await fakeMessage.reply('There was an error processing your request. Please try again later.');
     expect(fakeMessage.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
   });
