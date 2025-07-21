@@ -1,33 +1,17 @@
-// Mock dependencies
-jest.mock('events');
-jest.mock('discord.js', () => {
-  const original = jest.requireActual('discord.js');
-  // Create mock client with EventEmitter functionality
-  const mockClient = {
-    on: jest.fn().mockImplementation((event, handler) => {
-      if (event === 'ready') {
-        handler(); // Auto-trigger ready event for testing
-      }
-      return mockClient;
-    }),
-    once: jest.fn().mockReturnThis(),
-    emit: jest.fn(),
-    user: { id: 'test-user-id', tag: 'test-user#1234' },
-    login: jest.fn().mockResolvedValue('Logged in'),
-    destroy: jest.fn().mockResolvedValue()
-  };
-  
-  const REST = jest.fn().mockImplementation(() => ({
-    setToken: jest.fn().mockReturnThis(),
-    put: jest.fn().mockResolvedValue([]),
-  }));
+/**
+ * Main test file for the bot entry point (index.js)
+ * 
+ * This test file is organized into separate describe blocks for better readability:
+ * - Bot Initialization: Tests for bot initialization and login
+ * - Graceful Shutdown: Tests for graceful shutdown handling
+ * - Error Handling: Tests for error handling (uncaught exceptions, etc.)
+ */
 
-  return {
-    ...original,
-    Client: jest.fn(() => mockClient),
-    REST,
-  };
-});
+// Import mocks
+const mockClient = require('../__mocks__/discordClientMock');
+const mockLogger = require('../__mocks__/loggerMock');
+
+// Additional mocks
 jest.mock('../../src/config/config', () => ({
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-perplexity-key',
@@ -45,9 +29,6 @@ jest.mock('../../src/commands', () => ({
 jest.mock('../../src/utils/conversation', () => ({
   destroy: jest.fn().mockResolvedValue(),
 }));
-jest.mock('../../src/utils/logger');
-
-// TODO: Consider refactoring this test suite to be more focused and easier to understand
 // by breaking it into smaller, more targeted test files per feature area.
 describe('Bot Main Entry Point (index.js)', () => {
   let client;
