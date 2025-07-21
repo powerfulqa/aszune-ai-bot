@@ -48,7 +48,7 @@ class PerplexityService {
       if (statusCode !== 200) {
         const errorDetails = await body.json();
         console.error('Perplexity API Error:', errorDetails);
-        throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
+        throw new Error('API request failed');
       }
       
       return await body.json();

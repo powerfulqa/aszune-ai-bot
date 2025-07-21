@@ -1,12 +1,21 @@
-const { EventEmitter } = require('events');
-
 // Mock dependencies
+jest.mock('events');
 jest.mock('discord.js', () => {
   const original = jest.requireActual('discord.js');
-  const mockClient = new EventEmitter();
-  mockClient.user = { id: 'test-user-id', tag: 'test-user#1234' };
-  mockClient.login = jest.fn().mockResolvedValue('Logged in');
-  mockClient.destroy = jest.fn().mockResolvedValue();
+  // Create mock client with EventEmitter functionality
+  const mockClient = {
+    on: jest.fn().mockImplementation((event, handler) => {
+      if (event === 'ready') {
+        handler(); // Auto-trigger ready event for testing
+      }
+      return mockClient;
+    }),
+    once: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
+    user: { id: 'test-user-id', tag: 'test-user#1234' },
+    login: jest.fn().mockResolvedValue('Logged in'),
+    destroy: jest.fn().mockResolvedValue()
+  };
   
   const REST = jest.fn().mockImplementation(() => ({
     setToken: jest.fn().mockReturnThis(),
@@ -22,6 +31,11 @@ jest.mock('discord.js', () => {
 jest.mock('../../src/config/config', () => ({
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-perplexity-key',
+  API: {
+    PERPLEXITY: {
+      BASE_URL: 'https://api.perplexity.ai'
+    }
+  }
 }));
 jest.mock('../../src/services/chat');
 jest.mock('../../src/commands', () => ({
@@ -121,12 +135,12 @@ describe('Bot Main Entry Point (index.js)', () => {
 
     it('should log unhandled promise rejections', () => {
       const reason = new Error('Test rejection');
-      const promise = Promise.reject(reason);
+      // Create a promise that's caught to avoid actual unhandled rejection
+      const promise = Promise.reject(reason).catch(() => {});
       const unhandledRejectionHandler = processHandlers.get('unhandledRejection');
       unhandledRejectionHandler(reason, promise);
 
       expect(logger.error).toHaveBeenCalledWith('Unhandled Rejection at:', promise, 'reason:', reason);
     });
   });
-});
 });

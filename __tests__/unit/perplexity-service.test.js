@@ -14,7 +14,8 @@ describe('Perplexity Service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    perplexityService = new PerplexityService();
+    // The module already exports an instance, so we don't need to create a new one
+    perplexityService = PerplexityService;
   });
   
   describe('sendChatRequest', () => {
@@ -112,16 +113,6 @@ describe('Perplexity Service', () => {
         );
 
         expect(summary).toBe('Text summary');
-    });
-  });
-});
-        expect.arrayContaining([
-          { role: 'system', content: config.SYSTEM_MESSAGES.CHAT },
-          ...history
-        ])
-      );
-      
-      expect(response).toBe('Chat response');
     });
   });
 });
