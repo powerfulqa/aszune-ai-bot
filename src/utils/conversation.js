@@ -170,16 +170,18 @@ class ConversationManager {
   }
   
   /**
-   * Destroy the manager and clear the cleanup interval
+   * Destroy the manager and clear any active intervals
    */
   async destroy() {
-    // Clear intervals
-    if (this.cleanupInterval) {
+    // Clear intervals (check if they exist first to be more robust)
+    if (this.cleanupInterval !== undefined) {
       clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
     
-    if (this.saveStatsInterval) {
+    if (this.saveStatsInterval !== undefined) {
       clearInterval(this.saveStatsInterval);
+      this.saveStatsInterval = null;
     }
     
     // Save stats one last time

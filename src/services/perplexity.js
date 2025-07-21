@@ -70,14 +70,14 @@ class PerplexityService {
           throw new Error('Failed to parse API response');
         });
       } else {
-        // For non-JSON responses, return as text
+        // For non-JSON responses, attempt to parse as JSON if it's a successful status code
+        // This helps with tests and cases where content-type header might be incorrect
         const responseText = await body.text();
         try {
-          // Attempt to parse as JSON anyway in case content-type is incorrect
           return JSON.parse(responseText);
         } catch (e) {
-          // Return as-is if not JSON
-          return { text: responseText };
+          // If parsing fails, it's likely not a valid JSON response
+          throw new Error('Unexpected non-JSON response from API');
         }
       }
     } catch (error) {
