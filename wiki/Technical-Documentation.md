@@ -227,6 +227,8 @@ describe("Emoji Utilities", () => {
 });
 ```
 
+> For comprehensive information about testing, see the [Testing Guide](Testing-Guide) and [CI/CD Pipeline](CI-CD-Pipeline) pages.
+
 ## Performance Considerations
 
 - Uses JavaScript `Map` for conversation history and rate limiting for efficient lookups

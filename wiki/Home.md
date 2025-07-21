@@ -12,6 +12,8 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - [Usage Guide](Usage-Guide) - How to use the bot
 - [Command Reference](Command-Reference) - Detailed documentation for all commands
 - [Technical Documentation](Technical-Documentation) - Architecture and code details
+- [Testing Guide](Testing-Guide) - Comprehensive testing information
+- [CI/CD Pipeline](CI-CD-Pipeline) - Continuous integration and deployment details
 - [Deployment Guide](Deployment-Guide) - Production deployment instructions
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers

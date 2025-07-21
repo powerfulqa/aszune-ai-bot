@@ -5,6 +5,8 @@
 - [Usage Guide](Usage-Guide)
 - [Command Reference](Command-Reference)
 - [Technical Documentation](Technical-Documentation)
+- [Testing Guide](Testing-Guide)
+- [CI/CD Pipeline](CI-CD-Pipeline)
 - [Deployment Guide](Deployment-Guide)
 - [Troubleshooting](Troubleshooting)
 - [Contributing](Contributing)
