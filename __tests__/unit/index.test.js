@@ -60,8 +60,14 @@ describe('Bot Main Entry Point (index.js)', () => {
     process.exit = jest.fn();
 
     // Import modules after mocks are set up
-    const { Client } = require('discord.js');
-    client = new Client();
+    const { Client, GatewayIntentBits } = require('discord.js');
+    client = new Client({
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+      ]
+    });
     conversationManager = require('../../src/utils/conversation');
     logger = require('../../src/utils/logger');
     
