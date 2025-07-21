@@ -55,7 +55,7 @@ describe('Perplexity Service', () => {
       // Mock a proper error response with non-200 status code
       request.mockResolvedValueOnce({
         body: {
-          json: jest.fn().mockResolvedValue(mockError),
+          text: jest.fn().mockResolvedValue(JSON.stringify(mockError)),
         },
         statusCode: 400,
       });

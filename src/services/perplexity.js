@@ -45,48 +45,34 @@ class PerplexityService {
         }),
       });
       
-      // Check for success status code (200-299 range)
+      // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
+        const responseText = await body.text().catch(() => 'Could not read response body');
+        let errorInfo;
+        
         try {
-          const errorDetails = await body.json();
-          console.error('Perplexity API Error:', errorDetails);
-          throw new Error(`API request failed with status ${statusCode}`);
-        } catch (jsonError) {
-          // If we can't parse the body as JSON, create a simple error
-          console.error('Failed to parse error response body:', jsonError);
-          throw new Error(`API request failed with status ${statusCode} (response not parseable)`);
+          errorInfo = JSON.parse(responseText);
+        } catch (e) {
+          errorInfo = responseText;
         }
+        
+        console.error('Perplexity API Error:', errorInfo);
+        throw new Error(`API request failed with status ${statusCode}`);
       }
       
-      try {
-        return await body.json();
-      } catch (jsonError) {
-        console.error('Failed to parse successful response as JSON:', jsonError);
+      // Parse successful response
+      return await body.json().catch(error => {
+        console.error('Failed to parse successful response as JSON:', error);
         throw new Error('Failed to parse API response');
-      }
+      });
     } catch (error) {
-      let errorDetails;
+      // Create a simplified error object that's safe to stringify
+      const errorDetails = {
+        message: error && error.message ? error.message : 'Unknown API error',
+        statusCode: error && error.statusCode ? error.statusCode : 'unknown'
+      };
       
-      // Handle errors more robustly by checking error existence and properties
-      try {
-        if (typeof error === 'object' && error !== null) {
-          errorDetails = {
-            message: error.message || 'Unknown API error',
-            originalError: error
-          };
-          
-          // Add additional details if available
-          if (error.statusCode) {
-            errorDetails.statusCode = error.statusCode;
-          }
-        } else {
-          errorDetails = { message: 'Unknown error', originalError: error };
-        }
-      } catch (parseError) {
-        errorDetails = { message: 'Error parsing error object', originalError: String(error) };
-      }
-      
-      console.error('Perplexity API Error:', errorDetails);
+      console.error('Perplexity API Error:', error);
       throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
     }
   }
