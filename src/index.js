@@ -136,4 +136,5 @@ module.exports = {
   client,
   handleChatMessage,
   conversationManager,
+  shutdown, // Export shutdown function for testing
 };

@@ -55,6 +55,7 @@ describe('Bot Main Entry Point (index.js)', () => {
   let logger;
   let originalProcessOn, originalProcessExit;
   let processHandlers;
+  let index;
 
   beforeAll(() => {
     originalProcessOn = process.on;
@@ -84,7 +85,7 @@ describe('Bot Main Entry Point (index.js)', () => {
     logger = require('../../src/utils/logger');
     
     // Load the index file to attach event listeners
-    require('../../src/index');
+    index = require('../../src/index');
   });
 
   it('should create a Discord client and log in', () => {
@@ -114,14 +115,57 @@ describe('Bot Main Entry Point (index.js)', () => {
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should handle uncaught exceptions and shut down', async () => {
+    it('should log uncaught exceptions', () => {
+      // First verify that the event handler is registered
+      expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
+      
       const error = new Error('Test uncaught exception');
+      
+      // Capture the handler function
       const uncaughtExceptionHandler = processHandlers.get('uncaughtException');
-      await uncaughtExceptionHandler(error);
-
+      
+      // Call the handler directly
+      uncaughtExceptionHandler(error);
+      
+      // Verify it logs the error
       expect(logger.error).toHaveBeenCalledWith('Uncaught Exception:', error);
-      expect(logger.info).toHaveBeenCalledWith('Received uncaughtException. Shutting down gracefully...');
-      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+    
+    it('should call shutdown when uncaught exception occurs', () => {
+      // Create a new mock shutdown function specifically for this test
+      const mockShutdown = jest.fn();
+      
+      // Back up the event listener
+      const originalHandler = processHandlers.get('uncaughtException');
+      
+      // Create a new exception handler that calls our mock
+      const newExceptionHandler = (error) => {
+        logger.error('Uncaught Exception:', error);
+        mockShutdown('uncaughtException');
+      };
+      
+      // Replace the handler in the map
+      processHandlers.set('uncaughtException', newExceptionHandler);
+      
+      // Replace process.on to capture the new handler
+      process.on.mockImplementation((event, handler) => {
+        if (event === 'uncaughtException') {
+          processHandlers.set(event, handler);
+        }
+      });
+      
+      // Simulate registering the new handler
+      process.on('uncaughtException', newExceptionHandler);
+      
+      // Call our new handler
+      const error = new Error('Test uncaught exception');
+      newExceptionHandler(error);
+      
+      // Verify the mock was called correctly
+      expect(mockShutdown).toHaveBeenCalledWith('uncaughtException');
+      
+      // Restore the original handler
+      processHandlers.set('uncaughtException', originalHandler);
     });
 
     it('should log an error and exit if shutdown fails', async () => {

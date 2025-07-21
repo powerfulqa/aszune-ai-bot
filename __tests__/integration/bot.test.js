@@ -110,7 +110,7 @@ describe('Bot integration', () => {
 
     it('handles a normal message and replies', async () => {
         const { request } = require('undici');
-        const { mockSuccessResponse } = require('../utils/undici-mock');
+        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
         request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Hi there!' } }] }));
 
         await messageCreateHandler(message);
