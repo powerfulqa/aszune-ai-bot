@@ -76,12 +76,24 @@ client.on('warn', (info) => {
 const shutdown = async (signal) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
   try {
-    await conversationManager.destroy();
-    client.destroy();
+    try {
+      await conversationManager.destroy();
+    } catch (convError) {
+      logger.error('Error shutting down conversation manager:', convError);
+      throw convError;
+    }
+    
+    try {
+      client.destroy();
+    } catch (clientError) {
+      logger.error('Error shutting down Discord client:', clientError);
+      throw clientError;
+    }
+    
     logger.info('Shutdown complete.');
     process.exit(0);
   } catch (error) {
-    logger.error('Error during shutdown:', error);
+    logger.error('Fatal error during shutdown process:', error);
     process.exit(1);
   }
 };
