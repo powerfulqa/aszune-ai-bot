@@ -4,6 +4,7 @@
 const { request } = require('undici');
 const PerplexityService = require('../../src/services/perplexity');
 const config = require('../../src/config/config');
+const { mockSuccessResponse, mockErrorResponse } = require('../utils/undici-mock');
 
 jest.mock('undici', () => ({
   request: jest.fn(),
@@ -24,12 +25,7 @@ describe('Perplexity Service', () => {
         choices: [{ message: { content: 'Mock response' } }]
       };
       
-      request.mockResolvedValueOnce({
-        body: {
-          json: jest.fn().mockResolvedValue(mockResponse),
-        },
-        statusCode: 200,
-      });
+      request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
       
       const messages = [{ role: 'user', content: 'Hello' }];
       const response = await perplexityService.sendChatRequest(messages);
@@ -52,13 +48,8 @@ describe('Perplexity Service', () => {
     it('throws an error when API request fails', async () => {
       const mockError = { error: 'Bad request' };
       
-      // Mock a proper error response with non-200 status code
-      request.mockResolvedValueOnce({
-        body: {
-          text: jest.fn().mockResolvedValue(JSON.stringify(mockError)),
-        },
-        statusCode: 400,
-      });
+      // Use the mock helper for consistent error responses
+      request.mockResolvedValueOnce(mockErrorResponse(mockError, 400));
       
       await expect(perplexityService.sendChatRequest([{ role: 'user', content: 'Hello' }]))
         .rejects.toThrow('API request failed with status 400');

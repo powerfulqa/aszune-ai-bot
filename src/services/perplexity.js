@@ -67,11 +67,13 @@ class PerplexityService {
       });
     } catch (error) {
       // Create a simplified error object that's safe to stringify
+      // Properly validate error object structure to prevent undefined property access
       const errorDetails = {
-        message: error && error.message ? error.message : 'Unknown API error',
-        statusCode: error && error.statusCode ? error.statusCode : 'unknown'
+        message: typeof error === 'object' && error !== null && 'message' in error ? 
+                 error.message : 'Unknown API error'
       };
       
+      // Log the original error for debugging
       console.error('Perplexity API Error:', error);
       throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
     }

@@ -89,7 +89,8 @@ const shutdown = async (signal) => {
   
   // Step 2: Shutdown Discord client
   try {
-    client.destroy();
+    // Use await to ensure proper cleanup of connections
+    await client.destroy();
   } catch (clientError) {
     logger.error('Error shutting down Discord client:', clientError);
     errors.push(clientError);

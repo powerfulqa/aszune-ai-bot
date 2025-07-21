@@ -110,12 +110,8 @@ describe('Bot integration', () => {
 
     it('handles a normal message and replies', async () => {
         const { request } = require('undici');
-        request.mockResolvedValueOnce({
-            body: {
-                json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }),
-            },
-            statusCode: 200,
-        });
+        const { mockSuccessResponse } = require('../utils/undici-mock');
+        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Hi there!' } }] }));
 
         await messageCreateHandler(message);
         expect(message.channel.sendTyping).toHaveBeenCalled();

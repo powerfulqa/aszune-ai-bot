@@ -47,6 +47,8 @@ jest.mock('../../src/utils/conversation', () => ({
 }));
 jest.mock('../../src/utils/logger');
 
+// TODO: Consider refactoring this test suite to be more focused and easier to understand
+// by breaking it into smaller, more targeted test files per feature area.
 describe('Bot Main Entry Point (index.js)', () => {
   let client;
   let conversationManager;
