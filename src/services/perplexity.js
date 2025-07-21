@@ -53,7 +53,18 @@ class PerplexityService {
       
       return await body.json();
     } catch (error) {
-      const errorDetails = error?.response?.data || error.message || error;
+      let errorDetails;
+      
+      if (error.body) {
+        try {
+          errorDetails = await error.body.json();
+        } catch (parseError) {
+          errorDetails = { message: 'Failed to parse error body', originalError: error.message };
+        }
+      } else {
+        errorDetails = { message: error.message || 'Unknown error', originalError: error };
+      }
+      
       console.error('Perplexity API Error:', errorDetails);
       throw new Error(`API request failed: ${JSON.stringify(errorDetails)}`);
     }

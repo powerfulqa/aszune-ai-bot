@@ -148,4 +148,44 @@ describe('Conversation Manager', () => {
       expect(stats.summaries).toBe(1);
     });
   });
+
+  describe('destroy', () => {
+    it('clears intervals and saves user stats', async () => {
+      // Mock the intervals
+      conversationManager.cleanupInterval = setInterval(() => {}, 10000);
+      conversationManager.saveStatsInterval = setInterval(() => {}, 10000);
+      
+      // Mock the saveUserStats method
+      const saveStatsOriginal = conversationManager.saveUserStats;
+      conversationManager.saveUserStats = jest.fn().mockResolvedValue();
+      
+      // Call destroy
+      await conversationManager.destroy();
+      
+      // Verify intervals were cleared
+      expect(conversationManager.cleanupInterval._destroyed).toBe(true);
+      expect(conversationManager.saveStatsInterval._destroyed).toBe(true);
+      
+      // Verify saveUserStats was called
+      expect(conversationManager.saveUserStats).toHaveBeenCalled();
+      
+      // Restore the original method
+      conversationManager.saveUserStats = saveStatsOriginal;
+    });
+
+    it('handles errors when saving user stats during shutdown', async () => {
+      // Mock the saveUserStats method to throw an error
+      const saveStatsOriginal = conversationManager.saveUserStats;
+      conversationManager.saveUserStats = jest.fn().mockRejectedValue(new Error('Test error'));
+      
+      // Call destroy
+      await conversationManager.destroy();
+      
+      // Verify saveUserStats was called
+      expect(conversationManager.saveUserStats).toHaveBeenCalled();
+      
+      // Restore the original method
+      conversationManager.saveUserStats = saveStatsOriginal;
+    });
+  });
 });

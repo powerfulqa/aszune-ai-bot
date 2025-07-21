@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events');
-const axios = require('axios');
-jest.mock('axios');
+const { request } = require('undici');
+jest.mock('undici');
 
 describe('Bot Edge Cases', () => {
   let fakeMessage;

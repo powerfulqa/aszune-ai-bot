@@ -14,7 +14,7 @@ describe('Perplexity Service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // The module already exports an instance, so we don't need to create a new one
+    // The module export is assigned directly to perplexityService and does not require instantiation
     perplexityService = PerplexityService;
   });
   
