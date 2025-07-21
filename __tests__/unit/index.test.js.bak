@@ -7,17 +7,16 @@
  * - Error Handling: Tests for error handling (uncaught exceptions, etc.)
  */
 
-// Mock the logger module with our spy functions
-// Note: Jest requires using literals in mock definitions
-jest.mock('../../src/utils/logger', () => ({
+// Create simple spies for the logger that can be accessed later
+const loggerMock = {
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn()
-}));
+};
 
-// Get the mock for usage in our tests
-const loggerMock = require('../../src/utils/logger');
+// Mock the logger module with our spy functions
+jest.mock('../../src/utils/logger', () => loggerMock);
 
 // Setup client mock early
 const mockClient = {
@@ -72,10 +71,11 @@ jest.mock('../../src/commands', () => ({
 jest.mock('../../src/utils/conversation', () => ({
   destroy: jest.fn().mockResolvedValue(),
 }));
-
+// by breaking it into smaller, more targeted test files per feature area.
 describe('Bot Main Entry Point (index.js)', () => {
   let client;
   let conversationManager;
+  let logger;
   let originalProcessOn, originalProcessExit;
   let processHandlers;
   let index;
@@ -101,11 +101,19 @@ describe('Bot Main Entry Point (index.js)', () => {
     });
     process.exit = jest.fn();
 
+    // Re-mock the logger directly
+    jest.mock('../../src/utils/logger', () => ({
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    }), { virtual: true });
+    
     // Set up mock modules
     client = mockClient;
     conversationManager = require('../../src/utils/conversation');
     
-    // Clear all mock function calls
+    // Load the logger before index to ensure it's properly mocked
     loggerMock.info.mockClear();
     loggerMock.error.mockClear();
     loggerMock.debug.mockClear();
@@ -120,34 +128,39 @@ describe('Bot Main Entry Point (index.js)', () => {
   });
 
   describe('Graceful Shutdown', () => {
-    it('should register handler for SIGINT signal', () => {
-      // Verify that the process.on for SIGINT is registered
-      const sigintHandler = processHandlers.get('SIGINT');
-      expect(sigintHandler).toBeDefined();
+    it('should handle SIGINT and shut down gracefully', async () => {
+      // Call the exported shutdown function directly with SIGINT
+      await index.shutdown('SIGINT');
       
-      // Verify it's a function
-      expect(typeof sigintHandler).toBe('function');
+      expect(loggerMock.info).toHaveBeenCalledWith('Received SIGINT. Shutting down gracefully...');
+      expect(conversationManager.destroy).toHaveBeenCalled();
+      expect(client.destroy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith('Shutdown complete.');
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should register handler for SIGTERM signal', () => {
-      // Verify that the process.on for SIGTERM is registered
-      const sigtermHandler = processHandlers.get('SIGTERM');
-      expect(sigtermHandler).toBeDefined();
-      
-      // Verify it's a function
-      expect(typeof sigtermHandler).toBe('function');
+    it('should handle SIGTERM and shut down gracefully', async () => {
+      // Call the exported shutdown function directly with SIGTERM
+      await index.shutdown('SIGTERM');
+
+      expect(mockLogger.info).toHaveBeenCalledWith('Received SIGTERM. Shutting down gracefully...');
+      expect(conversationManager.destroy).toHaveBeenCalled();
+      expect(client.destroy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith('Shutdown complete.');
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should register handler for uncaughtException', () => {
+    it('should log uncaught exceptions', () => {
       // First verify that the event handler is registered
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
       
-      // Verify that the handler is defined
-      const uncaughtExceptionHandler = processHandlers.get('uncaughtException');
-      expect(uncaughtExceptionHandler).toBeDefined();
+      const error = new Error('Test uncaught exception');
       
-      // Verify it's a function
-      expect(typeof uncaughtExceptionHandler).toBe('function');
+      // Directly emit the uncaught exception event
+      process.emit('uncaughtException', error);
+      
+      // Verify it logs the error
+      expect(mockLogger.error).toHaveBeenCalledWith('Uncaught Exception:', error);
     });
     
     it('should call shutdown when uncaught exception occurs', () => {
@@ -159,7 +172,7 @@ describe('Bot Main Entry Point (index.js)', () => {
       
       // Create a new exception handler that calls our mock
       const newExceptionHandler = (error) => {
-        loggerMock.error('Uncaught Exception:', error);
+        mockLogger.error('Uncaught Exception:', error);
         mockShutdown('uncaughtException');
       };
       
@@ -188,24 +201,27 @@ describe('Bot Main Entry Point (index.js)', () => {
     });
 
     it('should log an error and exit if shutdown fails', async () => {
-      // Mock the conversation manager to reject with an error
       const shutdownError = new Error('Shutdown failed');
       conversationManager.destroy.mockRejectedValueOnce(shutdownError);
       
-      // Mock the process.exit function
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-      
       // Call the shutdown function directly
       await index.shutdown('SIGINT');
-      
-      // Verify process.exit was called with error code 1
-      expect(exitSpy).toHaveBeenCalledWith(1);
-      exitSpy.mockRestore();
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Error shutting down conversation manager:', shutdownError);
+      expect(mockLogger.error).toHaveBeenCalledWith('Shutdown error 1/1:', shutdownError);
+      expect(mockLogger.error).toHaveBeenCalledWith('Shutdown completed with 1 error(s)');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it('should register handler for unhandled promise rejections', () => {
-      // Verify the event handler is registered
-      expect(process.on).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
+    it('should log unhandled promise rejections', () => {
+      const reason = new Error('Test rejection');
+      // Create a promise that's caught to avoid actual unhandled rejection
+      const promise = Promise.reject(reason).catch(() => {});
+      
+      // Directly call process event handler
+      process.emit('unhandledRejection', reason, promise);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Unhandled Rejection at:', promise, 'reason:', reason);
     });
   });
 });
