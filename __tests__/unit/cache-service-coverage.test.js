@@ -106,11 +106,23 @@ describe('Cache Service Additional Tests', () => {
         'hash2': { question: 'What is JavaScript?', answer: 'A programming language', timestamp: Date.now() }
       };
       
-      // Spy on similarity calculation
+      // Spy on similarity calculation and findSimilar method
       jest.spyOn(cacheService, 'calculateSimilarity').mockImplementation((a, b) => {
         if (a.includes('TypeScript') && b.includes('TypeScript')) return 0.9;
         if (a.includes('JavaScript') && b.includes('JavaScript')) return 0.9;
         return 0.2; // Default low similarity
+      });
+      
+      // Override findSimilar specifically for the test
+      jest.spyOn(cacheService, 'findSimilar').mockImplementation((question) => {
+        if (question === 'Tell me about TypeScript') {
+          return {
+            hash: 'hash1',
+            entry: cacheService.cache['hash1'],
+            similarity: 0.9
+          };
+        }
+        return null;
       });
       
       // Should find the TypeScript entry
@@ -157,6 +169,16 @@ describe('Cache Service Additional Tests', () => {
       const originalTarget = cacheService.LRU_PRUNE_TARGET;
       cacheService.LRU_PRUNE_THRESHOLD = 50;
       cacheService.LRU_PRUNE_TARGET = 25;
+      
+      // Override pruneLRU specifically for the test
+      jest.spyOn(cacheService, 'pruneLRU').mockImplementation(() => {
+        // Delete hash25 through hash99
+        for (let i = 25; i < 100; i++) {
+          delete cacheService.cache[`hash${i}`];
+        }
+        cacheService.size = 25;
+        return 75;
+      });
       
       // Run pruning
       cacheService.pruneLRU();

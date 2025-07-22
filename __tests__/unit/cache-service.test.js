@@ -2,7 +2,7 @@
  * Tests for cache service
  */
 // Import the CacheService class (not the singleton instance)
-const { CacheService, CacheSaveError, CacheReadError } = require('../../src/services/cache');
+const { CacheService, CacheSaveError, CacheReadError } = require('../../src/services/cache_lean');
 const fs = require('fs');
 const path = require('path');
 

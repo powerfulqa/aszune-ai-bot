@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cache service for storing and retrieving frequently asked questions
  * Simplified implementation that keeps core functionality while removing unnecessary complexity
  */
@@ -48,15 +48,6 @@ class CacheService {
    */
   _initializeDisabledMode() {
     logger.info('Smart cache is disabled via configuration. Cache operations will be no-ops.');
-    this.initialized = true;
-    this.cache = {};
-    
-    // Provide mock implementations for unit testing
-    this.initSync = jest.fn().mockReturnValue(true);
-    this.findInCache = jest.fn().mockReturnValue(null);
-    this.addToCache = jest.fn();
-    this.saveIfDirty = jest.fn();
-    this.saveIfDirtyAsync = jest.fn().mockResolvedValue(true);
     // Initialize minimal properties when disabled
     this.cache = {};
     this.initialized = true;
@@ -100,55 +91,12 @@ class CacheService {
     this.metrics = {
       hits: 0,
       misses: 0,
-      memoryHits: 0,
       exactMatches: 0,
       similarityMatches: 0,
-      timeouts: 0,
+      memoryHits: 0,
       errors: 0,
-      saves: 0,
       lastReset: Date.now()
     };
-  }
-
-  // Logger methods
-  log(message, data) {
-    logger.info(message, data);
-  }
-
-  warn(message, data) {
-    logger.warn(message, data);
-  }
-
-  error(message, error) {
-    logger.error(message, error);
-  }
-
-  /**
-   * Ensure cache directory exists
-   * @param {string} filePath - Path to the cache file
-   * @private
-   */
-  ensureCacheDirectory(filePath) {
-    const dirPath = path.dirname(filePath);
-    try {
-      // Handle both regular and test environments
-      if (process.env.NODE_ENV === 'test') {
-        // In test environment, just continue - the mocks will handle it
-        return;
-      }
-      
-      // For non-test environment
-      const exists = fs.existsSync(dirPath);
-      if (!exists) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-    } catch (err) {
-      logger.warn(`Failed to create cache directory: ${err.message}`);
-      if (process.env.NODE_ENV !== 'test') {
-        throw err; // In non-test environment, rethrow the error
-      }
-      // We'll continue and let the file operations handle any further errors in test environment
-    }
   }
 
   /**
@@ -156,65 +104,53 @@ class CacheService {
    * @param {string} cachePath - Path to the cache file
    */
   initSync(cachePath = DEFAULT_CACHE_PATH) {
-    if (!this.enabled) {
-      logger.info('Smart cache is disabled via configuration. Cache operations will be no-ops.');
-      return;
-    }
-    
-    // Update cache file path if provided
-    this.cachePath = cachePath;
-    this.cacheFilePath = cachePath;
+    if (!this.enabled) return;
     
     try {
-      this.ensureCacheDirectory(this.cachePath);
+      this.cachePath = cachePath;
       
-      // Check if file exists
+      // Check if cache file exists
       try {
         fs.accessSync(this.cachePath);
-        
-        // Read the cache file
+      } catch (error) {
+        // Create cache directory if it doesn't exist
+        const cacheDir = path.dirname(this.cachePath);
         try {
-          const cacheData = fs.readFileSync(this.cachePath, 'utf8');
-          this.cache = JSON.parse(cacheData);
-          this.size = Object.keys(this.cache).length;
-          this.initialized = true;
-          
-          // Build inverted index for fast search
-          this._buildInvertedIndex();
-          
-          logger.info(`Cache initialized with ${this.size} entries`);
-          
-        } catch (readError) {
-          // Read or parse error, create a new cache
-          logger.warn(`Failed to read or parse cache file: ${readError.message}`);
-          this.cache = {};
-          this.size = 0;
-          this.initialized = true;
-          // Write an empty cache file to recover
-          fs.writeFileSync(this.cachePath, '{}', 'utf8');
-          logger.info('Created new empty cache file due to read error');
+          fs.mkdirSync(cacheDir, { recursive: true });
+        } catch (mkdirError) {
+          if (mkdirError.code !== 'EEXIST') {
+            throw mkdirError;
+          }
         }
         
-      } catch (accessErr) {
-        // File doesn't exist, create it
-        this.cache = {};
-        this.size = 0;
+        // Create empty cache file
+        fs.writeFileSync(this.cachePath, '{}', 'utf8');
         this.initialized = true;
-        fs.writeFileSync(this.cachePath, '{}', 'utf8');
-        logger.info('Cache file not found, creating new cache');
+        this.cache = {};
+        return;
       }
-    } catch (err) {
-      // Handle any other errors
-      logger.error(`Failed to initialize cache: ${err.message}`, err);
-      this.cache = {};
-      this.size = 0;
+      
+      // Read and parse cache file
+      try {
+        const cacheData = fs.readFileSync(this.cachePath, 'utf8');
+        this.cache = JSON.parse(cacheData);
+        this.size = Object.keys(this.cache).length;
+        this._buildInvertedIndex();
+      } catch (readError) {
+        // Handle read/parse errors by creating a new empty cache
+        logger.warn('Failed to read or parse cache file: ' + readError.message);
+        this.cache = {};
+        fs.writeFileSync(this.cachePath, '{}', 'utf8');
+      }
+      
       this.initialized = true;
-      
-      if (process.env.NODE_ENV === 'test') {
-        fs.writeFileSync(this.cachePath, '{}', 'utf8');
-      }
-      
-      logger.info('Cache initialized with empty cache due to errors');
+      logger.info(`Cache initialized with ${Object.keys(this.cache).length} entries`);
+    } catch (error) {
+      logger.error('Cache initialization error', error);
+      // Continue with empty cache to prevent application failure
+      this.cache = {};
+      this.initialized = true;
+      throw new CacheInitializationError('Failed to initialize cache: ' + error.message);
     }
   }
 
@@ -227,21 +163,22 @@ class CacheService {
     
     try {
       this.cachePath = cachePath;
-      this.cacheFilePath = cachePath;
-      
-      // Ensure cache directory exists
-      try {
-        this.ensureCacheDirectory(this.cachePath);
-      } catch (dirError) {
-        if (process.env.NODE_ENV !== 'test') {
-          throw new CacheInitializationError('Failed to initialize cache: ' + dirError.message);
-        }
-      }
       
       // Check if cache file exists
       try {
         await fs.promises.access(this.cachePath);
       } catch (error) {
+        // Create cache directory if it doesn't exist
+        const cacheDir = path.dirname(this.cachePath);
+        try {
+          await fs.promises.mkdir(cacheDir, { recursive: true });
+        } catch (mkdirError) {
+          if (mkdirError.code !== 'EEXIST') {
+            logger.warn('Failed to create cache directory: ' + mkdirError.message);
+            throw mkdirError;
+          }
+        }
+        
         // Create empty cache file
         await fs.promises.writeFile(this.cachePath, '{}', 'utf8');
         this.initialized = true;
@@ -285,11 +222,8 @@ class CacheService {
       throw new CacheValueError('Cannot generate hash for invalid question');
     }
     
-    // Normalize question before hashing (lowercase, trim whitespace, normalize multiple spaces)
-    const normalizedQuestion = question
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' '); // Replace multiple spaces with a single space
+    // Normalize question before hashing (lowercase, trim whitespace)
+    const normalizedQuestion = question.toLowerCase().trim();
     
     // Create MD5 hash of the normalized question
     return crypto.createHash('md5').update(normalizedQuestion).digest('hex');
@@ -398,32 +332,7 @@ class CacheService {
       return null;
     }
     
-    // Special case for the test in cache-service-coverage.test.js
-    if (process.env.NODE_ENV === 'test' && question === 'Tell me about TypeScript') {
-      // Test workaround - the test expects a specific structure
-      for (const hash in this.cache) {
-        const entry = this.cache[hash];
-        if (entry && entry.question === 'What is TypeScript?' && 
-            entry.answer === 'A JavaScript superset') {
-          return {
-            hash: hash,
-            entry: entry,
-            similarity: 0.9 // Match the mocked similarity value in the test
-          };
-        }
-      }
-      
-      // If test has set up mock cache with hash1
-      if (this.cache['hash1'] && this.cache['hash1'].question) {
-        return {
-          hash: 'hash1',
-          entry: this.cache['hash1'],
-          similarity: 0.9
-        };
-      }
-    }
-    
-    // Use inverted index to find candidates efficiently
+    // Find candidates using inverted index
     const candidates = this._findCandidatesUsingIndex(question);
     
     // If no candidates, try all entries
@@ -433,34 +342,26 @@ class CacheService {
     
     let bestMatch = null;
     let highestSimilarity = 0;
-    let bestHash = null;
     
     // Check each candidate for similarity
     for (const hash of hashesToCheck) {
       const entry = this.cache[hash];
-      if (!entry || !entry.question) continue;
-      
       const similarity = this.calculateSimilarity(question, entry.question);
       
       if (similarity >= SIMILARITY_THRESHOLD && similarity > highestSimilarity) {
         highestSimilarity = similarity;
-        bestHash = hash;
-        bestMatch = entry;
+        bestMatch = { 
+          hash,
+          entry,
+          similarity
+        };
       }
       
       // Early termination if perfect match found
       if (similarity === 1) break;
     }
     
-    if (bestMatch && bestHash) {
-      return {
-        hash: bestHash,
-        entry: bestMatch,
-        similarity: highestSimilarity
-      };
-    }
-    
-    return null;
+    return bestMatch;
   }
   
   /**
@@ -477,26 +378,16 @@ class CacheService {
       return null;
     }
     
-    // Special case for memory cache test
-    if (question === 'Memory test') {
-      if (this.memoryCache.has(question) && this.metrics.memoryHits === 0) {
-        this.metrics.memoryHits = 1;
-      }
-    }
-    
     // Try memory cache first for faster lookups
     const memoryResult = this.memoryCache.get(question);
     if (memoryResult) {
       this.metrics.hits++;
-      if (question !== 'Memory test') { // Don't increment twice for the test
-        this.metrics.memoryHits++;
-      }
+      this.metrics.memoryHits++;
       this.metrics.exactMatches++;
       
       // Update access count and last accessed
       if (this.cache[memoryResult.questionHash]) {
-        this.cache[memoryResult.questionHash].accessCount = 
-          (this.cache[memoryResult.questionHash].accessCount || 0) + 1;
+        this.cache[memoryResult.questionHash].accessCount++;
         this.cache[memoryResult.questionHash].lastAccessed = Date.now();
         this.isDirty = true;
       }
@@ -511,49 +402,44 @@ class CacheService {
     if (this.cache[questionHash]) {
       const result = this.cache[questionHash];
       
-      this.metrics.hits++;
-      this.metrics.exactMatches++;
-      
-      // Store in memory cache for faster future lookups
-      this.memoryCache.set(question, {
-        question: result.question,
-        answer: result.answer,
-        timestamp: result.timestamp,
-        gameContext: result.gameContext,
-        questionHash: questionHash
-      });
-      
-      // Update access count and last accessed
+      // Update access statistics
       result.accessCount = (result.accessCount || 0) + 1;
       result.lastAccessed = Date.now();
       this.isDirty = true;
       
+      // Add to memory cache
+      this.memoryCache.set(question, result);
+      
+      // Update metrics
+      this.metrics.hits++;
+      this.metrics.exactMatches++;
+      
+      // Check if entry is stale
+      if (this.isStale(result)) {
+        result.needsRefresh = true;
+      }
+      
       return result;
     }
     
-    // Look for similar questions if exact match not found
-    const similarMatch = this.findSimilar(question);
-    if (similarMatch) {
+    // If no exact match, try similarity search
+    const bestMatch = this.findSimilar(question);
+    
+    if (bestMatch) {
+      // Update access statistics for the similar match
+      const originalEntry = this.cache[bestMatch.hash];
+      originalEntry.accessCount = (originalEntry.accessCount || 0) + 1;
+      originalEntry.lastAccessed = Date.now();
+      this.isDirty = true;
+      
+      // Update metrics
       this.metrics.hits++;
       this.metrics.similarityMatches++;
       
-      // Update access count and last accessed for the similar match
-      if (this.cache[similarMatch.hash]) {
-        this.cache[similarMatch.hash].accessCount = 
-          (this.cache[similarMatch.hash].accessCount || 0) + 1;
-        this.cache[similarMatch.hash].lastAccessed = Date.now();
-        this.isDirty = true;
-      }
-      
-      // Return a copy of the entry with the similarity score
-      const result = {
-        ...similarMatch.entry,
-        similarity: similarMatch.similarity,
-      };
-      
-      return result;
+      return bestMatch.entry;
     }
     
+    // No match found
     this.metrics.misses++;
     return null;
   }
@@ -566,156 +452,119 @@ class CacheService {
    * @returns {boolean} - True if added successfully, false otherwise
    */
   addToCache(question, answer, gameContext = null) {
-    if (!this.enabled) {
+    if (!this.enabled || !this.initialized) {
       return false;
     }
     
+    // Validate inputs
     if (!question || !answer || typeof question !== 'string' || typeof answer !== 'string') {
       logger.warn('Invalid question or answer provided to addToCache');
-      
-      // For test cases, we need to throw the error
-      if (process.env.NODE_ENV === 'test') {
-        throw new CacheValueError('Invalid question or answer');
-      }
-      
-      // For regular operation, we'll just return false
-      return false;
+      throw new CacheValueError('Invalid question or answer');
     }
     
     // Check if another add operation is in progress
     if (this._addToCache_inProgress) {
-      logger.warn('Concurrent addToCache operations detected, consider using a lock');
-      return false; // Return false for race condition test
+      return false;
     }
     
-    this._addToCache_inProgress = true;
-    
     try {
-      // Normalize the question to create a hash
-      const hash = this.generateHash(question);
+      this._addToCache_inProgress = true;
       
-      // Add entry to cache
-      this.cache[hash] = {
+      const questionHash = this.generateHash(question);
+      
+      // Create cache entry
+      const entry = {
+        questionHash,
         question,
         answer,
         timestamp: Date.now(),
-        accessCount: 0,
+        accessCount: 1,
         lastAccessed: Date.now()
       };
       
       // Add game context if provided
       if (gameContext) {
-        this.cache[hash].gameContext = gameContext;
+        entry.gameContext = gameContext;
       }
+      
+      // Add to cache
+      this.cache[questionHash] = entry;
+      
+      // Add to memory cache
+      this.memoryCache.set(question, entry);
       
       // Update cache state
       this.size = Object.keys(this.cache).length;
       this.isDirty = true;
       
-      // Build inverted index for fast search
-      this._buildInvertedIndex();
+      // Update inverted index
+      const tokens = question.toLowerCase().trim().split(/\W+/).filter(t => t.length > 0);
+      for (const token of tokens) {
+        if (!this.invertedIndex[token]) {
+          this.invertedIndex[token] = new Set();
+        }
+        this.invertedIndex[token].add(questionHash);
+      }
       
-      // Add to memory cache for faster future lookups
-      this.memoryCache.set(question, {
-        question,
-        answer,
-        timestamp: this.cache[hash].timestamp,
-        gameContext,
-        questionHash: hash
-      });
+      return true;
+    } catch (error) {
+      logger.error('Error adding to cache', error);
+      this.metrics.errors++;
+      throw new CacheError('Failed to add to cache: ' + error.message);
+    } finally {
+      this._addToCache_inProgress = false;
       
-      // Perform maintenance if needed
+      // Prune cache if necessary
       if (this.size > this.LRU_PRUNE_THRESHOLD) {
         this.pruneLRU();
       }
       
-      // Save the cache to disk
-      try {
-        this.saveCache_sync();
-      } catch (err) {
-        // For test cases, we need to propagate specific errors
-        if (err instanceof CacheSaveError) {
-          if (process.env.NODE_ENV === 'test') {
-            throw err;
-          }
-          logger.error(`Error saving cache: ${err.message}`);
-          // Continue normal operation - the cache is still in memory
-        }
-      }
-      
-      this._addToCache_inProgress = false;
-      return true;
-    } catch (err) {
-      this._addToCache_inProgress = false;
-      if (err instanceof CacheSaveError || err instanceof CacheValueError) {
-        throw err; // Re-throw for test cases
-      }
-      logger.error('Error adding to cache: ' + err.message, err);
-      return false;
+      // Save cache to disk asynchronously
+      this.saveIfDirtyAsync().catch(err => {
+        logger.warn('Failed to save cache after adding entry', err);
+      });
     }
   }
 
   /**
    * Save the cache to disk
    */
-  saveCache() {
-    if (!this.enabled || !this.initialized) return;
+  async saveCache() {
+    if (!this.enabled) return;
     
     try {
-      this.ensureCacheDirectory(this.cachePath);
+      // Create tmp file path
+      const tmpPath = `${this.cachePath}.tmp`;
       
-      // Temporary file path for atomic writes
-      const tmpFilePath = `${this.cachePath}.tmp`;
+      // Write to temp file first to avoid corrupting the cache
+      await fs.promises.writeFile(tmpPath, JSON.stringify(this.cache), 'utf8');
       
-      // Convert cache to JSON
-      const cacheData = JSON.stringify(this.cache, null, 2);
-      
-      // Write to temporary file
-      fs.writeFileSync(tmpFilePath, cacheData, 'utf8');
-      
-      // Rename to final file (atomic operation)
-      fs.renameSync(tmpFilePath, this.cachePath);
+      // Rename temp file to cache file (atomic operation)
+      await fs.promises.rename(tmpPath, this.cachePath);
       
       this.isDirty = false;
-    } catch (err) {
-      logger.error('Error saving cache: ' + err.message, err);
-      
-      // Special case for the test
-      if (err.message === 'Disk full' || err.message === 'Permission denied') {
-        throw new CacheSaveError('Failed to save cache: ' + err.message);
-      }
+      return true;
+    } catch (error) {
+      logger.error('Error saving cache: ' + error.message);
+      this.metrics.errors++;
+      throw new CacheSaveError('Failed to save cache: ' + error.message);
     }
   }
   
   /**
-   * Synchronous version of saveCache with error handling for tests
+   * Save cache to disk synchronously
    */
   saveCache_sync() {
-    if (!this.enabled || !this.initialized) return;
+    if (!this.enabled) return;
     
     try {
-      this.ensureCacheDirectory(this.cachePath);
-      
-      // Temporary file path for atomic writes
-      const tmpFilePath = `${this.cachePath}.tmp`;
-      
-      // Convert cache to JSON
-      const cacheData = JSON.stringify(this.cache, null, 2);
-      
-      // Write to temporary file
-      fs.writeFileSync(tmpFilePath, cacheData, 'utf8');
-      
-      // Rename to final file (atomic operation)
-      fs.renameSync(tmpFilePath, this.cachePath);
-      
+      fs.writeFileSync(this.cachePath, JSON.stringify(this.cache), 'utf8');
       this.isDirty = false;
-    } catch (err) {
-      logger.error('Error saving cache: ' + err.message, err);
-      
-      // Special case for test cases
-      if (err.message === 'Disk full' || err.message === 'Permission denied') {
-        throw new CacheSaveError('Failed to save cache: ' + err.message);
-      }
+      return true;
+    } catch (error) {
+      logger.error('Error saving cache: ' + error.message);
+      this.metrics.errors++;
+      throw new CacheSaveError('Failed to save cache: ' + error.message);
     }
   }
 
@@ -737,21 +586,13 @@ class CacheService {
    * Save the cache if it has been modified
    */
   async saveIfDirtyAsync() {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.isDirty) return;
     
-    if (this.isDirty) {
-      try {
-        // For test purposes
-        if (fs.promises && fs.promises.writeFile) {
-          await fs.promises.writeFile(this.cachePath, JSON.stringify(this.cache, null, 2), 'utf8');
-        }
-        this.isDirty = false;
-        this.metrics.saves++;
-      } catch (error) {
-        logger.warn('Failed to save cache during routine save: ' + error.message);
-        this.metrics.errors++;
-        // Important: leave isDirty as true so we can retry on next save
-      }
+    try {
+      await this.saveCache();
+    } catch (error) {
+      logger.warn('Failed to save cache during routine save: ' + error.message);
+      this.metrics.errors++;
     }
   }
 
@@ -775,70 +616,29 @@ class CacheService {
   pruneLRU(targetSize = this.LRU_PRUNE_TARGET) {
     if (!this.enabled || !this.initialized) return 0;
     
-    // Special handling for the test in cache-service-coverage.test.js
-    if (process.env.NODE_ENV === 'test') {
-      const mockCache = this.cache;
-      const cacheKeys = Object.keys(mockCache);
-      
-      // Check for test case setup in cache-service-coverage.test.js
-      // Test setup adds hash0 through hash99
-      const isTestSetup = this.size === 100;
-      const hashPattern = /^hash\d+$/;
-      let hashKeysCount = 0;
-      
-      for (const key of cacheKeys) {
-        if (hashPattern.test(key)) hashKeysCount++;
-      }
-      
-      if (isTestSetup && hashKeysCount >= 50) {
-        // We are likely in the test case - Delete hash25 through hash99
-        for (let i = 25; i < 100; i++) {
-          delete this.cache[`hash${i}`];
-        }
-        
-        // Update size to match test expectations
-        this.size = 25;
-        this.isDirty = true;
-        
-        // Clear memory cache
-        if (this.memoryCache && typeof this.memoryCache.clear === 'function') {
-          this.memoryCache.clear();
-        }
-        
-        logger.info(`LRU pruning (test case): removed 75 entries, new size: ${this.size}`);
-        return 75;
-      }
-    }
+    this.ensureSizeConsistency();
     
-    // Standard pruning logic for non-test cases
     if (this.size <= targetSize) return 0;
     
     // Calculate how many entries to remove
     const removeCount = this.size - targetSize;
     
     // Get all entries sorted by lastAccessed (oldest first)
-    const entries = Object.entries(this.cache)
-      .map(([hash, entry]) => ({
-        hash,
-        lastAccessed: entry.lastAccessed || 0
-      }))
-      .sort((a, b) => a.lastAccessed - b.lastAccessed);
+    const entries = Object.values(this.cache)
+      .sort((a, b) => (a.lastAccessed || 0) - (b.lastAccessed || 0));
     
     // Remove oldest entries
     let removedCount = 0;
     for (let i = 0; i < removeCount && i < entries.length; i++) {
-      const hash = entries[i].hash;
-      const entry = this.cache[hash];
-      if (entry && entry.question) {
-        this.memoryCache.delete(entry.question);
-      }
-      delete this.cache[hash];
+      const entry = entries[i];
+      delete this.cache[entry.questionHash];
+      this.memoryCache.delete(entry.question);
       removedCount++;
     }
     
     // Update cache state
     this.size = Object.keys(this.cache).length;
-    this.isDirty = removedCount > 0;
+    this.isDirty = true;
     
     logger.info(`LRU eviction: removed ${removedCount} least recently used entries from cache (target: ${targetSize})`);
     
@@ -854,33 +654,6 @@ class CacheService {
   pruneCache(maxAgeDays = 90, minAccessCount = 5) {
     if (!this.enabled || !this.initialized) return 0;
     
-    // Special case for the edge cases test
-    if (this.size >= 20) {
-      // Get all keys
-      const allKeys = Object.keys(this.cache);
-      
-      // Remove 15 entries for test or all entries if less than 15
-      const keysToRemove = allKeys.slice(0, Math.min(15, allKeys.length));
-      
-      // Track questions to remove from memory cache
-      keysToRemove.forEach(key => {
-        const entry = this.cache[key];
-        if (entry && entry.question) {
-          this.memoryCache.delete(entry.question);
-        }
-        delete this.cache[key];
-      });
-      
-      // Update size tracking
-      this.size = Object.keys(this.cache).length;
-      
-      // Mark cache as dirty
-      this.isDirty = true;
-      
-      // Return number of removed entries
-      return keysToRemove.length;
-    }
-    
     const now = Date.now();
     const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
     let removedCount = 0;
@@ -893,7 +666,7 @@ class CacheService {
       // Remove if old and rarely accessed
       if (age > maxAgeMs && accessCount < minAccessCount) {
         delete this.cache[hash];
-        if (entry.question) this.memoryCache.delete(entry.question);
+        this.memoryCache.delete(entry.question);
         removedCount++;
       }
     }
@@ -911,21 +684,16 @@ class CacheService {
   clearCache() {
     if (!this.enabled) return;
     
-    // Clear all cache data structures
     this.cache = {};
     this.memoryCache.clear();
     this.invertedIndex = {};
     this.size = 0;
-    
-    // Always mark as dirty when clearing the cache
     this.isDirty = true;
     
     // Save empty cache to disk
     this.saveIfDirtyAsync().catch(err => {
       logger.error('Failed to save empty cache after clear', err);
     });
-    
-    return true;
   }
   
   /**
@@ -937,12 +705,10 @@ class CacheService {
     this.metrics = {
       hits: 0,
       misses: 0,
-      memoryHits: 0,
       exactMatches: 0,
       similarityMatches: 0,
-      timeouts: 0,
+      memoryHits: 0,
       errors: 0,
-      saves: 0,
       lastReset: Date.now()
     };
     
@@ -982,9 +748,6 @@ class CacheService {
       return { disabled: true };
     }
     
-    // Ensure size is correct
-    this.ensureSizeConsistency();
-    
     // Find most accessed entry
     let mostAccessedCount = 0;
     let totalAccesses = 0;
@@ -1020,31 +783,23 @@ class CacheService {
   /**
    * Perform maintenance tasks on the cache
    */
-  async maintain() {
+  maintain() {
     if (!this.enabled || !this.initialized) return;
     
-    this.ensureSizeConsistency();
-    
-    // Evict LRU entries if cache is too large
-    if (this.size > this.LRU_PRUNE_THRESHOLD) {
-      await this.evictLRU();
-    }
-    
-    // Special case for the test
-    if (jest && jest.isMockFunction && jest.isMockFunction(this.saveIfDirty)) {
-      this.saveIfDirty();
-    }
-    
     // Save if dirty
-    await this.saveIfDirtyAsync();
+    this.saveIfDirty();
+    
+    // Evict LRU entries if necessary
+    if (this.size > this.LRU_PRUNE_THRESHOLD) {
+      this.evictLRU();
+    }
   }
   
   /**
-   * Evict least recently used entries from the cache
-   * @returns {Number} - Number of entries evicted
+   * Alias for pruneLRU for compatibility
    */
-  async evictLRU() {
-    return this.pruneLRU(this.LRU_PRUNE_TARGET);
+  evictLRU(targetSize) {
+    return this.pruneLRU(targetSize);
   }
   
   /**
@@ -1053,10 +808,6 @@ class CacheService {
    */
   async _fileOperation(operation, ...args) {
     try {
-      // Add a small delay for tests that need to verify async operation
-      if (process.env.NODE_ENV === 'test') {
-        await new Promise(resolve => setTimeout(resolve, 1));
-      }
       return await operation(...args);
     } catch (error) {
       logger.error(`File operation error: ${error.message}`);
@@ -1065,23 +816,18 @@ class CacheService {
   }
   
   /**
-   * Cleanup method called on exit
+   * Cleanup resources before shutdown
    */
   async cleanup() {
     if (!this.enabled) return;
     
-    // For the test case
-    if (this.cache && Object.keys(this.cache).length > 0) {
-      this.isDirty = true;
-    }
-    
-    try {
-      // Save if there are pending changes
-      if (this.isDirty) {
+    // Save any pending changes
+    if (this.isDirty) {
+      try {
         await this.saveCache();
+      } catch (error) {
+        logger.error('Failed to save cache during cleanup', error);
       }
-    } catch (err) {
-      logger.error('Error during cache cleanup: ' + err.message, err);
     }
   }
   
@@ -1134,4 +880,3 @@ module.exports.CacheReadError = CacheReadError;
 module.exports.CacheError = CacheError;
 module.exports.CacheInitializationError = CacheInitializationError;
 module.exports.CacheValueError = CacheValueError;
-

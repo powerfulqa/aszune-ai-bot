@@ -3,7 +3,7 @@
  */
 const path = require('path');
 const fs = require('fs');
-const { CacheService } = require('../../src/services/cache');
+const { CacheService } = require('../../src/services/cache_lean');
 const cacheService = new CacheService();
 const { promisify } = require('util');
 

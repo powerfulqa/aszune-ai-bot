@@ -11,7 +11,7 @@ const commandHandler = require('./commands');
 const conversationManager = require('./utils/conversation');
 const logger = require('./utils/logger');
 // Import the pre-instantiated CacheService singleton
-const cacheService = require('./services/cache');
+const cacheService = require('./services/cache_lean');
 
 // Create Discord client
 const client = new Client({

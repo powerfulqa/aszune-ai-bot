@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cache service for storing and retrieving frequently asked questions
  * Simplified implementation that keeps core functionality while removing unnecessary complexity
  */
@@ -1134,4 +1134,3 @@ module.exports.CacheReadError = CacheReadError;
 module.exports.CacheError = CacheError;
 module.exports.CacheInitializationError = CacheInitializationError;
 module.exports.CacheValueError = CacheValueError;
-

@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const commandHandler = require('../commands');
 // Import the pre-instantiated CacheService singleton
-const cacheService = require('../services/cache');
+const cacheService = require('../services/cache_lean');
 
 /**
  * Handle an incoming chat message
