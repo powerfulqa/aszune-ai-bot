@@ -86,8 +86,9 @@ class PerplexityService {
       // Some APIs return JSON with incorrect content-type, so try parsing it
       try {
         return JSON.parse(responseText);
-      } catch {
+      } catch (parseError) {
         // Not valid JSON, return as a text object
+        console.debug('JSON parse failed:', parseError);
         return { text: responseText };
       }
     } catch (error) {
@@ -123,7 +124,7 @@ class PerplexityService {
       return response?.choices?.[0]?.message?.content || 'No summary generated';
     } catch (error) {
       console.error('Failed to generate summary:', error);
-      return 'Summary generation failed';
+      throw new Error('Summary generation failed');
     }
   }
   

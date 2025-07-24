@@ -15,7 +15,7 @@ describe('Perplexity Service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // The module exports a singleton instance of PerplexityService
+    // The module exports the PerplexityService class
     perplexityService = PerplexityService;
   });
   
