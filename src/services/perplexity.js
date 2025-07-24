@@ -34,7 +34,7 @@ class PerplexityService {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     
     try {
-      const { body, statusCode, headers } = await request(endpoint, {
+      const { statusCode, headers, body } = await request(endpoint, {
         method: 'POST',
         headers: this._getHeaders(),
         body: JSON.stringify({
@@ -63,37 +63,44 @@ class PerplexityService {
         throw new Error(`API request failed with status ${statusCode}`);
       }
       
-      // Parse successful response based on content type
-      // We know this is a successful response (2xx) at this point
-      try {
-        if (contentType.includes('application/json')) {
-          return await body.json();
-        } else {
-          // For non-JSON content types, read as text first
-          const responseText = await body.text();
-          
-          // Still try to parse as JSON as some APIs send JSON with wrong content-type
-          try {
-            return JSON.parse(responseText);
-          } catch (parseError) {
-            // Not JSON, return as text object
-            return { text: responseText };
-          }
-        }
-      } catch (error) {
-        console.error('Failed to process API response:', error);
-        throw new Error('Failed to parse API response');
-      }
-    } catch (error) {
-      // Log the original error for debugging
-      console.error('Perplexity API Error:', error);
-      
-      // Create a more readable error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown API error';
-      throw new Error(`API request failed: ${errorMessage}`);
+      // Parse response using our helper method
+      return await this._parseApiResponse(body, contentType);
+    } catch (err) {
+      console.error('Error in Perplexity API call:', err);
+      throw err;
     }
   }
-    /**
+  
+  /**
+   * Parse API response based on content type
+   * @param {ReadableStream} body - The response body
+   * @param {string} contentType - The content type header value
+   * @returns {Promise<object>} Parsed response
+   * @private
+   */
+  async _parseApiResponse(body, contentType) {
+    try {
+      if (contentType.includes('application/json')) {
+        return await body.json();
+      } else {
+        // For non-JSON content types, read as text first
+        const responseText = await body.text();
+        
+        // Still try to parse as JSON as some APIs send JSON with wrong content-type
+        try {
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          // Not JSON, return as text object
+          return { text: responseText };
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process API response:', error);
+      throw new Error('Failed to parse API response');
+    }
+  }
+
+  /**
    * Generate a summary from conversation history
    * @param {Array} history - The conversation history
    * @returns {Promise<String>} - The summary text
@@ -105,72 +112,68 @@ class PerplexityService {
           role: 'system',
           content: config.SYSTEM_MESSAGES.SUMMARY,
         },
-        ...history,
+        ...history.map(message => ({
+          role: message.role,
+          content: message.content,
+        })),
       ];
       
       const response = await this.sendChatRequest(messages, {
+        temperature: 0.2, // Lower temperature for more deterministic results
         maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
-        temperature: 0.2,
       });
       
-      return response.choices[0].message.content;
+      return response?.choices?.[0]?.message?.content || 'No summary generated';
     } catch (error) {
-      console.error('Summary Generation Error:', error);
-      throw error;
+      console.error('Failed to generate summary:', error);
+      return 'Summary generation failed';
     }
   }
   
   /**
-   * Generate a summary of provided text
-   * @param {Array} messages - The messages containing text to summarize
+   * Generate a text summary from messages
+   * @param {Array} messages - The messages to summarize
    * @returns {Promise<String>} - The summary text
    */
   async generateTextSummary(messages) {
     try {
-      const fullMessages = [
+      const requestMessages = [
         {
           role: 'system',
           content: config.SYSTEM_MESSAGES.TEXT_SUMMARY,
         },
-        ...messages,
+        {
+          role: 'user',
+          content: messages.join('\n'),
+        },
       ];
       
-      const response = await this.sendChatRequest(fullMessages, {
-        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
+      const response = await this.sendChatRequest(requestMessages, {
         temperature: 0.2,
+        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.TEXT_SUMMARY,
       });
       
-      return response.choices[0].message.content;
+      return response?.choices?.[0]?.message?.content || 'No summary generated';
     } catch (error) {
-      console.error('Text Summary Generation Error:', error);
-      throw error;
+      console.error('Failed to generate text summary:', error);
+      return 'Text summary generation failed';
     }
   }
   
   /**
-   * Generate a chat response
-   * @param {Array} history - The conversation history
-   * @returns {Promise<String>} - The response text
+   * Generate chat response for user query
+   * @param {Array} history - Chat history
+   * @returns {Promise<String>} - The chat response
    */
   async generateChatResponse(history) {
     try {
-      const messages = [
-        {
-          role: 'system',
-          content: config.SYSTEM_MESSAGES.CHAT,
-        },
-        ...history,
-      ];
-      
-      const response = await this.sendChatRequest(messages);
-      return response.choices[0].message.content;
+      const response = await this.sendChatRequest(history);
+      return response?.choices?.[0]?.message?.content || 'No response generated';
     } catch (error) {
-      console.error('Chat Response Generation Error:', error);
-      throw error;
+      console.error('Failed to generate chat response:', error);
+      throw error; // Re-throw for caller to handle
     }
   }
 }
 
-// Export the singleton instance for direct use
-const perplexityServiceInstance = new PerplexityService();
-module.exports = perplexityServiceInstance;
+module.exports = new PerplexityService();

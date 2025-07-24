@@ -11,6 +11,8 @@ class ConversationManager {
     this.conversations = new Map();
     this.lastMessageTimestamps = new Map();
     this.userStats = new Map();
+    // Track active intervals for proper cleanup
+    this.activeIntervals = new Set();
     
     // Don't load stats or set intervals in test environment
     if (process.env.NODE_ENV !== 'test') {
@@ -19,12 +21,12 @@ class ConversationManager {
       
       // Set up save interval (every 5 minutes)
       this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
+      this.activeIntervals.add(this.saveStatsInterval);
       
       // Set up cleanup interval (every hour)
       this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
+      this.activeIntervals.add(this.cleanupInterval);
     }
-    
-    // (Removed duplicate setInterval call to prevent orphaned timers)
   }
   
   /**
@@ -174,21 +176,19 @@ class ConversationManager {
    */
   async destroy() {
     // Clear intervals (check if they exist first to be more robust)
-    if (this.cleanupInterval !== undefined) {
-      clearInterval(this.cleanupInterval);
-      // Don't set to null - tests check for the _destroyed property
-      // Instead, we'll mark it with a property that tests expect
-      if (this.cleanupInterval) {
-        this.cleanupInterval._destroyed = true;
-      }
+    // Clear all tracked intervals
+    for (const interval of this.activeIntervals) {
+      clearInterval(interval);
+    }
+    this.activeIntervals.clear();
+    
+    // For backward compatibility with tests
+    if (this.cleanupInterval) {
+      this.cleanupInterval = null;
     }
     
-    if (this.saveStatsInterval !== undefined) {
-      clearInterval(this.saveStatsInterval);
-      // Don't set to null - tests check for the _destroyed property
-      if (this.saveStatsInterval) {
-        this.saveStatsInterval._destroyed = true;
-      }
+    if (this.saveStatsInterval) {
+      this.saveStatsInterval = null;
     }
     
     // Save stats one last time
