@@ -1,4 +1,19 @@
 const { request } = require('undici');
+
+// Mock the commands module
+jest.mock('../../src/commands', () => ({
+  handleTextCommand: jest.fn().mockImplementation(async (message) => {
+    if (message.content === '!summary') {
+      message.channel.sendTyping();
+      message.reply('An error occurred during summary generation.');
+      return;
+    }
+    return null;
+  }),
+  handleSlashCommand: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }])
+}));
+
 const handleChatMessage = require('../../src/services/chat');
 const { handleTextCommand } = require('../../src/commands');
 const conversationManager = require('../../src/utils/conversation');

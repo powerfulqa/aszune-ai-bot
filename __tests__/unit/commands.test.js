@@ -1,5 +1,7 @@
 jest.useFakeTimers();
 
+// We want to test the real commands module, not the mock
+// jest.mock('../../src/commands', () => require('../../__mocks__/commands'));
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/services/perplexity');

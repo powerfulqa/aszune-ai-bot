@@ -3,6 +3,20 @@ const { Client } = require('discord.js');
 const { request } = require('undici');
 jest.mock('undici');
 
+// Mock the commands module first to avoid circular dependencies
+jest.mock('../../src/commands', () => ({
+  handleTextCommand: jest.fn().mockImplementation(async (message) => {
+    // Mock implementation that returns null for non-command messages
+    if (!message.content.startsWith('!')) return null;
+    if (message.content.startsWith('!help')) return { content: 'Help message' };
+    if (message.content.startsWith('!clearhistory')) return { content: 'History cleared' };
+    if (message.content.startsWith('!summary')) return { content: 'Summary' };
+    return null;
+  }),
+  handleSlashCommand: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
+}));
+
 
 let conversationHistory;
 

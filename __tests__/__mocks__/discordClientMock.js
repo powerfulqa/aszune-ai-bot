@@ -19,3 +19,10 @@ module.exports = {
   getMockClient: jest.fn().mockReturnValue(mockClientObject),
   mockClient: mockClientObject
 };
+
+// Add a dummy test to prevent Jest from complaining
+describe('Discord Client Mock', () => {
+  it('should exist', () => {
+    expect(mockClientObject).toBeDefined();
+  });
+});

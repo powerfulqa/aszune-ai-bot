@@ -1,6 +1,13 @@
 /**
  * Tests for chat service
  */
+// Mock the commands module first
+jest.mock('../../src/commands', () => ({
+  handleTextCommand: jest.fn(),
+  handleSlashCommand: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
+}));
+
 const chatService = require('../../src/services/chat');
 const perplexityService = require('../../src/services/perplexity');
 const conversationManager = require('../../src/utils/conversation');

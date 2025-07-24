@@ -35,7 +35,12 @@ const mockErrorResponse = (errorData, statusCode = 400) => ({
   },
 });
 
+// Export the mock utilities for use in tests
 module.exports = {
   mockSuccessResponse,
   mockErrorResponse,
 };
+
+// This file is just a utility module and doesn't need tests itself.
+// Jest requires all files to have a test or be explicitly ignored.
+// Actual tests for these utilities are in undici-mock-helpers.test.js

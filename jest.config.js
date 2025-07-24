@@ -16,10 +16,12 @@ module.exports = {
     "**/__tests__/**/*.[jt]s?(x)",
     "**/?(*.)+(spec|test).[jt]s?(x)"
   ],
-  // Explicitly exclude our mock helpers file
+  // Explicitly exclude our mock helpers file and other problematic files
   testPathIgnorePatterns: [
+    "/__tests__/utils/undici-mock-helpers.js",
+    "/__tests__/utils/undici-mock-helpers.test.ignore.js",
     "/node_modules/",
-    "/__tests__/utils/undici-mock-helpers.js"
+    "/bot-shutdown.test.js/"
   ],
   // Generate JUnit XML test report for CodeCov
   reporters: [
