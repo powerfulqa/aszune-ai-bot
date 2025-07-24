@@ -35,8 +35,7 @@ The workflow uses the following key features:
 ### Security Checks
 ```yaml
 - name: Run security audit
-  run: npm audit
-  continue-on-error: true
+  run: npm audit --audit-level=high --production
 ```
 
 ### Coverage Reporting

@@ -242,24 +242,39 @@ The bot implements a robust shutdown mechanism that:
 
 1. Captures system signals (SIGINT, SIGTERM) for graceful shutdown
 2. Handles uncaught exceptions and unhandled promise rejections
-3. Performs cleanup operations in the correct order:
+3. Prevents multiple simultaneous shutdown attempts with an isShuttingDown flag
+4. Performs cleanup operations in the correct order:
    - Saves conversation history and user stats
    - Destroys the Discord client connection
    - Logs any errors that occur during shutdown
-4. Uses error counting to return appropriate exit codes
-5. Ensures proper resource cleanup
+5. Uses error counting to return appropriate exit codes
+6. Ensures proper resource cleanup
 
 ```javascript
+// Flag to prevent multiple shutdown executions
+let isShuttingDown = false;
+
 // Example of the shutdown handler
 async function shutdown(signal) {
-  let errorCount = 0;
+  // Prevent multiple simultaneous shutdown attempts
+  if (isShuttingDown) {
+    logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
+    return;
+  }
+  
+  isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
+  
+  // Track any errors that occur during shutdown
+  const errors = [];
+  let shutdownStatus = true;
   
   try {
     // Clean up conversation manager (save stats, clear timers)
     await conversationManager.destroy();
   } catch (error) {
-    errorCount++;
+    shutdownStatus = false;
+    errors.push(error);
     logger.error('Error shutting down conversation manager', error);
   }
   
@@ -268,12 +283,17 @@ async function shutdown(signal) {
     await client.destroy();
     logger.info('Discord client destroyed');
   } catch (error) {
-    errorCount++;
+    shutdownStatus = false;
+    errors.push(error);
     logger.error('Shutdown error', error);
   }
   
-  if (errorCount > 0) {
-    logger.error(`Shutdown completed with ${errorCount} error(s)`);
+  // Log individual errors for easier debugging
+  if (errors.length > 0) {
+    errors.forEach((err, index) => {
+      logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
+    });
+    logger.error(`Shutdown completed with ${errors.length} error(s)`);
     process.exit(1);
   } else {
     logger.info('Shutdown complete.');

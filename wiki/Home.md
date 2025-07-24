@@ -18,6 +18,25 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers
 
+## Version Information
+
+- **v1.2.0** - Optimizations and shutdown improvements
+  - Enhanced shutdown handling with protection against multiple executions
+  - Improved error handling in Perplexity service
+  - Updated CI security audit configuration for production dependencies
+  - Fixed all test failures and improved code coverage
+  
+- **v1.1.0** - Refactor and feature update
+  - Complete refactor to modular architecture
+  - Added stats tracking and slash command support
+  - Enhanced testing and CI integration
+  - Fixed summary command for better API compliance
+
+- **v1.0.0** - Initial release
+  - Core Discord bot functionality with Perplexity API integration
+  - Conversation history and emoji reactions
+  - Basic commands and rate limiting
+
 ## Features
 
 - 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar** model
