@@ -78,8 +78,18 @@ client.on('warn', (info) => {
   logger.warn('Discord client warning:', info);
 });
 
+// Flag to prevent multiple shutdown executions
+let isShuttingDown = false;
+
 // Centralized shutdown function
 const shutdown = async (signal) => {
+  // Prevent multiple simultaneous shutdown attempts
+  if (isShuttingDown) {
+    logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
+    return;
+  }
+  
+  isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
   
   // Track any errors that occur during shutdown

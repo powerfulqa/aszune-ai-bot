@@ -30,8 +30,9 @@ jobs:
         run: npm install
 
       - name: Security audit
-        run: npm audit --audit-level=high
-        # Only fail on high severity issues, but output is still visible in logs
+        run: npm audit --audit-level=high --production
+        # Fail on high severity issues in production dependencies
+        # This is a required check for production deployments
 
       - name: Run tests with coverage
         run: npm run test:ci

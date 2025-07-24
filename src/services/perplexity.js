@@ -51,16 +51,11 @@ class PerplexityService {
       // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
         const responseText = await body.text().catch(() => 'Could not read response body');
-        let errorInfo;
         
-        try {
-          errorInfo = JSON.parse(responseText);
-        } catch (e) {
-          errorInfo = responseText;
-        }
-        
-        console.error('Perplexity API Error:', errorInfo);
-        throw new Error(`API request failed with status ${statusCode}`);
+        // Create a descriptive error message with status code and response content
+        const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+        console.error('Perplexity API Error:', errorMessage);
+        throw new Error(errorMessage);
       }
       
       // Parse response using our helper method
@@ -80,23 +75,25 @@ class PerplexityService {
    */
   async _parseApiResponse(body, contentType) {
     try {
+      // For JSON content types, use the built-in json parser
       if (contentType.includes('application/json')) {
         return await body.json();
-      } else {
-        // For non-JSON content types, read as text first
-        const responseText = await body.text();
-        
-        // Still try to parse as JSON as some APIs send JSON with wrong content-type
-        try {
-          return JSON.parse(responseText);
-        } catch (parseError) {
-          // Not JSON, return as text object
-          return { text: responseText };
-        }
+      }
+      
+      // For all other content types, get as text first
+      const responseText = await body.text();
+      
+      // Some APIs return JSON with incorrect content-type, so try parsing it
+      try {
+        return JSON.parse(responseText);
+      } catch {
+        // Not valid JSON, return as a text object
+        return { text: responseText };
       }
     } catch (error) {
-      console.error('Failed to process API response:', error);
-      throw new Error('Failed to parse API response');
+      const errorMessage = `Failed to process API response: ${error.message || 'Unknown error'}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
   }
 
