@@ -64,21 +64,25 @@ class PerplexityService {
       }
       
       // Parse successful response based on content type
-      if (contentType.includes('application/json')) {
-        return await body.json().catch(error => {
-          console.error('Failed to parse successful response as JSON:', error);
-          throw new Error('Failed to parse API response');
-        });
-      } else {
-        // For non-JSON responses, attempt to parse as JSON if it's a successful status code
-        // This helps with tests and cases where content-type header might be incorrect
-        const responseText = await body.text();
-        try {
-          return JSON.parse(responseText);
-        } catch (e) {
-          // If parsing fails, it's likely not a valid JSON response
-          throw new Error('Unexpected non-JSON response from API');
+      // We know this is a successful response (2xx) at this point
+      try {
+        if (contentType.includes('application/json')) {
+          return await body.json();
+        } else {
+          // For non-JSON content types, read as text first
+          const responseText = await body.text();
+          
+          // Still try to parse as JSON as some APIs send JSON with wrong content-type
+          try {
+            return JSON.parse(responseText);
+          } catch (parseError) {
+            // Not JSON, return as text object
+            return { text: responseText };
+          }
         }
+      } catch (error) {
+        console.error('Failed to process API response:', error);
+        throw new Error('Failed to parse API response');
       }
     } catch (error) {
       // Log the original error for debugging

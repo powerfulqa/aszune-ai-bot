@@ -31,7 +31,7 @@ jobs:
 
       - name: Security audit
         run: npm audit --audit-level=high
-        continue-on-error: true
+        # Only fail on high severity issues, but output is still visible in logs
 
       - name: Run tests with coverage
         run: npm run test:ci
