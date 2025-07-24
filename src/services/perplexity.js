@@ -137,20 +137,22 @@ class PerplexityService {
    */
   async generateTextSummary(messages) {
     try {
+      // Create request messages with system prompt
       const requestMessages = [
         {
           role: 'system',
           content: config.SYSTEM_MESSAGES.TEXT_SUMMARY,
-        },
-        {
-          role: 'user',
-          content: messages.join('\n'),
-        },
+        }
       ];
+      
+      // Add user messages directly rather than joining them
+      messages.forEach(message => {
+        requestMessages.push(message);
+      });
       
       const response = await this.sendChatRequest(requestMessages, {
         temperature: 0.2,
-        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.TEXT_SUMMARY,
+        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
       });
       
       return response?.choices?.[0]?.message?.content || 'No summary generated';

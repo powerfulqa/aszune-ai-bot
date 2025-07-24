@@ -159,12 +159,23 @@ describe('Conversation Manager', () => {
       const saveStatsOriginal = conversationManager.saveUserStats;
       conversationManager.saveUserStats = jest.fn().mockResolvedValue();
       
+      // Store references to intervals before destroy
+      const cleanupIntervalBeforeDestroy = conversationManager.cleanupInterval;
+      const saveStatsIntervalBeforeDestroy = conversationManager.saveStatsInterval;
+      
+      // Verify they exist before destroy
+      expect(cleanupIntervalBeforeDestroy).toBeDefined();
+      expect(saveStatsIntervalBeforeDestroy).toBeDefined();
+      
       // Call destroy
       await conversationManager.destroy();
       
-      // Verify intervals were cleared
-      expect(conversationManager.cleanupInterval._destroyed).toBe(true);
-      expect(conversationManager.saveStatsInterval._destroyed).toBe(true);
+      // Verify intervals were cleared by checking activeIntervals size
+      expect(conversationManager.activeIntervals.size).toBe(0);
+      
+      // Verify references are null now
+      expect(conversationManager.cleanupInterval).toBeNull();
+      expect(conversationManager.saveStatsInterval).toBeNull();
       
       // Verify saveUserStats was called
       expect(conversationManager.saveUserStats).toHaveBeenCalled();

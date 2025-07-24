@@ -334,8 +334,8 @@ describe('Bot integration', () => {
         
         const calledWith = JSON.parse(request.mock.calls[0][1].body);
         // The history passed to perplexity should be truncated to MAX_HISTORY * 2 (40)
-        // plus the system prompt (1).
-        expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2 + 1);
+        // We don't have a system prompt in this test, just the conversation history
+        expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2);
     });
 
     it('handles missing environment variables gracefully', () => {
