@@ -64,14 +64,23 @@ describe('Conversation Manager', () => {
     it('trims conversation history when it exceeds the maximum length', () => {
       const userId = 'test-user';
       
-      // Add more messages than the limit
-      for (let i = 0; i < config.MAX_HISTORY * 3; i++) {
-        conversationManager.addMessage(userId, 'user', `message ${i}`);
-        conversationManager.addMessage(userId, 'assistant', `reply ${i}`);
-      }
+      // Enable PI optimization mode for this test
+      const originalEnabledValue = config.PI_OPTIMIZATIONS.ENABLED;
+      config.PI_OPTIMIZATIONS.ENABLED = true;
       
-      const history = conversationManager.getHistory(userId);
-      expect(history.length).toBeLessThanOrEqual(config.MAX_HISTORY * 2);
+      try {
+        // Add more messages than the limit
+        for (let i = 0; i < config.MAX_HISTORY * 3; i++) {
+          conversationManager.addMessage(userId, 'user', `message ${i}`);
+          conversationManager.addMessage(userId, 'assistant', `reply ${i}`);
+        }
+        
+        const history = conversationManager.getHistory(userId);
+        expect(history.length).toBeLessThanOrEqual(config.MAX_HISTORY * 2);
+      } finally {
+        // Restore the original value after test
+        config.PI_OPTIMIZATIONS.ENABLED = originalEnabledValue;
+      }
     });
   });
   

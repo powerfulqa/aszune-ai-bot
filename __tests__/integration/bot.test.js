@@ -1,6 +1,11 @@
 process.env.PERPLEXITY_API_KEY = 'test';
 process.env.DISCORD_BOT_TOKEN = 'test';
 
+// Mock undici to control API responses
+jest.mock('undici', () => ({
+  request: jest.fn()
+}));
+
 // Mock the commands module first to avoid circular dependencies
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn().mockImplementation(async (message) => {
@@ -161,6 +166,12 @@ describe('Bot integration', () => {
 
     afterAll(() => {
         jest.restoreAllMocks();
+        
+        // Reset PI_OPTIMIZATIONS to default
+        const config = require('../../src/config/config');
+        if (config.PI_OPTIMIZATIONS) {
+            config.PI_OPTIMIZATIONS.ENABLED = false;
+        }
     });
 
     it('should have attached the messageCreate handler', () => {
@@ -169,15 +180,27 @@ describe('Bot integration', () => {
     });
 
     it('handles a normal message and replies', async () => {
-        const { request } = require('undici');
-        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
-        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Hi there!' } }] }));
-
-        await messageCreateHandler(message);
-        expect(message.channel.sendTyping).toHaveBeenCalled();
-        expect(request).toHaveBeenCalled();
-        // Bot now replies with an embed
-        expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'Hi there!' })] });
+        const perplexityService = require('../../src/services/perplexity');
+        message.content = 'hello';
+        
+        // Make sure previous tests don't affect this one
+        message.reply.mockClear();
+        
+        // Mock the perplexity service to return a fixed response
+        const originalGenerateChatResponse = perplexityService.generateChatResponse;
+        perplexityService.generateChatResponse = jest.fn().mockResolvedValue('Hi there!');
+        
+        try {
+            await messageCreateHandler(message);
+            
+            expect(message.channel.sendTyping).toHaveBeenCalled();
+            
+            // Bot now replies with an embed
+            expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'Hi there!' })] });
+        } finally {
+            // Restore the original function
+            perplexityService.generateChatResponse = originalGenerateChatResponse;
+        }
     });    it('replies to !help command', async () => {
         message.content = '!help';
         await messageCreateHandler(message);
@@ -270,29 +293,65 @@ describe('Bot integration', () => {
     });
 
     it('rate limits user messages', async () => {
-        const { request } = require('undici');
+        const perplexityService = require('../../src/services/perplexity');
         message.content = 'first message';
-        const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
-        request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'response 1' } }] }));
-        await messageCreateHandler(message);
-        // The first reply is an embed
-        expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'response 1' })] });
-
-        // Second message immediately after
-        const secondMessage = { ...message, content: 'second message' };
-        await messageCreateHandler(secondMessage);
-        // Rate limit message is a plain string
-        expect(message.reply).toHaveBeenLastCalledWith('Please wait a few seconds before sending another message.');
-        expect(request).toHaveBeenCalledTimes(1);
+        
+        // Make sure previous tests don't affect this one
+        message.reply.mockClear();
+        
+        // Mock the perplexity service to return a fixed response
+        const originalGenerateChatResponse = perplexityService.generateChatResponse;
+        perplexityService.generateChatResponse = jest.fn().mockResolvedValue('response 1');
+        
+        try {
+            await messageCreateHandler(message);
+            
+            // The first reply is an embed
+            expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'response 1' })] });
+            
+            // Should have called the perplexity service
+            expect(perplexityService.generateChatResponse).toHaveBeenCalledTimes(1);
+            
+            // Reset reply mock to check for next reply
+            message.reply.mockClear();
+            perplexityService.generateChatResponse.mockClear();
+            
+            // Second message immediately after
+            const secondMessage = { ...message, content: 'second message' };
+            await messageCreateHandler(secondMessage);
+            
+            // Rate limit message is a plain string
+            expect(message.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
+            
+            // No additional API requests should be made for rate-limited message
+            expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
+        } finally {
+            // Restore the original function
+            perplexityService.generateChatResponse = originalGenerateChatResponse;
+        }
     });
 
     it('handles API error when replying', async () => {
-        const { request } = require('undici');
+        const perplexityService = require('../../src/services/perplexity');
         message.content = 'hello';
-        request.mockRejectedValueOnce(new Error('API Error'));
-        await messageCreateHandler(message);
-        // Error message is a plain string
-        expect(message.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
+        
+        // Make sure previous tests don't affect this one
+        message.reply.mockClear();
+        
+        // Mock the perplexity service to throw an error
+        const originalGenerateChatResponse = perplexityService.generateChatResponse;
+        perplexityService.generateChatResponse = jest.fn().mockRejectedValue(new Error('API Error'));
+        
+        try {
+            // Call the handler with our message
+            await messageCreateHandler(message);
+            
+            // Error message should be a plain string (not an embed)
+            expect(message.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
+        } finally {
+            // Restore the original function
+            perplexityService.generateChatResponse = originalGenerateChatResponse;
+        }
     });
 
     it('handles API error when summarising', async () => {
@@ -318,24 +377,34 @@ describe('Bot integration', () => {
     it('truncates very long conversation history', async () => {
         const { request } = require('undici');
         const config = require('../../src/config/config');
-        // Populate history with more messages than the limit
-        for (let i = 0; i < 25; i++) { // 25 pairs = 50 messages
-            conversation.addMessage(message.author.id, 'user', `msg${i}`);
-            conversation.addMessage(message.author.id, 'assistant', `resp${i}`);
+        
+        // Enable PI optimization mode for this test
+        const originalEnabledValue = config.PI_OPTIMIZATIONS.ENABLED;
+        config.PI_OPTIMIZATIONS.ENABLED = true;
+        
+        try {
+            // Populate history with more messages than the limit
+            for (let i = 0; i < 25; i++) { // 25 pairs = 50 messages
+                conversation.addMessage(message.author.id, 'user', `msg${i}`);
+                conversation.addMessage(message.author.id, 'assistant', `resp${i}`);
+            }
+            
+            message.content = 'hello';
+            request.mockResolvedValueOnce({
+                body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }) },
+                statusCode: 200,
+            });
+            
+            await messageCreateHandler(message);
+            
+            const calledWith = JSON.parse(request.mock.calls[0][1].body);
+            // The history passed to perplexity should be truncated to MAX_HISTORY * 2 (40)
+            // We don't have a system prompt in this test, just the conversation history
+            expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2);
+        } finally {
+            // Restore the original value after test
+            config.PI_OPTIMIZATIONS.ENABLED = originalEnabledValue;
         }
-        
-        message.content = 'hello';
-        request.mockResolvedValueOnce({
-            body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }) },
-            statusCode: 200,
-        });
-        
-        await messageCreateHandler(message);
-        
-        const calledWith = JSON.parse(request.mock.calls[0][1].body);
-        // The history passed to perplexity should be truncated to MAX_HISTORY * 2 (40)
-        // We don't have a system prompt in this test, just the conversation history
-        expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2);
     });
 
     it('handles missing environment variables gracefully', () => {

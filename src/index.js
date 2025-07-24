@@ -12,10 +12,52 @@ try {
   console.error('Failed to load configuration:', error.message);
   process.exit(1);
 }
+
+// Set up logger early
+const logger = require('./utils/logger');
+
+// Initialize Pi-specific optimizations if enabled
+async function bootWithOptimizations() {
+  try {
+    if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {
+      logger.info('Initializing Raspberry Pi optimizations...');
+      await config.initializePiOptimizations();
+      logger.info('Pi optimizations initialized successfully');
+    }
+  } catch (error) {
+    logger.error('Failed to initialize Pi optimizations:', error);
+    // Continue with default settings
+  }
+}
+
+// Core dependencies
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
 const conversationManager = require('./utils/conversation');
-const logger = require('./utils/logger');
+
+// Conditionally load optimizations - don't load in test environment for easier testing
+const isProd = process.env.NODE_ENV === 'production';
+const enablePiOptimizations = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
+
+// Only initialize in production to avoid affecting tests
+if (isProd && enablePiOptimizations) {
+  // Initialize Pi-specific optimizations
+  logger.info('Initializing Pi optimizations');
+  
+  try {
+    // Lazy-load optimization modules only when needed
+    const { lazyLoad } = require('./utils/lazy-loader');
+    const memoryMonitor = lazyLoad(() => require('./utils/memory-monitor'));
+    const performanceMonitor = lazyLoad(() => require('./utils/performance-monitor'));
+    const cachePruner = lazyLoad(() => require('./utils/cache-pruner'));
+    
+    // Initialize monitors
+    memoryMonitor().initialize();
+    performanceMonitor().initialize();
+  } catch (error) {
+    logger.warn('Failed to initialize Pi optimizations:', error);
+  }
+}
 
 // Create Discord client
 const client = new Client({
@@ -56,6 +98,9 @@ async function registerSlashCommands() {
 // Handle ready event
 client.once('ready', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
+  
+  // Initialize Pi optimizations after connection is established
+  await bootWithOptimizations();
   await registerSlashCommands();
 });
 

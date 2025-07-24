@@ -23,8 +23,12 @@ class ConversationManager {
       this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
       this.activeIntervals.add(this.saveStatsInterval);
       
-      // Set up cleanup interval (every hour)
-      this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
+      // Set up cleanup interval - more frequently if Pi optimizations are enabled
+      const cleanupInterval = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED 
+        ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000  // Pi-optimized interval
+        : 60 * 60 * 1000; // Default: every hour
+      
+      this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
       this.activeIntervals.add(this.cleanupInterval);
     }
   }
@@ -82,8 +86,13 @@ class ConversationManager {
     history.push({ role, content });
     
     // Trim history if it exceeds the max length
-    if (history.length > config.MAX_HISTORY * 2) {
-      this.conversations.set(userId, history.slice(-config.MAX_HISTORY * 2));
+    // Use a smaller history size on Pi to save memory
+    const maxLength = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED 
+      ? config.MAX_HISTORY * 2 // Use MAX_HISTORY*2 for Pi optimization
+      : config.CONVERSATION_MAX_LENGTH; // Use regular max length otherwise
+      
+    if (history.length > maxLength) {
+      history.shift(); // Remove the oldest message to save memory
     }
     
     // Update user stats

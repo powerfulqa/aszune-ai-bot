@@ -1,6 +1,17 @@
 /**
  * Utility for logging and error handling
  */
+const fs = require('fs').promises;
+const path = require('path');
+
+// Use a more efficient loading approach for the config
+let config;
+try {
+  config = require('../config/config');
+} catch (error) {
+  config = { PI_OPTIMIZATIONS: { ENABLED: false, LOG_LEVEL: 'INFO' } };
+}
+
 class Logger {
   constructor() {
     this.levels = {
@@ -10,10 +21,47 @@ class Logger {
       ERROR: 3,
     };
     
-    // Set log level based on environment
-    this.logLevel = process.env.NODE_ENV === 'production' 
+    // Use config if available or environment variable
+    this.logLevel = this._determineLogLevel();
+    
+    // Setup log file path
+    this.logDir = path.join(__dirname, '../../logs');
+    this.logFile = path.join(this.logDir, 'bot.log');
+    
+    // Create log directory if not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      this._ensureLogDirectory();
+    }
+  }
+  
+  /**
+   * Determine the appropriate log level based on config or environment
+   * @returns {number} Log level
+   * @private
+   */
+  _determineLogLevel() {
+    // If Pi optimizations are enabled, use the Pi-specific log level
+    if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {
+      const piLogLevel = config.PI_OPTIMIZATIONS.LOG_LEVEL;
+      return this.levels[piLogLevel] || this.levels.ERROR;
+    }
+    
+    // Otherwise use environment-based default
+    return process.env.NODE_ENV === 'production' 
       ? this.levels.INFO 
       : this.levels.DEBUG;
+  }
+  
+  /**
+   * Create log directory if it doesn't exist
+   * @private
+   */
+  async _ensureLogDirectory() {
+    try {
+      await fs.mkdir(this.logDir, { recursive: true });
+    } catch (error) {
+      console.error('Failed to create log directory:', error);
+    }
   }
   
   /**
@@ -28,14 +76,74 @@ class Logger {
   }
   
   /**
+   * Write log to file if not in test mode
+   * @param {string} formattedMessage - Formatted log message
+   * @private
+   */
+  async _writeToFile(formattedMessage) {
+    if (process.env.NODE_ENV === 'test') return;
+    
+    try {
+      // Ensure log directory exists
+      await this._ensureLogDirectory();
+      
+      // Check if log file needs rotation
+      await this._rotateLogFileIfNeeded();
+      
+      // Append to log file
+      await fs.appendFile(this.logFile, formattedMessage + '\n');
+    } catch (error) {
+      console.error('Failed to write to log file:', error);
+    }
+  }
+  
+  /**
+   * Rotate log file if it gets too large
+   * @private
+   */
+  async _rotateLogFileIfNeeded() {
+    try {
+      const stats = await fs.stat(this.logFile).catch(() => ({ size: 0 }));
+      
+      // If file exceeds 5MB, rotate it
+      const maxSize = 5 * 1024 * 1024;
+      
+      if (stats.size > maxSize) {
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
+        await fs.rename(this.logFile, `${this.logFile}.${timestamp}`);
+        
+        // Remove old log files (keep only 5 most recent)
+        const files = await fs.readdir(this.logDir);
+        const oldLogs = files
+          .filter(f => f.startsWith('bot.log.') && f !== 'bot.log')
+          .sort()
+          .reverse()
+          .slice(5);
+        
+        for (const oldLog of oldLogs) {
+          await fs.unlink(path.join(this.logDir, oldLog)).catch(() => {});
+        }
+      }
+    } catch (error) {
+      // Fail silently, don't crash if log rotation fails
+      console.error('Log rotation failed:', error);
+    }
+  }
+  
+  /**
    * Log a debug message
    * @param {string} message - Message to log
    * @param {*} data - Additional data to log
    */
   debug(message, data) {
     if (this.logLevel <= this.levels.DEBUG) {
-      console.log(this._formatMessage('DEBUG', message));
+      const formattedMessage = this._formatMessage('DEBUG', message);
+      console.log(formattedMessage);
       if (data) console.log(data);
+      
+      // Write to file
+      this._writeToFile(formattedMessage);
+      if (data) this._writeToFile(JSON.stringify(data));
     }
   }
   
@@ -46,8 +154,13 @@ class Logger {
    */
   info(message, data) {
     if (this.logLevel <= this.levels.INFO) {
-      console.log(this._formatMessage('INFO', message));
+      const formattedMessage = this._formatMessage('INFO', message);
+      console.log(formattedMessage);
       if (data) console.log(data);
+      
+      // Write to file
+      this._writeToFile(formattedMessage);
+      if (data) this._writeToFile(JSON.stringify(data));
     }
   }
   
@@ -58,8 +171,13 @@ class Logger {
    */
   warn(message, data) {
     if (this.logLevel <= this.levels.WARN) {
-      console.warn(this._formatMessage('WARN', message));
+      const formattedMessage = this._formatMessage('WARN', message);
+      console.warn(formattedMessage);
       if (data) console.warn(data);
+      
+      // Write to file
+      this._writeToFile(formattedMessage);
+      if (data) this._writeToFile(JSON.stringify(data));
     }
   }
   
@@ -70,23 +188,43 @@ class Logger {
    */
   error(message, error) {
     if (this.logLevel <= this.levels.ERROR) {
-      console.error(this._formatMessage('ERROR', message));
+      const formattedMessage = this._formatMessage('ERROR', message);
+      console.error(formattedMessage);
+      
+      // Write to file
+      this._writeToFile(formattedMessage);
       
       if (error) {
+        let errorDetails;
+        
         if (error.response) {
           // API error with response
-          console.error('API Error Response:', {
+          errorDetails = {
+            type: 'API Error Response',
             status: error.response.status,
             data: error.response.data,
-          });
+          };
+          console.error('API Error Response:', errorDetails);
         } else if (error.request) {
           // No response received
+          errorDetails = {
+            type: 'No API Response',
+            request: error.request
+          };
           console.error('No response received from API:', error.request);
         } else {
           // General error
+          errorDetails = {
+            type: 'General Error',
+            message: error.message || String(error),
+            stack: error.stack
+          };
           console.error('Error:', error.message || error);
           if (error.stack) console.error('Stack:', error.stack);
         }
+        
+        // Write error details to file
+        this._writeToFile(JSON.stringify(errorDetails, null, 2));
       }
     }
   }
