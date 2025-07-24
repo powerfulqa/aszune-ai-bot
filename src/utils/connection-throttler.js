@@ -10,7 +10,7 @@ class ConnectionThrottler {
     this.activeConnections = 0;
     this.connectionQueue = [];
     this.maxConnections = config.PI_OPTIMIZATIONS.ENABLED ? 
-      (config.PI_OPTIMIZATIONS.MAX_CONCURRENT_CONNECTIONS || 2) : 10;
+      (config.PI_OPTIMIZATIONS.MAX_CONNECTIONS || 2) : 10;
   }
 
   /**

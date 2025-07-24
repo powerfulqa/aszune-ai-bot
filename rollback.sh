@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "🔄 Rolling back to tagged safe version..."
-cd /root/discord-bot/aszuneai || { echo "❌ Failed to find bot directory."; exit 1; }
+cd "/root/discord-bot/aszuneai" || { echo "❌ Failed to find bot directory."; exit 1; }
 
 echo "🛑 Stopping bot..."
 pm2 stop aszune-ai

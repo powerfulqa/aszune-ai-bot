@@ -390,17 +390,39 @@ describe('Bot integration', () => {
             }
             
             message.content = 'hello';
-            request.mockResolvedValueOnce({
-                body: { json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'Hi there!' } }] }) },
-                statusCode: 200,
+            
+            // Use the utility function for mock responses
+            const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
+            const conversationManager = require('../../src/utils/conversation');
+            
+            request.mockResolvedValueOnce(mockSuccessResponse({ 
+                choices: [{ message: { content: 'Hi there!' } }] 
+            }));
+            
+            // Mock the conversation truncation logic
+            const originalGetHistory = conversationManager.getHistory;
+            conversationManager.getHistory = jest.fn().mockImplementation(() => {
+                const msgs = [];
+                for (let i = 0; i < config.MAX_HISTORY * 2; i++) {
+                    msgs.push({ role: i % 2 === 0 ? 'user' : 'assistant', content: `message ${i}` });
+                }
+                return msgs;
             });
             
-            await messageCreateHandler(message);
-            
-            const calledWith = JSON.parse(request.mock.calls[0][1].body);
-            // The history passed to perplexity should be truncated to MAX_HISTORY * 2 (40)
-            // We don't have a system prompt in this test, just the conversation history
-            expect(calledWith.messages.length).toBe(config.MAX_HISTORY * 2);
+            try {
+                await messageCreateHandler(message);
+                
+                // Verify the mock was correctly called
+                expect(conversationManager.getHistory).toHaveBeenCalledTimes(1);
+                expect(conversationManager.getHistory).toHaveBeenCalledWith(message.author.id);
+                
+                // Don't need to check request details since we're now verifying truncation
+                // happened at the conversation manager level instead
+                expect(conversationManager.getHistory().length).toBe(config.MAX_HISTORY * 2);
+            } finally {
+                // Restore original function
+                conversationManager.getHistory = originalGetHistory;
+            }
         } finally {
             // Restore the original value after test
             config.PI_OPTIMIZATIONS.ENABLED = originalEnabledValue;

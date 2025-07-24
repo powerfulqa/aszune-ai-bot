@@ -6,6 +6,7 @@ const config = require('../config/config');
 const fs = require('fs').promises;
 const path = require('path');
 const logger = require('../utils/logger');
+const crypto = require('crypto');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -84,11 +85,15 @@ class PerplexityService {
    * @param {Object} options - Additional options
    * @returns {Promise<Object>} - The API response
    */
-  async sendChatRequest(messages, options = {}) {
-    const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
-    
-    // Prepare request payload
-    const requestPayload = {
+  /**
+   * Build API request payload
+   * @param {Array} messages - The messages to send
+   * @param {Object} options - Request options
+   * @returns {Object} - The request payload
+   * @private
+   */
+  _buildRequestPayload(messages, options) {
+    const payload = {
       model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
       messages: messages,
       max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
@@ -100,8 +105,38 @@ class PerplexityService {
     const lowCpuMode = piOptEnabled && config.PI_OPTIMIZATIONS.LOW_CPU_MODE;
     
     if (options.stream && piOptEnabled && !lowCpuMode) {
-      requestPayload.stream = true;
+      payload.stream = true;
     }
+    
+    return payload;
+  }
+  
+  /**
+   * Handle API response
+   * @param {Object} response - The API response
+   * @returns {Promise<Object>} - The parsed response
+   * @private
+   */
+  async _handleApiResponse(response) {
+    const { statusCode, headers, body } = response;
+      
+    // For non-2xx status codes, handle as error
+    if (statusCode < 200 || statusCode >= 300) {
+      const responseText = await body.text().catch(() => 'Could not read response body');
+      
+      // Create a descriptive error message with status code and response content
+      const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+      console.error('Perplexity API Error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    // Parse response as JSON
+    return await body.json();
+  }
+
+  async sendChatRequest(messages, options = {}) {
+    const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
+    const requestPayload = this._buildRequestPayload(messages, options);
     
     // Create request function to pass to throttler
     const makeApiRequest = async () => {
@@ -115,6 +150,8 @@ class PerplexityService {
     try {
       // Use throttler if PI optimizations are enabled
       let response;
+      const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
+      
       if (piOptEnabled) {
         const throttler = connectionThrottler();
         response = await throttler.executeRequest(makeApiRequest, 'Perplexity API');
@@ -122,23 +159,7 @@ class PerplexityService {
         response = await makeApiRequest();
       }
       
-      const { statusCode, headers, body } = response;
-      
-      // First check content-type to determine appropriate parsing method
-      const contentType = headers.get('content-type') || '';
-      
-      // For non-2xx status codes, handle as error
-      if (statusCode < 200 || statusCode >= 300) {
-        const responseText = await body.text().catch(() => 'Could not read response body');
-        
-        // Create a descriptive error message with status code and response content
-        const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
-        console.error('Perplexity API Error:', errorMessage);
-        throw new Error(errorMessage);
-      }
-      
-      // Parse response as JSON
-      return await body.json();
+      return await this._handleApiResponse(response);
     } catch (error) {
       logger.error('API request failed:', error);
       throw error;
@@ -169,7 +190,7 @@ class PerplexityService {
       
       // Not in cache, get from API
       const response = await this.sendChatRequest(history);
-      const content = response?.choices?.[0]?.message?.content || 'No response generated';
+      const content = response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content || 'No response generated';
       
       if (shouldUseCache) {
         // Save to cache
@@ -178,7 +199,7 @@ class PerplexityService {
         cache[cacheKey] = content;
         
         // Get max cache entries from config or use default
-        const maxEntries = config.PI_OPTIMIZATIONS?.CACHE_MAX_ENTRIES || 100;
+        const maxEntries = (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES) || 100;
         
         // Trim cache if too large
         const keys = Object.keys(cache);
@@ -218,14 +239,14 @@ class PerplexityService {
       
       // Try streaming for better Pi performance if enabled
       const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
-      const streamingEnabled = piOptEnabled && !config.PI_OPTIMIZATIONS?.LOW_CPU_MODE;
+      const streamingEnabled = piOptEnabled && !(config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.LOW_CPU_MODE);
       
       const response = await this.sendChatRequest(messages, {
         maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
         stream: streamingEnabled
       });
       
-      return response?.choices?.[0]?.message?.content || 'Unable to generate summary.';
+      return response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content || 'Unable to generate summary.';
     } catch (error) {
       logger.error('Failed to generate summary:', error);
       throw error; // Re-throw for caller to handle
@@ -263,6 +284,37 @@ class PerplexityService {
    * @returns {Promise<void>}
    * @private
    */
+  /**
+   * Format a cache entry with timestamp
+   * @param {any} entry - The cache entry
+   * @param {number} timestamp - The current timestamp
+   * @returns {Object} - The formatted entry
+   * @private
+   */
+  _formatCacheEntry(entry, timestamp) {
+    if (typeof entry === 'string') {
+      return {
+        content: entry,
+        lastAccessed: timestamp
+      };
+    } else if (entry && !entry.lastAccessed) {
+      return {
+        content: entry,
+        lastAccessed: timestamp
+      };
+    } else if (entry) {
+      // Just update the timestamp on existing entries
+      entry.lastAccessed = timestamp;
+      return entry;
+    }
+    
+    // Fallback for unexpected entry types
+    return {
+      content: String(entry),
+      lastAccessed: timestamp
+    };
+  }
+
   async _saveCache(cache) {
     try {
       const cacheFile = path.join(__dirname, '../../data/question_cache.json');
@@ -273,23 +325,11 @@ class PerplexityService {
       
       // Add timestamp for when items were cached
       const now = Date.now();
-      Object.keys(cache).forEach(key => {
-        if (!cache[key].lastAccessed) {
-          cache[key] = {
-            content: cache[key],
-            lastAccessed: now
-          };
-        } else if (typeof cache[key] === 'string') {
-          cache[key] = {
-            content: cache[key],
-            lastAccessed: now
-          };
-        } else {
-          cache[key].lastAccessed = now;
-        }
-      });
+      const updatedCache = Object.fromEntries(
+        Object.entries(cache).map(([key, value]) => [key, this._formatCacheEntry(value, now)])
+      );
       
-      await fs.writeFile(cacheFile, JSON.stringify(cache, null, 2));
+      await fs.writeFile(cacheFile, JSON.stringify(updatedCache, null, 2));
     } catch (error) {
       logger.error('Error saving cache:', error);
     }
@@ -305,7 +345,7 @@ class PerplexityService {
     // Use only the last few messages for the cache key to avoid unnecessary cache misses
     const lastMessages = history.slice(-2);
     const key = lastMessages.map(msg => `${msg.role}:${msg.content}`).join('|');
-    return require('crypto').createHash('md5').update(key).digest('hex');
+    return crypto.createHash('md5').update(key).digest('hex');
   }
   
   /**

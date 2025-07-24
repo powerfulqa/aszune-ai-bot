@@ -47,13 +47,10 @@ if (isProd && enablePiOptimizations) {
   try {
     // Lazy-load optimization modules only when needed
     const { lazyLoad } = require('./utils/lazy-loader');
-    const memoryMonitor = lazyLoad(() => require('./utils/memory-monitor'));
-    const performanceMonitor = lazyLoad(() => require('./utils/performance-monitor'));
-    const cachePruner = lazyLoad(() => require('./utils/cache-pruner'));
     
-    // Initialize monitors
-    memoryMonitor().initialize();
-    performanceMonitor().initialize();
+    // Initialize monitors directly with lazy loading
+    lazyLoad(() => require('./utils/memory-monitor'))().initialize();
+    lazyLoad(() => require('./utils/performance-monitor'))().initialize();
   } catch (error) {
     logger.warn('Failed to initialize Pi optimizations:', error);
   }
