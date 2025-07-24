@@ -1,4 +1,4 @@
-# Aszune AI Bot
+# Aszune AI Bot (v1.2.0)
 
 ![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
@@ -54,7 +54,7 @@
 
 ### Prerequisites
 
-- Node.js (v20 or later recommended)
+- Node.js v20.18.1 or later
 - A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)
 
@@ -194,7 +194,7 @@ The test suite includes:
 - Edge case handling tests
 - Mocks for external dependencies
 
-Current test coverage: 100% of critical paths with 125 tests.
+Current test coverage: >90% overall with 140 tests.
 
 ---
 
