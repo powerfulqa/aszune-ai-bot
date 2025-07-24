@@ -34,3 +34,5 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance
 - 🆕 **Stats Tracking:** Shows per-user message and summary counts
 - 🆕 **Slash Command Support:** All major commands available as Discord slash commands
+- 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
+- 🧪 **Comprehensive Testing:** 140 automated tests with >90% code coverage

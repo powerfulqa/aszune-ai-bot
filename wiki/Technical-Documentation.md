@@ -14,6 +14,7 @@ Aszune AI Bot is built using Node.js and the Discord.js library, with the Perple
 4. **Conversation Manager** - Tracks and stores user conversations
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
+7. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
 
 ## Project Structure
 
@@ -234,6 +235,52 @@ describe("Emoji Utilities", () => {
 - Uses JavaScript `Map` for conversation history and rate limiting for efficient lookups
 - Implements proper error handling for API calls
 - Uses async/await for non-blocking operations
+
+## Graceful Shutdown Implementation
+
+The bot implements a robust shutdown mechanism that:
+
+1. Captures system signals (SIGINT, SIGTERM) for graceful shutdown
+2. Handles uncaught exceptions and unhandled promise rejections
+3. Performs cleanup operations in the correct order:
+   - Saves conversation history and user stats
+   - Destroys the Discord client connection
+   - Logs any errors that occur during shutdown
+4. Uses error counting to return appropriate exit codes
+5. Ensures proper resource cleanup
+
+```javascript
+// Example of the shutdown handler
+async function shutdown(signal) {
+  let errorCount = 0;
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
+  
+  try {
+    // Clean up conversation manager (save stats, clear timers)
+    await conversationManager.destroy();
+  } catch (error) {
+    errorCount++;
+    logger.error('Error shutting down conversation manager', error);
+  }
+  
+  try {
+    // Destroy Discord client connection
+    await client.destroy();
+    logger.info('Discord client destroyed');
+  } catch (error) {
+    errorCount++;
+    logger.error('Shutdown error', error);
+  }
+  
+  if (errorCount > 0) {
+    logger.error(`Shutdown completed with ${errorCount} error(s)`);
+    process.exit(1);
+  } else {
+    logger.info('Shutdown complete.');
+    process.exit(0);
+  }
+}
+```
 
 ## Security Considerations
 

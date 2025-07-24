@@ -43,8 +43,10 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🆕 **Comprehensive Testing:** 125 automated tests covering all key functionality.
+- 🆕 **Comprehensive Testing:** 140 automated tests covering all key functionality with >90% code coverage.
 - 🆕 **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
+- 🆕 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
+- 🆕 **Optimized Test Suite:** Fixed circular dependencies and improved mock implementations.
 
 ---
 
@@ -52,7 +54,7 @@
 
 ### Prerequisites
 
-- Node.js (v14 or later)
+- Node.js (v20 or later recommended)
 - A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)
 

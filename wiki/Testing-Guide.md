@@ -2,7 +2,7 @@
 
 ## Overview
 
-Aszune AI Bot has a comprehensive test suite with 125 tests covering all critical functionality. The tests are designed to verify that all components work correctly and handle edge cases appropriately.
+Aszune AI Bot has a comprehensive test suite with 140 tests covering all critical functionality with over 90% code coverage. The tests are designed to verify that all components work correctly and handle edge cases appropriately.
 
 ## Test Structure
 
@@ -48,6 +48,11 @@ The test suite was recently enhanced with several improvements:
 2. **Improved Singleton Pattern**: Ensured consistent usage of the singleton pattern in services
 3. **Enhanced Resource Management**: Properly cleaned up timers in test environments
 4. **Fixed Promise Rejection Handling**: Improved handling of unhandled promise rejections in tests
+5. **Resolved Circular Dependencies**: Improved module mocking to avoid circular dependencies
+6. **Simplified Command Data Format**: Removed SlashCommandBuilder dependency for more reliable tests
+7. **Enhanced Mock Implementations**: Updated mock implementations for Discord client and conversation manager
+8. **Added Test Exclusion Patterns**: Properly configured test path ignore patterns for utility files
+9. **Improved Error Handling Tests**: Added missing test cases for error scenarios during bot shutdown
 5. **Improved Mock Configuration**: Added comprehensive mocks for configuration and external services
 
 ## Writing New Tests
