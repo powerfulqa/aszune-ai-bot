@@ -1,6 +1,20 @@
 const { EventEmitter } = require('events');
-const axios = require('axios');
-jest.mock('axios');
+const { request } = require('undici');
+jest.mock('undici');
+
+// Mock the commands module first to avoid circular dependencies
+jest.mock('../../src/commands', () => ({
+  handleTextCommand: jest.fn().mockImplementation(async (message) => {
+    // Mock implementation that returns null for non-command messages
+    if (!message.content.startsWith('!')) return null;
+    if (message.content.startsWith('!help')) return { content: 'Help message' };
+    if (message.content.startsWith('!clearhistory')) return { content: 'History cleared' };
+    if (message.content.startsWith('!summary')) return { content: 'Summary' };
+    return null;
+  }),
+  handleSlashCommand: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
+}));
 
 describe('Bot Edge Cases', () => {
   let fakeMessage;
@@ -38,7 +52,7 @@ describe('Bot Edge Cases', () => {
   });
 
   it('handles API failure for chat completions', async () => {
-    axios.post.mockRejectedValueOnce(new Error('API Down'));
+    request.mockRejectedValueOnce(new Error('API Down'));
     await fakeMessage.reply('There was an error processing your request. Please try again later.');
     expect(fakeMessage.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
   });
@@ -60,20 +74,13 @@ describe('Bot Edge Cases', () => {
     delete process.env.PERPLEXITY_API_KEY;
     delete process.env.DISCORD_BOT_TOKEN;
 
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementationOnce(() => {
-      throw new Error('process.exit() was called.');
-    });
-
     jest.resetModules();
 
     expect(() => {
-      require('../../src/index.js');
-    }).toThrow('process.exit() was called.');
-
-    expect(exitSpy).toHaveBeenCalledWith(1);
+      require('../../src/config/config.js');
+    }).toThrow('Missing PERPLEXITY_API_KEY, DISCORD_BOT_TOKEN in environment variables.');
 
     // Cleanup
-    exitSpy.mockRestore();
     process.env = originalEnv;
     jest.resetModules();
   });

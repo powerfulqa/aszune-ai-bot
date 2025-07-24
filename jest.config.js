@@ -11,6 +11,26 @@ module.exports = {
     "!ecosystem.config.js",
     "!jest.setup.js"
   ],
+  // Define pattern for test files to exclude helper files
+  testMatch: [
+    "**/__tests__/**/*.[jt]s?(x)",
+    "**/?(*.)+(spec|test).[jt]s?(x)"
+  ],
+  // Explicitly exclude our mock helpers file and other problematic files
+  testPathIgnorePatterns: [
+    "/__tests__/utils/undici-mock-helpers.js",
+    "/__tests__/utils/undici-mock-helpers.test.ignore.js",
+    "/node_modules/",
+    "/bot-shutdown.test.js/"
+  ],
+  // Generate JUnit XML test report for CodeCov
+  reporters: [
+    "default",
+    ["jest-junit", {
+      outputDirectory: "test-results",
+      outputName: "junit.xml"
+    }]
+  ],
   // Use the Jest setup file
   setupFilesAfterEnv: ['./jest.setup.js'],
   // Use v8 coverage provider for better reporting

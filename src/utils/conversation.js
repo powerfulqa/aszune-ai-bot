@@ -11,21 +11,22 @@ class ConversationManager {
     this.conversations = new Map();
     this.lastMessageTimestamps = new Map();
     this.userStats = new Map();
+    // Track active intervals for proper cleanup
+    this.activeIntervals = new Set();
     
-    // Don't load stats in test environment
+    // Don't load stats or set intervals in test environment
     if (process.env.NODE_ENV !== 'test') {
       // Load user stats from disk
       this.loadUserStats();
       
       // Set up save interval (every 5 minutes)
       this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
+      this.activeIntervals.add(this.saveStatsInterval);
+      
+      // Set up cleanup interval (every hour)
+      this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
+      this.activeIntervals.add(this.cleanupInterval);
     }
-    
-    // Set up cleanup interval (every hour)
-    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
-    
-    // Set up stats save interval (every 5 minutes)
-    // (Removed duplicate setInterval call to prevent orphaned timers)
   }
   
   /**
@@ -171,16 +172,23 @@ class ConversationManager {
   }
   
   /**
-   * Destroy the manager and clear the cleanup interval
+   * Destroy the manager and clear any active intervals
    */
   async destroy() {
-    // Clear intervals
+    // Clear intervals (check if they exist first to be more robust)
+    // Clear all tracked intervals
+    for (const interval of this.activeIntervals) {
+      clearInterval(interval);
+    }
+    this.activeIntervals.clear();
+    
+    // For backward compatibility with tests
     if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
     
     if (this.saveStatsInterval) {
-      clearInterval(this.saveStatsInterval);
+      this.saveStatsInterval = null;
     }
     
     // Save stats one last time

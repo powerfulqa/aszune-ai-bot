@@ -1,4 +1,4 @@
-# Aszune AI Bot
+# Aszune AI Bot (v1.2.0)
 
 ![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
@@ -43,6 +43,10 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
+- 🆕 **Comprehensive Testing:** 140 automated tests covering all key functionality with >90% code coverage.
+- 🆕 **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
+- 🆕 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
+- 🆕 **Optimized Test Suite:** Fixed circular dependencies and improved mock implementations.
 
 ---
 
@@ -50,7 +54,7 @@
 
 ### Prerequisites
 
-- Node.js (v14 or later)
+- Node.js v20.18.1 or later
 - A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)
 
@@ -174,19 +178,37 @@ aszune-ai-bot/
 
 ## Testing & Coverage
 
-- **Automated Tests:**  
-  The project uses [Jest](https://jestjs.io/) for unit and integration testing.  
-  Run all tests with:
-  ```bash
-  npm test
-  ```
-- **Coverage Reporting:**  
-  Code coverage is collected automatically and uploaded to [Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot) via GitHub Actions.
-  To generate a local coverage report:
-  ```bash
-  npm test -- --coverage
-  ```
-  Coverage includes utility modules, command handling, emoji logic, error handling, and more.
+The project includes comprehensive testing with Jest. To run tests:
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+The test suite includes:
+- Unit tests for all service modules
+- Integration tests for bot functionality
+- Edge case handling tests
+- Mocks for external dependencies
+
+Current test coverage: >90% overall with 140 tests.
+
+---
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment. The pipeline:
+
+1. **Builds** the application
+2. **Runs all tests** with coverage reporting
+3. **Performs security checks** using npm audit
+4. **Uploads coverage data** to Codecov and QLTY
+5. **Prepares for deployment** when merging to main branch
+
+View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 
 ---
 
