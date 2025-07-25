@@ -1,0 +1,380 @@
+/**
+ * Service for interacting with the Perplexity API
+  /**
+   * Send a request to the Perplexity chat API
+   * @param {Array} messages - The messages to send to the API
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} - The API response
+   */
+  async sendChatRequest(messages, options = {}) {
+    const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
+    
+    // Prepare the request configuration
+    const requestConfig = {
+      method: 'POST',
+      headers: this._getHeaders(),
+      body: JSON.stringify({
+        model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
+        messages: messages,
+        max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
+        temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
+        stream: options.stream === true && !config.PI_OPTIMIZATIONS.LOW_CPU_MODE
+      }),
+    };
+    
+    try {
+      // Use connection throttler for Pi optimization
+      const makeRequest = async () => {
+        return await request(endpoint, requestConfig);
+      };
+      
+      // Execute through the throttler if Pi optimizations are enabled
+      const { statusCode, headers, body } = config.PI_OPTIMIZATIONS.ENABLED ? 
+        await connectionThrottler.executeRequest(() => makeRequest(), 'Perplexity API') :
+        await makeRequest(); } = require('undici');
+const config = require('../config/config');
+const fs = require('fs').promises;
+const path = require('path');
+const logger = require('../utils/logger');
+const connectionThrottler = require('../utils/connection-throttler');
+const { lazyLoad } = require('../utils/lazy-loader');
+
+// Lazy load cache pruner to avoid circular dependencies
+const getCachePruner = lazyLoad(() => require('../utils/cache-pruner'));
+
+/**
+ * Client for the Perplexity API
+ */
+class PerplexityService {
+  constructor() {
+    this.apiKey = config.PERPLEXITY_API_KEY;
+    this.baseUrl = config.API.PERPLEXITY.BASE_URL;
+    
+    // Track active intervals for proper cleanup
+    this.activeIntervals = new Set();
+    
+    // Set up cache cleanup interval (if not in test environment)
+    this.cacheCleanupInterval = null;
+    if (process.env.NODE_ENV !== 'test') {
+      // Clean cache every day
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      this.cacheCleanupInterval = setInterval(() => this._cleanupCache(), DAY_MS);
+      this.activeIntervals.add(this.cacheCleanupInterval);
+    }
+  }
+  
+  /**
+   * Shut down the service, clearing any intervals
+   */
+  shutdown() {
+    // Clear all intervals
+    for (const interval of this.activeIntervals) {
+      clearInterval(interval);
+    }
+    this.activeIntervals.clear();
+  }
+
+  /**
+   * Create headers for API requests
+   * @returns {Object} Headers object
+   */
+  _getHeaders() {
+    return {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  /**
+   * Send a chat completion request
+   * @param {Array} messages - The messages to send to the API
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} - The API response
+   */
+  async sendChatRequest(messages, options = {}) {
+    const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
+    
+    // Prepare request payload
+    const requestPayload = {
+      model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
+      messages: messages,
+      max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
+      temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE
+    };
+    
+    // Enable streaming for supported environments if not in low CPU mode
+    if (options.stream && !config.PI_OPTIMIZATIONS.LOW_CPU_MODE) {
+      requestPayload.stream = true;
+    }
+    
+    // Create request function to pass to throttler
+    const makeApiRequest = async () => {
+      return await request(endpoint, {
+        method: 'POST',
+        headers: this._getHeaders(),
+        body: JSON.stringify(requestPayload)
+      });
+    };
+    
+    try {
+      // Use throttler if PI optimizations are enabled
+      const { statusCode, headers, body } = config.PI_OPTIMIZATIONS.ENABLED ?
+        await connectionThrottler.executeRequest(makeApiRequest, 'Perplexity API') :
+        await makeApiRequest();
+      
+      // First check content-type to determine appropriate parsing method
+      const contentType = headers.get('content-type') || '';
+      
+      // For non-2xx status codes, handle as error
+      if (statusCode < 200 || statusCode >= 300) {
+        const responseText = await body.text().catch(() => 'Could not read response body');
+        
+        // Create a descriptive error message with status code and response content
+        const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+        console.error('Perplexity API Error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      // Parse response using our helper method
+      return await this._parseApiResponse(body, contentType);
+    } catch (err) {
+      console.error('Error in Perplexity API call:', err);
+      throw err;
+    }
+  }
+  
+  /**
+   * Parse API response based on content type
+   * @param {ReadableStream} body - The response body
+   * @param {string} contentType - The content type header value
+   * @returns {Promise<object>} Parsed response
+   * @private
+   */
+  async _parseApiResponse(body, contentType) {
+    try {
+      // For JSON content types, use the built-in json parser
+      if (contentType.includes('application/json')) {
+        return await body.json();
+      }
+      
+      // For all other content types, get as text first
+      const responseText = await body.text();
+      
+      // Some APIs return JSON with incorrect content-type, so try parsing it
+      try {
+        return JSON.parse(responseText);
+      } catch (parseError) {
+        // Not valid JSON, return as a text object
+        console.debug('JSON parse failed:', parseError);
+        return { text: responseText };
+      }
+    } catch (error) {
+      const errorMessage = `Failed to process API response: ${error.message || 'Unknown error'}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Generate a summary from conversation history
+   * @param {Array} history - The conversation history
+   * @returns {Promise<String>} - The summary text
+   */
+  async generateSummary(history) {
+    try {
+      const messages = [
+        {
+          role: 'system',
+          content: config.SYSTEM_MESSAGES.SUMMARY,
+        },
+        ...history.map(message => ({
+          role: message.role,
+          content: message.content,
+        })),
+      ];
+      
+      const response = await this.sendChatRequest(messages, {
+        temperature: 0.2, // Lower temperature for more deterministic results
+        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
+      });
+      
+      return response?.choices?.[0]?.message?.content || 'No summary generated';
+    } catch (error) {
+      console.error('Failed to generate summary:', error);
+      throw new Error('Summary generation failed');
+    }
+  }
+  
+  /**
+   * Generate a text summary from messages
+   * @param {Array} messages - The messages to summarize
+   * @returns {Promise<String>} - The summary text
+   */
+  async generateTextSummary(messages) {
+    try {
+      // Create request messages with system prompt
+      const requestMessages = [
+        {
+          role: 'system',
+          content: config.SYSTEM_MESSAGES.TEXT_SUMMARY,
+        }
+      ];
+      
+      // Add user messages directly rather than joining them
+      messages.forEach(message => {
+        requestMessages.push(message);
+      });
+      
+      const response = await this.sendChatRequest(requestMessages, {
+        temperature: 0.2,
+        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
+      });
+      
+      return response?.choices?.[0]?.message?.content || 'No summary generated';
+    } catch (error) {
+      console.error('Failed to generate text summary:', error);
+      return 'Text summary generation failed';
+    }
+  }
+  
+  /**
+   * Get cache file path
+   * @returns {string} Cache file path
+   * @private
+   */
+  _getCacheFilePath() {
+    return path.join(__dirname, '../../data/question_cache.json');
+  }
+
+  /**
+   * Load cache from disk
+   * @returns {Promise<Object>} Cache object
+   * @private
+   */
+  async _loadCache() {
+    try {
+      const data = await fs.readFile(this._getCacheFilePath(), 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return {};
+      }
+      logger.error('Failed to load cache:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Save cache to disk
+   * @param {Object} cache - Cache object
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _saveCache(cache) {
+    try {
+      await fs.writeFile(this._getCacheFilePath(), JSON.stringify(cache, null, 2));
+    } catch (error) {
+      logger.error('Failed to save cache:', error);
+    }
+  }
+
+  /**
+   * Generate a cache key for messages
+   * @param {Array} messages - Messages to generate key for
+   * @returns {string} Cache key
+   * @private
+   */
+  _generateCacheKey(messages) {
+    // Simple hash function for message content
+    const content = messages.map(m => `${m.role}:${m.content}`).join('|');
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+  }
+  
+  /**
+   * Clean up old cache entries
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _cleanupCache() {
+    try {
+      const cache = await this._loadCache();
+      const keys = Object.keys(cache);
+      
+      if (keys.length > 100) {
+        logger.debug(`Cleaning cache, currently ${keys.length} entries`);
+        // Keep only the 50 most recent entries
+        const newCache = {};
+        keys.slice(-50).forEach(key => {
+          newCache[key] = cache[key];
+        });
+        await this._saveCache(newCache);
+      }
+    } catch (error) {
+      logger.error('Failed to clean cache:', error);
+    }
+  }
+
+  /**
+   * Generate chat response for user query
+   * @param {Array} history - Chat history
+   * @param {boolean} useCache - Whether to override default cache behavior
+   * @returns {Promise<String>} - The chat response
+   */
+  async generateChatResponse(history, useCache = null) {
+    try {
+      // Determine whether to use cache based on Pi optimizations, defaulting to the parameter if provided
+      const shouldUseCache = useCache !== null ? useCache : 
+        (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED ? 
+          config.PI_OPTIMIZATIONS.CACHE_ENABLED : true);
+      
+      if (shouldUseCache) {
+        // Try to get from cache
+        const cacheKey = this._generateCacheKey(history);
+        const cache = await this._loadCache();
+        
+        if (cache[cacheKey]) {
+          logger.debug('Cache hit for query');
+          return cache[cacheKey];
+        }
+      }
+      
+      // Not in cache, get from API
+      const response = await this.sendChatRequest(history);
+      const content = response?.choices?.[0]?.message?.content || 'No response generated';
+      
+      if (shouldUseCache) {
+        // Save to cache
+        const cacheKey = this._generateCacheKey(history);
+        const cache = await this._loadCache();
+        cache[cacheKey] = content;
+        
+        // Get max cache entries from config or use default
+        const maxEntries = config.PI_OPTIMIZATIONS?.CACHE_MAX_ENTRIES || 100;
+        
+        // Trim cache if too large
+        const keys = Object.keys(cache);
+        if (keys.length > maxEntries) {
+          // Remove oldest 20% of entries
+          const removeCount = Math.ceil(maxEntries * 0.2);
+          const keysToRemove = keys.slice(0, removeCount);
+          keysToRemove.forEach(key => delete cache[key]);
+        }
+        
+        await this._saveCache(cache);
+      }
+      
+      return content;
+    } catch (error) {
+      logger.error('Failed to generate chat response:', error);
+      throw error; // Re-throw for caller to handle
+    }
+  }
+}
+
+module.exports = new PerplexityService();

@@ -1,5 +1,5 @@
 /**
- * Configuration settings for the Discord bot
+ * Configuration for the Discord bot with auto-detection for Raspberry Pi models
  */
 require('dotenv').config();
 
@@ -11,7 +11,8 @@ if (missingEnvVars.length > 0) {
   throw new Error(`Missing ${missingEnvVars.join(', ')} in environment variables.`);
 }
 
-module.exports = {
+// Export the basic config first - Pi optimizations will be initialized later dynamically
+const config = {
   // API Keys and Tokens
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
@@ -19,6 +20,26 @@ module.exports = {
   // Bot Configuration
   MAX_HISTORY: 20,
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
+  CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
+  
+  // Raspberry Pi optimizations (default values, will be overridden by pi-detector)
+  PI_OPTIMIZATIONS: {
+    ENABLED: process.env.ENABLE_PI_OPTIMIZATIONS === 'true',
+    LOG_LEVEL: process.env.PI_LOG_LEVEL || 'ERROR',
+    CACHE_ENABLED: true,
+    CACHE_MAX_ENTRIES: 100,
+    CLEANUP_INTERVAL_MINUTES: 30,
+    DEBOUNCE_MS: parseInt(process.env.PI_DEBOUNCE_MS || '300', 10),
+    MAX_CONNECTIONS: parseInt(process.env.PI_MAX_CONNECTIONS || '2', 10),
+    MEMORY_LIMITS: {
+      RAM_THRESHOLD_MB: parseInt(process.env.PI_MEMORY_LIMIT || '200', 10),
+      RAM_CRITICAL_MB: parseInt(process.env.PI_MEMORY_CRITICAL || '250', 10)
+    },
+    COMPACT_MODE: process.env.PI_COMPACT_MODE === 'true',
+    REACTION_LIMIT: parseInt(process.env.PI_REACTION_LIMIT || '3', 10),
+    LOW_CPU_MODE: process.env.PI_LOW_CPU_MODE === 'true',
+    STREAM_RESPONSES: process.env.PI_STREAM_RESPONSES !== 'false'
+  },
   
   // API Configuration
   API: {
@@ -61,3 +82,36 @@ module.exports = {
     welcome: '👋'
   }
 };
+
+// Import the Pi detection utility
+const piDetector = require('../utils/pi-detector');
+
+/**
+ * Initialize Pi-specific optimizations and update config
+ * This function should be called when the bot starts
+ */
+async function initializePiOptimizations() {
+  try {
+    // Only attempt to initialize if optimizations are enabled
+    if (config.PI_OPTIMIZATIONS.ENABLED) {
+      const optimizedSettings = await piDetector.initPiOptimizations();
+      
+      // Update the configuration with optimized settings
+      config.PI_OPTIMIZATIONS = {
+        ...config.PI_OPTIMIZATIONS,
+        ...optimizedSettings
+      };
+      
+      // Store Pi information for reference
+      config.PI_INFO = optimizedSettings.PI_INFO;
+    }
+    return config;
+  } catch (error) {
+    console.error('Failed to initialize Pi optimizations:', error);
+    return config;
+  }
+}
+
+// Export the config and initialization function
+module.exports = config;
+module.exports.initializePiOptimizations = initializePiOptimizations;

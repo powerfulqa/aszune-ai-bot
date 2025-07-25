@@ -110,3 +110,24 @@
   - Improved test coverage to >90% across the codebase
 
 ---
+
+## v1.2.1 - Raspberry Pi Optimization Update (2025-07-24)
+
+- **Performance Enhancements:**
+  - Added automatic Raspberry Pi model detection and optimizations
+  - Implemented memory management optimizations for resource-constrained devices
+  - Added connection throttling to limit concurrent network requests
+  - Created lazy loading system for heavy dependencies
+  - Added message debouncing to prevent excessive API calls
+  - Implemented automatic cache pruning for better memory usage
+  - Created model-specific settings for Pi 3, Pi 4, and Pi 5 with different RAM configurations
+  - Added comprehensive documentation for Pi optimizations
+
+- **Technical Improvements:**
+  - Enhanced configuration system for dynamic setting adjustments
+  - Added hardware detection capabilities for Raspberry Pi models
+  - Made all optimizations test-compatible to maintain 100% test success rate
+  - Created future-proof architecture supporting upcoming Pi models
+  - Improved startup process with environment-aware initialization
+
+---

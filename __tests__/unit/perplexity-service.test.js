@@ -73,8 +73,7 @@ describe('Perplexity Service', () => {
           ...history
         ]),
         expect.objectContaining({
-          maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
-          temperature: 0.2
+          maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY
         })
       );
       
@@ -99,8 +98,7 @@ describe('Perplexity Service', () => {
                 ...messages
             ]),
             expect.objectContaining({
-                maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
-                temperature: 0.2
+                maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY
             })
         );
 

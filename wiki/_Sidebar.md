@@ -8,6 +8,7 @@
 - [Testing Guide](Testing-Guide)
 - [CI/CD Pipeline](CI-CD-Pipeline)
 - [Deployment Guide](Deployment-Guide)
+- [Pi Optimization Guide](Pi-Optimization-Guide)
 - [Troubleshooting](Troubleshooting)
 - [Contributing](Contributing)
 
