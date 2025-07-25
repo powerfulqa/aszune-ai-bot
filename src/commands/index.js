@@ -1,7 +1,7 @@
 /**
  * Command handler for the bot
  */
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ApplicationCommandOptionType } = require('discord.js');
 const conversationManager = require('../utils/conversation');
 const perplexityService = require('../services/perplexity');
 const logger = require('../utils/logger');
@@ -103,6 +103,7 @@ const commands = {  help: {
         option.setName('text')
           .setDescription('The text to summarise')
           .setRequired(true)
+          .setType(ApplicationCommandOptionType.String)
       ),
     async execute(interaction) {
       let text;
