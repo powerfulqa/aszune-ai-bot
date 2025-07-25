@@ -148,4 +148,55 @@ describe('Conversation Manager', () => {
       expect(stats.summaries).toBe(1);
     });
   });
+
+  describe('destroy', () => {
+    it('clears intervals and saves user stats', async () => {
+      // Mock the intervals
+      conversationManager.cleanupInterval = setInterval(() => {}, 10000);
+      conversationManager.saveStatsInterval = setInterval(() => {}, 10000);
+      
+      // Mock the saveUserStats method
+      const saveStatsOriginal = conversationManager.saveUserStats;
+      conversationManager.saveUserStats = jest.fn().mockResolvedValue();
+      
+      // Store references to intervals before destroy
+      const cleanupIntervalBeforeDestroy = conversationManager.cleanupInterval;
+      const saveStatsIntervalBeforeDestroy = conversationManager.saveStatsInterval;
+      
+      // Verify they exist before destroy
+      expect(cleanupIntervalBeforeDestroy).toBeDefined();
+      expect(saveStatsIntervalBeforeDestroy).toBeDefined();
+      
+      // Call destroy
+      await conversationManager.destroy();
+      
+      // Verify intervals were cleared by checking activeIntervals size
+      expect(conversationManager.activeIntervals.size).toBe(0);
+      
+      // Verify references are null now
+      expect(conversationManager.cleanupInterval).toBeNull();
+      expect(conversationManager.saveStatsInterval).toBeNull();
+      
+      // Verify saveUserStats was called
+      expect(conversationManager.saveUserStats).toHaveBeenCalled();
+      
+      // Restore the original method
+      conversationManager.saveUserStats = saveStatsOriginal;
+    });
+
+    it('handles errors when saving user stats during shutdown', async () => {
+      // Mock the saveUserStats method to throw an error
+      const saveStatsOriginal = conversationManager.saveUserStats;
+      conversationManager.saveUserStats = jest.fn().mockRejectedValue(new Error('Test error'));
+      
+      // Call destroy
+      await conversationManager.destroy();
+      
+      // Verify saveUserStats was called
+      expect(conversationManager.saveUserStats).toHaveBeenCalled();
+      
+      // Restore the original method
+      conversationManager.saveUserStats = saveStatsOriginal;
+    });
+  });
 });

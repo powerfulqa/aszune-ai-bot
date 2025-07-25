@@ -28,6 +28,32 @@
 
 ---
 
+## Version 1.1.0
+
+### Refactor & Feature Update
+
+- **Architecture Improvements:**
+  - Complete refactor to modular architecture for better maintainability
+  - Enhanced code structure with separate service and utility modules
+  - Resolved test suite open handles issues
+
+- **New Features:**
+  - Added `!stats` and `/stats` commands to track user message and summary counts
+  - Added Discord slash command support for all major commands
+  - Fixed summary command to ensure proper API compliance
+  
+- **Testing & CI:**
+  - Achieved >80% test coverage across the codebase
+  - Added QLTY and Codecov integration for automated coverage reporting
+  - Set up GitHub Actions workflow for continuous integration
+  - Fixed test mocking for Discord.js Client
+
+- **Documentation:**
+  - Updated README to reflect new features and improvements
+  - Enhanced documentation for stats feature and slash commands
+
+---
+
 ## CI/CD & Testing
 
 - Added Jest unit and integration tests for core utilities and bot logic.
@@ -56,5 +82,31 @@
 - Updated documentation and README for new features and troubleshooting.
 - Added rollback script for production safety.
 - Improved PM2 ecosystem config and deployment instructions.
+
+---
+
+## Version 1.2.0
+
+### Optimizations and Shutdown Improvements
+
+- **Graceful Shutdown Handling:**
+  - Added prevention of multiple shutdown executions with isShuttingDown flag
+  - Improved shutdown procedure with detailed error reporting and proper cleanup
+  - Enhanced signal handling for SIGINT and SIGTERM
+
+- **Code Quality Improvements:**
+  - Simplified error handling in Perplexity service for better maintainability
+  - Extracted response parsing logic into separate method for cleaner code
+  - Improved interval tracking in conversation manager using Set for active intervals
+  - Enhanced error messages for easier debugging
+
+- **CI/CD Improvements:**
+  - Updated security audit configuration to focus on production dependencies
+  - Set appropriate Node.js version requirements (v20.18.1)
+  - Enhanced CI workflow to fail on high severity issues in production dependencies
+
+- **Testing:**
+  - Fixed all failing test suites (140 tests now passing)
+  - Improved test coverage to >90% across the codebase
 
 ---

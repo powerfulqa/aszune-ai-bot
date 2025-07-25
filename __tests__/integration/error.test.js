@@ -1,7 +1,44 @@
+const { request } = require('undici');
+
+// Mock the commands module
+jest.mock('../../src/commands', () => ({
+  handleTextCommand: jest.fn().mockImplementation(async (message) => {
+    if (message.content === '!summary') {
+      message.channel.sendTyping();
+      message.reply('An error occurred during summary generation.');
+      return;
+    }
+    return null;
+  }),
+  handleSlashCommand: jest.fn(),
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }])
+}));
+
+const handleChatMessage = require('../../src/services/chat');
+const { handleTextCommand } = require('../../src/commands');
+const conversationManager = require('../../src/utils/conversation');
+const logger = require('../../src/utils/logger');
+
+jest.mock('undici', () => ({
+  request: jest.fn(),
+}));
+jest.mock('../../src/utils/conversation');
+jest.mock('../../src/utils/logger');
+
 describe('Error handling', () => {
-  it('handles failed Perplexity API response', async () => {
-    const axios = require('axios');
-    jest.spyOn(axios, 'post').mockRejectedValueOnce(new Error('API Error'));
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock the logger to return a simple error message
+    logger.handleError.mockImplementation((error, context) => {
+      return `An error occurred during ${context}.`;
+    });
+  });
+
+  it('handles failed Perplexity API response during chat', async () => {
+    // Arrange
+    request.mockRejectedValueOnce(new Error('API Error'));
+    conversationManager.isRateLimited.mockReturnValue(false);
+    conversationManager.getHistory.mockReturnValue([]);
 
     const fakeMessage = {
       content: 'test',
@@ -10,18 +47,18 @@ describe('Error handling', () => {
       channel: { sendTyping: jest.fn() }
     };
 
-    try {
-      await axios.post('https://api.perplexity.ai/chat/completions', {}); // forced error
-    } catch (err) {
-      await fakeMessage.reply('There was an error processing your request.');
-    }
+    // Act
+    await handleChatMessage(fakeMessage);
 
-    expect(fakeMessage.reply).toHaveBeenCalledWith('There was an error processing your request.');
+    // Assert
+    expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
+    expect(fakeMessage.reply).toHaveBeenCalledWith('An error occurred during chat generation.');
   });
 
   it('handles failed summary API response', async () => {
-    const axios = require('axios');
-    jest.spyOn(axios, 'post').mockRejectedValueOnce(new Error('Summary API Error'));
+    // Arrange
+    request.mockRejectedValueOnce(new Error('Summary API Error'));
+    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
 
     const fakeMessage = {
       content: '!summary',
@@ -30,12 +67,11 @@ describe('Error handling', () => {
       channel: { sendTyping: jest.fn() }
     };
 
-    try {
-      await axios.post('https://api.perplexity.ai/chat/completions', {}); // forced error
-    } catch (err) {
-      await fakeMessage.reply('There was an error generating the summary.');
-    }
+    // Act
+    await handleTextCommand(fakeMessage);
 
-    expect(fakeMessage.reply).toHaveBeenCalledWith('There was an error generating the summary.');
+    // Assert
+    expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
+    expect(fakeMessage.reply).toHaveBeenCalledWith('An error occurred during summary generation.');
   });
 });

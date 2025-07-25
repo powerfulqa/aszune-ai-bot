@@ -1,17 +1,19 @@
 /**
  * Command handler for the bot
  */
-const { SlashCommandBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const conversationManager = require('../utils/conversation');
 const perplexityService = require('../services/perplexity');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 
 // Command definitions
-const commands = {  help: {
-    data: new SlashCommandBuilder()
-      .setName('help')
-      .setDescription('Show help for Aszai Bot'),
+const commands = {
+  help: {
+    data: {
+      name: 'help',
+      description: 'Show help for Aszai Bot'
+    },
     async execute(interaction) {
       return interaction.reply(
         "**Aszai Bot Commands:**\n" +        "`/help` or `!help` - Show this help message\n" +
@@ -26,9 +28,10 @@ const commands = {  help: {
   },
   
   clearhistory: {
-    data: new SlashCommandBuilder()
-      .setName('clearhistory')
-      .setDescription('Clear your conversation history'),
+    data: {
+      name: 'clearhistory',
+      description: 'Clear your conversation history'
+    },
     async execute(interaction) {
       const userId = interaction.user.id;
       conversationManager.clearHistory(userId);
@@ -38,9 +41,10 @@ const commands = {  help: {
   },
   
   summary: {
-    data: new SlashCommandBuilder()
-      .setName('summary')
-      .setDescription('Summarise your current conversation'),
+    data: {
+      name: 'summary',
+      description: 'Summarise your current conversation'
+    },
     async execute(interaction) {
       const userId = interaction.user.id;
       const history = conversationManager.getHistory(userId);
@@ -80,9 +84,10 @@ const commands = {  help: {
     textCommand: '!summary'
   },
     stats: {
-    data: new SlashCommandBuilder()
-      .setName('stats')
-      .setDescription('Show your usage stats'),
+    data: {
+      name: 'stats',
+      description: 'Show your usage stats'
+    },
     async execute(interaction) {
       const userId = interaction.user.id;
       const stats = conversationManager.getUserStats(userId);
@@ -96,15 +101,16 @@ const commands = {  help: {
   },
 
   summarise: {
-    data: new SlashCommandBuilder()
-      .setName('summarise')
-      .setDescription('Summarise provided text')
-      .addStringOption(option => 
-        option.setName('text')
-          .setDescription('The text to summarise')
-          .setRequired(true)
-          .setType(ApplicationCommandOptionType.String)
-      ),
+    data: {
+      name: 'summarise',
+      description: 'Summarise provided text',
+      options: [{
+        name: 'text',
+        description: 'The text to summarise',
+        type: ApplicationCommandOptionType.String,
+        required: true
+      }]
+    },
     async execute(interaction) {
       let text;
       
@@ -229,7 +235,7 @@ async function handleSlashCommand(interaction) {
  * @returns {Array} - Array of command data
  */
 function getSlashCommandsData() {
-  return Object.values(commands).map(command => command.data.toJSON());
+  return Object.values(commands).map(command => command.data);
 }
 
 module.exports = {

@@ -8,8 +8,7 @@ const requiredEnvVars = ['PERPLEXITY_API_KEY', 'DISCORD_BOT_TOKEN'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
-  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
+  throw new Error(`Missing ${missingEnvVars.join(', ')} in environment variables.`);
 }
 
 module.exports = {

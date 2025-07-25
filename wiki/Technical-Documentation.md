@@ -14,6 +14,7 @@ Aszune AI Bot is built using Node.js and the Discord.js library, with the Perple
 4. **Conversation Manager** - Tracks and stores user conversations
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
+7. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
 
 ## Project Structure
 
@@ -227,11 +228,79 @@ describe("Emoji Utilities", () => {
 });
 ```
 
+> For comprehensive information about testing, see the [Testing Guide](Testing-Guide) and [CI/CD Pipeline](CI-CD-Pipeline) pages.
+
 ## Performance Considerations
 
 - Uses JavaScript `Map` for conversation history and rate limiting for efficient lookups
 - Implements proper error handling for API calls
 - Uses async/await for non-blocking operations
+
+## Graceful Shutdown Implementation
+
+The bot implements a robust shutdown mechanism that:
+
+1. Captures system signals (SIGINT, SIGTERM) for graceful shutdown
+2. Handles uncaught exceptions and unhandled promise rejections
+3. Prevents multiple simultaneous shutdown attempts with an isShuttingDown flag
+4. Performs cleanup operations in the correct order:
+   - Saves conversation history and user stats
+   - Destroys the Discord client connection
+   - Logs any errors that occur during shutdown
+5. Uses error counting to return appropriate exit codes
+6. Ensures proper resource cleanup
+
+```javascript
+// Flag to prevent multiple shutdown executions
+let isShuttingDown = false;
+
+// Example of the shutdown handler
+async function shutdown(signal) {
+  // Prevent multiple simultaneous shutdown attempts
+  if (isShuttingDown) {
+    logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
+    return;
+  }
+  
+  isShuttingDown = true;
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
+  
+  // Track any errors that occur during shutdown
+  const errors = [];
+  let shutdownStatus = true;
+  
+  try {
+    // Clean up conversation manager (save stats, clear timers)
+    await conversationManager.destroy();
+  } catch (error) {
+    shutdownStatus = false;
+    errors.push(error);
+    logger.error('Error shutting down conversation manager', error);
+  }
+  
+  try {
+    // Destroy Discord client connection
+    await client.destroy();
+    logger.info('Discord client destroyed');
+  } catch (error) {
+    shutdownStatus = false;
+    errors.push(error);
+    logger.error('Shutdown error', error);
+  }
+  
+  // Log individual errors for easier debugging
+  if (errors.length > 0) {
+    errors.forEach((err, index) => {
+      logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
+    });
+    logger.error(`Shutdown completed with ${errors.length} error(s)`);
+    process.exit(1);
+  } else {
+    logger.info('Shutdown complete.');
+    process.exit(0);
+  }
+}
+```
 
 ## Security Considerations
 
