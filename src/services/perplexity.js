@@ -46,7 +46,8 @@ class PerplexityService {
       });
       
       // First check content-type to determine appropriate parsing method
-      const contentType = headers.get('content-type') || '';
+      // In Node.js with undici, headers is an object, not a Headers instance
+      const contentType = headers['content-type'] || '';
       
       // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
