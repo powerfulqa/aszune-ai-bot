@@ -23,6 +23,28 @@ class PerplexityService {
       'Content-Type': 'application/json',
     };
   }
+  
+  /**
+   * Safe way to access headers that works with both Headers objects and plain objects
+   * @param {Object|Headers} headers - The headers object
+   * @param {string} key - The header key to get
+   * @returns {string} The header value
+   */
+  _safeGetHeader(headers, key) {
+    if (!headers) return '';
+    
+    try {
+      // Try Headers object API if available
+      if (typeof headers.get === 'function') {
+        return headers.get(key) || '';
+      }
+      // Fall back to plain object access (case insensitive)
+      return headers[key] || headers[key.toLowerCase()] || headers[key.toUpperCase()] || '';
+    } catch (error) {
+      console.warn(`Error getting header "${key}":`, error.message);
+      return '';
+    }
+  }
 
   /**
    * Send a chat completion request
@@ -45,26 +67,9 @@ class PerplexityService {
         }),
       });
       
-      // First check content-type to determine appropriate parsing method
-      // Handle headers regardless of whether it's a Headers object or a plain object
-      let contentType = '';
-      
-      if (headers) {
-        try {
-          // First try Headers object API if available
-          if (typeof headers.get === 'function') {
-            contentType = headers.get('content-type') || '';
-          } 
-          // Fall back to plain object access
-          else {
-            contentType = headers['content-type'] || headers['Content-Type'] || '';
-          }
-        } catch (headerError) {
-          // If any error occurs while accessing headers, log and continue with empty content type
-          console.warn('Error accessing content-type header:', headerError.message);
-          contentType = '';
-        }
-      }
+      // Get content-type using our safe header access method
+      const contentType = this._safeGetHeader(headers, 'content-type');
+      console.debug('Content-Type header:', contentType);
       
       // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
