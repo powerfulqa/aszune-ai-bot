@@ -107,7 +107,7 @@ const commands = {
       options: [{
         name: 'text',
         description: 'The text to summarise',
-        type: ApplicationCommandOptionType.String,
+        type: 3, // ApplicationCommandOptionType.String = 3 in discord.js v14
         required: true
       }]
     },
