@@ -46,8 +46,25 @@ class PerplexityService {
       });
       
       // First check content-type to determine appropriate parsing method
-      // In Node.js with undici, headers is an object, not a Headers instance
-      const contentType = headers['content-type'] || '';
+      // Handle headers regardless of whether it's a Headers object or a plain object
+      let contentType = '';
+      
+      if (headers) {
+        try {
+          // First try Headers object API if available
+          if (typeof headers.get === 'function') {
+            contentType = headers.get('content-type') || '';
+          } 
+          // Fall back to plain object access
+          else {
+            contentType = headers['content-type'] || headers['Content-Type'] || '';
+          }
+        } catch (headerError) {
+          // If any error occurs while accessing headers, log and continue with empty content type
+          console.warn('Error accessing content-type header:', headerError.message);
+          contentType = '';
+        }
+      }
       
       // For non-2xx status codes, handle as error
       if (statusCode < 200 || statusCode >= 300) {
