@@ -9,13 +9,3 @@ const mockLogger = {
 };
 
 module.exports = mockLogger;
-
-// Mock the logger module
-jest.mock('../../src/utils/logger', () => mockLogger);
-
-// Add a dummy test to prevent Jest from complaining
-describe('Logger Mock', () => {
-  it('should exist', () => {
-    expect(mockLogger).toBeDefined();
-  });
-});

@@ -78,6 +78,28 @@ class PerplexityService {
       'Content-Type': 'application/json',
     };
   }
+  
+  /**
+   * Safe way to access headers that works with both Headers objects and plain objects
+   * @param {Object|Headers} headers - The headers object
+   * @param {string} key - The header key to get
+   * @returns {string} The header value
+   */
+  _safeGetHeader(headers, key) {
+    if (!headers) return '';
+    
+    try {
+      // Try Headers object API if available
+      if (typeof headers.get === 'function') {
+        return headers.get(key) || '';
+      }
+      // Fall back to plain object access (case insensitive)
+      return headers[key] || headers[key.toLowerCase()] || headers[key.toUpperCase()] || '';
+    } catch (error) {
+      console.warn(`Error getting header "${key}":`, error.message);
+      return '';
+    }
+  }
 
   /**
    * Send a chat completion request

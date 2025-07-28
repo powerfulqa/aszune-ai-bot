@@ -1,6 +1,7 @@
 /**
  * Command handler for the bot
  */
+const { ApplicationCommandOptionType } = require('discord.js');
 const conversationManager = require('../utils/conversation');
 const perplexityService = require('../services/perplexity');
 const logger = require('../utils/logger');
@@ -106,6 +107,7 @@ const commands = {
       options: [{
         name: 'text',
         description: 'The text to summarise',
+        type: 3, // ApplicationCommandOptionType.String = 3 in discord.js v14
         required: true
       }]
     },

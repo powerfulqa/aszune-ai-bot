@@ -179,17 +179,19 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
+function unhandledRejectionHandler(reason, promise) {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Don't exit here, just log
-});
+}
+process.on('unhandledRejection', unhandledRejectionHandler);
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+function uncaughtExceptionHandler(error) {
   logger.error('Uncaught Exception:', error);
   // Always exit with error code on uncaught exceptions
   shutdown('uncaughtException');
-});
+}
+process.on('uncaughtException', uncaughtExceptionHandler);
 
 // Log in to Discord
 client.login(config.DISCORD_BOT_TOKEN)
@@ -207,4 +209,6 @@ module.exports = {
   handleChatMessage,
   conversationManager,
   shutdown, // Export shutdown function for testing
+  unhandledRejectionHandler, // Export for direct testing
+  uncaughtExceptionHandler,  // Export for direct testing
 };

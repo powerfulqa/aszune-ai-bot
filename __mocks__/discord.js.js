@@ -40,10 +40,24 @@ const GatewayIntentBits = {
   MessageContent: 'MESSAGE_CONTENT'
 };
 
+// Mock ApplicationCommandOptionType
+const ApplicationCommandOptionType = {
+  String: 3,
+  Integer: 4,
+  Boolean: 5,
+  User: 6,
+  Channel: 7,
+  Role: 8,
+  Mentionable: 9,
+  Number: 10,
+  Attachment: 11
+};
+
 module.exports = {
   Client,
   REST,
   Routes,
   GatewayIntentBits,
+  ApplicationCommandOptionType,
   mockClient // Export for direct access in tests
 };
