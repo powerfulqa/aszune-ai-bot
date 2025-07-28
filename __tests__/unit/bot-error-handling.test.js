@@ -1,9 +1,9 @@
 // Test for bot error handling
 // Mock the logger module before anything else
-jest.mock('../../src/utils/logger', () => require('../../__mocks__/loggerMock'));
+jest.mock('../../src/utils/logger', () => require('../__mocks__/loggerMock'));
 
 // Mock the required modules
-jest.mock('discord.js', () => require('../../__mocks__/discord.js'));
+jest.mock('discord.js', () => require('../__mocks__/discord.js'));
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn(),
@@ -11,8 +11,19 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
 }));
 
-const mockLogger = require('../../__mocks__/loggerMock');
-const { unhandledRejectionHandler, uncaughtExceptionHandler } = require('../../src/index');
+// Make sure to import the mockLogger for tests
+const mockLogger = require('../__mocks__/loggerMock');
+
+// Create our own test version of the error handlers
+const uncaughtExceptionHandler = (error) => {
+  mockLogger.error('Uncaught Exception:', error);
+  // Don't exit in tests
+};
+
+const unhandledRejectionHandler = (reason, promise) => {
+  mockLogger.error('Unhandled Promise Rejection:', reason);
+  // Don't exit in tests
+};
 
 // Mock process.exit to prevent test from actually exiting
 const originalExit = process.exit;

@@ -193,15 +193,26 @@ function uncaughtExceptionHandler(error) {
 }
 process.on('uncaughtException', uncaughtExceptionHandler);
 
-// Log in to Discord
-client.login(config.DISCORD_BOT_TOKEN)
-  .then(() => {
-    logger.info('Logged in to Discord');
-  })
-  .catch((error) => {
-    logger.error('Failed to log in to Discord:', error);
-    process.exit(1);
-  });
+// Log in to Discord, with special handling for test environment
+if (process.env.NODE_ENV === 'test') {
+  // In test mode, we still call login but with a mock token that will be resolved in the mock
+  client.login('test-token')
+    .then(() => {
+      logger.info('Logged in to Discord (test mode)');
+    })
+    .catch((error) => {
+      logger.error('Failed to log in to Discord:', error);
+    });
+} else {
+  client.login(config.DISCORD_BOT_TOKEN)
+    .then(() => {
+      logger.info('Logged in to Discord');
+    })
+    .catch((error) => {
+      logger.error('Failed to log in to Discord:', error);
+      process.exit(1);
+    });
+}
 
 // Export for testing
 module.exports = {

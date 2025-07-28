@@ -102,12 +102,6 @@ class PerplexityService {
   }
 
   /**
-   * Send a chat completion request
-   * @param {Array} messages - The messages to send to the API
-   * @param {Object} options - Additional options
-   * @returns {Promise<Object>} - The API response
-   */
-  /**
    * Build API request payload
    * @param {Array} messages - The messages to send
    * @param {Object} options - Request options
@@ -306,6 +300,7 @@ class PerplexityService {
    * @returns {Promise<void>}
    * @private
    */
+  
   /**
    * Format a cache entry with timestamp
    * @param {any} entry - The cache entry
