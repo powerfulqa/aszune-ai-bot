@@ -74,11 +74,10 @@ class Logger {
   async _rotateLogFileIfNeeded() {
     try {
       const stats = await fs.stat(this.logFile).catch(() => ({ size: 0 }));
-      
-      // Default size: 5MB, but use config if available (convert MB to bytes)
+      // Default size: 5MB, but use env if available (convert MB to bytes)
       const defaultMaxSizeMB = 5;
-      const configMaxSizeMB = config.PI_OPTIMIZATIONS?.LOG_MAX_SIZE_MB;
-      const maxSizeMB = configMaxSizeMB || defaultMaxSizeMB;
+      const envMaxSizeMB = parseInt(process.env.PI_LOG_MAX_SIZE_MB, 10);
+      const maxSizeMB = !isNaN(envMaxSizeMB) ? envMaxSizeMB : defaultMaxSizeMB;
       const maxSize = maxSizeMB * 1024 * 1024;
       
       if (stats.size > maxSize) {
