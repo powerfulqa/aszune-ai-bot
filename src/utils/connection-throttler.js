@@ -7,10 +7,18 @@ const config = require('../config/config');
 
 class ConnectionThrottler {
   constructor() {
+    // Initialize connection tracking
     this.activeConnections = 0;
     this.connectionQueue = [];
-    this.maxConnections = config.PI_OPTIMIZATIONS.ENABLED ? 
-      (config.PI_OPTIMIZATIONS.MAX_CONNECTIONS || 2) : 10;
+    
+    // Define default values as constants for better maintainability
+    const DEFAULT_PI_CONNECTIONS = 2;
+    const DEFAULT_NORMAL_CONNECTIONS = 10;
+    
+    // Set max connections based on config or defaults
+    this.maxConnections = config.PI_OPTIMIZATIONS?.ENABLED ? 
+      (config.PI_OPTIMIZATIONS?.MAX_CONNECTIONS || DEFAULT_PI_CONNECTIONS) : 
+      DEFAULT_NORMAL_CONNECTIONS;
   }
 
   /**

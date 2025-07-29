@@ -83,16 +83,38 @@ class CachePruner {
         return;
       }
       
-      // Sort entries by last access time
-      const sortedEntries = Object.entries(cache)
-        .sort(([, a], [, b]) => (a.lastAccessed || 0) - (b.lastAccessed || 0));
-      
       // Calculate how many to remove
       const removeCount = Math.ceil(entryCount * this.prunePercentage);
       
-      // Remove oldest entries
-      const entriesToRemove = sortedEntries.slice(0, removeCount);
-      entriesToRemove.forEach(([key]) => {
+      // Find oldest entries without sorting the entire array
+      // Use a min-heap approach to find the N oldest entries in O(n log k) time
+      const oldestEntries = [];
+      const findOldestEntries = (key, value) => {
+        const timestamp = value.lastAccessed || 0;
+        
+        // If we haven't collected enough entries yet, just add it
+        if (oldestEntries.length < removeCount) {
+          oldestEntries.push({ key, timestamp });
+          // Re-heapify if necessary (keep newest at top for easy removal)
+          if (oldestEntries.length > 1) {
+            oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
+          }
+          return;
+        }
+        
+        // If this entry is older than the newest in our collection, replace it
+        if (timestamp < oldestEntries[0].timestamp) {
+          oldestEntries[0] = { key, timestamp };
+          // Restore heap property
+          oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
+        }
+      };
+      
+      // Find oldest entries
+      Object.entries(cache).forEach(([key, value]) => findOldestEntries(key, value));
+      
+      // Remove identified oldest entries
+      oldestEntries.forEach(({ key }) => {
         delete cache[key];
       });
       

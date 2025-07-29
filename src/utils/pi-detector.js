@@ -25,27 +25,64 @@ async function detectPiModel() {
       cpuInfo: {}
     };
 
-    // Look for Raspberry Pi specific files
+    // Look for Raspberry Pi specific files using multiple indicators
     try {
       // Try to read cpuinfo on Linux
       if (os.platform() === 'linux') {
         const cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
         
-        // Check if this is a Pi
-        if (cpuInfo.includes('Raspberry Pi')) {
+        // Combine multiple indicators for more robust detection
+        const isPiByHardware = cpuInfo.includes('Raspberry Pi') || 
+                             cpuInfo.includes('BCM27') || 
+                             cpuInfo.includes('BCM28');
+                             
+        const isPiByModel = cpuInfo.includes('Pi 3') || 
+                          cpuInfo.includes('Pi 4') || 
+                          cpuInfo.includes('Pi 5');
+                          
+        const isPiByRevision = cpuInfo.match(/Revision\s+:\s+[0-9a-f]+/);
+        
+        // Check if this is a Pi using multiple methods
+        if (isPiByHardware || isPiByModel || isPiByRevision) {
           result.isPi = true;
           
-          // Extract model information
-          if (cpuInfo.includes('BCM2835')) {
-            if (result.ram < 1) {
-              result.model = 'pi3';
-            } else {
-              result.model = 'pi4';
-            }
-          } else if (cpuInfo.includes('BCM2711')) {
-            result.model = 'pi4';
-          } else if (cpuInfo.includes('BCM2712')) {
+          // Multi-factor model detection
+          // Use CPU model, RAM size, and revision code for more accurate detection
+          const modelIndicators = {
+            // Pi 3 indicators
+            pi3: [
+              cpuInfo.includes('BCM2835'),
+              cpuInfo.includes('Pi 3'),
+              result.ram < 2 && result.cores <= 4
+            ],
+            
+            // Pi 4 indicators
+            pi4: [
+              cpuInfo.includes('BCM2711'),
+              cpuInfo.includes('Pi 4'),
+              result.cores >= 4 && (result.ram >= 1 && result.ram <= 8)
+            ],
+            
+            // Pi 5 indicators
+            pi5: [
+              cpuInfo.includes('BCM2712'),
+              cpuInfo.includes('Pi 5'),
+              result.cores >= 4 && result.ram >= 4
+            ]
+          };
+          
+          // Count positive indicators for each model
+          const pi3Score = modelIndicators.pi3.filter(Boolean).length;
+          const pi4Score = modelIndicators.pi4.filter(Boolean).length;
+          const pi5Score = modelIndicators.pi5.filter(Boolean).length;
+          
+          // Choose model with highest score
+          if (pi5Score >= Math.max(pi3Score, pi4Score)) {
             result.model = 'pi5';
+          } else if (pi4Score >= pi3Score) {
+            result.model = 'pi4';
+          } else if (pi3Score > 0) {
+            result.model = 'pi3';
           }
           
           // Store CPU frequency

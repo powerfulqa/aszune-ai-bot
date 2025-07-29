@@ -105,8 +105,11 @@ class Logger {
     try {
       const stats = await fs.stat(this.logFile).catch(() => ({ size: 0 }));
       
-      // If file exceeds 5MB, rotate it
-      const maxSize = 5 * 1024 * 1024;
+      // Default size: 5MB, but use config if available (convert MB to bytes)
+      const defaultMaxSizeMB = 5;
+      const configMaxSizeMB = config.PI_OPTIMIZATIONS?.LOG_MAX_SIZE_MB;
+      const maxSizeMB = configMaxSizeMB || defaultMaxSizeMB;
+      const maxSize = maxSizeMB * 1024 * 1024;
       
       if (stats.size > maxSize) {
         const timestamp = new Date().toISOString().replace(/:/g, '-');

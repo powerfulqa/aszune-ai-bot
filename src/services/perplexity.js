@@ -149,6 +149,16 @@ class PerplexityService {
     // Parse response as JSON
     return await body.json();
   }
+  
+  /**
+   * Safely extract content from API response
+   * @param {Object} response - API response object
+   * @returns {string} - Extracted content or default message
+   * @private
+   */
+  _extractResponseContent(response) {
+    return response?.choices?.[0]?.message?.content || 'No response generated';
+  }
 
   async sendChatRequest(messages, options = {}) {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
@@ -206,7 +216,7 @@ class PerplexityService {
       
       // Not in cache, get from API
       const response = await this.sendChatRequest(history);
-      const content = response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content || 'No response generated';
+      const content = this._extractResponseContent(response);
       
       if (shouldUseCache) {
         // Save to cache
@@ -262,7 +272,7 @@ class PerplexityService {
         stream: streamingEnabled
       });
       
-      return response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content || 'Unable to generate summary.';
+      return this._extractResponseContent(response) || 'Unable to generate summary.';
     } catch (error) {
       logger.error('Failed to generate summary:', error);
       throw error; // Re-throw for caller to handle
