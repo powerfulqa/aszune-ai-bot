@@ -86,19 +86,6 @@ class PerplexityService {
    * @returns {string} The header value
    */
   _safeGetHeader(headers, key) {
-<<<<<<< HEAD
-    if (!headers) return '';
-    
-    try {
-      // Try Headers object API if available
-      if (typeof headers.get === 'function') {
-        return headers.get(key) || '';
-      }
-      // Fall back to plain object access (case insensitive)
-      return headers[key] || headers[key.toLowerCase()] || headers[key.toUpperCase()] || '';
-    } catch (error) {
-      console.warn(`Error getting header "${key}":`, error.message);
-=======
     // Return empty string if headers or key is missing
     if (!headers || !key) return '';
     
@@ -134,7 +121,6 @@ class PerplexityService {
       return '';
     } catch (error) {
       logger.warn(`Error getting header "${key}":`, error);
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
       return '';
     }
   }
@@ -154,12 +140,6 @@ class PerplexityService {
       temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE
     };
     
-<<<<<<< HEAD
-    // Enable streaming for supported environments if not in low CPU mode
-    const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
-    const lowCpuMode = piOptEnabled && config.PI_OPTIMIZATIONS.LOW_CPU_MODE;
-    
-=======
     // Safely check if PI optimizations are enabled
     let piOptEnabled = false;
     let lowCpuMode = false;
@@ -177,7 +157,6 @@ class PerplexityService {
     }
     
     // Enable streaming for supported environments if not in low CPU mode
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
     if (options.stream && piOptEnabled && !lowCpuMode) {
       payload.stream = true;
     }
@@ -192,22 +171,6 @@ class PerplexityService {
    * @private
    */
   async _handleApiResponse(response) {
-<<<<<<< HEAD
-    const { statusCode, headers, body } = response;
-      
-    // For non-2xx status codes, handle as error
-    if (statusCode < 200 || statusCode >= 300) {
-      const responseText = await body.text().catch(() => 'Could not read response body');
-      
-      // Create a descriptive error message with status code and response content
-      const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
-      console.error('Perplexity API Error:', errorMessage);
-      throw new Error(errorMessage);
-    }
-    
-    // Parse response as JSON
-    return await body.json();
-=======
     if (!response) {
       throw new Error('Invalid response: response is null or undefined');
     }
@@ -242,7 +205,6 @@ class PerplexityService {
       logger.error('Failed to parse JSON response:', error);
       throw new Error('Failed to parse API response as JSON');
     }
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
   }
   
   /**
@@ -269,15 +231,6 @@ class PerplexityService {
     };
     
     try {
-<<<<<<< HEAD
-      // Use throttler if PI optimizations are enabled
-      let response;
-      const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
-      
-      if (piOptEnabled) {
-        const throttler = connectionThrottler();
-        response = await throttler.executeRequest(makeApiRequest, 'Perplexity API');
-=======
       // Safely check if PI optimizations are enabled
       let piOptEnabled = false;
       try {
@@ -299,7 +252,6 @@ class PerplexityService {
           logger.warn('Error using connection throttler, falling back to direct request:', throttlerError);
           response = await makeApiRequest();
         }
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
       } else {
         response = await makeApiRequest();
       }
@@ -319,19 +271,6 @@ class PerplexityService {
    */
   async generateChatResponse(history, useCache = true) {
     try {
-<<<<<<< HEAD
-      const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
-      const shouldUseCache = useCache && piOptEnabled && config.PI_OPTIMIZATIONS.CACHE_ENABLED;
-      
-      if (shouldUseCache) {
-        // Try to get from cache
-        const cacheKey = this._generateCacheKey(history);
-        const cache = await this._loadCache();
-        
-        if (cache[cacheKey]) {
-          logger.debug('Cache hit for query');
-          return cache[cacheKey];
-=======
       // Safely check if PI optimizations and cache are enabled
       let piOptEnabled = false;
       let cacheEnabled = false;
@@ -369,7 +308,6 @@ class PerplexityService {
         } catch (cacheError) {
           logger.warn('Error reading from cache:', cacheError);
           // Continue with API request if cache fails
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
         }
       }
       
@@ -378,26 +316,6 @@ class PerplexityService {
       const content = this._extractResponseContent(response);
       
       if (shouldUseCache) {
-<<<<<<< HEAD
-        // Save to cache
-        const cacheKey = this._generateCacheKey(history);
-        const cache = await this._loadCache();
-        cache[cacheKey] = content;
-        
-        // Get max cache entries from config or use default
-        const maxEntries = (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES) || 100;
-        
-        // Trim cache if too large
-        const keys = Object.keys(cache);
-        if (keys.length > maxEntries) {
-          // Remove oldest 20% of entries
-          const removeCount = Math.ceil(maxEntries * 0.2);
-          const keysToRemove = keys.slice(0, removeCount);
-          keysToRemove.forEach(key => delete cache[key]);
-        }
-        
-        await this._saveCache(cache);
-=======
         try {
           // Save to cache
           const cacheKey = this._generateCacheKey(history);
@@ -418,7 +336,6 @@ class PerplexityService {
           logger.warn('Error saving to cache:', cacheError);
           // Continue since we already have the content
         }
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
       }
       
       return content;
@@ -445,14 +362,6 @@ class PerplexityService {
         ...history
       ];
       
-<<<<<<< HEAD
-      // Try streaming for better Pi performance if enabled
-      const piOptEnabled = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
-      const streamingEnabled = piOptEnabled && !(config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.LOW_CPU_MODE);
-      
-      const response = await this.sendChatRequest(messages, {
-        maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY,
-=======
       // Safely check if PI optimizations are enabled
       let piOptEnabled = false;
       let lowCpuMode = false;
@@ -482,7 +391,6 @@ class PerplexityService {
       
       const response = await this.sendChatRequest(messages, {
         maxTokens: maxTokens,
->>>>>>> 07929d6 (fix: Harden Perplexity service and improve error handling for production reliability)
         stream: streamingEnabled
       });
       
