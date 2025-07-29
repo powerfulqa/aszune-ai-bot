@@ -1,5 +1,5 @@
 // __tests__/emoji.test.js
-const appendEmoji = require('../../utils/emoji');
+const { default: appendEmoji } = require('../../src/utils/emoji');
 
 describe('appendEmoji', () => {
   it('adds the correct emoji for known keywords', () => {

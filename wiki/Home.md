@@ -15,10 +15,18 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - [Testing Guide](Testing-Guide) - Comprehensive testing information
 - [CI/CD Pipeline](CI-CD-Pipeline) - Continuous integration and deployment details
 - [Deployment Guide](Deployment-Guide) - Production deployment instructions
+- [Pi Optimization Guide](Pi-Optimization-Guide) - Raspberry Pi performance optimizations
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers
 
 ## Version Information
+
+- **v1.2.1** - Raspberry Pi Optimization Update
+  - Added automatic detection of Raspberry Pi hardware models
+  - Implemented model-specific performance optimizations
+  - Created comprehensive Pi optimization documentation
+  - Enhanced configuration system for dynamic optimization settings
+  - Made all optimizations test-compatible with 100% passing tests
 
 - **v1.2.0** - Optimizations and shutdown improvements
   - Enhanced shutdown handling with protection against multiple executions

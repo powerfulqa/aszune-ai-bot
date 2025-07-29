@@ -1,10 +1,10 @@
-# Aszune AI Bot (v1.2.0)
+# Aszune AI Bot (v1.2.1)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands.
+**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands. Optimized to run efficiently on Raspberry Pi devices from Pi 3 to Pi 5.
 
 ---
 
@@ -47,6 +47,14 @@
 - 🆕 **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
 - 🆕 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🆕 **Optimized Test Suite:** Fixed circular dependencies and improved mock implementations.
+- 🆕 **Raspberry Pi Optimizations:** Specialized performance optimizations for running on resource-constrained devices like Raspberry Pi 3.
+  - 📉 **Memory Management:** Automatic garbage collection and memory monitoring
+  - 🔄 **Message Debouncing:** Prevents excessive API calls
+  - 📦 **Lazy Loading:** Loads heavy dependencies only when needed
+  - 📊 **Connection Throttling:** Limits concurrent network connections
+  - 🧠 **CPU Monitoring:** Adaptive throttling based on system load
+  - 💾 **Cache Pruning:** Automatically manages cache size
+  - 📱 **Compact Mode:** Reduced message size and complexity for better performance
 
 ---
 
@@ -97,6 +105,26 @@ Discord bot is online!
 ```
 
 Your bot should now appear online in your Discord server.
+
+### Running on Raspberry Pi 3
+
+For optimal performance on Raspberry Pi 3, use the provided script:
+
+```bash
+# Make the script executable
+chmod +x start-pi-optimized.sh
+
+# Run with optimizations
+./start-pi-optimized.sh
+```
+
+This script applies several performance optimizations:
+- Sets memory limits appropriate for Pi 3
+- Reduces CPU and memory usage
+- Optimizes network connections
+- Configures compact mode for responses
+
+For more details on Pi optimizations, see the [Raspberry Pi Optimization Guide](wiki/Raspberry-Pi-Optimization.md).
 
 ---
 

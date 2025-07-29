@@ -5,7 +5,7 @@ const mockConversationManager = {
 };
 
 // Mock required modules
-jest.mock('discord.js', () => require('../../__mocks__/discord.js'));
+jest.mock('discord.js', () => require('../__mocks__/discord.js'));
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 jest.mock('../../src/utils/logger', () => mockLogger);
 jest.mock('../../src/utils/conversation', () => mockConversationManager);
@@ -35,7 +35,7 @@ describe('Bot Shutdown', () => {
     jest.resetModules();
     
     // Import the discord mock to verify calls
-    discordMock = require('../../__mocks__/discord.js');
+    discordMock = require('../__mocks__/discord.js');
     
     // Import index after mocks are set up
     index = require('../../src/index');
