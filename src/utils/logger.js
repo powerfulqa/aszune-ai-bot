@@ -4,13 +4,8 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-// Use a more efficient loading approach for the config
-let config;
-try {
-  config = require('../config/config');
-} catch (error) {
-  config = { PI_OPTIMIZATIONS: { ENABLED: false, LOG_LEVEL: 'INFO' } };
-}
+// Use environment variable for log level, default to 'INFO'
+const LOG_LEVEL = process.env.PI_LOG_LEVEL || 'INFO';
 
 class Logger {
   constructor() {
@@ -20,9 +15,8 @@ class Logger {
       WARN: 2,
       ERROR: 3,
     };
-    
-    // Use config if available or environment variable
-    this.logLevel = this._determineLogLevel();
+    // Use environment variable or default
+    this.logLevel = this.levels[LOG_LEVEL] !== undefined ? this.levels[LOG_LEVEL] : this.levels.INFO;
     
     // Setup log file path
     this.logDir = path.join(__dirname, '../../logs');
@@ -32,24 +26,6 @@ class Logger {
     if (process.env.NODE_ENV !== 'test') {
       this._ensureLogDirectory();
     }
-  }
-  
-  /**
-   * Determine the appropriate log level based on config or environment
-   * @returns {number} Log level
-   * @private
-   */
-  _determineLogLevel() {
-    // If Pi optimizations are enabled, use the Pi-specific log level
-    if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {
-      const piLogLevel = config.PI_OPTIMIZATIONS.LOG_LEVEL;
-      return this.levels[piLogLevel] || this.levels.ERROR;
-    }
-    
-    // Otherwise use environment-based default
-    return process.env.NODE_ENV === 'production' 
-      ? this.levels.INFO 
-      : this.levels.DEBUG;
   }
   
   /**
