@@ -10,6 +10,7 @@ describe('Logger', () => {
   const originalConsoleError = console.error;
   
   beforeEach(() => {
+    process.env.PI_LOG_LEVEL = 'DEBUG';
     console.log = jest.fn();
     console.warn = jest.fn();
     console.error = jest.fn();
@@ -19,6 +20,7 @@ describe('Logger', () => {
     console.log = originalConsoleLog;
     console.warn = originalConsoleWarn;
     console.error = originalConsoleError;
+    delete process.env.PI_LOG_LEVEL;
   });
   
   it('logs debug messages', () => {
