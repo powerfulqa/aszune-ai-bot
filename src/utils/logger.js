@@ -4,9 +4,6 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-// Use environment variable for log level, default to 'INFO'
-const LOG_LEVEL = process.env.PI_LOG_LEVEL || 'INFO';
-
 class Logger {
   constructor() {
     this.levels = {
@@ -15,9 +12,6 @@ class Logger {
       WARN: 2,
       ERROR: 3,
     };
-    // Use environment variable or default
-    this.logLevel = this.levels[LOG_LEVEL] !== undefined ? this.levels[LOG_LEVEL] : this.levels.INFO;
-    
     // Setup log file path
     this.logDir = path.join(__dirname, '../../logs');
     this.logFile = path.join(this.logDir, 'bot.log');
@@ -110,12 +104,21 @@ class Logger {
   }
   
   /**
+   * Get the current log level
+   * @private
+   */
+  _getLogLevel() {
+    const envLevel = process.env.PI_LOG_LEVEL || 'INFO';
+    return this.levels[envLevel] !== undefined ? this.levels[envLevel] : this.levels.INFO;
+  }
+  
+  /**
    * Log a debug message
    * @param {string} message - Message to log
    * @param {*} data - Additional data to log
    */
   debug(message, data) {
-    if (this.logLevel <= this.levels.DEBUG) {
+    if (this._getLogLevel() <= this.levels.DEBUG) {
       const formattedMessage = this._formatMessage('DEBUG', message);
       console.log(formattedMessage);
       if (data) console.log(data);
@@ -132,7 +135,7 @@ class Logger {
    * @param {*} data - Additional data to log
    */
   info(message, data) {
-    if (this.logLevel <= this.levels.INFO) {
+    if (this._getLogLevel() <= this.levels.INFO) {
       const formattedMessage = this._formatMessage('INFO', message);
       console.log(formattedMessage);
       if (data) console.log(data);
@@ -149,7 +152,7 @@ class Logger {
    * @param {*} data - Additional data to log
    */
   warn(message, data) {
-    if (this.logLevel <= this.levels.WARN) {
+    if (this._getLogLevel() <= this.levels.WARN) {
       const formattedMessage = this._formatMessage('WARN', message);
       console.warn(formattedMessage);
       if (data) console.warn(data);
@@ -166,7 +169,7 @@ class Logger {
    * @param {Error} error - Error object
    */
   error(message, error) {
-    if (this.logLevel <= this.levels.ERROR) {
+    if (this._getLogLevel() <= this.levels.ERROR) {
       const formattedMessage = this._formatMessage('ERROR', message);
       console.error(formattedMessage);
       
