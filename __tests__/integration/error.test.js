@@ -16,7 +16,7 @@ jest.mock('../../src/commands', () => ({
 
 const handleChatMessage = require('../../src/services/chat');
 const { handleTextCommand } = require('../../src/commands');
-const conversationManager = require('../../src/utils/conversation');
+const ConversationManager = require('../../src/utils/conversation');
 const logger = require('../../src/utils/logger');
 
 jest.mock('undici', () => ({
@@ -26,12 +26,17 @@ jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/logger');
 
 describe('Error handling', () => {
+  let conversationManager;
   beforeEach(() => {
+    conversationManager = new ConversationManager();
     jest.clearAllMocks();
     // Mock the logger to return a simple error message
     logger.handleError.mockImplementation((error, context) => {
       return `An error occurred during ${context}.`;
     });
+    // Mock instance methods
+    conversationManager.isRateLimited = jest.fn();
+    conversationManager.getHistory = jest.fn();
   });
 
   it('handles failed Perplexity API response during chat', async () => {

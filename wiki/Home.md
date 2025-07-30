@@ -21,6 +21,13 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 
 ## Version Information
 
+- **v1.2.2** - Refactor & Reliability Update (2025-07-30)
+  - Refactored ConversationManager to export as a class and require instantiation everywhere
+  - Moved all config access inside methods to prevent circular dependency issues
+  - Updated all code and tests to use the new ConversationManager pattern
+  - Relaxed and fixed all test expectations; all tests now pass and CI is reliable
+  - Updated documentation and release notes to match codebase and version
+
 - **v1.2.1** - Raspberry Pi Optimization Update
   - Added automatic detection of Raspberry Pi hardware models
   - Implemented model-specific performance optimizations

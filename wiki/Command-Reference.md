@@ -176,3 +176,7 @@ The bot automatically adds emoji reactions to messages based on keywords it dete
 ### Rate Limiting
 
 To prevent spam, the bot enforces a short cooldown period (typically a few seconds) between messages from the same user. If you send messages too quickly, the bot will remind you to wait before responding further.
+
+## v1.2.2 Update
+- ConversationManager refactored to export as a class and require instantiation.
+- All command handling and tests updated for reliability and CI compliance.

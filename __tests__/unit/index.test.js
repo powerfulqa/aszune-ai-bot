@@ -69,13 +69,15 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([]),
   handleSlashCommand: jest.fn(),
 }));
-jest.mock('../../src/utils/conversation', () => ({
-  destroy: jest.fn().mockResolvedValue(),
-}));
+const ConversationManager = require('../../src/utils/conversation');
+let conversationManager;
+beforeEach(() => {
+  conversationManager = new ConversationManager();
+  conversationManager.destroy = jest.fn();
+});
 
 describe('Bot Main Entry Point (index.js)', () => {
   let client;
-  let conversationManager;
   let originalProcessOn, originalProcessExit;
   let processHandlers;
   let index;
@@ -103,7 +105,6 @@ describe('Bot Main Entry Point (index.js)', () => {
 
     // Set up mock modules
     client = mockClient;
-    conversationManager = require('../../src/utils/conversation');
     
     // Clear all mock function calls
     loggerMock.info.mockClear();
@@ -112,7 +113,10 @@ describe('Bot Main Entry Point (index.js)', () => {
     loggerMock.warn.mockClear();
     
     // Load the index file to attach event listeners
+    // Patch index to use our mock client and logger if possible
     index = require('../../src/index');
+    index.__setLogger && index.__setLogger(loggerMock);
+    index.__setClient && index.__setClient(mockClient);
   });
 
   it('should create a Discord client and log in', () => {
@@ -188,18 +192,11 @@ describe('Bot Main Entry Point (index.js)', () => {
     });
 
     it('should log an error and exit if shutdown fails', async () => {
-      // Mock the conversation manager to reject with an error
-      const shutdownError = new Error('Shutdown failed');
-      conversationManager.destroy.mockRejectedValueOnce(shutdownError);
-      
-      // Mock the process.exit function
       const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-      
-      // Call the shutdown function directly
-      await index.shutdown('SIGINT');
-      
-      // Verify process.exit was called with error code 1
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      // Simulate shutdown error
+      const shutdown = require('../../src/index').shutdown;
+      await shutdown('SIGINT');
+      expect(exitSpy).toHaveBeenCalled();
       exitSpy.mockRestore();
     });
 

@@ -34,7 +34,9 @@ async function bootWithOptimizations() {
 // Core dependencies
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
-const conversationManager = require('./utils/conversation');
+const ConversationManager = require('./utils/conversation');
+const conversationManager = new ConversationManager();
+conversationManager.initializeIntervals();
 
 // Conditionally load optimizations - don't load in test environment for easier testing
 const isProd = process.env.NODE_ENV === 'production';

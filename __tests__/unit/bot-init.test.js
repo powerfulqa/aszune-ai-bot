@@ -33,10 +33,14 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test-command' }]),
   handleSlashCommand: jest.fn()
 }));
-jest.mock('../../src/utils/conversation', () => ({
-  destroy: jest.fn().mockResolvedValue()
-}));
 jest.mock('../../src/utils/logger', () => mockLogger);
+
+const ConversationManager = require('../../src/utils/conversation');
+let conversationManager;
+beforeEach(() => {
+  conversationManager = new ConversationManager();
+  conversationManager.destroy = jest.fn();
+});
 
 describe('Bot Initialization', () => {
   let index;

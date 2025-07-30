@@ -2,10 +2,12 @@
  * Command handler for the bot
  */
 const { ApplicationCommandOptionType } = require('discord.js');
-const conversationManager = require('../utils/conversation');
+const ConversationManager = require('../utils/conversation');
 const perplexityService = require('../services/perplexity');
 const logger = require('../utils/logger');
 const config = require('../config/config');
+
+const conversationManager = new ConversationManager();
 
 // Command definitions
 const commands = {

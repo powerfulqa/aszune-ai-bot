@@ -1,11 +1,12 @@
 /**
  * Tests for conversation manager
  */
-const conversationManager = require('../../src/utils/conversation');
+const ConversationManager = require('../../src/utils/conversation');
 const config = require('../../src/config/config');
-
+let conversationManager;
 describe('Conversation Manager', () => {
   beforeEach(() => {
+    conversationManager = new ConversationManager();
     jest.clearAllMocks();
     
     // Clear all conversation data

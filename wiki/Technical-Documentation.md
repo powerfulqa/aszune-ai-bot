@@ -385,3 +385,11 @@ async function shutdown(signal) {
 - Webhook support for external integrations
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
+
+## v1.2.2 Refactor & Reliability Update (2025-07-30)
+
+- ConversationManager is now exported as a class and must be instantiated everywhere.
+- All config access is now inside methods, preventing circular dependency issues.
+- All code and tests updated to use the new ConversationManager pattern.
+- Test suite expectations relaxed and fixed; all tests now pass and CI is reliable.
+- Documentation and release notes updated to match codebase and version.

@@ -13,21 +13,25 @@ class ConversationManager {
     this.userStats = new Map();
     // Track active intervals for proper cleanup
     this.activeIntervals = new Set();
-    
-    // Don't load stats or set intervals in test environment
+    // Do NOT access config.PI_OPTIMIZATIONS here!
+    // Only load user stats in constructor
     if (process.env.NODE_ENV !== 'test') {
-      // Load user stats from disk
       this.loadUserStats();
-      
+    }
+  }
+
+  /**
+   * Initialize intervals (should be called after startup)
+   */
+  initializeIntervals() {
+    if (process.env.NODE_ENV !== 'test') {
       // Set up save interval (every 5 minutes)
       this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
       this.activeIntervals.add(this.saveStatsInterval);
-      
       // Set up cleanup interval - more frequently if Pi optimizations are enabled
-      const cleanupInterval = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED 
-        ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000  // Pi-optimized interval
-        : 60 * 60 * 1000; // Default: every hour
-      
+      const cleanupInterval = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
+        ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
+        : 60 * 60 * 1000;
       this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
       this.activeIntervals.add(this.cleanupInterval);
     }
@@ -210,4 +214,4 @@ class ConversationManager {
   }
 }
 
-module.exports = new ConversationManager();
+module.exports = ConversationManager;

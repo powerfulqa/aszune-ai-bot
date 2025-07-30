@@ -2,7 +2,7 @@
  * Chat message handler for the bot
  */
 const perplexityService = require('../services/perplexity');
-const conversationManager = require('../utils/conversation');
+const ConversationManager = require('../utils/conversation');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
 const config = require('../config/config');
@@ -34,6 +34,8 @@ const lazyLoad = (importFn) => {
 
 // Lazy load heavier dependencies
 const imageHandler = lazyLoad(() => require('../utils/image-handler'));
+
+const conversationManager = new ConversationManager();
 
 /**
  * Handle an incoming chat message
