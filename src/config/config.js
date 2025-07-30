@@ -83,14 +83,13 @@ const config = {
   }
 };
 
-// Import the Pi detection utility
-const piDetector = require('../utils/pi-detector');
-
 /**
  * Initialize Pi-specific optimizations and update config
  * This function should be called when the bot starts
  */
 async function initializePiOptimizations() {
+  // Import pi-detector only when needed to avoid circular dependency
+  const piDetector = require('../utils/pi-detector');
   try {
     // Only attempt to initialize if optimizations are enabled
     if (config.PI_OPTIMIZATIONS.ENABLED) {
