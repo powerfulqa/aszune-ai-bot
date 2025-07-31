@@ -5,4 +5,5 @@ coverage/
 data/
 logs/
 test-results/
+test-results/junit.xml
 .DS_Store
