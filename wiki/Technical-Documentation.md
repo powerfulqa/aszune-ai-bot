@@ -15,7 +15,13 @@ Aszune AI Bot is built using Node.js and the Discord.js library, with the Perple
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
 7. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-8. **Pi Optimization System** - Detects Raspberry Pi hardware and applies performance optimizations
+8. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
+
+```bash
+pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
+```
+
+This ensures all optimisations are applied. Running `pm2 start src/index.js` will NOT enable Pi optimisations.
 
 ## Project Structure
 

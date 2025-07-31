@@ -80,7 +80,19 @@ To verify that Pi optimizations are working correctly:
 2. Check the logs for messages like: 
    - "Detected pi4 with 4.0GB RAM and 4 cores"
    - "Applied optimizations: {optimizations object}"
-3. The bot should now be running with settings optimized for your specific Pi model
+3. The bot should now be running with settings optimized for your specific Pi model.
+
+## Running with PM2 for Pi Optimizations
+
+To run the bot with PM2 and ensure all Pi optimizations are applied:
+
+```bash
+pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
+pm2 startup
+pm2 save
+```
+
+This will keep your bot running and automatically restart it after a reboot, with all Pi-specific optimizations enabled.
 
 ## Troubleshooting
 

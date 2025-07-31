@@ -4,7 +4,7 @@
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands. Optimized to run efficiently on Raspberry Pi devices from Pi 3 to Pi 5.
+**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands. Optimised to run efficiently on Raspberry Pi devices from Pi 3 to Pi 5.
 
 ---
 
@@ -42,16 +42,16 @@
 - 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for better efficiency and reliability.
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
-- 🆕 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🆕 **Comprehensive Testing:** 140 automated tests covering all key functionality with >90% code coverage.
-- 🆕 **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
-- 🆕 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
-- 🆕 **Optimized Test Suite:** Fixed circular dependencies and improved mock implementations.
-- 🆕 **Raspberry Pi Optimizations:** Specialized performance optimizations for running on resource-constrained devices like Raspberry Pi 3.
+- 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
+- 🧪 **Comprehensive Testing:** 140 automated tests covering all key functionality with >90% code coverage.
+- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
+- 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
+- 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations.
+- 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on resource-constrained devices like Raspberry Pi 3.
   - 📉 **Memory Management:** Automatic garbage collection and memory monitoring
   - 🔄 **Message Debouncing:** Prevents excessive API calls
   - 📦 **Lazy Loading:** Loads heavy dependencies only when needed
-  - 📊 **Connection Throttling:** Limits concurrent network connections
+  - 📊 **Connection Throttling:** Limits concurrent network connections0
   - 🧠 **CPU Monitoring:** Adaptive throttling based on system load
   - 💾 **Cache Pruning:** Automatically manages cache size
   - 📱 **Compact Mode:** Reduced message size and complexity for better performance
@@ -118,55 +118,37 @@ For optimal performance on Raspberry Pi 3, use the provided script:
 # Make the script executable
 chmod +x start-pi-optimized.sh
 
-# Run with optimizations
+# Run with optimisations
 ./start-pi-optimized.sh
 ```
 
-This script applies several performance optimizations:
+This script applies several performance optimisations:
 - Sets memory limits appropriate for Pi 3
 - Reduces CPU and memory usage
-- Optimizes network connections
+- Optimises network connections
 - Configures compact mode for responses
 
-For more details on Pi optimizations, see the [Raspberry Pi Optimization Guide](wiki/Raspberry-Pi-Optimization.md).
+For more details on Pi optimisations, see the [Raspberry Pi Optimisation Guide](wiki/Pi-Optimization-Guide.md).
 
 ---
 
-### Running with PM2 (for Production)
+### Running with PM2 (for Production & Raspberry Pi)
 
 PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
 
-#### Option A: Using an Ecosystem File
+#### Recommended: Using the Pi Optimisation Shell Script
 
-1. Create a file called `ecosystem.config.js`:
-
-   ```js
-   module.exports = {
-     apps: [
-       {
-         name: "aszune-ai",
-         script: "src/index.js",
-         env: {
-           DISCORD_BOT_TOKEN: "your_discord_bot_token_here",
-           PERPLEXITY_API_KEY: "your_perplexity_api_key_here",
-         },
-       },
-     ],
-   };
-   ```
-
-2. Start your bot:
-
-   ```bash
-   pm2 start ecosystem.config.js
-   pm2 logs aszune-ai
-   ```
-
-#### Option B: Inline Environment Variables
+To run the bot with full Raspberry Pi optimisations, use the provided shell script as your PM2 entry point:
 
 ```bash
-DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity_api_key_here pm2 start src/index.js --name aszune-ai
+pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
+pm2 startup
+pm2 save
 ```
+
+This ensures all Pi-specific environment variables and system-level tweaks are applied before starting the bot, and enables automatic restart after a reboot.
+
+**Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations. Always use the shell script for Pi deployments.
 
 ---
 
@@ -279,7 +261,7 @@ Pull requests and ideas are always welcome! Please:
 
 ---
 
-## License
+## Licence
 
 MIT — feel free to use, modify, and share ✨
 
