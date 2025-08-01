@@ -9,7 +9,7 @@ jest.mock('../../src/commands', () => ({
 }));
 
 const chatService = require('../../src/services/chat');
-const perplexityService = require('../../src/services/perplexity');
+const perplexityService = require('../../src/services/perplexity-secure');
 const ConversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
 const commandHandler = require('../../src/commands');

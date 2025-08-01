@@ -188,7 +188,7 @@ describe('Bot integration', () => {
     });
 
     it('handles a normal message and replies', async () => {
-        const perplexityService = require('../../src/services/perplexity');
+        const perplexityService = require('../../src/services/perplexity-secure');
         message.content = 'hello';
         
         // Make sure previous tests don't affect this one
@@ -301,7 +301,7 @@ describe('Bot integration', () => {
     });
 
     it('rate limits user messages', async () => {
-        const perplexityService = require('../../src/services/perplexity');
+        const perplexityService = require('../../src/services/perplexity-secure');
         message.content = 'first message';
         
         // Make sure previous tests don't affect this one
@@ -340,7 +340,7 @@ describe('Bot integration', () => {
     });
 
     it('handles API error when replying', async () => {
-        const perplexityService = require('../../src/services/perplexity');
+        const perplexityService = require('../../src/services/perplexity-secure');
         message.content = 'hello';
         
         // Make sure previous tests don't affect this one
