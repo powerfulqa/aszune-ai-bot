@@ -225,4 +225,6 @@ module.exports = {
   shutdown, // Export shutdown function for testing
   unhandledRejectionHandler, // Export for direct testing
   uncaughtExceptionHandler,  // Export for direct testing
+  bootWithOptimizations, // Export for branch coverage testing
+  registerSlashCommands, // Export for branch coverage testing
 };

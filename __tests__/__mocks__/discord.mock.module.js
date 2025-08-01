@@ -1,4 +1,5 @@
-// Jest mock for discord.js
+/* istanbul ignore file */
+// Jest mock for discord.js - NOT A TEST FILE
 class SlashCommandBuilder {
   constructor() {
     this.name = '';

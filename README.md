@@ -20,6 +20,7 @@
 - [Bot Commands](#bot-commands)
 - [Project Structure](#project-structure)
 - [Testing & Coverage](#testing--coverage)
+  - [Branch Coverage Testing](#branch-coverage-testing)
 - [Troubleshooting](#troubleshooting)
 - [Future Enhancements](#future-enhancements)
 - [Contributing](#contributing)
@@ -43,10 +44,10 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🧪 **Comprehensive Testing:** 140 automated tests covering all key functionality with >90% code coverage.
+- 🧪 **Comprehensive Testing:** 241 automated tests covering all key functionality with >90% code coverage.
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
-- 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations.
+- 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with 82.45% branch coverage for critical components.
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on resource-constrained devices like Raspberry Pi 3.
   - 📉 **Memory Management:** Automatic garbage collection and memory monitoring
   - 🔄 **Message Debouncing:** Prevents excessive API calls
@@ -192,14 +193,20 @@ aszune-ai-bot/
 
 ## Testing & Coverage
 
-The project includes comprehensive testing with Jest. To run tests:
+The project includes comprehensive testing with Jest covering both standard functionality and branch coverage. To run tests:
 
 ```bash
-# Run tests
+# Run all tests
 npm test
 
 # Run tests with coverage report
-npm run test:coverage
+npm run coverage
+
+# Run tests with coverage report
+npm run coverage
+
+# Run branch coverage tests
+npm run test:branch-coverage
 ```
 
 The test suite includes:
@@ -207,8 +214,26 @@ The test suite includes:
 - Integration tests for bot functionality
 - Edge case handling tests
 - Mocks for external dependencies
+- Branch coverage tests for critical components
 
-Current test coverage: >90% overall with 140 tests.
+### Branch Coverage Testing
+
+This project implements specific configurations for branch coverage testing:
+
+- **Overall requirement**: 60% branch coverage threshold
+- **Current metrics**:
+  - index.js: 80% branch coverage
+  - logger.js: 82.45% branch coverage (combined with branch coverage tests)
+
+We use separate Jest configurations for branch coverage:
+- `index-branch-coverage.jest.config.js` - For index.js testing
+- `logger-branch-coverage.jest.config.js` - For logger.js testing
+
+The `test:branch-coverage` script runs both configurations sequentially to ensure all core components meet the coverage requirements. All branch coverage tests are now passing and properly implemented.
+
+For more detailed information about the testing strategy, see the [Testing Guide](./wiki/Testing-Guide.md) and [__tests__/README.md](./__tests__/README.md).
+
+Current test coverage: >90% overall with 241 tests.
 
 ---
 
@@ -279,6 +304,14 @@ MIT — feel free to use, modify, and share ✨
 - The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.
 
 ## Changelog
+
+### 1.3.0 (2025-08-01)
+- Fixed all logger branch coverage tests, improving coverage from 57.89% to 82.45%.
+- Resolved "duplicate manual mock found" warning in test infrastructure.
+- Properly implemented mocking for fs.promises methods with a centralized approach.
+- Added explicit Jest configuration for mock files.
+- Updated documentation and test scripts to reflect testing improvements.
+
 ### 1.2.2 (2025-07-30)
 - Refactored ConversationManager to export as a class and require instantiation.
 - Fixed circular dependency issues by moving config access inside methods.

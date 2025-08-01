@@ -9,7 +9,10 @@
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
     "security": "npm audit --audit-level=high",
     "format:md": "prettier --write '**/*.md'",
-    "format": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
+    "test:branch-coverage": "jest --config=index-branch-coverage.jest.config.js __tests__/unit/index-branch-coverage.test.js && jest --config=logger-branch-coverage.jest.config.js \"__tests__/unit/logger*.test.js\"",
+    "coverage": "jest --coverage",
+    "serve": "node src/index.js",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
     "lint": "eslint src __tests__",
     "lint:fix": "eslint src __tests__ --fix"
   },

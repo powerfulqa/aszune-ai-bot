@@ -140,3 +140,25 @@
 - Updated all code and tests to use the new ConversationManager pattern.
 - Relaxed and fixed all test expectations; all tests now pass and CI is reliable.
 - Updated documentation and release notes to match codebase and version.
+
+---
+
+## Version 1.3.0 (2025-08-01)
+
+### Enhanced Testing & Code Quality
+- **Fixed Logger Branch Coverage Testing:**
+  - Resolved all 7 failing tests in logger-branch-coverage.test.js
+  - Implemented proper mocking for fs.promises methods with a centralized mock object
+  - Improved branch coverage for logger.js from 57.89% to 82.45% (exceeding the required 55%)
+  - Updated test:branch-coverage script to run both logger test files for comprehensive coverage
+
+- **Resolved Test Infrastructure Issues:**
+  - Fixed "duplicate manual mock found: discord" warning by reorganizing mock files
+  - Added discord.mock.module.js to testPathIgnorePatterns in Jest configuration
+  - Created proper test files for mock modules to prevent test failures
+  - Added special comments to tell Jest to ignore mock files as test suites
+
+- **Documentation Improvements:**
+  - Updated README and wiki with accurate branch coverage information
+  - Added documentation about mocking approach in test files
+  - Updated Testing Guide with information about the resolved issues

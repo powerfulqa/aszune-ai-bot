@@ -21,6 +21,7 @@ module.exports = {
   // Explicitly exclude our mock helpers file and other problematic files
   testPathIgnorePatterns: [
     "/__mocks__/discord.js",
+    "/__mocks__/discord.mock.module.js",
     "/__mocks__/loggerMock.js",
     "/__tests__/utils/undici-mock-helpers.js",
     "/__tests__/utils/undici-mock-helpers.test.ignore.js",
