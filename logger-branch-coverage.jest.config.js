@@ -36,12 +36,6 @@ module.exports = {
     }
   },
   
-  // Run both test files
-  testMatch: [
-    '<rootDir>/__tests__/unit/logger.test.js',
-    '<rootDir>/__tests__/unit/logger-branch-coverage.test.js'
-  ],
-  
   // Don't fail on assertion errors
   testTimeout: 10000,
   bail: 0

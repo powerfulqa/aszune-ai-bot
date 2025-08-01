@@ -185,6 +185,17 @@ class PerplexityService {
     
     return '';
   }
+  
+  /**
+   * Determine if caching should be used based on options and configuration
+   * @param {Object} options - The cache options 
+   * @param {Object} cacheConfig - The cache configuration
+   * @returns {boolean} - Whether to use cache or not
+   * @private
+   */
+  _shouldUseCache(options, cacheConfig) {
+    return options.caching !== false && (process.env.NODE_ENV === 'test' || cacheConfig.enabled);
+  }
 
   /**
    * Build API request payload
@@ -387,19 +398,19 @@ class PerplexityService {
   /**
    * Generate chat response for user query
    * @param {Array} history - Chat history
-   * @param {boolean|Object} useCache - Whether to override default cache behavior or options object
+   * @param {boolean|Object} options - Whether to override default cache behavior or options object
    * @returns {Promise<String>} - The response content
    */
-  async generateChatResponse(history, useCache = true) {
+  async generateChatResponse(history, options = true) {
     try {
       // Parse options object or boolean
-      const options = typeof useCache === 'object' ? useCache : { caching: useCache };
+      const opts = typeof options === 'object' ? options : { caching: options };
       
       // Get cache configuration
       const cacheConfig = this._getCacheConfiguration();
       
       // Determine if caching should be used
-      const shouldUseCache = options.caching !== false && (process.env.NODE_ENV === 'test' || cacheConfig.enabled);
+      const shouldUseCache = this._shouldUseCache(opts, cacheConfig);
       
       // Try to get from cache first if enabled
       if (shouldUseCache) {
@@ -409,7 +420,7 @@ class PerplexityService {
       
       // Try to generate new response with retry for rate limits
       let response;
-      let retries = options.retryOnRateLimit ? 1 : 0;
+      let retries = opts.retryOnRateLimit ? 1 : 0;
       let retryDelay = 1000; // Start with 1 second delay
       
       try {
