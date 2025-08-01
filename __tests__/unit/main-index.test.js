@@ -2,7 +2,7 @@
  * Tests for main entry point of the bot
  */
 jest.mock('../../src/utils/logger');
-jest.mock('discord.js');
+jest.mock('discord.js', () => require('../__mocks__/discord.js'));
 jest.mock('../../src/utils/pi-detector', () => ({
   detectPiModel: jest.fn().mockResolvedValue({ 
     model: 'Pi 4 Model B',
