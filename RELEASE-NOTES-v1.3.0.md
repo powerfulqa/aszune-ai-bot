@@ -18,7 +18,10 @@ Version 1.3.0 of the Aszune AI Bot includes significant improvements to code qua
 
 ### Security Improvements
 - Fixed security issue related to top-level permissions
+  - Added explicit file permissions (0o644 for files, 0o755 for directories)
+  - Ensured only owner has write permissions to sensitive files
 - Added better validation for API interactions
+- Improved error handling with secure defaults
 
 ### Code Formatting & Standards
 - Added ESLint configuration for consistent code style
