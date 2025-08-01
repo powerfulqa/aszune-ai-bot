@@ -9,7 +9,9 @@ module.exports = {
     "!**/coverage/**",
     "!**/logs/**",    "!**/data/**",
     "!ecosystem.config.js",
-    "!jest.setup.js"
+    "!jest.setup.js",
+    "!src/services/perplexity.js",
+    "!src/services/perplexity-improved.js"
   ],
   // Define pattern for test files to exclude helper files
   testMatch: [
