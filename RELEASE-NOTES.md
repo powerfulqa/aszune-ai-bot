@@ -167,14 +167,21 @@
   - Created a new unified module with better organization
   - Added better error handling throughout the application
   - Improved test coverage for perplexity-secure.js from 59.44% to 66.89%
+  - Fixed caching issues in perplexity-secure.js:
+    - Resolved issue where cached responses were not properly retrieved
+    - Fixed issue where caching wasn't properly disabled when the `caching: false` option was set
+    - Enhanced cache retrieval to handle different cache entry formats
 
 - **Security Improvements:** (See RELEASE-NOTES-v1.3.0.md for more details)
   - Fixed security issues related to top-level permissions
   - Added explicit file permissions for better security
   - Improved validation for API interactions
+  - Improved error handling for cache operations
 
 - **Documentation Improvements:**
   - Updated README and wiki with accurate branch coverage information
   - Added documentation about mocking approach in test files
   - Updated Testing Guide with information about the resolved issues
   - Ensured consistency across all documentation files
+  - Added comprehensive documentation about the caching system to Technical Documentation
+  - Updated Architecture Overview with Response Caching System

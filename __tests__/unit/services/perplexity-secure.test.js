@@ -140,8 +140,10 @@ describe('PerplexitySecure Service', () => {
     it('should return cached response if available', async () => {
       // Mock successful cache read
       fs.readFile.mockResolvedValueOnce(JSON.stringify({ 
-        answer: 'Cached answer',
-        timestamp: Date.now()
+        "hashed-value": {
+          answer: 'Cached answer',
+          timestamp: Date.now()
+        }
       }));
       
       // Should not even call the API
