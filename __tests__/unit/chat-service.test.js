@@ -15,7 +15,9 @@ const emojiManager = require('../../src/utils/emoji');
 const commandHandler = require('../../src/commands');
 
 // Mock dependencies
-jest.mock('../../src/services/perplexity');
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn()
+}));
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
