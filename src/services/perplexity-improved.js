@@ -1,5 +1,6 @@
 /**
  * Service for interacting with the Perplexity API
+ * Version 1.3.0 - Improved for better maintainability and performance
  */
 const { request } = require('undici');
 const config = require('../config/config');
@@ -49,6 +50,14 @@ class PerplexityService {
     
     // Set up cache cleanup interval (if not in test environment)
     this.cacheCleanupInterval = null;
+    this._setupCacheCleanup();
+  }
+  
+  /**
+   * Set up cache cleanup routine
+   * @private
+   */
+  _setupCacheCleanup() {
     if (process.env.NODE_ENV !== 'test') {
       // Clean cache every day
       const DAY_MS = 24 * 60 * 60 * 1000;
@@ -79,12 +88,6 @@ class PerplexityService {
     };
   }
   
-  /**
-   * Safe way to access headers that works with both Headers objects and plain objects
-   * @param {Object|Headers} headers - The headers object
-   * @param {string} key - The header key to get
-   * @returns {string} The header value
-   */
   /**
    * Safe way to access headers that works with both Headers objects and plain objects
    * @param {Object|Headers} headers - The headers object
@@ -169,7 +172,6 @@ class PerplexityService {
     
     return '';
   }
-  }
 
   /**
    * Build API request payload
@@ -185,23 +187,42 @@ class PerplexityService {
       max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
       temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE
     };
-    // Safely check if PI optimizations are enabled
-    let piOptEnabled = false;
-    let lowCpuMode = false;
+    
+    // Get PI optimization settings
+    const piOptSettings = this._getPiOptimizationSettings();
+    
+    // Enable streaming for supported environments if not in low CPU mode
+    if (options.stream && piOptSettings.enabled && !piOptSettings.lowCpuMode) {
+      payload.stream = true;
+    }
+    
+    return payload;
+  }
+  
+  /**
+   * Get PI optimization settings from config
+   * @returns {Object} PI optimization settings
+   * @private
+   */
+  _getPiOptimizationSettings() {
+    const defaultSettings = {
+      enabled: false,
+      lowCpuMode: false
+    };
+    
     try {
+      // Check if config has PI_OPTIMIZATIONS property
       if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
-        piOptEnabled = Boolean(config.PI_OPTIMIZATIONS.ENABLED);
-        if (piOptEnabled) {
-          lowCpuMode = Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE);
-        }
+        return {
+          enabled: Boolean(config.PI_OPTIMIZATIONS.ENABLED),
+          lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE)
+        };
       }
     } catch (error) {
       logger.warn('Error accessing PI_OPTIMIZATIONS config:', error);
     }
-    if (options.stream && piOptEnabled && !lowCpuMode) {
-      payload.stream = true;
-    }
-    return payload;
+    
+    return defaultSettings;
   }
   
   /**
@@ -214,27 +235,50 @@ class PerplexityService {
     if (!response) {
       throw new Error('Invalid response: response is null or undefined');
     }
+    
+    // Safely extract properties with defaults
     const statusCode = response.statusCode || 500;
     const headers = response.headers || {};
     const body = response.body || null;
+    
+    // For non-2xx status codes, handle as error
     if (statusCode < 200 || statusCode >= 300) {
-      let responseText = 'Could not read response body';
-      if (body && typeof body.text === 'function') {
-        responseText = await body.text().catch(() => 'Could not read response body');
-      }
-      const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
-      logger.error('Perplexity API Error:', errorMessage);
-      throw new Error(errorMessage);
+      return this._handleErrorResponse(statusCode, body);
     }
+    
+    // Make sure body exists and has json method
     if (!body || typeof body.json !== 'function') {
-      throw new Error('Invalid response body format');
+      throw new Error('Invalid response: body is missing or does not have json method');
     }
+    
+    // Parse response as JSON
     try {
       return await body.json();
     } catch (error) {
-      logger.error('Failed to parse JSON response:', error);
-      throw new Error('Failed to parse API response as JSON');
+      throw new Error(`Failed to parse response as JSON: ${error.message}`);
     }
+  }
+  
+  /**
+   * Handle error response
+   * @param {number} statusCode - HTTP status code
+   * @param {Object} body - Response body
+   * @returns {Promise<never>} - Always throws an error
+   * @private
+   */
+  async _handleErrorResponse(statusCode, body) {
+    let responseText = 'Could not read response body';
+    if (body && typeof body.text === 'function') {
+      try {
+        responseText = await body.text();
+      } catch (textError) {
+        responseText = `Error reading response body: ${textError.message}`;
+      }
+    }
+    
+    // Create a descriptive error message with status code and response content
+    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+    throw new Error(errorMessage);
   }
   
   /**
@@ -244,12 +288,47 @@ class PerplexityService {
    * @private
    */
   _extractResponseContent(response) {
-    return response?.choices?.[0]?.message?.content || 'No response generated';
+    try {
+      // Check if response exists
+      if (!response) {
+        return 'Sorry, I received an empty response.';
+      }
+      
+      // Check for choices array
+      if (!response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
+        return 'Sorry, no response choices were returned.';
+      }
+      
+      // Get the first choice
+      const firstChoice = response.choices[0];
+      
+      // Extract content based on structure
+      if (firstChoice.message && typeof firstChoice.message.content === 'string') {
+        return firstChoice.message.content;
+      }
+      
+      if (typeof firstChoice.content === 'string') {
+        return firstChoice.content;
+      }
+      
+      return 'Sorry, I could not extract content from the response.';
+    } catch (error) {
+      logger.warn('Error extracting response content:', error);
+      return 'Sorry, an error occurred while processing the response.';
+    }
   }
 
+  /**
+   * Send a chat request to the API
+   * @param {Array} messages - Messages to send
+   * @param {Object} options - Request options
+   * @returns {Promise<Object>} API response
+   */
   async sendChatRequest(messages, options = {}) {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     const requestPayload = this._buildRequestPayload(messages, options);
+    
+    // Define API request function
     const makeApiRequest = async () => {
       return await request(endpoint, {
         method: 'POST',
@@ -257,25 +336,18 @@ class PerplexityService {
         body: JSON.stringify(requestPayload)
       });
     };
+    
     try {
-      let piOptEnabled = false;
-      try {
-        piOptEnabled = config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null && Boolean(config.PI_OPTIMIZATIONS.ENABLED);
-      } catch (configError) {
-        logger.warn('Error accessing PI_OPTIMIZATIONS config:', configError);
-      }
+      // Get PI optimization settings
+      const piOptSettings = this._getPiOptimizationSettings();
+      
       let response;
-      if (piOptEnabled) {
-        try {
-          const throttler = connectionThrottler();
-          response = await throttler.executeRequest(makeApiRequest, 'Perplexity API');
-        } catch (throttlerError) {
-          logger.warn('Error using connection throttler, falling back to direct request:', throttlerError);
-          response = await makeApiRequest();
-        }
+      if (piOptSettings.enabled) {
+        response = await this._executeWithThrottling(makeApiRequest);
       } else {
         response = await makeApiRequest();
       }
+      
       return await this._handleApiResponse(response);
     } catch (error) {
       logger.error('API request failed:', error);
@@ -284,16 +356,26 @@ class PerplexityService {
   }
   
   /**
+   * Execute request with throttling if available
+   * @param {Function} requestFn - Request function to execute
+   * @returns {Promise<Object>} - API response
+   * @private
+   */
+  async _executeWithThrottling(requestFn) {
+    try {
+      const throttler = connectionThrottler();
+      return await throttler.executeRequest(requestFn, 'Perplexity API');
+    } catch (throttlerError) {
+      logger.warn('Error using connection throttler, falling back to direct request:', throttlerError);
+      return await requestFn();
+    }
+  }
+  
+  /**
    * Generate chat response for user query
    * @param {Array} history - Chat history
    * @param {boolean} useCache - Whether to override default cache behavior
    * @returns {Promise<String>} - The response content
-   */
-  /**
-   * Generate a chat response
-   * @param {Array} history - Conversation history
-   * @param {boolean} useCache - Whether to use cache if available
-   * @returns {Promise<string>} The chat response content
    */
   async generateChatResponse(history, useCache = true) {
     try {
@@ -423,180 +505,180 @@ class PerplexityService {
    * Generate summary of conversation or text
    * @param {Array} history - Conversation history or text to summarize
    * @param {boolean} isText - Whether this is text or conversation history
-   * @returns {Promise<String>} - The summary
+   * @returns {Promise<string>} - The summary content
    */
   async generateSummary(history, isText = false) {
     try {
-      const systemPrompt = isText ? config.SYSTEM_MESSAGES.TEXT_SUMMARY : config.SYSTEM_MESSAGES.SUMMARY;
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        ...history
-      ];
-      let piOptEnabled = false;
-      let lowCpuMode = false;
-      let streamingEnabled = false;
-      try {
-        if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
-          piOptEnabled = Boolean(config.PI_OPTIMIZATIONS.ENABLED);
-          if (piOptEnabled) {
-            lowCpuMode = Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE);
-            streamingEnabled = !lowCpuMode;
-          }
-        }
-      } catch (configError) {
-        logger.warn('Error accessing PI_OPTIMIZATIONS config:', configError);
+      if (isText) {
+        return await this.generateTextSummary(history);
       }
-      let maxTokens = 500;
-      try {
-        if (config && config.API && config.API.PERPLEXITY && config.API.PERPLEXITY.MAX_TOKENS) {
-          maxTokens = config.API.PERPLEXITY.MAX_TOKENS.SUMMARY || maxTokens;
-        }
-      } catch (configError) {
-        logger.warn('Error accessing MAX_TOKENS config:', configError);
-      }
-      const response = await this.sendChatRequest(messages, {
-        maxTokens: maxTokens,
-        stream: streamingEnabled
-      });
-      return this._extractResponseContent(response) || 'Unable to generate summary.';
+      
+      // Format the conversation in a summarizable way
+      const conversationText = history.map(msg => {
+        const role = msg.role.toUpperCase();
+        return `${role}: ${msg.content}`;
+      }).join('\n\n');
+      
+      return await this.generateTextSummary(conversationText);
     } catch (error) {
       logger.error('Failed to generate summary:', error);
-      throw error; // Re-throw for caller to handle
+      throw error;
     }
-  }
-
-  /**
-   * Alias for generateSummary with isText=true
-   * @param {Array} text - Text to summarize
-   * @returns {Promise<String>} - The summary
-   */
-  async generateTextSummary(text) {
-    return this.generateSummary(text, true);
   }
   
   /**
-   * Load the response cache from disk
-   * @returns {Promise<Object>} - The cache object
-   * @private
+   * Generate summary of a text
+   * @param {string} text - Text to summarize
+   * @returns {Promise<string>} - The summary
+   */
+  async generateTextSummary(text) {
+    // Create a system message instructing to summarize
+    const messages = [
+      { role: 'system', content: 'Please provide a concise summary of the following text.' },
+      { role: 'user', content: text }
+    ];
+    
+    const options = { maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY };
+    const response = await this.sendChatRequest(messages, options);
+    return this._extractResponseContent(response);
+  }
+
+  /**
+   * Load the cache from disk
+   * @returns {Promise<Object>} The loaded cache object
    */
   async _loadCache() {
     try {
-      const cacheFile = path.join(__dirname, '../../data/question_cache.json');
-      const data = await fs.readFile(cacheFile, 'utf8').catch(() => '{}');
-      return JSON.parse(data);
+      const cacheDir = path.join(process.cwd(), 'data');
+      const cachePath = path.join(cacheDir, 'question_cache.json');
+      
+      // Ensure cache directory exists
+      try {
+        await fs.mkdir(cacheDir, { recursive: true });
+      } catch (mkdirError) {
+        if (mkdirError.code !== 'EEXIST') {
+          throw mkdirError;
+        }
+      }
+      
+      // Read and parse cache file
+      try {
+        const cacheData = await fs.readFile(cachePath, 'utf8');
+        return JSON.parse(cacheData);
+      } catch (readError) {
+        if (readError.code === 'ENOENT') {
+          // Cache file doesn't exist yet
+          return {};
+        }
+        throw readError;
+      }
     } catch (error) {
-      logger.error('Error loading cache:', error);
+      logger.error('Failed to load cache:', error);
       return {};
     }
   }
   
   /**
-   * Save the response cache to disk
-   * @param {Object} cache - The cache object to save
-   * @returns {Promise<void>}
-   * @private
-   */
-  
-  /**
-   * Format a cache entry with timestamp
-   * @param {any} entry - The cache entry
-   * @param {number} timestamp - The current timestamp
-   * @returns {Object} - The formatted entry
+   * Format a cache entry with metadata
+   * @param {string|Object} entry - The cache entry
+   * @param {number} timestamp - The timestamp
+   * @returns {Object} Formatted cache entry
    * @private
    */
   _formatCacheEntry(entry, timestamp) {
-    if (typeof entry === 'string') {
+    // If entry is already an object with content, just ensure it has a timestamp
+    if (typeof entry === 'object' && entry !== null && entry.content) {
       return {
-        content: entry,
-        lastAccessed: timestamp
+        ...entry,
+        timestamp: entry.timestamp || timestamp
       };
-    } else if (entry && !entry.lastAccessed) {
-      return {
-        content: entry,
-        lastAccessed: timestamp
-      };
-    } else if (entry) {
-      // Just update the timestamp on existing entries
-      entry.lastAccessed = timestamp;
-      return entry;
     }
     
-    // Fallback for unexpected entry types
+    // Otherwise, create a new object with content and timestamp
     return {
-      content: String(entry),
-      lastAccessed: timestamp
+      content: entry,
+      timestamp
     };
   }
 
+  /**
+   * Save the cache to disk
+   * @param {Object} cache - The cache object to save
+   * @returns {Promise<void>}
+   */
   async _saveCache(cache) {
     try {
-      const cacheFile = path.join(__dirname, '../../data/question_cache.json');
-      const cacheDir = path.dirname(cacheFile);
+      const cacheDir = path.join(process.cwd(), 'data');
+      const cachePath = path.join(cacheDir, 'question_cache.json');
       
-      // Ensure directory exists
-      await fs.mkdir(cacheDir, { recursive: true }).catch(() => {});
+      // Ensure cache directory exists
+      try {
+        await fs.mkdir(cacheDir, { recursive: true });
+      } catch (mkdirError) {
+        if (mkdirError.code !== 'EEXIST') {
+          throw mkdirError;
+        }
+      }
       
-      // Add timestamp for when items were cached
-      const now = Date.now();
-      const updatedCache = Object.fromEntries(
-        Object.entries(cache).map(([key, value]) => [key, this._formatCacheEntry(value, now)])
-      );
+      // Format entries with timestamps if needed
+      const timestamp = Date.now();
+      const formattedCache = {};
       
-      await fs.writeFile(cacheFile, JSON.stringify(updatedCache, null, 2));
+      for (const [key, value] of Object.entries(cache)) {
+        formattedCache[key] = this._formatCacheEntry(value, timestamp);
+      }
+      
+      // Write cache file
+      await fs.writeFile(cachePath, JSON.stringify(formattedCache, null, 2));
     } catch (error) {
-      logger.error('Error saving cache:', error);
+      logger.error('Failed to save cache:', error);
     }
   }
-  
+
   /**
-   * Generate a cache key from conversation history
-   * @param {Array} history - Conversation history
-   * @returns {String} - Cache key
-   * @private
+   * Generate a cache key for the given history
+   * @param {Array} history - The conversation history
+   * @returns {string} - A unique hash for this conversation
    */
   _generateCacheKey(history) {
-    // Use only the last few messages for the cache key to avoid unnecessary cache misses
-    const lastMessages = history.slice(-2);
-    const key = lastMessages.map(msg => `${msg.role}:${msg.content}`).join('|');
-    return crypto.createHash('md5').update(key).digest('hex');
+    const historyString = JSON.stringify(history);
+    return crypto.createHash('md5').update(historyString).digest('hex');
   }
-  
+
   /**
    * Clean up old cache entries
-   * @private
+   * @returns {Promise<void>}
    */
   async _cleanupCache() {
     try {
-      // Skip if in test environment
-      if (process.env.NODE_ENV === 'test') return;
+      // Try to get cache pruner
+      const pruner = getCachePruner();
+      if (pruner && typeof pruner.pruneCache === 'function') {
+        await pruner.pruneCache();
+        return;
+      }
       
-      logger.debug('Running cache cleanup');
-      
-      // Load cache
+      // Fallback to basic cache pruning
       const cache = await this._loadCache();
+      if (!cache) return;
       
-      // Get keys
-      const keys = Object.keys(cache);
-      if (keys.length === 0) return;
+      const now = Date.now();
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+      let modified = false;
       
-      // Sort by last access time if available
-      const keysByAge = keys.sort((a, b) => {
-        const aTime = cache[a].lastAccessed || 0;
-        const bTime = cache[b].lastAccessed || 0;
-        return aTime - bTime; // Oldest first
-      });
+      for (const [key, entry] of Object.entries(cache)) {
+        const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
+        if (timestamp && now - timestamp > ONE_WEEK_MS) {
+          delete cache[key];
+          modified = true;
+        }
+      }
       
-      // Keep only the most recent 80%
-      const keepCount = Math.floor(keys.length * 0.8);
-      const keysToRemove = keysByAge.slice(0, keys.length - keepCount);
-      
-      if (keysToRemove.length > 0) {
-        keysToRemove.forEach(key => delete cache[key]);
+      if (modified) {
         await this._saveCache(cache);
-        logger.info(`Removed ${keysToRemove.length} old cache entries`);
       }
     } catch (error) {
-      logger.error('Error during cache cleanup:', error);
+      logger.warn('Error cleaning up cache:', error);
     }
   }
 }
