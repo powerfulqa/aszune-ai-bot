@@ -3,6 +3,8 @@
 ## Overview
 Version 1.3.0 of the Aszune AI Bot includes significant improvements to code quality, maintainability, and security. This release addresses multiple issues identified in code analysis and improves overall performance and reliability.
 
+> Note: See also RELEASE-NOTES.md for information about testing improvements, which were a major part of this release.
+
 ## Key Improvements
 
 ### Code Quality Enhancements

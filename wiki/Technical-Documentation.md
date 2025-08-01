@@ -392,6 +392,20 @@ async function shutdown(signal) {
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
 
+## v1.3.0 Enhanced Testing & Code Quality (2025-08-01)
+
+- Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%.
+- Resolved "duplicate manual mock found: discord" warning by reorganizing mock files.
+- Implemented proper mocking for fs.promises methods with a centralized approach.
+- Refactored complex functions into smaller, more maintainable units:
+  - Improved the `generateChatResponse` function with better helper methods
+  - Refactored `_safeGetHeader` to follow better coding practices
+- Consolidated duplicate code between perplexity service implementations.
+- Created a unified `perplexity-improved.js` module with better organization.
+- Fixed security issues related to permissions and API validation.
+- Added ESLint configuration for consistent code style.
+- Added new npm scripts for linting and fixing code style issues.
+
 ## v1.2.2 Refactor & Reliability Update (2025-07-30)
 
 - ConversationManager is now exported as a class and must be instantiated everywhere.

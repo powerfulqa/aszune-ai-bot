@@ -50,12 +50,11 @@ The project implements special configurations for testing branch coverage of cri
 ### Branch Coverage Requirements
 
 - Overall branch coverage threshold: 60%
-- Current metrics:
+- Current metrics (as of v1.3.0):
   - index.js: 80% branch coverage
-  - logger.js: 57.89% branch coverage (with logger.test.js only)
-  - logger.js: ~80% branch coverage (with both logger.test.js and logger-branch-coverage.test.js)
+  - logger.js: 82.45% branch coverage (combined from both test sets)
 
-> Note: We now use both sets of tests in the branch coverage testing to achieve higher coverage.
+> Note: In v1.3.0, we fixed all logger branch coverage tests that were previously failing. Coverage improved from 57.89% to 82.45%, exceeding our requirements.
 
 ### Branch Coverage Configuration
 
@@ -90,11 +89,11 @@ npx jest --config=logger-branch-coverage.jest.config.js __tests__/unit/logger.te
 npx jest --config=logger-branch-coverage.jest.config.js __tests__/unit/logger-branch-coverage.test.js
 ```
 
-> Note: All tests in logger-branch-coverage.test.js now pass, and we're using both sets of tests to achieve higher branch coverage (82.45%).
+> Note: All tests in logger-branch-coverage.test.js now pass as of v1.3.0, and we're using both sets of tests to achieve higher branch coverage (82.45%).
 
-## Recent Test Improvements
+## Recent Test Improvements (v1.3.0)
 
-The test suite was recently enhanced with several improvements:
+The test suite was significantly enhanced in v1.3.0 with several improvements:
 
 1. **Fixed Error Handling in Perplexity Service**: Standardized error messages for API failures
 2. **Improved Singleton Pattern**: Ensured consistent usage of the singleton pattern in services
@@ -108,10 +107,12 @@ The test suite was recently enhanced with several improvements:
 10. **Added Test Exclusion Patterns**: Properly configured test path ignore patterns for utility files
 11. **Improved Error Handling Tests**: Added missing test cases for error scenarios during bot shutdown
 12. **Improved Mock Configuration**: Added comprehensive mocks for configuration and external services
-13. **Fixed Logger Branch Coverage Tests**: Resolved all failing tests in logger-branch-coverage.test.js
-14. **Improved fs.promises Mocking**: Created centralized mock object for file system operations
-15. **Resolved Duplicate Mock Warnings**: Fixed the "duplicate manual mock found: discord" warning
-16. **Enhanced Jest Configuration**: Added proper test path ignore patterns for mock files
+13. **Fixed Logger Branch Coverage Tests (v1.3.0)**: Resolved all failing tests in logger-branch-coverage.test.js
+14. **Improved fs.promises Mocking (v1.3.0)**: Created centralized mock object for file system operations
+15. **Resolved Duplicate Mock Warnings (v1.3.0)**: Fixed the "duplicate manual mock found: discord" warning by reorganizing mock files
+16. **Enhanced Jest Configuration (v1.3.0)**: Added proper test path ignore patterns for mock files
+17. **Mock File Organization (v1.3.0)**: Created proper test files for mock modules to prevent test failures
+18. **Improved File Structure (v1.3.0)**: Added special comments to mock files to tell Jest to ignore them as test suites
 
 ## Writing New Tests
 
@@ -132,3 +133,22 @@ Tests are automatically run as part of the CI/CD pipeline. The workflow:
 3. Fails the build if any tests fail
 
 Test reports can be viewed on the GitHub Actions page for each build.
+
+## Mocking Improvements in v1.3.0
+
+Version 1.3.0 significantly improved how mocks are handled:
+
+1. **Reorganized Mock Files**: Renamed and restructured mock files to prevent duplicate mock warnings
+   - `discord.js` was renamed to `discord.mock.module.js`
+   - Added proper test files for each mock to ensure they work correctly
+
+2. **Centralized fs.promises Mocking**: Created a unified approach to mocking file system operations
+   - Consolidated mocking patterns for consistent test behavior
+   - Fixed inconsistent mocking that was causing test failures
+
+3. **Jest Configuration Updates**:
+   - Added `discord.mock.module.js` to `testPathIgnorePatterns` in Jest configuration
+   - Added special comments to mock files to prevent Jest from treating them as test suites
+   - Updated test scripts to run both logger test files for comprehensive coverage
+
+These changes have eliminated warnings and test failures related to mocking, making the test suite more reliable.
