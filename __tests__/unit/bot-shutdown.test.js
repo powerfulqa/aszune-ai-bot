@@ -1,5 +1,5 @@
 // Test for bot shutdown functionality
-const mockLogger = require('../../__mocks__/logger');
+const mockLogger = require('../__mocks__/loggerMock');
 const ConversationManager = require('../../src/utils/conversation');
 let conversationManager;
 
