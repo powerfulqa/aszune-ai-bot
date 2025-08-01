@@ -41,7 +41,6 @@
   - Added `!stats` and `/stats` commands to track user message and summary counts
   - Added Discord slash command support for all major commands
   - Fixed summary command to ensure proper API compliance
-  
 - **Testing & CI:**
   - Achieved >80% test coverage across the codebase
   - Added QLTY and Codecov integration for automated coverage reporting
@@ -66,7 +65,8 @@
   - Added `persist-credentials: false` to checkout step.
   - Enabled `fail_ci_if_error: true` for Codecov upload.
 - **Workflow Maintenance:**
-  - Addressed warnings and errors in the GitHub Actions workflow by upgrading the Codecov action and following new setup recommendations.
+  - Addressed warnings and errors in the GitHub Actions workflow by upgrading the Codecov action and
+    following new setup recommendations.
   - Reduced retry/backoff issues and improved CI reliability.
 - **Additional Tests Added:**
   - Emoji utility: tested multiple keywords, order, empty strings, and keywords inside other words.
@@ -78,7 +78,8 @@
 
 ## Bugfixes & Maintenance
 
-- Fixed 504 Gateway Timeout errors in Codecov GitHub Action by upgrading to v4 and following new setup recommendations.
+- Fixed 504 Gateway Timeout errors in Codecov GitHub Action by upgrading to v4 and following new
+  setup recommendations.
 - Updated documentation and README for new features and troubleshooting.
 - Added rollback script for production safety.
 - Improved PM2 ecosystem config and deployment instructions.
@@ -135,8 +136,52 @@
 ## Version 1.2.2 (2025-07-30)
 
 ### Refactor & Reliability
+
 - Refactored ConversationManager to export as a class and require instantiation everywhere.
 - Moved all config access inside methods to prevent circular dependency issues.
 - Updated all code and tests to use the new ConversationManager pattern.
 - Relaxed and fixed all test expectations; all tests now pass and CI is reliable.
 - Updated documentation and release notes to match codebase and version.
+
+---
+
+## Version 1.3.0 (2025-08-01)
+
+### Enhanced Testing & Code Quality
+
+- **Fixed Logger Branch Coverage Testing:**
+  - Resolved all 7 failing tests in logger-branch-coverage.test.js
+  - Implemented proper mocking for fs.promises methods with a centralized mock object
+  - Improved branch coverage for logger.js from 57.89% to 82.45% (exceeding the required 55%)
+  - Updated test:branch-coverage script to run both logger test files for comprehensive coverage
+
+- **Resolved Test Infrastructure Issues:**
+  - Fixed "duplicate manual mock found: discord" warning by reorganizing mock files
+  - Added discord.mock.module.js to testPathIgnorePatterns in Jest configuration
+  - Created proper test files for mock modules to prevent test failures
+  - Added special comments to tell Jest to ignore mock files as test suites
+
+- **Code Quality Enhancements:** (See RELEASE-NOTES-v1.3.0.md for more details)
+  - Refactored complex functions into smaller, more maintainable units
+  - Consolidated duplicate code between service implementations
+  - Created a new unified module with better organization
+  - Added better error handling throughout the application
+  - Improved test coverage for perplexity-secure.js from 59.44% to 66.89%
+  - Fixed caching issues in perplexity-secure.js:
+    - Resolved issue where cached responses were not properly retrieved
+    - Fixed issue where caching wasn't properly disabled when the `caching: false` option was set
+    - Enhanced cache retrieval to handle different cache entry formats
+
+- **Security Improvements:** (See RELEASE-NOTES-v1.3.0.md for more details)
+  - Fixed security issues related to top-level permissions
+  - Added explicit file permissions for better security
+  - Improved validation for API interactions
+  - Improved error handling for cache operations
+
+- **Documentation Improvements:**
+  - Updated README and wiki with accurate branch coverage information
+  - Added documentation about mocking approach in test files
+  - Updated Testing Guide with information about the resolved issues
+  - Ensured consistency across all documentation files
+  - Added comprehensive documentation about the caching system to Technical Documentation
+  - Updated Architecture Overview with Response Caching System

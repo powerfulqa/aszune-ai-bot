@@ -2,7 +2,7 @@
  * Tests for perplexity service
  */
 const { request } = require('undici');
-const PerplexityService = require('../../src/services/perplexity');
+const PerplexityService = require('../../src/services/perplexity-secure');
 const config = require('../../src/config/config');
 const { mockSuccessResponse, mockErrorResponse } = require('../utils/undici-mock-helpers');
 
@@ -67,10 +67,11 @@ describe('Perplexity Service', () => {
       const history = [{ role: 'user', content: 'Hello' }];
       const summary = await perplexityService.generateSummary(history);
       
+      // Check that it was called with a system message and user content (formatted as conversation)
       expect(perplexityService.sendChatRequest).toHaveBeenCalledWith(
         expect.arrayContaining([
-          { role: 'system', content: config.SYSTEM_MESSAGES.SUMMARY },
-          ...history
+          { role: 'system', content: 'Please provide a concise summary of the following text.' },
+          { role: 'user', content: expect.stringContaining('USER: Hello') }
         ]),
         expect.objectContaining({
           maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY
@@ -89,13 +90,13 @@ describe('Perplexity Service', () => {
 
         jest.spyOn(perplexityService, 'sendChatRequest').mockResolvedValueOnce(mockResponse);
 
-        const messages = [{ role: 'user', content: 'Some text to summarize' }];
-        const summary = await perplexityService.generateTextSummary(messages);
+        const textToSummarize = 'Some text to summarize';
+        const summary = await perplexityService.generateTextSummary(textToSummarize);
 
         expect(perplexityService.sendChatRequest).toHaveBeenCalledWith(
             expect.arrayContaining([
-                { role: 'system', content: config.SYSTEM_MESSAGES.TEXT_SUMMARY },
-                ...messages
+                { role: 'system', content: 'Please provide a concise summary of the following text.' },
+                { role: 'user', content: textToSummarize }
             ]),
             expect.objectContaining({
                 maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY

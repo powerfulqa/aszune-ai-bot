@@ -21,6 +21,15 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 
 ## Version Information
 
+- **v1.3.0** - Enhanced Testing & Code Quality (2025-08-01)
+  - Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%
+  - Resolved "duplicate manual mock found: discord" warning by reorganizing mock files
+  - Implemented proper mocking for fs.promises methods with a centralized approach
+  - Improved code quality with refactored complex functions into smaller, more maintainable units
+  - Added ESLint configuration for consistent code style
+  - Consolidated duplicate code and created better organized service modules
+  - Fixed security issues related to permissions and API validation
+
 - **v1.2.2** - Refactor & Reliability Update (2025-07-30)
   - Refactored ConversationManager to export as a class and require instantiation everywhere
   - Moved all config access inside methods to prevent circular dependency issues
@@ -70,3 +79,7 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - 🆕 **Slash Command Support:** All major commands available as Discord slash commands
 - 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
 - 🧪 **Comprehensive Testing:** 140 automated tests with >90% code coverage
+- 🧾 **Branch Coverage Testing:** 82.45% branch coverage for critical components like logger.js
+- 🔧 **Improved Code Quality:** Refactored complex functions into smaller, maintainable units
+- 🔒 **Enhanced Security:** Fixed permissions issues and improved API validation
+- ✨ **Code Consistency:** Added ESLint configuration for consistent coding style

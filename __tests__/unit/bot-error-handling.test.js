@@ -3,7 +3,7 @@
 jest.mock('../../src/utils/logger', () => require('../__mocks__/loggerMock'));
 
 // Mock the required modules
-jest.mock('discord.js', () => require('../__mocks__/discord.js'));
+jest.mock('discord.js', () => require('../__mocks__/discord.mock.module.js'));
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn(),

@@ -1,10 +1,10 @@
 // Test for bot shutdown functionality
-const mockLogger = require('../../__mocks__/logger');
+const mockLogger = require('../__mocks__/loggerMock');
 const ConversationManager = require('../../src/utils/conversation');
 let conversationManager;
 
 // Mock required modules
-jest.mock('discord.js', () => require('../__mocks__/discord.js'));
+jest.mock('discord.js', () => require('../__mocks__/discord.mock.module.js'));
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 jest.mock('../../src/utils/logger', () => mockLogger);
 jest.mock('../../src/services/chat');
@@ -28,7 +28,7 @@ describe('Bot Shutdown', () => {
     jest.clearAllMocks();
     process.exit.mockClear();
     jest.resetModules();
-    discordMock = require('../__mocks__/discord.js');
+    discordMock = require('../__mocks__/discord.mock.module.js');
     index = require('../../src/index');
     shutdownFunction = index.shutdown;
     conversationManager = new ConversationManager();

@@ -3,7 +3,7 @@
  */
 const { ApplicationCommandOptionType } = require('discord.js');
 const ConversationManager = require('../utils/conversation');
-const perplexityService = require('../services/perplexity');
+const perplexityService = require('../services/perplexity-secure');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 

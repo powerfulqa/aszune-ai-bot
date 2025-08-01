@@ -14,8 +14,9 @@ Aszune AI Bot is built using Node.js and the Discord.js library, with the Perple
 4. **Conversation Manager** - Tracks and stores user conversations
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-8. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
+7. **Response Caching System** - Securely stores and retrieves responses to save API calls for repeated questions
+8. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
+9. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
 
 ```bash
 pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
@@ -55,6 +56,40 @@ aszune-ai-bot/
 ├── jest.setup.js          # Jest setup file
 └── coverage/              # Code coverage output
 ```
+
+## Response Caching System
+
+Aszune AI Bot implements a secure file-based caching system to improve performance and reduce API calls.
+
+### How Caching Works
+
+1. **Cache Storage**: Responses from the Perplexity API are stored in `data/question_cache.json`
+2. **Secure File Permissions**: Cache files use strict permissions (0o644 for files, 0o755 for directories)
+3. **Cache Keying**: Questions are hashed using MD5 to create unique cache keys
+4. **Cache Hit Behavior**: When a question matches a cached entry, the response is served immediately without calling the API
+5. **Cache Pruning**: The cache is automatically pruned to maintain performance
+   - Limits entries to the configured maximum (default 100)
+   - Older entries are removed first
+   - Weekly cleanup removes entries older than 7 days
+
+### Caching Configuration
+
+Caching behavior can be controlled through the Pi optimization settings:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `PI_OPTIMIZATIONS.CACHE_ENABLED` | Enable/disable response caching | `true` |
+| `PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES` | Maximum cache entries | `100` |
+
+Individual API calls can also override the cache behavior by setting `caching: false` in the options.
+
+### Cache Security
+
+All cache files are created with secure permissions:
+- Files: 0o644 (Owner can read/write, others can only read)
+- Directories: 0o755 (Owner can read/write/execute, others can read/execute)
+
+This ensures that only the bot process can modify cached data while still allowing the files to be read by monitoring tools.
 
 ## Core Modules
 
@@ -391,6 +426,20 @@ async function shutdown(signal) {
 - Webhook support for external integrations
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
+
+## v1.3.0 Enhanced Testing & Code Quality (2025-08-01)
+
+- Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%.
+- Resolved "duplicate manual mock found: discord" warning by reorganizing mock files.
+- Implemented proper mocking for fs.promises methods with a centralized approach.
+- Refactored complex functions into smaller, more maintainable units:
+  - Improved the `generateChatResponse` function with better helper methods
+  - Refactored `_safeGetHeader` to follow better coding practices
+- Consolidated duplicate code between perplexity service implementations.
+- Created a unified `perplexity-improved.js` module with better organization.
+- Fixed security issues related to permissions and API validation.
+- Added ESLint configuration for consistent code style.
+- Added new npm scripts for linting and fixing code style issues.
 
 ## v1.2.2 Refactor & Reliability Update (2025-07-30)
 

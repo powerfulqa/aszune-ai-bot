@@ -1,7 +1,8 @@
 /**
  * Chat message handler for the bot
+ * Updated for v1.3.0 with security fixes
  */
-const perplexityService = require('../services/perplexity');
+const perplexityService = require('../services/perplexity-secure');
 const ConversationManager = require('../utils/conversation');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');

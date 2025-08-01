@@ -4,11 +4,11 @@ jest.useFakeTimers();
 // jest.mock('../../src/commands', () => require('../../__mocks__/commands'));
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/utils/conversation');
-jest.mock('../../src/services/perplexity');
+jest.mock('../../src/services/perplexity-secure');
 
 const { handleTextCommand, handleSlashCommand, getSlashCommandsData } = require('../../src/commands');
 const ConversationManager = require('../../src/utils/conversation');
-const perplexityService = require('../../src/services/perplexity');
+const perplexityService = require('../../src/services/perplexity-secure');
 const { createMockMessage, createMockInteraction, resetMocks } = require('../../src/utils/testUtils');
 const logger = require('../../src/utils/logger');
 

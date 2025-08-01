@@ -1,5 +1,5 @@
 // Test for bot initialization and login
-const mockLogger = require('../../__mocks__/logger');
+const mockLogger = require('../__mocks__/loggerMock');
 
 // Mock discord.js before creating any variables
 jest.mock('discord.js', () => {

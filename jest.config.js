@@ -9,7 +9,9 @@ module.exports = {
     "!**/coverage/**",
     "!**/logs/**",    "!**/data/**",
     "!ecosystem.config.js",
-    "!jest.setup.js"
+    "!jest.setup.js",
+    "!src/services/perplexity.js",
+    "!src/services/perplexity-improved.js"
   ],
   // Define pattern for test files to exclude helper files
   testMatch: [
@@ -19,6 +21,7 @@ module.exports = {
   // Explicitly exclude our mock helpers file and other problematic files
   testPathIgnorePatterns: [
     "/__mocks__/discord.js",
+    "/__mocks__/discord.mock.module.js",
     "/__mocks__/loggerMock.js",
     "/__tests__/utils/undici-mock-helpers.js",
     "/__tests__/utils/undici-mock-helpers.test.ignore.js",
