@@ -10,8 +10,12 @@
  * @return {string[]} Array of message chunks
  */
 function chunkMessage(message, maxLength = 2000) {
+  // Debug logging
+  console.log(`Chunking message of length ${message.length} with max length ${maxLength}`);
+  
   // If message is already within limits, return as single chunk
   if (message.length <= maxLength) {
+    console.log(`Message within limits, returning single chunk`);
     return [message];
   }
 
@@ -49,9 +53,14 @@ function chunkMessage(message, maxLength = 2000) {
   }
   
   // Add numbering to chunks for better user experience
-  return chunks.map((chunk, index) => 
+  const numberedChunks = chunks.map((chunk, index) => 
     `[${index + 1}/${chunks.length}] ${chunk}`
   );
+  
+  // Debug logging
+  console.log(`Created ${numberedChunks.length} chunks`);
+  
+  return numberedChunks;
 }
 
 module.exports = { chunkMessage };

@@ -46,8 +46,15 @@ const conversationManager = new ConversationManager();
  * @returns {Promise<void>}
  */
 async function sendResponse(message, responseText) {
-  // Split the message into chunks if it's too long
-  const messageChunks = chunkMessage(responseText);
+  // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
+  const MAX_EMBED_LENGTH = 1800; // Discord's max is 2000, but we use a smaller value to be safe
+  
+  console.log(`Preparing to send response of length: ${responseText.length}`);
+  
+  // Split the message into chunks with our smaller max length
+  const messageChunks = chunkMessage(responseText, MAX_EMBED_LENGTH);
+  
+  console.log(`Response split into ${messageChunks.length} chunks`);
   
   // If there's only one chunk, send it as normal
   if (messageChunks.length === 1) {
@@ -66,6 +73,8 @@ async function sendResponse(message, responseText) {
   let firstReply = null;
   
   for (const [index, chunk] of messageChunks.entries()) {
+    console.log(`Sending chunk ${index + 1}/${messageChunks.length}, length: ${chunk.length}`);
+    
     const embed = messageFormatter.createCompactEmbed({
       color: config.COLORS.PRIMARY,
       description: chunk,
