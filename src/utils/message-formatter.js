@@ -28,9 +28,9 @@ class MessageFormatter {
     // Break long paragraphs
     result = this._breakLongParagraphs(result);
     
-    // Truncate if over limit
-    const maxLength = options.maxLength || 1500;
-    if (result.length > maxLength) {
+    // Only truncate for embeds or when explicitly requested, not for chunked messages
+    const maxLength = options.maxLength;
+    if (maxLength && result.length > maxLength) {
       result = result.substring(0, maxLength - 3) + '...';
     }
     
@@ -85,9 +85,9 @@ class MessageFormatter {
       compactEmbed.fields = compactEmbed.fields.slice(0, 2);
     }
     
-    // Simplify description
+    // Simplify description for embeds (embeds have a stricter limit)
     if (compactEmbed.description) {
-      compactEmbed.description = this.formatResponse(compactEmbed.description, { maxLength: 500 });
+      compactEmbed.description = this.formatResponse(compactEmbed.description, { maxLength: 1500 });
     }
     
     // Remove footer on low resource mode
