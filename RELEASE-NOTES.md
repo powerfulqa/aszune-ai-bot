@@ -185,3 +185,27 @@
   - Ensured consistency across all documentation files
   - Added comprehensive documentation about the caching system to Technical Documentation
   - Updated Architecture Overview with Response Caching System
+
+---
+
+## Version 1.3.1 (2025-08-02)
+
+### Message Chunking Update
+
+- **Improved Message Handling:**
+  - Added automatic message chunking to prevent long responses from being truncated
+  - Intelligently splits messages at paragraph and sentence boundaries
+  - Adds numbering prefixes ([1/3], [2/3], etc.) to indicate sequence
+  - Ensures all bot responses are delivered completely without loss of content
+
+- **Technical Enhancements:**
+  - Created new utility module `message-chunker.js` for smart text splitting
+  - Refactored message handling in chat service for better reliability
+  - Added comprehensive unit tests for chunking functionality
+  - All changes are backward compatible with existing features
+
+- **Bug Fixes:**
+  - Resolved issue where long responses would be cut off mid-sentence
+  - Fixed formatting issues at message boundaries
+
+See RELEASE-NOTES-v1.3.1.md for detailed information.
