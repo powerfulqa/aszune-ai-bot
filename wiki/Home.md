@@ -21,6 +21,16 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 
 ## Version Information
 
+- **v1.3.2** - Message Chunking Enhancement (2025-08-06)
+  - Fixed critical bug where words at chunk boundaries could be incorrectly joined
+  - Improved word boundary detection to ensure proper text formatting
+  - Enhanced testing suite to verify proper chunk boundary handling
+
+- **v1.3.1** - Message Chunking Implementation (2025-08-02)
+  - Added automatic message chunking to prevent long responses from being truncated
+  - Intelligently splits messages at paragraph and sentence boundaries
+  - Added numbering prefixes to indicate message sequence
+  
 - **v1.3.0** - Enhanced Testing & Code Quality (2025-08-01)
   - Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%
   - Resolved "duplicate manual mock found: discord" warning by reorganizing mock files

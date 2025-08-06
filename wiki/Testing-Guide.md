@@ -17,6 +17,7 @@ Tests are organized into:
 - `__tests__/unit/perplexity-service.test.js`: Tests for the Perplexity API integration
 - `__tests__/unit/chat-service.test.js`: Tests for the chat handling logic
 - `__tests__/unit/conversation-manager.test.js`: Tests for conversation history management
+- `__tests__/unit/message-chunker.test.js`: Tests for message splitting functionality
 - `__tests__/integration/bot.test.js`: Integration tests for the bot's message handling
 - `__tests__/integration/error.test.js`: Tests for error handling scenarios
 - `__tests__/unit/index.test.js`: Tests for the main application entry point
@@ -28,6 +29,14 @@ Tests are organized into:
 npm test
 
 # Run tests with coverage reporting
+npm run test:coverage
+
+# Test specific message chunking functionality
+cd scripts && node test-chunking.js
+# or on Windows
+scripts\test-chunking.bat
+# or on Unix/Linux
+bash scripts/test-chunking.sh
 npm run coverage
 
 # Run branch coverage tests

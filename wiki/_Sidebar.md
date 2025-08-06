@@ -11,6 +11,7 @@
 - [Pi Optimization Guide](Pi-Optimization-Guide)
 - [Troubleshooting](Troubleshooting)
 - [Contributing](Contributing)
+- [Release Notes](../docs/README.md)
 
 ### External Links
 

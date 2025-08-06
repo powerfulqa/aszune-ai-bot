@@ -2,6 +2,14 @@
 
 This guide explains how to interact with Aszune AI Bot and get the most out of its features.
 
+## What's New in v1.3.2
+
+Version 1.3.2 includes an important enhancement to the message chunking system introduced in v1.3.1:
+
+- Fixed a bug where words at chunk boundaries could be incorrectly joined together
+- Now all messages are properly formatted with correct spacing between words
+- Ensures complete content preservation when long messages are split into multiple chunks
+
 ## Basic Interaction
 
 Aszune AI Bot can be interacted with in two ways:
@@ -30,6 +38,17 @@ To ask the bot a question about gaming lore, game logic, guides, or advice:
    ```
 
 2. **Reply to the bot**: Reply to one of the bot's messages with your follow-up question
+
+## Long Responses
+
+When the bot needs to provide a lengthy response, it will automatically split the message into multiple parts to work within Discord's message character limits. Each part will be numbered like `[1/3]`, `[2/3]`, `[3/3]` to indicate the sequence.
+
+Example:
+```
+[1/2] This is the first part of a long response that has been automatically split by the bot's message chunking system. The chunking is done intelligently to preserve paragraph structure and sentence integrity...
+
+[2/2] ...and this is the continuation of the response. The message chunking system ensures that words at the boundary between chunks are properly separated with spaces.
+```
 
 ## Conversation Context
 

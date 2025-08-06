@@ -1,11 +1,25 @@
 # Release Notes
 
+This file contains the master release notes for the Aszune AI Bot. For detailed version-specific notes, see the [docs/](./docs/) directory.
+
 ---
 
-## Initial Release
+## Version History
+
+### v1.3.2 - Message Chunking Enhancement
+- Fixed critical bug where words at chunk boundaries could be incorrectly joined
+- Implemented intelligent space handling at chunk boundaries
+- Full details in [docs/v1.3.2.md](./docs/v1.3.2.md)
+
+### v1.3.1 - Message Chunking Feature
+- Added support for splitting long messages into multiple Discord embeds
+- Full details in [docs/v1.3.1.md](./docs/v1.3.1.md)
+
+### v1.3.0 - Initial Versioned Release
+- First versioned release
+- Full details in [docs/v1.3.0.md](./docs/v1.3.0.md)
 
 ### Initial Release
-
 - First public release of Aszune AI Bot.
 - Features:
   - Discord bot using Perplexity API (sonar model).
@@ -187,6 +201,22 @@
   - Updated Architecture Overview with Response Caching System
 
 ---
+
+## Version 1.3.2 (2025-08-06)
+
+### Message Chunking Enhancement
+
+- **Bug Fixes:**
+  - Fixed critical bug where words at chunk boundaries could be incorrectly joined (e.g., "selecting an" + "officer" → "selecting anofficer")
+  - Improved word boundary detection to ensure proper text formatting
+  - Enhanced testing suite to verify proper chunk boundary handling
+
+- **Technical Improvements:**
+  - Added boundary detection logic to preserve spaces between words
+  - Refactored code for better maintainability
+  - Ensured 100% content preservation when messages are split
+
+See RELEASE-NOTES-v1.3.2.md for detailed information.
 
 ## Version 1.3.1 (2025-08-02)
 

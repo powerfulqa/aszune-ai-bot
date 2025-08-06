@@ -14,9 +14,10 @@ Aszune AI Bot is built using Node.js and the Discord.js library, with the Perple
 4. **Conversation Manager** - Tracks and stores user conversations
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Response Caching System** - Securely stores and retrieves responses to save API calls for repeated questions
-8. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-9. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
+7. **Message Chunker** - Intelligently splits long messages into multiple chunks while preserving content and formatting
+8. **Response Caching System** - Securely stores and retrieves responses to save API calls for repeated questions
+9. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
+10. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
 
 ```bash
 pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
@@ -43,8 +44,18 @@ aszune-ai-bot/
 │   │   └── conversationService.js
 │   └── utils/             # Utility functions and helpers
 │       ├── emojiUtils.js
+│       ├── message-chunker.js # Message splitting utility
 │       ├── rateLimiter.js
 │       └── stringUtils.js
+├── scripts/               # Development and utility scripts
+│   ├── test-chunking.js   # Test script for message chunking
+│   ├── test-chunking.bat  # Windows batch file to run chunking test
+│   └── test-chunking.sh   # Unix shell script to run chunking test
+├── docs/                  # Documentation and version-specific release notes
+│   ├── README.md          # Index of available release notes
+│   ├── v1.3.0.md          # Version 1.3.0 release notes
+│   ├── v1.3.1.md          # Version 1.3.1 release notes
+│   └── v1.3.2.md          # Version 1.3.2 release notes
 ├── package.json           # Project metadata
 ├── package-lock.json      # Dependency lock file
 ├── ecosystem.config.js    # PM2 deployment config
@@ -52,8 +63,12 @@ aszune-ai-bot/
 ├── .gitignore             # Ignored files
 ├── __tests__/             # Unit and integration tests
 ├── __mocks__/             # Test mocks
+├── .github/               # GitHub-specific templates and workflows
+│   ├── COMMIT_TEMPLATE.md # Template for commit messages
+│   └── pull_request_template.md # Template for pull requests
 ├── jest.config.js         # Jest test configuration
 ├── jest.setup.js          # Jest setup file
+├── RELEASE-NOTES.md       # Master release notes with links to detailed versions
 └── coverage/              # Code coverage output
 ```
 
@@ -240,7 +255,65 @@ function isRateLimited(userId) {
 }
 ```
 
-### 6. Pi Optimization System
+### 6. Message Chunker
+
+Handles the splitting of long messages into multiple smaller chunks to work around Discord's message character limits while preserving content integrity and formatting.
+
+```javascript
+// Simplified example from message-chunker.js
+function chunkMessage(message, maxLength = 2000) {
+  // If message is already within limits, return as single chunk
+  if (message.length <= maxLength) {
+    return [message];
+  }
+
+  const chunks = [];
+  let currentChunk = '';
+  
+  // Account for chunk numbering prefix (e.g., "[1/2] ") in max length
+  const prefixBuffer = 7; // "[xx/xx] "
+  const effectiveMaxLength = maxLength - prefixBuffer;
+  
+  // Split by paragraphs first
+  const paragraphs = message.split('\n\n');
+  
+  for (const paragraph of paragraphs) {
+    // If paragraph would exceed limit, split into smaller chunks
+    if ((currentChunk + paragraph).length + 2 > effectiveMaxLength && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = '';
+    }
+    
+    // Process paragraph content
+    if (paragraph.length > effectiveMaxLength) {
+      // Split long paragraphs by sentences
+      const sentences = paragraph.split(/(?<=[.!?])\s+/);
+      // Process sentences...
+    } else {
+      currentChunk += paragraph + '\n\n';
+    }
+  }
+  
+  // Check for word breaks at chunk boundaries to prevent words from merging
+  for (let i = 0; i < chunks.length - 1; i++) {
+    const currentChunk = chunks[i];
+    const nextChunk = chunks[i + 1];
+    
+    // If current chunk ends with a word and next chunk starts with a word
+    // Add a space to prevent words from merging (e.g., "an" + "officer" → "anofficer")
+    if (/\w$/.test(currentChunk) && /^\w/.test(nextChunk)) {
+      chunks[i] = currentChunk + ' ';
+    }
+  }
+  
+  // Add numbering prefix to each chunk
+  return chunks.map((chunk, index) => 
+    `[${index + 1}/${chunks.length}] ${chunk}`
+  );
+}
+```
+
+### 7. Pi Optimization System
 
 Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available resources.
 

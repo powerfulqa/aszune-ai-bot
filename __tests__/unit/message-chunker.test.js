@@ -43,4 +43,39 @@ describe('Message Chunker', () => {
       expect(chunk).toMatch(new RegExp(`^\\[${index + 1}\\/${chunks.length}\\]`));
     });
   });
+  
+  test('should not cut off sentences at chunk boundaries', () => {
+    // Create a long message with sentences that would be near the chunk boundary
+    const longSentence = 'This is a very long sentence that contains important information about Starsector assigning operatives to do missions through the campaign interface by interacting with contacts who offer missions and then selecting an officer to carry out the mission.';
+    const nextSentence = 'The general process includes obtaining a mission, assigning an officer, and awaiting the mission outcome.';
+    const longText = longSentence + ' ' + nextSentence;
+    
+    // Force chunking by using a length that falls in the middle of the first sentence
+    const chunkLength = longSentence.length - 20;
+    const chunks = chunkMessage(longText, chunkLength);
+    
+    // Should split into at least 2 chunks
+    expect(chunks.length).toBeGreaterThan(1);
+    
+    // Check that the sentence is properly preserved across chunks
+    const cleanChunks = chunks.map(chunk => chunk.replace(/^\[\d+\/\d+\]\s*/, ''));
+    const reconstructed = cleanChunks.join('');
+    
+    // Make sure all key phrases are present in the reconstructed text
+    expect(reconstructed).toContain('This is a very long sentence that contains important information');
+    expect(reconstructed).toContain('Starsector assigning operatives');
+    expect(reconstructed).toContain('offer missions and then selecting');
+    expect(reconstructed).toContain('officer to carry out the mission');
+    expect(reconstructed).toContain('general process includes obtaining a mission');
+    
+    // Most important: ensure the content remains intact (with small formatting variations allowed)
+    const normalizedReconstruction = reconstructed.replace(/\s+/g, ' ');
+    const normalizedOriginal = longText.replace(/\s+/g, ' ');
+    
+    // The key phrases should be present in the proper order
+    expect(normalizedReconstruction).toContain('information about Starsector');
+    expect(normalizedReconstruction).toContain('selecting an officer');
+    expect(normalizedReconstruction).toContain('carry out the mission');
+    expect(normalizedReconstruction).toContain('general process includes obtaining');
+  });
 });

@@ -53,8 +53,18 @@ aszune-ai-bot/
 │   ├── config/            # Configuration settings
 │   ├── services/          # API and core services
 │   └── utils/             # Utility functions and helpers
+├── scripts/               # Development and utility scripts
+│   ├── test-chunking.js   # Test script for message chunking
+│   └── test-chunking.bat  # Windows batch script to run message chunking test
+├── docs/                  # Documentation and version-specific release notes
+│   ├── v1.3.0.md          # Version 1.3.0 release notes
+│   ├── v1.3.1.md          # Version 1.3.1 release notes
+│   └── v1.3.2.md          # Version 1.3.2 release notes
 ├── __tests__/             # Unit and integration tests
-└── __mocks__/             # Test mocks
+├── __mocks__/             # Test mocks
+└── .github/               # GitHub-specific templates and workflows
+    ├── COMMIT_TEMPLATE.md # Template for commit messages
+    └── pull_request_template.md # Template for pull requests
 ```
 
 ## Development Workflow
@@ -90,7 +100,15 @@ aszune-ai-bot/
 
 5. **Commit Your Changes**
 
-   Follow conventional commits format for commit messages:
+   Follow conventional commits format for commit messages. You can use the commit template by running:
+
+   ```bash
+   git config --local commit.template .github/COMMIT_TEMPLATE.md
+   ```
+
+   Then use your editor to create the commit message following the template.
+
+   For quick commits, follow this format:
 
    ```bash
    git commit -m "feat: add new command for xyz"
@@ -191,7 +209,9 @@ npm run test:coverage
 3. Ensure all tests pass
 4. Make sure your code has no linting errors
 5. Update the `RELEASE-NOTES.md` file with details of changes
-6. The pull request will be merged once it receives approval from a maintainer
+6. For significant changes, create a version-specific release note in the `docs/` directory
+7. Use the pull request template to provide a complete description of your changes
+8. The pull request will be merged once it receives approval from a maintainer
 
 ## Reporting Issues
 

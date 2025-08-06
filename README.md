@@ -1,8 +1,10 @@
-# Aszune AI Bot (v1.3.0)
+# Aszune AI Bot (v1.3.2)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
+
+[Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
 
 **Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands. Optimised to run efficiently on Raspberry Pi devices from Pi 3 to Pi 5.
 
@@ -48,11 +50,17 @@
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with 82.45% branch coverage for critical components.
+- 📝 **Smart Message Chunking:** Automatically splits long responses into multiple messages without content loss (v1.3.1-1.3.2)
+  - 📊 **Intelligent Chunking:** Splits at paragraph and sentence boundaries to maintain context
+  - 🔢 **Clear Numbering:** Adds "[1/3]", "[2/3]", etc. prefixes to indicate message sequence
+  - 📄 **Word Boundary Preservation:** Ensures words at chunk boundaries remain properly separated
+  - 📋 **Full Content Delivery:** No more truncated responses, even for very long messages
+
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on resource-constrained devices like Raspberry Pi 3.
   - 📉 **Memory Management:** Automatic garbage collection and memory monitoring
   - 🔄 **Message Debouncing:** Prevents excessive API calls
   - 📦 **Lazy Loading:** Loads heavy dependencies only when needed
-  - 📊 **Connection Throttling:** Limits concurrent network connections0
+  - 📊 **Connection Throttling:** Limits concurrent network connections
   - 🧠 **CPU Monitoring:** Adaptive throttling based on system load
   - 💾 **Cache Pruning:** Automatically manages cache size
   - 📱 **Compact Mode:** Reduced message size and complexity for better performance
