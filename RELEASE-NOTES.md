@@ -6,6 +6,12 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
 
 ## Version History
 
+### v1.3.3 - Source Link Enhancement and Truncation Fix
+- Fixed source references (especially YouTube URLs) to appear as clickable links in Discord
+- Fixed truncation issues where the last sentence would get cut off
+- Added protection to prevent URLs from being split across chunk boundaries
+- Full details in [RELEASE-NOTES-v1.3.3.md](./RELEASE-NOTES-v1.3.3.md)
+
 ### v1.3.2 - Message Chunking Enhancement
 - Fixed critical bug where words at chunk boundaries could be incorrectly joined
 - Implemented intelligent space handling at chunk boundaries
@@ -201,6 +207,24 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
   - Updated Architecture Overview with Response Caching System
 
 ---
+
+## Version 1.3.3 (2025-08-10)
+
+### Source Link Enhancement and Truncation Fix
+
+- **Bug Fixes:**
+  - Fixed source references (especially YouTube URLs) to appear as clickable links in Discord
+  - Fixed truncation issues where the last sentence would get cut off
+  - Added protection to prevent URLs from being split across chunk boundaries
+  - Ensured proper rendering of numbered source references with markdown formatting
+
+- **Technical Improvements:**
+  - Created enhanced message chunker with source reference detection
+  - Added source link processing to convert references to clickable links
+  - Reduced maximum message length from 1800 to 1700 characters for safety buffer
+  - Enhanced test suite to verify proper URL and source reference handling
+
+See RELEASE-NOTES-v1.3.3.md for detailed information.
 
 ## Version 1.3.2 (2025-08-06)
 

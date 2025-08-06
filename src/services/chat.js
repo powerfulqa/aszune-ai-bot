@@ -1,6 +1,6 @@
 /**
  * Chat message handler for the bot
- * Updated for v1.3.0 with security fixes
+ * Updated for v1.3.2 with source link formatting and truncation fixes
  */
 const perplexityService = require('../services/perplexity-secure');
 const ConversationManager = require('../utils/conversation');
@@ -10,7 +10,7 @@ const config = require('../config/config');
 const commandHandler = require('../commands');
 const { debounce } = require('../utils/debouncer');
 const messageFormatter = require('../utils/message-formatter');
-const { chunkMessage } = require('../utils/message-chunker');
+const { chunkMessage } = require('../utils/enhanced-message-chunker');
 
 // Simple lazy loading function to use in tests
 const lazyLoad = (importFn) => {
@@ -47,7 +47,8 @@ const conversationManager = new ConversationManager();
  */
 async function sendResponse(message, responseText) {
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
-  const MAX_EMBED_LENGTH = 1800; // Discord's max is 2000, but we use a smaller value to be safe
+  // Further reduced to prevent truncation issues with source links and URL formatting
+  const MAX_EMBED_LENGTH = 1700; // Discord's max is 2000, but we use a smaller value to ensure sources render properly
   
   console.log(`Preparing to send response of length: ${responseText.length}`);
   

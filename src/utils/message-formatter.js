@@ -25,6 +25,9 @@ class MessageFormatter {
     // Remove excessive whitespace
     result = result.replace(/\n\s*\n\s*\n/g, '\n\n');
     
+    // Process source links with proper markdown formatting
+    result = this._formatSourceLinks(result);
+    
     // Break long paragraphs
     result = this._breakLongParagraphs(result);
     
@@ -35,6 +38,55 @@ class MessageFormatter {
     }
     
     return result;
+  }
+  
+  /**
+   * Format source links in markdown format to make them clickable
+   * @param {String} text - Text to process
+   * @returns {String} - Text with formatted source links
+   * @private
+   */
+  _formatSourceLinks(text) {
+    // Find patterns like (1) that refer to a URL somewhere in the text
+    const sourceRefRegex = /\((\d+)\)/g;
+    const urlRegex = /\(?(https?:\/\/[^\s)]+)\)?/g;
+    
+    // Collect all URLs
+    const urls = [];
+    let urlMatch;
+    while ((urlMatch = urlRegex.exec(text)) !== null) {
+      urls.push(urlMatch[1]);
+    }
+    
+    // If we have URLs, attempt to associate them with source numbers
+    if (urls.length > 0) {
+      // Replace source references with markdown links
+      text = text.replace(sourceRefRegex, (match, sourceNum) => {
+        const sourceIndex = parseInt(sourceNum) - 1;
+        if (sourceIndex >= 0 && sourceIndex < urls.length) {
+          return `[(${sourceNum})](${urls[sourceIndex]})`;
+        }
+        return match;
+      });
+      
+      // Clean up any raw URLs left in the text
+      text = text.replace(urlRegex, (match, url) => {
+        // If the URL is part of a markdown link already, leave it
+        const prevChar = text.charAt(text.indexOf(match) - 1);
+        if (prevChar === '(') {
+          return match;
+        }
+        // Otherwise, hide it with a markdown link using the domain name
+        try {
+          const domain = new URL(url).hostname;
+          return `[${domain}](${url})`;
+        } catch (e) {
+          return match;
+        }
+      });
+    }
+    
+    return text;
   }
   
   /**
