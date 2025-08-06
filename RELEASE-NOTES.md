@@ -6,6 +6,12 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
 
 ## Version History
 
+### v1.3.5 - Enhanced URL Processing and Layout Fixes
+- Fixed YouTube links showing duplicate text
+- Fixed domain names being split by periods (e.g., fractalsoftworks.com)
+- Further reduced message length to prevent truncation
+- Added special handling for domains and TLDs
+
 ### v1.3.4 - Advanced Source Link Formatting and Anti-Truncation
 - Enhanced source reference handling for various formats including YouTube links
 - Improved message chunking to prevent sentence truncation

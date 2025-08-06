@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="5" failures="0" errors="0" time="0.587">
-  <testsuite name="Enhanced Message Chunker" errors="0" failures="0" skipped="0" timestamp="2025-08-06T19:33:20" time="0.509" tests="5">
+<testsuites name="jest tests" tests="5" failures="0" errors="0" time="0.61">
+  <testsuite name="Enhanced Message Chunker" errors="0" failures="0" skipped="0" timestamp="2025-08-06T19:59:26" time="0.529" tests="5">
     <testcase classname="Enhanced Message Chunker processes source references correctly" name="Enhanced Message Chunker processes source references correctly" time="0.003">
     </testcase>
-    <testcase classname="Enhanced Message Chunker handles YouTube links in sources correctly" name="Enhanced Message Chunker handles YouTube links in sources correctly" time="0">
+    <testcase classname="Enhanced Message Chunker handles YouTube links in sources correctly" name="Enhanced Message Chunker handles YouTube links in sources correctly" time="0.001">
     </testcase>
     <testcase classname="Enhanced Message Chunker preserves formatting for multiple source references" name="Enhanced Message Chunker preserves formatting for multiple source references" time="0.001">
     </testcase>
     <testcase classname="Enhanced Message Chunker chunking preserves source references across chunks" name="Enhanced Message Chunker chunking preserves source references across chunks" time="0.001">
     </testcase>
-    <testcase classname="Enhanced Message Chunker handles URLs split between chunks" name="Enhanced Message Chunker handles URLs split between chunks" time="0.001">
+    <testcase classname="Enhanced Message Chunker handles URLs split between chunks" name="Enhanced Message Chunker handles URLs split between chunks" time="0">
     </testcase>
   </testsuite>
 </testsuites>

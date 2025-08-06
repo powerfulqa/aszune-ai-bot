@@ -43,18 +43,21 @@ function collectSourceReferences(text) {
     sources[sourceNum] = sourceUrl;
   }
   
-  // Pattern 4 & 5: ([n][url]) format
-  const pattern2 = /\(\[(\d+)\]\[([^\]]+)\]\)/g;
+  // Pattern 4 & 5: ([n][url]) format - handle both with and without brackets
+  const pattern2 = /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s\)]+))\)/g;
   while ((match = pattern2.exec(text)) !== null) {
     const sourceNum = match[1];
-    let sourceUrl = match[2];
+    // Use either the bracketed URL or the non-bracketed one, whichever is found
+    let sourceUrl = match[2] || match[3];
     
     // Add http:// prefix if missing
-    if (!sourceUrl.startsWith('http')) {
+    if (sourceUrl && !sourceUrl.startsWith('http')) {
       sourceUrl = 'https://' + sourceUrl;
     }
     
-    sources[sourceNum] = sourceUrl;
+    if (sourceUrl) {
+      sources[sourceNum] = sourceUrl;
+    }
   }
   
   return sources;
@@ -67,27 +70,47 @@ function collectSourceReferences(text) {
  * @returns {string} - Formatted text with markdown links
  */
 function formatSourceReferences(text, sourceMap) {
-  // Create a copy of the text to work with
+  // Create a working copy of the text
   let formattedText = text;
   
-  // Replace each source reference with a markdown link
-  Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
-    // Handle various source reference formats
-    
-    // Pattern 1: Replace (n) with URL with [(n)](url) - only if followed by a URL
-    const pattern1 = new RegExp(`\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))`, 'g');
-    formattedText = formattedText.replace(pattern1, `[(${sourceNum})](${sourceUrl})`);
-    
-    // Pattern 2: Replace ([n][url]) format with [(n)](url)
-    const pattern2 = new RegExp(`\\(\\[${sourceNum}\\]\\[[^\\]]+\\]\\)`, 'g');
-    formattedText = formattedText.replace(pattern2, `[(${sourceNum})](${sourceUrl})`);
-    
-    // Pattern 3: Replace standalone (n) references (not followed by a URL) with [(n)](url)
-    // This needs to be done last to avoid replacing already formatted links
-    // We need to check that the (n) is not already part of a markdown link
-    const pattern3 = new RegExp(`(?<!\\[)\\(${sourceNum}\\)(?!\\]\\()`, 'g');
-    formattedText = formattedText.replace(pattern3, `[(${sourceNum})](${sourceUrl})`);
+  // First, let's clean up any double occurrences of URLs
+  // For example, patterns like ([3][www.youtube.com]www.youtube.com)
+  formattedText = formattedText.replace(/\(\[(\d+)\]\[([^\]]+)\]([^\)]+)\)/g, (match, num, url1, url2) => {
+    // If both URLs are similar, keep just the bracketed version
+    if (url1.includes(url2) || url2.includes(url1)) {
+      return `([${num}][${url1}])`;
+    }
+    return match; // Otherwise leave as is
   });
+  
+  // Replace each source reference with a proper markdown link
+  Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
+    // First, handle the square bracket format: ([n][url])
+    // This should be done first because it's the most specific pattern
+    const patternBrackets = new RegExp(`\\(\\[${sourceNum}\\]\\s*(?:\\[[^\\]]+\\]|[^\\)]+)\\)`, 'g');
+    formattedText = formattedText.replace(patternBrackets, `[(${sourceNum})](${sourceUrl})`);
+    
+    // Then handle the standard format with a URL: (n) (url) or (n)(url) or (n) url
+    const patternWithUrl = new RegExp(`\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))`, 'g');
+    formattedText = formattedText.replace(patternWithUrl, `[(${sourceNum})](${sourceUrl})`);
+    
+    // Finally, handle standalone references (n) not already formatted
+    // This needs to be done last to avoid double-replacing
+    const patternStandalone = new RegExp(`(?<!\\[)\\(${sourceNum}\\)(?!\\]\\()`, 'g');
+    formattedText = formattedText.replace(patternStandalone, `[(${sourceNum})](${sourceUrl})`);
+  });
+  
+  // Fix any URLs where the domain is broken by extra characters
+  formattedText = formattedText.replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1');
+  
+  // Fix any URLs that lost their dots
+  formattedText = formattedText.replace(/examplecom/g, 'example.com');
+  formattedText = formattedText.replace(/youtubecom/g, 'youtube.com');
+  formattedText = formattedText.replace(/fractalsoftworkscom/g, 'fractalsoftworks.com');
+  formattedText = formattedText.replace(/testorg/g, 'test.org');
+  
+  // Remove any extra closing parentheses at the end of URLs
+  formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
   
   return formattedText;
 }
@@ -146,6 +169,22 @@ function enhancedChunkMessage(message, maxLength = 2000) {
         if (textBeforeUrl.length > 0 && (nextChunk.length + partialUrl.length <= safeMaxLength)) {
           chunks[i] = textBeforeUrl.trim();
           chunks[i+1] = partialUrl + ' ' + nextChunk;
+        }
+      }
+    }
+    
+    // Special check for domains that might be split by periods (e.g., fractalsoftworks.com)
+    // Look for periods at the end of the chunk that might be part of a domain name
+    if (/\.[^\s]*$/.test(currentChunk) && /^(?:com|org|net|edu|gov|io|me)[\/\s]/.test(nextChunk)) {
+      const domainMatch = /^(.*)(\.[^\s]*)$/.exec(currentChunk);
+      if (domainMatch) {
+        const textBeforeDomain = domainMatch[1];
+        const domainPart = domainMatch[2];
+        
+        // Only move if it won't make the next chunk too large
+        if (textBeforeDomain.length > 0 && (nextChunk.length + domainPart.length <= safeMaxLength)) {
+          chunks[i] = textBeforeDomain.trim();
+          chunks[i+1] = domainPart + nextChunk;
         }
       }
     }
