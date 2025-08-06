@@ -1,6 +1,30 @@
 /**
  * Message chunker enhancement for fixing source links and truncation issues
- * This version properly handles URLs, particularly YouTube links, and ensures proper boundary handling
+ * This version  // Post-processing: Convert any incomplete URLs or broken brackets
+  // Handle cases where bracket format is broken, like ([3][www.youtube.
+  formattedText = formattedText.replace(/\(\[(\d+)\]\[([^\]]+)(?=\s|$)/g, (match, num, url) => {
+    if (url.includes('www.') && !url.includes('.com')) {
+      // It's likely a broken domain like www.youtube (without .com)
+      const domain = url.trim();
+      if (domain.startsWith('www.')) {
+        return `([${num}][${domain}.com]`;
+      }
+    }
+    // Handle fractalsoftworks.com domain specifically
+    if (url.includes('fractalsoftworks') && !url.includes('.com')) {
+      return `([${num}][fractalsoftworks.com]`;
+    }
+    return match;
+  });
+  
+  // Convert plain text URLs to links when they're in source references
+  formattedText = formattedText.replace(/\)\s+((?:https?:\/\/)?(?:www\.)?fractalsoftworks\.com[^\s]+)/g, 
+                                      (match, url) => {
+    if (!url.startsWith('http')) {
+      return `) [https://fractalsoftworks.com${url.replace('fractalsoftworks.com', '')}](https://fractalsoftworks.com${url.replace('fractalsoftworks.com', '')})`;
+    }
+    return `) [${url}](${url})`;
+  });ndles URLs, particularly YouTube links, and ensures proper boundary handling
  */
 
 // Import the original message chunker
@@ -173,12 +197,26 @@ function formatSourceReferences(text, sourceMap) {
   // ([5][https://[[fractalsoftworks.com](https://fractalsoftworks/.com/forum/index.php?topic=13667.705)).
   formattedText = formattedText.replace(/\(\[([\d]+)\](?:\[[^\]]*\])?\[([^\]]+)\]\((https?:\/\/[^)]+)\)\)/g, '[([$1)]($3)');
   
+  // Fix YouTube links appearing on separate lines by removing the preceding newline
+  formattedText = formattedText.replace(/\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, ' $1');
+  formattedText = formattedText.replace(/\.\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, '. $1');
+  
+  // Properly format YouTube links that aren't properly linked
+  formattedText = formattedText.replace(/(?<!\()(www\.youtube\.[^\s]+|youtube\.com[^\s]+)/g, '(https://$1)');
+  formattedText = formattedText.replace(/\((?!https?:\/\/)(www\.youtube|youtube\.com)/g, '(https://$1');
+  
   // Fix common Markdown link format issues (missing spaces, extra brackets)
   formattedText = formattedText.replace(/\]\(([^)]+)\)\(([^)]+)\)/g, ']($1)');
   
   // Fix specific forum link format issues seen in Discord messages
   formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
                                        '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+  
+  // Convert plain text URLs to proper links
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=\d+\.\d+)/g, 
+                                       '(https://$1)');
+  formattedText = formattedText.replace(/\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
+                                       '([$1](https://fractalsoftworks.com$2)');
   
   // Fix links with improper spacing in Markdown syntax
   formattedText = formattedText.replace(/\]([^\s(])/g, '] $1');
@@ -189,6 +227,7 @@ function formatSourceReferences(text, sourceMap) {
   
   // Fix forum URLs with missing http prefix
   formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/\[fractalsoftworks\.com\](?!\()/g, '[fractalsoftworks.com](https://fractalsoftworks.com)');
   
   // Fix nested parentheses in URLs
   formattedText = formattedText.replace(/\(\[(\d+)\]\)\(([^)]+)\)/g, '[([$1)]($2)');
@@ -222,6 +261,12 @@ function enhancedChunkMessage(message, maxLength = 2000) {
   
   // Add newlines before numbered lists for better formatting
   processedMessage = processedMessage.replace(/([^\n])(\n\d+\.\s+)/g, '$1\n$2');
+  
+  // Fix standalone URLs and links that appear on their own lines
+  processedMessage = processedMessage.replace(/\n(www\.|\[?https?:\/\/|\[?youtu\.?be|\[?fractalsoftworks)/g, ' $1');
+  
+  // Fix URLs at the end of paragraphs that might be split from their text
+  processedMessage = processedMessage.replace(/\.\s*\n(www\.|\[?https?:\/\/|\[?youtu\.?be|\[?fractalsoftworks)/g, '. $1');
   
   // Process any source references in the message
   processedMessage = processSourceReferences(processedMessage);
