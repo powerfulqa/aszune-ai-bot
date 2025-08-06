@@ -148,23 +148,28 @@ function formatYouTubeLinks(text) {
   formattedText = formattedText.replace(/\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, ' $1');
   formattedText = formattedText.replace(/\.\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, '. $1');
   
-  // Extract video titles or use generic YouTube Link text
+  // Extract video titles or use generic YouTube Link text - ensure correct URL
   formattedText = formattedText.replace(/(^|\s)((?:www\.)?youtube\.com\/watch\?v=([^\s&]+)[^\s]*|youtu\.be\/([^\s]+))(?=[\s.,;!?]|$)/g, 
     (match, prefix, url, videoId1, videoId2) => {
       // Get the actual video ID, whether it came from the first or second pattern
       const videoId = videoId1 || videoId2;
-      return `${prefix}[YouTube Video: ${videoId}](https://${url})`;
+      // Make sure we have the proper full URL with protocol
+      let fullUrl = url;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = 'https://' + fullUrl;
+      }
+      return `${prefix}[YouTube Video](${fullUrl})`;
     });
     
   // Fix YouTube links that are already in brackets but not properly formatted as markdown links
   formattedText = formattedText.replace(/\[((?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^\s&]+)[^\s\]]*|youtu\.be\/([^\s\]]+))\](?!\()/g,
     (match, url, videoId1, videoId2) => {
-      const videoId = videoId1 || videoId2;
+      // Make sure we have the proper full URL with protocol
       let fullUrl = url;
       if (!fullUrl.startsWith('http')) {
         fullUrl = 'https://' + fullUrl;
       }
-      return `[YouTube Video: ${videoId}](${fullUrl})`;
+      return `[YouTube Video](${fullUrl})`;
     });
   
   // Fix YouTube URLs that are missing protocol
@@ -208,21 +213,36 @@ function formatStarsectorLinks(text) {
   
   // Convert plain text URLs to proper links with descriptive text
   formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+))/g, 
-                                      '[Starsector Forum Topic #$2](https://$1)');
+                                      (match, url, topicId) => {
+                                        let fullUrl = url;
+                                        if (!fullUrl.startsWith('http')) {
+                                          fullUrl = 'https://' + fullUrl;
+                                        }
+                                        return `[Starsector Forum](${fullUrl})`;
+                                      });
                                       
   // Fix specific source references with forum URLs
   formattedText = formattedText.replace(/\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
-                                      '[(Source $1)](https://fractalsoftworks.com$2)');
+                                      (match, sourceNum, path) => {
+                                        const fullUrl = 'https://fractalsoftworks.com' + path;
+                                        return `[(Source ${sourceNum})](${fullUrl})`;
+                                      });
   
   // Fix forum URLs with missing http prefix and add descriptive text
   formattedText = formattedText.replace(/\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g, 
-                                      '([Starsector Forum](https://fractalsoftworks.com$1))');
+                                      (match, path) => {
+                                        const fullUrl = 'https://fractalsoftworks.com' + path;
+                                        return `([Starsector Forum](${fullUrl}))`;
+                                      });
   formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
   formattedText = formattedText.replace(/\[fractalsoftworks\.com\](?!\()/g, '[Starsector Website](https://fractalsoftworks.com)');
   
   // Fix direct URLs that are inside markdown brackets but not properly formatted
   formattedText = formattedText.replace(/\[(?:https?:\/\/)?(?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+)\](?!\()/g,
-                                      '[Starsector Forum Topic #$1](https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+                                      (match, topicId1, topicId2) => {
+                                        const fullUrl = `https://fractalsoftworks.com/forum/index.php?topic=${topicId1}.${topicId2}`;
+                                        return `[Starsector Forum](${fullUrl})`;
+                                      });
   
   // Fix specific forum link pattern seen in the screenshot
   formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
@@ -327,25 +347,24 @@ function formatSourceReferences(text, sourceMap) {
       const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
       
       // Special handling for different URL types to provide better descriptive text
-      let linkText = refNum;
+      let linkText;
       const url = sourceMap[refNum];
       
       if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        // Extract video ID for YouTube
-        const videoIdMatch = url.match(/(?:v=|\.be\/)([^&\s]+)/);
-        const videoId = videoIdMatch ? videoIdMatch[1] : refNum;
-        linkText = `Source ${refNum}: YouTube Video ${videoId}`;
+        linkText = 'YouTube Video';
       } else if (url.includes('fractalsoftworks.com/forum')) {
-        // Extract topic number for forum links
-        const topicMatch = url.match(/topic=(\d+)/);
-        const topicNum = topicMatch ? topicMatch[1] : refNum;
-        linkText = `Source ${refNum}: Starsector Forum Topic ${topicNum}`;
+        linkText = 'Starsector Forum';
       } else {
-        // Generic source reference
-        linkText = `Source ${refNum}`;
+        linkText = 'Source ' + refNum;
       }
       
-      formattedText = formattedText.replace(replaceRegex, `[${linkText}](${sourceMap[refNum]})`);
+      // Make sure the URL is complete and properly formatted
+      let fullUrl = url;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = 'https://' + fullUrl;
+      }
+      
+      formattedText = formattedText.replace(replaceRegex, `[${linkText}](${fullUrl})`);
     }
   }
   
