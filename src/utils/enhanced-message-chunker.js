@@ -254,9 +254,13 @@ function formatStarsectorLinks(text) {
 function fixLinkFormatting(text) {
   let formattedText = text;
   
-  // Fix links with improper spacing in Markdown syntax
-  formattedText = formattedText.replace(/\]([^\s(])/g, '] $1');
+  // Fix links with improper spacing in Markdown syntax - excluding source references
+  // Only add a space after a closing bracket if it's not part of a source reference pattern
+  formattedText = formattedText.replace(/\]([^\s()])(?!\()/g, '] $1');
   formattedText = formattedText.replace(/\)([^\s.,;:!?)])/g, ') $1');
+  
+  // Fix any source reference links with extra spaces
+  formattedText = formattedText.replace(/\[\((\d+)\) \]\((https?:\/\/[^)]+)\)/g, (match, num, url) => `[(${num})](${url})`);
   
   // Remove any extra closing parentheses at the end of URLs
   formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
