@@ -153,12 +153,45 @@ function formatSourceReferences(text, sourceMap) {
   formattedText = formattedText.replace(/(https?:\/\/)?fractalsoftworks\/\./g, 'https://fractalsoftworks.');
   formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\//g, '(https://fractalsoftworks.');
   
+  // Fix forum URLs with specific patterns (seen in screenshot)
+  formattedText = formattedText.replace(/\(https:\/\/\[fractalsoftworks\.com\]/g, '(https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.comcom/g, '(https://fractalsoftworks.com');
+  
+  // Clean up forum URLs that might get double domain or malformed forum paths
+  formattedText = formattedText.replace(/fractalsoftworks\.com\.com/g, 'fractalsoftworks.com');
+  formattedText = formattedText.replace(/fractalsoftworks\.comcom/g, 'fractalsoftworks.com');
+  
+  // Fix specific forum link pattern seen in the screenshot
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
+                                       '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+  
+  // Handle specific nested markdown patterns in forum links
+  formattedText = formattedText.replace(/\[\[fractalsoftworks\.com\]\(https:\/\/fractalsoftworks(?:\.com)?\//g, 
+                                       '[fractalsoftworks.com](https://fractalsoftworks.com/');
+  
   // Handle the specific pattern in the screenshot - convert from
   // ([5][https://[[fractalsoftworks.com](https://fractalsoftworks/.com/forum/index.php?topic=13667.705)).
   formattedText = formattedText.replace(/\(\[([\d]+)\](?:\[[^\]]*\])?\[([^\]]+)\]\((https?:\/\/[^)]+)\)\)/g, '[([$1)]($3)');
   
+  // Fix common Markdown link format issues (missing spaces, extra brackets)
+  formattedText = formattedText.replace(/\]\(([^)]+)\)\(([^)]+)\)/g, ']($1)');
+  
+  // Fix specific forum link format issues seen in Discord messages
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
+                                       '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+  
+  // Fix links with improper spacing in Markdown syntax
+  formattedText = formattedText.replace(/\]([^\s(])/g, '] $1');
+  formattedText = formattedText.replace(/\)([^\s.,;:!?)])/g, ') $1');
+  
   // Remove any extra closing parentheses at the end of URLs
   formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
+  
+  // Fix forum URLs with missing http prefix
+  formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
+  
+  // Fix nested parentheses in URLs
+  formattedText = formattedText.replace(/\(\[(\d+)\]\)\(([^)]+)\)/g, '[([$1)]($2)');
   
   return formattedText;
 }
@@ -180,6 +213,15 @@ function enhancedChunkMessage(message, maxLength = 2000) {
   // Fix numbered list formatting
   // Ensure no empty lines between numbered items (a common Discord formatting issue)
   processedMessage = processedMessage.replace(/(\d+\.\s+[^\n]+)\n\s*\n(\d+\.\s+)/g, '$1\n$2');
+  
+  // Ensure proper indentation for numbered lists (especially in summaries)
+  processedMessage = processedMessage.replace(/^(\d+)\.\s*(\S)/gm, '$1. $2');
+  
+  // Fix missing spaces after numbered list periods
+  processedMessage = processedMessage.replace(/(\d+\.)(\S)/g, '$1 $2');
+  
+  // Add newlines before numbered lists for better formatting
+  processedMessage = processedMessage.replace(/([^\n])(\n\d+\.\s+)/g, '$1\n$2');
   
   // Process any source references in the message
   processedMessage = processSourceReferences(processedMessage);
