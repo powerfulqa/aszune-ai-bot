@@ -25,14 +25,35 @@ function processSourceReferences(text) {
  * @returns {Object} - Map of source numbers to URLs
  */
 function collectSourceReferences(text) {
-  // Look for patterns like (1) (http://...) with optional space between
-  const sourceURLPattern = /\((\d+)\)(?:\s*(?:\(|\s))(https?:\/\/[^\s)]+)/g;
-  const sources = {};
-  let match;
+  // Capture multiple source reference formats:
+  // 1. (1) (http://example.com) - Standard format with parentheses
+  // 2. (1)(http://example.com) - No space between number and URL
+  // 3. (1) http://example.com - Space but no parentheses around URL
+  // 4. ([1][http://example.com]) - Format with square brackets
+  // 5. ([1]www.example.com) - Format with square brackets without http
   
-  while ((match = sourceURLPattern.exec(text)) !== null) {
+  const sources = {};
+  
+  // Pattern 1 & 2 & 3: (n) followed by URL in various formats
+  const pattern1 = /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g;
+  let match;
+  while ((match = pattern1.exec(text)) !== null) {
     const sourceNum = match[1];
     const sourceUrl = match[2];
+    sources[sourceNum] = sourceUrl;
+  }
+  
+  // Pattern 4 & 5: ([n][url]) format
+  const pattern2 = /\(\[(\d+)\]\[([^\]]+)\]\)/g;
+  while ((match = pattern2.exec(text)) !== null) {
+    const sourceNum = match[1];
+    let sourceUrl = match[2];
+    
+    // Add http:// prefix if missing
+    if (!sourceUrl.startsWith('http')) {
+      sourceUrl = 'https://' + sourceUrl;
+    }
+    
     sources[sourceNum] = sourceUrl;
   }
   
@@ -46,14 +67,29 @@ function collectSourceReferences(text) {
  * @returns {string} - Formatted text with markdown links
  */
 function formatSourceReferences(text, sourceMap) {
+  // Create a copy of the text to work with
+  let formattedText = text;
+  
   // Replace each source reference with a markdown link
   Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
-    // Replace all occurrences of (n) with [(n)](url)
-    const pattern = new RegExp(`\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))?`, 'g');
-    text = text.replace(pattern, `[(${sourceNum})](${sourceUrl})`);
+    // Handle various source reference formats
+    
+    // Pattern 1: Replace (n) with URL with [(n)](url) - only if followed by a URL
+    const pattern1 = new RegExp(`\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))`, 'g');
+    formattedText = formattedText.replace(pattern1, `[(${sourceNum})](${sourceUrl})`);
+    
+    // Pattern 2: Replace ([n][url]) format with [(n)](url)
+    const pattern2 = new RegExp(`\\(\\[${sourceNum}\\]\\[[^\\]]+\\]\\)`, 'g');
+    formattedText = formattedText.replace(pattern2, `[(${sourceNum})](${sourceUrl})`);
+    
+    // Pattern 3: Replace standalone (n) references (not followed by a URL) with [(n)](url)
+    // This needs to be done last to avoid replacing already formatted links
+    // We need to check that the (n) is not already part of a markdown link
+    const pattern3 = new RegExp(`(?<!\\[)\\(${sourceNum}\\)(?!\\]\\()`, 'g');
+    formattedText = formattedText.replace(pattern3, `[(${sourceNum})](${sourceUrl})`);
   });
   
-  return text;
+  return formattedText;
 }
 
 /**
@@ -63,16 +99,40 @@ function formatSourceReferences(text, sourceMap) {
  * @return {string[]} Array of message chunks
  */
 function enhancedChunkMessage(message, maxLength = 2000) {
+  // Reduce max length slightly to ensure we have room for formatting
+  // This helps prevent truncation issues
+  const safeMaxLength = maxLength - 50;
+  
   // First, process any source references in the message
   const processedMessage = processSourceReferences(message);
   
-  // Now use the original chunker on the processed message
-  const chunks = originalChunker.chunkMessage(processedMessage, maxLength);
+  // Now use the original chunker on the processed message with reduced length
+  const chunks = originalChunker.chunkMessage(processedMessage, safeMaxLength);
   
-  // Perform an additional check to ensure no chunk ends with a partial URL
+  // Make an additional pass to ensure no chunk ends mid-sentence or with a partial URL
   for (let i = 0; i < chunks.length - 1; i++) {
-    const currentChunk = chunks[i];
-    const nextChunk = chunks[i + 1];
+    let currentChunk = chunks[i];
+    let nextChunk = chunks[i + 1];
+    
+    // Check for truncated sentences (ends without punctuation)
+    if (!/[.!?…][\s"'\])]?$/.test(currentChunk.trim())) {
+      // Look for the last sentence boundary
+      const lastSentenceMatch = /^(.*[.!?…][\s"'\])])/s.exec(currentChunk);
+      if (lastSentenceMatch) {
+        const completeSentencePart = lastSentenceMatch[1];
+        const remainingText = currentChunk.substring(completeSentencePart.length);
+        
+        // Only move text if it doesn't make the next chunk too large
+        if (nextChunk.length + remainingText.length <= safeMaxLength) {
+          chunks[i] = completeSentencePart.trim();
+          chunks[i+1] = remainingText + ' ' + nextChunk;
+          
+          // Update for URL check below
+          currentChunk = chunks[i];
+          nextChunk = chunks[i+1];
+        }
+      }
+    }
     
     // Check for a URL that might be split between chunks
     if (/https?:\/\/[^\s]*$/.test(currentChunk) && /^[^\s]*/.test(nextChunk)) {
@@ -83,9 +143,27 @@ function enhancedChunkMessage(message, maxLength = 2000) {
         const partialUrl = urlStartMatch[2];
         
         // Only perform this operation if moving the URL won't make the next chunk too large
-        if (textBeforeUrl.length > 0 && (nextChunk.length + partialUrl.length <= maxLength)) {
+        if (textBeforeUrl.length > 0 && (nextChunk.length + partialUrl.length <= safeMaxLength)) {
           chunks[i] = textBeforeUrl.trim();
           chunks[i+1] = partialUrl + ' ' + nextChunk;
+        }
+      }
+    }
+    
+    // Check for Markdown link being split across chunks ([text](url))
+    if (/\[[^\]]*$/.test(currentChunk) || /\][^(]*$/.test(currentChunk) || /\([^)]*$/.test(currentChunk)) {
+      // Find the start of the potential broken markdown link
+      const brokenMarkdownMatch = /^(.*)\[[^\]]*$/.exec(currentChunk) || 
+                                  /^(.*)\][^(]*$/.exec(currentChunk) || 
+                                  /^(.*)\([^)]*$/.exec(currentChunk);
+      
+      if (brokenMarkdownMatch) {
+        const textBeforeLink = brokenMarkdownMatch[1];
+        const partialLink = currentChunk.substring(textBeforeLink.length);
+        
+        if (textBeforeLink.length > 0 && (nextChunk.length + partialLink.length <= safeMaxLength)) {
+          chunks[i] = textBeforeLink.trim();
+          chunks[i+1] = partialLink + ' ' + nextChunk;
         }
       }
     }

@@ -6,6 +6,11 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
 
 ## Version History
 
+### v1.3.4 - Advanced Source Link Formatting and Anti-Truncation
+- Enhanced source reference handling for various formats including YouTube links
+- Improved message chunking to prevent sentence truncation
+- Added specific handling to preserve Markdown links across chunks
+
 ### v1.3.3 - Source Link Enhancement and Truncation Fix
 - Fixed source references (especially YouTube URLs) to appear as clickable links in Discord
 - Fixed truncation issues where the last sentence would get cut off
