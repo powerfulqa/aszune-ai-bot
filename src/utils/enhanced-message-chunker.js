@@ -50,6 +50,29 @@ function collectSourceReferences(text) {
     // Use either the bracketed URL or the non-bracketed one, whichever is found
     let sourceUrl = match[2] || match[3];
     
+    // Clean up the URL if it contains undesirable characters
+    if (sourceUrl) {
+      // Remove any trailing characters that shouldn't be part of the URL
+      sourceUrl = sourceUrl.replace(/\)$/, '');
+    }
+    
+    // Add http:// prefix if missing
+    if (sourceUrl && !sourceUrl.startsWith('http')) {
+      sourceUrl = 'https://' + sourceUrl;
+    }
+    
+    if (sourceUrl) {
+      sources[sourceNum] = sourceUrl;
+    }
+  }
+  
+  // Additional pattern for square bracket format without closing bracket
+  // e.g. ([3][www.youtube. (broken across lines)
+  const pattern3 = /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g;
+  while ((match = pattern3.exec(text)) !== null) {
+    const sourceNum = match[1];
+    let sourceUrl = match[2];
+    
     // Add http:// prefix if missing
     if (sourceUrl && !sourceUrl.startsWith('http')) {
       sourceUrl = 'https://' + sourceUrl;
@@ -73,7 +96,20 @@ function formatSourceReferences(text, sourceMap) {
   // Create a working copy of the text
   let formattedText = text;
   
-  // First, let's clean up any double occurrences of URLs
+  // Pre-processing: Convert any incomplete URLs or broken brackets
+  // Handle cases where bracket format is broken, like ([3][www.youtube.
+  formattedText = formattedText.replace(/\(\[(\d+)\]\[([^\]]+)(?=\s|$)/g, (match, num, url) => {
+    if (url.includes('www.') && !url.includes('.com')) {
+      // It's likely a broken domain like www.youtube (without .com)
+      const domain = url.trim();
+      if (domain.startsWith('www.')) {
+        return `([${num}][${domain}.com]`;
+      }
+    }
+    return match;
+  });
+  
+  // Clean up any double occurrences of URLs
   // For example, patterns like ([3][www.youtube.com]www.youtube.com)
   formattedText = formattedText.replace(/\(\[(\d+)\]\[([^\]]+)\]([^\)]+)\)/g, (match, num, url1, url2) => {
     // If both URLs are similar, keep just the bracketed version
@@ -86,8 +122,8 @@ function formatSourceReferences(text, sourceMap) {
   // Replace each source reference with a proper markdown link
   Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
     // First, handle the square bracket format: ([n][url])
-    // This should be done first because it's the most specific pattern
-    const patternBrackets = new RegExp(`\\(\\[${sourceNum}\\]\\s*(?:\\[[^\\]]+\\]|[^\\)]+)\\)`, 'g');
+    // This needs to be more aggressive to catch partial matches
+    const patternBrackets = new RegExp(`\\(\\[${sourceNum}\\][^)]*\\)`, 'g');
     formattedText = formattedText.replace(patternBrackets, `[(${sourceNum})](${sourceUrl})`);
     
     // Then handle the standard format with a URL: (n) (url) or (n)(url) or (n) url
@@ -100,6 +136,8 @@ function formatSourceReferences(text, sourceMap) {
     formattedText = formattedText.replace(patternStandalone, `[(${sourceNum})](${sourceUrl})`);
   });
   
+  // Post-processing cleanup for common URL issues
+  
   // Fix any URLs where the domain is broken by extra characters
   formattedText = formattedText.replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1');
   
@@ -108,6 +146,16 @@ function formatSourceReferences(text, sourceMap) {
   formattedText = formattedText.replace(/youtubecom/g, 'youtube.com');
   formattedText = formattedText.replace(/fractalsoftworkscom/g, 'fractalsoftworks.com');
   formattedText = formattedText.replace(/testorg/g, 'test.org');
+  
+  // Fix any fractalsoftworks URLs specifically (common issue)
+  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\/\.com/g, 'https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\./g, 'https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/(https?:\/\/)?fractalsoftworks\/\./g, 'https://fractalsoftworks.');
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\//g, '(https://fractalsoftworks.');
+  
+  // Handle the specific pattern in the screenshot - convert from
+  // ([5][https://[[fractalsoftworks.com](https://fractalsoftworks/.com/forum/index.php?topic=13667.705)).
+  formattedText = formattedText.replace(/\(\[([\d]+)\](?:\[[^\]]*\])?\[([^\]]+)\]\((https?:\/\/[^)]+)\)\)/g, '[([$1)]($3)');
   
   // Remove any extra closing parentheses at the end of URLs
   formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
@@ -126,8 +174,15 @@ function enhancedChunkMessage(message, maxLength = 2000) {
   // This helps prevent truncation issues
   const safeMaxLength = maxLength - 50;
   
-  // First, process any source references in the message
-  const processedMessage = processSourceReferences(message);
+  // Pre-process message to fix common formatting issues
+  let processedMessage = message;
+  
+  // Fix numbered list formatting
+  // Ensure no empty lines between numbered items (a common Discord formatting issue)
+  processedMessage = processedMessage.replace(/(\d+\.\s+[^\n]+)\n\s*\n(\d+\.\s+)/g, '$1\n$2');
+  
+  // Process any source references in the message
+  processedMessage = processSourceReferences(processedMessage);
   
   // Now use the original chunker on the processed message with reduced length
   const chunks = originalChunker.chunkMessage(processedMessage, safeMaxLength);
@@ -185,6 +240,22 @@ function enhancedChunkMessage(message, maxLength = 2000) {
         if (textBeforeDomain.length > 0 && (nextChunk.length + domainPart.length <= safeMaxLength)) {
           chunks[i] = textBeforeDomain.trim();
           chunks[i+1] = domainPart + nextChunk;
+        }
+      }
+    }
+    
+    // Check for numbered list items being split between chunks
+    // We don't want to split between a number and its content
+    if (/\d+\.\s*$/.test(currentChunk)) {
+      // Found a number at the end of the chunk, move it to next chunk
+      const numberMatch = /^(.*?)(\d+\.\s*)$/.exec(currentChunk);
+      if (numberMatch) {
+        const textBeforeNumber = numberMatch[1];
+        const numberPart = numberMatch[2];
+        
+        if (textBeforeNumber.length > 0 && (nextChunk.length + numberPart.length <= safeMaxLength)) {
+          chunks[i] = textBeforeNumber.trim();
+          chunks[i+1] = numberPart + nextChunk;
         }
       }
     }

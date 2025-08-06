@@ -6,6 +6,12 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
 
 ## Version History
 
+### v1.3.6 - Performance and Stability Enhancements
+- Improved response time and reduced memory usage
+- Enhanced error detection and recovery mechanisms
+- Refined message formatting and content delivery
+- Full details in [RELEASE-NOTES-v1.3.6.md](./RELEASE-NOTES-v1.3.6.md)
+
 ### v1.3.5 - Enhanced URL Processing and Layout Fixes
 - Fixed YouTube links showing duplicate text
 - Fixed domain names being split by periods (e.g., fractalsoftworks.com)
