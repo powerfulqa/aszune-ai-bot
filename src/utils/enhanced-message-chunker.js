@@ -155,6 +155,17 @@ function formatYouTubeLinks(text) {
       const videoId = videoId1 || videoId2;
       return `${prefix}[YouTube Video: ${videoId}](https://${url})`;
     });
+    
+  // Fix YouTube links that are already in brackets but not properly formatted as markdown links
+  formattedText = formattedText.replace(/\[((?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^\s&]+)[^\s\]]*|youtu\.be\/([^\s\]]+))\](?!\()/g,
+    (match, url, videoId1, videoId2) => {
+      const videoId = videoId1 || videoId2;
+      let fullUrl = url;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = 'https://' + fullUrl;
+      }
+      return `[YouTube Video: ${videoId}](${fullUrl})`;
+    });
   
   // Fix YouTube URLs that are missing protocol
   formattedText = formattedText.replace(/\((?!https?:\/\/)(www\.youtube|youtube\.com)/g, '(https://$1');
@@ -208,6 +219,10 @@ function formatStarsectorLinks(text) {
                                       '([Starsector Forum](https://fractalsoftworks.com$1))');
   formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
   formattedText = formattedText.replace(/\[fractalsoftworks\.com\](?!\()/g, '[Starsector Website](https://fractalsoftworks.com)');
+  
+  // Fix direct URLs that are inside markdown brackets but not properly formatted
+  formattedText = formattedText.replace(/\[(?:https?:\/\/)?(?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+)\](?!\()/g,
+                                      '[Starsector Forum Topic #$1](https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
   
   // Fix specific forum link pattern seen in the screenshot
   formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
@@ -310,7 +325,27 @@ function formatSourceReferences(text, sourceMap) {
     const refNum = match[1];
     if (sourceMap[refNum]) {
       const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
-      formattedText = formattedText.replace(replaceRegex, `[${refNum}](${sourceMap[refNum]})`);
+      
+      // Special handling for different URL types to provide better descriptive text
+      let linkText = refNum;
+      const url = sourceMap[refNum];
+      
+      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        // Extract video ID for YouTube
+        const videoIdMatch = url.match(/(?:v=|\.be\/)([^&\s]+)/);
+        const videoId = videoIdMatch ? videoIdMatch[1] : refNum;
+        linkText = `Source ${refNum}: YouTube Video ${videoId}`;
+      } else if (url.includes('fractalsoftworks.com/forum')) {
+        // Extract topic number for forum links
+        const topicMatch = url.match(/topic=(\d+)/);
+        const topicNum = topicMatch ? topicMatch[1] : refNum;
+        linkText = `Source ${refNum}: Starsector Forum Topic ${topicNum}`;
+      } else {
+        // Generic source reference
+        linkText = `Source ${refNum}`;
+      }
+      
+      formattedText = formattedText.replace(replaceRegex, `[${linkText}](${sourceMap[refNum]})`);
     }
   }
   
