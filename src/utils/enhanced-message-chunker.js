@@ -110,12 +110,135 @@ function collectSourceReferences(text) {
   return sources;
 }
 
-/**
- * Format source references in text using the collected URL map
- * @param {string} text - The text to process
- * @param {Object} sourceMap - Map of source numbers to URLs
- * @returns {string} - Formatted text with markdown links
- */
+// Helper functions for formatting different types of URLs
+function formatSocialMediaLinks(text) {
+  let formattedText = text;
+  
+  // Handle basic Reddit URLs - convert to proper links
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)(reddit\.com\/r\/[^\s]+)/g, 
+                                     '(https://$1)');
+                                     
+  // Handle Reddit URLs that are in incomplete Markdown format
+  formattedText = formattedText.replace(/\[(?:https?:\/\/)?(reddit\.com\/r\/[^\]]+)\]\s*(?!\()/g, 
+                                     '[$1](https://$1)');
+                                     
+  // Handle plain text r/subreddit references
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/|\/)(r\/[\w\d_]+)(?=[\s.,;!?]|$)/g,
+                                     '[Reddit: $1](https://reddit.com/$1)');
+  
+  // Handle Imgur URLs - convert to proper links
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?imgur\.com\/[^\s]+)/g,
+                                     '(https://$1)');
+                                     
+  // Handle GitHub URLs - convert to proper links
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?github\.com\/[^\s]+)/g,
+                                     '(https://$1)');
+  
+  // Handle Twitter/X URLs - convert to proper links
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?(twitter\.com|x\.com)\/[^\s]+)/g,
+                                     '(https://$1)');
+  
+  return formattedText;
+}
+
+function formatYouTubeLinks(text) {
+  let formattedText = text;
+  
+  // Fix YouTube links appearing on separate lines by removing the preceding newline
+  formattedText = formattedText.replace(/\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, ' $1');
+  formattedText = formattedText.replace(/\.\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, '. $1');
+  
+  // Extract video titles or use generic YouTube Link text
+  formattedText = formattedText.replace(/(^|\s)((?:www\.)?youtube\.com\/watch\?v=([^\s&]+)[^\s]*|youtu\.be\/([^\s]+))(?=[\s.,;!?]|$)/g, 
+    (match, prefix, url, videoId1, videoId2) => {
+      // Get the actual video ID, whether it came from the first or second pattern
+      const videoId = videoId1 || videoId2;
+      return `${prefix}[YouTube Video: ${videoId}](https://${url})`;
+    });
+  
+  // Fix YouTube URLs that are missing protocol
+  formattedText = formattedText.replace(/\((?!https?:\/\/)(www\.youtube|youtube\.com)/g, '(https://$1');
+  
+  return formattedText;
+}
+
+function formatStarsectorLinks(text) {
+  let formattedText = text;
+  
+  // Fix any fractalsoftworks URLs specifically (common issue)
+  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\/\.com/g, 'https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\./g, 'https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/(https?:\/\/)?fractalsoftworks\/\./g, 'https://fractalsoftworks.');
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\//g, '(https://fractalsoftworks.');
+  
+  // Fix forum URLs with specific patterns (seen in screenshot)
+  formattedText = formattedText.replace(/\(https:\/\/\[fractalsoftworks\.com\]/g, '(https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.comcom/g, '(https://fractalsoftworks.com');
+  
+  // Clean up forum URLs that might get double domain or malformed forum paths
+  formattedText = formattedText.replace(/fractalsoftworks\.com\.com/g, 'fractalsoftworks.com');
+  formattedText = formattedText.replace(/fractalsoftworks\.comcom/g, 'fractalsoftworks.com');
+  formattedText = formattedText.replace(/fractalsoftworks\.c\s*\n*com/g, 'fractalsoftworks.com');
+  
+  // Fix spaces in topic numbers
+  formattedText = formattedText.replace(/topic=(\d+)\.\s+(\d+)/g, 'topic=$1.$2');
+  
+  // Fix specific cases of line breaks in URLs
+  formattedText = formattedText.replace(/(https:\/\/[^\s]+)\n([^\s]+)/g, '$1$2');
+  formattedText = formattedText.replace(/(\n[^\s]*php\?topic=[^\s]+)\n([^\s]+)/g, '$1$2');
+  
+  // Handle specific nested markdown patterns in forum links
+  formattedText = formattedText.replace(/\[\[fractalsoftworks\.com\]\(https:\/\/fractalsoftworks(?:\.com)?\//g, 
+                                      '[fractalsoftworks.com](https://fractalsoftworks.com/');
+  
+  // Fix specific forum link format issues seen in Discord messages
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
+                                      '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+  
+  // Convert plain text URLs to proper links with descriptive text
+  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+))/g, 
+                                      '[Starsector Forum Topic #$2](https://$1)');
+                                      
+  // Fix specific source references with forum URLs
+  formattedText = formattedText.replace(/\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
+                                      '[(Source $1)](https://fractalsoftworks.com$2)');
+  
+  // Fix forum URLs with missing http prefix and add descriptive text
+  formattedText = formattedText.replace(/\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g, 
+                                      '([Starsector Forum](https://fractalsoftworks.com$1))');
+  formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
+  formattedText = formattedText.replace(/\[fractalsoftworks\.com\](?!\()/g, '[Starsector Website](https://fractalsoftworks.com)');
+  
+  // Fix specific forum link pattern seen in the screenshot
+  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
+                                      '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
+  
+  return formattedText;
+}
+
+function fixLinkFormatting(text) {
+  let formattedText = text;
+  
+  // Fix links with improper spacing in Markdown syntax
+  formattedText = formattedText.replace(/\]([^\s(])/g, '] $1');
+  formattedText = formattedText.replace(/\)([^\s.,;:!?)])/g, ') $1');
+  
+  // Remove any extra closing parentheses at the end of URLs
+  formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
+  
+  // Fix common Markdown link format issues (missing spaces, extra brackets)
+  formattedText = formattedText.replace(/\]\(([^)]+)\)\(([^)]+)\)/g, ']($1)');
+  
+  // Fix nested parentheses in URLs for source references
+  formattedText = formattedText.replace(/\(\[(\d+)\]\)\(([^)]+)\)/g, '[(Source $1)]($2)');
+  
+  // Handle the specific pattern in the screenshot - convert from
+  // ([5][https://[[fractalsoftworks.com](https://fractalsoftworks/.com/forum/index.php?topic=13667.705)).
+  formattedText = formattedText.replace(/\(\[([\d]+)\](?:\[[^\]]*\])?\[([^\]]+)\]\((https?:\/\/[^)]+)\)\)/g, '[(Source $1)]($3)');
+  
+  return formattedText;
+}
+
 function formatSourceReferences(text, sourceMap) {
   // Create a working copy of the text
   let formattedText = text;
@@ -171,66 +294,25 @@ function formatSourceReferences(text, sourceMap) {
   formattedText = formattedText.replace(/fractalsoftworkscom/g, 'fractalsoftworks.com');
   formattedText = formattedText.replace(/testorg/g, 'test.org');
   
-  // Fix any fractalsoftworks URLs specifically (common issue)
-  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\/\.com/g, 'https://fractalsoftworks.com');
-  formattedText = formattedText.replace(/https:\/\/fractalsoftworks\./g, 'https://fractalsoftworks.com');
-  formattedText = formattedText.replace(/(https?:\/\/)?fractalsoftworks\/\./g, 'https://fractalsoftworks.');
-  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\//g, '(https://fractalsoftworks.');
+  // Apply platform-specific formatting
+  formattedText = formatSocialMediaLinks(formattedText);
+  formattedText = formatYouTubeLinks(formattedText);
+  formattedText = formatStarsectorLinks(formattedText);
   
-  // Fix forum URLs with specific patterns (seen in screenshot)
-  formattedText = formattedText.replace(/\(https:\/\/\[fractalsoftworks\.com\]/g, '(https://fractalsoftworks.com');
-  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.comcom/g, '(https://fractalsoftworks.com');
+  // Final cleanup pass
+  formattedText = fixLinkFormatting(formattedText);
   
-  // Clean up forum URLs that might get double domain or malformed forum paths
-  formattedText = formattedText.replace(/fractalsoftworks\.com\.com/g, 'fractalsoftworks.com');
-  formattedText = formattedText.replace(/fractalsoftworks\.comcom/g, 'fractalsoftworks.com');
+  // Handle references where the URL is part of the text but not properly linked
+  const urlRegex = /\[(\d+)\]\s*(?!\()/g;
+  const urlMatches = formattedText.matchAll(urlRegex);
   
-  // Fix specific forum link pattern seen in the screenshot
-  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
-                                       '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
-  
-  // Handle specific nested markdown patterns in forum links
-  formattedText = formattedText.replace(/\[\[fractalsoftworks\.com\]\(https:\/\/fractalsoftworks(?:\.com)?\//g, 
-                                       '[fractalsoftworks.com](https://fractalsoftworks.com/');
-  
-  // Handle the specific pattern in the screenshot - convert from
-  // ([5][https://[[fractalsoftworks.com](https://fractalsoftworks/.com/forum/index.php?topic=13667.705)).
-  formattedText = formattedText.replace(/\(\[([\d]+)\](?:\[[^\]]*\])?\[([^\]]+)\]\((https?:\/\/[^)]+)\)\)/g, '[([$1)]($3)');
-  
-  // Fix YouTube links appearing on separate lines by removing the preceding newline
-  formattedText = formattedText.replace(/\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, ' $1');
-  formattedText = formattedText.replace(/\.\n(www\.youtube|youtube\.com|https:\/\/(?:www\.)?youtube\.com)/g, '. $1');
-  
-  // Properly format YouTube links that aren't properly linked
-  formattedText = formattedText.replace(/(?<!\()(www\.youtube\.[^\s]+|youtube\.com[^\s]+)/g, '(https://$1)');
-  formattedText = formattedText.replace(/\((?!https?:\/\/)(www\.youtube|youtube\.com)/g, '(https://$1');
-  
-  // Fix common Markdown link format issues (missing spaces, extra brackets)
-  formattedText = formattedText.replace(/\]\(([^)]+)\)\(([^)]+)\)/g, ']($1)');
-  
-  // Fix specific forum link format issues seen in Discord messages
-  formattedText = formattedText.replace(/\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g, 
-                                       '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)');
-  
-  // Convert plain text URLs to proper links
-  formattedText = formattedText.replace(/(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=\d+\.\d+)/g, 
-                                       '(https://$1)');
-  formattedText = formattedText.replace(/\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
-                                       '([$1](https://fractalsoftworks.com$2)');
-  
-  // Fix links with improper spacing in Markdown syntax
-  formattedText = formattedText.replace(/\]([^\s(])/g, '] $1');
-  formattedText = formattedText.replace(/\)([^\s.,;:!?)])/g, ') $1');
-  
-  // Remove any extra closing parentheses at the end of URLs
-  formattedText = formattedText.replace(/(\(https?:\/\/[^)]+)\)\)/g, '$1)');
-  
-  // Fix forum URLs with missing http prefix
-  formattedText = formattedText.replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com');
-  formattedText = formattedText.replace(/\[fractalsoftworks\.com\](?!\()/g, '[fractalsoftworks.com](https://fractalsoftworks.com)');
-  
-  // Fix nested parentheses in URLs
-  formattedText = formattedText.replace(/\(\[(\d+)\]\)\(([^)]+)\)/g, '[([$1)]($2)');
+  for (const match of urlMatches) {
+    const refNum = match[1];
+    if (sourceMap[refNum]) {
+      const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
+      formattedText = formattedText.replace(replaceRegex, `[${refNum}](${sourceMap[refNum]})`);
+    }
+  }
   
   return formattedText;
 }
