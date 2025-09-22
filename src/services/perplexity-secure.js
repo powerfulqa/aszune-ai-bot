@@ -13,6 +13,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
+const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -107,7 +108,8 @@ class PerplexityService {
     try {
       return this._tryGetHeaderValue(headers, key);
     } catch (error) {
-      logger.warn(`Error getting header "${key}":`, error);
+      const errorResponse = ErrorHandler.handleError(error, `getting header "${key}"`);
+      logger.warn(`Header access error: ${errorResponse.message}`);
       return '';
     }
   }
@@ -237,7 +239,8 @@ class PerplexityService {
         };
       }
     } catch (error) {
-      logger.warn('Error accessing PI_OPTIMIZATIONS config:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'accessing PI_OPTIMIZATIONS config');
+      logger.warn(`Config access error: ${errorResponse.message}`);
     }
     
     return defaultSettings;
@@ -251,7 +254,7 @@ class PerplexityService {
    */
   async _handleApiResponse(response) {
     if (!response) {
-      throw new Error('Invalid response: response is null or undefined');
+      throw ErrorHandler.createError('Invalid response: response is null or undefined', ERROR_TYPES.API_ERROR);
     }
     
     // Safely extract properties with defaults
@@ -266,14 +269,14 @@ class PerplexityService {
     
     // Make sure body exists and has json method
     if (!body || typeof body.json !== 'function') {
-      throw new Error('Invalid response: body is missing or does not have json method');
+      throw ErrorHandler.createError('Invalid response: body is missing or does not have json method', ERROR_TYPES.API_ERROR);
     }
     
     // Parse response as JSON
     try {
       return await body.json();
     } catch (error) {
-      throw new Error(`Failed to parse response as JSON: ${error.message}`);
+      throw ErrorHandler.createError(`Failed to parse response as JSON: ${error.message}`, ERROR_TYPES.API_ERROR);
     }
   }
   
@@ -296,7 +299,9 @@ class PerplexityService {
     
     // Create a descriptive error message with status code and response content
     const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
-    throw new Error(errorMessage);
+    const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
+    error.statusCode = statusCode;
+    throw error;
   }
   
   /**
@@ -331,7 +336,8 @@ class PerplexityService {
       
       return 'Sorry, I could not extract content from the response.';
     } catch (error) {
-      logger.warn('Error extracting response content:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'extracting response content');
+      logger.warn(`Response processing error: ${errorResponse.message}`);
       return 'Sorry, an error occurred while processing the response.';
     }
   }
@@ -368,7 +374,8 @@ class PerplexityService {
       
       return await this._handleApiResponse(response);
     } catch (error) {
-      logger.error('API request failed:', error);
+      const errorResponse = ErrorHandler.handleApiError(error, 'Perplexity API');
+      logger.error(`API request failed: ${errorResponse.message}`);
       throw error;
     }
   }
@@ -384,7 +391,8 @@ class PerplexityService {
       const throttler = connectionThrottler();
       return await throttler.executeRequest(requestFn, 'Perplexity API');
     } catch (throttlerError) {
-      logger.warn('Error using connection throttler, falling back to direct request:', throttlerError);
+      const errorResponse = ErrorHandler.handleError(throttlerError, 'connection throttling');
+      logger.warn(`Throttler error, falling back to direct request: ${errorResponse.message}`);
       return await requestFn();
     }
   }
@@ -422,7 +430,8 @@ class PerplexityService {
       } catch (apiError) {
         // Check if it's a rate limit error (429) and we should retry
         if (apiError.message && apiError.message.includes('429') && retries > 0) {
-          logger.info(`Rate limited, retrying after ${retryDelay}ms...`);
+          const errorResponse = ErrorHandler.handleError(apiError, 'API rate limit', { retries });
+          logger.info(`Rate limited, retrying after ${retryDelay}ms: ${errorResponse.message}`);
           
           // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -443,7 +452,11 @@ class PerplexityService {
       
       return content;
     } catch (error) {
-      logger.error('Failed to generate chat response:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'generate chat response', { 
+        historyLength: history?.length || 0,
+        shouldUseCache: shouldUseCache
+      });
+      logger.error(`Failed to generate chat response: ${errorResponse.message}`);
       throw error;
     }
   }
@@ -475,7 +488,8 @@ class PerplexityService {
         }
       }
     } catch (configError) {
-      logger.warn('Error accessing PI_OPTIMIZATIONS config:', configError);
+      const errorResponse = ErrorHandler.handleError(configError, 'accessing PI_OPTIMIZATIONS config');
+      logger.warn(`Config access error: ${errorResponse.message}`);
     }
     
     return defaultConfig;
@@ -520,7 +534,8 @@ class PerplexityService {
         }
       }
     } catch (cacheError) {
-      logger.warn('Error reading from cache:', cacheError);
+      const errorResponse = ErrorHandler.handleFileError(cacheError, 'reading from cache', 'question_cache.json');
+      logger.warn(`Cache read error: ${errorResponse.message}`);
     }
     
     return null;
@@ -545,7 +560,8 @@ class PerplexityService {
       
       await this._saveCache(cache);
     } catch (cacheError) {
-      logger.warn('Error saving to cache:', cacheError);
+      const errorResponse = ErrorHandler.handleFileError(cacheError, 'saving to cache', 'question_cache.json');
+      logger.warn(`Cache save error: ${errorResponse.message}`);
     }
   }
   
@@ -585,7 +601,11 @@ class PerplexityService {
       
       return await this.generateTextSummary(conversationText);
     } catch (error) {
-      logger.error('Failed to generate summary:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'generate summary', { 
+        historyLength: history?.length || 0,
+        isText: isText
+      });
+      logger.error(`Failed to generate summary: ${errorResponse.message}`);
       throw error;
     }
   }
@@ -641,7 +661,8 @@ class PerplexityService {
         throw readError;
       }
     } catch (error) {
-      logger.error('Failed to load cache:', error);
+      const errorResponse = ErrorHandler.handleFileError(error, 'loading cache', cachePath);
+      logger.error(`Failed to load cache: ${errorResponse.message}`);
       return {};
     }
   }
@@ -710,7 +731,8 @@ class PerplexityService {
       // Apply secure file permissions
       await fs.chmod(cachePath, this.FILE_PERMISSIONS.FILE);
     } catch (error) {
-      logger.error('Failed to save cache:', error);
+      const errorResponse = ErrorHandler.handleFileError(error, 'saving cache', cachePath);
+      logger.error(`Failed to save cache: ${errorResponse.message}`);
     }
   }
 
@@ -756,7 +778,8 @@ class PerplexityService {
         await this._saveCache(cache);
       }
     } catch (error) {
-      logger.warn('Error cleaning up cache:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'cleaning up cache');
+      logger.warn(`Cache cleanup error: ${errorResponse.message}`);
     }
   }
 }

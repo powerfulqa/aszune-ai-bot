@@ -214,23 +214,13 @@ class Logger {
    * @param {Error} error - The error to handle
    * @param {string} context - Context where the error occurred
    * @returns {string} - User-friendly error message
+   * @deprecated Use ErrorHandler.handleError() instead for consistent error handling
    */
   handleError(error, context = '') {
-    let userMessage = 'There was an error processing your request. Please try again later.';
-    
-    // Log the error
-    this.error(`Error in ${context}:`, error);
-    
-    // Customize message based on error type
-    if (error.message.includes('429')) {
-      userMessage = 'The service is currently busy. Please try again in a few moments.';
-    } else if (error.message.includes('401') || error.message.includes('403')) {
-      userMessage = 'Authentication error. Please contact an administrator.';
-    } else if (error.message.includes('504') || error.message.includes('timeout')) {
-      userMessage = 'The request timed out. Please try again with a shorter message.';
-    }
-    
-    return userMessage;
+    // Import ErrorHandler dynamically to avoid circular dependency
+    const { ErrorHandler } = require('./error-handler');
+    const errorResponse = ErrorHandler.handleError(error, context);
+    return errorResponse.message;
   }
 }
 

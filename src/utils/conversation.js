@@ -4,6 +4,7 @@
 const config = require('../config/config');
 const dataStorage = require('../services/storage');
 const logger = require('./logger');
+const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
 
 class ConversationManager {
   constructor() {
@@ -51,7 +52,8 @@ class ConversationManager {
       
       logger.info(`Loaded stats for ${this.userStats.size} users`);
     } catch (error) {
-      logger.error('Failed to load user stats:', error);
+      const errorResponse = ErrorHandler.handleFileError(error, 'loading user stats', 'user_stats.json');
+      logger.error(`Failed to load user stats: ${errorResponse.message}`);
     }
   }
   
@@ -62,7 +64,8 @@ class ConversationManager {
     try {
       await dataStorage.saveUserStats(this.userStats);
     } catch (error) {
-      logger.error('Failed to save user stats:', error);
+      const errorResponse = ErrorHandler.handleFileError(error, 'saving user stats', 'user_stats.json');
+      logger.error(`Failed to save user stats: ${errorResponse.message}`);
     }
   }
   
@@ -209,7 +212,8 @@ class ConversationManager {
       await this.saveUserStats();
       logger.info('Final user stats saved before shutdown');
     } catch (error) {
-      logger.error('Failed to save user stats during shutdown:', error);
+      const errorResponse = ErrorHandler.handleFileError(error, 'saving user stats during shutdown', 'user_stats.json');
+      logger.error(`Failed to save user stats during shutdown: ${errorResponse.message}`);
     }
   }
 }

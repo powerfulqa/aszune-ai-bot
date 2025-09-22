@@ -11,6 +11,7 @@ const commandHandler = require('../commands');
 const { debounce } = require('../utils/debouncer');
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage } = require('../utils/enhanced-message-chunker');
+const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
 
 // Simple lazy loading function to use in tests
 const lazyLoad = (importFn) => {
@@ -168,10 +169,13 @@ async function handleChatMessage(message) {
       await emojiManager.addReactionsToMessage(message);
     }
   } catch (error) {
-    const errorMessage = logger.handleError(error, 'chat generation');
-    // Send error message using our sendResponse function but in plain text
-    // Just reply directly for errors as they're typically shorter
-    message.reply(errorMessage);
+    const errorResponse = ErrorHandler.handleError(error, 'chat generation', {
+      userId: processedData.userId,
+      messageLength: message.content?.length || 0
+    });
+    
+    // Send user-friendly error message
+    message.reply(errorResponse.message);
   }
 }
 

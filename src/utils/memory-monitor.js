@@ -5,6 +5,7 @@
 
 const logger = require('./logger');
 const config = require('../config/config');
+const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
 
 class MemoryMonitor {
   constructor() {
@@ -77,7 +78,11 @@ class MemoryMonitor {
         logger.error(`CRITICAL MEMORY USAGE: ${Math.round(heapUsed / 1024 / 1024)}MB used!`);
       }
     } catch (error) {
-      logger.error('Error checking memory usage:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'checking memory usage', {
+        memoryLimit: this.memoryLimit,
+        criticalMemory: this.criticalMemory
+      });
+      logger.error(`Memory check error: ${errorResponse.message}`);
     }
   }
 
@@ -108,7 +113,11 @@ class MemoryMonitor {
       
       logger.debug('Memory cleanup attempted');
     } catch (error) {
-      logger.error('Error during garbage collection:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'garbage collection', {
+        lastGcTime: this.lastGcTime,
+        isLowMemory: this.isLowMemory
+      });
+      logger.error(`Garbage collection error: ${errorResponse.message}`);
     }
   }
 
@@ -128,7 +137,8 @@ class MemoryMonitor {
         isLowMemory: this.isLowMemory
       };
     } catch (error) {
-      logger.error('Error getting memory usage:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'getting memory usage');
+      logger.error(`Memory usage error: ${errorResponse.message}`);
       return {};
     }
   }

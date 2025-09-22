@@ -6,6 +6,7 @@ const ConversationManager = require('../utils/conversation');
 const perplexityService = require('../services/perplexity-secure');
 const logger = require('../utils/logger');
 const config = require('../config/config');
+const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
 
 const conversationManager = new ConversationManager();
 
@@ -79,8 +80,11 @@ const commands = {
           }]
         });
       } catch (error) {
-        const errorMessage = logger.handleError(error, 'summary generation');
-        return interaction.editReply(errorMessage);
+        const errorResponse = ErrorHandler.handleError(error, 'summary generation', {
+          userId: userId,
+          historyLength: history?.length || 0
+        });
+        return interaction.editReply(errorResponse.message);
       }
     },
     textCommand: '!summary'
@@ -151,8 +155,11 @@ const commands = {
           }]
         });
       } catch (error) {
-        const errorMessage = logger.handleError(error, 'text summary generation');
-        return interaction.editReply(errorMessage);
+        const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
+          userId: interaction.user.id,
+          textLength: text?.length || 0
+        });
+        return interaction.editReply(errorResponse.message);
       }
     },
     // Support both spellings as text commands
@@ -191,8 +198,13 @@ async function handleTextCommand(message) {
         
         return await command.execute(mockInteraction);
       } catch (error) {
-        logger.error(`Error executing text command ${name}:`, error);
-        return message.reply('There was an error executing this command.');
+        const errorResponse = ErrorHandler.handleError(error, `text command ${name}`, {
+          userId: message.author.id,
+          command: name,
+          content: message.content
+        });
+        logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
+        return message.reply(errorResponse.message);
       }
     }
   }
@@ -217,10 +229,16 @@ async function handleSlashCommand(interaction) {
   try {
     await command.execute(interaction);
   } catch (error) {
-    logger.error(`Error executing slash command ${interaction.commandName}:`, error);
+    const errorResponse = ErrorHandler.handleError(error, `slash command ${interaction.commandName}`, {
+      userId: interaction.user.id,
+      command: interaction.commandName,
+      guildId: interaction.guild?.id
+    });
+    
+    logger.error(`Error executing slash command ${interaction.commandName}: ${errorResponse.message}`);
     
     const reply = { 
-      content: 'There was an error executing this command.', 
+      content: errorResponse.message, 
       ephemeral: true 
     };
     

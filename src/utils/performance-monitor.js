@@ -5,6 +5,7 @@
 const os = require('os');
 const logger = require('./logger');
 const config = require('../config/config');
+const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
 
 class PerformanceMonitor {
   constructor() {
@@ -129,7 +130,11 @@ class PerformanceMonitor {
         logger.info(`[PerformanceMonitor] CPU: ${(cpuUsage * 100).toFixed(1)}%, Memory: ${memoryUsage.toFixed(1)}%, Throttle: ${this.throttleFactor.toFixed(1)}x`);
       }
     } catch (error) {
-      logger.error('[PerformanceMonitor] Error checking performance:', error);
+      const errorResponse = ErrorHandler.handleError(error, 'performance monitoring', {
+        throttleFactor: this.throttleFactor,
+        isThrottled: this.isThrottled
+      });
+      logger.error(`[PerformanceMonitor] Performance check error: ${errorResponse.message}`);
     }
   }
   
