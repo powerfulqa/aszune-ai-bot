@@ -3,17 +3,20 @@ jest.useFakeTimers();
 // We want to test the real commands module, not the mock
 // jest.mock('../../src/commands', () => require('../../__mocks__/commands'));
 jest.mock('../../src/utils/logger');
+jest.mock('../../src/services/perplexity-secure');
+
+// Mock the conversation module
 jest.mock('../../src/utils/conversation', () => {
   const mockInstance = {
     clearHistory: jest.fn(),
     getHistory: jest.fn().mockReturnValue([]),
     getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
-    updateUserStats: jest.fn()
+    updateUserStats: jest.fn(),
+    addMessage: jest.fn()
   };
   
   return jest.fn().mockImplementation(() => mockInstance);
 });
-jest.mock('../../src/services/perplexity-secure');
 
 const { handleTextCommand, handleSlashCommand, getSlashCommandsData } = require('../../src/commands');
 const ConversationManager = require('../../src/utils/conversation');
@@ -21,12 +24,15 @@ const perplexityService = require('../../src/services/perplexity-secure');
 const { createMockMessage, createMockInteraction, resetMocks } = require('../../src/utils/testUtils');
 const logger = require('../../src/utils/logger');
 
-let conversationManager;
-
 describe('Command Handlers', () => {
+  let conversationManager;
+  
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
+    
+    // Get the mock instance from the ConversationManager constructor
+    conversationManager = new ConversationManager();
   });
 
   afterEach(() => {

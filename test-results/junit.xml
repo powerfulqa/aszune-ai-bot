@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="7" failures="1" errors="0" time="0.98">
-  <testsuite name="EmojiManager" errors="0" failures="1" skipped="0" timestamp="2025-09-22T12:16:43" time="0.848" tests="7">
-    <testcase classname="EmojiManager adds emojis to response based on keywords" name="EmojiManager adds emojis to response based on keywords" time="0.004">
+<testsuites name="jest tests" tests="20" failures="9" errors="0" time="5.021">
+  <testsuite name="Command Handlers" errors="0" failures="9" skipped="0" timestamp="2025-09-22T12:22:05" time="4.729" tests="20">
+    <testcase classname="Command Handlers getSlashCommandsData should return an array of slash command data" name="Command Handlers getSlashCommandsData should return an array of slash command data" time="0.006">
     </testcase>
-    <testcase classname="EmojiManager adds multiple emojis when multiple keywords are found" name="EmojiManager adds multiple emojis when multiple keywords are found" time="0.002">
-      <failure>Error: expect(received).toContain(expected) // indexOf
-
-Expected substring: &quot;👋&quot;
-Received string:    &quot;I love to help, welcome! ❤️&quot;
-    at Object.toContain (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\emoji-manager.test.js:18:20)
+    <testcase classname="Command Handlers handleTextCommand should handle !help command" name="Command Handlers handleTextCommand should handle !help command" time="0.006">
+    </testcase>
+    <testcase classname="Command Handlers handleTextCommand should handle !clearhistory command" name="Command Handlers handleTextCommand should handle !clearhistory command" time="0.001">
+    </testcase>
+    <testcase classname="Command Handlers handleTextCommand should handle !summary command with history" name="Command Handlers handleTextCommand should handle !summary command with history" time="0.001">
+    </testcase>
+    <testcase classname="Command Handlers handleTextCommand should handle !summary command with no history" name="Command Handlers handleTextCommand should handle !summary command with no history" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:84:27)
     at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
     at new Promise (&lt;anonymous&gt;)
     at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
@@ -17,21 +20,170 @@ Received string:    &quot;I love to help, welcome! ❤️&quot;
     at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
     at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
     at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
     at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
     at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
     at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
     at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
     at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
     </testcase>
-    <testcase classname="EmojiManager does not add emojis when no keywords are found" name="EmojiManager does not add emojis when no keywords are found" time="0">
+    <testcase classname="Command Handlers handleTextCommand should handle !summary command with only assistant messages in history" name="Command Handlers handleTextCommand should handle !summary command with only assistant messages in history" time="0.008">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:91:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
     </testcase>
-    <testcase classname="EmojiManager gets reactions for a message based on keywords" name="EmojiManager gets reactions for a message based on keywords" time="0.001">
+    <testcase classname="Command Handlers handleTextCommand should handle errors during text command execution" name="Command Handlers handleTextCommand should handle errors during text command execution" time="0.008">
     </testcase>
-    <testcase classname="EmojiManager returns empty array when no reaction keywords are found" name="EmojiManager returns empty array when no reaction keywords are found" time="0.002">
+    <testcase classname="Command Handlers handleTextCommand should handle !summary command API error" name="Command Handlers handleTextCommand should handle !summary command API error" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:107:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
     </testcase>
-    <testcase classname="EmojiManager adds reactions to a message" name="EmojiManager adds reactions to a message" time="0.001">
+    <testcase classname="Command Handlers handleTextCommand should handle !stats command" name="Command Handlers handleTextCommand should handle !stats command" time="0">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getUserStats&apos;)
+    at Object.getUserStats (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:117:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
     </testcase>
-    <testcase classname="EmojiManager handles errors when adding reactions" name="EmojiManager handles errors when adding reactions" time="0.001">
+    <testcase classname="Command Handlers handleTextCommand should return null for unknown command" name="Command Handlers handleTextCommand should return null for unknown command" time="0.001">
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /help command" name="Command Handlers handleSlashCommand should handle /help command" time="0.008">
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /clearhistory command" name="Command Handlers handleSlashCommand should handle /clearhistory command" time="0.001">
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /summary command with history" name="Command Handlers handleSlashCommand should handle /summary command with history" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:146:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /summary command API error" name="Command Handlers handleSlashCommand should handle /summary command API error" time="0.003">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:159:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /summary command with only assistant messages in history" name="Command Handlers handleSlashCommand should handle /summary command with only assistant messages in history" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:172:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /summary command with no history" name="Command Handlers handleSlashCommand should handle /summary command with no history" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getHistory&apos;)
+    at Object.getHistory (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:181:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle /stats command" name="Command Handlers handleSlashCommand should handle /stats command" time="0">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;getUserStats&apos;)
+    at Object.getUserStats (C:\Users\ch\aszune\aszune-ai-bot\__tests__\unit\commands.test.js:188:27)
+    at Promise.then.completed (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+    at run (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\Users\ch\aszune\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)</failure>
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle command execution error when not deferred" name="Command Handlers handleSlashCommand should handle command execution error when not deferred" time="0.004">
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle unknown command" name="Command Handlers handleSlashCommand should handle unknown command" time="0.002">
+    </testcase>
+    <testcase classname="Command Handlers handleSlashCommand should handle command execution error" name="Command Handlers handleSlashCommand should handle command execution error" time="0.005">
     </testcase>
   </testsuite>
 </testsuites>

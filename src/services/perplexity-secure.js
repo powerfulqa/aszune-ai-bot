@@ -703,9 +703,10 @@ class PerplexityService {
    * @returns {Promise<Object>} The loaded cache object
    */
   async _loadCache() {
+    const cacheDir = path.join(process.cwd(), 'data');
+    const cachePath = path.join(cacheDir, 'question_cache.json');
+    
     try {
-      const cacheDir = path.join(process.cwd(), 'data');
-      const cachePath = path.join(cacheDir, 'question_cache.json');
       
       // Ensure cache directory exists with secure permissions
       try {
@@ -767,9 +768,10 @@ class PerplexityService {
    * @returns {Promise<void>}
    */
   async _saveCache(cache) {
+    const cacheDir = path.join(process.cwd(), 'data');
+    const cachePath = path.join(cacheDir, 'question_cache.json');
+    
     try {
-      const cacheDir = path.join(process.cwd(), 'data');
-      const cachePath = path.join(cacheDir, 'question_cache.json');
       
       // Ensure cache directory exists with secure permissions
       try {

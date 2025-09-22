@@ -75,5 +75,8 @@ module.exports = {
     'love': '❤️',
     'happy': '😊',
     'sad': '😢'
-  }
+  },
+  
+  // Mock function for Pi optimizations initialization
+  initializePiOptimizations: jest.fn().mockResolvedValue(module.exports)
 };
