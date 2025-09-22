@@ -5,6 +5,12 @@
 // Mock the config module
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
+// Mock the storage service
+jest.mock('../../src/services/storage', () => ({
+  loadUserStats: jest.fn().mockResolvedValue({}),
+  saveUserStats: jest.fn().mockResolvedValue()
+}));
+
 const ConversationManager = require('../../src/utils/conversation');
 const config = require('../../src/config/config');
 let conversationManager;
@@ -31,12 +37,12 @@ describe('Conversation Manager', () => {
   
   describe('getHistory', () => {
     it('returns empty array for new users', () => {
-      const history = conversationManager.getHistory('new-user');
+      const history = conversationManager.getHistory('123456789012345678');
       expect(history).toEqual([]);
     });
     
     it('returns conversation history for existing users', () => {
-      const userId = 'existing-user';
+      const userId = '123456789012345678';
       const mockHistory = [
         { role: 'user', content: 'hello' },
         { role: 'assistant', content: 'hi' }
@@ -51,7 +57,7 @@ describe('Conversation Manager', () => {
   
   describe('addMessage', () => {
     it('adds a message to conversation history', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       conversationManager.addMessage(userId, 'user', 'hello');
       
       const history = conversationManager.getHistory(userId);
@@ -59,7 +65,7 @@ describe('Conversation Manager', () => {
     });
     
     it('updates user stats when adding a user message', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       conversationManager.addMessage(userId, 'user', 'hello');
       
       const stats = conversationManager.getUserStats(userId);
@@ -67,7 +73,7 @@ describe('Conversation Manager', () => {
     });
     
     it('trims conversation history when it exceeds the maximum length', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       
       // Enable PI optimization mode for this test
       const originalEnabledValue = config.PI_OPTIMIZATIONS.ENABLED;
@@ -91,7 +97,7 @@ describe('Conversation Manager', () => {
   
   describe('clearHistory', () => {
     it('clears conversation history for a user', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       
       conversationManager.addMessage(userId, 'user', 'hello');
       conversationManager.addMessage(userId, 'assistant', 'hi');
@@ -109,14 +115,14 @@ describe('Conversation Manager', () => {
     });
     
     it('returns true for users with recent messages', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       conversationManager.lastMessageTimestamps.set(userId, Date.now());
       
       expect(conversationManager.isRateLimited(userId)).toBe(true);
     });
     
     it('returns false after the rate limit window passes', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       // Set timestamp to older than the rate limit window
       const pastTime = Date.now() - config.RATE_LIMIT_WINDOW - 1000;
       conversationManager.lastMessageTimestamps.set(userId, pastTime);
@@ -132,7 +138,7 @@ describe('Conversation Manager', () => {
     });
     
     it('returns user stats for existing users', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       const mockStats = { messages: 5, summaries: 2 };
       
       conversationManager.userStats.set(userId, mockStats);
@@ -144,7 +150,7 @@ describe('Conversation Manager', () => {
   
   describe('updateUserStats', () => {
     it('increments message count', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'messages');
@@ -154,7 +160,7 @@ describe('Conversation Manager', () => {
     });
     
     it('increments summary count', () => {
-      const userId = 'test-user';
+      const userId = '123456789012345678';
       
       conversationManager.updateUserStats(userId, 'summaries');
       

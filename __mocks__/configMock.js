@@ -3,6 +3,8 @@
 module.exports = {
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-perplexity-key',
+  MAX_HISTORY: 20,
+  RATE_LIMIT_WINDOW: 5000,
   API: {
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
@@ -75,6 +77,18 @@ module.exports = {
     'love': '❤️',
     'happy': '😊',
     'sad': '😢'
+  },
+  
+  SYSTEM_MESSAGES: {
+    CHAT: 'You are a helpful AI assistant.',
+    SUMMARY: 'Please provide a summary of the following conversation.'
+  },
+  
+  COLORS: {
+    PRIMARY: '#5865F2',
+    SUCCESS: '#57F287',
+    ERROR: '#ED4245',
+    WARNING: '#FEE75C'
   },
   
   // Mock function for Pi optimizations initialization

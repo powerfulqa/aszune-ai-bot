@@ -61,11 +61,21 @@ describe('Config', () => {
   });
   
   it('should throw error when missing required environment variables', () => {
+    const originalEnv = process.env.PERPLEXITY_API_KEY;
     delete process.env.PERPLEXITY_API_KEY;
+    
+    // Clear the require cache to force reload of the config
+    jest.resetModules();
     
     expect(() => {
       require('../../src/config/config');
     }).toThrow('Missing PERPLEXITY_API_KEY in environment variables.');
+    
+    // Restore the environment variable
+    process.env.PERPLEXITY_API_KEY = originalEnv;
+    
+    // Reset modules again to restore mocks
+    jest.resetModules();
   });
   
   it('should have default API configuration', () => {
