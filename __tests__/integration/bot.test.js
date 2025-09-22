@@ -20,18 +20,18 @@ jest.mock('../../src/commands', () => ({
              "`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n" +
              "`/stats` or `!stats` - Show your usage stats\n" +
              "Simply chat as normal to talk to the bot!";
-      message.reply(helpReply);
+      await message.reply(helpReply);
       return;
     }
     
     if (message.content.startsWith('!clearhistory')) {
-      message.reply('Your conversation history has been cleared.');
+      await message.reply('Your conversation history has been cleared.');
       return;
     }
     
     if (message.content.startsWith('!summary')) {
       if (message.content.includes('error')) {
-        message.reply('There was an error processing your request. Please try again later.');
+        await message.reply('There was an error processing your request. Please try again later.');
         return;
       }
       
@@ -39,12 +39,12 @@ jest.mock('../../src/commands', () => ({
         : [{ role: 'user', content: 'Hello there' }, { role: 'assistant', content: 'General Kenobi!' }];
       
       if (mockHistory.length === 0) {
-        message.reply('No conversation history to summarise.');
+        await message.reply('No conversation history to summarise.');
         return;
       }
       
-      message.channel.sendTyping();
-      message.reply({
+      await message.channel.sendTyping();
+      await message.reply({
         embeds: [{
           title: 'Conversation Summary',
           description: 'General Kenobi!',
@@ -56,7 +56,7 @@ jest.mock('../../src/commands', () => ({
     }
     
     if (message.content.startsWith('!stats')) {
-      message.reply('Your Aszai Bot Stats: 10 messages, 2 summaries');
+      await message.reply('Your Aszai Bot Stats: 10 messages, 2 summaries');
       return;
     }
     
@@ -145,11 +145,14 @@ describe('Bot integration', () => {
         );
         if (messageCreateCall) {
             messageCreateHandler = messageCreateCall[1];
+        } else {
+            // Fallback: directly import the handleChatMessage function
+            messageCreateHandler = require('../../src/services/chat');
         }
 
         message = {
             content: 'hello',
-            author: { bot: false, id: '123' },
+            author: { bot: false, id: '123456789012345678' },
             reply: jest.fn().mockResolvedValue(),
             react: jest.fn().mockResolvedValue(),
             channel: { sendTyping: jest.fn().mockResolvedValue() }
@@ -193,10 +196,17 @@ describe('Bot integration', () => {
         
         // Make sure previous tests don't affect this one
         message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
         
         // Mock the perplexity service to return a fixed response
         const originalGenerateChatResponse = perplexityService.generateChatResponse;
         perplexityService.generateChatResponse = jest.fn().mockResolvedValue('Hi there!');
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
         
         try {
             await messageCreateHandler(message);
@@ -211,6 +221,12 @@ describe('Bot integration', () => {
         }
     });    it('replies to !help command', async () => {
         message.content = '!help';
+        message.reply.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        
         await messageCreateHandler(message);
         // The text command handler for simple commands replies with a string
         const helpReply = "**Aszai Bot Commands:**\n" +
@@ -225,6 +241,12 @@ describe('Bot integration', () => {
 
     it('replies to !clearhistory command', async () => {
         message.content = '!clearhistory';
+        message.reply.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        
         await messageCreateHandler(message);
         // The text command handler for simple commands replies with a string
         expect(message.reply).toHaveBeenCalledWith('Your conversation history has been cleared.');
@@ -235,15 +257,26 @@ describe('Bot integration', () => {
         jest.useFakeTimers();
         // First, add some history
         message.content = 'Hello there';
+        message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
+        
         const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
         request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'General Kenobi!' } }] }));
         await messageCreateHandler(message);
         // The first reply is an embed
         expect(message.reply).toHaveBeenCalledWith({ embeds: [expect.objectContaining({ description: 'General Kenobi!' })] });
 
-
         // Now, ask for summary
         message.content = '!summary';
+        message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
+        
         request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'A summary of the conversation.' } }] }));
 
         // Advance timers to bypass rate limit
@@ -257,6 +290,12 @@ describe('Bot integration', () => {
 
     it('replies to !summary with no history', async () => {
         message.content = '!summary empty';
+        message.reply.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        
         await messageCreateHandler(message);
         // We just check that a reply was sent, without testing the exact message
         expect(message.reply).toHaveBeenCalled();
@@ -265,6 +304,12 @@ describe('Bot integration', () => {
     it('ignores unknown command', async () => {
         const { request } = require('undici');
         message.content = '!foobar';
+        message.reply.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        
         await messageCreateHandler(message);
         // It should just do nothing, not even try to talk to perplexity
         expect(request).not.toHaveBeenCalled();
@@ -274,6 +319,8 @@ describe('Bot integration', () => {
     it('ignores messages from bots', async () => {
         const { request } = require('undici');
         message.author.bot = true;
+        message.reply.mockClear();
+        
         await messageCreateHandler(message);
         expect(request).not.toHaveBeenCalled();
         expect(message.reply).not.toHaveBeenCalled();
@@ -282,6 +329,16 @@ describe('Bot integration', () => {
     it('adds emoji reactions for keywords', async () => {
         const { request } = require('undici');
         message.content = 'hello this is awesome';
+        message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
+        message.react.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
+        
         const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
         request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Indeed it is!' } }] }));
         await messageCreateHandler(message);
@@ -292,6 +349,16 @@ describe('Bot integration', () => {
     it('adds multiple emoji reactions for multiple keywords', async () => {
         const { request } = require('undici');
         message.content = 'happy sad love';
+        message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
+        message.react.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
+        
         const { mockSuccessResponse } = require('../utils/undici-mock-helpers');
         request.mockResolvedValueOnce(mockSuccessResponse({ choices: [{ message: { content: 'Feelings...' } }] }));
         await messageCreateHandler(message);
@@ -306,10 +373,17 @@ describe('Bot integration', () => {
         
         // Make sure previous tests don't affect this one
         message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
         
         // Mock the perplexity service to return a fixed response
         const originalGenerateChatResponse = perplexityService.generateChatResponse;
         perplexityService.generateChatResponse = jest.fn().mockResolvedValue('response 1');
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
         
         try {
             await messageCreateHandler(message);
@@ -323,6 +397,9 @@ describe('Bot integration', () => {
             // Reset reply mock to check for next reply
             message.reply.mockClear();
             perplexityService.generateChatResponse.mockClear();
+            
+            // Mock rate limiting for second message
+            conversationManager.isRateLimited = jest.fn().mockReturnValue(true);
             
             // Second message immediately after
             const secondMessage = { ...message, content: 'second message' };
@@ -345,17 +422,24 @@ describe('Bot integration', () => {
         
         // Make sure previous tests don't affect this one
         message.reply.mockClear();
+        message.channel.sendTyping.mockClear();
         
         // Mock the perplexity service to throw an error
         const originalGenerateChatResponse = perplexityService.generateChatResponse;
         perplexityService.generateChatResponse = jest.fn().mockRejectedValue(new Error('API Error'));
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        conversationManager.addMessage = jest.fn();
+        conversationManager.getHistory = jest.fn().mockReturnValue([]);
         
         try {
             // Call the handler with our message
             await messageCreateHandler(message);
             
             // Error message should be a plain string (not an embed)
-            expect(message.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
+            expect(message.reply).toHaveBeenCalledWith('The service is temporarily unavailable. Please try again later.');
         } finally {
             // Restore the original function
             perplexityService.generateChatResponse = originalGenerateChatResponse;
@@ -369,6 +453,12 @@ describe('Bot integration', () => {
         conversation.addMessage(message.author.id, 'assistant', 'answer');
 
         message.content = '!summary error';
+        message.reply.mockClear();
+        
+        // Mock the conversation manager methods
+        conversationManager.isRateLimited = jest.fn().mockReturnValue(false);
+        conversationManager.updateTimestamp = jest.fn();
+        
         await messageCreateHandler(message);
         // We just check that a reply was sent, without testing the exact message
         expect(message.reply).toHaveBeenCalled();

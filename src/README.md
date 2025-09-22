@@ -3,7 +3,7 @@
 ![CI](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/test.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. This branch contains a major refactor to improve the codebase structure, maintainability, and performance.
+**Aszune AI Bot v1.4.0** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. This version features comprehensive test coverage improvements, enhanced error handling, and robust testing infrastructure for production-ready stability.
 
 ---
 
@@ -38,7 +38,7 @@ All existing features from the main branch, plus:
 - 📝 **Better Logging:** Structured logging with different levels and timestamps
 - 🧹 **Memory Management:** Automatic cleanup of inactive conversations to prevent memory leaks
 - 🔄 **Background Processing:** Scheduled tasks for maintenance operations
-- 🧪 **Enhanced Testing:** Improved test structure with better mocking and isolation
+- 🧪 **Enhanced Testing:** 380+ automated tests with 82%+ code coverage and comprehensive error handling
 
 ---
 

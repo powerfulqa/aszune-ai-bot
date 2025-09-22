@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.3.3)
+# Aszune AI Bot (v1.4.0)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -46,7 +46,7 @@
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🧪 **Comprehensive Testing:** 241 automated tests covering all key functionality with >90% code coverage.
+- 🧪 **Comprehensive Testing:** 380+ automated tests covering all key functionality with 82%+ code coverage.
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with 82.45% branch coverage for critical components.
@@ -241,7 +241,7 @@ The `test:branch-coverage` script runs both configurations sequentially to ensur
 
 For more detailed information about the testing strategy, see the [Testing Guide](./wiki/Testing-Guide.md) and [__tests__/README.md](./__tests__/README.md).
 
-Current test coverage: >90% overall with 241 tests.
+Current test coverage: 82%+ overall with 380+ tests.
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Aszune AI Bot has a comprehensive test suite covering all critical functionality with over 90% code coverage. The tests are designed to verify that all components work correctly and handle edge cases appropriately.
+Aszune AI Bot has a comprehensive test suite covering all critical functionality with 82%+ code coverage. The tests are designed to verify that all components work correctly and handle edge cases appropriately.
 
 ## Test Structure
 
@@ -14,13 +14,22 @@ Tests are organized into:
 
 ## Key Test Files
 
+### Core Service Tests
 - `__tests__/unit/perplexity-service.test.js`: Tests for the Perplexity API integration
 - `__tests__/unit/chat-service.test.js`: Tests for the chat handling logic
 - `__tests__/unit/conversation-manager.test.js`: Tests for conversation history management
 - `__tests__/unit/message-chunker.test.js`: Tests for message splitting functionality
+
+### Integration Tests
 - `__tests__/integration/bot.test.js`: Integration tests for the bot's message handling
 - `__tests__/integration/error.test.js`: Tests for error handling scenarios
 - `__tests__/unit/index.test.js`: Tests for the main application entry point
+
+### v1.4.0 New Test Suites
+- `__tests__/unit/memory-monitor.test.js`: Complete test coverage for memory monitoring and garbage collection
+- `__tests__/unit/message-chunking/index.test.js`: Enhanced message chunking functionality tests
+- `__tests__/unit/message-chunking/chunk-boundary-handler.test.js`: Intelligent chunk boundary detection tests
+- `__tests__/unit/commands.test.js`: Comprehensive command handling tests (enhanced in v1.4.0)
 
 ## Running Tests
 

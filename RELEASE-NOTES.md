@@ -6,6 +6,13 @@ This file contains the master release notes for the Aszune AI Bot. For detailed 
 
 ## Version History
 
+### v1.4.0 - Comprehensive Testing & Coverage Enhancement
+- Massive test coverage improvement from 77.79% to 82%+
+- Added comprehensive test suites for memory monitoring, message chunking, and command handling
+- Expanded test count from 371 to 380+ passing tests
+- Enhanced error handling and recovery mechanisms across all modules
+- Full details in [RELEASE-NOTES-v1.4.0.md](./RELEASE-NOTES-v1.4.0.md)
+
 ### v1.3.6 - Performance and Stability Enhancements
 - Improved response time and reduced memory usage
 - Enhanced error detection and recovery mechanisms

@@ -122,6 +122,72 @@ describe('Command Handlers', () => {
       expect(message.reply).toHaveBeenCalled();
     });
 
+    it('should handle !summarise command with text', async () => {
+      const message = createMockMessage({ content: '!summarise This is a test message to summarise' });
+      perplexityService.generateSummary.mockResolvedValue('This is a summary.');
+      await handleTextCommand(message);
+      expect(message.channel.sendTyping).toHaveBeenCalled();
+      expect(message.reply).toHaveBeenCalled();
+    });
+
+    it('should handle !summerise command with text (alternative spelling)', async () => {
+      const message = createMockMessage({ content: '!summerise This is a test message to summarise' });
+      perplexityService.generateSummary.mockResolvedValue('This is a summary.');
+      await handleTextCommand(message);
+      expect(message.channel.sendTyping).toHaveBeenCalled();
+      expect(message.reply).toHaveBeenCalled();
+    });
+
+    it('should handle !summarise command without text', async () => {
+      const message = createMockMessage({ content: '!summarise' });
+      await handleTextCommand(message);
+      expect(message.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    });
+
+    it('should handle !summarise command with empty text', async () => {
+      const message = createMockMessage({ content: '!summarise   ' });
+      await handleTextCommand(message);
+      expect(message.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    });
+
+    it('should handle !summarise command with invalid text', async () => {
+      const message = createMockMessage({ content: '!summarise ' + 'x'.repeat(4000) });
+      await handleTextCommand(message);
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid text input'));
+    });
+
+    it('should handle !summarise command API error', async () => {
+      const message = createMockMessage({ content: '!summarise This is a test message' });
+      perplexityService.generateSummary.mockRejectedValue(new Error('API Error'));
+      await handleTextCommand(message);
+      expect(message.reply).toHaveBeenCalled();
+    });
+
+    it('should handle text command with invalid user ID', async () => {
+      const message = createMockMessage({ 
+        content: '!summarise test',
+        author: { id: 'invalid-id' }
+      });
+      await handleTextCommand(message);
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid user ID'));
+    });
+
+    it('should handle text command parsing for summarise', async () => {
+      const message = createMockMessage({ content: '!summarise This is a test message' });
+      perplexityService.generateSummary.mockResolvedValue('This is a summary.');
+      await handleTextCommand(message);
+      expect(message.channel.sendTyping).toHaveBeenCalled();
+      expect(message.reply).toHaveBeenCalled();
+    });
+
+    it('should handle text command parsing for summerise (alternative spelling)', async () => {
+      const message = createMockMessage({ content: '!summerise This is a test message' });
+      perplexityService.generateSummary.mockResolvedValue('This is a summary.');
+      await handleTextCommand(message);
+      expect(message.channel.sendTyping).toHaveBeenCalled();
+      expect(message.reply).toHaveBeenCalled();
+    });
+
     it('should return null for unknown command', async () => {
       const message = createMockMessage({ content: '!unknown' });
       const result = await handleTextCommand(message);
@@ -194,6 +260,64 @@ describe('Command Handlers', () => {
       expect(interaction.reply).toHaveBeenCalled();
     });
 
+    it('should handle /summarise command with text', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue('This is a test message to summarise')
+        }
+      });
+      perplexityService.generateSummary.mockResolvedValue('This is a summary.');
+      await handleSlashCommand(interaction);
+      expect(interaction.deferReply).toHaveBeenCalled();
+      expect(interaction.editReply).toHaveBeenCalled();
+    });
+
+    it('should handle /summarise command without text', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue(null)
+        }
+      });
+      await handleSlashCommand(interaction);
+      expect(interaction.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    });
+
+    it('should handle /summarise command with empty text', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue('   ')
+        }
+      });
+      await handleSlashCommand(interaction);
+      expect(interaction.reply).toHaveBeenCalledWith('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    });
+
+    it('should handle /summarise command with invalid text', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue('x'.repeat(4000))
+        }
+      });
+      await handleSlashCommand(interaction);
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid text input'));
+    });
+
+    it('should handle /summarise command API error', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue('This is a test message')
+        }
+      });
+      perplexityService.generateSummary.mockRejectedValue(new Error('API Error'));
+      await handleSlashCommand(interaction);
+      expect(interaction.editReply).toHaveBeenCalled();
+    });
+
     it('should handle command execution error when not deferred', async () => {
       const interaction = createMockInteraction({ commandName: 'help' });
       const error = new Error('Test Error');
@@ -228,6 +352,47 @@ describe('Command Handlers', () => {
     it('should handle command execution error', async () => {
       const interaction = createMockInteraction({ commandName: 'help' });
       interaction.deferred = true; // Set deferred to true to test the editReply path
+      const error = new Error('Test Error');
+      interaction.reply.mockRejectedValue(error);
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: 'An unexpected error occurred. Please try again later.',
+        ephemeral: true
+      });
+    });
+
+    it('should handle slash command with invalid user ID', async () => {
+      const interaction = createMockInteraction({ 
+        commandName: 'summarise',
+        user: { id: 'invalid-id' },
+        options: {
+          getString: jest.fn().mockReturnValue('test')
+        }
+      });
+      await handleSlashCommand(interaction);
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid user ID'));
+    });
+
+    it('should handle slash command when already replied', async () => {
+      const interaction = createMockInteraction({ commandName: 'help' });
+      interaction.replied = true;
+      const error = new Error('Test Error');
+      interaction.reply.mockRejectedValue(error);
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: 'An unexpected error occurred. Please try again later.',
+        ephemeral: true
+      });
+    });
+
+    it('should handle slash command when already deferred and replied', async () => {
+      const interaction = createMockInteraction({ commandName: 'help' });
+      interaction.deferred = true;
+      interaction.replied = true;
       const error = new Error('Test Error');
       interaction.reply.mockRejectedValue(error);
 
