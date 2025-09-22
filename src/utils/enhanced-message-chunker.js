@@ -381,10 +381,10 @@ function formatSourceReferences(text, sourceMap) {
  * @param {number} maxLength - Maximum length per message chunk (default: 2000)
  * @return {string[]} Array of message chunks
  */
-function enhancedChunkMessage(message, maxLength = 2000) {
+function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD_MAX_LENGTH) {
   // Reduce max length slightly to ensure we have room for formatting
   // This helps prevent truncation issues
-  const safeMaxLength = maxLength - 50;
+  const safeMaxLength = maxLength - config.MESSAGE_LIMITS.SAFE_CHUNK_OVERHEAD;
   
   // Pre-process message to fix common formatting issues
   let processedMessage = message;

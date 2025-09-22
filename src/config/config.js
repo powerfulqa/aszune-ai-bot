@@ -22,6 +22,67 @@ const config = {
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
   CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
   
+  // Message and UI Limits
+  MESSAGE_LIMITS: {
+    DISCORD_MAX_LENGTH: 2000,
+    EMBED_MAX_LENGTH: 1400,
+    SAFE_CHUNK_OVERHEAD: 50,
+    MAX_PARAGRAPH_LENGTH: 300,
+    EMBED_DESCRIPTION_MAX_LENGTH: 1500,
+    ERROR_MESSAGE_MAX_LENGTH: 200,
+    CHUNK_DELAY_MS: 800
+  },
+  
+  // Cache Configuration
+  CACHE: {
+    DEFAULT_MAX_ENTRIES: 100,
+    CLEANUP_PERCENTAGE: 0.2,
+    MAX_AGE_DAYS: 7,
+    MAX_AGE_MS: 7 * 24 * 60 * 60 * 1000,
+    CLEANUP_INTERVAL_DAYS: 1,
+    CLEANUP_INTERVAL_MS: 24 * 60 * 60 * 1000
+  },
+  
+  // Rate Limiting and Retry
+  RATE_LIMITS: {
+    DEFAULT_WINDOW_MS: 5000,
+    RETRY_DELAY_MS: 1000,
+    MAX_RETRIES: 1,
+    API_TIMEOUT_MS: 30000
+  },
+  
+  // File Permissions
+  FILE_PERMISSIONS: {
+    FILE: 0o644, // Owner can read/write, group/others can read only
+    DIRECTORY: 0o755 // Owner can read/write/execute, group/others can read/execute
+  },
+  
+  // Memory and Performance
+  MEMORY: {
+    DEFAULT_LIMIT_MB: 200,
+    DEFAULT_CRITICAL_MB: 250,
+    GC_COOLDOWN_MS: 30000,
+    CHECK_INTERVAL_MS: 60000,
+    PRESSURE_TEST_SIZE: 1000000
+  },
+  
+  // Performance Monitoring
+  PERFORMANCE: {
+    MIN_VALID_INTERVAL_MS: 250,
+    BACKOFF_MAX_MS: 10000,
+    BACKOFF_MIN_MS: 500,
+    CHECK_INTERVAL_MS: 5000,
+    CPU_THRESHOLD_PERCENT: 80,
+    MEMORY_THRESHOLD_PERCENT: 85
+  },
+  
+  // Logging
+  LOGGING: {
+    DEFAULT_MAX_SIZE_MB: 5,
+    MAX_LOG_FILES: 5,
+    ROTATION_CHECK_INTERVAL_MS: 60000
+  },
+  
   // Raspberry Pi optimizations (default values, will be overridden by pi-detector)
   PI_OPTIMIZATIONS: {
     ENABLED: process.env.ENABLE_PI_OPTIMIZATIONS === 'true',

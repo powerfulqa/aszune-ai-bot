@@ -4,13 +4,14 @@
  */
 
 const logger = require('./logger');
+const config = require('../config/config');
 
 class MemoryMonitor {
   constructor() {
     this.initialized = false;
-    this.memoryLimit = process.env.PI_MEMORY_LIMIT ? parseInt(process.env.PI_MEMORY_LIMIT, 10) * 1024 * 1024 : 200 * 1024 * 1024;
-    this.criticalMemory = process.env.PI_MEMORY_CRITICAL ? parseInt(process.env.PI_MEMORY_CRITICAL, 10) * 1024 * 1024 : 250 * 1024 * 1024;
-    this.checkIntervalMs = 60000; // Check every minute
+    this.memoryLimit = process.env.PI_MEMORY_LIMIT ? parseInt(process.env.PI_MEMORY_LIMIT, 10) * 1024 * 1024 : config.MEMORY.DEFAULT_LIMIT_MB * 1024 * 1024;
+    this.criticalMemory = process.env.PI_MEMORY_CRITICAL ? parseInt(process.env.PI_MEMORY_CRITICAL, 10) * 1024 * 1024 : config.MEMORY.DEFAULT_CRITICAL_MB * 1024 * 1024;
+    this.checkIntervalMs = config.MEMORY.CHECK_INTERVAL_MS;
     this.checkInterval = null;
     this.lastGcTime = 0;
     this.isLowMemory = false;
@@ -87,7 +88,7 @@ class MemoryMonitor {
     try {
       // Only try to GC every 30 seconds at most
       const now = Date.now();
-      if (now - this.lastGcTime < 30000) return;
+      if (now - this.lastGcTime < config.MEMORY.GC_COOLDOWN_MS) return;
       
       // Try different methods to encourage garbage collection
       this.lastGcTime = now;
@@ -101,7 +102,7 @@ class MemoryMonitor {
       // Second method: Create temporary pressure then release
       const pressure = [];
       for (let i = 0; i < 10; i++) {
-        pressure.push(new Array(1000000).fill('x'));
+        pressure.push(new Array(config.MEMORY.PRESSURE_TEST_SIZE).fill('x'));
       }
       pressure.length = 0;
       

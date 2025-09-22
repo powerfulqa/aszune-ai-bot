@@ -51,12 +51,7 @@ class PerplexityService {
     this.baseUrl = config.API.PERPLEXITY.BASE_URL;
     
     // File permission constants
-    this.FILE_PERMISSIONS = {
-      // 0o644 = Owner can read/write, group/others can read only
-      FILE: 0o644,
-      // 0o755 = Owner can read/write/execute, group/others can read/execute
-      DIRECTORY: 0o755
-    };
+    this.FILE_PERMISSIONS = config.FILE_PERMISSIONS;
     
     // Track active intervals for proper cleanup
     this.activeIntervals = new Set();
@@ -73,8 +68,7 @@ class PerplexityService {
   _setupCacheCleanup() {
     if (process.env.NODE_ENV !== 'test') {
       // Clean cache every day
-      const DAY_MS = 24 * 60 * 60 * 1000;
-      this.cacheCleanupInterval = setInterval(() => this._cleanupCache(), DAY_MS);
+      this.cacheCleanupInterval = setInterval(() => this._cleanupCache(), config.CACHE.CLEANUP_INTERVAL_MS);
       this.activeIntervals.add(this.cacheCleanupInterval);
     }
   }
@@ -301,7 +295,7 @@ class PerplexityService {
     }
     
     // Create a descriptive error message with status code and response content
-    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
     throw new Error(errorMessage);
   }
   
@@ -420,8 +414,8 @@ class PerplexityService {
       
       // Try to generate new response with retry for rate limits
       let response;
-      let retries = opts.retryOnRateLimit ? 1 : 0;
-      let retryDelay = 1000; // Start with 1 second delay
+      let retries = opts.retryOnRateLimit ? config.RATE_LIMITS.MAX_RETRIES : 0;
+      let retryDelay = config.RATE_LIMITS.RETRY_DELAY_MS;
       
       try {
         response = await this.sendChatRequest(history);
@@ -462,7 +456,7 @@ class PerplexityService {
   _getCacheConfiguration() {
     const defaultConfig = {
       enabled: false,
-      maxEntries: 100
+      maxEntries: config.CACHE.DEFAULT_MAX_ENTRIES
     };
     
     try {
@@ -564,8 +558,8 @@ class PerplexityService {
   _pruneCache(cache, maxEntries) {
     const keys = Object.keys(cache);
     if (keys.length > maxEntries) {
-      // Remove oldest 20% of entries
-      const removeCount = Math.ceil(maxEntries * 0.2);
+      // Remove oldest entries based on configured percentage
+      const removeCount = Math.ceil(maxEntries * config.CACHE.CLEANUP_PERCENTAGE);
       const keysToRemove = keys.slice(0, removeCount);
       keysToRemove.forEach(key => delete cache[key]);
     }
@@ -748,12 +742,11 @@ class PerplexityService {
       if (!cache) return;
       
       const now = Date.now();
-      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
       let modified = false;
       
       for (const [key, entry] of Object.entries(cache)) {
         const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
-        if (timestamp && now - timestamp > ONE_WEEK_MS) {
+        if (timestamp && now - timestamp > config.CACHE.MAX_AGE_MS) {
           delete cache[key];
           modified = true;
         }

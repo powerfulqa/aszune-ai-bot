@@ -26,12 +26,12 @@ class ConversationManager {
   initializeIntervals() {
     if (process.env.NODE_ENV !== 'test') {
       // Set up save interval (every 5 minutes)
-      this.saveStatsInterval = setInterval(() => this.saveUserStats(), 5 * 60 * 1000);
+      this.saveStatsInterval = setInterval(() => this.saveUserStats(), config.CACHE.CLEANUP_INTERVAL_MS);
       this.activeIntervals.add(this.saveStatsInterval);
       // Set up cleanup interval - more frequently if Pi optimizations are enabled
       const cleanupInterval = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
         ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
-        : 60 * 60 * 1000;
+        : config.CACHE.CLEANUP_INTERVAL_MS;
       this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
       this.activeIntervals.add(this.cleanupInterval);
     }
@@ -170,7 +170,7 @@ class ConversationManager {
    */
   cleanupOldConversations() {
     const now = Date.now();
-    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+    const oneDayAgo = now - config.CACHE.CLEANUP_INTERVAL_MS;
     
     for (const [userId, timestamp] of this.lastMessageTimestamps.entries()) {
       if (timestamp < oneDayAgo) {

@@ -19,12 +19,12 @@ class PerformanceMonitor {
     this.maxThrottleFactor = 5; // Maximum delay factor
     
     // Minimum valid interval
-    this.minValidInterval = 250; // ms
+    this.minValidInterval = config.PERFORMANCE.MIN_VALID_INTERVAL_MS;
     
     // Exponential backoff parameters
     this.backoffFactor = 1.5;
-    this.backoffMax = 10000; // ms
-    this.backoffMin = 500; // ms
+    this.backoffMax = config.PERFORMANCE.BACKOFF_MAX_MS;
+    this.backoffMin = config.PERFORMANCE.BACKOFF_MIN_MS;
     this.currentBackoff = this.backoffMin;
   }
   
@@ -47,7 +47,7 @@ class PerformanceMonitor {
     this.lastCpuInfo = this._getCpuInfo();
     
     // Start monitoring at 5-second intervals
-    this.checkInterval = setInterval(() => this._checkPerformance(), 5000);
+    this.checkInterval = setInterval(() => this._checkPerformance(), config.PERFORMANCE.CHECK_INTERVAL_MS);
     logger.info('[PerformanceMonitor] Performance monitoring initialized');
   }
   

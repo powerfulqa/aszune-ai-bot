@@ -48,7 +48,7 @@ const conversationManager = new ConversationManager();
 async function sendResponse(message, responseText) {
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
   // Further reduced to prevent truncation issues with source links and URL formatting
-  const MAX_EMBED_LENGTH = 1400; // Significantly reduced from Discord's max of 2000 to prevent any truncation issues
+  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH;
   
   console.log(`Preparing to send response of length: ${responseText.length}`);
   
@@ -87,7 +87,7 @@ async function sendResponse(message, responseText) {
       firstReply = await message.reply({ embeds: [embed] });
     } else {
       // Small delay between messages for better readability
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, config.MESSAGE_LIMITS.CHUNK_DELAY_MS));
       await message.channel.send({ embeds: [embed] });
     }
   }

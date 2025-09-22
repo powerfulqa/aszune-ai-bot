@@ -97,7 +97,7 @@ class MessageFormatter {
    */
   _breakLongParagraphs(text) {
     const paragraphs = text.split('\n\n');
-    const maxParaLength = 300;
+    const maxParaLength = config.MESSAGE_LIMITS.MAX_PARAGRAPH_LENGTH;
     
     const processed = paragraphs.map(para => {
       if (para.length <= maxParaLength) return para;
@@ -139,7 +139,7 @@ class MessageFormatter {
     
     // Simplify description for embeds (embeds have a stricter limit)
     if (compactEmbed.description) {
-      compactEmbed.description = this.formatResponse(compactEmbed.description, { maxLength: 1500 });
+      compactEmbed.description = this.formatResponse(compactEmbed.description, { maxLength: config.MESSAGE_LIMITS.EMBED_DESCRIPTION_MAX_LENGTH });
     }
     
     // Remove footer on low resource mode

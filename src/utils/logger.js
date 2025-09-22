@@ -74,23 +74,22 @@ class Logger {
   async _rotateLogFileIfNeeded() {
     try {
       const stats = await fs.stat(this.logFile).catch(() => ({ size: 0 }));
-      // Default size: 5MB, but use env if available (convert MB to bytes)
-      const defaultMaxSizeMB = 5;
+      // Default size from config, but use env if available (convert MB to bytes)
       const envMaxSizeMB = parseInt(process.env.PI_LOG_MAX_SIZE_MB, 10);
-      const maxSizeMB = !isNaN(envMaxSizeMB) ? envMaxSizeMB : defaultMaxSizeMB;
+      const maxSizeMB = !isNaN(envMaxSizeMB) ? envMaxSizeMB : config.LOGGING.DEFAULT_MAX_SIZE_MB;
       const maxSize = maxSizeMB * 1024 * 1024;
       
       if (stats.size > maxSize) {
         const timestamp = new Date().toISOString().replace(/:/g, '-');
         await fs.rename(this.logFile, `${this.logFile}.${timestamp}`);
         
-        // Remove old log files (keep only 5 most recent)
+        // Remove old log files (keep only configured number most recent)
         const files = await fs.readdir(this.logDir);
         const oldLogs = files
           .filter(f => f.startsWith('bot.log.') && f !== 'bot.log')
           .sort()
           .reverse()
-          .slice(5);
+          .slice(config.LOGGING.MAX_LOG_FILES);
         
         for (const oldLog of oldLogs) {
           await fs.unlink(path.join(this.logDir, oldLog)).catch(() => {});
