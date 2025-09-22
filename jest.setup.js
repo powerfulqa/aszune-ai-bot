@@ -12,6 +12,9 @@ jest.spyOn(process, 'exit').mockImplementation(() => {
   throw new Error('process.exit called');
 });
 
+// Mock the config module
+jest.mock('./src/config/config', () => require('./__mocks__/configMock'));
+
 // Reset modules between tests
 beforeEach(() => {
   jest.resetModules();

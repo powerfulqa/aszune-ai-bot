@@ -20,7 +20,7 @@ function createMockMessage(options = {}) {
     content: content || '',
     author: {
       bot: isBot || false,
-      id: userId || '12345',
+      id: userId || '123456789012345678',
     },
     reply: mockReply,
     react: mockReact,
@@ -48,7 +48,7 @@ function resetMocks() {
 function createMockInteraction(options = {}) {
   return {
     user: {
-      id: options.userId || '12345',
+      id: options.userId || '123456789012345678',
     },
     commandName: options.commandName || 'help',
     isChatInputCommand: () => true,

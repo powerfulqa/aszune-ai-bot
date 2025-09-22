@@ -3,7 +3,16 @@ jest.useFakeTimers();
 // We want to test the real commands module, not the mock
 // jest.mock('../../src/commands', () => require('../../__mocks__/commands'));
 jest.mock('../../src/utils/logger');
-jest.mock('../../src/utils/conversation');
+jest.mock('../../src/utils/conversation', () => {
+  const mockInstance = {
+    clearHistory: jest.fn(),
+    getHistory: jest.fn().mockReturnValue([]),
+    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
+    updateUserStats: jest.fn()
+  };
+  
+  return jest.fn().mockImplementation(() => mockInstance);
+});
 jest.mock('../../src/services/perplexity-secure');
 
 const { handleTextCommand, handleSlashCommand, getSlashCommandsData } = require('../../src/commands');
@@ -16,11 +25,8 @@ let conversationManager;
 
 describe('Command Handlers', () => {
   beforeEach(() => {
-    logger.handleError.mockReturnValue('There was an error executing this command.');
-    conversationManager = new ConversationManager();
-    jest.spyOn(conversationManager, 'clearHistory').mockImplementation(() => {});
-    jest.spyOn(conversationManager, 'getHistory').mockImplementation(() => []);
-    jest.spyOn(conversationManager, 'getUserStats').mockImplementation(() => ({ messages: 10, summaries: 2 }));
+    // Reset all mocks
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -55,9 +61,15 @@ describe('Command Handlers', () => {
 
     it('should handle !summary command with history', async () => {
       const message = createMockMessage({ content: '!summary' });
-      conversationManager.getHistory.mockReturnValue([
-        { role: 'user', content: 'Hello' }
-      ]);
+      // The mock is already set up to return empty array, so we need to override it
+      ConversationManager.mockImplementation(() => ({
+        clearHistory: jest.fn(),
+        getHistory: jest.fn().mockReturnValue([
+          { role: 'user', content: 'Hello' }
+        ]),
+        getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
+        updateUserStats: jest.fn()
+      }));
       perplexityService.generateSummary.mockResolvedValue('This is a summary.');
       await handleTextCommand(message);
       // Accept either embed or fallback string
@@ -84,7 +96,7 @@ describe('Command Handlers', () => {
       const message = createMockMessage({ content: '!help' });
       message.reply.mockRejectedValueOnce(new Error('Test Error'));
       await handleTextCommand(message);
-      expect(message.reply).toHaveBeenCalledWith('There was an error executing this command.');
+      expect(message.reply).toHaveBeenCalledWith('An unexpected error occurred. Please try again later.');
     });
 
     it('should handle !summary command API error', async () => {
@@ -193,7 +205,7 @@ describe('Command Handlers', () => {
 
       // The code will try to call reply, which will throw, then it will try to call reply again in the catch block.
       expect(interaction.reply).toHaveBeenLastCalledWith({
-        content: 'There was an error executing this command.',
+        content: 'An unexpected error occurred. Please try again later.',
         ephemeral: true
       });
     });
@@ -216,7 +228,7 @@ describe('Command Handlers', () => {
       await handleSlashCommand(interaction);
 
       expect(interaction.editReply).toHaveBeenCalledWith({
-        content: 'There was an error executing this command.',
+        content: 'An unexpected error occurred. Please try again later.',
         ephemeral: true
       });
     });

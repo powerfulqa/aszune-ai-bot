@@ -524,7 +524,7 @@ class PerplexityService {
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'generate chat response', { 
         historyLength: history?.length || 0,
-        shouldUseCache: shouldUseCache
+        shouldUseCache: opts.caching !== false
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
       throw error;

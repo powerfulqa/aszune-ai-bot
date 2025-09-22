@@ -11,6 +11,10 @@ jest.mock('../../src/config/config', () => ({
     ENABLED: true,
     COMPACT_MODE: true,
     LOW_CPU_MODE: false
+  },
+  MESSAGE_LIMITS: {
+    EMBED_DESCRIPTION_MAX_LENGTH: 2048,
+    MAX_PARAGRAPH_LENGTH: 1000
   }
 }));
 

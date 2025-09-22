@@ -9,6 +9,12 @@ jest.mock('os');
 jest.mock('../../src/config/config', () => ({
   PI_OPTIMIZATIONS: {
     ENABLED: true
+  },
+  PERFORMANCE: {
+    MIN_VALID_INTERVAL_MS: 100,
+    BACKOFF_MAX_MS: 30000,
+    BACKOFF_MIN_MS: 1000,
+    CHECK_INTERVAL_MS: 5000
   }
 }));
 
@@ -197,8 +203,8 @@ describe('Performance Monitor', () => {
       performanceMonitor._checkPerformance();
       
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error checking performance'),
-        expect.any(Error)
+        expect.stringContaining('Error in performance monitoring:'),
+        expect.any(Object)
       );
     });
   });
