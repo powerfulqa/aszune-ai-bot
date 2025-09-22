@@ -5,6 +5,7 @@ const config = require('../config/config');
 const dataStorage = require('../services/storage');
 const logger = require('./logger');
 const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
+const { InputValidator } = require('./input-validator');
 
 class ConversationManager {
   constructor() {
@@ -75,6 +76,13 @@ class ConversationManager {
    * @returns {Array} - The conversation history
    */
   getHistory(userId) {
+    // Validate user ID
+    const userIdValidation = InputValidator.validateUserId(userId);
+    if (!userIdValidation.valid) {
+      logger.warn(`Invalid user ID in getHistory: ${userIdValidation.error}`);
+      return [];
+    }
+    
     return this.conversations.get(userId) || [];
   }
   
@@ -85,12 +93,36 @@ class ConversationManager {
    * @param {string} content - The message content
    */
   addMessage(userId, role, content) {
+    // Validate user ID
+    const userIdValidation = InputValidator.validateUserId(userId);
+    if (!userIdValidation.valid) {
+      logger.warn(`Invalid user ID in addMessage: ${userIdValidation.error}`);
+      return;
+    }
+    
+    // Validate message content
+    const contentValidation = InputValidator.validateAndSanitize(content, {
+      type: 'message',
+      strict: false
+    });
+    
+    if (!contentValidation.valid) {
+      logger.warn(`Invalid message content in addMessage: ${contentValidation.error}`);
+      return;
+    }
+    
+    // Validate role
+    if (!['user', 'assistant', 'system'].includes(role)) {
+      logger.warn(`Invalid role in addMessage: ${role}`);
+      return;
+    }
+    
     if (!this.conversations.has(userId)) {
       this.conversations.set(userId, []);
     }
     
     const history = this.conversations.get(userId);
-    history.push({ role, content });
+    history.push({ role, content: contentValidation.sanitized });
     
     // Trim history if it exceeds the max length
     // Use a smaller history size on Pi to save memory

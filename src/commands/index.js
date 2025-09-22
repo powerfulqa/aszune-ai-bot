@@ -7,6 +7,7 @@ const perplexityService = require('../services/perplexity-secure');
 const logger = require('../utils/logger');
 const config = require('../config/config');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
+const { InputValidator } = require('../utils/input-validator');
 
 const conversationManager = new ConversationManager();
 
@@ -48,45 +49,58 @@ const commands = {
       name: 'summary',
       description: 'Summarise your current conversation'
     },
-    async execute(interaction) {
-      const userId = interaction.user.id;
-      const history = conversationManager.getHistory(userId);
-      
-      if (!history || history.length === 0) {
-        return interaction.reply('No conversation history to summarise.');
-      }
-      
-      // Ensure last message is from user or tool
-      let cleanHistory = [...history];
-      while (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'assistant') {
-        cleanHistory.pop();
-      }
-      
-      if (cleanHistory.length === 0) {
-        return interaction.reply('No conversation history to summarise.');
-      }
-      
-      await interaction.deferReply();
-      
-      try {
-        const summary = await perplexityService.generateSummary(cleanHistory);
-        conversationManager.updateUserStats(userId, 'summaries');
-          return interaction.editReply({ 
-          embeds: [{
-            color: config.COLORS.PRIMARY,
-            title: 'Conversation Summary',
-            description: summary,
-            footer: { text: 'Aszai Bot' }
-          }]
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'summary generation', {
-          userId: userId,
-          historyLength: history?.length || 0
-        });
-        return interaction.editReply(errorResponse.message);
-      }
-    },
+  async execute(interaction) {
+    const userId = interaction.user.id;
+    
+    // Validate user ID
+    const userIdValidation = InputValidator.validateUserId(userId);
+    if (!userIdValidation.valid) {
+      return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
+    }
+    
+    const history = conversationManager.getHistory(userId);
+    
+    // Validate conversation history
+    const historyValidation = InputValidator.validateConversationHistory(history);
+    if (!historyValidation.valid) {
+      return interaction.reply(`❌ Invalid conversation history: ${historyValidation.error}`);
+    }
+    
+    if (!history || history.length === 0) {
+      return interaction.reply('No conversation history to summarise.');
+    }
+    
+    // Ensure last message is from user or tool
+    let cleanHistory = [...history];
+    while (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'assistant') {
+      cleanHistory.pop();
+    }
+    
+    if (cleanHistory.length === 0) {
+      return interaction.reply('No conversation history to summarise.');
+    }
+    
+    await interaction.deferReply();
+    
+    try {
+      const summary = await perplexityService.generateSummary(cleanHistory);
+      conversationManager.updateUserStats(userId, 'summaries');
+        return interaction.editReply({ 
+        embeds: [{
+          color: config.COLORS.PRIMARY,
+          title: 'Conversation Summary',
+          description: summary,
+          footer: { text: 'Aszai Bot' }
+        }]
+      });
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'summary generation', {
+        userId: userId,
+        historyLength: history?.length || 0
+      });
+      return interaction.editReply(errorResponse.message);
+    }
+  },
     textCommand: '!summary'
   },
     stats: {
@@ -117,35 +131,58 @@ const commands = {
         required: true
       }]
     },
-    async execute(interaction) {
-      let text;
-      
-      // Handle both text commands and slash commands
-      if (interaction.options) {
-        // This is a slash command
-        text = interaction.options.getString('text');      } else {
-        // This is a text command
-        const commandText = interaction.content || '';
-        // Match both spellings: summarise and summerise
-        const match = commandText.match(/^!sum[me]?[ae]rise\s+(.+)/i);
-        text = match ? match[1] : '';
+  async execute(interaction) {
+    const userId = interaction.user.id;
+    
+    // Validate user ID
+    const userIdValidation = InputValidator.validateUserId(userId);
+    if (!userIdValidation.valid) {
+      return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
+    }
+    
+    let text;
+    
+    // Handle both text commands and slash commands
+    if (interaction.options) {
+      // This is a slash command
+      text = interaction.options.getString('text');      } else {
+      // This is a text command
+      const commandText = interaction.content || '';
+      // Match both spellings: summarise and summerise
+      const match = commandText.match(/^!sum[me]?[ae]rise\s+(.+)/i);
+      text = match ? match[1] : '';
       }
-        if (!text || text.trim().length === 0) {
-        return interaction.reply('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
-      }
-      
-      await interaction.deferReply();
-      
-      try {        // Create a message array with the text to summarize
+        
+    if (!text || text.trim().length === 0) {
+      return interaction.reply('Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`');
+    }
+    
+    // Validate and sanitize the text input
+    const textValidation = InputValidator.validateAndSanitize(text, {
+      type: 'message',
+      maxLength: 3000, // Reasonable limit for summarization
+      strict: false
+    });
+    
+    if (!textValidation.valid) {
+      return interaction.reply(`❌ Invalid text input: ${textValidation.error}`);
+    }
+    
+    // Use sanitized text
+    const sanitizedText = textValidation.sanitized;
+    
+    await interaction.deferReply();
+    
+    try {        // Create a message array with the sanitized text to summarize
         const messages = [
           {
             role: 'user', 
-            content: text
+            content: sanitizedText
           }
         ];
         
         const summary = await perplexityService.generateTextSummary(messages);
-        conversationManager.updateUserStats(interaction.user.id, 'summaries');
+        conversationManager.updateUserStats(userId, 'summaries');
           return interaction.editReply({ 
           embeds: [{
             color: config.COLORS.PRIMARY,
@@ -156,8 +193,9 @@ const commands = {
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
-          userId: interaction.user.id,
-          textLength: text?.length || 0
+          userId: userId,
+          textLength: sanitizedText?.length || 0,
+          warnings: textValidation.warnings
         });
         return interaction.editReply(errorResponse.message);
       }

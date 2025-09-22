@@ -12,6 +12,7 @@ const { debounce } = require('../utils/debouncer');
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage } = require('../utils/enhanced-message-chunker');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
+const { InputValidator } = require('../utils/input-validator');
 
 // Simple lazy loading function to use in tests
 const lazyLoad = (importFn) => {
@@ -104,6 +105,32 @@ async function processUserMessage(message) {
   
   const userId = message.author.id;
   
+  // Validate user ID
+  const userIdValidation = InputValidator.validateUserId(userId);
+  if (!userIdValidation.valid) {
+    logger.warn(`Invalid user ID: ${userIdValidation.error}`);
+    return null;
+  }
+  
+  // Validate and sanitize message content
+  const contentValidation = InputValidator.validateAndSanitize(message.content, {
+    type: 'message',
+    strict: false // Allow with warnings for better user experience
+  });
+  
+  if (!contentValidation.valid) {
+    await message.reply(`❌ ${contentValidation.error}`);
+    return null;
+  }
+  
+  // Log warnings if any
+  if (contentValidation.warnings.length > 0) {
+    logger.warn(`Message sanitization warnings for user ${userId}:`, contentValidation.warnings);
+  }
+  
+  // Use sanitized content
+  const sanitizedContent = contentValidation.sanitized;
+  
   // Check for rate limiting
   if (conversationManager.isRateLimited(userId)) {
     await message.reply('Please wait a few seconds before sending another message.');
@@ -112,15 +139,15 @@ async function processUserMessage(message) {
   conversationManager.updateTimestamp(userId);
   
   // Check for commands
-  if (message.content.startsWith('!')) {
+  if (sanitizedContent.startsWith('!')) {
     const commandResult = await commandHandler.handleTextCommand(message);
     return null;
   }
   
-  // Add message to history
-  conversationManager.addMessage(userId, 'user', message.content);
+  // Add sanitized message to history
+  conversationManager.addMessage(userId, 'user', sanitizedContent);
   
-  return { userId };
+  return { userId, sanitizedContent };
 }
 
 /**
@@ -171,7 +198,8 @@ async function handleChatMessage(message) {
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'chat generation', {
       userId: processedData.userId,
-      messageLength: message.content?.length || 0
+      messageLength: message.content?.length || 0,
+      sanitizedContent: processedData.sanitizedContent?.length || 0
     });
     
     // Send user-friendly error message
