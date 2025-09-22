@@ -14,21 +14,7 @@ jest.mock('../../src/utils/pi-detector', () => ({
   optimizeSettings: jest.fn(),
 }));
 
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  PERPLEXITY_API_KEY: 'test-perplexity-key',
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai'
-    }
-  },
-  LOGGING: {
-    LEVEL: 'info'
-  },
-  PI_OPTIMIZATIONS: {
-    ENABLED: true
-  }
-}));
+jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
 describe('Main entry point', () => {
   let originalProcess;

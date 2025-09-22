@@ -1,6 +1,10 @@
 /**
  * Tests for conversation manager
  */
+
+// Mock the config module
+jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
+
 const ConversationManager = require('../../src/utils/conversation');
 const config = require('../../src/config/config');
 let conversationManager;

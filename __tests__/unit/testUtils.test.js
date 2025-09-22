@@ -24,7 +24,7 @@ describe('Test Utilities', () => {
       const message = createMockMessage();
       expect(message.content).toBe('');
       expect(message.author.bot).toBe(false);
-      expect(message.author.id).toBe('12345');
+      expect(message.author.id).toBe('123456789012345678');
       expect(message.reply).toBe(mockReply);
       expect(message.react).toBe(mockReact);
       expect(message.channel.sendTyping).toBe(mockSendTyping);
@@ -48,7 +48,7 @@ describe('Test Utilities', () => {
   describe('createMockInteraction', () => {
     it('creates a default mock interaction with expected properties', () => {
       const interaction = createMockInteraction();
-      expect(interaction.user.id).toBe('12345');
+      expect(interaction.user.id).toBe('123456789012345678');
       expect(interaction.commandName).toBe('help');
       expect(interaction.isChatInputCommand()).toBe(true);
       expect(interaction.reply).toBe(mockReply);

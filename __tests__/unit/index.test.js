@@ -16,6 +16,9 @@ jest.mock('../../src/utils/logger', () => ({
   error: jest.fn()
 }));
 
+// Mock the config module
+jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
+
 // Get the mock for usage in our tests
 const loggerMock = require('../../src/utils/logger');
 

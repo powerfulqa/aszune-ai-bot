@@ -17,7 +17,7 @@ const legacyEmojiMap = {
 
 class EmojiManager {
   constructor() {
-    this.reactions = config.REACTIONS;
+    this.reactions = config.EMOJI_REACTIONS || config.REACTIONS || legacyEmojiMap;
   }
   
   /**

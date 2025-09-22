@@ -474,9 +474,10 @@ class PerplexityService {
    * @returns {Promise<String>} - The response content
    */
   async generateChatResponse(history, options = true) {
+    // Parse options object or boolean
+    const opts = typeof options === 'object' ? options : { caching: options };
+    
     try {
-      // Parse options object or boolean
-      const opts = typeof options === 'object' ? options : { caching: options };
       
       // Get cache configuration
       const cacheConfig = this._getCacheConfiguration();

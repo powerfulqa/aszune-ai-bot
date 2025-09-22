@@ -70,6 +70,7 @@ module.exports = {
   },
   EMOJI_REACTIONS: {
     'hello': '👋',
+    'welcome': '👋',
     'thanks': '🙏',
     'love': '❤️',
     'happy': '😊',
