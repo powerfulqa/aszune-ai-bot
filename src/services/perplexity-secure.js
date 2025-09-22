@@ -14,6 +14,7 @@ const path = require('path');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
+const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -57,6 +58,15 @@ class PerplexityService {
     // Track active intervals for proper cleanup
     this.activeIntervals = new Set();
     
+    // Initialize enhanced cache
+    this.cache = new EnhancedCache({
+      maxSize: config.CACHE.DEFAULT_MAX_ENTRIES,
+      maxMemory: config.CACHE.MAX_MEMORY_MB * 1024 * 1024,
+      evictionStrategy: EVICTION_STRATEGIES.HYBRID,
+      defaultTtl: config.CACHE.DEFAULT_TTL_MS,
+      cleanupInterval: config.CACHE.CLEANUP_INTERVAL_MS
+    });
+    
     // Set up cache cleanup interval (if not in test environment)
     this.cacheCleanupInterval = null;
     this._setupCacheCleanup();
@@ -75,6 +85,62 @@ class PerplexityService {
   }
   
   /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getCacheStats() {
+    try {
+      return this.cache.getStats();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
+      logger.error(`Cache stats error: ${errorResponse.message}`);
+      return {
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        evictions: 0,
+        hitRate: 0,
+        entryCount: 0,
+        memoryUsage: 0,
+        error: errorResponse.message
+      };
+    }
+  }
+
+  /**
+   * Get detailed cache information
+   * @returns {Object} Detailed cache information
+   */
+  getDetailedCacheInfo() {
+    try {
+      return this.cache.getDetailedInfo();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'getting detailed cache info');
+      logger.error(`Detailed cache info error: ${errorResponse.message}`);
+      return {
+        error: errorResponse.message,
+        stats: this.getCacheStats()
+      };
+    }
+  }
+
+  /**
+   * Invalidate cache entries by tag
+   * @param {string} tag - Tag to invalidate
+   * @returns {number} Number of entries invalidated
+   */
+  invalidateCacheByTag(tag) {
+    try {
+      return this.cache.invalidateByTag(tag);
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'invalidating cache by tag', { tag });
+      logger.error(`Cache tag invalidation error: ${errorResponse.message}`);
+      return 0;
+    }
+  }
+
+  /**
    * Shut down the service, clearing any intervals
    */
   shutdown() {
@@ -83,6 +149,10 @@ class PerplexityService {
       clearInterval(interval);
     }
     this.activeIntervals.clear();
+    
+    // Log final cache statistics
+    const finalStats = this.getCacheStats();
+    logger.info('Final cache statistics:', finalStats);
   }
 
   /**

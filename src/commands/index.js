@@ -103,6 +103,80 @@ const commands = {
   },
     textCommand: '!summary'
   },
+  cache: {
+    data: {
+      name: 'cache',
+      description: 'View cache statistics and information'
+    },
+    async execute(interaction) {
+      const userId = interaction.user.id;
+      
+      // Validate user ID
+      const userIdValidation = InputValidator.validateUserId(userId);
+      if (!userIdValidation.valid) {
+        return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
+      }
+      
+      await interaction.deferReply();
+      
+      try {
+        const cacheStats = perplexityService.getCacheStats();
+        const detailedInfo = perplexityService.getDetailedCacheInfo();
+        
+        // Create embed with cache information
+        const embed = {
+          color: config.COLORS.PRIMARY,
+          title: 'Cache Statistics',
+          fields: [
+            {
+              name: 'Performance',
+              value: `Hit Rate: ${cacheStats.hitRate}%\nHits: ${cacheStats.hits}\nMisses: ${cacheStats.misses}`,
+              inline: true
+            },
+            {
+              name: 'Operations',
+              value: `Sets: ${cacheStats.sets}\nDeletes: ${cacheStats.deletes}\nEvictions: ${cacheStats.evictions}`,
+              inline: true
+            },
+            {
+              name: 'Memory Usage',
+              value: `${cacheStats.memoryUsageFormatted} / ${cacheStats.maxMemoryFormatted}\nEntries: ${cacheStats.entryCount} / ${cacheStats.maxSize}`,
+              inline: true
+            },
+            {
+              name: 'Configuration',
+              value: `Strategy: ${cacheStats.evictionStrategy}\nUptime: ${cacheStats.uptimeFormatted}`,
+              inline: true
+            }
+          ],
+          footer: { text: 'Aszai Bot Cache' },
+          timestamp: new Date()
+        };
+        
+        // Add recent entries if available
+        if (detailedInfo.entries && detailedInfo.entries.length > 0) {
+          const recentEntries = detailedInfo.entries.slice(0, 5);
+          const entriesText = recentEntries.map(entry => 
+            `**${entry.key.substring(0, 20)}...** (${entry.accessCount} accesses)`
+          ).join('\n');
+          
+          embed.fields.push({
+            name: 'Recent Entries',
+            value: entriesText || 'No entries',
+            inline: false
+          });
+        }
+        
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'cache statistics retrieval', {
+          userId: userId
+        });
+        return interaction.editReply(`❌ Error retrieving cache statistics: ${errorResponse.message}`);
+      }
+    },
+    textCommand: '!cache'
+  },
     stats: {
     data: {
       name: 'stats',
