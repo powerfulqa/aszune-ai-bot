@@ -55,9 +55,9 @@ describe('Config', () => {
     expect(config).toHaveProperty('SYSTEM_MESSAGES.SUMMARY');
     
     // Test emoji reactions
-    expect(config).toHaveProperty('EMOJI_REACTIONS');
-    expect(config.EMOJI_REACTIONS).toHaveProperty('hello', '👋');
-    expect(config.EMOJI_REACTIONS).toHaveProperty('happy', '😊');
+    expect(config).toHaveProperty('REACTIONS');
+    expect(config.REACTIONS).toHaveProperty('hello', '👋');
+    expect(config.REACTIONS).toHaveProperty('happy', '😊');
   });
   
   it('should have required environment variables available', () => {
