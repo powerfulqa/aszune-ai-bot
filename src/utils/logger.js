@@ -3,6 +3,7 @@
  */
 const fs = require('fs').promises;
 const path = require('path');
+const config = require('../config/config');
 
 class Logger {
   constructor() {
