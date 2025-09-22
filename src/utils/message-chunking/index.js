@@ -62,14 +62,7 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
   }
 }
 
-/**
- * Process source references in text (standalone function for external use)
- * @param {string} text - The text to process
- * @returns {string} - Text with properly formatted source references
- */
-function processSourceReferences(text) {
-  return processSourceReferences(text);
-}
+// processSourceReferences is already imported from './source-reference-processor'
 
 /**
  * Format URLs in text (standalone function for external use)
