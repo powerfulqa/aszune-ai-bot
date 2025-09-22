@@ -19,6 +19,40 @@ jest.mock('../../src/utils/logger', () => ({
 // Mock the config module
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
+// Mock the enhanced cache module to avoid config dependency issues
+jest.mock('../../src/utils/enhanced-cache', () => {
+  const mockInstance = {
+    get: jest.fn(),
+    set: jest.fn(),
+    delete: jest.fn(),
+    clear: jest.fn(),
+    getStats: jest.fn().mockReturnValue({ hits: 0, misses: 0, size: 0 }),
+    getDetailedInfo: jest.fn().mockReturnValue({ entries: [], memoryUsage: 0 })
+  };
+  
+  const mockClass = jest.fn().mockImplementation(() => mockInstance);
+  
+  // Export both the class and the EVICTION_STRATEGIES
+  mockClass.EVICTION_STRATEGIES = {
+    LRU: 'LRU',
+    LFU: 'LFU',
+    TTL: 'TTL',
+    SIZE_BASED: 'SIZE_BASED',
+    HYBRID: 'HYBRID'
+  };
+  
+  return mockClass;
+});
+
+// Mock the perplexity-secure service to avoid config dependency issues
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+  generateSummary: jest.fn(),
+  getCacheStats: jest.fn(),
+  getDetailedCacheInfo: jest.fn(),
+  invalidateCacheByTag: jest.fn()
+}));
+
 // Get the mock for usage in our tests
 const loggerMock = require('../../src/utils/logger');
 

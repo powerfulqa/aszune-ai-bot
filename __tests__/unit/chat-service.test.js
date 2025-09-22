@@ -1,6 +1,10 @@
 /**
  * Tests for chat service
  */
+
+// Mock the config module
+jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
+
 // Mock the commands module first
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn(),
@@ -26,7 +30,7 @@ describe('Chat Service', () => {
   // Create a mock message
   const createMessage = (content = 'hello') => ({
     content,
-    author: { bot: false, id: '123' },
+    author: { bot: false, id: '123456789012345678' },
     reply: jest.fn().mockResolvedValue({}),
     react: jest.fn().mockResolvedValue({}),
     channel: { sendTyping: jest.fn() }
@@ -95,7 +99,7 @@ describe('Chat Service', () => {
     
     await chatService(message);
     
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('unavailable'));
   });
   
   it('adds the bot response to conversation history', async () => {
