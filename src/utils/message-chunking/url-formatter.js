@@ -1,6 +1,29 @@
 /**
- * URL Formatter
- * Handles formatting and fixing of various URL types in messages
+ * @module url-formatter
+ * @fileoverview Provides comprehensive URL formatting capabilities for message content.
+ * 
+ * This module includes functions to detect, format, and fix various types of URLs 
+ * (including Reddit, Imgur, GitHub, Twitter/X, YouTube, and Starsector forum links) 
+ * within text, ensuring consistent and user-friendly presentation.
+ * 
+ * ## Exports
+ * {@link formatSocialMediaLinks}: Formats Reddit, Imgur, GitHub, and Twitter/X links.
+ * {@link formatYouTubeLinks}: Formats YouTube links with descriptive text.
+ * {@link formatStarsectorLinks}: Formats Starsector forum links.
+ * 
+ * ## Error Handling
+ * All formatting functions use a centralized {@link ErrorHandler} to catch and log errors, 
+ * returning the original text in case of failure.
+ * 
+ * ## Usage Example
+ * ```javascript
+ * const { formatSocialMediaLinks, formatYouTubeLinks, formatStarsectorLinks } = require('./url-formatter');
+ * const input = "Check this out: reddit.com/r/example and https://youtu.be/abc123";
+ * const formatted = formatSocialMediaLinks(formatYouTubeLinks(input));
+ * ```
+ * 
+ * @author
+ * @version 1.0.0
  */
 const { ErrorHandler } = require('../error-handler');
 
