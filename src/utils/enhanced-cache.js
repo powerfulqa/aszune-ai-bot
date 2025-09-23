@@ -81,19 +81,29 @@ class CacheEntry {
 }
 
 /**
+ * Validates cache configuration object
+ * @param {object} config - The configuration object to validate
+ * @throws {Error} If required CACHE configuration values are missing
+ */
+function validateCacheConfig(config) {
+  if (!config.CACHE || 
+      typeof config.CACHE.DEFAULT_MAX_ENTRIES === 'undefined' ||
+      typeof config.CACHE.MAX_MEMORY_MB === 'undefined' ||
+      typeof config.CACHE.DEFAULT_TTL_MS === 'undefined' ||
+      typeof config.CACHE.CLEANUP_INTERVAL_MS === 'undefined') {
+    throw new Error('Missing required CACHE configuration values');
+  }
+}
+
+/**
  * Enhanced Cache Manager
+ * Provides intelligent caching with TTL, LRU eviction, and memory management
  */
 class EnhancedCache {
   constructor(options = {}) {
-    // Error handling for missing config.CACHE or its properties
+    // Validate config and set cache parameters
     try {
-      if (!config.CACHE || 
-          typeof config.CACHE.DEFAULT_MAX_ENTRIES === 'undefined' ||
-          typeof config.CACHE.MAX_MEMORY_MB === 'undefined' ||
-          typeof config.CACHE.DEFAULT_TTL_MS === 'undefined' ||
-          typeof config.CACHE.CLEANUP_INTERVAL_MS === 'undefined') {
-        throw new Error('Missing required CACHE configuration values');
-      }
+      validateCacheConfig(config);
       
       this.maxSize = options.maxSize || config.CACHE.DEFAULT_MAX_ENTRIES;
       this.maxMemory = options.maxMemory || config.CACHE.MAX_MEMORY_MB * 1024 * 1024;

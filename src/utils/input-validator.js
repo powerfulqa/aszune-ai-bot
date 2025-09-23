@@ -460,6 +460,12 @@ class InputValidator {
       case 'message':
         typeValidation = this.validateMessageContent(input);
         break;
+      default:
+        typeValidation = {
+          valid: false,
+          error: `Unknown input type: ${type}`,
+        };
+        break;
       }
 
       // In strict mode, reject if any warnings

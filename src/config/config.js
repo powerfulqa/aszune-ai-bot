@@ -12,6 +12,16 @@ if (missingEnvVars.length > 0) {
 }
 
 // Export the basic config first - Pi optimizations will be initialized later dynamically
+/**
+ * Helper function to parse integer environment variables with fallback
+ * @param {string} envVar - Environment variable name
+ * @param {number} defaultValue - Default value if env var is not set or invalid
+ * @returns {number} Parsed integer value or default
+ */
+function getIntEnvVar(envVar, defaultValue) {
+  return parseInt(process.env[envVar]) || defaultValue;
+}
+
 const config = {
   // API Keys and Tokens
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
@@ -68,14 +78,14 @@ const config = {
 
   // Performance Monitoring
   PERFORMANCE: {
-    MIN_VALID_INTERVAL_MS: parseInt(process.env.MIN_VALID_INTERVAL_MS) || 250,
-    BACKOFF_MAX_MS: parseInt(process.env.BACKOFF_MAX_MS) || 10000,
-    BACKOFF_MIN_MS: parseInt(process.env.BACKOFF_MIN_MS) || 500,
-    CHECK_INTERVAL_MS: parseInt(process.env.CHECK_INTERVAL_MS) || 5000,
+    MIN_VALID_INTERVAL_MS: getIntEnvVar('MIN_VALID_INTERVAL_MS', 250),
+    BACKOFF_MAX_MS: getIntEnvVar('BACKOFF_MAX_MS', 10000),
+    BACKOFF_MIN_MS: getIntEnvVar('BACKOFF_MIN_MS', 500),
+    CHECK_INTERVAL_MS: getIntEnvVar('CHECK_INTERVAL_MS', 5000),
     // Set via CPU_THRESHOLD_PERCENT env var, default 80
-    CPU_THRESHOLD_PERCENT: parseInt(process.env.CPU_THRESHOLD_PERCENT) || 80,
+    CPU_THRESHOLD_PERCENT: getIntEnvVar('CPU_THRESHOLD_PERCENT', 80),
     // Set via MEMORY_THRESHOLD_PERCENT env var, default 85
-    MEMORY_THRESHOLD_PERCENT: parseInt(process.env.MEMORY_THRESHOLD_PERCENT) || 85,
+    MEMORY_THRESHOLD_PERCENT: getIntEnvVar('MEMORY_THRESHOLD_PERCENT', 85),
   },
 
   // Logging
