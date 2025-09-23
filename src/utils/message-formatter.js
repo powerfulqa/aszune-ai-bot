@@ -98,7 +98,12 @@ class MessageFormatter {
    */
   _breakLongParagraphs(text) {
     const paragraphs = text.split('\n\n');
-    const maxParaLength = config.MESSAGE_LIMITS.MAX_PARAGRAPH_LENGTH;
+    let maxParaLength = 300; // Default fallback
+    try {
+      maxParaLength = config.MESSAGE_LIMITS.MAX_PARAGRAPH_LENGTH;
+    } catch (e) {
+      // Use fallback if config is not available
+    }
 
     const processed = paragraphs.map((para) => {
       if (para.length <= maxParaLength) return para;
@@ -140,8 +145,15 @@ class MessageFormatter {
 
     // Simplify description for embeds (embeds have a stricter limit)
     if (compactEmbed.description) {
+      let maxLength = 1500; // Default fallback
+      try {
+        maxLength = config.MESSAGE_LIMITS.EMBED_DESCRIPTION_MAX_LENGTH;
+      } catch (e) {
+        // Use fallback if config is not available
+      }
+      
       compactEmbed.description = this.formatResponse(compactEmbed.description, {
-        maxLength: config.MESSAGE_LIMITS.EMBED_DESCRIPTION_MAX_LENGTH,
+        maxLength: maxLength,
       });
     }
 

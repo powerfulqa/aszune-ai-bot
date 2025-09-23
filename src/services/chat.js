@@ -72,8 +72,6 @@ async function sendResponse(message, responseText) {
   }
 
   // Send multiple chunks sequentially
-  let firstReply = null;
-
   for (const [index, chunk] of messageChunks.entries()) {
     console.log(`Sending chunk ${index + 1}/${messageChunks.length}, length: ${chunk.length}`);
 
