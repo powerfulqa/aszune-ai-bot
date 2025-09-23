@@ -68,12 +68,14 @@ const config = {
 
   // Performance Monitoring
   PERFORMANCE: {
-    MIN_VALID_INTERVAL_MS: 250,
-    BACKOFF_MAX_MS: 10000,
-    BACKOFF_MIN_MS: 500,
-    CHECK_INTERVAL_MS: 5000,
-    CPU_THRESHOLD_PERCENT: 80,
-    MEMORY_THRESHOLD_PERCENT: 85,
+    MIN_VALID_INTERVAL_MS: parseInt(process.env.MIN_VALID_INTERVAL_MS) || 250,
+    BACKOFF_MAX_MS: parseInt(process.env.BACKOFF_MAX_MS) || 10000,
+    BACKOFF_MIN_MS: parseInt(process.env.BACKOFF_MIN_MS) || 500,
+    CHECK_INTERVAL_MS: parseInt(process.env.CHECK_INTERVAL_MS) || 5000,
+    // Set via CPU_THRESHOLD_PERCENT env var, default 80
+    CPU_THRESHOLD_PERCENT: parseInt(process.env.CPU_THRESHOLD_PERCENT) || 80,
+    // Set via MEMORY_THRESHOLD_PERCENT env var, default 85
+    MEMORY_THRESHOLD_PERCENT: parseInt(process.env.MEMORY_THRESHOLD_PERCENT) || 85,
   },
 
   // Logging

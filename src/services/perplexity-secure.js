@@ -485,12 +485,15 @@ class PerplexityService {
   /**
    * Generate chat response for user query
    * @param {Array} history - Chat history
-   * @param {boolean|Object} options - Whether to override default cache behavior or options object
+   * @param {Object} options - Options object with caching and other settings
    * @returns {Promise<String>} - The response content
    */
-  async generateChatResponse(history, options = true) {
-    // Parse options object or boolean
-    const opts = typeof options === 'object' ? options : { caching: options };
+  async generateChatResponse(history, options = {}) {
+    // Standardize options - always expect an object
+    const opts = {
+      caching: true,
+      ...options
+    };
 
     try {
       // Get cache configuration

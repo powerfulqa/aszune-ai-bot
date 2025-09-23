@@ -47,7 +47,13 @@ const VALIDATION_LIMITS = {
   MAX_FILENAME_LENGTH: 255,
   MAX_PATH_LENGTH: 500,
   MAX_URL_LENGTH: 2048,
-  MAX_HISTORY_LENGTH: config.CONVERSATION_MAX_LENGTH,
+  MAX_HISTORY_LENGTH: (() => {
+    try {
+      return config.CONVERSATION_MAX_LENGTH ?? 100;
+    } catch (error) {
+      return 100;
+    }
+  })(),
   MIN_PASSWORD_LENGTH: 8,
   MAX_PASSWORD_LENGTH: 128,
 };

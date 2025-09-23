@@ -19,13 +19,22 @@ class PerformanceMonitor {
     this.throttleFactor = 1; // Current throttling factor (1 = normal, >1 = throttled)
     this.maxThrottleFactor = 5; // Maximum delay factor
 
-    // Minimum valid interval
-    this.minValidInterval = config.PERFORMANCE.MIN_VALID_INTERVAL_MS;
+    // Minimum valid interval with fallback
+    try {
+      this.minValidInterval = config.PERFORMANCE?.MIN_VALID_INTERVAL_MS || 250;
+    } catch (error) {
+      this.minValidInterval = 250;
+    }
 
-    // Exponential backoff parameters
+    // Exponential backoff parameters with fallbacks
     this.backoffFactor = 1.5;
-    this.backoffMax = config.PERFORMANCE.BACKOFF_MAX_MS;
-    this.backoffMin = config.PERFORMANCE.BACKOFF_MIN_MS;
+    try {
+      this.backoffMax = config.PERFORMANCE?.BACKOFF_MAX_MS || 10000;
+      this.backoffMin = config.PERFORMANCE?.BACKOFF_MIN_MS || 500;
+    } catch (error) {
+      this.backoffMax = 10000;
+      this.backoffMin = 500;
+    }
     this.currentBackoff = this.backoffMin;
   }
 

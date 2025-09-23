@@ -85,11 +85,29 @@ class CacheEntry {
  */
 class EnhancedCache {
   constructor(options = {}) {
-    this.maxSize = options.maxSize || config.CACHE.DEFAULT_MAX_ENTRIES;
-    this.maxMemory = options.maxMemory || config.CACHE.MAX_MEMORY_MB * 1024 * 1024;
-    this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
-    this.defaultTtl = options.defaultTtl || config.CACHE.DEFAULT_TTL_MS;
-    this.cleanupInterval = options.cleanupInterval || config.CACHE.CLEANUP_INTERVAL_MS;
+    // Error handling for missing config.CACHE or its properties
+    try {
+      if (!config.CACHE || 
+          typeof config.CACHE.DEFAULT_MAX_ENTRIES === 'undefined' ||
+          typeof config.CACHE.MAX_MEMORY_MB === 'undefined' ||
+          typeof config.CACHE.DEFAULT_TTL_MS === 'undefined' ||
+          typeof config.CACHE.CLEANUP_INTERVAL_MS === 'undefined') {
+        throw new Error('Missing required CACHE configuration values');
+      }
+      
+      this.maxSize = options.maxSize || config.CACHE.DEFAULT_MAX_ENTRIES;
+      this.maxMemory = options.maxMemory || config.CACHE.MAX_MEMORY_MB * 1024 * 1024;
+      this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
+      this.defaultTtl = options.defaultTtl || config.CACHE.DEFAULT_TTL_MS;
+      this.cleanupInterval = options.cleanupInterval || config.CACHE.CLEANUP_INTERVAL_MS;
+    } catch (error) {
+      // Fallback to safe defaults if config is missing
+      this.maxSize = options.maxSize || 1000;
+      this.maxMemory = options.maxMemory || 50 * 1024 * 1024; // 50MB default
+      this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
+      this.defaultTtl = options.defaultTtl || 300000; // 5 minutes default
+      this.cleanupInterval = options.cleanupInterval || 60000; // 1 minute default
+    }
 
     // Cache storage
     this.entries = new Map();
