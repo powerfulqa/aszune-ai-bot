@@ -447,32 +447,22 @@ class InputValidator {
 
       // Additional validation based on type
       let typeValidation = { valid: true };
-      switch (type) {
-      case 'userId':
-        typeValidation = this.validateUserId(input);
-        break;
-      case 'url':
-        typeValidation = this.validateUrl(input);
-        break;
-      case 'command':
-        typeValidation = this.validateCommand(input);
-        break;
-      case 'message':
-        typeValidation = this.validateMessageContent(input);
-        break;
-      case 'text':
-        // Basic text validation - text is already validated for length above
-        typeValidation = {
-          valid: true,
-          error: null,
-        };
-        break;
-      default:
+      
+      const typeValidators = {
+        userId: this.validateUserId.bind(this),
+        url: this.validateUrl.bind(this),
+        command: this.validateCommand.bind(this),
+        message: this.validateMessageContent.bind(this),
+        text: () => ({ valid: true, error: null }),
+      };
+      
+      if (typeValidators[type]) {
+        typeValidation = typeValidators[type](input);
+      } else {
         typeValidation = {
           valid: false,
           error: `Unknown input type: ${type}`,
         };
-        break;
       }
 
       // In strict mode, reject if any warnings
