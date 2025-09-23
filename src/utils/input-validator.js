@@ -453,7 +453,15 @@ class InputValidator {
         url: this.validateUrl.bind(this),
         command: this.validateCommand.bind(this),
         message: this.validateMessageContent.bind(this),
-        text: () => ({ valid: true, error: null }),
+        text: (input) => {
+          if (!VALIDATION_PATTERNS.SAFE_TEXT.test(input)) {
+            return {
+              valid: false,
+              error: 'Input contains unsafe characters',
+            };
+          }
+          return { valid: true, error: null };
+        },
       };
       
       if (typeValidators[type]) {

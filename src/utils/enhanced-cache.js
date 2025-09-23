@@ -86,13 +86,15 @@ class CacheEntry {
  * @throws {Error} If required CACHE configuration values are missing
  */
 function validateCacheConfig(config) {
-  if (!config.CACHE || 
-      typeof config.CACHE.DEFAULT_MAX_ENTRIES === 'undefined' ||
-      typeof config.CACHE.MAX_MEMORY_MB === 'undefined' ||
-      typeof config.CACHE.DEFAULT_TTL_MS === 'undefined' ||
-      typeof config.CACHE.CLEANUP_INTERVAL_MS === 'undefined') {
-    throw new Error('Missing required CACHE configuration values');
-  }
+  // Use optional chaining and provide defaults instead of throwing errors
+  const cacheConfig = config?.CACHE || {};
+  
+  return {
+    DEFAULT_MAX_ENTRIES: cacheConfig.DEFAULT_MAX_ENTRIES ?? 1000,
+    MAX_MEMORY_MB: cacheConfig.MAX_MEMORY_MB ?? 50,
+    DEFAULT_TTL_MS: cacheConfig.DEFAULT_TTL_MS ?? 300000, // 5 minutes
+    CLEANUP_INTERVAL_MS: cacheConfig.CLEANUP_INTERVAL_MS ?? 60000, // 1 minute
+  };
 }
 
 /**
@@ -101,23 +103,14 @@ function validateCacheConfig(config) {
  */
 class EnhancedCache {
   constructor(options = {}) {
-    // Validate config and set cache parameters
-    try {
-      validateCacheConfig(config);
-      
-      this.maxSize = options.maxSize || config.CACHE.DEFAULT_MAX_ENTRIES;
-      this.maxMemory = options.maxMemory || config.CACHE.MAX_MEMORY_MB * 1024 * 1024;
-      this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
-      this.defaultTtl = options.defaultTtl || config.CACHE.DEFAULT_TTL_MS;
-      this.cleanupInterval = options.cleanupInterval || config.CACHE.CLEANUP_INTERVAL_MS;
-    } catch (error) {
-      // Fallback to safe defaults if config is missing
-      this.maxSize = options.maxSize || 1000;
-      this.maxMemory = options.maxMemory || 50 * 1024 * 1024; // 50MB default
-      this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
-      this.defaultTtl = options.defaultTtl || 300000; // 5 minutes default
-      this.cleanupInterval = options.cleanupInterval || 60000; // 1 minute default
-    }
+    // Validate config and set cache parameters with resilient defaults
+    const validatedConfig = validateCacheConfig(config);
+    
+    this.maxSize = options.maxSize || validatedConfig.DEFAULT_MAX_ENTRIES;
+    this.maxMemory = options.maxMemory || validatedConfig.MAX_MEMORY_MB * 1024 * 1024;
+    this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
+    this.defaultTtl = options.defaultTtl || validatedConfig.DEFAULT_TTL_MS;
+    this.cleanupInterval = options.cleanupInterval || validatedConfig.CLEANUP_INTERVAL_MS;
 
     // Cache storage
     this.entries = new Map();

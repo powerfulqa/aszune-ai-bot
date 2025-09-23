@@ -59,7 +59,7 @@ class PerformanceMonitor {
     // Start monitoring at 5-second intervals
     this.checkInterval = setInterval(
       () => this._checkPerformance(),
-      config.PERFORMANCE.CHECK_INTERVAL_MS
+      config.PERFORMANCE?.CHECK_INTERVAL_MS || 5000
     );
     logger.info('[PerformanceMonitor] Performance monitoring initialized');
   }

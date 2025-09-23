@@ -19,7 +19,8 @@ if (missingEnvVars.length > 0) {
  * @returns {number} Parsed integer value or default
  */
 function getIntEnvVar(envVar, defaultValue) {
-  return parseInt(process.env[envVar]) || defaultValue;
+  const parsed = parseInt(process.env[envVar], 10);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 const config = {

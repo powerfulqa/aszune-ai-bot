@@ -97,7 +97,7 @@ class MemoryMonitor {
     try {
       // Only try to GC every 30 seconds at most
       const now = Date.now();
-      if (now - this.lastGcTime < config.MEMORY.GC_COOLDOWN_MS) return;
+      if (now - this.lastGcTime < (config.MEMORY?.GC_COOLDOWN_MS || 30000)) return;
 
       // Try different methods to encourage garbage collection
       this.lastGcTime = now;
@@ -111,7 +111,7 @@ class MemoryMonitor {
       // Second method: Create temporary pressure then release
       const pressure = [];
       for (let i = 0; i < 10; i++) {
-        pressure.push(new Array(config.MEMORY.PRESSURE_TEST_SIZE).fill('x'));
+        pressure.push(new Array(config.MEMORY?.PRESSURE_TEST_SIZE || 1000).fill('x'));
       }
       pressure.length = 0;
 
