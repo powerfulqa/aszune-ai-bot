@@ -460,6 +460,13 @@ class InputValidator {
       case 'message':
         typeValidation = this.validateMessageContent(input);
         break;
+      case 'text':
+        // Basic text validation - text is already validated for length above
+        typeValidation = {
+          valid: true,
+          error: null,
+        };
+        break;
       default:
         typeValidation = {
           valid: false,
