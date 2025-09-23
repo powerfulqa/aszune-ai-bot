@@ -111,7 +111,7 @@ class MemoryMonitor {
       // Second method: Create temporary pressure then release
       const pressure = [];
       for (let i = 0; i < 10; i++) {
-        pressure.push(new Array(config.MEMORY?.PRESSURE_TEST_SIZE || 1000).fill('x'));
+        pressure.push(new Array(config.MEMORY?.PRESSURE_TEST_SIZE || 1000000).fill('x'));
       }
       pressure.length = 0;
 

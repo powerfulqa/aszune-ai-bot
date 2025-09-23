@@ -14,7 +14,15 @@ class PerformanceMonitor {
     this.highLoadCount = 0;
     this.lastCpuInfo = null;
     this.lastCpuTimes = { idle: 0, total: 0 };
-    this.cpuThreshold = 0.8; // 80% CPU usage threshold
+    // CPU usage threshold (as decimal, e.g., 0.8 for 80%)
+    try {
+      const percent = config.PERFORMANCE?.CPU_THRESHOLD_PERCENT;
+      this.cpuThreshold = (typeof percent === 'number' && !isNaN(percent))
+        ? percent / 100
+        : 0.8;
+    } catch (error) {
+      this.cpuThreshold = 0.8;
+    }
     this.consecutiveThreshold = 5; // How many consecutive high readings before action
     this.throttleFactor = 1; // Current throttling factor (1 = normal, >1 = throttled)
     this.maxThrottleFactor = 5; // Maximum delay factor

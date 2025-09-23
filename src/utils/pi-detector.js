@@ -96,7 +96,7 @@ async function detectPiModel() {
             const tempCommand = 'vcgencmd measure_temp';
             // Intentionally ignore the output; this is just a capability check to see if
             // temperature can be read
-            execSync(tempCommand, { encoding: 'utf8' });
+            const _tempOutput = execSync(tempCommand, { encoding: 'utf8' });
             result.cpuInfo.canReadTemp = true;
           } catch (e) {
             result.cpuInfo.canReadTemp = false;
