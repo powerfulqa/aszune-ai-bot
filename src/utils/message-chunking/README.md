@@ -1,6 +1,7 @@
 # Message Chunking Module
 
-This module provides enhanced message chunking functionality with intelligent boundary handling and URL formatting.
+This module provides enhanced message chunking functionality with intelligent boundary handling and
+URL formatting.
 
 ## Structure
 
@@ -12,17 +13,20 @@ This module provides enhanced message chunking functionality with intelligent bo
 ## Features
 
 ### Source Reference Processing
+
 - Collects source references from text using multiple pattern matching
 - Formats source references with proper markdown links
 - Handles broken or incomplete source references
 
 ### URL Formatting
+
 - **Social Media**: Reddit, Imgur, GitHub, Twitter/X
 - **YouTube**: Handles various YouTube URL formats with descriptive text
 - **Starsector**: Specialized formatting for fractalsoftworks.com forum links
 - **General**: Fixes common markdown link formatting issues
 
 ### Intelligent Chunking
+
 - Preprocesses messages to fix formatting issues
 - Avoids breaking content at inappropriate boundaries:
   - Mid-sentence
@@ -50,6 +54,7 @@ const formattedText = formatUrls(text);
 ## Error Handling
 
 All functions include comprehensive error handling with:
+
 - Structured error logging
 - Graceful fallbacks
 - Context-aware error messages
@@ -58,6 +63,7 @@ All functions include comprehensive error handling with:
 ## Configuration
 
 Uses constants from `config.MESSAGE_LIMITS`:
+
 - `DISCORD_MAX_LENGTH` - Maximum Discord message length
 - `SAFE_CHUNK_OVERHEAD` - Safety buffer for chunking
 - `EMBED_MAX_LENGTH` - Maximum embed description length

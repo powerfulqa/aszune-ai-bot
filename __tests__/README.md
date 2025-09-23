@@ -20,8 +20,10 @@ This project uses Jest for testing and has specific configurations for branch co
 
 We have two approaches for branch coverage testing:
 
-1. **Standard Tests**: Regular unit tests in files like `logger.test.js` that test the main functionality
-2. **Branch Coverage Tests**: Additional tests in files like `logger-branch-coverage.test.js` specifically designed to hit edge cases and improve branch coverage
+1. **Standard Tests**: Regular unit tests in files like `logger.test.js` that test the main
+   functionality
+2. **Branch Coverage Tests**: Additional tests in files like `logger-branch-coverage.test.js`
+   specifically designed to hit edge cases and improve branch coverage
 
 ### Jest Configurations
 
@@ -49,7 +51,9 @@ This script runs both index and logger branch coverage tests sequentially.
 
 ### Test Strategy Decision
 
-We are now using both the regular `logger.test.js` file and the specialized `logger-branch-coverage.test.js` file for branch coverage testing:
+We are now using both the regular `logger.test.js` file and the specialized
+`logger-branch-coverage.test.js` file for branch coverage testing:
+
 1. `logger.test.js` provides 57.89% branch coverage on its own, which exceeds our 55% threshold
 2. `logger-branch-coverage.test.js` provides additional branch coverage, testing edge cases
 3. Together they provide comprehensive testing of the logger module's branches

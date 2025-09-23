@@ -18,8 +18,7 @@ Aszune AI Bot supports two types of commands:
 - `!help`
 - `/help`
 
-**Description:**
-Displays a list of all available commands and their basic usage information.
+**Description:** Displays a list of all available commands and their basic usage information.
 
 **Example:**
 
@@ -47,8 +46,8 @@ Available commands:
 - `!clearhistory`
 - `/clearhistory`
 
-**Description:**
-Clears your personal conversation history with the bot, starting a fresh conversation context.
+**Description:** Clears your personal conversation history with the bot, starting a fresh
+conversation context.
 
 **Example:**
 
@@ -71,8 +70,7 @@ Your conversation history has been cleared. What would you like to chat about?
 - `!summary`
 - `/summary`
 
-**Description:**
-Generates a summary of your current conversation with the bot in UK English.
+**Description:** Generates a summary of your current conversation with the bot in UK English.
 
 **Example:**
 
@@ -101,8 +99,8 @@ Generates a summary of your current conversation with the bot in UK English.
 - `!summarise <text>`
 - `!summerise <text>`
 
-**Description:**
-Summarises any provided text in UK English. This command accepts arbitrary text and generates a concise summary.
+**Description:** Summarises any provided text in UK English. This command accepts arbitrary text and
+generates a concise summary.
 
 **Example:**
 
@@ -130,8 +128,8 @@ Summarises any provided text in UK English. This command accepts arbitrary text 
 - `!stats`
 - `/stats`
 
-**Description:**
-Displays your personal usage statistics, including the number of messages sent and summaries requested.
+**Description:** Displays your personal usage statistics, including the number of messages sent and
+summaries requested.
 
 **Example:**
 
@@ -157,14 +155,15 @@ You can chat with the bot in two ways:
    @AszuneBot What's the best build for a mage in Elden Ring?
    ```
 
-2. **Reply to the bot**:
-   Simply reply to one of the bot's messages with your follow-up question or comment.
+2. **Reply to the bot**: Simply reply to one of the bot's messages with your follow-up question or
+   comment.
 
 ## Advanced Features
 
 ### Emoji Reactions
 
-The bot automatically adds emoji reactions to messages based on keywords it detects. Common keywords include:
+The bot automatically adds emoji reactions to messages based on keywords it detects. Common keywords
+include:
 
 - "hello", "hi", "hey" → 👋
 - "funny", "lol", "haha" → 😄
@@ -175,8 +174,11 @@ The bot automatically adds emoji reactions to messages based on keywords it dete
 
 ### Rate Limiting
 
-To prevent spam, the bot enforces a short cooldown period (typically a few seconds) between messages from the same user. If you send messages too quickly, the bot will remind you to wait before responding further.
+To prevent spam, the bot enforces a short cooldown period (typically a few seconds) between messages
+from the same user. If you send messages too quickly, the bot will remind you to wait before
+responding further.
 
 ## v1.2.2 Update
+
 - ConversationManager refactored to export as a class and require instantiation.
 - All command handling and tests updated for reliability and CI compliance.

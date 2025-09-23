@@ -21,7 +21,7 @@ describe('DataStorage', () => {
     fs.readFile.mockReset();
     logger.error.mockReset();
     logger.debug.mockReset();
-    
+
     // Reset singleton state
     storage.initialized = false;
   });
@@ -82,7 +82,9 @@ describe('DataStorage', () => {
       fs.readFile.mockRejectedValue(error);
       const result = await storage.loadUserStats();
       expect(result).toEqual({});
-      expect(logger.debug).toHaveBeenCalledWith('No user stats file found, starting with empty stats');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'No user stats file found, starting with empty stats'
+      );
     });
 
     it('should return empty object and log error if readFile fails for other reasons', async () => {
@@ -94,10 +96,13 @@ describe('DataStorage', () => {
     });
 
     it('should return empty object and log error if JSON parsing fails', async () => {
-        fs.readFile.mockResolvedValue('invalid json');
-        const result = await storage.loadUserStats();
-        expect(result).toEqual({});
-        expect(logger.error).toHaveBeenCalledWith('Failed to load user stats:', expect.any(SyntaxError));
-      });
+      fs.readFile.mockResolvedValue('invalid json');
+      const result = await storage.loadUserStats();
+      expect(result).toEqual({});
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to load user stats:',
+        expect.any(SyntaxError)
+      );
+    });
   });
 });

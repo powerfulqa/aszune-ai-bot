@@ -1,10 +1,12 @@
 # Contributing
 
-Thank you for your interest in contributing to the Aszune AI Bot! This guide will help you get started with development and outline the best practices for contributing to this project.
+Thank you for your interest in contributing to the Aszune AI Bot! This guide will help you get
+started with development and outline the best practices for contributing to this project.
 
 ## Code of Conduct
 
-Please be respectful and considerate when contributing to this project. We welcome contributions from everyone who wishes to improve the bot.
+Please be respectful and considerate when contributing to this project. We welcome contributions
+from everyone who wishes to improve the bot.
 
 ## Getting Started
 
@@ -39,7 +41,9 @@ Please be respectful and considerate when contributing to this project. We welco
 
 5. **Create a Development Bot**
 
-   For testing, create a separate Discord bot application through the [Discord Developer Portal](https://discord.com/developers/applications) rather than using the production bot.
+   For testing, create a separate Discord bot application through the
+   [Discord Developer Portal](https://discord.com/developers/applications) rather than using the
+   production bot.
 
 ### Project Structure
 
@@ -100,7 +104,8 @@ aszune-ai-bot/
 
 5. **Commit Your Changes**
 
-   Follow conventional commits format for commit messages. You can use the commit template by running:
+   Follow conventional commits format for commit messages. You can use the commit template by
+   running:
 
    ```bash
    git config --local commit.template .github/COMMIT_TEMPLATE.md
@@ -131,7 +136,8 @@ aszune-ai-bot/
 
 7. **Create a Pull Request**
 
-   Open a pull request against the `develop` branch with a clear description of the changes and any relevant issue numbers.
+   Open a pull request against the `develop` branch with a clear description of the changes and any
+   relevant issue numbers.
 
 ## Coding Standards
 
@@ -252,8 +258,10 @@ Feature requests are welcome! When suggesting a new feature, please provide:
 
 ## Community
 
-Join our Discord community for discussions and updates: [Aszune AI Community](https://discord.gg/your-invite-link)
+Join our Discord community for discussions and updates:
+[Aszune AI Community](https://discord.gg/your-invite-link)
 
 ---
 
-Thank you for contributing to the Aszune AI Bot project! Your efforts help make this bot better for everyone.
+Thank you for contributing to the Aszune AI Bot project! Your efforts help make this bot better for
+everyone.

@@ -11,4 +11,5 @@ This directory contains the release notes for individual versions of the Aszune 
 
 ## Main Release Notes
 
-For the complete release history, see the main [RELEASE-NOTES.md](../RELEASE-NOTES.md) in the root directory.
+For the complete release history, see the main [RELEASE-NOTES.md](../RELEASE-NOTES.md) in the root
+directory.

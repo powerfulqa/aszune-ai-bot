@@ -16,13 +16,13 @@ function processParagraph(paragraph, effectiveMaxLength, currentChunk, chunks) {
   if (paragraph.length > effectiveMaxLength) {
     // Improved regex to properly capture sentences with punctuation
     const sentences = paragraph.split(/(?<=[.!?])\s+/);
-    
+
     for (const sentence of sentences) {
       currentChunk = processSentence(sentence, effectiveMaxLength, currentChunk, chunks);
     }
     return currentChunk;
-  } 
-  
+  }
+
   // Paragraph fits, add it
   return currentChunk + paragraph + '\n\n';
 }
@@ -40,18 +40,18 @@ function processSentence(sentence, effectiveMaxLength, currentChunk, chunks) {
   if ((currentChunk + sentence).length + 1 <= effectiveMaxLength) {
     return currentChunk + sentence + ' ';
   }
-  
+
   // If sentence doesn't fit but we already have content, start new chunk
   if (currentChunk.length > 0) {
     chunks.push(currentChunk.trim());
     return sentence + ' ';
   }
-  
+
   // If sentence is too long for a single chunk, split by words
   if (sentence.length > effectiveMaxLength) {
     return processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks);
   }
-  
+
   // Otherwise, sentence becomes the start of a new chunk
   return sentence + ' ';
 }
@@ -67,7 +67,7 @@ function processSentence(sentence, effectiveMaxLength, currentChunk, chunks) {
 function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks) {
   const words = sentence.split(/\s+/);
   let sentencePart = '';
-  
+
   for (const word of words) {
     // If adding this word would exceed the limit, flush the current part
     if ((sentencePart + word).length + 1 > effectiveMaxLength && sentencePart.length > 0) {
@@ -76,7 +76,7 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
       currentChunk = '';
       sentencePart = '';
     }
-    
+
     // Handle the word
     if (word.length > effectiveMaxLength) {
       // Very long word that exceeds chunk size - rare case
@@ -87,11 +87,11 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
         currentChunk = '';
         sentencePart = '';
       }
-      
+
       // Split the word with ellipsis
       const firstPart = word.substring(0, effectiveMaxLength - 3) + '...';
       chunks.push(firstPart);
-      
+
       // Start next chunk with the rest of the word
       sentencePart = '...' + word.substring(effectiveMaxLength - 3) + ' ';
     } else {
@@ -99,7 +99,7 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
       sentencePart += word + ' ';
     }
   }
-  
+
   return currentChunk + sentencePart;
 }
 
@@ -117,57 +117,55 @@ function chunkMessage(message, maxLength = 2000) {
 
   const chunks = [];
   let currentChunk = '';
-  
+
   // Account for chunk numbering prefix (e.g., "[1/2] ") in the max length calculation
   // Assuming a maximum of 99 chunks (adjust if needed)
   const prefixBuffer = 7; // "[xx/xx] "
   const effectiveMaxLength = maxLength - prefixBuffer;
-  
+
   // Split by paragraphs to maintain context
   const paragraphs = message.split('\n\n');
-  
+
   for (const paragraph of paragraphs) {
     // If adding this paragraph exceeds max length, start a new chunk
     if ((currentChunk + paragraph).length + 2 > effectiveMaxLength && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       currentChunk = '';
     }
-    
+
     // Process this paragraph and update the currentChunk
     currentChunk = processParagraph(paragraph, effectiveMaxLength, currentChunk, chunks);
   }
-  
+
   // Add the final chunk if it has content
   if (currentChunk.trim().length > 0) {
     chunks.push(currentChunk.trim());
   }
-  
+
   // BUGFIX: Check for word breaks at chunk boundaries and ensure proper spacing
   // This prevents cases where words might be merged when chunks are joined (e.g., "an" + "officer" → "anofficer")
   // Without this fix, words split across chunk boundaries would lose spaces and become merged
   for (let i = 0; i < chunks.length - 1; i++) {
     const currentChunk = chunks[i];
     const nextChunk = chunks[i + 1];
-    
+
     // If current chunk ends with a word and next chunk starts with a word (no space between)
     // Add a space to the end of the current chunk to prevent words merging
     if (/\w$/.test(currentChunk) && /^\w/.test(nextChunk)) {
       chunks[i] = currentChunk + ' ';
     }
   }
-  
+
   // Add numbering to chunks for better user experience
-  const numberedChunks = chunks.map((chunk, index) => 
-    `[${index + 1}/${chunks.length}] ${chunk}`
-  );
-  
+  const numberedChunks = chunks.map((chunk, index) => `[${index + 1}/${chunks.length}] ${chunk}`);
+
   return numberedChunks;
 }
 
-module.exports = { 
+module.exports = {
   chunkMessage,
   // Export helper functions for testing purposes
   _processParagraph: processParagraph,
   _processSentence: processSentence,
-  _processLongSentence: processLongSentence
+  _processLongSentence: processLongSentence,
 };

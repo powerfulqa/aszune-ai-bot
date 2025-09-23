@@ -19,7 +19,7 @@ const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache'
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
   let module;
-  return function() {
+  return function () {
     if (!module) {
       try {
         module = require(importPath);
@@ -51,27 +51,27 @@ class PerplexityService {
   constructor() {
     this.apiKey = config.PERPLEXITY_API_KEY;
     this.baseUrl = config.API.PERPLEXITY.BASE_URL;
-    
+
     // File permission constants
     this.FILE_PERMISSIONS = config.FILE_PERMISSIONS;
-    
+
     // Track active intervals for proper cleanup
     this.activeIntervals = new Set();
-    
+
     // Initialize enhanced cache
     this.cache = new EnhancedCache({
       maxSize: config.CACHE.DEFAULT_MAX_ENTRIES,
       maxMemory: config.CACHE.MAX_MEMORY_MB * 1024 * 1024,
       evictionStrategy: EVICTION_STRATEGIES.HYBRID,
       defaultTtl: config.CACHE.DEFAULT_TTL_MS,
-      cleanupInterval: config.CACHE.CLEANUP_INTERVAL_MS
+      cleanupInterval: config.CACHE.CLEANUP_INTERVAL_MS,
     });
-    
+
     // Set up cache cleanup interval (if not in test environment)
     this.cacheCleanupInterval = null;
     this._setupCacheCleanup();
   }
-  
+
   /**
    * Set up cache cleanup routine
    * @private
@@ -79,11 +79,14 @@ class PerplexityService {
   _setupCacheCleanup() {
     if (process.env.NODE_ENV !== 'test') {
       // Clean cache every day
-      this.cacheCleanupInterval = setInterval(() => this._cleanupCache(), config.CACHE.CLEANUP_INTERVAL_MS);
+      this.cacheCleanupInterval = setInterval(
+        () => this._cleanupCache(),
+        config.CACHE.CLEANUP_INTERVAL_MS
+      );
       this.activeIntervals.add(this.cacheCleanupInterval);
     }
   }
-  
+
   /**
    * Get cache statistics
    * @returns {Object} Cache statistics
@@ -103,7 +106,7 @@ class PerplexityService {
         hitRate: 0,
         entryCount: 0,
         memoryUsage: 0,
-        error: errorResponse.message
+        error: errorResponse.message,
       };
     }
   }
@@ -120,7 +123,7 @@ class PerplexityService {
       logger.error(`Detailed cache info error: ${errorResponse.message}`);
       return {
         error: errorResponse.message,
-        stats: this.getCacheStats()
+        stats: this.getCacheStats(),
       };
     }
   }
@@ -149,7 +152,7 @@ class PerplexityService {
       clearInterval(interval);
     }
     this.activeIntervals.clear();
-    
+
     // Log final cache statistics
     const finalStats = this.getCacheStats();
     logger.info('Final cache statistics:', finalStats);
@@ -161,11 +164,11 @@ class PerplexityService {
    */
   _getHeaders() {
     return {
-      'Authorization': `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
     };
   }
-  
+
   /**
    * Safe way to access headers that works with both Headers objects and plain objects
    * @param {Object|Headers} headers - The headers object
@@ -196,13 +199,13 @@ class PerplexityService {
     if (typeof headers !== 'object' && typeof headers !== 'function') {
       return '';
     }
-    
+
     // Try Headers object API first
     const headerFromGetMethod = this._tryHeadersGetMethod(headers, key);
     if (headerFromGetMethod !== null) {
       return headerFromGetMethod;
     }
-    
+
     // Fall back to plain object access
     return this._tryObjectPropertyAccess(headers, key);
   }
@@ -238,23 +241,23 @@ class PerplexityService {
     if (Object.prototype.hasOwnProperty.call(headers, key)) {
       return headers[key] || '';
     }
-    
+
     // Check lowercase
     if (Object.prototype.hasOwnProperty.call(headers, key.toLowerCase())) {
       return headers[key.toLowerCase()] || '';
     }
-    
+
     // Check uppercase
     if (Object.prototype.hasOwnProperty.call(headers, key.toUpperCase())) {
       return headers[key.toUpperCase()] || '';
     }
-    
+
     return '';
   }
-  
+
   /**
    * Determine if caching should be used based on options and configuration
-   * @param {Object} options - The cache options 
+   * @param {Object} options - The cache options
    * @param {Object} cacheConfig - The cache configuration
    * @returns {boolean} - Whether to use cache or not
    * @private
@@ -275,20 +278,20 @@ class PerplexityService {
       model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
       messages: messages,
       max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
-      temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE
+      temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
     };
-    
+
     // Get PI optimization settings
     const piOptSettings = this._getPiOptimizationSettings();
-    
+
     // Enable streaming for supported environments if not in low CPU mode
     if (options.stream && piOptSettings.enabled && !piOptSettings.lowCpuMode) {
       payload.stream = true;
     }
-    
+
     return payload;
   }
-  
+
   /**
    * Get PI optimization settings from config
    * @returns {Object} PI optimization settings
@@ -297,25 +300,29 @@ class PerplexityService {
   _getPiOptimizationSettings() {
     const defaultSettings = {
       enabled: false,
-      lowCpuMode: false
+      lowCpuMode: false,
     };
-    
+
     try {
       // Check if config has PI_OPTIMIZATIONS property
-      if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
+      if (
+        config &&
+        typeof config.PI_OPTIMIZATIONS === 'object' &&
+        config.PI_OPTIMIZATIONS !== null
+      ) {
         return {
           enabled: Boolean(config.PI_OPTIMIZATIONS.ENABLED),
-          lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE)
+          lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE),
         };
       }
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'accessing PI_OPTIMIZATIONS config');
       logger.warn(`Config access error: ${errorResponse.message}`);
     }
-    
+
     return defaultSettings;
   }
-  
+
   /**
    * Handle API response
    * @param {Object} response - The API response
@@ -324,32 +331,40 @@ class PerplexityService {
    */
   async _handleApiResponse(response) {
     if (!response) {
-      throw ErrorHandler.createError('Invalid response: response is null or undefined', ERROR_TYPES.API_ERROR);
+      throw ErrorHandler.createError(
+        'Invalid response: response is null or undefined',
+        ERROR_TYPES.API_ERROR
+      );
     }
-    
+
     // Safely extract properties with defaults
     const statusCode = response.statusCode || 500;
-    const headers = response.headers || {};
     const body = response.body || null;
-    
+
     // For non-2xx status codes, handle as error
     if (statusCode < 200 || statusCode >= 300) {
       return this._handleErrorResponse(statusCode, body);
     }
-    
+
     // Make sure body exists and has json method
     if (!body || typeof body.json !== 'function') {
-      throw ErrorHandler.createError('Invalid response: body is missing or does not have json method', ERROR_TYPES.API_ERROR);
+      throw ErrorHandler.createError(
+        'Invalid response: body is missing or does not have json method',
+        ERROR_TYPES.API_ERROR
+      );
     }
-    
+
     // Parse response as JSON
     try {
       return await body.json();
     } catch (error) {
-      throw ErrorHandler.createError(`Failed to parse response as JSON: ${error.message}`, ERROR_TYPES.API_ERROR);
+      throw ErrorHandler.createError(
+        `Failed to parse response as JSON: ${error.message}`,
+        ERROR_TYPES.API_ERROR
+      );
     }
   }
-  
+
   /**
    * Handle error response
    * @param {number} statusCode - HTTP status code
@@ -366,14 +381,14 @@ class PerplexityService {
         responseText = `Error reading response body: ${textError.message}`;
       }
     }
-    
+
     // Create a descriptive error message with status code and response content
     const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
     const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
     error.statusCode = statusCode;
     throw error;
   }
-  
+
   /**
    * Safely extract content from API response
    * @param {Object} response - API response object
@@ -386,24 +401,24 @@ class PerplexityService {
       if (!response) {
         return 'Sorry, I received an empty response.';
       }
-      
+
       // Check for choices array
       if (!response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
         return 'Sorry, no response choices were returned.';
       }
-      
+
       // Get the first choice
       const firstChoice = response.choices[0];
-      
+
       // Extract content based on structure
       if (firstChoice.message && typeof firstChoice.message.content === 'string') {
         return firstChoice.message.content;
       }
-      
+
       if (typeof firstChoice.content === 'string') {
         return firstChoice.content;
       }
-      
+
       return 'Sorry, I could not extract content from the response.';
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'extracting response content');
@@ -421,27 +436,27 @@ class PerplexityService {
   async sendChatRequest(messages, options = {}) {
     const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     const requestPayload = this._buildRequestPayload(messages, options);
-    
+
     // Define API request function
     const makeApiRequest = async () => {
       return await request(endpoint, {
         method: 'POST',
         headers: this._getHeaders(),
-        body: JSON.stringify(requestPayload)
+        body: JSON.stringify(requestPayload),
       });
     };
-    
+
     try {
       // Get PI optimization settings
       const piOptSettings = this._getPiOptimizationSettings();
-      
+
       let response;
       if (piOptSettings.enabled) {
         response = await this._executeWithThrottling(makeApiRequest);
       } else {
         response = await makeApiRequest();
       }
-      
+
       return await this._handleApiResponse(response);
     } catch (error) {
       const errorResponse = ErrorHandler.handleApiError(error, 'Perplexity API');
@@ -449,7 +464,7 @@ class PerplexityService {
       throw error;
     }
   }
-  
+
   /**
    * Execute request with throttling if available
    * @param {Function} requestFn - Request function to execute
@@ -466,7 +481,7 @@ class PerplexityService {
       return await requestFn();
     }
   }
-  
+
   /**
    * Generate chat response for user query
    * @param {Array} history - Chat history
@@ -476,26 +491,25 @@ class PerplexityService {
   async generateChatResponse(history, options = true) {
     // Parse options object or boolean
     const opts = typeof options === 'object' ? options : { caching: options };
-    
+
     try {
-      
       // Get cache configuration
       const cacheConfig = this._getCacheConfiguration();
-      
+
       // Determine if caching should be used
       const shouldUseCache = this._shouldUseCache(opts, cacheConfig);
-      
+
       // Try to get from cache first if enabled
       if (shouldUseCache) {
         const cachedContent = await this._tryGetFromCache(history);
         if (cachedContent) return cachedContent;
       }
-      
+
       // Try to generate new response with retry for rate limits
       let response;
       let retries = opts.retryOnRateLimit ? config.RATE_LIMITS.MAX_RETRIES : 0;
       let retryDelay = config.RATE_LIMITS.RETRY_DELAY_MS;
-      
+
       try {
         response = await this.sendChatRequest(history);
       } catch (apiError) {
@@ -503,35 +517,35 @@ class PerplexityService {
         if (apiError.message && apiError.message.includes('429') && retries > 0) {
           const errorResponse = ErrorHandler.handleError(apiError, 'API rate limit', { retries });
           logger.info(`Rate limited, retrying after ${retryDelay}ms: ${errorResponse.message}`);
-          
+
           // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
           // Retry the request
           response = await this.sendChatRequest(history);
         } else {
           throw apiError; // Not a rate limit error or out of retries
         }
       }
-      
+
       const content = this._extractResponseContent(response);
-      
+
       // Save to cache if enabled
       if (shouldUseCache) {
         await this._trySaveToCache(history, content, cacheConfig.maxEntries);
       }
-      
+
       return content;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'generate chat response', { 
+      const errorResponse = ErrorHandler.handleError(error, 'generate chat response', {
         historyLength: history?.length || 0,
-        shouldUseCache: opts.caching !== false
+        shouldUseCache: opts.caching !== false,
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
       throw error;
     }
   }
-  
+
   /**
    * Get cache configuration from config
    * @returns {Object} Cache configuration object
@@ -540,32 +554,40 @@ class PerplexityService {
   _getCacheConfiguration() {
     const defaultConfig = {
       enabled: false,
-      maxEntries: config.CACHE.DEFAULT_MAX_ENTRIES
+      maxEntries: config.CACHE.DEFAULT_MAX_ENTRIES,
     };
-    
+
     try {
-      if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
+      if (
+        config &&
+        typeof config.PI_OPTIMIZATIONS === 'object' &&
+        config.PI_OPTIMIZATIONS !== null
+      ) {
         const piOptEnabled = Boolean(config.PI_OPTIMIZATIONS.ENABLED);
         if (piOptEnabled) {
           const cacheEnabled = Boolean(config.PI_OPTIMIZATIONS.CACHE_ENABLED);
-          const maxEntries = typeof config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES === 'number' 
-            ? config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES 
-            : defaultConfig.maxEntries;
-            
+          const maxEntries =
+            typeof config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES === 'number'
+              ? config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES
+              : defaultConfig.maxEntries;
+
           return {
             enabled: cacheEnabled,
-            maxEntries: maxEntries
+            maxEntries: maxEntries,
           };
         }
       }
     } catch (configError) {
-      const errorResponse = ErrorHandler.handleError(configError, 'accessing PI_OPTIMIZATIONS config');
+      const errorResponse = ErrorHandler.handleError(
+        configError,
+        'accessing PI_OPTIMIZATIONS config'
+      );
       logger.warn(`Config access error: ${errorResponse.message}`);
     }
-    
+
     return defaultConfig;
   }
-  
+
   /**
    * Try to get response from cache
    * @param {Array} history - Conversation history
@@ -576,12 +598,12 @@ class PerplexityService {
     try {
       const cacheKey = this._generateCacheKey(history);
       const cache = await this._loadCache();
-      
+
       // Check if we have a cache entry for this key
       if (cache && cache[cacheKey]) {
         logger.debug('Cache hit for query');
         const entry = cache[cacheKey];
-        
+
         // Handle object entries
         if (typeof entry === 'object' && entry !== null) {
           // Test format in cache
@@ -598,20 +620,24 @@ class PerplexityService {
             return entry[hashedKey].answer;
           }
         }
-        
+
         // Handle string entries as fallback
         if (typeof entry === 'string') {
           return entry;
         }
       }
     } catch (cacheError) {
-      const errorResponse = ErrorHandler.handleFileError(cacheError, 'reading from cache', 'question_cache.json');
+      const errorResponse = ErrorHandler.handleFileError(
+        cacheError,
+        'reading from cache',
+        'question_cache.json'
+      );
       logger.warn(`Cache read error: ${errorResponse.message}`);
     }
-    
+
     return null;
   }
-  
+
   /**
    * Try to save response to cache
    * @param {Array} history - Conversation history
@@ -623,19 +649,23 @@ class PerplexityService {
   async _trySaveToCache(history, content, maxEntries) {
     try {
       const cacheKey = this._generateCacheKey(history);
-      const cache = await this._loadCache() || {};
+      const cache = (await this._loadCache()) || {};
       cache[cacheKey] = content;
-      
+
       // Prune cache if it exceeds max entries
       this._pruneCache(cache, maxEntries);
-      
+
       await this._saveCache(cache);
     } catch (cacheError) {
-      const errorResponse = ErrorHandler.handleFileError(cacheError, 'saving to cache', 'question_cache.json');
+      const errorResponse = ErrorHandler.handleFileError(
+        cacheError,
+        'saving to cache',
+        'question_cache.json'
+      );
       logger.warn(`Cache save error: ${errorResponse.message}`);
     }
   }
-  
+
   /**
    * Prune cache to keep it under the maximum size
    * @param {Object} cache - Cache object
@@ -648,7 +678,7 @@ class PerplexityService {
       // Remove oldest entries based on configured percentage
       const removeCount = Math.ceil(maxEntries * config.CACHE.CLEANUP_PERCENTAGE);
       const keysToRemove = keys.slice(0, removeCount);
-      keysToRemove.forEach(key => delete cache[key]);
+      keysToRemove.forEach((key) => delete cache[key]);
     }
   }
 
@@ -663,24 +693,26 @@ class PerplexityService {
       if (isText) {
         return await this.generateTextSummary(history);
       }
-      
+
       // Format the conversation in a summarizable way
-      const conversationText = history.map(msg => {
-        const role = msg.role.toUpperCase();
-        return `${role}: ${msg.content}`;
-      }).join('\n\n');
-      
+      const conversationText = history
+        .map((msg) => {
+          const role = msg.role.toUpperCase();
+          return `${role}: ${msg.content}`;
+        })
+        .join('\n\n');
+
       return await this.generateTextSummary(conversationText);
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'generate summary', { 
+      const errorResponse = ErrorHandler.handleError(error, 'generate summary', {
         historyLength: history?.length || 0,
-        isText: isText
+        isText: isText,
       });
       logger.error(`Failed to generate summary: ${errorResponse.message}`);
       throw error;
     }
   }
-  
+
   /**
    * Generate summary of a text
    * @param {string} text - Text to summarize
@@ -690,9 +722,9 @@ class PerplexityService {
     // Create a system message instructing to summarize
     const messages = [
       { role: 'system', content: 'Please provide a concise summary of the following text.' },
-      { role: 'user', content: text }
+      { role: 'user', content: text },
     ];
-    
+
     const options = { maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY };
     const response = await this.sendChatRequest(messages, options);
     return this._extractResponseContent(response);
@@ -705,22 +737,21 @@ class PerplexityService {
   async _loadCache() {
     const cacheDir = path.join(process.cwd(), 'data');
     const cachePath = path.join(cacheDir, 'question_cache.json');
-    
+
     try {
-      
       // Ensure cache directory exists with secure permissions
       try {
-        await fs.mkdir(cacheDir, { 
+        await fs.mkdir(cacheDir, {
           recursive: true,
           // Use secure directory permissions (read/write/execute for owner, read/execute for others)
-          mode: this.FILE_PERMISSIONS.DIRECTORY 
+          mode: this.FILE_PERMISSIONS.DIRECTORY,
         });
       } catch (mkdirError) {
         if (mkdirError.code !== 'EEXIST') {
           throw mkdirError;
         }
       }
-      
+
       // Read and parse cache file
       try {
         const cacheData = await fs.readFile(cachePath, 'utf8');
@@ -738,7 +769,7 @@ class PerplexityService {
       return {};
     }
   }
-  
+
   /**
    * Format a cache entry with metadata
    * @param {string|Object} entry - The cache entry
@@ -751,14 +782,14 @@ class PerplexityService {
     if (typeof entry === 'object' && entry !== null && entry.content) {
       return {
         ...entry,
-        timestamp: entry.timestamp || timestamp
+        timestamp: entry.timestamp || timestamp,
       };
     }
-    
+
     // Otherwise, create a new object with content and timestamp
     return {
       content: entry,
-      timestamp
+      timestamp,
     };
   }
 
@@ -770,37 +801,36 @@ class PerplexityService {
   async _saveCache(cache) {
     const cacheDir = path.join(process.cwd(), 'data');
     const cachePath = path.join(cacheDir, 'question_cache.json');
-    
+
     try {
-      
       // Ensure cache directory exists with secure permissions
       try {
-        await fs.mkdir(cacheDir, { 
+        await fs.mkdir(cacheDir, {
           recursive: true,
           // Use secure directory permissions (read/write/execute for owner, read/execute for others)
-          mode: this.FILE_PERMISSIONS.DIRECTORY
+          mode: this.FILE_PERMISSIONS.DIRECTORY,
         });
       } catch (mkdirError) {
         if (mkdirError.code !== 'EEXIST') {
           throw mkdirError;
         }
       }
-      
+
       // Format entries with timestamps if needed
       const timestamp = Date.now();
       const formattedCache = {};
-      
+
       for (const [key, value] of Object.entries(cache)) {
         formattedCache[key] = this._formatCacheEntry(value, timestamp);
       }
-      
+
       // Write cache file with secure permissions
       await fs.writeFile(
-        cachePath, 
-        JSON.stringify(formattedCache, null, 2), 
+        cachePath,
+        JSON.stringify(formattedCache, null, 2),
         { mode: this.FILE_PERMISSIONS.FILE } // Set secure file permissions (read/write for owner, read for others)
       );
-      
+
       // Apply secure file permissions
       await fs.chmod(cachePath, this.FILE_PERMISSIONS.FILE);
     } catch (error) {
@@ -831,14 +861,14 @@ class PerplexityService {
         await pruner.pruneCache();
         return;
       }
-      
+
       // Fallback to basic cache pruning
       const cache = await this._loadCache();
       if (!cache) return;
-      
+
       const now = Date.now();
       let modified = false;
-      
+
       for (const [key, entry] of Object.entries(cache)) {
         const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
         if (timestamp && now - timestamp > config.CACHE.MAX_AGE_MS) {
@@ -846,7 +876,7 @@ class PerplexityService {
           modified = true;
         }
       }
-      
+
       if (modified) {
         await this._saveCache(cache);
       }

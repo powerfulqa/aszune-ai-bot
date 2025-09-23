@@ -33,5 +33,5 @@ module.exports = {
   // Re-export functions from the new modular system
   _processParagraph: enhancedChunker._processParagraph,
   _processSentence: enhancedChunker._processSentence,
-  _processLongSentence: enhancedChunker._processLongSentence
+  _processLongSentence: enhancedChunker._processLongSentence,
 };

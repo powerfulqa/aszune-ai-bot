@@ -1,7 +1,7 @@
 require('dotenv').config();
 /**
  * Aszai Discord Bot - Main Entry Point
- * 
+ *
  * A Discord bot that specializes in gaming lore, game logic, guides, and advice,
  * powered by the Perplexity API.
  */
@@ -46,11 +46,11 @@ const enablePiOptimizations = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS
 if (isProd && enablePiOptimizations) {
   // Initialize Pi-specific optimizations
   logger.info('Initializing Pi optimizations');
-  
+
   try {
     // Lazy-load optimization modules only when needed
     const { lazyLoad } = require('./utils/lazy-loader');
-    
+
     // Initialize monitors directly with lazy loading
     lazyLoad(() => require('./utils/memory-monitor'))().initialize();
     lazyLoad(() => require('./utils/performance-monitor'))().initialize();
@@ -76,19 +76,16 @@ async function registerSlashCommands() {
     logger.error('Cannot register slash commands: Client not ready');
     return;
   }
-  
+
   const commands = commandHandler.getSlashCommandsData();
-  
+
   const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
-  
+
   try {
     logger.info(`Registering ${commands.length} slash commands`);
-    
-    await rest.put(
-      Routes.applicationCommands(client.user.id),
-      { body: commands },
-    );
-    
+
+    await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+
     logger.info('Slash commands registered successfully');
   } catch (error) {
     logger.error('Error registering slash commands:', error);
@@ -98,7 +95,7 @@ async function registerSlashCommands() {
 // Handle ready event
 client.once('ready', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
-  
+
   // Initialize Pi optimizations after connection is established
   await bootWithOptimizations();
   await registerSlashCommands();
@@ -133,14 +130,14 @@ const shutdown = async (signal) => {
     logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
     return;
   }
-  
+
   isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
-  
+
   // Track any errors that occur during shutdown
   const errors = [];
   let shutdownStatus = true;
-  
+
   // Step 1: Shutdown conversation manager
   try {
     logger.debug('Shutting down conversation manager...');
@@ -151,7 +148,7 @@ const shutdown = async (signal) => {
     logger.error('Error shutting down conversation manager:', convError);
     errors.push(convError);
   }
-  
+
   // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
   try {
     logger.debug('Shutting down Discord client...');
@@ -159,11 +156,10 @@ const shutdown = async (signal) => {
     await client.destroy();
     logger.debug('Discord client shutdown successful');
   } catch (clientError) {
-    shutdownStatus = false;
     logger.error('Error shutting down Discord client:', clientError);
     errors.push(clientError);
   }
-  
+
   // Log individual errors for easier debugging
   if (errors.length > 0) {
     errors.forEach((err, index) => {
@@ -199,7 +195,8 @@ process.on('uncaughtException', uncaughtExceptionHandler);
 // Log in to Discord, with special handling for test environment
 if (process.env.NODE_ENV === 'test') {
   // In test mode, we still call login but with a mock token that will be resolved in the mock
-  client.login('test-token')
+  client
+    .login('test-token')
     .then(() => {
       logger.info('Logged in to Discord (test mode)');
     })
@@ -207,7 +204,8 @@ if (process.env.NODE_ENV === 'test') {
       logger.error('Failed to log in to Discord:', error);
     });
 } else {
-  client.login(config.DISCORD_BOT_TOKEN)
+  client
+    .login(config.DISCORD_BOT_TOKEN)
     .then(() => {
       logger.info('Logged in to Discord');
     })
@@ -224,7 +222,7 @@ module.exports = {
   conversationManager,
   shutdown, // Export shutdown function for testing
   unhandledRejectionHandler, // Export for direct testing
-  uncaughtExceptionHandler,  // Export for direct testing
+  uncaughtExceptionHandler, // Export for direct testing
   bootWithOptimizations, // Export for branch coverage testing
   registerSlashCommands, // Export for branch coverage testing
 };

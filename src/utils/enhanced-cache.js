@@ -3,17 +3,17 @@
  * Provides intelligent caching with advanced eviction strategies and metrics
  */
 const config = require('../config/config');
-const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
+const { ErrorHandler } = require('./error-handler');
 
 /**
  * Cache eviction strategies
  */
 const EVICTION_STRATEGIES = {
-  LRU: 'lru',           // Least Recently Used
-  LFU: 'lfu',           // Least Frequently Used
-  TTL: 'ttl',           // Time To Live
-  SIZE_BASED: 'size',   // Size-based eviction
-  HYBRID: 'hybrid'      // Combination of strategies
+  LRU: 'lru', // Least Recently Used
+  LFU: 'lfu', // Least Frequently Used
+  TTL: 'ttl', // Time To Live
+  SIZE_BASED: 'size', // Size-based eviction
+  HYBRID: 'hybrid', // Combination of strategies
 };
 
 /**
@@ -90,12 +90,12 @@ class EnhancedCache {
     this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
     this.defaultTtl = options.defaultTtl || config.CACHE.DEFAULT_TTL_MS;
     this.cleanupInterval = options.cleanupInterval || config.CACHE.CLEANUP_INTERVAL_MS;
-    
+
     // Cache storage
     this.entries = new Map();
     this.accessOrder = new Map(); // For LRU tracking
     this.frequencyMap = new Map(); // For LFU tracking
-    
+
     // Metrics
     this.metrics = {
       hits: 0,
@@ -104,9 +104,9 @@ class EnhancedCache {
       deletes: 0,
       evictions: 0,
       totalMemory: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
+
     // Start cleanup interval
     this.startCleanup();
   }
@@ -119,24 +119,24 @@ class EnhancedCache {
   get(key) {
     try {
       const entry = this.entries.get(key);
-      
+
       if (!entry) {
         this.metrics.misses++;
         return null;
       }
-      
+
       // Check if expired
       if (entry.isExpired()) {
         this.delete(key);
         this.metrics.misses++;
         return null;
       }
-      
+
       // Update access statistics
       entry.touch();
       this.updateAccessOrder(key);
       this.updateFrequency(key);
-      
+
       this.metrics.hits++;
       return entry.value;
     } catch (error) {
@@ -158,34 +158,34 @@ class EnhancedCache {
     try {
       const ttl = options.ttl || this.defaultTtl;
       const tags = options.tags || [];
-      
+
       // Remove existing entry if present
       if (this.entries.has(key)) {
         this.delete(key);
       }
-      
+
       // Create new entry
       const entry = new CacheEntry(key, value, ttl);
-      
+
       // Add tags
-      tags.forEach(tag => entry.addTag(tag));
-      
+      tags.forEach((tag) => entry.addTag(tag));
+
       // Check if we need to evict entries
       this.ensureSpace(entry);
-      
+
       // Add to cache
       this.entries.set(key, entry);
       this.updateAccessOrder(key);
       this.updateFrequency(key);
       this.updateMemoryMetrics();
-      
+
       this.metrics.sets++;
       return true;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache set operation', { 
-        key, 
+      const errorResponse = ErrorHandler.handleError(error, 'cache set operation', {
+        key,
         valueType: typeof value,
-        options 
+        options,
       });
       console.error(`Cache set error: ${errorResponse.message}`);
       return false;
@@ -201,12 +201,12 @@ class EnhancedCache {
     try {
       const entry = this.entries.get(key);
       if (!entry) return false;
-      
+
       this.entries.delete(key);
       this.accessOrder.delete(key);
       this.frequencyMap.delete(key);
       this.updateMemoryMetrics();
-      
+
       this.metrics.deletes++;
       return true;
     } catch (error) {
@@ -239,14 +239,14 @@ class EnhancedCache {
   invalidateByTag(tag) {
     try {
       let invalidated = 0;
-      
+
       for (const [key, entry] of this.entries.entries()) {
         if (entry.tags.has(tag)) {
           this.delete(key);
           invalidated++;
         }
       }
-      
+
       return invalidated;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache tag invalidation', { tag });
@@ -262,10 +262,11 @@ class EnhancedCache {
   getStats() {
     const now = Date.now();
     const uptime = now - this.metrics.startTime;
-    const hitRate = this.metrics.hits + this.metrics.misses > 0 
-      ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100 
-      : 0;
-    
+    const hitRate =
+      this.metrics.hits + this.metrics.misses > 0
+        ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100
+        : 0;
+
     return {
       ...this.metrics,
       hitRate: Math.round(hitRate * 100) / 100,
@@ -277,7 +278,7 @@ class EnhancedCache {
       maxSize: this.maxSize,
       maxMemory: this.maxMemory,
       maxMemoryFormatted: this.formatBytes(this.maxMemory),
-      evictionStrategy: this.evictionStrategy
+      evictionStrategy: this.evictionStrategy,
     };
   }
 
@@ -288,7 +289,7 @@ class EnhancedCache {
   getDetailedInfo() {
     const stats = this.getStats();
     const entries = [];
-    
+
     for (const [key, entry] of this.entries.entries()) {
       entries.push({
         key,
@@ -297,13 +298,13 @@ class EnhancedCache {
         accessCount: entry.accessCount,
         size: entry.size,
         tags: Array.from(entry.tags),
-        isExpired: entry.isExpired()
+        isExpired: entry.isExpired(),
       });
     }
-    
+
     return {
       ...stats,
-      entries: entries.sort((a, b) => b.lastAccessed - a.lastAccessed) // Sort by most recent access
+      entries: entries.sort((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
     };
   }
 
@@ -313,29 +314,31 @@ class EnhancedCache {
    */
   ensureSpace(newEntry) {
     // Check if we're under limits
-    if (this.entries.size < this.maxSize && 
-        this.metrics.totalMemory + newEntry.size <= this.maxMemory) {
+    if (
+      this.entries.size < this.maxSize &&
+      this.metrics.totalMemory + newEntry.size <= this.maxMemory
+    ) {
       return; // No eviction needed
     }
-    
+
     // Perform eviction based on strategy
     switch (this.evictionStrategy) {
-      case EVICTION_STRATEGIES.LRU:
-        this.evictLRU();
-        break;
-      case EVICTION_STRATEGIES.LFU:
-        this.evictLFU();
-        break;
-      case EVICTION_STRATEGIES.TTL:
-        this.evictExpired();
-        break;
-      case EVICTION_STRATEGIES.SIZE_BASED:
-        this.evictBySize();
-        break;
-      case EVICTION_STRATEGIES.HYBRID:
-      default:
-        this.evictHybrid();
-        break;
+    case EVICTION_STRATEGIES.LRU:
+      this.evictLRU();
+      break;
+    case EVICTION_STRATEGIES.LFU:
+      this.evictLFU();
+      break;
+    case EVICTION_STRATEGIES.TTL:
+      this.evictExpired();
+      break;
+    case EVICTION_STRATEGIES.SIZE_BASED:
+      this.evictBySize();
+      break;
+    case EVICTION_STRATEGIES.HYBRID:
+    default:
+      this.evictHybrid();
+      break;
     }
   }
 
@@ -344,9 +347,8 @@ class EnhancedCache {
    */
   evictLRU() {
     const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
-    const sortedByAccess = Array.from(this.accessOrder.entries())
-      .sort((a, b) => a[1] - b[1]);
-    
+    const sortedByAccess = Array.from(this.accessOrder.entries()).sort((a, b) => a[1] - b[1]);
+
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {
       const key = sortedByAccess[i][0];
       this.delete(key);
@@ -359,9 +361,8 @@ class EnhancedCache {
    */
   evictLFU() {
     const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries())
-      .sort((a, b) => a[1] - b[1]);
-    
+    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort((a, b) => a[1] - b[1]);
+
     for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {
       const key = sortedByFrequency[i][0];
       this.delete(key);
@@ -373,16 +374,15 @@ class EnhancedCache {
    * Evict expired entries
    */
   evictExpired() {
-    const now = Date.now();
     const keysToDelete = [];
-    
+
     for (const [key, entry] of this.entries.entries()) {
       if (entry.isExpired()) {
         keysToDelete.push(key);
       }
     }
-    
-    keysToDelete.forEach(key => {
+
+    keysToDelete.forEach((key) => {
       this.delete(key);
       this.metrics.evictions++;
     });
@@ -393,19 +393,19 @@ class EnhancedCache {
    */
   evictBySize() {
     const targetMemory = this.maxMemory * 0.8; // Reduce to 80% of max
-    
+
     while (this.metrics.totalMemory > targetMemory && this.entries.size > 0) {
       // Find largest entry
       let largestKey = null;
       let largestSize = 0;
-      
+
       for (const [key, entry] of this.entries.entries()) {
         if (entry.size > largestSize) {
           largestSize = entry.size;
           largestKey = key;
         }
       }
-      
+
       if (largestKey) {
         this.delete(largestKey);
         this.metrics.evictions++;
@@ -421,10 +421,9 @@ class EnhancedCache {
   evictHybrid() {
     // First, remove expired entries
     this.evictExpired();
-    
+
     // If still over limits, use LRU
-    if (this.entries.size >= this.maxSize || 
-        this.metrics.totalMemory >= this.maxMemory) {
+    if (this.entries.size >= this.maxSize || this.metrics.totalMemory >= this.maxMemory) {
       this.evictLRU();
     }
   }
@@ -490,7 +489,7 @@ class EnhancedCache {
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
@@ -514,5 +513,5 @@ class EnhancedCache {
 module.exports = {
   EnhancedCache,
   EVICTION_STRATEGIES,
-  CacheEntry
+  CacheEntry,
 };

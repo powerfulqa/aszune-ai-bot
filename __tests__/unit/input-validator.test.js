@@ -2,18 +2,19 @@
  * Input Validator Tests
  * Comprehensive test coverage for input validation and sanitization
  */
-const { InputValidator, VALIDATION_PATTERNS, VALIDATION_LIMITS, DANGEROUS_PATTERNS } = require('../../src/utils/input-validator');
+const {
+  InputValidator,
+  VALIDATION_PATTERNS,
+  VALIDATION_LIMITS,
+  DANGEROUS_PATTERNS,
+} = require('../../src/utils/input-validator');
 
 describe('InputValidator', () => {
   describe('validateUserId', () => {
     it('should validate correct Discord user IDs', () => {
-      const validIds = [
-        '123456789012345678',
-        '987654321098765432',
-        '111111111111111111'
-      ];
+      const validIds = ['123456789012345678', '987654321098765432', '111111111111111111'];
 
-      validIds.forEach(id => {
+      validIds.forEach((id) => {
         const result = InputValidator.validateUserId(id);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -29,10 +30,10 @@ describe('InputValidator', () => {
         '', // empty
         null, // null
         undefined, // undefined
-        123456789012345678 // number instead of string
+        123456789012345678, // number instead of string
       ];
 
-      invalidIds.forEach(id => {
+      invalidIds.forEach((id) => {
         const result = InputValidator.validateUserId(id);
         expect(result.valid).toBe(false);
         expect(result.error).toBeDefined();
@@ -40,13 +41,9 @@ describe('InputValidator', () => {
     });
 
     it('should accept valid user IDs', () => {
-      const validIds = [
-        '123456789012345678',
-        '987654321098765432',
-        '111111111111111111'
-      ];
+      const validIds = ['123456789012345678', '987654321098765432', '111111111111111111'];
 
-      validIds.forEach(id => {
+      validIds.forEach((id) => {
         const result = InputValidator.validateUserId(id);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -66,10 +63,10 @@ describe('InputValidator', () => {
       const validMessages = [
         'Hello world!',
         'This is a test message.',
-        'Message with numbers 123 and symbols !@#$%'
+        'Message with numbers 123 and symbols !@#$%',
       ];
 
-      validMessages.forEach(message => {
+      validMessages.forEach((message) => {
         const result = InputValidator.validateMessageContent(message);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -101,10 +98,10 @@ describe('InputValidator', () => {
       const validUrls = [
         'https://example.com',
         'http://test.org',
-        'https://subdomain.example.com/path?query=value'
+        'https://subdomain.example.com/path?query=value',
       ];
 
-      validUrls.forEach(url => {
+      validUrls.forEach((url) => {
         const result = InputValidator.validateUrl(url);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -116,10 +113,10 @@ describe('InputValidator', () => {
         'not-a-url',
         'ftp://example.com',
         'javascript:alert("xss")',
-        'data:text/html,<script>alert("xss")</script>'
+        'data:text/html,<script>alert("xss")</script>',
       ];
 
-      invalidUrls.forEach(url => {
+      invalidUrls.forEach((url) => {
         const result = InputValidator.validateUrl(url);
         expect(result.valid).toBe(false);
         expect(result.error).toBeDefined();
@@ -129,14 +126,9 @@ describe('InputValidator', () => {
 
   describe('validateCommand', () => {
     it('should validate correct commands', () => {
-      const validCommands = [
-        '!help',
-        '/help',
-        '!test_command',
-        '/test-command'
-      ];
+      const validCommands = ['!help', '/help', '!test_command', '/test-command'];
 
-      validCommands.forEach(command => {
+      validCommands.forEach((command) => {
         const result = InputValidator.validateCommand(command);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -149,10 +141,10 @@ describe('InputValidator', () => {
         '!', // just prefix
         '!a'.repeat(50), // too long
         '!command@invalid', // invalid characters
-        '' // empty
+        '', // empty
       ];
 
-      invalidCommands.forEach(command => {
+      invalidCommands.forEach((command) => {
         const result = InputValidator.validateCommand(command);
         expect(result.valid).toBe(false);
         expect(result.error).toBeDefined();
@@ -165,10 +157,10 @@ describe('InputValidator', () => {
         '!test-command',
         '!test123',
         '/help',
-        '/test_command'
+        '/test_command',
       ];
 
-      validCommands.forEach(command => {
+      validCommands.forEach((command) => {
         const result = InputValidator.validateCommand(command);
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -193,7 +185,7 @@ describe('InputValidator', () => {
     });
 
     it('should detect SQL injection attempts', () => {
-      const dangerousContent = "'; DROP TABLE users; --";
+      const dangerousContent = '\'; DROP TABLE users; --';
       const result = InputValidator.sanitizeContent(dangerousContent);
       expect(result.warnings.length).toBeGreaterThan(0);
     });

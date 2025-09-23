@@ -13,7 +13,7 @@ jest.mock('../../src/commands', () => ({
     return null;
   }),
   handleSlashCommand: jest.fn(),
-  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }]),
 }));
 
 describe('Bot Edge Cases', () => {
@@ -25,7 +25,7 @@ describe('Bot Edge Cases', () => {
       author: { bot: false, id: 'user1' },
       reply: jest.fn(),
       react: jest.fn(),
-      channel: { sendTyping: jest.fn() }
+      channel: { sendTyping: jest.fn() },
     };
     jest.clearAllMocks();
   });
@@ -54,7 +54,9 @@ describe('Bot Edge Cases', () => {
   it('handles API failure for chat completions', async () => {
     request.mockRejectedValueOnce(new Error('API Down'));
     await fakeMessage.reply('There was an error processing your request. Please try again later.');
-    expect(fakeMessage.reply).toHaveBeenCalledWith('There was an error processing your request. Please try again later.');
+    expect(fakeMessage.reply).toHaveBeenCalledWith(
+      'There was an error processing your request. Please try again later.'
+    );
   });
 
   it('reacts with correct emoji for hello', async () => {

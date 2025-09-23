@@ -16,13 +16,13 @@ class Logger {
     // Setup log file path
     this.logDir = path.join(__dirname, '../../logs');
     this.logFile = path.join(this.logDir, 'bot.log');
-    
+
     // Create log directory if not in test environment
     if (process.env.NODE_ENV !== 'test') {
       this._ensureLogDirectory();
     }
   }
-  
+
   /**
    * Create log directory if it doesn't exist
    * @private
@@ -34,7 +34,7 @@ class Logger {
       console.error('Failed to create log directory:', error);
     }
   }
-  
+
   /**
    * Format a log message with timestamp
    * @param {string} level - Log level
@@ -45,7 +45,7 @@ class Logger {
     const timestamp = new Date().toISOString();
     return `[${timestamp}] [${level}] ${message}`;
   }
-  
+
   /**
    * Write log to file if not in test mode
    * @param {string} formattedMessage - Formatted log message
@@ -53,21 +53,21 @@ class Logger {
    */
   async _writeToFile(formattedMessage) {
     if (process.env.NODE_ENV === 'test') return;
-    
+
     try {
       // Ensure log directory exists
       await this._ensureLogDirectory();
-      
+
       // Check if log file needs rotation
       await this._rotateLogFileIfNeeded();
-      
+
       // Append to log file
       await fs.appendFile(this.logFile, formattedMessage + '\n');
     } catch (error) {
       console.error('Failed to write to log file:', error);
     }
   }
-  
+
   /**
    * Rotate log file if it gets too large
    * @private
@@ -79,19 +79,19 @@ class Logger {
       const envMaxSizeMB = parseInt(process.env.PI_LOG_MAX_SIZE_MB, 10);
       const maxSizeMB = !isNaN(envMaxSizeMB) ? envMaxSizeMB : config.LOGGING.DEFAULT_MAX_SIZE_MB;
       const maxSize = maxSizeMB * 1024 * 1024;
-      
+
       if (stats.size > maxSize) {
         const timestamp = new Date().toISOString().replace(/:/g, '-');
         await fs.rename(this.logFile, `${this.logFile}.${timestamp}`);
-        
+
         // Remove old log files (keep only configured number most recent)
         const files = await fs.readdir(this.logDir);
         const oldLogs = files
-          .filter(f => f.startsWith('bot.log.') && f !== 'bot.log')
+          .filter((f) => f.startsWith('bot.log.') && f !== 'bot.log')
           .sort()
           .reverse()
           .slice(config.LOGGING.MAX_LOG_FILES);
-        
+
         for (const oldLog of oldLogs) {
           await fs.unlink(path.join(this.logDir, oldLog)).catch(() => {});
         }
@@ -101,7 +101,7 @@ class Logger {
       console.error('Log rotation failed:', error);
     }
   }
-  
+
   /**
    * Get the current log level
    * @private
@@ -110,7 +110,7 @@ class Logger {
     const envLevel = process.env.PI_LOG_LEVEL || 'INFO';
     return this.levels[envLevel] !== undefined ? this.levels[envLevel] : this.levels.INFO;
   }
-  
+
   /**
    * Log a debug message
    * @param {string} message - Message to log
@@ -121,13 +121,13 @@ class Logger {
       const formattedMessage = this._formatMessage('DEBUG', message);
       console.log(formattedMessage);
       if (data) console.log(data);
-      
+
       // Write to file
       this._writeToFile(formattedMessage);
       if (data) this._writeToFile(JSON.stringify(data));
     }
   }
-  
+
   /**
    * Log an info message
    * @param {string} message - Message to log
@@ -138,13 +138,13 @@ class Logger {
       const formattedMessage = this._formatMessage('INFO', message);
       console.log(formattedMessage);
       if (data) console.log(data);
-      
+
       // Write to file
       this._writeToFile(formattedMessage);
       if (data) this._writeToFile(JSON.stringify(data));
     }
   }
-  
+
   /**
    * Log a warning message
    * @param {string} message - Message to log
@@ -155,13 +155,13 @@ class Logger {
       const formattedMessage = this._formatMessage('WARN', message);
       console.warn(formattedMessage);
       if (data) console.warn(data);
-      
+
       // Write to file
       this._writeToFile(formattedMessage);
       if (data) this._writeToFile(JSON.stringify(data));
     }
   }
-  
+
   /**
    * Log an error message
    * @param {string} message - Message to log
@@ -171,13 +171,13 @@ class Logger {
     if (this._getLogLevel() <= this.levels.ERROR) {
       const formattedMessage = this._formatMessage('ERROR', message);
       console.error(formattedMessage);
-      
+
       // Write to file
       this._writeToFile(formattedMessage);
-      
+
       if (error) {
         let errorDetails;
-        
+
         if (error.response) {
           // API error with response
           errorDetails = {
@@ -190,7 +190,7 @@ class Logger {
           // No response received
           errorDetails = {
             type: 'No API Response',
-            request: error.request
+            request: error.request,
           };
           console.error('No response received from API:', error.request);
         } else {
@@ -198,18 +198,18 @@ class Logger {
           errorDetails = {
             type: 'General Error',
             message: error.message || String(error),
-            stack: error.stack
+            stack: error.stack,
           };
           console.error('Error:', error.message || error);
           if (error.stack) console.error('Stack:', error.stack);
         }
-        
+
         // Write error details to file
         this._writeToFile(JSON.stringify(errorDetails, null, 2));
       }
     }
   }
-  
+
   /**
    * Handle an error and return a user-friendly message
    * @param {Error} error - The error to handle

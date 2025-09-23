@@ -17,7 +17,7 @@ const ERROR_TYPES = {
   RATE_LIMIT_ERROR: 'RATE_LIMIT_ERROR',
   MEMORY_ERROR: 'MEMORY_ERROR',
   PERMISSION_ERROR: 'PERMISSION_ERROR',
-  UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
 };
 
 /**
@@ -32,7 +32,7 @@ const HTTP_STATUS_MESSAGES = {
   500: 'Internal Server Error',
   502: 'Bad Gateway',
   503: 'Service Unavailable',
-  504: 'Gateway Timeout'
+  504: 'Gateway Timeout',
 };
 
 class ErrorHandler {
@@ -94,17 +94,21 @@ class ErrorHandler {
    * @param {Error} originalError - The original error object
    * @returns {string} - User-friendly error message
    */
-  static getUserFriendlyMessage(errorType, originalError = null) {
+  static getUserFriendlyMessage(errorType) {
     const messages = {
       [ERROR_TYPES.API_ERROR]: 'The service is temporarily unavailable. Please try again later.',
-      [ERROR_TYPES.RATE_LIMIT_ERROR]: 'The service is currently busy. Please wait a moment and try again.',
-      [ERROR_TYPES.NETWORK_ERROR]: 'Network connection issue. Please check your connection and try again.',
+      [ERROR_TYPES.RATE_LIMIT_ERROR]:
+        'The service is currently busy. Please wait a moment and try again.',
+      [ERROR_TYPES.NETWORK_ERROR]:
+        'Network connection issue. Please check your connection and try again.',
       [ERROR_TYPES.FILE_ERROR]: 'File operation failed. Please try again or contact support.',
       [ERROR_TYPES.PERMISSION_ERROR]: 'Permission denied. Please contact an administrator.',
-      [ERROR_TYPES.MEMORY_ERROR]: 'System is experiencing high memory usage. Please try again later.',
+      [ERROR_TYPES.MEMORY_ERROR]:
+        'System is experiencing high memory usage. Please try again later.',
       [ERROR_TYPES.CONFIG_ERROR]: 'Configuration error. Please contact an administrator.',
-      [ERROR_TYPES.VALIDATION_ERROR]: 'Invalid input provided. Please check your request and try again.',
-      [ERROR_TYPES.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again later.'
+      [ERROR_TYPES.VALIDATION_ERROR]:
+        'Invalid input provided. Please check your request and try again.',
+      [ERROR_TYPES.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again later.',
     };
 
     return messages[errorType] || messages[ERROR_TYPES.UNKNOWN_ERROR];
@@ -120,7 +124,7 @@ class ErrorHandler {
   static handleError(error, context = '', additionalData = {}) {
     const errorType = this.categorizeError(error);
     const userMessage = this.getUserFriendlyMessage(errorType, error);
-    
+
     // Enhanced error logging with structured data
     const errorLog = {
       type: errorType,
@@ -130,7 +134,7 @@ class ErrorHandler {
       code: error.code,
       statusCode: error.statusCode || error.status,
       timestamp: new Date().toISOString(),
-      ...additionalData
+      ...additionalData,
     };
 
     // Log based on error severity
@@ -147,7 +151,7 @@ class ErrorHandler {
       message: userMessage,
       context: context,
       timestamp: errorLog.timestamp,
-      originalError: process.env.NODE_ENV === 'development' ? error.message : undefined
+      originalError: process.env.NODE_ENV === 'development' ? error.message : undefined,
     };
   }
 
@@ -159,17 +163,17 @@ class ErrorHandler {
    */
   static handleApiError(error, endpoint = '') {
     const context = `API call to ${endpoint}`;
-    const errorType = this.categorizeError(error);
-    
+    this.categorizeError(error);
+
     // Extract HTTP status if available
     const statusCode = error.statusCode || error.status || error.response?.status;
     const statusMessage = statusCode ? HTTP_STATUS_MESSAGES[statusCode] : 'Unknown error';
-    
+
     const additionalData = {
       endpoint: endpoint,
       statusCode: statusCode,
       statusMessage: statusMessage,
-      responseData: error.response?.data
+      responseData: error.response?.data,
     };
 
     return this.handleError(error, context, additionalData);
@@ -187,7 +191,7 @@ class ErrorHandler {
     const additionalData = {
       operation: operation,
       filePath: filePath,
-      errorCode: error.code
+      errorCode: error.code,
     };
 
     return this.handleError(error, context, additionalData);
@@ -205,7 +209,7 @@ class ErrorHandler {
     const additionalData = {
       field: field,
       value: typeof value === 'string' ? value.substring(0, 100) : value,
-      validationType: error.name || 'ValidationError'
+      validationType: error.name || 'ValidationError',
     };
 
     return this.handleError(error, context, additionalData);
@@ -237,31 +241,33 @@ class ErrorHandler {
       maxRetries = config.RATE_LIMITS.MAX_RETRIES,
       delay = config.RATE_LIMITS.RETRY_DELAY_MS,
       backoffMultiplier = 2,
-      retryableErrors = [ERROR_TYPES.RATE_LIMIT_ERROR, ERROR_TYPES.NETWORK_ERROR]
+      retryableErrors = [ERROR_TYPES.RATE_LIMIT_ERROR, ERROR_TYPES.NETWORK_ERROR],
     } = options;
 
     let lastError;
-    
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error;
         const errorType = this.categorizeError(error);
-        
+
         // Don't retry if error is not retryable or we've exhausted retries
         if (!retryableErrors.includes(errorType) || attempt === maxRetries) {
           throw error;
         }
-        
+
         // Calculate delay with exponential backoff
         const currentDelay = delay * Math.pow(backoffMultiplier, attempt);
-        logger.warn(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${currentDelay}ms for ${errorType}`);
-        
-        await new Promise(resolve => setTimeout(resolve, currentDelay));
+        logger.warn(
+          `Retry attempt ${attempt + 1}/${maxRetries + 1} after ${currentDelay}ms for ${errorType}`
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, currentDelay));
       }
     }
-    
+
     throw lastError;
   }
 }
@@ -269,5 +275,5 @@ class ErrorHandler {
 module.exports = {
   ErrorHandler,
   ERROR_TYPES,
-  HTTP_STATUS_MESSAGES
+  HTTP_STATUS_MESSAGES,
 };

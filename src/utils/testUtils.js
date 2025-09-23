@@ -15,7 +15,7 @@ const mockSendTyping = jest.fn().mockResolvedValue({});
 function createMockMessage(options = {}) {
   // Extract only expected properties to avoid overriding critical mock properties
   const { content, isBot, userId, ...safeOptions } = options;
-  
+
   return {
     content: content || '',
     author: {

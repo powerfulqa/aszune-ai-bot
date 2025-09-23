@@ -11,7 +11,7 @@ jest.mock('../../src/commands', () => ({
     return null;
   }),
   handleSlashCommand: jest.fn(),
-  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }])
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }]),
 }));
 
 const handleChatMessage = require('../../src/services/chat');
@@ -51,7 +51,7 @@ describe('Error handling', () => {
       content: 'test',
       author: { bot: false, id: '123456789012345678' },
       reply: jest.fn(),
-      channel: { sendTyping: jest.fn() }
+      channel: { sendTyping: jest.fn() },
     };
 
     // Act
@@ -59,7 +59,9 @@ describe('Error handling', () => {
 
     // Assert
     expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
-    expect(fakeMessage.reply).toHaveBeenCalledWith('The service is temporarily unavailable. Please try again later.');
+    expect(fakeMessage.reply).toHaveBeenCalledWith(
+      'The service is temporarily unavailable. Please try again later.'
+    );
   });
 
   it('handles failed summary API response', async () => {
@@ -71,7 +73,7 @@ describe('Error handling', () => {
       content: '!summary',
       author: { bot: false, id: '123456789012345678' },
       reply: jest.fn(),
-      channel: { sendTyping: jest.fn() }
+      channel: { sendTyping: jest.fn() },
     };
 
     // Act

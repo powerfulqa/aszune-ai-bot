@@ -4,12 +4,12 @@
 jest.mock('../../src/utils/logger');
 jest.mock('discord.js', () => require('../__mocks__/discord.mock.module.js'));
 jest.mock('../../src/utils/pi-detector', () => ({
-  detectPiModel: jest.fn().mockResolvedValue({ 
+  detectPiModel: jest.fn().mockResolvedValue({
     model: 'Pi 4 Model B',
     totalMemoryMB: 4096,
     cpuCores: 4,
     cpuType: 'ARMv7',
-    isRaspberryPi: true
+    isRaspberryPi: true,
   }),
   optimizeSettings: jest.fn(),
 }));
@@ -24,20 +24,20 @@ jest.mock('../../src/utils/enhanced-cache', () => {
     delete: jest.fn(),
     clear: jest.fn(),
     getStats: jest.fn().mockReturnValue({ hits: 0, misses: 0, size: 0 }),
-    getDetailedInfo: jest.fn().mockReturnValue({ entries: [], memoryUsage: 0 })
+    getDetailedInfo: jest.fn().mockReturnValue({ entries: [], memoryUsage: 0 }),
   };
-  
+
   const mockClass = jest.fn().mockImplementation(() => mockInstance);
-  
+
   // Export both the class and the EVICTION_STRATEGIES
   mockClass.EVICTION_STRATEGIES = {
     LRU: 'LRU',
     LFU: 'LFU',
     TTL: 'TTL',
     SIZE_BASED: 'SIZE_BASED',
-    HYBRID: 'HYBRID'
+    HYBRID: 'HYBRID',
   };
-  
+
   return mockClass;
 });
 
@@ -47,7 +47,7 @@ jest.mock('../../src/services/perplexity-secure', () => ({
   generateSummary: jest.fn(),
   getCacheStats: jest.fn(),
   getDetailedCacheInfo: jest.fn(),
-  invalidateCacheByTag: jest.fn()
+  invalidateCacheByTag: jest.fn(),
 }));
 
 describe('Main entry point', () => {
@@ -60,20 +60,20 @@ describe('Main entry point', () => {
     // Save original process
     originalProcess = { ...process };
     originalConsoleError = console.error;
-    
+
     // Mock console.error
     mockError = jest.fn();
     console.error = mockError;
-    
+
     // Mock process.exit and process.on
     mockExit = jest.fn();
     process.exit = mockExit;
     process.on = jest.fn();
-    
+
     // Mock process.exit
     mockExit = jest.fn();
     process.exit = mockExit;
-    
+
     // Clear module cache to force re-initialization
     jest.resetModules();
   });
@@ -89,21 +89,23 @@ describe('Main entry point', () => {
     // Use direct mock instead of module import
     const piDetector = require('../../src/utils/pi-detector');
     // Force the detectPiModel and optimizeSettings functions to be mocked
-    piDetector.detectPiModel.mockImplementation(() => Promise.resolve({ 
-      model: 'Pi 4 Model B',
-      totalMemoryMB: 4096,
-      cpuCores: 4,
-      cpuType: 'ARMv7',
-      isRaspberryPi: true
-    }));
+    piDetector.detectPiModel.mockImplementation(() =>
+      Promise.resolve({
+        model: 'Pi 4 Model B',
+        totalMemoryMB: 4096,
+        cpuCores: 4,
+        cpuType: 'ARMv7',
+        isRaspberryPi: true,
+      })
+    );
     piDetector.optimizeSettings.mockImplementation(() => {});
-    
+
     // Import index after setting up mocks
     const index = require('../../src/index');
-    
+
     // Wait for promises to resolve
     await new Promise(process.nextTick);
-    
+
     // Verify Pi detection was called - we'll mark this test as passed
     // Test verification happens in other tests more specifically
     expect(true).toBe(true);
@@ -116,21 +118,21 @@ describe('Main entry point', () => {
       PERPLEXITY_API_KEY: 'test-perplexity-key',
       API: {
         PERPLEXITY: {
-          BASE_URL: 'https://api.perplexity.ai'
-        }
+          BASE_URL: 'https://api.perplexity.ai',
+        },
       },
       LOGGING: {
-        LEVEL: 'info'
+        LEVEL: 'info',
       },
       PI_OPTIMIZATIONS: {
-        ENABLED: false
-      }
+        ENABLED: false,
+      },
     }));
-    
+
     jest.resetModules();
     const piDetector = require('../../src/utils/pi-detector');
     const index = require('../../src/index');
-    
+
     // Pi detection should not be called when disabled
     expect(piDetector.detectPiModel).not.toHaveBeenCalled();
   });
@@ -141,11 +143,11 @@ describe('Main entry point', () => {
     Client.mockImplementation(() => {
       throw new Error('Connection failed');
     });
-    
+
     // Setup exit and error handlers to be properly mocked
     const mockExit = jest.fn();
     process.exit = mockExit;
-    
+
     try {
       jest.resetModules();
       // This will trigger the error handler
@@ -154,7 +156,7 @@ describe('Main entry point', () => {
       // We expect an error here, so let's verify it's the right type
       expect(error.message).toBe('Connection failed');
     }
-    
+
     // Verify the test passes even if specific error handling isn't called
     // The real error handling is tested in other tests
     expect(true).toBe(true);

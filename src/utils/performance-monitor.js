@@ -5,7 +5,7 @@
 const os = require('os');
 const logger = require('./logger');
 const config = require('../config/config');
-const { ErrorHandler, ERROR_TYPES } = require('./error-handler');
+const { ErrorHandler } = require('./error-handler');
 
 class PerformanceMonitor {
   constructor() {
@@ -14,21 +14,21 @@ class PerformanceMonitor {
     this.highLoadCount = 0;
     this.lastCpuInfo = null;
     this.lastCpuTimes = { idle: 0, total: 0 };
-    this.cpuThreshold = 0.80; // 80% CPU usage threshold
+    this.cpuThreshold = 0.8; // 80% CPU usage threshold
     this.consecutiveThreshold = 5; // How many consecutive high readings before action
     this.throttleFactor = 1; // Current throttling factor (1 = normal, >1 = throttled)
     this.maxThrottleFactor = 5; // Maximum delay factor
-    
+
     // Minimum valid interval
     this.minValidInterval = config.PERFORMANCE.MIN_VALID_INTERVAL_MS;
-    
+
     // Exponential backoff parameters
     this.backoffFactor = 1.5;
     this.backoffMax = config.PERFORMANCE.BACKOFF_MAX_MS;
     this.backoffMin = config.PERFORMANCE.BACKOFF_MIN_MS;
     this.currentBackoff = this.backoffMin;
   }
-  
+
   /**
    * Start the performance monitoring
    */
@@ -37,21 +37,24 @@ class PerformanceMonitor {
       logger.debug('[PerformanceMonitor] Performance monitoring disabled');
       return;
     }
-    
+
     // Only monitor in production to avoid affecting development/testing
     if (process.env.NODE_ENV !== 'production') {
       logger.debug('[PerformanceMonitor] Skipping initialization for non-production environment');
       return;
     }
-    
+
     // Take initial CPU snapshot
     this.lastCpuInfo = this._getCpuInfo();
-    
+
     // Start monitoring at 5-second intervals
-    this.checkInterval = setInterval(() => this._checkPerformance(), config.PERFORMANCE.CHECK_INTERVAL_MS);
+    this.checkInterval = setInterval(
+      () => this._checkPerformance(),
+      config.PERFORMANCE.CHECK_INTERVAL_MS
+    );
     logger.info('[PerformanceMonitor] Performance monitoring initialized');
   }
-  
+
   /**
    * Stop the performance monitoring
    */
@@ -61,7 +64,7 @@ class PerformanceMonitor {
       this.checkInterval = null;
     }
   }
-  
+
   /**
    * Get current throttle factor for operations
    * @returns {number} - Current throttle factor (1 = normal, >1 = throttled)
@@ -69,7 +72,7 @@ class PerformanceMonitor {
   getThrottleFactor() {
     return this.enabled ? this.throttleFactor : 1;
   }
-  
+
   /**
    * Apply throttling to a time value
    * @param {number} ms - Original time in milliseconds
@@ -79,7 +82,7 @@ class PerformanceMonitor {
     if (!this.enabled || ms < this.minValidInterval) return ms;
     return Math.min(ms * this.throttleFactor, this.backoffMax);
   }
-  
+
   /**
    * Apply throttling to a task - delays execution based on current system load
    * @param {Function} task - The task function to execute
@@ -87,17 +90,19 @@ class PerformanceMonitor {
    */
   async throttleTask(task) {
     if (!this.enabled) return task();
-    
+
     const delay = this.currentBackoff * (this.throttleFactor - 1);
-    
+
     if (delay > 0) {
-      logger.debug(`[PerformanceMonitor] Throttling task by ${delay}ms (factor: ${this.throttleFactor.toFixed(1)})`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      logger.debug(
+        `[PerformanceMonitor] Throttling task by ${delay}ms (factor: ${this.throttleFactor.toFixed(1)})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-    
+
     return task();
   }
-  
+
   /**
    * Check the current performance metrics and adjust throttling
    * @private
@@ -108,36 +113,38 @@ class PerformanceMonitor {
       const cpuInfo = this._getCpuInfo();
       const cpuUsage = this._calculateCpuUsage(this.lastCpuInfo, cpuInfo);
       this.lastCpuInfo = cpuInfo;
-      
+
       // Get process memory usage
       const memoryUsage = this._getMemoryUsage();
-      
+
       // Check if we're under high load
       const highLoad = cpuUsage > this.cpuThreshold;
-      
+
       // Update consecutive counter
       if (highLoad) {
         this.highLoadCount++;
       } else if (this.highLoadCount > 0) {
         this.highLoadCount--;
       }
-      
+
       // Adjust throttling based on load patterns
       this._adjustThrottling();
-      
+
       // Log current status (only if significant changes)
       if (highLoad || this.throttleFactor > 1.5) {
-        logger.info(`[PerformanceMonitor] CPU: ${(cpuUsage * 100).toFixed(1)}%, Memory: ${memoryUsage.toFixed(1)}%, Throttle: ${this.throttleFactor.toFixed(1)}x`);
+        logger.info(
+          `[PerformanceMonitor] CPU: ${(cpuUsage * 100).toFixed(1)}%, Memory: ${memoryUsage.toFixed(1)}%, Throttle: ${this.throttleFactor.toFixed(1)}x`
+        );
       }
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'performance monitoring', {
         throttleFactor: this.throttleFactor,
-        isThrottled: this.isThrottled
+        isThrottled: this.isThrottled,
       });
       logger.error(`[PerformanceMonitor] Performance check error: ${errorResponse.message}`);
     }
   }
-  
+
   /**
    * Adjust the throttling factor based on current load patterns
    * @private
@@ -149,25 +156,24 @@ class PerformanceMonitor {
         this.throttleFactor * this.backoffFactor,
         this.maxThrottleFactor
       );
-      this.currentBackoff = Math.min(
-        this.currentBackoff * this.backoffFactor, 
-        this.backoffMax
-      );
-      
+      this.currentBackoff = Math.min(this.currentBackoff * this.backoffFactor, this.backoffMax);
+
       if (this.highLoadCount === this.consecutiveThreshold) {
-        logger.warn(`[PerformanceMonitor] High system load detected, throttling by ${this.throttleFactor.toFixed(1)}x`);
+        logger.warn(
+          `[PerformanceMonitor] High system load detected, throttling by ${this.throttleFactor.toFixed(1)}x`
+        );
       }
     } else if (this.highLoadCount === 0 && this.throttleFactor > 1) {
       // Gradually reduce throttling when load is low
       this.throttleFactor = Math.max(1, this.throttleFactor / this.backoffFactor);
       this.currentBackoff = Math.max(this.backoffMin, this.currentBackoff / this.backoffFactor);
-      
+
       if (this.throttleFactor === 1) {
         logger.info('[PerformanceMonitor] System load normalized, removing throttling');
       }
     }
   }
-  
+
   /**
    * Get current CPU information
    * @private
@@ -177,17 +183,17 @@ class PerformanceMonitor {
     const cpus = os.cpus();
     let idle = 0;
     let total = 0;
-    
+
     for (const cpu of cpus) {
       for (const type in cpu.times) {
         total += cpu.times[type];
       }
       idle += cpu.times.idle;
     }
-    
+
     return { idle, total };
   }
-  
+
   /**
    * Calculate CPU usage percentage
    * @private
@@ -198,14 +204,14 @@ class PerformanceMonitor {
   _calculateCpuUsage(startInfo, endInfo) {
     const idleDiff = endInfo.idle - startInfo.idle;
     const totalDiff = endInfo.total - startInfo.total;
-    
+
     // Avoid division by zero
     if (totalDiff === 0) return 0;
-    
+
     // Calculate usage (1 - idle percentage)
-    return 1 - (idleDiff / totalDiff);
+    return 1 - idleDiff / totalDiff;
   }
-  
+
   /**
    * Get process memory usage as percentage of total
    * @private

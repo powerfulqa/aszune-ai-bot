@@ -6,5 +6,5 @@ module.exports = (content, overrides = {}) => ({
   channel: {
     sendTyping: jest.fn(),
   },
-  ...overrides
+  ...overrides,
 });

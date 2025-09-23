@@ -9,21 +9,21 @@ module.exports = {
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions'
+        CHAT_COMPLETIONS: '/chat/completions',
       },
       MAX_TOKENS: {
         SUMMARY: 1000,
-        CHAT: 2000
+        CHAT: 2000,
       },
       DEFAULT_MODEL: 'llama-3.1-sonar-small-128k-online',
-      DEFAULT_TEMPERATURE: 0.7
-    }
+      DEFAULT_TEMPERATURE: 0.7,
+    },
   },
   LOGGING: {
     LEVEL: 'info',
     FILE_ENABLED: false,
     DEFAULT_MAX_SIZE_MB: 10,
-    MAX_LOG_FILES: 5
+    MAX_LOG_FILES: 5,
   },
   MESSAGE_LIMITS: {
     DISCORD_MAX_LENGTH: 2000,
@@ -32,7 +32,7 @@ module.exports = {
     MAX_PARAGRAPH_LENGTH: 1000,
     SAFE_CHUNK_OVERHEAD: 100,
     CHUNK_DELAY_MS: 1000,
-    ERROR_MESSAGE_MAX_LENGTH: 500
+    ERROR_MESSAGE_MAX_LENGTH: 500,
   },
   CACHE: {
     DEFAULT_MAX_ENTRIES: 1000,
@@ -40,57 +40,57 @@ module.exports = {
     DEFAULT_TTL_MS: 300000,
     CLEANUP_INTERVAL_MS: 60000,
     MAX_AGE_MS: 86400000,
-    CLEANUP_PERCENTAGE: 0.2
+    CLEANUP_PERCENTAGE: 0.2,
   },
   FILE_PERMISSIONS: {
     READ: 0o644,
     WRITE: 0o644,
-    DIRECTORY: 0o755
+    DIRECTORY: 0o755,
   },
   RATE_LIMITS: {
     MAX_RETRIES: 3,
     RETRY_DELAY_MS: 1000,
-    BACKOFF_MULTIPLIER: 2
+    BACKOFF_MULTIPLIER: 2,
   },
   MEMORY: {
     DEFAULT_LIMIT_MB: 100,
     DEFAULT_CRITICAL_MB: 150,
     CHECK_INTERVAL_MS: 30000,
     GC_COOLDOWN_MS: 5000,
-    PRESSURE_TEST_SIZE: 1024
+    PRESSURE_TEST_SIZE: 1024,
   },
   PERFORMANCE: {
     MIN_VALID_INTERVAL_MS: 100,
     BACKOFF_MAX_MS: 30000,
     BACKOFF_MIN_MS: 1000,
-    CHECK_INTERVAL_MS: 5000
+    CHECK_INTERVAL_MS: 5000,
   },
   PI_OPTIMIZATIONS: {
     ENABLED: false,
     COMPACT_MODE: false,
-    LOW_CPU_MODE: false
+    LOW_CPU_MODE: false,
   },
   EMOJI_REACTIONS: {
-    'hello': '👋',
-    'welcome': '👋',
-    'thanks': '🙏',
-    'love': '❤️',
-    'happy': '😊',
-    'sad': '😢'
+    hello: '👋',
+    welcome: '👋',
+    thanks: '🙏',
+    love: '❤️',
+    happy: '😊',
+    sad: '😢',
   },
-  
+
   SYSTEM_MESSAGES: {
     CHAT: 'You are a helpful AI assistant.',
-    SUMMARY: 'Please provide a summary of the following conversation.'
+    SUMMARY: 'Please provide a summary of the following conversation.',
   },
-  
+
   COLORS: {
     PRIMARY: '#5865F2',
     SUCCESS: '#57F287',
     ERROR: '#ED4245',
-    WARNING: '#FEE75C'
+    WARNING: '#FEE75C',
   },
-  
+
   // Mock function for Pi optimizations initialization
-  initializePiOptimizations: jest.fn().mockResolvedValue(module.exports)
+  initializePiOptimizations: jest.fn().mockResolvedValue(module.exports),
 };

@@ -137,9 +137,11 @@ describe('URL Formatter', () => {
     it('should handle errors in formatSocialMediaLinks gracefully', () => {
       // Mock ErrorHandler to throw an error
       const originalHandleError = require('../../src/utils/error-handler').ErrorHandler.handleError;
-      require('../../src/utils/error-handler').ErrorHandler.handleError = jest.fn().mockImplementation(() => {
-        throw new Error('Mock error');
-      });
+      require('../../src/utils/error-handler').ErrorHandler.handleError = jest
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Mock error');
+        });
 
       const result = urlFormatter.formatSocialMediaLinks('test');
       expect(result).toBe('test');
@@ -151,9 +153,11 @@ describe('URL Formatter', () => {
     it('should handle errors in formatYouTubeLinks gracefully', () => {
       // Mock ErrorHandler to throw an error
       const originalHandleError = require('../../src/utils/error-handler').ErrorHandler.handleError;
-      require('../../src/utils/error-handler').ErrorHandler.handleError = jest.fn().mockImplementation(() => {
-        throw new Error('Mock error');
-      });
+      require('../../src/utils/error-handler').ErrorHandler.handleError = jest
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Mock error');
+        });
 
       const result = urlFormatter.formatYouTubeLinks('test');
       expect(result).toBe('test');
@@ -165,9 +169,11 @@ describe('URL Formatter', () => {
     it('should handle errors in fixLinkFormatting gracefully', () => {
       // Mock ErrorHandler to throw an error
       const originalHandleError = require('../../src/utils/error-handler').ErrorHandler.handleError;
-      require('../../src/utils/error-handler').ErrorHandler.handleError = jest.fn().mockImplementation(() => {
-        throw new Error('Mock error');
-      });
+      require('../../src/utils/error-handler').ErrorHandler.handleError = jest
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Mock error');
+        });
 
       const result = urlFormatter.fixLinkFormatting('test');
       expect(result).toBe('test');
@@ -179,9 +185,11 @@ describe('URL Formatter', () => {
     it('should handle errors in formatAllUrls gracefully', () => {
       // Mock ErrorHandler to throw an error
       const originalHandleError = require('../../src/utils/error-handler').ErrorHandler.handleError;
-      require('../../src/utils/error-handler').ErrorHandler.handleError = jest.fn().mockImplementation(() => {
-        throw new Error('Mock error');
-      });
+      require('../../src/utils/error-handler').ErrorHandler.handleError = jest
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Mock error');
+        });
 
       const result = urlFormatter.formatAllUrls('test');
       expect(result).toBe('test');

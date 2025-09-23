@@ -17,7 +17,10 @@
     "semi": ["error", "always"],
     "complexity": ["error", { "max": 15 }],
     "max-depth": ["error", 4],
-    "max-lines-per-function": ["error", { "max": 50, "skipBlankLines": true, "skipComments": true }],
+    "max-lines-per-function": [
+      "error",
+      { "max": 50, "skipBlankLines": true, "skipComments": true }
+    ],
     "max-statements": ["error", 25]
   }
 }

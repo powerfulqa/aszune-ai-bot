@@ -19,13 +19,13 @@ Aszune AI Bot can be interacted with in two ways:
 
 ## Available Commands
 
-| Command                           | Description                                                 |
-| --------------------------------- | ----------------------------------------------------------- |
-| `!help` / `/help`                 | Shows a list of available commands and usage                |
-| `!clearhistory` / `/clearhistory` | Clears your conversation history                            |
-| `!summary` / `/summary`           | Summarises your current conversation in UK English          |
+| Command                                   | Description                                                 |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `!help` / `/help`                         | Shows a list of available commands and usage                |
+| `!clearhistory` / `/clearhistory`         | Clears your conversation history                            |
+| `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
-| `!stats` / `/stats`               | Shows your usage stats (messages sent, summaries requested) |
+| `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
 ## Asking Questions
 
@@ -41,9 +41,12 @@ To ask the bot a question about gaming lore, game logic, guides, or advice:
 
 ## Long Responses
 
-When the bot needs to provide a lengthy response, it will automatically split the message into multiple parts to work within Discord's message character limits. Each part will be numbered like `[1/3]`, `[2/3]`, `[3/3]` to indicate the sequence.
+When the bot needs to provide a lengthy response, it will automatically split the message into
+multiple parts to work within Discord's message character limits. Each part will be numbered like
+`[1/3]`, `[2/3]`, `[3/3]` to indicate the sequence.
 
 Example:
+
 ```
 [1/2] This is the first part of a long response that has been automatically split by the bot's message chunking system. The chunking is done intelligently to preserve paragraph structure and sentence integrity...
 
@@ -52,7 +55,8 @@ Example:
 
 ## Conversation Context
 
-The bot maintains a conversation history for each user, allowing it to remember context from previous messages. This enables more coherent and contextual responses over time.
+The bot maintains a conversation history for each user, allowing it to remember context from
+previous messages. This enables more coherent and contextual responses over time.
 
 ### Managing Your History
 
@@ -114,7 +118,8 @@ or
 
 ## Emoji Reactions
 
-The bot will automatically add emoji reactions to your messages based on keywords it detects. For example:
+The bot will automatically add emoji reactions to your messages based on keywords it detects. For
+example:
 
 - "hello" might get a 👋 reaction
 - "funny" might get a 😄 reaction
@@ -124,7 +129,8 @@ These reactions are just for fun and help make interactions more engaging.
 
 ## Rate Limiting
 
-To prevent spam, the bot enforces a short cooldown period between messages. If you try to send too many messages too quickly, the bot will remind you to wait.
+To prevent spam, the bot enforces a short cooldown period between messages. If you try to send too
+many messages too quickly, the bot will remind you to wait.
 
 ## Best Practices
 

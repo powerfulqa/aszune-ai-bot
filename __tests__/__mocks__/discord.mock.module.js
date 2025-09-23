@@ -22,25 +22,25 @@ module.exports = {
     once: jest.fn(),
     login: jest.fn().mockResolvedValue('login-success'),
     destroy: jest.fn().mockResolvedValue(),
-    user: { 
+    user: {
       setActivity: jest.fn(),
       tag: 'MockBot#0000',
-      id: '123456789'
+      id: '123456789',
     },
   })),
   GatewayIntentBits: {
     Guilds: 1,
     GuildMessages: 2,
-    MessageContent: 3
+    MessageContent: 3,
   },
   Partials: {},
   Events: {},
   REST: jest.fn().mockImplementation(() => ({
     setToken: jest.fn().mockReturnThis(),
-    put: jest.fn().mockResolvedValue({})
+    put: jest.fn().mockResolvedValue({}),
   })),
   Routes: {
-    applicationCommands: jest.fn().mockReturnValue('application-commands-route')
+    applicationCommands: jest.fn().mockReturnValue('application-commands-route'),
   },
 };
 
