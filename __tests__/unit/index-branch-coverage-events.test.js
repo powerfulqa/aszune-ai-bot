@@ -1,0 +1,171 @@
+/**
+ * Event handler branch coverage tests for index.js
+ * Tests Discord client event handlers and login process
+ */
+
+describe('index.js - Event Handler Branch Coverage', () => {
+  describe('Discord client event handlers', () => {
+    let mockClient;
+    let mockLogger;
+
+    beforeEach(() => {
+      jest.resetModules();
+
+      // Mock logger
+      mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      jest.mock('../../src/utils/logger', () => mockLogger);
+
+      // Mock client
+      mockClient = {
+        on: jest.fn(),
+        once: jest.fn(),
+        login: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+        user: { tag: 'MockBot#0000', id: '123456789' },
+      };
+
+      jest.mock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
+        GatewayIntentBits: {
+          Guilds: 1,
+          GuildMessages: 2,
+          MessageContent: 3,
+        },
+      }));
+
+      // Mock commands
+      jest.mock('../../src/commands', () => ({
+        handleTextCommand: jest.fn(),
+        handleSlashCommand: jest.fn(),
+      }));
+
+      // Import the index module
+      require('../../src/index');
+    });
+
+    it('should handle error events', () => {
+      const mockError = new Error('Test error');
+      
+      // Simulate an error event
+      const errorHandler = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+      errorHandler(mockError);
+
+      // Verify error was logged
+      expect(mockLogger.error).toHaveBeenCalledWith('Discord client error:', mockError);
+    });
+
+    it('should handle warning events', () => {
+      const mockWarning = 'Test warning';
+      
+      // Simulate a warn event
+      const warnHandler = mockClient.on.mock.calls.find(call => call[0] === 'warn')[1];
+      warnHandler(mockWarning);
+
+      // Verify warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith('Discord client warning:', mockWarning);
+    });
+
+    it('should handle non-command interactions', async () => {
+      const mockInteraction = {
+        isChatInputCommand: () => false,
+        commandName: 'test',
+      };
+
+      // Simulate an interaction event
+      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      await interactionHandler(mockInteraction);
+
+      // Verify no command handler was called
+      const { handleSlashCommand } = require('../../src/commands');
+      expect(handleSlashCommand).not.toHaveBeenCalled();
+    });
+
+    it('should handle command interactions', async () => {
+      const mockInteraction = {
+        isChatInputCommand: () => true,
+        commandName: 'test',
+      };
+
+      // Simulate an interaction event
+      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      await interactionHandler(mockInteraction);
+
+      // Verify command handler was called
+      const { handleSlashCommand } = require('../../src/commands');
+      expect(handleSlashCommand).toHaveBeenCalledWith(mockInteraction);
+    });
+  });
+
+  describe('Login process', () => {
+    let mockClient;
+    let mockLogger;
+    let originalEnv;
+
+    beforeEach(() => {
+      jest.resetModules();
+
+      // Mock logger
+      mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      jest.mock('../../src/utils/logger', () => mockLogger);
+
+      // Mock client
+      mockClient = {
+        on: jest.fn(),
+        once: jest.fn(),
+        login: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+        user: { tag: 'MockBot#0000', id: '123456789' },
+      };
+
+      jest.mock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
+        GatewayIntentBits: {
+          Guilds: 1,
+          GuildMessages: 2,
+          MessageContent: 3,
+        },
+      }));
+
+      // Mock config
+      jest.mock('../../src/config/config', () => ({
+        DISCORD_BOT_TOKEN: 'test-token',
+        PI_OPTIMIZATIONS: { ENABLED: false },
+        initializePiOptimizations: jest.fn(),
+      }));
+
+      // Save original environment
+      originalEnv = process.env.NODE_ENV;
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should handle login failure in production mode', async () => {
+      process.env.NODE_ENV = 'production';
+      mockClient.login.mockRejectedValue(new Error('Login failed'));
+
+      // Require the module
+      require('../../src/index');
+
+      // Wait for login attempt
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify error was logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to login to Discord:',
+        expect.any(Error)
+      );
+    });
+  });
+});

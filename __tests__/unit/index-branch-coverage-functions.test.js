@@ -1,0 +1,166 @@
+/**
+ * Function-specific branch coverage tests for index.js
+ * Tests individual functions like bootWithOptimizations and registerSlashCommands
+ */
+
+describe('index.js - Function Branch Coverage', () => {
+  describe('bootWithOptimizations function', () => {
+    let index;
+    let mockConfig;
+    let mockLogger;
+
+    beforeEach(() => {
+      jest.resetModules();
+
+      // Mock logger
+      mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      jest.mock('../../src/utils/logger', () => mockLogger);
+
+      // Mock config
+      mockConfig = {
+        DISCORD_BOT_TOKEN: 'test-token',
+        PI_OPTIMIZATIONS: { ENABLED: true },
+        initializePiOptimizations: jest.fn(),
+      };
+      jest.mock('../../src/config/config', () => mockConfig);
+
+      // Import the index module
+      index = require('../../src/index');
+    });
+
+    it('should handle errors in Pi optimization initialization', async () => {
+      // Setup
+      mockConfig.initializePiOptimizations.mockRejectedValue(new Error('Test optimization error'));
+
+      // Call the bootWithOptimizations function directly
+      await index.bootWithOptimizations();
+
+      // Verify error handling
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to initialize Pi optimizations:',
+        expect.any(Error)
+      );
+    });
+
+    it('should not call initialization when PI_OPTIMIZATIONS is disabled', async () => {
+      // Setup
+      mockConfig.PI_OPTIMIZATIONS.ENABLED = false;
+
+      // Call the bootWithOptimizations function directly
+      await index.bootWithOptimizations();
+
+      // Verify initialization was not called
+      expect(mockConfig.initializePiOptimizations).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('registerSlashCommands function', () => {
+    let index;
+    let mockClient;
+    let mockRest;
+    let mockLogger;
+
+    beforeEach(() => {
+      jest.resetModules();
+
+      // Mock logger
+      mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      jest.mock('../../src/utils/logger', () => mockLogger);
+
+      // Mock client
+      mockClient = {
+        user: { id: '123456789' },
+        readyAt: new Date(),
+      };
+
+      // Mock REST
+      mockRest = {
+        setToken: jest.fn().mockReturnThis(),
+        put: jest.fn().mockResolvedValue(),
+      };
+
+      jest.mock('discord.js', () => ({
+        REST: jest.fn(() => mockRest),
+        Routes: {
+          applicationCommands: jest.fn().mockReturnValue('mock-route'),
+        },
+      }));
+
+      // Import the index module
+      index = require('../../src/index');
+    });
+
+    it('should handle client not being ready', async () => {
+      // Setup client as not ready
+      mockClient.readyAt = null;
+
+      // Call registerSlashCommands
+      await index.registerSlashCommands(mockClient);
+
+      // Verify warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith('Client is not ready, skipping slash command registration');
+    });
+
+    it('should handle errors during slash command registration', async () => {
+      // Setup REST to throw error
+      mockRest.put.mockRejectedValue(new Error('Registration failed'));
+
+      // Call registerSlashCommands
+      await index.registerSlashCommands(mockClient);
+
+      // Verify error was logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to register slash commands:',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Multiple shutdown attempts', () => {
+    let index;
+    let mockClient;
+
+    beforeEach(() => {
+      jest.resetModules();
+
+      // Mock client
+      mockClient = {
+        destroy: jest.fn().mockResolvedValue(),
+      };
+
+      jest.mock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
+        GatewayIntentBits: {
+          Guilds: 1,
+          GuildMessages: 2,
+          MessageContent: 3,
+        },
+      }));
+
+      // Import the index module
+      index = require('../../src/index');
+    });
+
+    it('should prevent multiple simultaneous shutdown attempts', async () => {
+      // Start two shutdown attempts simultaneously
+      const shutdown1 = index.shutdown();
+      const shutdown2 = index.shutdown();
+
+      // Wait for both to complete
+      await Promise.all([shutdown1, shutdown2]);
+
+      // Verify client was only destroyed once
+      expect(mockClient.destroy).toHaveBeenCalledTimes(1);
+    });
+  });
+});
