@@ -19,6 +19,7 @@ describe('EnhancedCache - Basic Operations', () => {
   afterEach(() => {
     if (cache) {
       cache.clear();
+      cache.stopCleanup();
     }
   });
 

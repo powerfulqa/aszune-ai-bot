@@ -19,6 +19,7 @@ describe('EnhancedCache - Eviction', () => {
   afterEach(() => {
     if (cache) {
       cache.clear();
+      cache.stopCleanup();
     }
   });
 
@@ -48,7 +49,7 @@ describe('EnhancedCache - Eviction', () => {
 
     it('should calculate entry size correctly', () => {
       const smallValue = 'small';
-      const largeValue = 'x'.repeat(1000);
+      const largeValue = 'x'.repeat(400); // 400 chars = ~904 bytes total (fits within maxSize: 1000)
 
       cache.set('small', smallValue);
       cache.set('large', largeValue);

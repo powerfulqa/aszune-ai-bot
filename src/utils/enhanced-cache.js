@@ -51,7 +51,7 @@ class CacheEntry {
    * @returns {boolean} True if expired
    */
   isExpired() {
-    if (!this.ttl) return false;
+    if (this.ttl === null || this.ttl === undefined) return false;
     if (this.ttl === 0) return true; // Zero TTL means immediate expiration
     return Date.now() - this.createdAt > this.ttl;
   }
@@ -92,6 +92,7 @@ function getCacheConfigWithDefaults(config) {
   
   return {
     DEFAULT_MAX_ENTRIES: cacheConfig.DEFAULT_MAX_ENTRIES ?? 1000,
+    DEFAULT_MAX_SIZE: cacheConfig.DEFAULT_MAX_SIZE ?? 1000, // Per-entry size limit
     MAX_MEMORY_MB: cacheConfig.MAX_MEMORY_MB ?? 50,
     DEFAULT_TTL_MS: cacheConfig.DEFAULT_TTL_MS ?? 300000, // 5 minutes
     CLEANUP_INTERVAL_MS: cacheConfig.CLEANUP_INTERVAL_MS ?? 60000, // 1 minute
@@ -107,7 +108,8 @@ class EnhancedCache {
     // Validate config and set cache parameters with resilient defaults
     const validatedConfig = getCacheConfigWithDefaults(config);
     
-    this.maxSize = options.maxSize || validatedConfig.DEFAULT_MAX_ENTRIES;
+    this.maxEntries = options.maxEntries || validatedConfig.DEFAULT_MAX_ENTRIES;
+    this.maxSize = options.maxSize || validatedConfig.DEFAULT_MAX_SIZE; // Per-entry size limit
     this.maxMemory = options.maxMemory || validatedConfig.MAX_MEMORY_MB * 1024 * 1024;
     this.evictionStrategy = options.evictionStrategy || EVICTION_STRATEGIES.HYBRID;
     this.defaultTtl = options.defaultTtl || validatedConfig.DEFAULT_TTL_MS;
@@ -117,6 +119,7 @@ class EnhancedCache {
     this.entries = new Map();
     this.accessOrder = new Map(); // For LRU tracking
     this.frequencyMap = new Map(); // For LFU tracking
+    this.cleanupTimer = null; // Store cleanup interval ID
 
     // Metrics
     this.metrics = {
@@ -178,7 +181,7 @@ class EnhancedCache {
    */
   set(key, value, options = {}) {
     try {
-      const ttl = options.ttl || this.defaultTtl;
+      const ttl = options.ttl !== undefined ? options.ttl : this.defaultTtl;
       const tags = options.tags || [];
 
       // Remove existing entry if present
@@ -191,6 +194,12 @@ class EnhancedCache {
 
       // Add tags
       tags.forEach((tag) => entry.addTag(tag));
+
+      // Check if entry exceeds per-entry size limit
+      if (this.maxSize && entry.size > this.maxSize) {
+        this.metrics.sets++;
+        return true; // Don't store oversized entries
+      }
 
       // Check if entry is immediately expired (TTL = 0)
       if (entry.isExpired()) {
@@ -352,7 +361,7 @@ class EnhancedCache {
     }
     
     // If we're at or will exceed the limit, evict before adding
-    if (this.entries.size >= this.maxEntries) {
+    if (this.entries.size >= this.maxEntries || this.metrics.totalMemory + newEntry.size > this.maxMemory) {
       // Perform eviction based on strategy
       switch (this.evictionStrategy) {
       case EVICTION_STRATEGIES.LRU:
@@ -497,9 +506,19 @@ class EnhancedCache {
    */
   startCleanup() {
     if (this.cleanupInterval > 0) {
-      setInterval(() => {
+      this.cleanupTimer = setInterval(() => {
         this.cleanup();
       }, this.cleanupInterval);
+    }
+  }
+
+  /**
+   * Stop cleanup interval
+   */
+  stopCleanup() {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
     }
   }
 

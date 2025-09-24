@@ -86,8 +86,9 @@ describe('Conversation Manager - Basic Operations', () => {
 
       const history = conversationManager.getHistory(userId);
       expect(history).toHaveLength(maxHistory);
-      // Should keep the most recent messages
-      expect(history[0].content).toBe(`message ${maxHistory + 4}`);
+      // Should keep the most recent messages (messages 5-24 when adding 0-24)
+      expect(history[0].content).toBe(`message ${maxHistory - 15}`); // message 5
+      expect(history[history.length - 1].content).toBe(`message ${maxHistory + 4}`); // message 24
     });
   });
 

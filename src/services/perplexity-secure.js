@@ -399,12 +399,12 @@ class PerplexityService {
     try {
       // Check if response exists
       if (!response) {
-        return 'Sorry, I received an empty response.';
+        throw new Error('Empty response received from the service.');
       }
 
       // Check for choices array
       if (!response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
-        return 'Sorry, no response choices were returned.';
+        throw new Error('Empty response received from the service.');
       }
 
       // Get the first choice
@@ -488,6 +488,29 @@ class PerplexityService {
    * @param {Object} options - Options object with caching and other settings
    * @returns {Promise<String>} - The response content
    */
+  /**
+   * Helper function to generate user-friendly error messages
+   * @param {Error} error - The error object
+   * @param {Object} errorResponse - Error response from ErrorHandler
+   * @returns {string} User-friendly error message
+   * @private
+   */
+  _generateErrorMessage(error, errorResponse) {
+    if (error.statusCode === 429) {
+      return 'Rate limit exceeded. Please try again later.';
+    } else if (error.statusCode >= 500) {
+      return 'The service is temporarily unavailable. Please try again later.';
+    } else if (error.message && error.message.includes('Network')) {
+      return 'Network connection issue. Please check your connection and try again.';
+    } else if (error.message && error.message.includes('Empty response')) {
+      return 'Empty response received from the service.';
+    } else if (error.message && error.message.includes('invalid')) {
+      return 'Unexpected response format received.';
+    }
+    
+    return errorResponse.message;
+  }
+
   async generateChatResponse(history, options = {}) {
     // Backward compatibility: if options is a boolean, treat as caching flag
     let normalizedOptions;
@@ -533,7 +556,8 @@ class PerplexityService {
         shouldUseCache: opts.caching !== false,
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
-      throw error;
+      
+      return this._generateErrorMessage(error, errorResponse);
     }
   }
 
@@ -551,10 +575,12 @@ class PerplexityService {
     try {
       return await this.sendChatRequest(history);
     } catch (apiError) {
-      // Check if it's a rate limit error (429) and we should retry
-      if (apiError.message && apiError.message.includes('429') && retries > 0) {
-        const errorResponse = ErrorHandler.handleError(apiError, 'API rate limit', { retries });
-        logger.info(`Rate limited, retrying after ${retryDelay}ms: ${errorResponse.message}`);
+      // Check if it's a retryable error and we should retry
+      const isRetryableError = this._isRetryableError(apiError);
+      
+      if (isRetryableError && retries > 0) {
+        const errorResponse = ErrorHandler.handleError(apiError, 'API retry', { retries });
+        logger.info(`Retryable error, retrying after ${retryDelay}ms: ${errorResponse.message}`);
 
         // Wait before retrying
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -562,9 +588,40 @@ class PerplexityService {
         // Retry the request
         return await this.sendChatRequest(history);
       } else {
-        throw apiError; // Not a rate limit error or out of retries
+        throw apiError; // Not a retryable error or out of retries
       }
     }
+  }
+
+  /**
+   * Determine if an error is retryable
+   * @param {Error} error - The error to check
+   * @returns {boolean} - True if the error is retryable
+   * @private
+   */
+  _isRetryableError(error) {
+    if (!error || !error.message) return false;
+    
+    const message = error.message.toLowerCase();
+    
+    // Retry on temporary/network errors
+    if (message.includes('temporary') || 
+        message.includes('network') || 
+        message.includes('timeout') ||
+        message.includes('429')) {
+      return true;
+    }
+    
+    // Don't retry on permanent errors
+    if (message.includes('permanent') || 
+        message.includes('invalid') ||
+        message.includes('unauthorized') ||
+        message.includes('forbidden')) {
+      return false;
+    }
+    
+    // Default to not retryable for unknown errors
+    return false;
   }
 
   /**
@@ -730,7 +787,15 @@ class PerplexityService {
         isText: isText,
       });
       logger.error(`Failed to generate summary: ${errorResponse.message}`);
-      throw error;
+      
+      // Return specific error messages based on error type
+      if (history.length === 0) {
+        return 'No conversation history provided to summarize.';
+      } else if (error.message && error.message.includes('Summary generation failed')) {
+        return 'Unable to generate summary at this time.';
+      }
+      
+      return errorResponse.message;
     }
   }
 

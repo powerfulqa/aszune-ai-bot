@@ -19,6 +19,7 @@ describe('EnhancedCache - TTL', () => {
   afterEach(() => {
     if (cache) {
       cache.clear();
+      cache.stopCleanup();
     }
   });
 

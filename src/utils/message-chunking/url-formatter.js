@@ -34,6 +34,11 @@ const { ErrorHandler } = require('../error-handler');
  */
 function formatSocialMediaLinks(text) {
   try {
+    // Input validation
+    if (typeof text !== 'string') {
+      return text;
+    }
+    
     let formattedText = text;
 
     // Handle basic Reddit URLs - convert to proper links (case insensitive, handle www, https/http prefixes)
@@ -89,6 +94,11 @@ function formatSocialMediaLinks(text) {
  */
 function formatYouTubeLinks(text) {
   try {
+    // Input validation
+    if (typeof text !== 'string') {
+      return text;
+    }
+    
     let formattedText = text;
 
     // Fix YouTube links appearing on separate lines by removing the preceding newline
@@ -103,10 +113,10 @@ function formatYouTubeLinks(text) {
 
     // Extract video titles or use generic YouTube Link text - ensure correct URL
     formattedText = formattedText.replace(
-      /(^|\s)((?:www\.)?youtube\.com\/watch\?v=([^\s&]+)[^\s]*|youtu\.be\/([^\s]+))(?=[\s.,;!?]|$)/g,
-      (match, prefix, url, videoId1, videoId2) => {
+      /(^|\s)((?:www\.)?youtube\.com\/watch\?v=([^\s&.,;!?]+)|youtu\.be\/([^\s.,;!?]+))(?=[\s.,;!?]|$)/g,
+      (match, prefix, url) => {
         // Get the actual video ID, whether it came from the first or second pattern
-        const videoId = videoId1 || videoId2;
+        // const videoId = videoId1 || videoId2; // Currently unused
         // Make sure we have the proper full URL with protocol
         let fullUrl = url;
         if (!fullUrl.startsWith('http')) {
@@ -152,6 +162,11 @@ function formatYouTubeLinks(text) {
  */
 function formatStarsectorLinks(text) {
   try {
+    // Input validation
+    if (typeof text !== 'string') {
+      return text;
+    }
+    
     let formattedText = text;
 
     // Fix any fractalsoftworks URLs specifically (common issue)
@@ -276,7 +291,20 @@ function formatStarsectorLinks(text) {
  */
 function fixLinkFormatting(text) {
   try {
+    // Input validation
+    if (typeof text !== 'string') {
+      return text;
+    }
+    
     let formattedText = text;
+
+    // Fix malformed markdown links missing closing parentheses
+    // Handle links at end of string
+    formattedText = formattedText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)$/g, '[$1]($2)');
+    // Handle links followed by space and more text
+    formattedText = formattedText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\s/g, '[$1]($2) ');
+    // Handle links followed by other text (like "and")
+    formattedText = formattedText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\s+(\w)/g, '[$1]($2) $3');
 
     // Fix links with improper spacing in Markdown syntax - excluding source references
     // Only add a space after a closing bracket if it's not part of a source reference pattern

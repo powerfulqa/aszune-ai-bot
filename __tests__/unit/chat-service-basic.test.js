@@ -22,7 +22,18 @@ const commandHandler = require('../../src/commands');
 jest.mock('../../src/services/perplexity-secure', () => ({
   generateChatResponse: jest.fn(),
 }));
-jest.mock('../../src/utils/conversation');
+
+// Mock ConversationManager
+jest.mock('../../src/utils/conversation', () => {
+  const mockConversationManager = {
+    isRateLimited: jest.fn().mockReturnValue(false),
+    getHistory: jest.fn().mockReturnValue([{ role: 'user', content: 'hello' }]),
+    addMessage: jest.fn(),
+    updateTimestamp: jest.fn(),
+  };
+  return jest.fn().mockImplementation(() => mockConversationManager);
+});
+
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
 
@@ -36,15 +47,17 @@ describe('Chat Service - Basic', () => {
     channel: { sendTyping: jest.fn() },
   });
 
-  let conversationManager;
+  let mockConversationManager;
   beforeEach(() => {
     jest.clearAllMocks();
-    conversationManager = new ConversationManager();
-    jest.spyOn(conversationManager, 'isRateLimited').mockReturnValue(false);
-    jest
-      .spyOn(conversationManager, 'getHistory')
-      .mockReturnValue([{ role: 'user', content: 'hello' }]);
-    jest.spyOn(conversationManager, 'addMessage').mockImplementation(() => {});
+    // Get the mock instance
+    mockConversationManager = new ConversationManager();
+    // Reset mock return values
+    mockConversationManager.isRateLimited.mockReturnValue(false);
+    mockConversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
+    mockConversationManager.addMessage.mockImplementation(() => {});
+    mockConversationManager.updateTimestamp.mockImplementation(() => {});
+    
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
     commandHandler.handleTextCommand.mockResolvedValue();
@@ -88,7 +101,7 @@ describe('Chat Service - Basic', () => {
   });
 
   it('should handle rate limited users', async () => {
-    jest.spyOn(conversationManager, 'isRateLimited').mockReturnValue(true);
+    mockConversationManager.isRateLimited.mockReturnValue(true);
     const message = createMessage('Hello');
 
     await chatService(message);

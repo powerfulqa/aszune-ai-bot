@@ -7,7 +7,7 @@ describe('Message Chunker - Basic', () => {
     const chunks = chunkMessage(shortMessage, 2000);
 
     expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toBe(shortMessage);
+    expect(chunks[0]).toBe('[1/1] ' + shortMessage);
   });
 
   test('should chunk a message that exceeds max length', () => {

@@ -1,6 +1,6 @@
 const createMockMessage = require('../../__mocks__/discordMessageMock');
-const { Client } = require('discord.js');
-const { request } = require('undici');
+// const { Client } = require('discord.js'); // Currently unused
+// const { request } = require('undici'); // Currently unused
 jest.mock('undici');
 
 // Mock the commands module first to avoid circular dependencies

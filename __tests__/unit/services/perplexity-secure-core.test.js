@@ -50,7 +50,7 @@ describe('PerplexitySecure Service - Core', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const result = await perplexityService.generateChatResponse(messages);
 
-      expect(result).toContain('rate limit');
+      expect(result).toContain('Rate limit exceeded');
       expect(result).toContain('try again');
     });
 
@@ -69,7 +69,7 @@ describe('PerplexitySecure Service - Core', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const result = await perplexityService.generateChatResponse(messages);
 
-      expect(result).toContain('network');
+      expect(result).toContain('Network connection');
       expect(result).toContain('connection');
     });
 
@@ -79,8 +79,8 @@ describe('PerplexitySecure Service - Core', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const result = await perplexityService.generateChatResponse(messages);
 
-      expect(result).toContain('unexpected');
-      expect(result).toContain('format');
+      expect(result).toContain('error occurred');
+      expect(result).toContain('processing the response');
     });
 
     it('should handle empty response', async () => {
@@ -89,8 +89,8 @@ describe('PerplexitySecure Service - Core', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const result = await perplexityService.generateChatResponse(messages);
 
-      expect(result).toContain('empty');
-      expect(result).toContain('response');
+      expect(result).toContain('error occurred');
+      expect(result).toContain('processing the response');
     });
 
     it('should handle successful response', async () => {
@@ -181,7 +181,7 @@ describe('PerplexitySecure Service - Core', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const result = await perplexityService.generateSummary(messages);
 
-      expect(result).toContain('unable to generate');
+      expect(result).toContain('Unable to generate summary');
     });
   });
 });

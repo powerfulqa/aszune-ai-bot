@@ -141,10 +141,12 @@ class ConversationManager {
     const maxLength =
       config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
         ? config.MAX_HISTORY * 2 // Use MAX_HISTORY*2 for Pi optimization
-        : config.CONVERSATION_MAX_LENGTH; // Use regular max length otherwise
+        : config.MAX_HISTORY; // Use MAX_HISTORY for regular operation
 
     if (history.length > maxLength) {
-      history.shift(); // Remove the oldest message to save memory
+      // Remove excess messages from the beginning (oldest first)
+      const excessCount = history.length - maxLength;
+      history.splice(0, excessCount);
     }
 
     // Update user stats
@@ -156,7 +158,13 @@ class ConversationManager {
    * @param {string} userId - The user's ID
    */
   clearHistory(userId) {
-    this.conversations.set(userId, []);
+    if (userId) {
+      // Clear history for specific user
+      this.conversations.set(userId, []);
+    } else {
+      // Clear all conversations
+      this.conversations.clear();
+    }
   }
 
   /**

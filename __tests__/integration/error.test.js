@@ -59,9 +59,13 @@ describe('Error handling', () => {
 
     // Assert
     expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
-    expect(fakeMessage.reply).toHaveBeenCalledWith(
-      'The service is temporarily unavailable. Please try again later.'
-    );
+    expect(fakeMessage.reply).toHaveBeenCalledWith({
+      embeds: [expect.objectContaining({
+        description: 'The service is temporarily unavailable. Please try again later.',
+        color: expect.any(Number),
+        footer: { text: 'Aszai Bot' }
+      })]
+    });
   });
 
   it('handles failed summary API response', async () => {
