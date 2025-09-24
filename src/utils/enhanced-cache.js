@@ -351,7 +351,7 @@ class EnhancedCache {
       return; // No eviction needed
     }
     
-    // If we're at the limit, evict before adding
+    // If we're at or will exceed the limit, evict before adding
     if (this.entries.size >= this.maxEntries) {
       // Perform eviction based on strategy
       switch (this.evictionStrategy) {
@@ -467,7 +467,9 @@ class EnhancedCache {
    * @param {string} key - Cache key
    */
   updateAccessOrder(key) {
-    this.accessOrder.set(key, Date.now());
+    // Use a counter to ensure proper ordering for LRU
+    this.accessCounter = (this.accessCounter || 0) + 1;
+    this.accessOrder.set(key, this.accessCounter);
   }
 
   /**

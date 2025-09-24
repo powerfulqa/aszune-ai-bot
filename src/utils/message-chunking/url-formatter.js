@@ -36,9 +36,9 @@ function formatSocialMediaLinks(text) {
   try {
     let formattedText = text;
 
-    // Handle basic Reddit URLs - convert to proper links
+    // Handle basic Reddit URLs - convert to proper links (case insensitive, handle www, https/http prefixes)
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)(reddit\.com\/r\/[^\s]+)/g,
+      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(?:www\.)?(reddit\.com\/r\/[^\s.,;!?]+)/gi,
       '(https://$1)'
     );
 
@@ -60,15 +60,15 @@ function formatSocialMediaLinks(text) {
       '(https://$1)'
     );
 
-    // Handle GitHub URLs - convert to proper links
+    // Handle GitHub URLs
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)((?:www\.)?github\.com\/[^\s]+)/g,
+      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(?:www\.)?(github\.com\/[^\s.,;!?]+)/gi,
       '(https://$1)'
     );
 
     // Handle Twitter/X URLs - convert to proper links
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)((?:www\.)?(twitter\.com|x\.com)\/[^\s]+)/g,
+      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(?:www\.)?((?:twitter\.com|x\.com)\/[^\s.,;!?]+)/gi,
       '(https://$1)'
     );
 
