@@ -344,25 +344,28 @@ class EnhancedCache {
     ) {
       return; // No eviction needed
     }
-
-    // Perform eviction based on strategy
-    switch (this.evictionStrategy) {
-    case EVICTION_STRATEGIES.LRU:
-      this.evictLRU();
-      break;
-    case EVICTION_STRATEGIES.LFU:
-      this.evictLFU();
-      break;
-    case EVICTION_STRATEGIES.TTL:
-      this.evictExpired();
-      break;
-    case EVICTION_STRATEGIES.SIZE_BASED:
-      this.evictBySize();
-      break;
-    case EVICTION_STRATEGIES.HYBRID:
-    default:
-      this.evictHybrid();
-      break;
+    
+    // If we're at the limit, evict before adding
+    if (this.entries.size >= this.maxEntries) {
+      // Perform eviction based on strategy
+      switch (this.evictionStrategy) {
+      case EVICTION_STRATEGIES.LRU:
+        this.evictLRU();
+        break;
+      case EVICTION_STRATEGIES.LFU:
+        this.evictLFU();
+        break;
+      case EVICTION_STRATEGIES.TTL:
+        this.evictExpired();
+        break;
+      case EVICTION_STRATEGIES.SIZE_BASED:
+        this.evictBySize();
+        break;
+      case EVICTION_STRATEGIES.HYBRID:
+      default:
+        this.evictHybrid();
+        break;
+      }
     }
   }
 

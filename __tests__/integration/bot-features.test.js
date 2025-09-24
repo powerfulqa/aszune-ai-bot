@@ -110,7 +110,7 @@ jest.mock('../../src/utils/error-handler', () => ({
   },
 }));
 
-jest.mock('../../src/utils/storage', () => ({
+jest.mock('../../src/services/storage', () => ({
   saveData: jest.fn(),
   loadData: jest.fn().mockReturnValue({}),
 }));

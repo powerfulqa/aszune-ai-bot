@@ -46,6 +46,29 @@ describe('index.js - Function Branch Coverage', () => {
         initializePiOptimizations: jest.fn(),
       };
       jest.mock('../../src/config/config', () => mockConfig);
+      
+      // Mock Discord.js
+      jest.mock('discord.js', () => ({
+        Client: jest.fn().mockImplementation(() => ({
+          on: jest.fn(),
+          once: jest.fn(),
+          login: jest.fn().mockResolvedValue(),
+          destroy: jest.fn().mockResolvedValue(),
+          user: { tag: 'MockBot#0000', id: '123456789' },
+        })),
+        GatewayIntentBits: {
+          Guilds: 'GUILDS',
+          GuildMessages: 'GUILD_MESSAGES',
+          MessageContent: 'MESSAGE_CONTENT',
+        },
+        REST: jest.fn().mockImplementation(() => ({
+          setToken: jest.fn(),
+          put: jest.fn().mockResolvedValue(),
+        })),
+        Routes: {
+          applicationCommands: jest.fn().mockReturnValue('mock-route'),
+        },
+      }));
 
       // Import the index module
       index = require('../../src/index');
