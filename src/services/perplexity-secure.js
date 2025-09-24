@@ -489,10 +489,18 @@ class PerplexityService {
    * @returns {Promise<String>} - The response content
    */
   async generateChatResponse(history, options = {}) {
+    // Backward compatibility: if options is a boolean, treat as caching flag
+    let normalizedOptions;
+    if (typeof options === 'boolean') {
+      normalizedOptions = { caching: options };
+    } else {
+      normalizedOptions = options || {};
+    }
+    
     // Standardize options - always expect an object
     const opts = {
       caching: true,
-      ...options
+      ...normalizedOptions
     };
 
     try {

@@ -81,11 +81,11 @@ class CacheEntry {
 }
 
 /**
- * Validates cache configuration object
- * @param {object} config - The configuration object to validate
- * @throws {Error} If required CACHE configuration values are missing
+ * Gets cache configuration with defaults
+ * @param {object} config - The configuration object to extract cache settings from
+ * @returns {object} Cache configuration with defaults applied
  */
-function validateCacheConfig(config) {
+function getCacheConfigWithDefaults(config) {
   // Use optional chaining and provide defaults instead of throwing errors
   const cacheConfig = config?.CACHE || {};
   
@@ -104,7 +104,7 @@ function validateCacheConfig(config) {
 class EnhancedCache {
   constructor(options = {}) {
     // Validate config and set cache parameters with resilient defaults
-    const validatedConfig = validateCacheConfig(config);
+    const validatedConfig = getCacheConfigWithDefaults(config);
     
     this.maxSize = options.maxSize || validatedConfig.DEFAULT_MAX_ENTRIES;
     this.maxMemory = options.maxMemory || validatedConfig.MAX_MEMORY_MB * 1024 * 1024;

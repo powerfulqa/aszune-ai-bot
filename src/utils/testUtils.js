@@ -3,6 +3,9 @@
  * This file contains utility functions for testing the Discord bot
  * See __tests__/unit/testUtils.test.js for the consolidated tests of these utilities
  */
+
+// Default Discord user ID for testing
+const DEFAULT_TEST_USER_ID = '123456789012345678';
 const mockReply = jest.fn().mockResolvedValue({});
 const mockReact = jest.fn().mockResolvedValue({});
 const mockSendTyping = jest.fn().mockResolvedValue({});
@@ -20,7 +23,7 @@ function createMockMessage(options = {}) {
     content: content || '',
     author: {
       bot: isBot || false,
-      id: userId || '123456789012345678',
+      id: userId || DEFAULT_TEST_USER_ID,
     },
     reply: mockReply,
     react: mockReact,

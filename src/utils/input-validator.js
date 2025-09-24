@@ -460,7 +460,7 @@ class InputValidator {
               error: 'Input contains unsafe characters',
             };
           }
-          return { valid: true, error: null };
+          return { valid: true };
         },
       };
       

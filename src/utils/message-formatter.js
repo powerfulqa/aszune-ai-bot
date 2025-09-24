@@ -153,7 +153,7 @@ class MessageFormatter {
       }
       
       compactEmbed.description = this.formatResponse(compactEmbed.description, {
-        maxLength: maxLength,
+        maxLength,
       });
     }
 
