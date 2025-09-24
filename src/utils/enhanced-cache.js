@@ -192,6 +192,12 @@ class EnhancedCache {
       // Add tags
       tags.forEach((tag) => entry.addTag(tag));
 
+      // Check if entry is immediately expired (TTL = 0)
+      if (entry.isExpired()) {
+        this.metrics.sets++;
+        return true; // Don't store expired entries
+      }
+
       // Check if we need to evict entries
       this.ensureSpace(entry);
 
@@ -373,7 +379,8 @@ class EnhancedCache {
    * Evict least recently used entries
    */
   evictLRU() {
-    const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
+    // Evict enough entries to make room for new ones
+    const entriesToEvict = Math.max(1, Math.ceil(this.maxEntries * 0.1)); // At least 1, or 10%
     const sortedByAccess = Array.from(this.accessOrder.entries()).toSorted((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {

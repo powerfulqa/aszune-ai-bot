@@ -44,11 +44,17 @@ jest.mock('../../src/utils/emoji', () => ({
   getEmojisForKeywords: jest.fn().mockReturnValue(['😊', '👍']),
 }));
 
-jest.mock('../../src/utils/conversation', () => ({
-  isRateLimited: jest.fn().mockReturnValue(false),
-  addMessage: jest.fn(),
-  getHistory: jest.fn().mockReturnValue([]),
-}));
+jest.mock('../../src/utils/conversation', () => {
+  return jest.fn().mockImplementation(() => ({
+    isRateLimited: jest.fn().mockReturnValue(false),
+    addMessage: jest.fn(),
+    getHistory: jest.fn().mockReturnValue([]),
+    getUserStats: jest.fn().mockReturnValue({ messages: 0, summaries: 0, lastActive: null }),
+    updateUserStats: jest.fn(),
+    clearHistory: jest.fn(),
+    destroy: jest.fn(),
+  }));
+});
 
 jest.mock('../../src/utils/message-formatter', () => ({
   formatResponse: jest.fn().mockImplementation((text) => text),
@@ -205,8 +211,7 @@ describe('Bot Integration - Features', () => {
       addMessage: jest.fn(),
     };
 
-    const ConversationManager = require('../../src/utils/conversation');
-    ConversationManager.mockImplementation(() => conversationManager);
+    // ConversationManager is already mocked globally
 
     const { createMockMessage } = require('../../src/utils/testUtils');
     createMockMessage.mockImplementation((options = {}) => ({
