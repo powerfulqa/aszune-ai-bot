@@ -54,7 +54,7 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('API Error'));
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(message.reply).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
@@ -63,7 +63,7 @@ describe('Chat Service - Advanced', () => {
   it('should add emojis to responses when not in low CPU mode', async () => {
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(emojiManager.addEmojisToResponse).toHaveBeenCalled();
   });
@@ -73,7 +73,7 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockResolvedValue(longResponse);
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(message.reply).toHaveBeenCalled();
   });
@@ -114,7 +114,7 @@ describe('Chat Service - Advanced', () => {
     jest.spyOn(conversationManager, 'getHistory').mockReturnValue([]);
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -128,7 +128,7 @@ describe('Chat Service - Advanced', () => {
     jest.spyOn(conversationManager, 'getHistory').mockReturnValue(history);
     const message = createMessage('What is your name?');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -137,7 +137,7 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('Request timeout'));
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('timeout'));
   });
@@ -146,7 +146,7 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('Rate limit exceeded'));
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('rate limit'));
   });

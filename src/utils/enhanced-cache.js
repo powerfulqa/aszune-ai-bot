@@ -52,6 +52,7 @@ class CacheEntry {
    */
   isExpired() {
     if (!this.ttl) return false;
+    if (this.ttl === 0) return true; // Zero TTL means immediate expiration
     return Date.now() - this.createdAt > this.ttl;
   }
 
@@ -297,6 +298,7 @@ class EnhancedCache {
       memoryUsage: this.metrics.totalMemory,
       memoryUsageFormatted: this.formatBytes(this.metrics.totalMemory),
       maxSize: this.maxSize,
+      maxEntries: this.maxEntries,
       maxMemory: this.maxMemory,
       maxMemoryFormatted: this.formatBytes(this.maxMemory),
       evictionStrategy: this.evictionStrategy,
@@ -314,6 +316,7 @@ class EnhancedCache {
     for (const [key, entry] of this.entries.entries()) {
       entries.push({
         key,
+        value: entry.value,
         age: Date.now() - entry.createdAt,
         lastAccessed: entry.lastAccessed,
         accessCount: entry.accessCount,
@@ -324,7 +327,7 @@ class EnhancedCache {
     }
 
     return {
-      ...stats,
+      stats,
       entries: entries.toSorted((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
     };
   }
@@ -336,7 +339,7 @@ class EnhancedCache {
   ensureSpace(newEntry) {
     // Check if we're under limits
     if (
-      this.entries.size < this.maxSize &&
+      this.entries.size < this.maxEntries &&
       this.metrics.totalMemory + newEntry.size <= this.maxMemory
     ) {
       return; // No eviction needed
@@ -367,7 +370,7 @@ class EnhancedCache {
    * Evict least recently used entries
    */
   evictLRU() {
-    const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
+    const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
     const sortedByAccess = Array.from(this.accessOrder.entries()).toSorted((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {
@@ -381,7 +384,7 @@ class EnhancedCache {
    * Evict least frequently used entries
    */
   evictLFU() {
-    const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
+    const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
     const sortedByFrequency = Array.from(this.frequencyMap.entries()).toSorted((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {

@@ -9,13 +9,13 @@ describe('URL Formatter - YouTube', () => {
     it('should format YouTube URLs', () => {
       const input = 'Watch this: youtube.com/watch?v=abc123';
       const result = urlFormatter.formatYouTubeLinks(input);
-      expect(result).toContain('[YouTube](https://youtube.com/watch?v=abc123)');
+      expect(result).toContain('[YouTube Video](https://youtube.com/watch?v=abc123)');
     });
 
     it('should format YouTube short URLs', () => {
       const input = 'Check out youtu.be/abc123';
       const result = urlFormatter.formatYouTubeLinks(input);
-      expect(result).toContain('[YouTube](https://youtu.be/abc123)');
+      expect(result).toContain('[YouTube Video](https://youtu.be/abc123)');
     });
 
     it('should handle text without YouTube URLs', () => {
@@ -27,8 +27,8 @@ describe('URL Formatter - YouTube', () => {
     it('should handle multiple YouTube URLs', () => {
       const input = 'Watch youtube.com/watch?v=abc123 and youtu.be/def456';
       const result = urlFormatter.formatYouTubeLinks(input);
-      expect(result).toContain('[YouTube](https://youtube.com/watch?v=abc123)');
-      expect(result).toContain('[YouTube](https://youtu.be/def456)');
+      expect(result).toContain('[YouTube Video](https://youtube.com/watch?v=abc123)');
+      expect(result).toContain('[YouTube Video](https://youtu.be/def456)');
     });
   });
 
@@ -64,7 +64,7 @@ describe('URL Formatter - YouTube', () => {
       const input = 'Check reddit.com/r/programming and youtube.com/watch?v=abc123';
       const result = urlFormatter.formatAllUrls(input);
       expect(result).toContain('(https://reddit.com/r/programming)');
-      expect(result).toContain('[YouTube](https://youtube.com/watch?v=abc123)');
+      expect(result).toContain('[YouTube Video](https://youtube.com/watch?v=abc123)');
     });
 
     it('should handle text without URLs', () => {
@@ -77,7 +77,7 @@ describe('URL Formatter - YouTube', () => {
       const input = 'Check reddit.com/r/programming, youtube.com/watch?v=abc123, and github.com/user/repo';
       const result = urlFormatter.formatAllUrls(input);
       expect(result).toContain('(https://reddit.com/r/programming)');
-      expect(result).toContain('[YouTube](https://youtube.com/watch?v=abc123)');
+      expect(result).toContain('[YouTube Video](https://youtube.com/watch?v=abc123)');
       expect(result).toContain('(https://github.com/user/repo)');
     });
   });

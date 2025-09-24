@@ -77,7 +77,7 @@ describe('Conversation Manager - Basic Operations', () => {
 
     it('maintains conversation history limit', () => {
       const userId = '123456789012345678';
-      const maxHistory = config.CONVERSATION.MAX_HISTORY_LENGTH;
+      const maxHistory = config.MAX_HISTORY;
 
       // Add more messages than the limit
       for (let i = 0; i < maxHistory + 5; i++) {

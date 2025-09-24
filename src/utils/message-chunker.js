@@ -110,6 +110,11 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
  * @return {string[]} Array of message chunks
  */
 function chunkMessage(message, maxLength = 2000) {
+  // Handle null or undefined input
+  if (!message) {
+    return [''];
+  }
+  
   // If message is already within limits, return as single chunk
   if (message.length <= maxLength) {
     return [message];

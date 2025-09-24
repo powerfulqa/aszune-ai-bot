@@ -54,7 +54,7 @@ describe('Chat Service - Basic', () => {
     const botMessage = createMessage('hello');
     botMessage.author.bot = true;
 
-    await chatService.handleChatMessage(botMessage);
+    await chatService(botMessage);
 
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
     expect(botMessage.reply).not.toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe('Chat Service - Basic', () => {
   it('should ignore empty messages', async () => {
     const emptyMessage = createMessage('');
 
-    await chatService.handleChatMessage(emptyMessage);
+    await chatService(emptyMessage);
 
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
     expect(emptyMessage.reply).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe('Chat Service - Basic', () => {
   it('should handle regular chat messages', async () => {
     const message = createMessage('Hello, how are you?');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe('Chat Service - Basic', () => {
   it('should handle command messages', async () => {
     const commandMessage = createMessage('!help');
 
-    await chatService.handleChatMessage(commandMessage);
+    await chatService(commandMessage);
 
     expect(commandHandler.handleTextCommand).toHaveBeenCalledWith(commandMessage);
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe('Chat Service - Basic', () => {
     jest.spyOn(conversationManager, 'isRateLimited').mockReturnValue(true);
     const message = createMessage('Hello');
 
-    await chatService.handleChatMessage(message);
+    await chatService(message);
 
     expect(message.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();

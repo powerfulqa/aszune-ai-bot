@@ -24,7 +24,25 @@ describe('index.js - Function Branch Coverage', () => {
       // Mock config
       mockConfig = {
         DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-key',
         PI_OPTIMIZATIONS: { ENABLED: true },
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api.perplexity.ai',
+            ENDPOINTS: {
+              CHAT_COMPLETIONS: '/chat/completions',
+            },
+          },
+        },
+        FILE_PERMISSIONS: {
+          FILE: 0o644,
+          DIRECTORY: 0o755,
+        },
+        CACHE: {
+          DEFAULT_MAX_ENTRIES: 100,
+          MAX_MEMORY_MB: 50,
+          DEFAULT_TTL_MS: 300000,
+        },
         initializePiOptimizations: jest.fn(),
       };
       jest.mock('../../src/config/config', () => mockConfig);

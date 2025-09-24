@@ -20,6 +20,11 @@ class MessageFormatter {
    */
   formatResponse(content, options = {}) {
     if (!this.compact) return content;
+    
+    // Handle null or undefined input
+    if (!content) {
+      return '';
+    }
 
     let result = content;
 

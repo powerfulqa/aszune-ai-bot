@@ -14,6 +14,12 @@ class PerformanceMonitor {
     this.highLoadCount = 0;
     this.lastCpuInfo = null;
     this.lastCpuTimes = { idle: 0, total: 0 };
+    
+    // Alias for tests
+    Object.defineProperty(this, 'intervalId', {
+      get: () => this.checkInterval,
+      set: (value) => { this.checkInterval = value; }
+    });
     // CPU usage threshold (as decimal, e.g., 0.8 for 80%)
     try {
       const percent = config.PERFORMANCE?.CPU_THRESHOLD_PERCENT;
@@ -202,10 +208,12 @@ class PerformanceMonitor {
     let total = 0;
 
     for (const cpu of cpus) {
-      for (const type in cpu.times) {
-        total += cpu.times[type];
+      if (cpu.times) {
+        for (const type in cpu.times) {
+          total += cpu.times[type];
+        }
+        idle += cpu.times.idle || 0;
       }
-      idle += cpu.times.idle;
     }
 
     return { idle, total };
@@ -238,6 +246,37 @@ class PerformanceMonitor {
     const used = process.memoryUsage().rss;
     const total = os.totalmem();
     return used / total;
+  }
+
+  /**
+   * Throttle function calls to limit execution frequency
+   * @param {Function} func - Function to throttle
+   * @param {number} delay - Delay in milliseconds
+   * @returns {Function} Throttled function
+   */
+  throttle(func, delay) {
+    let lastCall = 0;
+    return function(...args) {
+      const now = Date.now();
+      if (now - lastCall >= delay) {
+        lastCall = now;
+        return func.apply(this, args);
+      }
+    };
+  }
+
+  /**
+   * Debounce function calls to delay execution until after calls have stopped
+   * @param {Function} func - Function to debounce
+   * @param {number} delay - Delay in milliseconds
+   * @returns {Function} Debounced function
+   */
+  debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
   }
 }
 

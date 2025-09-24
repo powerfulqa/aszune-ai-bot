@@ -39,14 +39,15 @@ jest.mock('../../src/utils/logger', () => ({
   debug: jest.fn(),
 }));
 
-jest.mock('../../src/utils/emoji-manager', () => ({
+jest.mock('../../src/utils/emoji', () => ({
   getEmojiForKeyword: jest.fn().mockReturnValue('😊'),
   getEmojisForKeywords: jest.fn().mockReturnValue(['😊', '👍']),
 }));
 
-jest.mock('../../src/utils/rate-limiter', () => ({
+jest.mock('../../src/utils/conversation', () => ({
   isRateLimited: jest.fn().mockReturnValue(false),
-  recordRequest: jest.fn(),
+  addMessage: jest.fn(),
+  getHistory: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('../../src/utils/message-formatter', () => ({

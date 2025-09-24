@@ -55,7 +55,7 @@ describe('Conversation Manager - Advanced Features', () => {
 
     it('returns false for users outside rate limit window', () => {
       const userId = '123456789012345678';
-      const pastTime = Date.now() - (config.RATE_LIMIT.WINDOW_MS + 1000);
+      const pastTime = Date.now() - (config.RATE_LIMIT_WINDOW + 1000);
       
       // Set timestamp to past time
       conversationManager.lastMessageTimestamps.set(userId, pastTime);

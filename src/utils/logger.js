@@ -193,6 +193,10 @@ class Logger {
             request: error.request,
           };
           console.error('No response received from API:', error.request);
+        } else if (typeof error === 'object' && !error.message && !error.stack) {
+          // Simple data object
+          console.error(error);
+          errorDetails = error;
         } else {
           // General error
           errorDetails = {
