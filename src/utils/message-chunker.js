@@ -65,6 +65,14 @@ function processSentence(sentence, effectiveMaxLength, currentChunk, chunks) {
  * @returns {string} - Updated currentChunk value
  */
 function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks) {
+  // Check if sentence contains URLs - if so, handle them specially
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  const urls = sentence.match(urlRegex);
+  
+  if (urls && urls.length > 0) {
+    return processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chunks, urls);
+  }
+  
   const words = sentence.split(/\s+/);
   let sentencePart = '';
 
@@ -88,12 +96,22 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
         sentencePart = '';
       }
 
-      // Split the word with ellipsis
-      const firstPart = word.substring(0, effectiveMaxLength - 3) + '...';
-      chunks.push(firstPart);
-
-      // Start next chunk with the rest of the word
-      sentencePart = '...' + word.substring(effectiveMaxLength - 3) + ' ';
+      // Split the word into multiple chunks
+      let remainingWord = word;
+      while (remainingWord.length > 0) {
+        const chunkSize = Math.min(effectiveMaxLength, remainingWord.length);
+        const wordChunk = remainingWord.substring(0, chunkSize);
+        
+        if (currentChunk.length > 0) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+        }
+        
+        chunks.push(wordChunk);
+        remainingWord = remainingWord.substring(chunkSize);
+      }
+      
+      sentencePart = '';
     } else {
       // Regular case - add word to current sentence part
       sentencePart += word + ' ';
@@ -101,6 +119,78 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
   }
 
   return currentChunk + sentencePart;
+}
+
+/**
+ * Process a sentence that contains URLs, preserving URL integrity
+ * @param {string} sentence - The sentence containing URLs
+ * @param {number} effectiveMaxLength - Maximum length for chunk content
+ * @param {string} currentChunk - Current accumulating chunk content
+ * @param {string[]} chunks - Array to collect completed chunks
+ * @param {string[]} urls - Array of URLs found in the sentence
+ * @returns {string} - Updated currentChunk value
+ */
+function processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chunks, urls) {
+  let remainingSentence = sentence;
+  let sentencePart = '';
+  
+  // Process each URL
+  for (const url of urls) {
+    const urlIndex = remainingSentence.indexOf(url);
+    const beforeUrl = remainingSentence.substring(0, urlIndex);
+    const afterUrl = remainingSentence.substring(urlIndex + url.length);
+    
+    // Add text before URL
+    if (beforeUrl.length > 0) {
+      sentencePart += beforeUrl;
+    }
+    
+    // Check if URL fits in current chunk
+    if ((sentencePart + url).length <= effectiveMaxLength) {
+      sentencePart += url;
+    } else {
+      // URL doesn't fit, flush current part and start new chunk
+      if (sentencePart.length > 0) {
+        currentChunk += sentencePart;
+        chunks.push(currentChunk.trim());
+        currentChunk = '';
+      }
+      
+      // If URL itself is too long, split it
+      if (url.length > effectiveMaxLength) {
+        let remainingUrl = url;
+        while (remainingUrl.length > 0) {
+          const chunkSize = Math.min(effectiveMaxLength, remainingUrl.length);
+          const urlChunk = remainingUrl.substring(0, chunkSize);
+          chunks.push(urlChunk);
+          remainingUrl = remainingUrl.substring(chunkSize);
+        }
+        sentencePart = '';
+      } else {
+        sentencePart = url;
+      }
+    }
+    
+    remainingSentence = afterUrl;
+  }
+  
+  // Add any remaining text after the last URL
+  if (remainingSentence.length > 0) {
+    sentencePart += remainingSentence;
+  }
+  
+  // If we have remaining content, process it normally
+  if (sentencePart.length > effectiveMaxLength) {
+    // Flush current part if it exists
+    if (currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = '';
+    }
+    // Process remaining content as regular words
+    return processLongSentence(sentencePart, effectiveMaxLength, currentChunk, chunks);
+  }
+  
+  return sentencePart;
 }
 
 /**
@@ -113,11 +203,6 @@ function chunkMessage(message, maxLength = 2000) {
   // Handle null or undefined input
   if (!message) {
     return [''];
-  }
-  
-  // If message is already within limits, return as single chunk
-  if (message.length <= maxLength) {
-    return [message];
   }
 
   const chunks = [];
