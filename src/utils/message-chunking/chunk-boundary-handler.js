@@ -43,7 +43,10 @@ function preprocessMessage(message) {
     const errorResponse = ErrorHandler.handleError(error, 'preprocessing message', {
       messageLength: message?.length || 0,
     });
-    console.error(`Message preprocessing error: ${errorResponse.message}`);
+    ErrorHandler.logError(errorResponse, {
+      operation: 'preprocessMessage',
+      messageLength: message?.length || 0,
+    });
     return message; // Return original message if preprocessing fails
   }
 }
@@ -56,110 +59,10 @@ function preprocessMessage(message) {
  */
 function fixChunkBoundaries(chunks, safeMaxLength) {
   try {
-    // Make an additional pass to ensure no chunk ends mid-sentence or with a partial URL
+    // Apply all boundary fixing rules
     for (let i = 0; i < chunks.length - 1; i++) {
-      let currentChunk = chunks[i];
-      let nextChunk = chunks[i + 1];
-
-      // Check for truncated sentences (ends without punctuation)
-      if (!/[.!?…][\s"'\])]?$/.test(currentChunk.trim())) {
-        // Look for the last sentence boundary
-        const lastSentenceMatch = /^(.*[.!?…][\s"'\])])/s.exec(currentChunk);
-        if (lastSentenceMatch) {
-          const completeSentencePart = lastSentenceMatch[1];
-          const remainingText = currentChunk.substring(completeSentencePart.length);
-
-          // Only move text if it doesn't make the next chunk too large
-          if (nextChunk.length + remainingText.length <= safeMaxLength) {
-            chunks[i] = completeSentencePart.trim();
-            chunks[i + 1] = remainingText + ' ' + nextChunk;
-
-            // Update for URL check below
-            currentChunk = chunks[i];
-            nextChunk = chunks[i + 1];
-          }
-        }
-      }
-
-      // Check for a URL that might be split between chunks
-      if (/https?:\/\/[^\s]*$/.test(currentChunk) && /^[^\s]*/.test(nextChunk)) {
-        // Move the URL entirely to the next chunk if possible
-        const urlStartMatch = /^(.*)(https?:\/\/[^\s]*)$/.exec(currentChunk);
-        if (urlStartMatch) {
-          const textBeforeUrl = urlStartMatch[1];
-          const partialUrl = urlStartMatch[2];
-
-          // Only perform this operation if moving the URL won't make the next chunk too large
-          if (textBeforeUrl.length > 0 && nextChunk.length + partialUrl.length <= safeMaxLength) {
-            chunks[i] = textBeforeUrl.trim();
-            chunks[i + 1] = partialUrl + ' ' + nextChunk;
-          }
-        }
-      }
-
-      // Special check for domains that might be split by periods (e.g., fractalsoftworks.com)
-      // Look for periods at the end of the chunk that might be part of a domain name
-      if (
-        /\.[^\s]*$/.test(currentChunk) &&
-        /^(?:com|org|net|edu|gov|io|me)[\/\s]/.test(nextChunk)
-      ) {
-        const domainMatch = /^(.*)(\.[^\s]*)$/.exec(currentChunk);
-        if (domainMatch) {
-          const textBeforeDomain = domainMatch[1];
-          const domainPart = domainMatch[2];
-
-          // Only move if it won't make the next chunk too large
-          if (
-            textBeforeDomain.length > 0 &&
-            nextChunk.length + domainPart.length <= safeMaxLength
-          ) {
-            chunks[i] = textBeforeDomain.trim();
-            chunks[i + 1] = domainPart + nextChunk;
-          }
-        }
-      }
-
-      // Check for numbered list items being split between chunks
-      // We don't want to split between a number and its content
-      if (/\d+\.\s*$/.test(currentChunk)) {
-        // Found a number at the end of the chunk, move it to next chunk
-        const numberMatch = /^(.*?)(\d+\.\s*)$/.exec(currentChunk);
-        if (numberMatch) {
-          const textBeforeNumber = numberMatch[1];
-          const numberPart = numberMatch[2];
-
-          if (
-            textBeforeNumber.length > 0 &&
-            nextChunk.length + numberPart.length <= safeMaxLength
-          ) {
-            chunks[i] = textBeforeNumber.trim();
-            chunks[i + 1] = numberPart + nextChunk;
-          }
-        }
-      }
-
-      // Check for Markdown link being split across chunks ([text](url))
-      if (
-        /\[[^\]]*$/.test(currentChunk) ||
-        /\][^(]*$/.test(currentChunk) ||
-        /\([^)]*$/.test(currentChunk)
-      ) {
-        // Find the start of the potential broken markdown link
-        const brokenMarkdownMatch =
-          /^(.*)\[[^\]]*$/.exec(currentChunk) ||
-          /^(.*)\][^(]*$/.exec(currentChunk) ||
-          /^(.*)\([^)]*$/.exec(currentChunk);
-
-        if (brokenMarkdownMatch) {
-          const textBeforeLink = brokenMarkdownMatch[1];
-          const partialLink = currentChunk.substring(textBeforeLink.length);
-
-          if (textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength) {
-            chunks[i] = textBeforeLink.trim();
-            chunks[i + 1] = partialLink + ' ' + nextChunk;
-          }
-        }
-      }
+      const boundaryFixResult = fixChunkBoundaryAt(chunks, i, safeMaxLength);
+      chunks = boundaryFixResult.chunks;
     }
 
     return chunks;
@@ -168,9 +71,185 @@ function fixChunkBoundaries(chunks, safeMaxLength) {
       chunkCount: chunks?.length || 0,
       safeMaxLength,
     });
-    console.error(`Chunk boundary fixing error: ${errorResponse.message}`);
+    ErrorHandler.logError(errorResponse, {
+      operation: 'fixChunkBoundaries',
+      chunkCount: chunks?.length || 0,
+      safeMaxLength,
+    });
     return chunks; // Return original chunks if fixing fails
   }
+}
+
+function fixChunkBoundaryAt(chunks, index, safeMaxLength) {
+  let currentChunk = chunks[index];
+  let nextChunk = chunks[index + 1];
+
+  // Apply sentence boundary fixes
+  const sentenceFix = fixSentenceBoundary(chunks, index, safeMaxLength);
+  if (sentenceFix.fixed) {
+    chunks = sentenceFix.chunks;
+    currentChunk = chunks[index];
+    nextChunk = chunks[index + 1];
+  }
+
+  // Apply URL boundary fixes
+  const urlFix = fixUrlBoundary(chunks, index, safeMaxLength);
+  if (urlFix.fixed) {
+    chunks = urlFix.chunks;
+    currentChunk = chunks[index];
+    nextChunk = chunks[index + 1];
+  }
+
+  // Apply domain boundary fixes
+  const domainFix = fixDomainBoundary(chunks, index, safeMaxLength);
+  if (domainFix.fixed) {
+    chunks = domainFix.chunks;
+    currentChunk = chunks[index];
+    nextChunk = chunks[index + 1];
+  }
+
+  // Apply numbered list fixes
+  const numberFix = fixNumberedListBoundary(chunks, index, safeMaxLength);
+  if (numberFix.fixed) {
+    chunks = numberFix.chunks;
+    currentChunk = chunks[index];
+    nextChunk = chunks[index + 1];
+  }
+
+  // Apply markdown link fixes
+  const markdownFix = fixMarkdownLinkBoundary(chunks, index, safeMaxLength);
+  if (markdownFix.fixed) {
+    chunks = markdownFix.chunks;
+  }
+
+  return { chunks };
+}
+
+function fixSentenceBoundary(chunks, index, safeMaxLength) {
+  const currentChunk = chunks[index];
+  const nextChunk = chunks[index + 1];
+
+  // Check for truncated sentences (ends without punctuation)
+  if (!/[.!?…][\s"'\])]?$/.test(currentChunk.trim())) {
+    const lastSentenceMatch = /^(.*[.!?…][\s"'\])])/s.exec(currentChunk);
+    if (lastSentenceMatch) {
+      const completeSentencePart = lastSentenceMatch[1];
+      const remainingText = currentChunk.substring(completeSentencePart.length);
+
+      if (nextChunk.length + remainingText.length <= safeMaxLength) {
+        chunks[index] = completeSentencePart.trim();
+        chunks[index + 1] = remainingText + ' ' + nextChunk;
+        return { fixed: true, chunks };
+      }
+    }
+  }
+
+  return { fixed: false, chunks };
+}
+
+function fixUrlBoundary(chunks, index, safeMaxLength) {
+  const currentChunk = chunks[index];
+  const nextChunk = chunks[index + 1];
+
+  // Check for a URL that might be split between chunks
+  if (/https?:\/\/[^\s]*$/.test(currentChunk) && /^[^\s]*/.test(nextChunk)) {
+    const urlStartMatch = /^(.*)(https?:\/\/[^\s]*)$/.exec(currentChunk);
+    if (urlStartMatch) {
+      const textBeforeUrl = urlStartMatch[1];
+      const partialUrl = urlStartMatch[2];
+
+      if (textBeforeUrl.length > 0 && nextChunk.length + partialUrl.length <= safeMaxLength) {
+        chunks[index] = textBeforeUrl.trim();
+        chunks[index + 1] = partialUrl + ' ' + nextChunk;
+        return { fixed: true, chunks };
+      }
+    }
+  }
+
+  return { fixed: false, chunks };
+}
+
+function fixDomainBoundary(chunks, index, safeMaxLength) {
+  const currentChunk = chunks[index];
+  const nextChunk = chunks[index + 1];
+
+  // Check for domains that might be split by periods
+  if (
+    /\.[^\s]*$/.test(currentChunk) &&
+    /^(?:com|org|net|edu|gov|io|me)[\/\s]/.test(nextChunk)
+  ) {
+    const domainMatch = /^(.*)(\.[^\s]*)$/.exec(currentChunk);
+    if (domainMatch) {
+      const textBeforeDomain = domainMatch[1];
+      const domainPart = domainMatch[2];
+
+      if (
+        textBeforeDomain.length > 0 &&
+        nextChunk.length + domainPart.length <= safeMaxLength
+      ) {
+        chunks[index] = textBeforeDomain.trim();
+        chunks[index + 1] = domainPart + nextChunk;
+        return { fixed: true, chunks };
+      }
+    }
+  }
+
+  return { fixed: false, chunks };
+}
+
+function fixNumberedListBoundary(chunks, index, safeMaxLength) {
+  const currentChunk = chunks[index];
+  const nextChunk = chunks[index + 1];
+
+  // Check for numbered list items being split
+  if (/\d+\.\s*$/.test(currentChunk)) {
+    const numberMatch = /^(.*?)(\d+\.\s*)$/.exec(currentChunk);
+    if (numberMatch) {
+      const textBeforeNumber = numberMatch[1];
+      const numberPart = numberMatch[2];
+
+      if (
+        textBeforeNumber.length > 0 &&
+        nextChunk.length + numberPart.length <= safeMaxLength
+      ) {
+        chunks[index] = textBeforeNumber.trim();
+        chunks[index + 1] = numberPart + nextChunk;
+        return { fixed: true, chunks };
+      }
+    }
+  }
+
+  return { fixed: false, chunks };
+}
+
+function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
+  const currentChunk = chunks[index];
+  const nextChunk = chunks[index + 1];
+
+  // Check for Markdown link being split across chunks
+  if (
+    /\[[^\]]*$/.test(currentChunk) ||
+    /\][^(]*$/.test(currentChunk) ||
+    /\([^)]*$/.test(currentChunk)
+  ) {
+    const brokenMarkdownMatch =
+      /^(.*)\[[^\]]*$/.exec(currentChunk) ||
+      /^(.*)\][^(]*$/.exec(currentChunk) ||
+      /^(.*)\([^)]*$/.exec(currentChunk);
+
+    if (brokenMarkdownMatch) {
+      const textBeforeLink = brokenMarkdownMatch[1];
+      const partialLink = currentChunk.substring(textBeforeLink.length);
+
+      if (textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength) {
+        chunks[index] = textBeforeLink.trim();
+        chunks[index + 1] = partialLink + ' ' + nextChunk;
+        return { fixed: true, chunks };
+      }
+    }
+  }
+
+  return { fixed: false, chunks };
 }
 
 /**

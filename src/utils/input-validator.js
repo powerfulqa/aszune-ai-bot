@@ -19,12 +19,12 @@ const VALIDATION_PATTERNS = {
   EMAIL_PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 
   // Command patterns
-  COMMAND_PREFIX: /^[!\/]/,
+  COMMAND_PREFIX: /^[!/]/,
   COMMAND_NAME: /^[a-zA-Z0-9_-]{1,32}$/,
 
   // File patterns
   FILENAME: /^[a-zA-Z0-9._-]{1,255}$/,
-  PATH: /^[a-zA-Z0-9._\-\/\\]{1,500}$/,
+  PATH: /^[a-zA-Z0-9._\-/\\]{1,500}$/,
 
   // Numeric patterns
   POSITIVE_INTEGER: /^\d+$/,
@@ -34,7 +34,7 @@ const VALIDATION_PATTERNS = {
   // Text patterns
   ALPHANUMERIC: /^[a-zA-Z0-9]+$/,
   ALPHANUMERIC_WITH_SPACES: /^[a-zA-Z0-9\s]+$/,
-  SAFE_TEXT: /^[a-zA-Z0-9\s.,!?@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/~`]+$/,
+  SAFE_TEXT: /^[a-zA-Z0-9\s.,!?@#$%^&*()_+\-=[\]{};':"\\|,.<>/~`]+$/,
 };
 
 /**
@@ -157,14 +157,13 @@ class InputValidator {
    */
   static validateCommand(command) {
     try {
+      // Early validation checks
       if (!command) {
         return { valid: false, error: 'Command is required' };
       }
-
       if (typeof command !== 'string') {
         return { valid: false, error: 'Command must be a string' };
       }
-
       if (command.length > VALIDATION_LIMITS.MAX_COMMAND_LENGTH) {
         return {
           valid: false,
@@ -172,15 +171,10 @@ class InputValidator {
         };
       }
 
-      // Check if command starts with valid prefix
-      if (!VALIDATION_PATTERNS.COMMAND_PREFIX.test(command)) {
-        return { valid: false, error: 'Command must start with ! or /' };
-      }
-
-      // Extract command name (everything after prefix until first space)
-      const commandName = command.substring(1).split(' ')[0];
-      if (!VALIDATION_PATTERNS.COMMAND_NAME.test(commandName)) {
-        return { valid: false, error: 'Invalid command name format' };
+      // Validate command structure
+      const validationResult = this._validateCommandStructure(command);
+      if (!validationResult.valid) {
+        return validationResult;
       }
 
       return { valid: true };
@@ -192,6 +186,21 @@ class InputValidator {
     }
   }
 
+  static _validateCommandStructure(command) {
+    // Check if command starts with valid prefix
+    if (!VALIDATION_PATTERNS.COMMAND_PREFIX.test(command)) {
+      return { valid: false, error: 'Command must start with ! or /' };
+    }
+
+    // Extract command name (everything after prefix until first space)
+    const commandName = command.substring(1).split(' ')[0];
+    if (!VALIDATION_PATTERNS.COMMAND_NAME.test(commandName)) {
+      return { valid: false, error: 'Invalid command name format' };
+    }
+
+    return { valid: true };
+  }
+
   /**
    * Validate conversation history
    * @param {Array} history - Conversation history to validate
@@ -199,10 +208,10 @@ class InputValidator {
    */
   static validateConversationHistory(history) {
     try {
+      // Early validation checks
       if (!Array.isArray(history)) {
         return { valid: false, error: 'Conversation history must be an array' };
       }
-
       if (history.length > VALIDATION_LIMITS.MAX_HISTORY_LENGTH) {
         return {
           valid: false,
@@ -210,33 +219,10 @@ class InputValidator {
         };
       }
 
-      for (let i = 0; i < history.length; i++) {
-        const message = history[i];
-
-        if (!message || typeof message !== 'object') {
-          return { valid: false, error: `Invalid message object at index ${i}` };
-        }
-
-        if (!message.role || typeof message.role !== 'string') {
-          return { valid: false, error: `Invalid message role at index ${i}` };
-        }
-
-        if (!['user', 'assistant', 'system'].includes(message.role)) {
-          return { valid: false, error: `Invalid message role "${message.role}" at index ${i}` };
-        }
-
-        if (!message.content || typeof message.content !== 'string') {
-          return { valid: false, error: `Invalid message content at index ${i}` };
-        }
-
-        // Validate message content
-        const contentValidation = this.validateMessageContent(message.content);
-        if (!contentValidation.valid) {
-          return {
-            valid: false,
-            error: `Invalid message content at index ${i}: ${contentValidation.error}`,
-          };
-        }
+      // Validate each message
+      const messageValidation = this._validateHistoryMessages(history);
+      if (!messageValidation.valid) {
+        return messageValidation;
       }
 
       return { valid: true };
@@ -248,6 +234,49 @@ class InputValidator {
     }
   }
 
+  static _validateHistoryMessages(history) {
+    for (let i = 0; i < history.length; i++) {
+      const message = history[i];
+
+      // Validate message structure
+      const structureValidation = this._validateMessageStructure(message, i);
+      if (!structureValidation.valid) {
+        return structureValidation;
+      }
+
+      // Validate message content
+      const contentValidation = this.validateMessageContent(message.content);
+      if (!contentValidation.valid) {
+        return {
+          valid: false,
+          error: `Invalid message content at index ${i}: ${contentValidation.error}`,
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  static _validateMessageStructure(message, index) {
+    if (!message || typeof message !== 'object') {
+      return { valid: false, error: `Invalid message object at index ${index}` };
+    }
+
+    if (!message.role || typeof message.role !== 'string') {
+      return { valid: false, error: `Invalid message role at index ${index}` };
+    }
+
+    if (!['user', 'assistant', 'system'].includes(message.role)) {
+      return { valid: false, error: `Invalid message role "${message.role}" at index ${index}` };
+    }
+
+    if (!message.content || typeof message.content !== 'string') {
+      return { valid: false, error: `Invalid message content at index ${index}` };
+    }
+
+    return { valid: true };
+  }
+
   /**
    * Validate URL
    * @param {string} url - URL to validate
@@ -255,14 +284,13 @@ class InputValidator {
    */
   static validateUrl(url) {
     try {
+      // Early validation checks
       if (!url) {
         return { valid: false, error: 'URL is required' };
       }
-
       if (typeof url !== 'string') {
         return { valid: false, error: 'URL must be a string' };
       }
-
       if (url.length > VALIDATION_LIMITS.MAX_URL_LENGTH) {
         return {
           valid: false,
@@ -270,18 +298,10 @@ class InputValidator {
         };
       }
 
-      if (!VALIDATION_PATTERNS.URL_PATTERN.test(url)) {
-        return { valid: false, error: 'Invalid URL format' };
-      }
-
-      // Check for dangerous protocols
-      const lowerUrl = url.toLowerCase();
-      if (
-        lowerUrl.startsWith('javascript:') ||
-        lowerUrl.startsWith('data:') ||
-        lowerUrl.startsWith('vbscript:')
-      ) {
-        return { valid: false, error: 'Dangerous URL protocol detected' };
+      // Validate URL format and safety
+      const urlValidation = this._validateUrlFormatAndSafety(url);
+      if (!urlValidation.valid) {
+        return urlValidation;
       }
 
       return { valid: true };
@@ -291,6 +311,24 @@ class InputValidator {
       });
       return { valid: false, error: errorResponse.message };
     }
+  }
+
+  static _validateUrlFormatAndSafety(url) {
+    if (!VALIDATION_PATTERNS.URL_PATTERN.test(url)) {
+      return { valid: false, error: 'Invalid URL format' };
+    }
+
+    // Check for dangerous protocols
+    const lowerUrl = url.toLowerCase();
+    if (
+      lowerUrl.startsWith('javascript:') ||
+      lowerUrl.startsWith('data:') ||
+      lowerUrl.startsWith('vbscript:')
+    ) {
+      return { valid: false, error: 'Dangerous URL protocol detected' };
+    }
+
+    return { valid: true };
   }
 
   /**
@@ -304,73 +342,50 @@ class InputValidator {
         return { content: '', warnings: [] };
       }
 
-      let sanitized = content;
-      const warnings = [];
-
-      // Remove script tags
-      if (DANGEROUS_PATTERNS.SCRIPT_TAGS.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.SCRIPT_TAGS, '');
-        warnings.push('Script tags removed');
-      }
-
-      // Remove HTML tags (except basic formatting)
-      if (DANGEROUS_PATTERNS.HTML_TAGS.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.HTML_TAGS, '');
-        warnings.push('HTML tags removed');
-      }
-
-      // Remove JavaScript protocol
-      if (DANGEROUS_PATTERNS.JAVASCRIPT_PROTOCOL.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.JAVASCRIPT_PROTOCOL, '');
-        warnings.push('JavaScript protocol removed');
-      }
-
-      // Remove data protocol
-      if (DANGEROUS_PATTERNS.DATA_PROTOCOL.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.DATA_PROTOCOL, '');
-        warnings.push('Data protocol removed');
-      }
-
-      // Remove VBScript protocol
-      if (DANGEROUS_PATTERNS.VBSCRIPT_PROTOCOL.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.VBSCRIPT_PROTOCOL, '');
-        warnings.push('VBScript protocol removed');
-      }
-
-      // Remove onload events
-      if (DANGEROUS_PATTERNS.ONLOAD_EVENTS.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.ONLOAD_EVENTS, '');
-        warnings.push('Event handlers removed');
-      }
-
-      // Check for SQL injection patterns
-      if (DANGEROUS_PATTERNS.SQL_INJECTION.test(sanitized)) {
-        warnings.push('Potential SQL injection pattern detected');
-      }
-
-      // Check for path traversal
-      if (DANGEROUS_PATTERNS.PATH_TRAVERSAL.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.PATH_TRAVERSAL, '');
-        warnings.push('Path traversal pattern removed');
-      }
-
-      // Check for XSS patterns
-      if (DANGEROUS_PATTERNS.XSS_PATTERNS.test(sanitized)) {
-        sanitized = sanitized.replace(DANGEROUS_PATTERNS.XSS_PATTERNS, '');
-        warnings.push('XSS patterns removed');
-      }
-
-      // Trim whitespace
-      sanitized = sanitized.trim();
-
-      return { content: sanitized, warnings };
+      const sanitizationResult = this._performSanitization(content);
+      return { content: sanitizationResult.content.trim(), warnings: sanitizationResult.warnings };
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'sanitizing content', {
         contentLength: content?.length || 0,
       });
-      console.error(`Content sanitization error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, {
+        operation: 'sanitizeContent',
+        contentLength: content?.length || 0,
+      });
       return { content: content || '', warnings: ['Sanitization failed'] };
     }
+  }
+
+  static _performSanitization(content) {
+    let sanitized = content;
+    const warnings = [];
+
+    // Apply all sanitization rules
+    const sanitizationRules = [
+      { pattern: DANGEROUS_PATTERNS.SCRIPT_TAGS, message: 'Script tags removed' },
+      { pattern: DANGEROUS_PATTERNS.HTML_TAGS, message: 'HTML tags removed' },
+      { pattern: DANGEROUS_PATTERNS.JAVASCRIPT_PROTOCOL, message: 'JavaScript protocol removed' },
+      { pattern: DANGEROUS_PATTERNS.DATA_PROTOCOL, message: 'Data protocol removed' },
+      { pattern: DANGEROUS_PATTERNS.VBSCRIPT_PROTOCOL, message: 'VBScript protocol removed' },
+      { pattern: DANGEROUS_PATTERNS.ONLOAD_EVENTS, message: 'Event handlers removed' },
+      { pattern: DANGEROUS_PATTERNS.PATH_TRAVERSAL, message: 'Path traversal pattern removed' },
+      { pattern: DANGEROUS_PATTERNS.XSS_PATTERNS, message: 'XSS patterns removed' },
+    ];
+
+    // Apply removal patterns
+    sanitizationRules.forEach(rule => {
+      if (rule.pattern.test(sanitized)) {
+        sanitized = sanitized.replace(rule.pattern, '');
+        warnings.push(rule.message);
+      }
+    });
+
+    // Check for detection-only patterns
+    if (DANGEROUS_PATTERNS.SQL_INJECTION.test(sanitized)) {
+      warnings.push('Potential SQL injection pattern detected');
+    }
+
+    return { content: sanitized, warnings };
   }
 
   /**
@@ -395,7 +410,10 @@ class InputValidator {
       const errorResponse = ErrorHandler.handleError(error, 'escaping HTML', {
         textLength: text?.length || 0,
       });
-      console.error(`HTML escaping error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, {
+        operation: 'escapeHtml',
+        textLength: text?.length || 0,
+      });
       return text || '';
     }
   }
@@ -414,66 +432,19 @@ class InputValidator {
         strict = false,
       } = options;
 
-      if (!input) {
-        return {
-          valid: false,
-          error: 'Input is required',
-          sanitized: '',
-          warnings: [],
-        };
-      }
-
-      if (typeof input !== 'string') {
-        return {
-          valid: false,
-          error: 'Input must be a string',
-          sanitized: '',
-          warnings: [],
-        };
-      }
-
-      // Check length
-      if (input.length > maxLength) {
-        return {
-          valid: false,
-          error: `Input too long. Maximum length is ${maxLength} characters`,
-          sanitized: '',
-          warnings: [],
-        };
+      // Early validation checks
+      const basicValidation = this._validateBasicInput(input, maxLength);
+      if (!basicValidation.valid) {
+        return basicValidation;
       }
 
       // Sanitize content
       const sanitizationResult = this.sanitizeContent(input);
 
-      // Additional validation based on type
-      let typeValidation = { valid: true };
-      
-      const typeValidators = {
-        userId: this.validateUserId.bind(this),
-        url: this.validateUrl.bind(this),
-        command: this.validateCommand.bind(this),
-        message: this.validateMessageContent.bind(this),
-        text: (input) => {
-          if (!VALIDATION_PATTERNS.SAFE_TEXT.test(input)) {
-            return {
-              valid: false,
-              error: 'Input contains unsafe characters',
-            };
-          }
-          return { valid: true };
-        },
-      };
-      
-      if (typeValidators[type]) {
-        typeValidation = typeValidators[type](input);
-      } else {
-        typeValidation = {
-          valid: false,
-          error: `Unknown input type: ${type}`,
-        };
-      }
+      // Type-specific validation
+      const typeValidation = this._validateByType(input, type);
 
-      // In strict mode, reject if any warnings
+      // Strict mode check
       if (strict && sanitizationResult.warnings.length > 0) {
         return {
           valid: false,
@@ -502,6 +473,64 @@ class InputValidator {
         warnings: [],
       };
     }
+  }
+
+  static _validateBasicInput(input, maxLength) {
+    if (!input) {
+      return {
+        valid: false,
+        error: 'Input is required',
+        sanitized: '',
+        warnings: [],
+      };
+    }
+
+    if (typeof input !== 'string') {
+      return {
+        valid: false,
+        error: 'Input must be a string',
+        sanitized: '',
+        warnings: [],
+      };
+    }
+
+    if (input.length > maxLength) {
+      return {
+        valid: false,
+        error: `Input too long. Maximum length is ${maxLength} characters`,
+        sanitized: '',
+        warnings: [],
+      };
+    }
+
+    return { valid: true };
+  }
+
+  static _validateByType(input, type) {
+    const typeValidators = {
+      userId: this.validateUserId.bind(this),
+      url: this.validateUrl.bind(this),
+      command: this.validateCommand.bind(this),
+      message: this.validateMessageContent.bind(this),
+      text: (input) => {
+        if (!VALIDATION_PATTERNS.SAFE_TEXT.test(input)) {
+          return {
+            valid: false,
+            error: 'Input contains unsafe characters',
+          };
+        }
+        return { valid: true };
+      },
+    };
+
+    if (typeValidators[type]) {
+      return typeValidators[type](input);
+    }
+
+    return {
+      valid: false,
+      error: `Unknown input type: ${type}`,
+    };
   }
 }
 
