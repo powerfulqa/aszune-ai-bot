@@ -517,27 +517,7 @@ class PerplexityService {
       }
 
       // Try to generate new response with retry for rate limits
-      let response;
-      let retries = opts.retryOnRateLimit ? config.RATE_LIMITS.MAX_RETRIES : 0;
-      let retryDelay = config.RATE_LIMITS.RETRY_DELAY_MS;
-
-      try {
-        response = await this.sendChatRequest(history);
-      } catch (apiError) {
-        // Check if it's a rate limit error (429) and we should retry
-        if (apiError.message && apiError.message.includes('429') && retries > 0) {
-          const errorResponse = ErrorHandler.handleError(apiError, 'API rate limit', { retries });
-          logger.info(`Rate limited, retrying after ${retryDelay}ms: ${errorResponse.message}`);
-
-          // Wait before retrying
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
-
-          // Retry the request
-          response = await this.sendChatRequest(history);
-        } else {
-          throw apiError; // Not a rate limit error or out of retries
-        }
-      }
+      const response = await this._generateResponseWithRetry(history, opts);
 
       const content = this._extractResponseContent(response);
 
@@ -554,6 +534,36 @@ class PerplexityService {
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * Generate response with retry logic for rate limits
+   * @param {Array} history - Conversation history
+   * @param {Object} opts - Options including retry settings
+   * @returns {Object} API response
+   * @private
+   */
+  async _generateResponseWithRetry(history, opts) {
+    let retries = opts.retryOnRateLimit ? config.RATE_LIMITS.MAX_RETRIES : 0;
+    let retryDelay = config.RATE_LIMITS.RETRY_DELAY_MS;
+
+    try {
+      return await this.sendChatRequest(history);
+    } catch (apiError) {
+      // Check if it's a rate limit error (429) and we should retry
+      if (apiError.message && apiError.message.includes('429') && retries > 0) {
+        const errorResponse = ErrorHandler.handleError(apiError, 'API rate limit', { retries });
+        logger.info(`Rate limited, retrying after ${retryDelay}ms: ${errorResponse.message}`);
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
+        // Retry the request
+        return await this.sendChatRequest(history);
+      } else {
+        throw apiError; // Not a rate limit error or out of retries
+      }
     }
   }
 

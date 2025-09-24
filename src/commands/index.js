@@ -128,50 +128,7 @@ const commands = {
         const cacheStats = perplexityService.getCacheStats();
         const detailedInfo = perplexityService.getDetailedCacheInfo();
 
-        // Create embed with cache information
-        const embed = {
-          color: config.COLORS.PRIMARY,
-          title: 'Cache Statistics',
-          fields: [
-            {
-              name: 'Performance',
-              value: `Hit Rate: ${cacheStats.hitRate}%\nHits: ${cacheStats.hits}\nMisses: ${cacheStats.misses}`,
-              inline: true,
-            },
-            {
-              name: 'Operations',
-              value: `Sets: ${cacheStats.sets}\nDeletes: ${cacheStats.deletes}\nEvictions: ${cacheStats.evictions}`,
-              inline: true,
-            },
-            {
-              name: 'Memory Usage',
-              value: `${cacheStats.memoryUsageFormatted} / ${cacheStats.maxMemoryFormatted}\nEntries: ${cacheStats.entryCount} / ${cacheStats.maxSize}`,
-              inline: true,
-            },
-            {
-              name: 'Configuration',
-              value: `Strategy: ${cacheStats.evictionStrategy}\nUptime: ${cacheStats.uptimeFormatted}`,
-              inline: true,
-            },
-          ],
-          footer: { text: 'Aszai Bot Cache' },
-          timestamp: new Date(),
-        };
-
-        // Add recent entries if available
-        if (detailedInfo.entries && detailedInfo.entries.length > 0) {
-          const recentEntries = detailedInfo.entries.slice(0, 5);
-          const entriesText = recentEntries
-            .map((entry) => `**${entry.key.substring(0, 20)}...** (${entry.accessCount} accesses)`)
-            .join('\n');
-
-          embed.fields.push({
-            name: 'Recent Entries',
-            value: entriesText || 'No entries',
-            inline: false,
-          });
-        }
-
+        const embed = this._createCacheEmbed(cacheStats, detailedInfo);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'cache statistics retrieval', {
@@ -182,6 +139,54 @@ const commands = {
         );
       }
     },
+
+    _createCacheEmbed(cacheStats, detailedInfo) {
+      const embed = {
+        color: config.COLORS.PRIMARY,
+        title: 'Cache Statistics',
+        fields: [
+          {
+            name: 'Performance',
+            value: `Hit Rate: ${cacheStats.hitRate}%\nHits: ${cacheStats.hits}\nMisses: ${cacheStats.misses}`,
+            inline: true,
+          },
+          {
+            name: 'Operations',
+            value: `Sets: ${cacheStats.sets}\nDeletes: ${cacheStats.deletes}\nEvictions: ${cacheStats.evictions}`,
+            inline: true,
+          },
+          {
+            name: 'Memory Usage',
+            value: `${cacheStats.memoryUsageFormatted} / ${cacheStats.maxMemoryFormatted}\nEntries: ${cacheStats.entryCount} / ${cacheStats.maxSize}`,
+            inline: true,
+          },
+          {
+            name: 'Configuration',
+            value: `Strategy: ${cacheStats.evictionStrategy}\nUptime: ${cacheStats.uptimeFormatted}`,
+            inline: true,
+          },
+        ],
+        footer: { text: 'Aszai Bot Cache' },
+        timestamp: new Date(),
+      };
+
+      // Add recent entries if available
+      if (detailedInfo.entries && detailedInfo.entries.length > 0) {
+        const recentEntries = detailedInfo.entries.slice(0, 5);
+        const entriesText = recentEntries
+          .map((entry) => `**${entry.key.substring(0, 20)}...** (${entry.accessCount} accesses)`)
+          .join('\n');
+
+        embed.fields.push({
+          name: 'Recent Entries',
+          value: entriesText || 'No entries',
+          inline: false,
+        });
+      }
+
+      return embed;
+    },
+
     textCommand: '!cache',
   },
   stats: {
