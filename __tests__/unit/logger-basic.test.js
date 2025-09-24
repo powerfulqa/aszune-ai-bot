@@ -1,9 +1,9 @@
 /**
- * Tests for logger utility
+ * Tests for logger utility - Basic functionality
  */
 const logger = require('../../src/utils/logger');
 
-describe('Logger', () => {
+describe('Logger - Basic', () => {
   // Save and restore console methods
   const originalConsoleLog = console.log;
   const originalConsoleWarn = console.warn;
@@ -55,45 +55,41 @@ describe('Logger', () => {
     expect(console.error.mock.calls[0][0]).toContain('[ERROR] Test error message');
   });
 
-  it('logs error messages with error object', () => {
-    const testError = new Error('Test error');
-    logger.error('Test error message', testError);
-    expect(console.error).toHaveBeenCalled();
-    expect(console.error.mock.calls[0][0]).toContain('[ERROR] Test error message');
-  });
-
-  it('handles API errors', () => {
-    const apiError = {
-      response: {
-        status: 404,
-        data: { error: 'Not found' },
-      },
-    };
-    logger.error('API error', apiError);
+  it('logs error messages with data', () => {
+    const testData = { error: 'data' };
+    logger.error('Test error message', testData);
     expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error.mock.calls[1][0]).toBe('API Error Response:');
-  });
-
-  it('provides user-friendly error messages', () => {
-    // Test that logger can handle error objects properly
-    const testError = new Error('Some error');
-    logger.error('Test error message', testError);
-    expect(console.error).toHaveBeenCalled();
     expect(console.error.mock.calls[0][0]).toContain('[ERROR] Test error message');
+    expect(console.error.mock.calls[1][0]).toEqual(testData);
   });
 
-  it('handles different error types properly', () => {
-    // Test various error scenarios
-    const error429 = new Error('Request failed with status code 429');
-    logger.error('Rate limit error', error429);
-    expect(console.error).toHaveBeenCalled();
+  it('handles empty messages', () => {
+    logger.debug('');
+    expect(console.log).toHaveBeenCalled();
+    expect(console.log.mock.calls[0][0]).toContain('[DEBUG]');
+  });
 
-    const error401 = new Error('Request failed with status code 401');
-    logger.error('Auth error', error401);
-    expect(console.error).toHaveBeenCalled();
+  it('handles null messages', () => {
+    logger.debug(null);
+    expect(console.log).toHaveBeenCalled();
+    expect(console.log.mock.calls[0][0]).toContain('[DEBUG]');
+  });
 
-    const errorTimeout = new Error('Request timed out');
-    logger.error('Timeout error', errorTimeout);
-    expect(console.error).toHaveBeenCalled();
+  it('handles undefined messages', () => {
+    logger.debug(undefined);
+    expect(console.log).toHaveBeenCalled();
+    expect(console.log.mock.calls[0][0]).toContain('[DEBUG]');
+  });
+
+  it('handles messages with special characters', () => {
+    logger.debug('Message with !@#$%^&*()_+-=[]{}|;:,.<>?');
+    expect(console.log).toHaveBeenCalled();
+    expect(console.log.mock.calls[0][0]).toContain('[DEBUG] Message with !@#$%^&*()_+-=[]{}|;:,.<>?');
+  });
+
+  it('handles messages with unicode characters', () => {
+    logger.debug('Message with 世界 🌍');
+    expect(console.log).toHaveBeenCalled();
+    expect(console.log.mock.calls[0][0]).toContain('[DEBUG] Message with 世界 🌍');
   });
 });
