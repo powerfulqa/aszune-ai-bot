@@ -48,44 +48,72 @@ class ErrorHandler {
     const code = error.code || '';
     const statusCode = error.statusCode || error.status;
 
-    // API errors
-    if (statusCode || message.includes('API') || message.includes('HTTP')) {
-      if (statusCode === 429 || message.includes('429') || message.includes('rate limit')) {
-        return ERROR_TYPES.RATE_LIMIT_ERROR;
-      }
-      if (statusCode >= 400 && statusCode < 500) {
-        return ERROR_TYPES.API_ERROR;
-      }
-      if (statusCode >= 500) {
-        return ERROR_TYPES.NETWORK_ERROR;
-      }
+    // Check each error category in order of specificity
+    const apiErrorType = this._categorizeApiError(statusCode, message);
+    if (apiErrorType) return apiErrorType;
+
+    const fileErrorType = this._categorizeFileError(code);
+    if (fileErrorType) return fileErrorType;
+
+    const memoryErrorType = this._categorizeMemoryError(message, code);
+    if (memoryErrorType) return memoryErrorType;
+
+    const configErrorType = this._categorizeConfigError(message);
+    if (configErrorType) return configErrorType;
+
+    const validationErrorType = this._categorizeValidationError(message);
+    if (validationErrorType) return validationErrorType;
+
+    return ERROR_TYPES.UNKNOWN_ERROR;
+  }
+
+  static _categorizeApiError(statusCode, message) {
+    if (!statusCode && !message.includes('API') && !message.includes('HTTP')) {
+      return null;
+    }
+
+    if (statusCode === 429 || message.includes('429') || message.includes('rate limit')) {
+      return ERROR_TYPES.RATE_LIMIT_ERROR;
+    }
+    if (statusCode >= 400 && statusCode < 500) {
       return ERROR_TYPES.API_ERROR;
     }
+    if (statusCode >= 500) {
+      return ERROR_TYPES.NETWORK_ERROR;
+    }
+    return ERROR_TYPES.API_ERROR;
+  }
 
-    // File system errors
-    if (code && ['ENOENT', 'EACCES', 'EMFILE', 'ENFILE'].includes(code)) {
-      if (code === 'EACCES') {
-        return ERROR_TYPES.PERMISSION_ERROR;
-      }
-      return ERROR_TYPES.FILE_ERROR;
+  static _categorizeFileError(code) {
+    if (!code || !['ENOENT', 'EACCES', 'EMFILE', 'ENFILE'].includes(code)) {
+      return null;
     }
 
-    // Memory errors
+    if (code === 'EACCES') {
+      return ERROR_TYPES.PERMISSION_ERROR;
+    }
+    return ERROR_TYPES.FILE_ERROR;
+  }
+
+  static _categorizeMemoryError(message, code) {
     if (message.includes('memory') || message.includes('heap') || code === 'ENOMEM') {
       return ERROR_TYPES.MEMORY_ERROR;
     }
+    return null;
+  }
 
-    // Configuration errors
+  static _categorizeConfigError(message) {
     if (message.includes('config') || message.includes('environment')) {
       return ERROR_TYPES.CONFIG_ERROR;
     }
+    return null;
+  }
 
-    // Validation errors
+  static _categorizeValidationError(message) {
     if (message.includes('validation') || message.includes('invalid')) {
       return ERROR_TYPES.VALIDATION_ERROR;
     }
-
-    return ERROR_TYPES.UNKNOWN_ERROR;
+    return null;
   }
 
   /**

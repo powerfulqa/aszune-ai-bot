@@ -223,6 +223,27 @@ const commands = {
         return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
       }
 
+      // Extract and validate text input
+      const textExtractionResult = this._extractTextFromInteraction(interaction);
+      if (!textExtractionResult.success) {
+        return interaction.reply(textExtractionResult.errorMessage);
+      }
+
+      const textValidation = InputValidator.validateAndSanitize(textExtractionResult.text, {
+        type: 'message',
+        maxLength: 3000, // Reasonable limit for summarization
+        strict: false,
+      });
+
+      if (!textValidation.valid) {
+        return interaction.reply(`❌ Invalid text input: ${textValidation.error}`);
+      }
+
+      // Generate summary
+      return this._generateSummary(interaction, userId, textValidation.sanitized, textValidation.warnings);
+    },
+
+    _extractTextFromInteraction(interaction) {
       let text;
 
       // Handle both text commands and slash commands
@@ -238,25 +259,16 @@ const commands = {
       }
 
       if (!text || text.trim().length === 0) {
-        return interaction.reply(
-          'Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`'
-        );
+        return {
+          success: false,
+          errorMessage: 'Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`'
+        };
       }
 
-      // Validate and sanitize the text input
-      const textValidation = InputValidator.validateAndSanitize(text, {
-        type: 'message',
-        maxLength: 3000, // Reasonable limit for summarization
-        strict: false,
-      });
+      return { success: true, text };
+    },
 
-      if (!textValidation.valid) {
-        return interaction.reply(`❌ Invalid text input: ${textValidation.error}`);
-      }
-
-      // Use sanitized text
-      const sanitizedText = textValidation.sanitized;
-
+    async _generateSummary(interaction, userId, sanitizedText, warnings) {
       await interaction.deferReply();
 
       try {
@@ -284,7 +296,7 @@ const commands = {
         const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
           userId: userId,
           textLength: sanitizedText?.length || 0,
-          warnings: textValidation.warnings,
+          warnings: warnings,
         });
         return interaction.editReply(errorResponse.message);
       }

@@ -162,7 +162,7 @@ class EnhancedCache {
       return entry.value;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache get operation', { key });
-      console.error(`Cache get error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheGet', key });
       this.metrics.misses++;
       return null;
     }
@@ -208,7 +208,7 @@ class EnhancedCache {
         valueType: typeof value,
         options,
       });
-      console.error(`Cache set error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheSet', key, options });
       return false;
     }
   }
@@ -232,7 +232,7 @@ class EnhancedCache {
       return true;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache delete operation', { key });
-      console.error(`Cache delete error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheDelete', key });
       return false;
     }
   }
@@ -248,7 +248,7 @@ class EnhancedCache {
       this.metrics.totalMemory = 0;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache clear operation');
-      console.error(`Cache clear error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheClear' });
     }
   }
 
@@ -271,7 +271,7 @@ class EnhancedCache {
       return invalidated;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache tag invalidation', { tag });
-      console.error(`Cache tag invalidation error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheTagInvalidation', tag });
       return 0;
     }
   }
@@ -325,7 +325,7 @@ class EnhancedCache {
 
     return {
       ...stats,
-      entries: entries.sort((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
+      entries: entries.toSorted((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
     };
   }
 
@@ -368,7 +368,7 @@ class EnhancedCache {
    */
   evictLRU() {
     const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
-    const sortedByAccess = Array.from(this.accessOrder.entries()).sort((a, b) => a[1] - b[1]);
+    const sortedByAccess = Array.from(this.accessOrder.entries()).toSorted((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {
       const key = sortedByAccess[i][0];
@@ -382,7 +382,7 @@ class EnhancedCache {
    */
   evictLFU() {
     const entriesToEvict = Math.ceil(this.maxSize * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort((a, b) => a[1] - b[1]);
+    const sortedByFrequency = Array.from(this.frequencyMap.entries()).toSorted((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {
       const key = sortedByFrequency[i][0];
@@ -496,7 +496,7 @@ class EnhancedCache {
       this.evictExpired();
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'cache cleanup');
-      console.error(`Cache cleanup error: ${errorResponse.message}`);
+      ErrorHandler.logError(errorResponse, { operation: 'cacheCleanup' });
     }
   }
 

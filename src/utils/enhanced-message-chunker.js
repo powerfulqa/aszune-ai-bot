@@ -5,7 +5,7 @@
  */
 
 // Import the new modular chunking system
-const enhancedChunker = require('./message-chunking');
+const messageChunking = require('./message-chunking');
 
 /**
  * Enhanced chunk message function that handles source references properly
@@ -14,7 +14,7 @@ const enhancedChunker = require('./message-chunking');
  * @return {string[]} Array of message chunks
  */
 function enhancedChunkMessage(message, maxLength = 2000) {
-  return enhancedChunker.chunkMessage(message, maxLength);
+  return messageChunking.chunkMessage(message, maxLength);
 }
 
 /**
@@ -23,7 +23,7 @@ function enhancedChunkMessage(message, maxLength = 2000) {
  * @returns {string} - Text with properly formatted source references
  */
 function processSourceReferences(text) {
-  return enhancedChunker.processSourceReferences(text);
+  return messageChunking.processSourceReferences(text);
 }
 
 // Export both the enhanced chunker and original functions for backward compatibility
@@ -31,7 +31,7 @@ module.exports = {
   chunkMessage: enhancedChunkMessage,
   processSourceReferences,
   // Re-export functions from the new modular system
-  _processParagraph: enhancedChunker._processParagraph,
-  _processSentence: enhancedChunker._processSentence,
-  _processLongSentence: enhancedChunker._processLongSentence,
+  _processParagraph: messageChunking._processParagraph,
+  _processSentence: messageChunking._processSentence,
+  _processLongSentence: messageChunking._processLongSentence,
 };

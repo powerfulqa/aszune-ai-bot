@@ -134,33 +134,52 @@ const shutdown = async (signal) => {
   isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
-  // Track any errors that occur during shutdown
+  // Perform shutdown steps and collect errors
+  const errors = await performShutdownSteps();
+  
+  // Handle shutdown completion
+  handleShutdownCompletion(errors);
+};
+
+async function performShutdownSteps() {
   const errors = [];
-  let shutdownStatus = true;
 
   // Step 1: Shutdown conversation manager
+  const convError = await shutdownConversationManager();
+  if (convError) errors.push(convError);
+
+  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
+  const clientError = await shutdownDiscordClient();
+  if (clientError) errors.push(clientError);
+
+  return errors;
+}
+
+async function shutdownConversationManager() {
   try {
     logger.debug('Shutting down conversation manager...');
     await conversationManager.destroy();
     logger.debug('Conversation manager shutdown successful');
+    return null;
   } catch (convError) {
-    shutdownStatus = false;
     logger.error('Error shutting down conversation manager:', convError);
-    errors.push(convError);
+    return convError;
   }
+}
 
-  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
+async function shutdownDiscordClient() {
   try {
     logger.debug('Shutting down Discord client...');
-    // Use await to ensure proper cleanup of connections
     await client.destroy();
     logger.debug('Discord client shutdown successful');
+    return null;
   } catch (clientError) {
     logger.error('Error shutting down Discord client:', clientError);
-    errors.push(clientError);
+    return clientError;
   }
+}
 
-  // Log individual errors for easier debugging
+function handleShutdownCompletion(errors) {
   if (errors.length > 0) {
     errors.forEach((err, index) => {
       logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
@@ -171,7 +190,7 @@ const shutdown = async (signal) => {
     logger.info('Shutdown complete.');
     process.exit(0);
   }
-};
+}
 
 // Handle shutdown signals
 process.on('SIGINT', () => shutdown('SIGINT'));

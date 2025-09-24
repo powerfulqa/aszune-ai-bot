@@ -98,6 +98,7 @@ async function sendResponse(message, responseText) {
  * @returns {Promise<Object|null>} processedData or null if early return
  */
 async function processUserMessage(message) {
+  // Early validation checks
   if (message.author.bot || !message.content) return null;
 
   const userId = message.author.id;
@@ -109,6 +110,25 @@ async function processUserMessage(message) {
     return null;
   }
 
+  // Process message content and handle validation
+  const contentResult = await processMessageContent(message, userId);
+  if (!contentResult.success) return null;
+
+  // Handle rate limiting
+  const rateLimitResult = await handleRateLimiting(message, userId);
+  if (!rateLimitResult.success) return null;
+
+  // Handle commands
+  const commandResult = await handleCommandCheck(message, contentResult.sanitizedContent);
+  if (!commandResult.success) return null;
+
+  // Add sanitized message to history
+  conversationManager.addMessage(userId, 'user', contentResult.sanitizedContent);
+
+  return { userId, sanitizedContent: contentResult.sanitizedContent };
+}
+
+async function processMessageContent(message, userId) {
   // Validate and sanitize message content
   const contentValidation = InputValidator.validateAndSanitize(message.content, {
     type: 'message',
@@ -117,7 +137,7 @@ async function processUserMessage(message) {
 
   if (!contentValidation.valid) {
     await message.reply(`❌ ${contentValidation.error}`);
-    return null;
+    return { success: false };
   }
 
   // Log warnings if any
@@ -125,26 +145,26 @@ async function processUserMessage(message) {
     logger.warn(`Message sanitization warnings for user ${userId}:`, contentValidation.warnings);
   }
 
-  // Use sanitized content
-  const sanitizedContent = contentValidation.sanitized;
+  return { success: true, sanitizedContent: contentValidation.sanitized };
+}
 
+async function handleRateLimiting(message, userId) {
   // Check for rate limiting
   if (conversationManager.isRateLimited(userId)) {
     await message.reply('Please wait a few seconds before sending another message.');
-    return null;
+    return { success: false };
   }
   conversationManager.updateTimestamp(userId);
+  return { success: true };
+}
 
+async function handleCommandCheck(message, sanitizedContent) {
   // Check for commands
   if (sanitizedContent.startsWith('!')) {
     await commandHandler.handleTextCommand(message);
-    return null;
+    return { success: false };
   }
-
-  // Add sanitized message to history
-  conversationManager.addMessage(userId, 'user', sanitizedContent);
-
-  return { userId, sanitizedContent };
+  return { success: true };
 }
 
 /**
