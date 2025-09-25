@@ -69,9 +69,11 @@ describe('Bot Initialization', () => {
 
   it('should register event handlers', () => {
     // Verify that critical event handlers are registered
-    expect(discordMock.Client().once).toHaveBeenCalled();
-    expect(discordMock.Client().on).toHaveBeenCalledWith('messageCreate', expect.any(Function));
-    expect(discordMock.Client().on).toHaveBeenCalledWith('interactionCreate', expect.any(Function));
-    expect(discordMock.Client().on).toHaveBeenCalledWith('error', expect.any(Function));
+    expect(discordMock.Client).toHaveBeenCalled();
+    const mockClientInstance = discordMock.Client.mock.results[0].value;
+    expect(mockClientInstance.once).toHaveBeenCalled();
+    expect(mockClientInstance.on).toHaveBeenCalledWith('messageCreate', expect.any(Function));
+    expect(mockClientInstance.on).toHaveBeenCalledWith('interactionCreate', expect.any(Function));
+    expect(mockClientInstance.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 });

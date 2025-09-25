@@ -132,8 +132,10 @@ class EnhancedCache {
       startTime: Date.now(),
     };
 
-    // Start cleanup interval
-    this.startCleanup();
+    // Start cleanup interval (not in test environment and cleanupInterval > 0)
+    if (process.env.NODE_ENV !== 'test' && this.cleanupInterval > 0) {
+      this.startCleanup();
+    }
   }
 
   /**
@@ -505,6 +507,10 @@ class EnhancedCache {
    * Start cleanup interval
    */
   startCleanup() {
+    if (process.env.NODE_ENV === 'test') {
+      return; // Don't start cleanup in test environment
+    }
+    
     if (this.cleanupInterval > 0) {
       this.cleanupTimer = setInterval(() => {
         this.cleanup();

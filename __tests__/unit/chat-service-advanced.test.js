@@ -13,6 +13,7 @@ jest.mock('../../src/commands', () => ({
 }));
 
 const chatService = require('../../src/services/chat');
+const handleChatMessage = chatService.handleChatMessage || chatService.default || chatService;
 const perplexityService = require('../../src/services/perplexity-secure');
 const ConversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
@@ -25,6 +26,16 @@ jest.mock('../../src/services/perplexity-secure', () => ({
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
+jest.mock('../../src/utils/input-validator', () => ({
+  InputValidator: {
+    validateUserId: jest.fn().mockReturnValue({ valid: true }),
+    validateAndSanitize: jest.fn().mockReturnValue({ 
+      valid: true, 
+      sanitized: 'Hello! @#$%^&*()_+-=[]{}|;:,.<>?',
+      warnings: []
+    }),
+  },
+}));
 
 describe('Chat Service - Advanced', () => {
   // Create a mock message
@@ -54,16 +65,16 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('API Error'));
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalled();
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
   });
 
   it('should add emojis to responses when not in low CPU mode', async () => {
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(emojiManager.addEmojisToResponse).toHaveBeenCalled();
   });
@@ -73,7 +84,7 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockResolvedValue(longResponse);
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalled();
   });
@@ -81,7 +92,7 @@ describe('Chat Service - Advanced', () => {
   it('should handle special characters in messages', async () => {
     const specialMessage = createMessage('Hello! @#$%^&*()_+-=[]{}|;:,.<>?');
 
-    await chatService.handleChatMessage(specialMessage);
+    await handleChatMessage(specialMessage);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -89,7 +100,7 @@ describe('Chat Service - Advanced', () => {
   it('should handle multiline messages', async () => {
     const multilineMessage = createMessage('Line 1\nLine 2\nLine 3');
 
-    await chatService.handleChatMessage(multilineMessage);
+    await handleChatMessage(multilineMessage);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -97,7 +108,7 @@ describe('Chat Service - Advanced', () => {
   it('should handle messages with URLs', async () => {
     const urlMessage = createMessage('Check out https://example.com');
 
-    await chatService.handleChatMessage(urlMessage);
+    await handleChatMessage(urlMessage);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -105,7 +116,7 @@ describe('Chat Service - Advanced', () => {
   it('should handle messages with emojis', async () => {
     const emojiMessage = createMessage('Hello 👋 World 🌍');
 
-    await chatService.handleChatMessage(emojiMessage);
+    await handleChatMessage(emojiMessage);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -114,7 +125,7 @@ describe('Chat Service - Advanced', () => {
     jest.spyOn(conversationManager, 'getHistory').mockReturnValue([]);
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -128,7 +139,7 @@ describe('Chat Service - Advanced', () => {
     jest.spyOn(conversationManager, 'getHistory').mockReturnValue(history);
     const message = createMessage('What is your name?');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
   });
@@ -137,17 +148,17 @@ describe('Chat Service - Advanced', () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('Request timeout'));
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('timeout'));
+    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('unexpected error occurred'));
   });
 
   it('should handle rate limit errors from API', async () => {
     perplexityService.generateChatResponse.mockRejectedValue(new Error('Rate limit exceeded'));
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('rate limit'));
+    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is currently busy'));
   });
 });

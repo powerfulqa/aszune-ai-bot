@@ -39,7 +39,7 @@ const commands = {
     async execute(interaction) {
       const userId = interaction.user.id;
       conversationManager.clearHistory(userId);
-      return interaction.reply('Your conversation history has been cleared.');
+      return interaction.reply('Conversation history cleared!');
     },
     textCommand: '!clearhistory',
   },
@@ -67,7 +67,7 @@ const commands = {
       }
 
       if (!history || history.length === 0) {
-        return interaction.reply('No conversation history to summarise.');
+        return interaction.reply('No conversation history to summarize.');
       }
 
       // Ensure last message is from user or tool
@@ -80,7 +80,7 @@ const commands = {
       }
 
       if (cleanHistory.length === 0) {
-        return interaction.reply('No conversation history to summarise.');
+        return interaction.reply('No conversation history to summarize.');
       }
 
       await interaction.deferReply();
@@ -266,7 +266,7 @@ const commands = {
       if (!text || text.trim().length === 0) {
         return {
           success: false,
-          errorMessage: 'Please provide the text you want summarised. Usage: `!summarise <text>` or `!summerise <text>`'
+          errorMessage: 'Please provide text to summarize.'
         };
       }
 
@@ -285,7 +285,7 @@ const commands = {
           },
         ];
 
-        const summary = await perplexityService.generateTextSummary(messages);
+        const summary = await perplexityService.generateSummary(messages, true);
         conversationManager.updateUserStats(userId, 'summaries');
         return interaction.editReply({
           embeds: [
@@ -348,7 +348,11 @@ async function handleTextCommand(message) {
           content: message.content,
         });
         logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
-        return message.reply(errorResponse.message);
+        try {
+          return await message.reply(errorResponse.message);
+        } catch (replyError) {
+          logger.error(`Failed to send error reply for text command ${name}: ${replyError.message}`);
+        }
       }
     }
   }
@@ -368,6 +372,11 @@ async function handleSlashCommand(interaction) {
       content: 'Unknown command',
       ephemeral: true,
     });
+  }
+
+  // Don't execute if already replied
+  if (interaction.replied) {
+    return;
   }
 
   try {
@@ -392,10 +401,14 @@ async function handleSlashCommand(interaction) {
       ephemeral: true,
     };
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply(reply);
-    } else {
-      await interaction.reply(reply);
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(reply);
+      } else {
+        await interaction.reply(reply);
+      }
+    } catch (replyError) {
+      logger.error(`Failed to send error reply for slash command ${interaction.commandName}: ${replyError.message}`);
     }
   }
 }

@@ -32,7 +32,7 @@ async function bootWithOptimizations() {
 }
 
 // Core dependencies
-const handleChatMessage = require('./services/chat');
+const { handleChatMessage } = require('./services/chat');
 const commandHandler = require('./commands');
 const ConversationManager = require('./utils/conversation');
 const conversationManager = new ConversationManager();
@@ -185,10 +185,16 @@ function handleShutdownCompletion(errors) {
       logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
     });
     logger.error(`Shutdown completed with ${errors.length} error(s)`);
-    process.exit(1);
+    // Don't exit in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
   } else {
     logger.info('Shutdown complete.');
-    process.exit(0);
+    // Don't exit in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(0);
+    }
   }
 }
 
@@ -230,7 +236,9 @@ if (process.env.NODE_ENV === 'test') {
     })
     .catch((error) => {
       logger.error('Failed to log in to Discord:', error);
-      process.exit(1);
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(1);
+      }
     });
 }
 

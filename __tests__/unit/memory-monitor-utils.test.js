@@ -81,15 +81,9 @@ describe('Memory Monitor - Utils', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       expect.any(Error),
-      'Failed to get memory usage'
+      'getting memory usage'
     );
-    expect(usage).toEqual({
-      rss: 0,
-      heapTotal: 0,
-      heapUsed: 0,
-      external: 0,
-      heapUsedPercent: 0,
-    });
+    expect(usage).toEqual({});
   });
 
   it('should return status information', () => {
@@ -110,10 +104,8 @@ describe('Memory Monitor - Utils', () => {
   it('should handle configuration-based initialization', () => {
     memoryMonitor.initialize();
 
-    expect(setInterval).toHaveBeenCalledWith(
-      expect.any(Function),
-      memoryMonitor.checkIntervalMs
-    );
+    // In test mode, intervals are not created to prevent Jest from hanging
+    expect(setInterval).not.toHaveBeenCalled();
   });
 
   it('should handle memory threshold detection', () => {

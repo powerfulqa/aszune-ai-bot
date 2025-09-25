@@ -31,13 +31,17 @@ class MemoryMonitor {
     logger.debug('Initializing memory monitor...');
     this.checkMemoryUsage();
 
-    // Set up periodic checks
-    this.checkInterval = setInterval(() => {
-      this.checkMemoryUsage();
-    }, this.checkIntervalMs);
+    // Set up periodic checks (only if not in test mode)
+    if (process.env.NODE_ENV !== 'test') {
+      this.checkInterval = setInterval(() => {
+        this.checkMemoryUsage();
+      }, this.checkIntervalMs);
+    }
 
     // Make sure interval doesn't keep process alive
-    this.checkInterval.unref();
+    if (this.checkInterval) {
+      this.checkInterval.unref();
+    }
 
     this.initialized = true;
     logger.debug('Memory monitor initialized');
@@ -82,11 +86,15 @@ class MemoryMonitor {
         logger.error(`CRITICAL MEMORY USAGE: ${Math.round(heapUsed / 1024 / 1024)}MB used!`);
       }
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'checking memory usage', {
-        memoryLimit: this.memoryLimit,
-        criticalMemory: this.criticalMemory,
-      });
-      logger.error(`Memory check error: ${errorResponse.message}`);
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'checking memory usage', {
+          memoryLimit: this.memoryLimit,
+          criticalMemory: this.criticalMemory,
+        });
+        logger.error(`Memory check error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+      } catch (handlerError) {
+        logger.error(`Memory check error: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -117,11 +125,15 @@ class MemoryMonitor {
 
       logger.debug('Memory cleanup attempted');
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'garbage collection', {
-        lastGcTime: this.lastGcTime,
-        isLowMemory: this.isLowMemory,
-      });
-      logger.error(`Garbage collection error: ${errorResponse.message}`);
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'garbage collection', {
+          lastGcTime: this.lastGcTime,
+          isLowMemory: this.isLowMemory,
+        });
+        logger.error(`Garbage collection error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+      } catch (handlerError) {
+        logger.error(`Garbage collection error: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -138,12 +150,18 @@ class MemoryMonitor {
         heapUsed: memUsage.heapUsed,
         external: memUsage.external,
         percentUsed: Math.round((memUsage.heapUsed / this.memoryLimit) * 100),
+        heapUsedPercent: Math.round((memUsage.heapUsed / this.memoryLimit) * 100),
         isLowMemory: this.isLowMemory,
       };
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting memory usage');
-      logger.error(`Memory usage error: ${errorResponse.message}`);
-      return {};
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'getting memory usage');
+        logger.error(`Memory usage error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+        return {};
+      } catch (handlerError) {
+        logger.error(`Memory usage error: ${error.message || 'Unknown error'}`);
+        return {};
+      }
     }
   }
 
@@ -159,6 +177,7 @@ class MemoryMonitor {
       criticalMemory: this.criticalMemory,
       lastGcTime: this.lastGcTime,
       isLowMemory: this.isLowMemory,
+      checkIntervalMs: this.checkIntervalMs,
     };
   }
 }

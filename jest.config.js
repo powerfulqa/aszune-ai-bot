@@ -2,6 +2,11 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
+  // Add timeout and force exit settings to prevent hanging
+  testTimeout: 10000,
+  forceExit: true,
+  detectOpenHandles: true,
+  maxWorkers: 1,
   collectCoverageFrom: [
     'src/**/*.js',
     '!**/node_modules/**',
@@ -38,7 +43,7 @@ module.exports = {
     ],
   ],
   // Use the Jest setup file
-  setupFilesAfterEnv: ['./jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
   // Configure coverage thresholds

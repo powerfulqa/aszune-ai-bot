@@ -148,7 +148,6 @@ describe('Conversation Manager - Advanced Features', () => {
     it('clears all conversation data', () => {
       const userId = '123456789012345678';
       conversationManager.addMessage(userId, 'user', 'hello');
-      conversationManager.updateUserStats(userId, 'messages');
       
       expect(conversationManager.getHistory(userId)).toHaveLength(1);
       expect(conversationManager.getUserStats(userId).messages).toBe(1);

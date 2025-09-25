@@ -116,15 +116,28 @@ class Logger {
    * @param {string} message - Message to log
    * @param {*} data - Additional data to log
    */
-  debug(message, data) {
+  debug(message, ...dataArgs) {
     if (this._getLogLevel() <= this.levels.DEBUG) {
       const formattedMessage = this._formatMessage('DEBUG', message);
       console.log(formattedMessage);
-      if (data) console.log(data);
+      
+      // Log each data argument
+      dataArgs.forEach(data => {
+        if (data !== undefined) console.log(data);
+      });
 
       // Write to file
       this._writeToFile(formattedMessage);
-      if (data) this._writeToFile(JSON.stringify(data));
+      dataArgs.forEach(data => {
+        if (data !== undefined) {
+          try {
+            this._writeToFile(JSON.stringify(data));
+          } catch (error) {
+            // Handle circular references
+            this._writeToFile('[Circular Reference]');
+          }
+        }
+      });
     }
   }
 

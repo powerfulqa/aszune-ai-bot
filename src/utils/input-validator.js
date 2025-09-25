@@ -10,12 +10,16 @@ const { ErrorHandler } = require('./error-handler');
  */
 const VALIDATION_PATTERNS = {
   // User ID patterns
+  USER_ID: /^\d{17,19}$/,
   DISCORD_USER_ID: /^\d{17,19}$/,
   DISCORD_SNOWFLAKE: /^\d{17,19}$/,
 
   // Content patterns
+  TEXT: /^[\s\S]{1,4000}$/,
   MESSAGE_CONTENT: /^[\s\S]{1,4000}$/, // 1-4000 characters (Discord limit is 2000, but we allow more for processing)
+  URL: /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
   URL_PATTERN: /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
+  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   EMAIL_PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 
   // Command patterns
@@ -41,12 +45,15 @@ const VALIDATION_PATTERNS = {
  * Validation limits and constraints
  */
 const VALIDATION_LIMITS = {
+  TEXT_MAX_LENGTH: 4000,
   MAX_MESSAGE_LENGTH: 4000,
+  EMAIL_MAX_LENGTH: 254,
+  URL_MAX_LENGTH: 2048,
+  USER_ID_LENGTH: 18,
   MAX_USERNAME_LENGTH: 32,
   MAX_COMMAND_LENGTH: 100,
   MAX_FILENAME_LENGTH: 255,
   MAX_PATH_LENGTH: 500,
-  MAX_URL_LENGTH: 2048,
   MAX_HISTORY_LENGTH: (() => {
     try {
       return config.CONVERSATION_MAX_LENGTH ?? 100;
@@ -61,17 +68,17 @@ const VALIDATION_LIMITS = {
 /**
  * Dangerous patterns that should be sanitized or rejected
  */
-const DANGEROUS_PATTERNS = {
-  SCRIPT_TAGS: /<script[^>]*>.*?<\/script>/gi,
-  HTML_TAGS: /<[^>]*>/g,
-  JAVASCRIPT_PROTOCOL: /javascript:/gi,
-  DATA_PROTOCOL: /data:/gi,
-  VBSCRIPT_PROTOCOL: /vbscript:/gi,
-  ONLOAD_EVENTS: /on\w+\s*=/gi,
-  SQL_INJECTION: /(union|select|insert|update|delete|drop|create|alter|exec|execute)/gi,
-  PATH_TRAVERSAL: /\.\.\/|\.\.\\|\.\.%2f|\.\.%5c/gi,
-  XSS_PATTERNS: /<iframe|<object|<embed|<link|<meta|<style/gi,
-};
+const DANGEROUS_PATTERNS = [
+  /<script[^>]*>.*?<\/script>/gi,
+  /<[^>]*>/g,
+  /javascript:/gi,
+  /data:/gi,
+  /vbscript:/gi,
+  /on\w+\s*=/gi,
+  /(union|select|insert|update|delete|drop|create|alter|exec|execute)/gi,
+  /\.\.\/|\.\.\\|\.\.%2f|\.\.%5c/gi,
+  /<iframe|<object|<embed|<link|<meta|<style/gi,
+];
 
 /**
  * Input validation class
@@ -362,14 +369,14 @@ class InputValidator {
 
     // Apply all sanitization rules
     const sanitizationRules = [
-      { pattern: DANGEROUS_PATTERNS.SCRIPT_TAGS, message: 'Script tags removed' },
-      { pattern: DANGEROUS_PATTERNS.HTML_TAGS, message: 'HTML tags removed' },
-      { pattern: DANGEROUS_PATTERNS.JAVASCRIPT_PROTOCOL, message: 'JavaScript protocol removed' },
-      { pattern: DANGEROUS_PATTERNS.DATA_PROTOCOL, message: 'Data protocol removed' },
-      { pattern: DANGEROUS_PATTERNS.VBSCRIPT_PROTOCOL, message: 'VBScript protocol removed' },
-      { pattern: DANGEROUS_PATTERNS.ONLOAD_EVENTS, message: 'Event handlers removed' },
-      { pattern: DANGEROUS_PATTERNS.PATH_TRAVERSAL, message: 'Path traversal pattern removed' },
-      { pattern: DANGEROUS_PATTERNS.XSS_PATTERNS, message: 'XSS patterns removed' },
+      { pattern: DANGEROUS_PATTERNS[0], message: 'Script tags removed' },
+      { pattern: DANGEROUS_PATTERNS[1], message: 'HTML tags removed' },
+      { pattern: DANGEROUS_PATTERNS[2], message: 'JavaScript protocol removed' },
+      { pattern: DANGEROUS_PATTERNS[3], message: 'Data protocol removed' },
+      { pattern: DANGEROUS_PATTERNS[4], message: 'VBScript protocol removed' },
+      { pattern: DANGEROUS_PATTERNS[5], message: 'Event handlers removed' },
+      { pattern: DANGEROUS_PATTERNS[6], message: 'Path traversal pattern removed' },
+      { pattern: DANGEROUS_PATTERNS[7], message: 'XSS patterns removed' },
     ];
 
     // Apply removal patterns
@@ -381,7 +388,7 @@ class InputValidator {
     });
 
     // Check for detection-only patterns
-    if (DANGEROUS_PATTERNS.SQL_INJECTION.test(sanitized)) {
+    if (DANGEROUS_PATTERNS[6].test(sanitized)) {
       warnings.push('Potential SQL injection pattern detected');
     }
 
@@ -476,7 +483,7 @@ class InputValidator {
   }
 
   static _validateBasicInput(input, maxLength) {
-    if (!input) {
+    if (input === null || input === undefined) {
       return {
         valid: false,
         error: 'Input is required',
@@ -503,20 +510,72 @@ class InputValidator {
       };
     }
 
+    // Empty string is valid for text type
+    if (input.length === 0) {
+      return { valid: true };
+    }
+
     return { valid: true };
   }
 
   static _validateByType(input, type) {
     const typeValidators = {
-      userId: this.validateUserId.bind(this),
-      url: this.validateUrl.bind(this),
-      command: this.validateCommand.bind(this),
-      message: this.validateMessageContent.bind(this),
+      userId: (input) => InputValidator.validateUserId(input),
+      url: (input) => InputValidator.validateUrl(input),
+      command: (input) => InputValidator.validateCommand(input),
+      message: (input) => InputValidator.validateMessageContent(input),
       text: (input) => {
+        // Check length limits first
+        if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
+          return {
+            valid: false,
+            error: 'Input is too long',
+          };
+        }
+        
+        // Check for dangerous patterns first (before sanitization)
+        const dangerousPatterns = [
+          /<script[^>]*>.*?<\/script>/gi,
+          /javascript:/gi,
+          /data:/gi,
+          /vbscript:/gi,
+          /on\w+\s*=/gi,
+          /eval\s*\(/gi,
+          /expression\s*\(/gi,
+          /setTimeout\s*\(/gi,
+          /setInterval\s*\(/gi,
+        ];
+        
+        const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
+        if (hasDangerousContent) {
+          return {
+            valid: false,
+            error: 'Input contains potentially unsafe content',
+          };
+        }
+        
+        
+        // Sanitize content
+        const sanitizationResult = this.sanitizeContent(input);
+        
+        // Allow empty strings
+        if (input.length === 0) {
+          return { valid: true };
+        }
+        
         if (!VALIDATION_PATTERNS.SAFE_TEXT.test(input)) {
           return {
             valid: false,
             error: 'Input contains unsafe characters',
+          };
+        }
+        return { valid: true };
+      },
+      email: (input) => {
+        if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
+          return {
+            valid: false,
+            error: 'Invalid email format',
           };
         }
         return { valid: true };
@@ -531,6 +590,27 @@ class InputValidator {
       valid: false,
       error: `Unknown input type: ${type}`,
     };
+  }
+
+  /**
+   * General input validation method
+   * @param {string} input - Input to validate
+   * @param {string} type - Type of input to validate
+   * @returns {Object} - Validation result
+   */
+  static validateInput(input, type) {
+    // For validation without sanitization, use _validateByType directly
+    return this._validateByType(input, type);
+  }
+
+  /**
+   * Sanitize input by removing dangerous patterns
+   * @param {string} input - Input to sanitize
+   * @returns {string} - Sanitized input
+   */
+  static sanitizeInput(input) {
+    const result = this.sanitizeContent(input);
+    return result.content;
   }
 }
 

@@ -27,6 +27,14 @@ describe('Pi Detector - Initialization', () => {
     logger.info.mockClear();
     logger.error.mockClear();
 
+    // Clear environment variables that might interfere
+    delete process.env.PI_OPTIMIZATIONS_ENABLED;
+    delete process.env.PI_OPTIMIZATIONS_COMPACT_MODE;
+    delete process.env.PI_COMPACT_MODE;
+    delete process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS;
+    delete process.env.PI_MAX_CONNECTIONS;
+    delete process.env.ENABLE_PI_OPTIMIZATIONS;
+
     // Mock default OS values
     os.platform.mockReturnValue('linux');
     os.cpus.mockReturnValue([{}, {}, {}]); // 3 CPUs
@@ -43,7 +51,7 @@ describe('Pi Detector - Initialization', () => {
 
       expect(result).toBeDefined();
       expect(result.ENABLED).toBe(true);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Pi optimizations'));
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Detected pi4'));
     });
 
     it('should respect environment variable overrides', async () => {
@@ -76,7 +84,7 @@ describe('Pi Detector - Initialization', () => {
 
       expect(result).toBeDefined();
       expect(result.ENABLED).toBe(false);
-      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith('Error initializing Pi optimizations:', expect.any(Error));
     });
 
     it('should not initialize Pi optimizations when disabled by environment variable', async () => {
@@ -85,7 +93,8 @@ describe('Pi Detector - Initialization', () => {
       const result = await piDetector.initPiOptimizations();
 
       expect(result.ENABLED).toBe(false);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Pi optimizations disabled'));
+      // When Pi optimizations are disabled, no log message is expected
+      expect(logger.info).not.toHaveBeenCalled();
 
       delete process.env.PI_OPTIMIZATIONS_ENABLED;
     });

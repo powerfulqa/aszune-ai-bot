@@ -68,12 +68,14 @@ class ErrorHandler {
   }
 
   static _categorizeApiError(statusCode, message) {
-    if (!statusCode && !message.includes('API') && !message.includes('HTTP')) {
-      return null;
+    // Check for rate limit errors first (regardless of status code)
+    if (statusCode === 429 || message.includes('429') || message.toLowerCase().includes('rate limit')) {
+      return ERROR_TYPES.RATE_LIMIT_ERROR;
     }
 
-    if (statusCode === 429 || message.includes('429') || message.includes('rate limit')) {
-      return ERROR_TYPES.RATE_LIMIT_ERROR;
+    // If no status code and message doesn't contain API/HTTP indicators, return null
+    if (!statusCode && !message.includes('API') && !message.includes('HTTP')) {
+      return null;
     }
     if (statusCode >= 400 && statusCode < 500) {
       return ERROR_TYPES.API_ERROR;

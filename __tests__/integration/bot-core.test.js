@@ -94,7 +94,7 @@ jest.mock('../../src/services/perplexity-secure', () => ({
 
 jest.mock('../../src/services/chat', () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(async (message) => {
+  handleChatMessage: jest.fn().mockImplementation(async (message) => {
     try {
       // Check if message is from a bot
       if (message.author && message.author.bot) {
@@ -434,7 +434,7 @@ describe('Bot Integration - Core', () => {
     require('../../src/index');
 
     // Get the mocked handleChatMessage function
-    const handleChatMessage = require('../../src/services/chat').default;
+    const { handleChatMessage } = require('../../src/services/chat');
     messageCreateHandler = handleChatMessage;
   });
 
@@ -445,7 +445,7 @@ describe('Bot Integration - Core', () => {
   });
 
   it('should have attached the messageCreate handler', () => {
-    expect(mockOn).toHaveBeenCalledWith('messageCreate', expect.any(Object));
+    expect(mockOn).toHaveBeenCalledWith('messageCreate', expect.any(Function));
   });
 
   it('handles a normal message and replies', async () => {

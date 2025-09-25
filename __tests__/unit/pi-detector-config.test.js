@@ -17,6 +17,14 @@ describe('Pi Detector - Config Generation', () => {
     logger.info.mockClear();
     logger.error.mockClear();
 
+    // Clear environment variables that might interfere
+    delete process.env.PI_OPTIMIZATIONS_ENABLED;
+    delete process.env.PI_OPTIMIZATIONS_COMPACT_MODE;
+    delete process.env.PI_COMPACT_MODE;
+    delete process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS;
+    delete process.env.PI_MAX_CONNECTIONS;
+    delete process.env.ENABLE_PI_OPTIMIZATIONS;
+
     // Mock default OS values
     os.platform.mockReturnValue('linux');
     os.cpus.mockReturnValue([{}, {}, {}]); // 3 CPUs
@@ -29,7 +37,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi4',
         cores: 4,
-        memory: 2 * 1024 * 1024 * 1024, // 2GB
+        ram: 2 * 1024 * 1024 * 1024, // 2GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -46,7 +54,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi4',
         cores: 4,
-        memory: 1 * 1024 * 1024 * 1024, // 1GB
+        ram: 1 * 1024 * 1024 * 1024, // 1GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -63,7 +71,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi4',
         cores: 4,
-        memory: 4 * 1024 * 1024 * 1024, // 4GB
+        ram: 4 * 1024 * 1024 * 1024, // 4GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -80,7 +88,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi3',
         cores: 4,
-        memory: 1 * 1024 * 1024 * 1024, // 1GB
+        ram: 1 * 1024 * 1024 * 1024, // 1GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -97,7 +105,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi5',
         cores: 4,
-        memory: 4 * 1024 * 1024 * 1024, // 4GB
+        ram: 4 * 1024 * 1024 * 1024, // 4GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -114,7 +122,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'pi5',
         cores: 4,
-        memory: 8 * 1024 * 1024 * 1024, // 8GB
+        ram: 8 * 1024 * 1024 * 1024, // 8GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -131,7 +139,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: true,
         model: 'unknown',
         cores: 4,
-        memory: 2 * 1024 * 1024 * 1024, // 2GB
+        ram: 2 * 1024 * 1024 * 1024, // 2GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);
@@ -148,7 +156,7 @@ describe('Pi Detector - Config Generation', () => {
         isPi: false,
         model: 'unknown',
         cores: 8,
-        memory: 16 * 1024 * 1024 * 1024, // 16GB
+        ram: 16 * 1024 * 1024 * 1024, // 16GB
       };
 
       const config = piDetector.generateOptimizedConfig(piInfo);

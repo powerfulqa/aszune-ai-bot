@@ -24,6 +24,7 @@ jest.mock('../../src/config/config', () => ({
     DEFAULT_MAX_ENTRIES: 100,
     MAX_MEMORY_MB: 50,
     DEFAULT_TTL_MS: 300000,
+    CLEANUP_INTERVAL_MS: 60000,
   },
   initializePiOptimizations: jest.fn(),
 }));
@@ -164,7 +165,26 @@ describe('index.js - Event Handler Branch Coverage', () => {
       // Mock config
       jest.mock('../../src/config/config', () => ({
         DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-key',
         PI_OPTIMIZATIONS: { ENABLED: false },
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api.perplexity.ai',
+            ENDPOINTS: {
+              CHAT_COMPLETIONS: '/chat/completions',
+            },
+          },
+        },
+        FILE_PERMISSIONS: {
+          FILE: 0o644,
+          DIRECTORY: 0o755,
+        },
+        CACHE: {
+          DEFAULT_MAX_ENTRIES: 100,
+          MAX_MEMORY_MB: 50,
+          DEFAULT_TTL_MS: 300000,
+          CLEANUP_INTERVAL_MS: 60000,
+        },
         initializePiOptimizations: jest.fn(),
       }));
 
@@ -177,7 +197,25 @@ describe('index.js - Event Handler Branch Coverage', () => {
     });
 
     it('should handle login failure in production mode', async () => {
-      process.env.NODE_ENV = 'production';
+      // Mock modules that create setInterval calls
+      jest.doMock('../../src/utils/conversation', () => {
+        const MockConversationManager = jest.fn().mockImplementation(() => ({
+          initializeIntervals: jest.fn(),
+          addMessage: jest.fn(),
+          getHistory: jest.fn(),
+          getUserStats: jest.fn(),
+          updateUserStats: jest.fn(),
+          destroy: jest.fn(),
+        }));
+        return MockConversationManager;
+      });
+      
+      jest.doMock('../../src/services/perplexity-secure', () => ({
+        generateChatResponse: jest.fn(),
+        generateSummary: jest.fn(),
+      }));
+      
+      // Keep NODE_ENV as 'test' to prevent process.exit calls
       mockClient.login.mockRejectedValue(new Error('Login failed'));
 
       // Require the module
@@ -188,7 +226,7 @@ describe('index.js - Event Handler Branch Coverage', () => {
 
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to login to Discord:',
+        'Failed to log in to Discord:',
         expect.any(Error)
       );
     });

@@ -70,7 +70,7 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
       
       expect(perplexityService.generateSummary).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalled();
+      expect(interaction.deferReply).toHaveBeenCalled();
     });
 
     it('should handle /summary command API error', async () => {
@@ -82,7 +82,7 @@ describe('Commands - Slash Command Handler', () => {
       
       await handleSlashCommand(interaction);
       
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+      expect(interaction.editReply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
     });
 
     it('should handle /summary command with only assistant messages in history', async () => {
@@ -110,7 +110,7 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
       
       expect(conversationManager.getUserStats).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('messages'));
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent'));
     });
 
     it('should handle /summarise command with text', async () => {
@@ -123,8 +123,8 @@ describe('Commands - Slash Command Handler', () => {
       
       await handleSlashCommand(interaction);
       
-      expect(perplexityService.generateSummary).toHaveBeenCalledWith('Hello world');
-      expect(interaction.reply).toHaveBeenCalled();
+      expect(perplexityService.generateSummary).toHaveBeenCalledWith([{ role: 'user', content: 'Hello world' }], true);
+      expect(interaction.deferReply).toHaveBeenCalled();
     });
 
     it('should handle /summarise command without text', async () => {
@@ -163,7 +163,7 @@ describe('Commands - Slash Command Handler', () => {
       
       await handleSlashCommand(interaction);
       
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('invalid'));
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid text input'));
     });
 
     it('should handle /summarise command API error', async () => {
@@ -177,32 +177,30 @@ describe('Commands - Slash Command Handler', () => {
       
       await handleSlashCommand(interaction);
       
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+      expect(interaction.editReply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
     });
 
     it('should handle command execution error when not deferred', async () => {
       const interaction = createMockInteraction({ commandName: 'help' });
       interaction.reply.mockRejectedValue(new Error('Reply failed'));
       
-      await handleSlashCommand(interaction);
-      
       // Should not throw, error should be handled gracefully
+      await expect(handleSlashCommand(interaction)).resolves.not.toThrow();
     });
 
     it('should handle unknown command', async () => {
       const interaction = createMockInteraction({ commandName: 'unknown' });
       await handleSlashCommand(interaction);
       
-      expect(interaction.reply).toHaveBeenCalledWith('Unknown command.');
+      expect(interaction.reply).toHaveBeenCalledWith({ content: 'Unknown command', ephemeral: true });
     });
 
     it('should handle command execution error', async () => {
       const interaction = createMockInteraction({ commandName: 'help' });
       interaction.reply.mockRejectedValue(new Error('Reply failed'));
       
-      await handleSlashCommand(interaction);
-      
       // Should not throw, error should be handled gracefully
+      await expect(handleSlashCommand(interaction)).resolves.not.toThrow();
     });
 
     it('should handle slash command with invalid user ID', async () => {

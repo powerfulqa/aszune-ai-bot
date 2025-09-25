@@ -225,4 +225,7 @@ async function handleChatMessage(message) {
   }
 }
 
-module.exports = handleChatMessage;
+module.exports = {
+  handleChatMessage,
+  default: handleChatMessage,
+};

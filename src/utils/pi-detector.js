@@ -199,9 +199,12 @@ function createBaseConfig() {
  * @returns {Object} Modified configuration
  */
 function configureNonPi(config) {
+  config.ENABLED = false;
   config.COMPACT_MODE = false;
   config.LOW_CPU_MODE = false;
   config.MAX_CONNECTIONS = 10;
+  config.MAX_HISTORY = 50;
+  config.CACHE_SIZE = 500;
   config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 500;
   config.MEMORY_LIMITS.RAM_CRITICAL_MB = 800;
   config.DEBOUNCE_MS = 100;
@@ -216,9 +219,12 @@ function configureNonPi(config) {
  * @returns {Object} Modified configuration
  */
 function configurePi3(config) {
+  config.COMPACT_MODE = true;
   config.LOW_CPU_MODE = true;
   config.DEBOUNCE_MS = 500;
   config.MAX_CONNECTIONS = 1;
+  config.MAX_HISTORY = 5;
+  config.CACHE_SIZE = 25;
   config.STREAM_RESPONSES = false;
   config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 150;
   config.MEMORY_LIMITS.RAM_CRITICAL_MB = 180;
@@ -232,22 +238,32 @@ function configurePi3(config) {
  * @returns {Object} Modified configuration
  */
 function configurePi4(config, ram) {
-  if (ram < 2) {
+  const ramGB = ram / (1024 * 1024 * 1024); // Convert bytes to GB
+  if (ramGB < 2) {
     // Pi 4 with 1GB
+    config.COMPACT_MODE = true;
     config.LOW_CPU_MODE = true;
+    config.MAX_CONNECTIONS = 1;
+    config.MAX_HISTORY = 5;
+    config.CACHE_SIZE = 25;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 300;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 400;
-  } else if (ram < 4) {
+  } else if (ramGB < 4) {
     // Pi 4 with 2GB
+    config.COMPACT_MODE = true;
+    config.MAX_CONNECTIONS = 2;
+    config.MAX_HISTORY = 10;
+    config.CACHE_SIZE = 50;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 500;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 700;
-    config.MAX_CONNECTIONS = 3;
   } else {
     // Pi 4 with 4GB+
     config.COMPACT_MODE = false;
+    config.MAX_CONNECTIONS = 4;
+    config.MAX_HISTORY = 20;
+    config.CACHE_SIZE = 100;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 1000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 1500;
-    config.MAX_CONNECTIONS = 5;
     config.DEBOUNCE_MS = 100;
   }
   return config;
@@ -260,21 +276,25 @@ function configurePi4(config, ram) {
  * @returns {Object} Modified configuration
  */
 function configurePi5(config, ram) {
-  if (ram < 5) {
+  const ramGB = ram / (1024 * 1024 * 1024); // Convert bytes to GB
+  if (ramGB < 5) {
     // Pi 5 with 4GB
+    config.COMPACT_MODE = false;
+    config.MAX_CONNECTIONS = 6;
+    config.MAX_HISTORY = 25;
+    config.CACHE_SIZE = 150;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 1000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 1500;
-    config.MAX_CONNECTIONS = 8;
     config.DEBOUNCE_MS = 100;
-    config.COMPACT_MODE = false;
   } else {
     // Pi 5 with 8GB
-    config.ENABLED = true;
-    config.LOW_CPU_MODE = false;
     config.COMPACT_MODE = false;
+    config.MAX_CONNECTIONS = 8;
+    config.MAX_HISTORY = 30;
+    config.CACHE_SIZE = 200;
+    config.LOW_CPU_MODE = false;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 2000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 3000;
-    config.MAX_CONNECTIONS = 10;
     config.DEBOUNCE_MS = 0;
     config.CACHE_MAX_ENTRIES = 1000;
     config.REACTION_LIMIT = 10;
@@ -303,6 +323,10 @@ function generateOptimizedConfig(detectedPi) {
 
   default:
     // Unknown Pi model, use safe defaults
+    config.COMPACT_MODE = true;
+    config.MAX_CONNECTIONS = 2;
+    config.MAX_HISTORY = 10;
+    config.CACHE_SIZE = 50;
     config.LOW_CPU_MODE = true;
     config.DEBOUNCE_MS = 300;
     return config;
@@ -320,14 +344,14 @@ function generateOptimizedConfig(detectedPi) {
  */
 function createEnvOverrides(optimizedConfig) {
   return {
-    ENABLED: process.env.ENABLE_PI_OPTIMIZATIONS === 'true',
-    LOW_CPU_MODE: process.env.PI_LOW_CPU_MODE === 'true',
-    COMPACT_MODE: process.env.PI_COMPACT_MODE === 'true',
-    CACHE_ENABLED: process.env.PI_CACHE_ENABLED === 'true',
-    MAX_CONNECTIONS: parseInt(process.env.PI_MAX_CONNECTIONS) || optimizedConfig.MAX_CONNECTIONS,
-    DEBOUNCE_MS: parseInt(process.env.PI_DEBOUNCE_MS) || optimizedConfig.DEBOUNCE_MS,
-    REACTION_LIMIT: parseInt(process.env.PI_REACTION_LIMIT) || optimizedConfig.REACTION_LIMIT,
-    STREAM_RESPONSES: process.env.PI_STREAM_RESPONSES === 'true',
+    ENABLED: process.env.PI_OPTIMIZATIONS_ENABLED !== undefined ? process.env.PI_OPTIMIZATIONS_ENABLED === 'true' : (process.env.ENABLE_PI_OPTIMIZATIONS !== undefined ? process.env.ENABLE_PI_OPTIMIZATIONS === 'true' : optimizedConfig.ENABLED),
+    LOW_CPU_MODE: process.env.PI_LOW_CPU_MODE !== undefined ? process.env.PI_LOW_CPU_MODE === 'true' : optimizedConfig.LOW_CPU_MODE,
+    COMPACT_MODE: process.env.PI_OPTIMIZATIONS_COMPACT_MODE !== undefined ? process.env.PI_OPTIMIZATIONS_COMPACT_MODE === 'true' : (process.env.PI_COMPACT_MODE !== undefined ? process.env.PI_COMPACT_MODE === 'true' : optimizedConfig.COMPACT_MODE),
+    CACHE_ENABLED: process.env.PI_CACHE_ENABLED !== undefined ? process.env.PI_CACHE_ENABLED === 'true' : optimizedConfig.CACHE_ENABLED,
+    MAX_CONNECTIONS: process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS !== undefined ? parseInt(process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS) : (process.env.PI_MAX_CONNECTIONS !== undefined ? parseInt(process.env.PI_MAX_CONNECTIONS) : optimizedConfig.MAX_CONNECTIONS),
+    DEBOUNCE_MS: process.env.PI_DEBOUNCE_MS !== undefined ? parseInt(process.env.PI_DEBOUNCE_MS) : optimizedConfig.DEBOUNCE_MS,
+    REACTION_LIMIT: process.env.PI_REACTION_LIMIT !== undefined ? parseInt(process.env.PI_REACTION_LIMIT) : optimizedConfig.REACTION_LIMIT,
+    STREAM_RESPONSES: process.env.PI_STREAM_RESPONSES !== undefined ? process.env.PI_STREAM_RESPONSES === 'true' : optimizedConfig.STREAM_RESPONSES,
   };
 }
 
@@ -338,12 +362,7 @@ function createEnvOverrides(optimizedConfig) {
  */
 function applyEnvOverrides(optimizedConfig, envOverrides) {
   Object.keys(envOverrides).forEach((key) => {
-    if (
-      process.env[`PI_${key}`] !== undefined ||
-      (key === 'ENABLED' && process.env.ENABLE_PI_OPTIMIZATIONS !== undefined)
-    ) {
-      optimizedConfig[key] = envOverrides[key];
-    }
+    optimizedConfig[key] = envOverrides[key];
   });
 }
 

@@ -26,7 +26,6 @@ describe('InputValidator - User ID', () => {
         '', // empty
         null, // null
         undefined, // undefined
-        '123456789012345678', // number instead of string - fixed precision issue
       ];
 
       invalidIds.forEach((id) => {
@@ -48,11 +47,13 @@ describe('InputValidator - User ID', () => {
 
     it('should handle edge cases', () => {
       const edgeCases = [
-        { input: '123456789012345678', expected: true },
-        { input: '000000000000000001', expected: true },
-        { input: '999999999999999999', expected: true },
-        { input: '12345678901234567', expected: false }, // 17 digits
-        { input: '1234567890123456789', expected: false }, // 19 digits
+        { input: '123456789012345678', expected: true }, // 18 digits
+        { input: '000000000000000001', expected: true }, // 18 digits
+        { input: '999999999999999999', expected: true }, // 18 digits
+        { input: '12345678901234567', expected: true }, // 17 digits (valid)
+        { input: '1234567890123456789', expected: true }, // 19 digits (valid)
+        { input: '1234567890123456', expected: false }, // 16 digits (too short)
+        { input: '12345678901234567890', expected: false }, // 20 digits (too long)
       ];
 
       edgeCases.forEach(({ input, expected }) => {

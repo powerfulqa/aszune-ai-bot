@@ -44,6 +44,29 @@ class ConversationManager {
   }
 
   /**
+   * Start cleanup interval (for testing)
+   */
+  startCleanupInterval() {
+    const cleanupInterval =
+      config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
+        ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
+        : config.CACHE.CLEANUP_INTERVAL_MS;
+    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
+    this.activeIntervals.add(this.cleanupInterval);
+  }
+
+  /**
+   * Start save stats interval (for testing)
+   */
+  startSaveStatsInterval() {
+    this.saveStatsInterval = setInterval(
+      () => this.saveUserStats(),
+      config.CACHE.CLEANUP_INTERVAL_MS
+    );
+    this.activeIntervals.add(this.saveStatsInterval);
+  }
+
+  /**
    * Load user stats from disk
    */
   async loadUserStats() {
@@ -198,7 +221,7 @@ class ConversationManager {
    */
   getUserStats(userId) {
     if (!this.userStats.has(userId)) {
-      this.userStats.set(userId, { messages: 0, summaries: 0 });
+      this.userStats.set(userId, { messages: 0, summaries: 0, lastActive: null });
     }
 
     return this.userStats.get(userId);
@@ -217,6 +240,9 @@ class ConversationManager {
     } else if (statType === 'summaries') {
       stats.summaries += 1;
     }
+    
+    // Update last active timestamp
+    stats.lastActive = Date.now();
 
     this.userStats.set(userId, stats);
   }
@@ -261,6 +287,10 @@ class ConversationManager {
     if (this.saveStatsInterval) {
       this.saveStatsInterval = null;
     }
+
+    // Clear all conversation data
+    this.conversations.clear();
+    this.userStats.clear();
 
     // Save stats one last time
     try {

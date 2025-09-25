@@ -31,7 +31,7 @@ describe('Logger - Advanced', () => {
     logger.warn('This should be logged');
     logger.error('This should be logged');
     
-    expect(console.log).toHaveBeenCalledTimes(2); // info and debug (if debug is enabled)
+    expect(console.log).toHaveBeenCalledTimes(1); // info only (debug should not be logged with INFO level)
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -96,8 +96,8 @@ describe('Logger - Advanced', () => {
     logger.warn('This should be logged');
     logger.error('This should be logged');
     
-    // Should default to DEBUG level
-    expect(console.log).toHaveBeenCalledTimes(2);
+    // Should default to INFO level
+    expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });

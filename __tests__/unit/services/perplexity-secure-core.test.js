@@ -80,7 +80,7 @@ describe('PerplexitySecure Service - Core', () => {
       const result = await perplexityService.generateChatResponse(messages);
 
       expect(result).toContain('error occurred');
-      expect(result).toContain('processing the response');
+      expect(result).toContain('unexpected error occurred');
     });
 
     it('should handle empty response', async () => {
@@ -90,7 +90,7 @@ describe('PerplexitySecure Service - Core', () => {
       const result = await perplexityService.generateChatResponse(messages);
 
       expect(result).toContain('error occurred');
-      expect(result).toContain('processing the response');
+      expect(result).toContain('unexpected error occurred');
     });
 
     it('should handle successful response', async () => {

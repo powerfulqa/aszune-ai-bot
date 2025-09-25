@@ -12,19 +12,49 @@
  * @returns {string} - Updated currentChunk value
  */
 function processParagraph(paragraph, effectiveMaxLength, currentChunk, chunks) {
-  // If a single paragraph is too long, split it by sentences
+  // If a single paragraph is too long, split it by sentences or lines
   if (paragraph.length > effectiveMaxLength) {
-    // Improved regex to properly capture sentences with punctuation
+    // First try to split by single line breaks (\n)
+    if (paragraph.includes('\n')) {
+      const lines = paragraph.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Process each line as a sentence, but don't add trailing spaces for line breaks
+        if (line.length > 0) {
+          // Check if the line fits in the current chunk
+          if ((currentChunk + line).length + 1 <= effectiveMaxLength) {
+            currentChunk = currentChunk + line;
+          } else {
+            // Start new chunk
+            if (currentChunk.length > 0) {
+              chunks.push(currentChunk.trim());
+            }
+            currentChunk = line;
+          }
+        }
+        // Add line break after each line except the last one
+        if (i < lines.length - 1) {
+          if (currentChunk.length > 0) {
+            currentChunk += '\n';
+          }
+        }
+      }
+      return currentChunk;
+    }
+    
+    // If no line breaks, split by sentences
     const sentences = paragraph.split(/(?<=[.!?])\s+/);
-
     for (const sentence of sentences) {
       currentChunk = processSentence(sentence, effectiveMaxLength, currentChunk, chunks);
     }
     return currentChunk;
   }
 
-  // Paragraph fits, add it
-  return currentChunk + paragraph + '\n\n';
+  // Paragraph fits, add it with proper spacing
+  if (currentChunk.length > 0) {
+    return currentChunk + '\n\n' + paragraph;
+  }
+  return paragraph;
 }
 
 /**
@@ -90,12 +120,17 @@ function flushSentencePart(sentencePart, currentChunk, chunks) {
 function splitVeryLongWord(word, effectiveMaxLength, currentChunk, chunks) {
   let remainingWord = word;
   while (remainingWord.length > 0) {
-    const chunkSize = Math.min(effectiveMaxLength, remainingWord.length);
+    const chunkSize = Math.max(1, Math.min(effectiveMaxLength, remainingWord.length));
     const wordChunk = remainingWord.substring(0, chunkSize);
     
     if (currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       currentChunk = '';
+    }
+    
+    // Prevent infinite loop by ensuring we always make progress
+    if (chunkSize <= 0) {
+      break;
     }
     
     chunks.push(wordChunk);

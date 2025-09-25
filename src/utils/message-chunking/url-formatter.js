@@ -43,8 +43,11 @@ function formatSocialMediaLinks(text) {
 
     // Handle basic Reddit URLs - convert to proper links (case insensitive, handle www, https/http prefixes)
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(?:www\.)?(reddit\.com\/r\/[^\s.,;!?]+)/gi,
-      '(https://$1)'
+      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(www\.)?(reddit\.com\/r\/[^\s.,;!?]+(?:\?[^\s.,;!?]*)?(?:#[^\s.,;!?]*)?)/gi,
+      (match, www, domain) => {
+        const cleanDomain = domain.toLowerCase();
+        return `(https://${www || ''}${cleanDomain})`;
+      }
     );
 
     // Handle Reddit URLs that are in incomplete Markdown format
@@ -53,9 +56,9 @@ function formatSocialMediaLinks(text) {
       '[$1](https://$1)'
     );
 
-    // Handle plain text r/subreddit references
+    // Handle plain text r/subreddit references (but not when part of another domain)
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/|\/)(r\/[\w\d_]+)(?=[\s.,;!?]|$)/g,
+      /(?<!\(|\[|:\/\/|\/|\.com\/[^\/]*)(r\/[\w\d_]+)(?=[\s.,;!?]|$)/g,
       '[Reddit: $1](https://reddit.com/$1)'
     );
 
@@ -67,8 +70,10 @@ function formatSocialMediaLinks(text) {
 
     // Handle GitHub URLs
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(?:www\.)?(github\.com\/[^\s.,;!?]+)/gi,
-      '(https://$1)'
+      /(?<!\(|\[|:\/\/)(?:https?:\/\/)?(www\.)?(github\.com\/[^\s.,;!?]+(?:\?[^\s.,;!?]*)?(?:#[^\s.,;!?]*)?)/gi,
+      (match, www, domain) => {
+        return `(https://${www || ''}${domain.toLowerCase()})`;
+      }
     );
 
     // Handle Twitter/X URLs - convert to proper links

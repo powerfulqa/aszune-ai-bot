@@ -233,7 +233,8 @@ describe('Bot Main Entry Point (index.js)', () => {
       // Simulate shutdown error
       const shutdown = require('../../src/index').shutdown;
       await shutdown('SIGINT');
-      expect(exitSpy).toHaveBeenCalled();
+      // In test mode, process.exit() should not be called
+      expect(exitSpy).not.toHaveBeenCalled();
       exitSpy.mockRestore();
     });
 

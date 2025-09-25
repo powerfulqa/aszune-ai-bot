@@ -80,12 +80,13 @@ describe('Pi Detector - Detection', () => {
     });
 
     it('should handle CPU frequency detection', async () => {
-      fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2');
+      fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2\nCPU max MHz: 1500.0\nRevision: c03112');
       execSync.mockReturnValue('temp=42.3\'C');
 
       const result = await piDetector.detectPiModel();
 
-      expect(result.cpuInfo.frequency).toBeDefined();
+      expect(result.cpuInfo.maxFrequency).toBeDefined();
+      expect(result.cpuInfo.maxFrequency).toBe(1500.0);
     });
 
     it('should handle temperature reading failure', async () => {
@@ -126,7 +127,7 @@ describe('Pi Detector - Detection', () => {
 
       expect(result.isPi).toBe(false);
       expect(result.model).toBe('unknown');
-      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith('Error detecting Pi model:', expect.any(Error));
     });
   });
 });

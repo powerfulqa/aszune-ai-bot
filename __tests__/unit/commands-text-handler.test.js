@@ -97,9 +97,8 @@ describe('Commands - Text Command Handler', () => {
       const message = createMockMessage({ content: '!help' });
       message.reply.mockRejectedValue(new Error('Reply failed'));
       
-      await handleTextCommand(message);
-      
       // Should not throw, error should be handled gracefully
+      await expect(handleTextCommand(message)).resolves.not.toThrow();
     });
 
     it('should handle !summary command API error', async () => {
@@ -111,7 +110,7 @@ describe('Commands - Text Command Handler', () => {
       
       await handleTextCommand(message);
       
-      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
     });
 
     it('should handle !stats command', async () => {
@@ -119,14 +118,14 @@ describe('Commands - Text Command Handler', () => {
       await handleTextCommand(message);
       
       expect(conversationManager.getUserStats).toHaveBeenCalledWith(message.author.id);
-      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('messages'));
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent'));
     });
 
     it('should handle !summarise command with text', async () => {
       const message = createMockMessage({ content: '!summarise Hello world' });
       await handleTextCommand(message);
       
-      expect(perplexityService.generateSummary).toHaveBeenCalledWith('Hello world');
+      expect(perplexityService.generateSummary).toHaveBeenCalledWith([{ role: 'user', content: 'Hello world' }], true);
       expect(message.reply).toHaveBeenCalled();
     });
 
@@ -134,7 +133,7 @@ describe('Commands - Text Command Handler', () => {
       const message = createMockMessage({ content: '!summerise Hello world' });
       await handleTextCommand(message);
       
-      expect(perplexityService.generateSummary).toHaveBeenCalledWith('Hello world');
+      expect(perplexityService.generateSummary).toHaveBeenCalledWith([{ role: 'user', content: 'Hello world' }], true);
       expect(message.reply).toHaveBeenCalled();
     });
 
@@ -156,7 +155,7 @@ describe('Commands - Text Command Handler', () => {
       const message = createMockMessage({ content: '!summarise <script>alert("xss")</script>' });
       await handleTextCommand(message);
       
-      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('invalid'));
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid text input'));
     });
 
     it('should handle !summarise command API error', async () => {
@@ -165,7 +164,7 @@ describe('Commands - Text Command Handler', () => {
       
       await handleTextCommand(message);
       
-      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('error'));
+      expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
     });
 
     it('should handle text command with invalid user ID', async () => {
@@ -179,14 +178,14 @@ describe('Commands - Text Command Handler', () => {
       const message = createMockMessage({ content: '!summarise This is a test' });
       await handleTextCommand(message);
       
-      expect(perplexityService.generateSummary).toHaveBeenCalledWith('This is a test');
+      expect(perplexityService.generateSummary).toHaveBeenCalledWith([{ role: 'user', content: 'This is a test' }], true);
     });
 
     it('should handle text command parsing for summerise (alternative spelling)', async () => {
       const message = createMockMessage({ content: '!summerise This is a test' });
       await handleTextCommand(message);
       
-      expect(perplexityService.generateSummary).toHaveBeenCalledWith('This is a test');
+      expect(perplexityService.generateSummary).toHaveBeenCalledWith([{ role: 'user', content: 'This is a test' }], true);
     });
 
     it('should return null for unknown command', async () => {

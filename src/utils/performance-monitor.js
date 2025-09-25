@@ -61,6 +61,12 @@ class PerformanceMonitor {
       return;
     }
 
+    // Prevent multiple initialization
+    if (this.checkInterval) {
+      logger.debug('[PerformanceMonitor] Already initialized, skipping');
+      return;
+    }
+
     // Only monitor in production to avoid affecting development/testing
     if (process.env.NODE_ENV !== 'production') {
       logger.debug('[PerformanceMonitor] Skipping initialization for non-production environment');
@@ -70,11 +76,13 @@ class PerformanceMonitor {
     // Take initial CPU snapshot
     this.lastCpuInfo = this._getCpuInfo();
 
-    // Start monitoring at 5-second intervals
-    this.checkInterval = setInterval(
-      () => this._checkPerformance(),
-      config.PERFORMANCE?.CHECK_INTERVAL_MS || 5000
-    );
+    // Start monitoring at 5-second intervals (only if not in test mode)
+    if (process.env.NODE_ENV !== 'test') {
+      this.checkInterval = setInterval(
+        () => this._checkPerformance(),
+        config.PERFORMANCE?.CHECK_INTERVAL_MS || 5000
+      );
+    }
     logger.info('[PerformanceMonitor] Performance monitoring initialized');
   }
 

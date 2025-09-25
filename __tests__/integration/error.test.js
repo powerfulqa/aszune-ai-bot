@@ -14,7 +14,7 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }]),
 }));
 
-const handleChatMessage = require('../../src/services/chat');
+const { handleChatMessage } = require('../../src/services/chat');
 const { handleTextCommand } = require('../../src/commands');
 const ConversationManager = require('../../src/utils/conversation');
 const logger = require('../../src/utils/logger');

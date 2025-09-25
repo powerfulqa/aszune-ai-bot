@@ -30,7 +30,7 @@ describe('InputValidator - General Validation', () => {
       const result = InputValidator.validateInput(longInput, 'text');
       
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('exceeds maximum length');
+      expect(result.error).toContain('too long');
     });
 
     it('should reject inputs with dangerous patterns', () => {

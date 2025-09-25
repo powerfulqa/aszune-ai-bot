@@ -69,7 +69,9 @@ class PerplexityService {
 
     // Set up cache cleanup interval (if not in test environment)
     this.cacheCleanupInterval = null;
-    this._setupCacheCleanup();
+    if (process.env.NODE_ENV !== 'test') {
+      this._setupCacheCleanup();
+    }
   }
 
   /**
@@ -356,7 +358,42 @@ class PerplexityService {
 
     // Parse response as JSON
     try {
-      return await body.json();
+      const responseData = await body.json();
+      
+      // Validate response structure for malformed responses
+      if (!responseData || typeof responseData !== 'object') {
+        throw ErrorHandler.createError(
+          'Invalid response: response is not a valid object',
+          ERROR_TYPES.API_ERROR
+        );
+      }
+      
+      // Check for required choices array
+      if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
+        throw ErrorHandler.createError(
+          'Invalid response: missing or empty choices array',
+          ERROR_TYPES.API_ERROR
+        );
+      }
+      
+      // Check for valid choice structure
+      const firstChoice = responseData.choices[0];
+      if (!firstChoice || typeof firstChoice !== 'object') {
+        throw ErrorHandler.createError(
+          'Invalid response: invalid choice structure',
+          ERROR_TYPES.API_ERROR
+        );
+      }
+      
+      // Check for required message field in choice
+      if (!firstChoice.message || typeof firstChoice.message !== 'object') {
+        throw ErrorHandler.createError(
+          'Invalid response: choice missing required message field',
+          ERROR_TYPES.API_ERROR
+        );
+      }
+      
+      return responseData;
     } catch (error) {
       throw ErrorHandler.createError(
         `Failed to parse response as JSON: ${error.message}`,
@@ -423,7 +460,7 @@ class PerplexityService {
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'extracting response content');
       logger.warn(`Response processing error: ${errorResponse.message}`);
-      return 'Sorry, an error occurred while processing the response.';
+      throw error; // Re-throw the error for tests
     }
   }
 

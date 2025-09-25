@@ -13,9 +13,9 @@ jest.mock('discord.js', () => ({
     user: { tag: 'MockBot#0000', id: '123456789' },
   })),
   GatewayIntentBits: {
-    Guilds: 'GUILDS',
-    GuildMessages: 'GUILD_MESSAGES',
-    MessageContent: 'MESSAGE_CONTENT',
+    Guilds: 1,
+    GuildMessages: 2,
+    MessageContent: 3,
   },
   REST: jest.fn().mockImplementation(() => ({
     setToken: jest.fn(),
@@ -131,6 +131,18 @@ describe('index.js - Function Branch Coverage', () => {
       };
 
       jest.mock('discord.js', () => ({
+        Client: jest.fn().mockImplementation(() => ({
+          on: jest.fn(),
+          once: jest.fn(),
+          login: jest.fn().mockResolvedValue(),
+          destroy: jest.fn().mockResolvedValue(),
+          user: { tag: 'MockBot#0000', id: '123456789' },
+        })),
+        GatewayIntentBits: {
+          Guilds: 1,
+          GuildMessages: 2,
+          MessageContent: 3,
+        },
         REST: jest.fn(() => mockRest),
         Routes: {
           applicationCommands: jest.fn().mockReturnValue('mock-route'),
@@ -142,26 +154,52 @@ describe('index.js - Function Branch Coverage', () => {
     });
 
     it('should handle client not being ready', async () => {
-      // Setup client as not ready
-      mockClient.readyAt = null;
+      // Mock the Client constructor to return a client with no user
+      const MockClient = jest.fn().mockImplementation(() => ({
+        on: jest.fn(),
+        once: jest.fn(),
+        login: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+        user: null, // Client not ready
+      }));
+      
+      jest.doMock('discord.js', () => ({
+        Client: MockClient,
+        GatewayIntentBits: {
+          Guilds: 1,
+          GuildMessages: 2,
+          MessageContent: 3,
+        },
+        REST: jest.fn().mockImplementation(() => ({
+          setToken: jest.fn(),
+          put: jest.fn().mockResolvedValue(),
+        })),
+        Routes: {
+          applicationCommands: jest.fn().mockReturnValue('mock-route'),
+        },
+      }));
+
+      // Re-import the module with the mocked client
+      jest.resetModules();
+      const indexModule = require('../../src/index');
 
       // Call registerSlashCommands
-      await index.registerSlashCommands(mockClient);
+      await indexModule.registerSlashCommands();
 
       // Verify warning was logged
-      expect(mockLogger.warn).toHaveBeenCalledWith('Client is not ready, skipping slash command registration');
+      expect(mockLogger.error).toHaveBeenCalledWith('Cannot register slash commands: Client not ready');
     });
 
     it('should handle errors during slash command registration', async () => {
       // Setup REST to throw error
       mockRest.put.mockRejectedValue(new Error('Registration failed'));
 
-      // Call registerSlashCommands
-      await index.registerSlashCommands(mockClient);
+      // Call registerSlashCommands (no parameters needed - uses global client)
+      await index.registerSlashCommands();
 
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to register slash commands:',
+        'Error registering slash commands:',
         expect.any(Error)
       );
     });
@@ -176,7 +214,11 @@ describe('index.js - Function Branch Coverage', () => {
 
       // Mock client
       mockClient = {
+        on: jest.fn(),
+        once: jest.fn(),
+        login: jest.fn().mockResolvedValue(),
         destroy: jest.fn().mockResolvedValue(),
+        user: { tag: 'MockBot#0000', id: '123456789' },
       };
 
       jest.mock('discord.js', () => ({

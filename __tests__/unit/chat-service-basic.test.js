@@ -13,6 +13,7 @@ jest.mock('../../src/commands', () => ({
 }));
 
 const chatService = require('../../src/services/chat');
+const handleChatMessage = chatService.handleChatMessage || chatService.default || chatService;
 const perplexityService = require('../../src/services/perplexity-secure');
 const ConversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
@@ -67,7 +68,7 @@ describe('Chat Service - Basic', () => {
     const botMessage = createMessage('hello');
     botMessage.author.bot = true;
 
-    await chatService(botMessage);
+    await handleChatMessage(botMessage);
 
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
     expect(botMessage.reply).not.toHaveBeenCalled();
@@ -76,7 +77,7 @@ describe('Chat Service - Basic', () => {
   it('should ignore empty messages', async () => {
     const emptyMessage = createMessage('');
 
-    await chatService(emptyMessage);
+    await handleChatMessage(emptyMessage);
 
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
     expect(emptyMessage.reply).not.toHaveBeenCalled();
@@ -85,7 +86,7 @@ describe('Chat Service - Basic', () => {
   it('should handle regular chat messages', async () => {
     const message = createMessage('Hello, how are you?');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(perplexityService.generateChatResponse).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalled();
@@ -94,7 +95,7 @@ describe('Chat Service - Basic', () => {
   it('should handle command messages', async () => {
     const commandMessage = createMessage('!help');
 
-    await chatService(commandMessage);
+    await handleChatMessage(commandMessage);
 
     expect(commandHandler.handleTextCommand).toHaveBeenCalledWith(commandMessage);
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
@@ -104,7 +105,7 @@ describe('Chat Service - Basic', () => {
     mockConversationManager.isRateLimited.mockReturnValue(true);
     const message = createMessage('Hello');
 
-    await chatService(message);
+    await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
