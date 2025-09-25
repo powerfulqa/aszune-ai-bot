@@ -77,12 +77,17 @@ describe('Pi Detector - Initialization', () => {
     });
 
     it('should handle errors and return safe defaults', async () => {
-      // Mock file read failure
+      // Clear environment variables that might affect the result
+      delete process.env.ENABLE_PI_OPTIMIZATIONS;
+      delete process.env.PI_OPTIMIZATIONS_ENABLED;
+      
+      // Mock file read failure to trigger error handling
       fs.readFile.mockRejectedValue(new Error('File read failed'));
 
       const result = await piDetector.initPiOptimizations();
 
       expect(result).toBeDefined();
+      // When file read fails, the function should return safe defaults
       expect(result.ENABLED).toBe(false);
       expect(logger.error).toHaveBeenCalledWith('Error initializing Pi optimizations: Pi detection failed');
     });

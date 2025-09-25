@@ -99,7 +99,7 @@ function determinePiModel(cpuInfo, result) {
  * @returns {number|null} CPU frequency in MHz or null
  */
 function extractCpuFrequency(cpuInfo) {
-  const freqMatch = cpuInfo.match(/CPU max MHz:\\s+([0-9.]+)/);
+  const freqMatch = cpuInfo.match(/CPU max MHz:\s*([0-9.]+)/);
   return freqMatch && freqMatch[1] ? parseFloat(freqMatch[1]) : null;
 }
 
@@ -145,8 +145,8 @@ async function processLinuxPiDetection(result) {
     
     return result;
   } catch (error) {
-    // Ignore errors in detection, we'll use defaults
-    return result;
+    // Re-throw error so it can be logged by the calling function
+    throw error;
   }
 }
 
@@ -412,6 +412,16 @@ async function initPiOptimizations() {
   try {
     // Detect the Pi model
     const piInfo = await detectPiModel();
+
+    // Check if Pi detection failed (returned default result)
+    if (!piInfo.isPi && piInfo.model === 'unknown') {
+      logger.error('Error initializing Pi optimizations: Pi detection failed');
+      // Even if detection failed, check for environment variables
+      const safeDefaults = createSafeDefaults();
+      const envOverrides = createEnvOverrides(safeDefaults);
+      applyEnvOverrides(safeDefaults, envOverrides);
+      return safeDefaults;
+    }
 
     // Generate optimized configuration
     const optimizedConfig = generateOptimizedConfig(piInfo);

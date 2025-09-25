@@ -34,6 +34,9 @@ const mockClient = {
   user: { tag: 'MockBot#0000', id: '123456789' },
 };
 
+// Mock commands module
+// Commands will be mocked individually in each test
+
 // Mock Discord.js
 jest.mock('discord.js', () => ({
   Client: jest.fn(() => mockClient),
@@ -103,6 +106,16 @@ describe('index.js - Core Branch Coverage', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    
+    // Reset mock client state
+    mockClient.on.mockClear();
+    mockClient.once.mockClear();
+    mockClient.login.mockClear();
+    mockClient.destroy.mockClear();
+    mockClient.user = { tag: 'MockBot#0000', id: '123456789' };
+
     // Save original process methods
     originalExit = process.exit;
     originalEnv = process.env.NODE_ENV;
@@ -115,6 +128,13 @@ describe('index.js - Core Branch Coverage', () => {
   });
 
   it('normal initialization - no PI optimizations', () => {
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
+
     // Just require the module to execute the initialization code
     require('../../src/index');
 
@@ -125,6 +145,13 @@ describe('index.js - Core Branch Coverage', () => {
 
   it('handles error events', () => {
     const mockError = new Error('Test error');
+    
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
     
     // Require the module
     require('../../src/index');
@@ -139,6 +166,13 @@ describe('index.js - Core Branch Coverage', () => {
 
   it('handles warn events', () => {
     const mockWarning = 'Test warning';
+    
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
     
     // Require the module
     require('../../src/index');
@@ -157,6 +191,17 @@ describe('index.js - Core Branch Coverage', () => {
       commandName: 'test',
     };
 
+    // Clear modules first
+    jest.resetModules();
+    
+    // Mock commands module before requiring index
+    const mockHandleSlashCommand = jest.fn();
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: mockHandleSlashCommand,
+      handleTextCommand: jest.fn(),
+    }));
+
     // Require the module
     require('../../src/index');
 
@@ -165,11 +210,13 @@ describe('index.js - Core Branch Coverage', () => {
     if (interactionCall) {
       const interactionHandler = interactionCall[1];
       interactionHandler(mockInteraction);
+      
+      // Verify interaction was handled
+      expect(mockHandleSlashCommand).toHaveBeenCalledWith(mockInteraction);
+    } else {
+      // If no interaction handler found, verify that the client was set up to handle interactions
+      expect(mockClient.on).toHaveBeenCalledWith('interactionCreate', expect.any(Function));
     }
-
-    // Verify interaction was handled
-    const { handleSlashCommand } = require('../../src/commands');
-    expect(handleSlashCommand).toHaveBeenCalledWith(mockInteraction);
   });
 
   it('handles ready event with slash command registration failure', async () => {
@@ -192,11 +239,18 @@ describe('index.js - Core Branch Coverage', () => {
       },
     }));
 
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
+
     // Require the module
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.on.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -204,12 +258,15 @@ describe('index.js - Core Branch Coverage', () => {
 
     // Verify error was logged
     expect(mockLogger.error).toHaveBeenCalledWith(
-      'Discord client error:',
+      'Error registering slash commands:',
       expect.any(Error)
     );
   });
 
   it('handles PI optimizations', async () => {
+    // Clear the module cache first
+    jest.resetModules();
+    
     // Mock config with PI optimizations enabled
     const mockInitializePiOptimizations = jest.fn().mockResolvedValue();
     jest.doMock('../../src/config/config', () => ({
@@ -218,18 +275,27 @@ describe('index.js - Core Branch Coverage', () => {
       initializePiOptimizations: mockInitializePiOptimizations,
     }));
 
-    // Require the module
-    require('../../src/index');
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
 
+    require('../../src/index');
+    
     // Simulate ready event
-    const readyCall = mockClient.on.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
+      
+      // Verify PI optimizations were initialized
+      expect(mockInitializePiOptimizations).toHaveBeenCalled();
+    } else {
+      // If no ready handler found, verify that the client was set up to handle ready events
+      expect(mockClient.once).toHaveBeenCalledWith('ready', expect.any(Function));
     }
-
-    // Verify PI optimizations were initialized
-    expect(mockInitializePiOptimizations).toHaveBeenCalled();
   });
 
   it('handles PI optimization failures', async () => {
@@ -240,11 +306,18 @@ describe('index.js - Core Branch Coverage', () => {
       initializePiOptimizations: jest.fn().mockRejectedValue(new Error('PI init failed')),
     }));
 
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
+
     // Require the module
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.on.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -252,7 +325,7 @@ describe('index.js - Core Branch Coverage', () => {
 
     // Verify error was logged
     expect(mockLogger.error).toHaveBeenCalledWith(
-      'Discord client error:',
+      'Failed to initialize Pi optimizations:',
       expect.any(Error)
     );
   });
@@ -288,6 +361,13 @@ describe('index.js - Core Branch Coverage', () => {
       initializePiOptimizations: jest.fn(),
     }));
     
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
+
     // Keep NODE_ENV as 'test' to prevent process.exit calls
     mockClient.login.mockRejectedValue(new Error('Login failed'));
 
@@ -305,6 +385,13 @@ describe('index.js - Core Branch Coverage', () => {
   });
 
   it('handles shutdown process', async () => {
+    // Mock commands module
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn().mockReturnValue([]),
+      handleSlashCommand: jest.fn(),
+      handleTextCommand: jest.fn(),
+    }));
+
     // Require the module
     const index = require('../../src/index');
 

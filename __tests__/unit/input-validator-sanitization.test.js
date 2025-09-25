@@ -64,7 +64,7 @@ describe('InputValidator - Sanitization', () => {
       ];
 
       testCases.forEach(({ input, type, expected }) => {
-        const result = InputValidator.validateAndSanitize(input, type);
+        const result = InputValidator.validateAndSanitize(input, { type });
         expect(result.valid).toBe(expected);
       });
     });
