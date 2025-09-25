@@ -7,6 +7,7 @@
 let mockGlobalConversationManager = null;
 
 // Mock dependencies
+jest.mock('axios');
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn().mockImplementation(async (message) => {
     console.log('Command handler called with message:', message.content);
