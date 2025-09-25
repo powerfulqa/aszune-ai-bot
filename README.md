@@ -59,7 +59,7 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   modern user experience.
 - 🧪 **Comprehensive Testing:** 380+ automated tests covering all key functionality with 82%+ code
   coverage.
-- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
+- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with
   82.45% branch coverage for critical components.
@@ -69,6 +69,8 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   - 🔢 **Clear Numbering:** Adds "[1/3]", "[2/3]", etc. prefixes to indicate message sequence
   - 📄 **Word Boundary Preservation:** Ensures words at chunk boundaries remain properly separated
   - 📋 **Full Content Delivery:** No more truncated responses, even for very long messages
+  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper formatting
+  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or mid-URL
 
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
   resource-constrained devices like Raspberry Pi 3.
@@ -86,6 +88,10 @@ Raspberry Pi devices from Pi 3 to Pi 5.
 - 🧪 **Test Suite Reliability:** All tests now pass, with relaxed expectations and robust mocking.
   CI will not fail due to test issues.
 - 📝 **Documentation and Release Notes:** Updated to reflect all recent changes and fixes.
+- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for optimal performance.
+- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and ensure data integrity.
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource utilization.
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management.
 
 ---
 
@@ -205,21 +211,45 @@ script for Pi deployments.
 ```
 aszune-ai-bot/
 ├── src/
-│   ├── index.js           # Main entry point
-│   ├── commands/          # Command handlers
-│   ├── config/            # Configuration settings
-│   ├── services/          # API and core services
-│   └── utils/             # Utility functions and helpers
-├── package.json           # Project metadata
-├── package-lock.json      # Dependency lock file
-├── ecosystem.config.js    # PM2 deployment config
-├── .env                   # Environment secrets (not committed)
-├── .gitignore             # Ignored files
-├── __tests__/             # Unit and integration tests
-├── __mocks__/             # Test mocks
-├── jest.config.js         # Jest test configuration
-├── jest.setup.js          # Jest setup file
-└── coverage/              # Code coverage output (Codecov)
+│   ├── index.js                    # Main entry point
+│   ├── commands/                   # Command handlers
+│   │   └── index.js               # Unified command handler
+│   ├── config/                     # Configuration settings
+│   │   └── config.js              # Global configuration
+│   ├── services/                   # API and core services
+│   │   ├── chat.js                # Chat message handler
+│   │   ├── perplexity-secure.js   # Perplexity API service
+│   │   └── storage.js             # Data storage service
+│   └── utils/                      # Utility functions and helpers
+│       ├── conversation.js         # Conversation management
+│       ├── error-handler.js        # Error handling utilities
+│       ├── input-validator.js      # Input validation
+│       ├── logger.js               # Logging utilities
+│       ├── memory-monitor.js       # Memory monitoring
+│       ├── message-chunker.js      # Message chunking
+│       ├── message-chunking/       # Enhanced chunking system
+│       │   ├── index.js           # Main chunking coordinator
+│       │   ├── chunk-boundary-handler.js
+│       │   ├── source-reference-processor.js
+│       │   └── url-formatter.js
+│       ├── pi-detector.js          # Raspberry Pi detection
+│       └── [other utilities]       # Additional utility modules
+├── data/                           # Persistent data storage
+│   ├── question_cache.json        # Response cache
+│   └── user_stats.json            # User statistics
+├── docs/                          # Version-specific documentation
+├── wiki/                          # Comprehensive documentation
+├── __tests__/                     # Test suites
+│   ├── integration/               # Integration tests
+│   ├── unit/                      # Unit tests
+│   └── utils/                     # Test utilities
+├── __mocks__/                     # Test mocks
+├── coverage/                      # Code coverage reports
+├── package.json                   # Project metadata
+├── ecosystem.config.js            # PM2 deployment config
+├── jest.config.js                 # Jest test configuration
+├── jest.setup.js                  # Jest setup file
+└── .env                           # Environment secrets (not committed)
 ```
 
 ---

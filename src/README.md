@@ -5,8 +5,8 @@
 
 **Aszune AI Bot v1.4.0** is a Discord bot designed to provide gaming lore, game logic, guides, and
 advice using the Perplexity API with the **sonar** model. This version features comprehensive test
-coverage improvements, enhanced error handling, and robust testing infrastructure for
-production-ready stability.
+coverage improvements, enhanced error handling, robust testing infrastructure, and a complete
+utility ecosystem for production-ready stability and performance.
 
 ---
 
@@ -44,6 +44,12 @@ All existing features from the main branch, plus:
 - 🔄 **Background Processing:** Scheduled tasks for maintenance operations
 - 🧪 **Enhanced Testing:** 380+ automated tests with 82%+ code coverage and comprehensive error
   handling
+- 🛡️ **Comprehensive Error Handling:** Advanced error handling system with context-aware error messages
+- 🔍 **Input Validation:** Complete input sanitization and validation system
+- 🧠 **Memory Management:** Advanced memory monitoring and automatic garbage collection
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management
+- 🎯 **Advanced Chunking:** Enhanced message chunking with intelligent boundary detection and source link processing
 
 ---
 
@@ -158,18 +164,38 @@ commands:
 ```
 aszune-ai-bot/
 ├── src/                     # Source code
+│   ├── index.js             # Main entry point
 │   ├── commands/            # Command handlers
+│   │   └── index.js         # Unified command handler
 │   ├── config/              # Configuration files
+│   │   └── config.js        # Global configuration
 │   ├── services/            # External services and API clients
+│   │   ├── chat.js          # Chat message handler
+│   │   ├── perplexity-secure.js # Perplexity API service
+│   │   └── storage.js       # Data storage service
 │   └── utils/               # Utility functions and helpers
+│       ├── conversation.js  # Conversation management
+│       ├── error-handler.js # Error handling utilities
+│       ├── input-validator.js # Input validation
+│       ├── logger.js        # Logging utilities
+│       ├── memory-monitor.js # Memory monitoring
+│       ├── message-chunker.js # Message chunking
+│       ├── message-chunking/ # Enhanced chunking system
+│       ├── pi-detector.js   # Raspberry Pi detection
+│       ├── performance-monitor.js # Performance tracking
+│       └── [other utilities] # Additional utility modules
 ├── data/                    # Persistent data storage
+│   ├── question_cache.json # Response cache
+│   └── user_stats.json     # User statistics
 ├── __tests__/               # Test files
 │   ├── integration/         # Integration tests
 │   ├── unit/                # Unit tests
 │   └── utils/               # Test utilities
 ├── __mocks__/               # Mock files for testing
+├── docs/                    # Version-specific documentation
+├── wiki/                    # Comprehensive documentation
+├── coverage/                # Code coverage reports
 ├── .env                     # Environment variables (not in git)
-├── .gitignore               # Git ignore file
 ├── ecosystem.config.js      # PM2 configuration
 ├── jest.config.js           # Jest configuration
 ├── package.json             # Node.js dependencies and scripts

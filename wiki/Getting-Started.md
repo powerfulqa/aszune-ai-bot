@@ -6,7 +6,7 @@ This guide will walk you through setting up Aszune AI Bot for your Discord serve
 
 Before you begin, make sure you have:
 
-- Node.js (v14 or later)
+- Node.js v20.18.1 or later
 - A Discord bot token (from the
   [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)

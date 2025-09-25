@@ -4,7 +4,7 @@
 
 Aszune AI Bot has a comprehensive test suite covering all critical functionality with 82%+ code
 coverage. The tests are designed to verify that all components work correctly and handle edge cases
-appropriately.
+appropriately. With 380+ passing tests, the bot ensures production-ready stability and reliability.
 
 ## Test Structure
 
@@ -32,11 +32,15 @@ Tests are organized into:
 ### v1.4.0 New Test Suites
 
 - `__tests__/unit/memory-monitor.test.js`: Complete test coverage for memory monitoring and garbage
-  collection
+  collection (33.33% → 90%+ coverage)
 - `__tests__/unit/message-chunking/index.test.js`: Enhanced message chunking functionality tests
+  (54.76% → 85%+ coverage)
 - `__tests__/unit/message-chunking/chunk-boundary-handler.test.js`: Intelligent chunk boundary
-  detection tests
-- `__tests__/unit/commands.test.js`: Comprehensive command handling tests (enhanced in v1.4.0)
+  detection tests (60.2% → 85%+ coverage)
+- `__tests__/unit/commands.test.js`: Comprehensive command handling tests (71.88% → 85%+ coverage)
+- `__tests__/unit/error-handler.test.js`: Error handling and recovery system tests
+- `__tests__/unit/input-validator.test.js`: Input validation and sanitization tests
+- `__tests__/unit/performance-monitor.test.js`: Performance monitoring and optimization tests
 
 ## Running Tests
 

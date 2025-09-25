@@ -12,17 +12,22 @@ maintainable.
 ### Core Components
 
 1. **Discord Interface** - Handles interactions with Discord's API
-2. **Command Handler** - Processes and routes commands
-3. **Perplexity API Client** - Manages communication with Perplexity's API
-4. **Conversation Manager** - Tracks and stores user conversations
+2. **Command Handler** - Processes and routes commands (both text and slash commands)
+3. **Perplexity API Client** - Manages communication with Perplexity's API with secure caching
+4. **Conversation Manager** - Tracks and stores user conversations with class-based architecture
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Message Chunker** - Intelligently splits long messages into multiple chunks while preserving
-   content and formatting
+7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while preserving
+   content and formatting with advanced boundary detection
 8. **Response Caching System** - Securely stores and retrieves responses to save API calls for
    repeated questions
-9. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-10. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
+9. **Error Handler** - Comprehensive error handling and recovery system
+10. **Input Validator** - Input sanitization and validation system
+11. **Memory Monitor** - Advanced memory usage tracking and garbage collection
+12. **Performance Monitor** - Real-time performance tracking and optimization
+13. **Storage Service** - Data persistence and management
+14. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
+15. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
     optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
     script, which sets environment variables and applies system-level tweaks before launching
     Node.js. For production deployments, use PM2 with the shell script as the entry point:
@@ -39,47 +44,61 @@ optimisations.
 ```
 aszune-ai-bot/
 ├── src/
-│   ├── index.js           # Main entry point
-│   ├── commands/          # Command handlers
-│   │   ├── clearHistory.js
-│   │   ├── help.js
-│   │   ├── stats.js
-│   │   ├── summarise.js
-│   │   └── summary.js
-│   ├── config/            # Configuration settings
-│   │   └── config.js      # Global configuration
-│   ├── services/          # API and core services
-│   │   ├── perplexityService.js
-│   │   └── conversationService.js
-│   └── utils/             # Utility functions and helpers
-│       ├── emojiUtils.js
-│       ├── message-chunker.js # Message splitting utility
-│       ├── rateLimiter.js
-│       └── stringUtils.js
-├── scripts/               # Development and utility scripts
-│   ├── test-chunking.js   # Test script for message chunking
-│   ├── test-chunking.bat  # Windows batch file to run chunking test
-│   └── test-chunking.sh   # Unix shell script to run chunking test
-├── docs/                  # Documentation and version-specific release notes
-│   ├── README.md          # Index of available release notes
-│   ├── v1.3.0.md          # Version 1.3.0 release notes
-│   ├── v1.3.1.md          # Version 1.3.1 release notes
-│   ├── v1.3.2.md          # Version 1.3.2 release notes
-│   └── v1.4.0.md          # Version 1.4.0 release notes
-├── package.json           # Project metadata
-├── package-lock.json      # Dependency lock file
-├── ecosystem.config.js    # PM2 deployment config
-├── .env                   # Environment secrets (not committed)
-├── .gitignore             # Ignored files
-├── __tests__/             # Unit and integration tests
-├── __mocks__/             # Test mocks
-├── .github/               # GitHub-specific templates and workflows
-│   ├── COMMIT_TEMPLATE.md # Template for commit messages
-│   └── pull_request_template.md # Template for pull requests
-├── jest.config.js         # Jest test configuration
-├── jest.setup.js          # Jest setup file
-├── RELEASE-NOTES.md       # Master release notes with links to detailed versions
-└── coverage/              # Code coverage output
+│   ├── index.js                    # Main entry point
+│   ├── commands/                   # Command handlers
+│   │   └── index.js               # Unified command handler
+│   ├── config/                     # Configuration settings
+│   │   └── config.js              # Global configuration
+│   ├── services/                   # API and core services
+│   │   ├── chat.js                # Chat message handler
+│   │   ├── perplexity-secure.js   # Perplexity API service with caching
+│   │   └── storage.js             # Data storage service
+│   └── utils/                      # Utility functions and helpers
+│       ├── conversation.js         # Conversation management (class-based)
+│       ├── error-handler.js        # Error handling utilities
+│       ├── input-validator.js      # Input validation and sanitization
+│       ├── logger.js               # Logging utilities
+│       ├── memory-monitor.js       # Memory monitoring and GC
+│       ├── message-chunker.js      # Basic message chunking
+│       ├── message-chunking/       # Enhanced chunking system
+│       │   ├── index.js           # Main chunking coordinator
+│       │   ├── chunk-boundary-handler.js
+│       │   ├── source-reference-processor.js
+│       │   └── url-formatter.js
+│       ├── pi-detector.js          # Raspberry Pi detection
+│       ├── performance-monitor.js  # Performance tracking
+│       ├── cache-pruner.js         # Cache management
+│       ├── connection-throttler.js # Connection limiting
+│       ├── debouncer.js            # Message debouncing
+│       ├── lazy-loader.js          # Lazy loading utilities
+│       └── [other utilities]       # Additional utility modules
+├── data/                           # Persistent data storage
+│   ├── question_cache.json        # Response cache
+│   └── user_stats.json            # User statistics
+├── scripts/                        # Development and utility scripts
+│   ├── test-chunking.js           # Test script for message chunking
+│   ├── test-chunking.bat          # Windows batch file to run chunking test
+│   └── test-chunking.sh           # Unix shell script to run chunking test
+├── docs/                          # Documentation and version-specific release notes
+│   ├── README.md                  # Index of available release notes
+│   ├── v1.3.0.md                 # Version 1.3.0 release notes
+│   ├── v1.3.1.md                 # Version 1.3.1 release notes
+│   ├── v1.3.2.md                 # Version 1.3.2 release notes
+│   └── v1.4.0.md                 # Version 1.4.0 release notes
+├── wiki/                          # Comprehensive documentation
+├── __tests__/                     # Test suites
+│   ├── integration/               # Integration tests
+│   ├── unit/                      # Unit tests
+│   └── utils/                     # Test utilities
+├── __mocks__/                     # Test mocks
+├── coverage/                      # Code coverage reports
+├── package.json                   # Project metadata
+├── package-lock.json              # Dependency lock file
+├── ecosystem.config.js            # PM2 deployment config
+├── jest.config.js                 # Jest test configuration
+├── jest.setup.js                  # Jest setup file
+├── RELEASE-NOTES.md               # Master release notes
+└── .env                           # Environment secrets (not committed)
 ```
 
 ## Response Caching System
@@ -121,6 +140,54 @@ All cache files are created with secure permissions:
 
 This ensures that only the bot process can modify cached data while still allowing the files to be
 read by monitoring tools.
+
+## Enhanced Architecture (v1.4.0+)
+
+### New Utility Modules
+
+The bot now includes a comprehensive set of utility modules for enhanced functionality:
+
+#### Error Handling System
+- **`error-handler.js`**: Centralized error handling with context-aware error messages
+- Comprehensive error recovery mechanisms
+- Structured error logging and reporting
+- Graceful degradation for API failures
+
+#### Input Validation System
+- **`input-validator.js`**: Input sanitization and validation
+- Prevents malicious input and ensures data integrity
+- Configurable validation rules for different input types
+- Comprehensive error reporting for invalid inputs
+
+#### Memory Management
+- **`memory-monitor.js`**: Advanced memory usage tracking
+- Automatic garbage collection triggers
+- Memory limit monitoring and alerts
+- Resource usage optimization
+
+#### Performance Monitoring
+- **`performance-monitor.js`**: Real-time performance tracking
+- API response time monitoring
+- Resource utilization metrics
+- Performance optimization recommendations
+
+#### Enhanced Caching System
+- **`cache-pruner.js`**: Intelligent cache management
+- **`enhanced-cache.js`**: Advanced caching with TTL and size limits
+- Automatic cache cleanup and optimization
+- Memory-efficient cache storage
+
+#### Connection Management
+- **`connection-throttler.js`**: Network connection limiting
+- **`debouncer.js`**: Message debouncing to prevent spam
+- Adaptive throttling based on system load
+- Resource-constrained device optimization
+
+#### Lazy Loading System
+- **`lazy-loader.js`**: On-demand module loading
+- Reduces initial memory footprint
+- Improves startup performance
+- Dynamic dependency management
 
 ## Core Modules
 
