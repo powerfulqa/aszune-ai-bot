@@ -84,7 +84,7 @@ describe('Pi Detector - Initialization', () => {
 
       expect(result).toBeDefined();
       expect(result.ENABLED).toBe(false);
-      expect(logger.error).toHaveBeenCalledWith('Error initializing Pi optimizations:', expect.any(Error));
+      expect(logger.error).toHaveBeenCalledWith('Error initializing Pi optimizations: Pi detection failed');
     });
 
     it('should not initialize Pi optimizations when disabled by environment variable', async () => {
