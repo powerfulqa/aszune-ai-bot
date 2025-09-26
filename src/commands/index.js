@@ -7,6 +7,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
+const { ApplicationCommandOptionType } = require('discord.js');
 
 const conversationManager = new ConversationManager();
 
@@ -214,7 +215,7 @@ const commands = {
         {
           name: 'text',
           description: 'The text to summarise',
-          type: 3, // ApplicationCommandOptionType.String = 3 in discord.js v14
+          type: ApplicationCommandOptionType.String,
           required: true,
         },
       ],

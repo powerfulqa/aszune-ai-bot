@@ -238,7 +238,7 @@ function configurePi3(config) {
  * @returns {Object} Modified configuration
  */
 function configurePi4(config, ram) {
-  const ramGB = ram / (1024 * 1024 * 1024); // Convert bytes to GB
+  const ramGB = ram; // ram is already in GB
   if (ramGB < 2) {
     // Pi 4 with 1GB
     config.COMPACT_MODE = true;
@@ -276,7 +276,7 @@ function configurePi4(config, ram) {
  * @returns {Object} Modified configuration
  */
 function configurePi5(config, ram) {
-  const ramGB = ram / (1024 * 1024 * 1024); // Convert bytes to GB
+  const ramGB = ram; // ram is already in GB
   if (ramGB < 5) {
     // Pi 5 with 4GB
     config.COMPACT_MODE = false;

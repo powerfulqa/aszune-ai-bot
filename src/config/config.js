@@ -30,6 +30,13 @@ if (missingEnvVars.length > 0) {
  * const threshold = getIntEnvVar('CPU_THRESHOLD_PERCENT', 80);
  */
 function getIntEnvVar(envVar, defaultValue) {
+  if (typeof envVar !== 'string') {
+    throw new TypeError(`getIntEnvVar: envVar must be a string, got ${typeof envVar}`);
+  }
+  if (typeof defaultValue !== 'number' || Number.isNaN(defaultValue)) {
+    throw new TypeError(`getIntEnvVar: defaultValue must be a valid number, got ${defaultValue}`);
+  }
+  
   const parsed = parseInt(process.env[envVar], 10);
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
