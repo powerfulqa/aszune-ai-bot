@@ -223,9 +223,9 @@ describe('PerplexitySecure Service - Advanced', () => {
       request.mockRejectedValueOnce(new Error('Permanent API error'));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages, { retryOnRateLimit: true });
-
-      expect(result).toContain('temporarily unavailable');
+      
+      await expect(perplexityService.generateChatResponse(messages, { retryOnRateLimit: true }))
+        .rejects.toThrow('Permanent API error');
       expect(request).toHaveBeenCalledTimes(1);
     });
 

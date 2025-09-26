@@ -48,49 +48,45 @@ describe('PerplexitySecure Service - Core', () => {
       request.mockResolvedValueOnce(mockErrorResponse({ error: 'Rate limit exceeded' }, 429));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages);
-
-      expect(result).toContain('Rate limit exceeded');
-      expect(result).toContain('try again');
+      
+      await expect(perplexityService.generateChatResponse(messages))
+        .rejects.toThrow('API request failed with status 429');
     });
 
     it('should handle API errors gracefully', async () => {
       request.mockResolvedValueOnce(mockErrorResponse({ error: 'API Error' }, 500));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages);
-
-      expect(result).toContain('temporarily unavailable');
+      
+      await expect(perplexityService.generateChatResponse(messages))
+        .rejects.toThrow('API request failed with status 500');
     });
 
     it('should handle network errors', async () => {
       request.mockRejectedValueOnce(new Error('Network error'));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages);
-
-      expect(result).toContain('Network connection');
-      expect(result).toContain('connection');
+      
+      await expect(perplexityService.generateChatResponse(messages))
+        .rejects.toThrow('Network error');
     });
 
     it('should handle invalid response format', async () => {
       request.mockResolvedValueOnce(mockSuccessResponse({ invalid: 'format' }));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages);
-
-      expect(result).toContain('error occurred');
-      expect(result).toContain('unexpected error occurred');
+      
+      await expect(perplexityService.generateChatResponse(messages))
+        .rejects.toThrow('Invalid response: missing or empty choices array');
     });
 
     it('should handle empty response', async () => {
       request.mockResolvedValueOnce(mockSuccessResponse({ choices: [] }));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages);
-
-      expect(result).toContain('error occurred');
-      expect(result).toContain('unexpected error occurred');
+      
+      await expect(perplexityService.generateChatResponse(messages))
+        .rejects.toThrow('Invalid response: missing or empty choices array');
     });
 
     it('should handle successful response', async () => {

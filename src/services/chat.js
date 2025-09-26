@@ -196,8 +196,14 @@ async function handleChatMessage(message) {
       sanitizedContent: processedData.sanitizedContent?.length || 0,
     });
 
-    // Send user-friendly error message
-    message.reply(errorResponse.message);
+    // Send user-friendly error message as embed
+    const embed = messageFormatter.createCompactEmbed({
+      color: config.COLORS.PRIMARY,
+      description: errorResponse.message,
+      footer: { text: 'Aszai Bot' },
+    });
+    
+    message.reply({ embeds: [embed] });
   }
 }
 
