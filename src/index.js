@@ -32,7 +32,7 @@ async function bootWithOptimizations() {
 }
 
 // Core dependencies
-const { handleChatMessage } = require('./services/chat');
+const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
 const ConversationManager = require('./utils/conversation');
 const conversationManager = new ConversationManager();

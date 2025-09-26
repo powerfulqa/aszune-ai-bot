@@ -25,7 +25,7 @@ const conversationManager = new ConversationManager();
 async function sendResponse(message, responseText) {
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
   // Further reduced to prevent truncation issues with source links and URL formatting
-  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH;
+  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH ?? 1900;
 
   console.log(`Preparing to send response of length: ${responseText.length}`);
 
@@ -208,5 +208,3 @@ async function handleChatMessage(message) {
 }
 
 module.exports = handleChatMessage;
-module.exports.handleChatMessage = handleChatMessage;
-module.exports.default = handleChatMessage;

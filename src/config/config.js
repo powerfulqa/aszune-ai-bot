@@ -33,8 +33,8 @@ function getIntEnvVar(envVar, defaultValue) {
   if (typeof envVar !== 'string') {
     throw new TypeError(`getIntEnvVar: envVar must be a string, got ${typeof envVar}`);
   }
-  if (typeof defaultValue !== 'number' || Number.isNaN(defaultValue)) {
-    throw new TypeError(`getIntEnvVar: defaultValue must be a valid number, got ${defaultValue}`);
+  if (!Number.isInteger(defaultValue)) {
+    throw new TypeError(`getIntEnvVar: defaultValue must be a valid integer, got ${defaultValue}`);
   }
   
   const parsed = parseInt(process.env[envVar], 10);

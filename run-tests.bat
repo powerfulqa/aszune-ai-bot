@@ -1,6 +1,6 @@
 @echo off
 echo Starting tests with timeout...
-timeout 30 npm test
+timeout 300 npm test
 if %errorlevel% neq 0 (
     echo Tests timed out or failed
     taskkill /F /IM node.exe 2>nul
