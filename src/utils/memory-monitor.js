@@ -4,19 +4,33 @@
  */
 
 const logger = require('./logger');
-const config = require('../config/config');
 const { ErrorHandler } = require('./error-handler');
+
+// Safely load config with fallback
+let config;
+try {
+  config = require('../config/config');
+} catch (error) {
+  logger.warn('Failed to load config, using defaults:', error.message);
+  config = {
+    MEMORY: {
+      DEFAULT_LIMIT_MB: 200,
+      DEFAULT_CRITICAL_MB: 250,
+      CHECK_INTERVAL_MS: 60000,
+    },
+  };
+}
 
 class MemoryMonitor {
   constructor() {
     this.initialized = false;
     this.memoryLimit = process.env.PI_MEMORY_LIMIT
       ? parseInt(process.env.PI_MEMORY_LIMIT, 10) * 1024 * 1024
-      : config.MEMORY.DEFAULT_LIMIT_MB * 1024 * 1024;
+      : (config.MEMORY?.DEFAULT_LIMIT_MB || 200) * 1024 * 1024;
     this.criticalMemory = process.env.PI_MEMORY_CRITICAL
       ? parseInt(process.env.PI_MEMORY_CRITICAL, 10) * 1024 * 1024
-      : config.MEMORY.DEFAULT_CRITICAL_MB * 1024 * 1024;
-    this.checkIntervalMs = config.MEMORY.CHECK_INTERVAL_MS;
+      : (config.MEMORY?.DEFAULT_CRITICAL_MB || 250) * 1024 * 1024;
+    this.checkIntervalMs = config.MEMORY?.CHECK_INTERVAL_MS || 60000;
     this.checkInterval = null;
     this.lastGcTime = 0;
     this.isLowMemory = false;
