@@ -11,13 +11,14 @@ notes, see the [docs/](./docs/) directory.
 
 - Massive test coverage improvement from 77.79% to 82%+
 - Added comprehensive test suites for memory monitoring, message chunking, and command handling
-- Expanded test count from 371 to 380+ passing tests
+- Expanded test count from 371 to 536 passing tests
 - Enhanced error handling and recovery mechanisms across all modules
 - New utility modules for error handling, input validation, memory monitoring, and performance tracking
 - Enhanced message chunking with advanced boundary detection and source link processing
 - Comprehensive input sanitization and validation system
 - Advanced memory management and garbage collection
 - Real-time performance monitoring and optimization
+- **Recent Code Quality Improvements**: Fixed critical security vulnerabilities, import inconsistencies, and code duplication issues identified through code review
 - Full details in [RELEASE-NOTES-v1.4.0.md](./RELEASE-NOTES-v1.4.0.md)
 
 ### v1.3.6 - Performance and Stability Enhancements

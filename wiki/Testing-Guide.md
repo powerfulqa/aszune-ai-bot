@@ -4,7 +4,7 @@
 
 Aszune AI Bot has a comprehensive test suite covering all critical functionality with 82%+ code
 coverage. The tests are designed to verify that all components work correctly and handle edge cases
-appropriately. With 380+ passing tests, the bot ensures production-ready stability and reliability.
+appropriately. With 536 passing tests, the bot ensures production-ready stability and reliability.
 
 ## Test Structure
 

@@ -591,7 +591,7 @@ async function shutdown(signal) {
 
 - **Test Coverage Expansion**: Increased overall test coverage from 77.79% to 82%+
 - **New Test Modules**: Added comprehensive test suites for previously untested modules
-- **Test Count Growth**: Expanded from 371 to 380+ passing tests
+- **Test Count Growth**: Expanded from 371 to 536 passing tests
 - **Production Readiness**: All critical modules now have extensive test coverage
 
 ### New Test Suites Added
