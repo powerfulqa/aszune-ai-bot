@@ -26,8 +26,8 @@ if (missingEnvVars.length > 0) {
  * const port = getIntEnvVar('PORT', 3000);
  * 
  * @example
- * // Parse CPU_THRESHOLD with default 80
- * const threshold = getIntEnvVar('CPU_THRESHOLD_PERCENT', 80);
+ * // Parse CPU_THRESHOLD with default 80 (used in config object)
+ * CPU_THRESHOLD_PERCENT: getIntEnvVar('CPU_THRESHOLD_PERCENT', 80),
  */
 function getIntEnvVar(envVar, defaultValue) {
   if (typeof envVar !== 'string') {

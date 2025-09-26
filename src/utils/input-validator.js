@@ -556,14 +556,15 @@ class InputValidator {
         
         
         // Sanitize content
-        this.sanitizeContent(input);
+        const sanitizedResult = this.sanitizeContent(input);
+        const sanitizedInput = sanitizedResult.content;
         
         // Allow empty strings
-        if (input.length === 0) {
+        if (sanitizedInput.length === 0) {
           return { valid: true };
         }
         
-        if (!VALIDATION_PATTERNS.SAFE_TEXT.test(input)) {
+        if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
           return {
             valid: false,
             error: 'Input contains unsafe characters',

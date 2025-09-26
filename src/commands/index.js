@@ -301,7 +301,7 @@ const commands = {
           },
         ];
 
-        const summary = await perplexityService.generateSummary(messages, true);
+        const summary = await perplexityService.generateSummary(messages, true); // isText = true
         conversationManager.updateUserStats(userId, 'summaries');
         return interaction.editReply({
           embeds: [

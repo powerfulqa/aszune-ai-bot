@@ -217,29 +217,27 @@ function uncaughtExceptionHandler(error) {
 }
 process.on('uncaughtException', uncaughtExceptionHandler);
 
-// Log in to Discord, with special handling for test environment
-if (process.env.NODE_ENV === 'test') {
-  // In test mode, we still call login but with a mock token that will be resolved in the mock
-  client
-    .login('test-token')
+// Helper function to handle Discord login with appropriate error handling
+function loginToDiscord(token, isTestMode = false) {
+  return client
+    .login(token)
     .then(() => {
-      logger.info('Logged in to Discord (test mode)');
+      logger.info(`Logged in to Discord${isTestMode ? ' (test mode)' : ''}`);
     })
     .catch((error) => {
       logger.error('Failed to log in to Discord:', error);
-    });
-} else {
-  client
-    .login(config.DISCORD_BOT_TOKEN)
-    .then(() => {
-      logger.info('Logged in to Discord');
-    })
-    .catch((error) => {
-      logger.error('Failed to log in to Discord:', error);
-      if (process.env.NODE_ENV !== 'test') {
+      if (!isTestMode) {
         process.exit(1);
       }
     });
+}
+
+// Log in to Discord, with special handling for test environment
+if (process.env.NODE_ENV === 'test') {
+  // In test mode, we still call login but with a mock token that will be resolved in the mock
+  loginToDiscord('test-token', true);
+} else {
+  loginToDiscord(config.DISCORD_BOT_TOKEN, false);
 }
 
 // Export for testing

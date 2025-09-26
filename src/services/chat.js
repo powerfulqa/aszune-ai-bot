@@ -191,9 +191,9 @@ async function handleChatMessage(message) {
     }
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'chat generation', {
-      userId: processedData.userId,
+      userId: processedData?.userId || 'unknown',
       messageLength: message.content?.length || 0,
-      sanitizedContent: processedData.sanitizedContent?.length || 0,
+      sanitizedContent: processedData?.sanitizedContent?.length || 0,
     });
 
     // Send user-friendly error message as embed
