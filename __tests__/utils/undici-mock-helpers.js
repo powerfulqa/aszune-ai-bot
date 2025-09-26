@@ -14,7 +14,7 @@ const mockSuccessResponse = (responseData) => ({
   },
   statusCode: 200,
   headers: {
-    get: jest.fn(key => key.toLowerCase() === 'content-type' ? 'application/json' : null)
+    get: jest.fn((key) => (key.toLowerCase() === 'content-type' ? 'application/json' : null)),
   },
 });
 
@@ -31,7 +31,7 @@ const mockErrorResponse = (errorData, statusCode = 400) => ({
   },
   statusCode,
   headers: {
-    get: jest.fn(key => key.toLowerCase() === 'content-type' ? 'application/json' : null)
+    get: jest.fn((key) => (key.toLowerCase() === 'content-type' ? 'application/json' : null)),
   },
 });
 

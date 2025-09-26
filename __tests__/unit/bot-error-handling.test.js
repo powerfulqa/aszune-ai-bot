@@ -8,7 +8,7 @@ jest.mock('../../src/config/config', () => require('../../__mocks__/configMock')
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn(),
   handleSlashCommand: jest.fn(),
-  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }])
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }]),
 }));
 
 // Make sure to import the mockLogger for tests

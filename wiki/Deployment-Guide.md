@@ -6,7 +6,8 @@ This guide provides instructions for deploying the Aszune AI Bot to a production
 
 ### Method 1: PM2 (Process Manager)
 
-PM2 is a production process manager for Node.js applications that helps keep your bot running continuously, even after system reboots.
+PM2 is a production process manager for Node.js applications that helps keep your bot running
+continuously, even after system reboots.
 
 #### Installation
 
@@ -32,16 +33,16 @@ For better management, create an ecosystem configuration file:
 module.exports = {
   apps: [
     {
-      name: "aszune-ai",
-      script: "src/index.js",
+      name: 'aszune-ai',
+      script: 'src/index.js',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: "512M",
+      max_memory_restart: '512M',
       env: {
-        NODE_ENV: "production",
-        DISCORD_BOT_TOKEN: "your_discord_bot_token_here",
-        PERPLEXITY_API_KEY: "your_perplexity_api_key_here",
+        NODE_ENV: 'production',
+        DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
+        PERPLEXITY_API_KEY: 'your_perplexity_api_key_here',
       },
     },
   ],
@@ -90,7 +91,7 @@ CMD ["node", "src/index.js"]
 #### Create a docker-compose.yml file
 
 ```yaml
-version: "3"
+version: '3'
 
 services:
   bot:
@@ -195,4 +196,5 @@ It's recommended to regularly backup your bot's data:
 cp -r data/ backup/data_$(date +%Y%m%d)/
 ```
 
-For more advanced deployment scenarios, consider setting up CI/CD pipelines with GitHub Actions, GitLab CI, or other continuous integration tools.
+For more advanced deployment scenarios, consider setting up CI/CD pipelines with GitHub Actions,
+GitLab CI, or other continuous integration tools.

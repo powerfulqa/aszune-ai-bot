@@ -6,7 +6,8 @@ This directory contains the GitHub Actions workflows for the Aszune AI Bot proje
 
 ### Unified Workflow
 
-- **unified-ci.yml**: A consolidated workflow that handles building, testing, and code coverage reporting
+- **unified-ci.yml**: A consolidated workflow that handles building, testing, and code coverage
+  reporting
 
 ## Workflow Features
 

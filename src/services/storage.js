@@ -11,13 +11,13 @@ class DataStorage {
     this.statsFile = path.join(this.dataDir, 'user_stats.json');
     this.initialized = false;
   }
-  
+
   /**
    * Initialize the data storage
    */
   async init() {
     if (this.initialized) return;
-    
+
     try {
       // Create data directory if it doesn't exist
       await fs.mkdir(this.dataDir, { recursive: true });
@@ -27,21 +27,21 @@ class DataStorage {
       throw error;
     }
   }
-  
+
   /**
    * Save user stats to disk
    * @param {Map} stats - User stats map
    */
   async saveUserStats(stats) {
     await this.init();
-    
+
     try {
       // Convert Map to object for serialization
       const statsObj = {};
       for (const [userId, data] of stats.entries()) {
         statsObj[userId] = data;
       }
-      
+
       await fs.writeFile(this.statsFile, JSON.stringify(statsObj, null, 2));
       logger.debug('User stats saved successfully');
     } catch (error) {
@@ -49,14 +49,14 @@ class DataStorage {
       // We don't throw here to avoid crashing the application
     }
   }
-  
+
   /**
    * Load user stats from disk
    * @returns {Object} - User stats object
    */
   async loadUserStats() {
     await this.init();
-    
+
     try {
       const data = await fs.readFile(this.statsFile, 'utf8');
       const stats = JSON.parse(data);
@@ -68,7 +68,7 @@ class DataStorage {
         logger.debug('No user stats file found, starting with empty stats');
         return {};
       }
-      
+
       logger.error('Failed to load user stats:', error);
       return {};
     }

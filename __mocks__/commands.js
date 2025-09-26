@@ -3,11 +3,11 @@ const mockCommands = {
   handleTextCommand: jest.fn(),
   handleSlashCommand: jest.fn(),
   getSlashCommandsData: jest.fn().mockReturnValue([
-    { 
+    {
       name: 'test-command',
-      description: 'A test command'
-    }
-  ])
+      description: 'A test command',
+    },
+  ]),
 };
 
 module.exports = mockCommands;

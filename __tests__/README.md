@@ -7,16 +7,23 @@ This project uses Jest for testing and has specific configurations for branch co
 ### Coverage Requirements
 
 - Overall branch coverage requirement: 60%
-- Current coverage metrics:
+- Current coverage metrics (v1.4.0):
+  - Overall project: 82%+ statement coverage
+  - Test count: 380+ passing tests
   - index.js: 80% branch coverage
   - logger.js: 57.89% branch coverage (standalone) / 82.45% (with branch coverage tests)
+  - Memory Monitor: 90%+ coverage (new in v1.4.0)
+  - Message Chunking: 85%+ coverage (new in v1.4.0)
+  - Commands: 85%+ coverage (enhanced in v1.4.0)
 
 ### Testing Structure
 
 We have two approaches for branch coverage testing:
 
-1. **Standard Tests**: Regular unit tests in files like `logger.test.js` that test the main functionality
-2. **Branch Coverage Tests**: Additional tests in files like `logger-branch-coverage.test.js` specifically designed to hit edge cases and improve branch coverage
+1. **Standard Tests**: Regular unit tests in files like `logger.test.js` that test the main
+   functionality
+2. **Branch Coverage Tests**: Additional tests in files like `logger-branch-coverage.test.js`
+   specifically designed to hit edge cases and improve branch coverage
 
 ### Jest Configurations
 
@@ -44,17 +51,23 @@ This script runs both index and logger branch coverage tests sequentially.
 
 ### Test Strategy Decision
 
-We are now using both the regular `logger.test.js` file and the specialized `logger-branch-coverage.test.js` file for branch coverage testing:
+We are now using both the regular `logger.test.js` file and the specialized
+`logger-branch-coverage.test.js` file for branch coverage testing:
+
 1. `logger.test.js` provides 57.89% branch coverage on its own, which exceeds our 55% threshold
 2. `logger-branch-coverage.test.js` provides additional branch coverage, testing edge cases
 3. Together they provide comprehensive testing of the logger module's branches
 
-### Recent Improvements
+### Recent Improvements (v1.4.0)
 
-1. ✅ Fixed all tests in `logger-branch-coverage.test.js` for improved branch coverage
-2. ✅ Resolved duplicate mock warnings
-3. ✅ Combined coverage reports by running both logger test files together
-4. ✅ Updated the `test:branch-coverage` script to include both test files
+1. ✅ Added comprehensive test suites for memory monitoring, message chunking, and command handling
+2. ✅ Increased overall test coverage from 77.79% to 82%+
+3. ✅ Expanded test count from 371 to 380+ passing tests
+4. ✅ Enhanced error handling and recovery mechanisms across all modules
+5. ✅ Fixed all tests in `logger-branch-coverage.test.js` for improved branch coverage
+6. ✅ Resolved duplicate mock warnings
+7. ✅ Combined coverage reports by running both logger test files together
+8. ✅ Updated the `test:branch-coverage` script to include both test files
 
 ### Future Improvements
 

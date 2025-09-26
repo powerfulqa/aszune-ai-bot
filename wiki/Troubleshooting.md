@@ -1,6 +1,7 @@
 # Troubleshooting
 
-This guide covers common issues you might encounter while setting up and running the Aszune AI Bot, along with their solutions.
+This guide covers common issues you might encounter while setting up and running the Aszune AI Bot,
+along with their solutions.
 
 ## Connection Issues
 
@@ -153,8 +154,7 @@ For more detailed troubleshooting:
 
 1. **Enable Debug Mode**
 
-   Add to your `.env` file: ```env
-   DEBUG=true
+   Add to your `.env` file: ```env DEBUG=true
 
    ```
 
@@ -176,7 +176,8 @@ For more detailed troubleshooting:
 
 If you're still experiencing issues:
 
-1. Check the [GitHub Issues](https://github.com/chrishaycock/aszune-ai-bot/issues) for similar problems
+1. Check the [GitHub Issues](https://github.com/chrishaycock/aszune-ai-bot/issues) for similar
+   problems
 2. Search the [Discord.js Guide](https://discordjs.guide/) for common Discord bot issues
 3. Post a new GitHub issue with:
    - Detailed description of the problem

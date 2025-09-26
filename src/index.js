@@ -1,7 +1,7 @@
 require('dotenv').config();
 /**
  * Aszai Discord Bot - Main Entry Point
- * 
+ *
  * A Discord bot that specializes in gaming lore, game logic, guides, and advice,
  * powered by the Perplexity API.
  */
@@ -46,11 +46,11 @@ const enablePiOptimizations = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS
 if (isProd && enablePiOptimizations) {
   // Initialize Pi-specific optimizations
   logger.info('Initializing Pi optimizations');
-  
+
   try {
     // Lazy-load optimization modules only when needed
     const { lazyLoad } = require('./utils/lazy-loader');
-    
+
     // Initialize monitors directly with lazy loading
     lazyLoad(() => require('./utils/memory-monitor'))().initialize();
     lazyLoad(() => require('./utils/performance-monitor'))().initialize();
@@ -76,19 +76,16 @@ async function registerSlashCommands() {
     logger.error('Cannot register slash commands: Client not ready');
     return;
   }
-  
+
   const commands = commandHandler.getSlashCommandsData();
-  
+
   const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
-  
+
   try {
     logger.info(`Registering ${commands.length} slash commands`);
-    
-    await rest.put(
-      Routes.applicationCommands(client.user.id),
-      { body: commands },
-    );
-    
+
+    await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+
     logger.info('Slash commands registered successfully');
   } catch (error) {
     logger.error('Error registering slash commands:', error);
@@ -98,7 +95,7 @@ async function registerSlashCommands() {
 // Handle ready event
 client.once('ready', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
-  
+
   // Initialize Pi optimizations after connection is established
   await bootWithOptimizations();
   await registerSlashCommands();
@@ -133,49 +130,73 @@ const shutdown = async (signal) => {
     logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
     return;
   }
-  
+
   isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
+
+  // Perform shutdown steps and collect errors
+  const errors = await performShutdownSteps();
   
-  // Track any errors that occur during shutdown
+  // Handle shutdown completion
+  handleShutdownCompletion(errors);
+};
+
+async function performShutdownSteps() {
   const errors = [];
-  let shutdownStatus = true;
-  
+
   // Step 1: Shutdown conversation manager
+  const convError = await shutdownConversationManager();
+  if (convError) errors.push(convError);
+
+  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
+  const clientError = await shutdownDiscordClient();
+  if (clientError) errors.push(clientError);
+
+  return errors;
+}
+
+async function shutdownConversationManager() {
   try {
     logger.debug('Shutting down conversation manager...');
     await conversationManager.destroy();
     logger.debug('Conversation manager shutdown successful');
+    return null;
   } catch (convError) {
-    shutdownStatus = false;
     logger.error('Error shutting down conversation manager:', convError);
-    errors.push(convError);
+    return convError;
   }
-  
-  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
+}
+
+async function shutdownDiscordClient() {
   try {
     logger.debug('Shutting down Discord client...');
-    // Use await to ensure proper cleanup of connections
     await client.destroy();
     logger.debug('Discord client shutdown successful');
+    return null;
   } catch (clientError) {
-    shutdownStatus = false;
     logger.error('Error shutting down Discord client:', clientError);
-    errors.push(clientError);
+    return clientError;
   }
-  
-  // Log individual errors for easier debugging
+}
+
+function handleShutdownCompletion(errors) {
   if (errors.length > 0) {
     errors.forEach((err, index) => {
       logger.error(`Shutdown error ${index + 1}/${errors.length}:`, err);
     });
     logger.error(`Shutdown completed with ${errors.length} error(s)`);
-    process.exit(1);
+    // Don't exit in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
   } else {
     logger.info('Shutdown complete.');
-    process.exit(0);
+    // Don't exit in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(0);
+    }
   }
-};
+}
 
 // Handle shutdown signals
 process.on('SIGINT', () => shutdown('SIGINT'));
@@ -196,25 +217,27 @@ function uncaughtExceptionHandler(error) {
 }
 process.on('uncaughtException', uncaughtExceptionHandler);
 
+// Helper function to handle Discord login with appropriate error handling
+function loginToDiscord(token, isTestMode = false) {
+  return client
+    .login(token)
+    .then(() => {
+      logger.info(`Logged in to Discord${isTestMode ? ' (test mode)' : ''}`);
+    })
+    .catch((error) => {
+      logger.error('Failed to log in to Discord:', error);
+      if (!isTestMode) {
+        process.exit(1);
+      }
+    });
+}
+
 // Log in to Discord, with special handling for test environment
 if (process.env.NODE_ENV === 'test') {
   // In test mode, we still call login but with a mock token that will be resolved in the mock
-  client.login('test-token')
-    .then(() => {
-      logger.info('Logged in to Discord (test mode)');
-    })
-    .catch((error) => {
-      logger.error('Failed to log in to Discord:', error);
-    });
+  loginToDiscord('test-token', true);
 } else {
-  client.login(config.DISCORD_BOT_TOKEN)
-    .then(() => {
-      logger.info('Logged in to Discord');
-    })
-    .catch((error) => {
-      logger.error('Failed to log in to Discord:', error);
-      process.exit(1);
-    });
+  loginToDiscord(config.DISCORD_BOT_TOKEN, false);
 }
 
 // Export for testing
@@ -224,7 +247,7 @@ module.exports = {
   conversationManager,
   shutdown, // Export shutdown function for testing
   unhandledRejectionHandler, // Export for direct testing
-  uncaughtExceptionHandler,  // Export for direct testing
+  uncaughtExceptionHandler, // Export for direct testing
   bootWithOptimizations, // Export for branch coverage testing
   registerSlashCommands, // Export for branch coverage testing
 };

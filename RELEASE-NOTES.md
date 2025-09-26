@@ -1,48 +1,71 @@
 # Release Notes
 
-This file contains the master release notes for the Aszune AI Bot. For detailed version-specific notes, see the [docs/](./docs/) directory.
+This file contains the master release notes for the Aszune AI Bot. For detailed version-specific
+notes, see the [docs/](./docs/) directory.
 
 ---
 
 ## Version History
 
+### v1.4.0 - Comprehensive Testing & Coverage Enhancement
+
+- Massive test coverage improvement from 77.79% to 82%+
+- Added comprehensive test suites for memory monitoring, message chunking, and command handling
+- Expanded test count from 371 to 536 passing tests
+- Enhanced error handling and recovery mechanisms across all modules
+- New utility modules for error handling, input validation, memory monitoring, and performance tracking
+- Enhanced message chunking with advanced boundary detection and source link processing
+- Comprehensive input sanitization and validation system
+- Advanced memory management and garbage collection
+- Real-time performance monitoring and optimization
+- **Recent Code Quality Improvements**: Fixed critical security vulnerabilities, import inconsistencies, and code duplication issues identified through code review
+- Full details in [RELEASE-NOTES-v1.4.0.md](./RELEASE-NOTES-v1.4.0.md)
+
 ### v1.3.6 - Performance and Stability Enhancements
+
 - Improved response time and reduced memory usage
 - Enhanced error detection and recovery mechanisms
 - Refined message formatting and content delivery
 - Full details in [RELEASE-NOTES-v1.3.6.md](./RELEASE-NOTES-v1.3.6.md)
 
 ### v1.3.5 - Enhanced URL Processing and Layout Fixes
+
 - Fixed YouTube links showing duplicate text
 - Fixed domain names being split by periods (e.g., fractalsoftworks.com)
 - Further reduced message length to prevent truncation
 - Added special handling for domains and TLDs
 
 ### v1.3.4 - Advanced Source Link Formatting and Anti-Truncation
+
 - Enhanced source reference handling for various formats including YouTube links
 - Improved message chunking to prevent sentence truncation
 - Added specific handling to preserve Markdown links across chunks
 
 ### v1.3.3 - Source Link Enhancement and Truncation Fix
+
 - Fixed source references (especially YouTube URLs) to appear as clickable links in Discord
 - Fixed truncation issues where the last sentence would get cut off
 - Added protection to prevent URLs from being split across chunk boundaries
 - Full details in [RELEASE-NOTES-v1.3.3.md](./RELEASE-NOTES-v1.3.3.md)
 
 ### v1.3.2 - Message Chunking Enhancement
+
 - Fixed critical bug where words at chunk boundaries could be incorrectly joined
 - Implemented intelligent space handling at chunk boundaries
 - Full details in [docs/v1.3.2.md](./docs/v1.3.2.md)
 
 ### v1.3.1 - Message Chunking Feature
+
 - Added support for splitting long messages into multiple Discord embeds
 - Full details in [docs/v1.3.1.md](./docs/v1.3.1.md)
 
 ### v1.3.0 - Initial Versioned Release
+
 - First versioned release
 - Full details in [docs/v1.3.0.md](./docs/v1.3.0.md)
 
 ### Initial Release
+
 - First public release of Aszune AI Bot.
 - Features:
   - Discord bot using Perplexity API (sonar model).
@@ -248,7 +271,8 @@ See RELEASE-NOTES-v1.3.3.md for detailed information.
 ### Message Chunking Enhancement
 
 - **Bug Fixes:**
-  - Fixed critical bug where words at chunk boundaries could be incorrectly joined (e.g., "selecting an" + "officer" → "selecting anofficer")
+  - Fixed critical bug where words at chunk boundaries could be incorrectly joined (e.g., "selecting
+    an" + "officer" → "selecting anofficer")
   - Improved word boundary detection to ensure proper text formatting
   - Enhanced testing suite to verify proper chunk boundary handling
 

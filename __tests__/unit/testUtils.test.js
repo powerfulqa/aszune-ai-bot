@@ -1,17 +1,17 @@
 /**
  * Test the utility functions for testing
- * 
+ *
  * This is the test file for src/utils/testUtils.js
  * Previously, tests were duplicated in __tests__/utils/testUtils.test.js,
  * but they have been consolidated here to eliminate code duplication
  */
-const { 
-  createMockMessage, 
-  createMockInteraction, 
-  resetMocks, 
-  mockReply, 
+const {
+  createMockMessage,
+  createMockInteraction,
+  resetMocks,
+  mockReply,
   mockReact,
-  mockSendTyping
+  mockSendTyping,
 } = require('../../src/utils/testUtils');
 
 describe('Test Utilities', () => {
@@ -24,7 +24,7 @@ describe('Test Utilities', () => {
       const message = createMockMessage();
       expect(message.content).toBe('');
       expect(message.author.bot).toBe(false);
-      expect(message.author.id).toBe('12345');
+      expect(message.author.id).toBe('123456789012345678');
       expect(message.reply).toBe(mockReply);
       expect(message.react).toBe(mockReact);
       expect(message.channel.sendTyping).toBe(mockSendTyping);
@@ -36,7 +36,7 @@ describe('Test Utilities', () => {
         content: 'test message',
         userId: '67890',
         isBot: true,
-        customProp: 'custom'
+        customProp: 'custom',
       });
       expect(message.content).toBe('test message');
       expect(message.author.id).toBe('67890');
@@ -48,7 +48,7 @@ describe('Test Utilities', () => {
   describe('createMockInteraction', () => {
     it('creates a default mock interaction with expected properties', () => {
       const interaction = createMockInteraction();
-      expect(interaction.user.id).toBe('12345');
+      expect(interaction.user.id).toBe('123456789012345678');
       expect(interaction.commandName).toBe('help');
       expect(interaction.isChatInputCommand()).toBe(true);
       expect(interaction.reply).toBe(mockReply);
@@ -60,7 +60,7 @@ describe('Test Utilities', () => {
       const interaction = createMockInteraction({
         userId: '67890',
         commandName: 'test',
-        customProp: 'custom'
+        customProp: 'custom',
       });
       expect(interaction.user.id).toBe('67890');
       expect(interaction.commandName).toBe('test');
@@ -74,15 +74,15 @@ describe('Test Utilities', () => {
       mockReply('test');
       mockReact('test');
       mockSendTyping('test');
-      
+
       // Verify they've been called
       expect(mockReply).toHaveBeenCalled();
       expect(mockReact).toHaveBeenCalled();
       expect(mockSendTyping).toHaveBeenCalled();
-      
+
       // Reset mocks
       resetMocks();
-      
+
       // Verify they've been reset
       expect(mockReply).not.toHaveBeenCalled();
       expect(mockReact).not.toHaveBeenCalled();

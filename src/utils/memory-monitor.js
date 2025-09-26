@@ -4,13 +4,19 @@
  */
 
 const logger = require('./logger');
+const config = require('../config/config');
+const { ErrorHandler } = require('./error-handler');
 
 class MemoryMonitor {
   constructor() {
     this.initialized = false;
-    this.memoryLimit = process.env.PI_MEMORY_LIMIT ? parseInt(process.env.PI_MEMORY_LIMIT, 10) * 1024 * 1024 : 200 * 1024 * 1024;
-    this.criticalMemory = process.env.PI_MEMORY_CRITICAL ? parseInt(process.env.PI_MEMORY_CRITICAL, 10) * 1024 * 1024 : 250 * 1024 * 1024;
-    this.checkIntervalMs = 60000; // Check every minute
+    this.memoryLimit = process.env.PI_MEMORY_LIMIT
+      ? parseInt(process.env.PI_MEMORY_LIMIT, 10) * 1024 * 1024
+      : config.MEMORY.DEFAULT_LIMIT_MB * 1024 * 1024;
+    this.criticalMemory = process.env.PI_MEMORY_CRITICAL
+      ? parseInt(process.env.PI_MEMORY_CRITICAL, 10) * 1024 * 1024
+      : config.MEMORY.DEFAULT_CRITICAL_MB * 1024 * 1024;
+    this.checkIntervalMs = config.MEMORY.CHECK_INTERVAL_MS;
     this.checkInterval = null;
     this.lastGcTime = 0;
     this.isLowMemory = false;
@@ -21,18 +27,22 @@ class MemoryMonitor {
    */
   initialize() {
     if (this.initialized) return;
-    
+
     logger.debug('Initializing memory monitor...');
     this.checkMemoryUsage();
-    
-    // Set up periodic checks
-    this.checkInterval = setInterval(() => {
-      this.checkMemoryUsage();
-    }, this.checkIntervalMs);
-    
+
+    // Set up periodic checks (only if not in test mode)
+    if (process.env.NODE_ENV !== 'test') {
+      this.checkInterval = setInterval(() => {
+        this.checkMemoryUsage();
+      }, this.checkIntervalMs);
+    }
+
     // Make sure interval doesn't keep process alive
-    this.checkInterval.unref();
-    
+    if (this.checkInterval) {
+      this.checkInterval.unref();
+    }
+
     this.initialized = true;
     logger.debug('Memory monitor initialized');
   }
@@ -42,12 +52,12 @@ class MemoryMonitor {
    */
   shutdown() {
     if (!this.initialized) return;
-    
+
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
-    
+
     this.initialized = false;
     logger.debug('Memory monitor shut down');
   }
@@ -59,7 +69,7 @@ class MemoryMonitor {
     try {
       const memUsage = process.memoryUsage();
       const heapUsed = memUsage.heapUsed;
-      
+
       // If memory usage exceeds limit, try to free some memory
       if (heapUsed > this.memoryLimit) {
         logger.warn(`High memory usage detected: ${Math.round(heapUsed / 1024 / 1024)}MB used`);
@@ -70,13 +80,21 @@ class MemoryMonitor {
         logger.info(`Memory usage has normalized: ${Math.round(heapUsed / 1024 / 1024)}MB used`);
         this.isLowMemory = false;
       }
-      
+
       // For critical memory situations, log a more urgent warning
       if (heapUsed > this.criticalMemory) {
         logger.error(`CRITICAL MEMORY USAGE: ${Math.round(heapUsed / 1024 / 1024)}MB used!`);
       }
     } catch (error) {
-      logger.error('Error checking memory usage:', error);
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'checking memory usage', {
+          memoryLimit: this.memoryLimit,
+          criticalMemory: this.criticalMemory,
+        });
+        logger.error(`Memory check error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+      } catch (handlerError) {
+        logger.error(`Memory check error: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -87,27 +105,35 @@ class MemoryMonitor {
     try {
       // Only try to GC every 30 seconds at most
       const now = Date.now();
-      if (now - this.lastGcTime < 30000) return;
-      
+      if (now - this.lastGcTime < (config.MEMORY?.GC_COOLDOWN_MS || 30000)) return;
+
       // Try different methods to encourage garbage collection
       this.lastGcTime = now;
-      
+
       // First method: Force nodejs to consider GC
       if (global.gc) {
         logger.debug('Running global.gc()');
         global.gc();
       }
-      
+
       // Second method: Create temporary pressure then release
       const pressure = [];
       for (let i = 0; i < 10; i++) {
-        pressure.push(new Array(1000000).fill('x'));
+        pressure.push(new Array(config.MEMORY?.PRESSURE_TEST_SIZE || 1000000).fill('x'));
       }
       pressure.length = 0;
-      
+
       logger.debug('Memory cleanup attempted');
     } catch (error) {
-      logger.error('Error during garbage collection:', error);
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'garbage collection', {
+          lastGcTime: this.lastGcTime,
+          isLowMemory: this.isLowMemory,
+        });
+        logger.error(`Garbage collection error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+      } catch (handlerError) {
+        logger.error(`Garbage collection error: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -124,11 +150,18 @@ class MemoryMonitor {
         heapUsed: memUsage.heapUsed,
         external: memUsage.external,
         percentUsed: Math.round((memUsage.heapUsed / this.memoryLimit) * 100),
-        isLowMemory: this.isLowMemory
+        heapUsedPercent: Math.round((memUsage.heapUsed / this.memoryLimit) * 100),
+        isLowMemory: this.isLowMemory,
       };
     } catch (error) {
-      logger.error('Error getting memory usage:', error);
-      return {};
+      try {
+        const errorResponse = ErrorHandler.handleError(error, 'getting memory usage');
+        logger.error(`Memory usage error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+        return {};
+      } catch (handlerError) {
+        logger.error(`Memory usage error: ${error.message || 'Unknown error'}`);
+        return {};
+      }
     }
   }
 
@@ -143,7 +176,8 @@ class MemoryMonitor {
       memoryLimit: this.memoryLimit,
       criticalMemory: this.criticalMemory,
       lastGcTime: this.lastGcTime,
-      isLowMemory: this.isLowMemory
+      isLowMemory: this.isLowMemory,
+      checkIntervalMs: this.checkIntervalMs,
     };
   }
 }

@@ -10,7 +10,7 @@
  */
 function lazyLoad(importFn) {
   let module;
-  return function() {
+  return function () {
     if (!module) {
       module = importFn();
     }

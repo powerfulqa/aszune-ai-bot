@@ -17,9 +17,9 @@ const legacyEmojiMap = {
 
 class EmojiManager {
   constructor() {
-    this.reactions = config.REACTIONS;
+    this.reactions = config.EMOJI_REACTIONS || config.REACTIONS || legacyEmojiMap;
   }
-  
+
   /**
    * Process the message content and add emojis to the response based on keywords
    * @param {string} content - The message content to analyze
@@ -27,16 +27,16 @@ class EmojiManager {
    */
   addEmojisToResponse(content) {
     let modifiedContent = content;
-    
+
     for (const [keyword, emoji] of Object.entries(this.reactions)) {
       if (content.toLowerCase().includes(keyword)) {
         modifiedContent += ` ${emoji}`;
       }
     }
-    
+
     return modifiedContent;
   }
-  
+
   /**
    * Append emojis to text based on whole-word keyword matches (case-insensitive)
    * This maintains compatibility with the older utils/emoji.js implementation
@@ -45,9 +45,9 @@ class EmojiManager {
    */
   appendEmoji(text) {
     if (!text) return text;
-    
+
     let result = text;
-    
+
     // Using the legacy emoji map for backwards compatibility with tests
     for (const [keyword, emoji] of Object.entries(legacyEmojiMap)) {
       // Only match whole words (case-insensitive)
@@ -56,10 +56,10 @@ class EmojiManager {
         result += ` ${emoji}`;
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get emojis to react with based on message content
    * @param {string} content - The message content to analyze
@@ -67,16 +67,16 @@ class EmojiManager {
    */
   getReactionsForMessage(content) {
     const reactEmojis = [];
-    
+
     for (const [keyword, emoji] of Object.entries(this.reactions)) {
       if (content.toLowerCase().includes(keyword)) {
         reactEmojis.push(emoji);
       }
     }
-    
+
     return reactEmojis;
   }
-  
+
   /**
    * Add reactions to a message
    * @param {Object} message - Discord.js message object
@@ -84,7 +84,7 @@ class EmojiManager {
    */
   async addReactionsToMessage(message) {
     const emojis = this.getReactionsForMessage(message.content);
-    
+
     for (const emoji of emojis) {
       try {
         await message.react(emoji);

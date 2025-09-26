@@ -11,7 +11,7 @@ jest.mock('../../src/commands', () => ({
     return null;
   }),
   handleSlashCommand: jest.fn(),
-  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }])
+  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }]),
 }));
 
 const handleChatMessage = require('../../src/services/chat');
@@ -44,12 +44,14 @@ describe('Error handling', () => {
     request.mockRejectedValueOnce(new Error('API Error'));
     conversationManager.isRateLimited.mockReturnValue(false);
     conversationManager.getHistory.mockReturnValue([]);
+    conversationManager.updateTimestamp = jest.fn();
+    conversationManager.addMessage = jest.fn();
 
     const fakeMessage = {
       content: 'test',
-      author: { bot: false, id: '123' },
+      author: { bot: false, id: '123456789012345678' },
       reply: jest.fn(),
-      channel: { sendTyping: jest.fn() }
+      channel: { sendTyping: jest.fn() },
     };
 
     // Act
@@ -57,7 +59,13 @@ describe('Error handling', () => {
 
     // Assert
     expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
-    expect(fakeMessage.reply).toHaveBeenCalledWith('An error occurred during chat generation.');
+    expect(fakeMessage.reply).toHaveBeenCalledWith({
+      embeds: [expect.objectContaining({
+        description: 'The service is temporarily unavailable. Please try again later.',
+        color: expect.any(Number),
+        footer: { text: 'Aszai Bot' }
+      })]
+    });
   });
 
   it('handles failed summary API response', async () => {
@@ -67,9 +75,9 @@ describe('Error handling', () => {
 
     const fakeMessage = {
       content: '!summary',
-      author: { bot: false, id: '123' },
+      author: { bot: false, id: '123456789012345678' },
       reply: jest.fn(),
-      channel: { sendTyping: jest.fn() }
+      channel: { sendTyping: jest.fn() },
     };
 
     // Act

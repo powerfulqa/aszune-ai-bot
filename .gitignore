@@ -8,3 +8,4 @@ test-results/
 junit.xml
 .DS_Store
 commit_message.txt
+commit_msg.txt

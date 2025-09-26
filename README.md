@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.3.3)
+# Aszune AI Bot (v1.4.0)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -6,7 +6,11 @@
 
 [Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. Now supports both traditional `!` commands and modern Discord slash commands. Optimised to run efficiently on Raspberry Pi devices from Pi 3 to Pi 5.
+**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice
+using the Perplexity API with the **sonar** model. It maintains a short conversation history for
+each user and adds fun emoji reactions based on keywords found in messages. Now supports both
+traditional `!` commands and modern Discord slash commands. Optimised to run efficiently on
+Raspberry Pi devices from Pi 3 to Pi 5.
 
 ---
 
@@ -32,31 +36,44 @@
 
 ## Features
 
-- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar** model.
+- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar**
+  model.
 - 🧠 **Context Awareness:** Remembers recent user messages with a configurable history length.
 - 🔁 **Command Support:** Users can clear their history at any time.
 - 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc.
 - 🔒 **Secure Configuration:** `.env` based token and key management (keeps secrets out of code).
-- 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between messages.
+- 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between
+  messages.
 - 📝 **Help Command:** `!help` and `/help` commands list all available commands and usage.
-- 🧾 **Conversation Summary:** `!summary` and `/summary` commands generate a summary of your current conversation using UK English. (Now robust to API requirements: last message must be from user/tool)
-- 📝 **Text Summarisation:** `!summarise <text>` or `!summerise <text>` command generates a summary of any provided text using UK English.
+- 🧾 **Conversation Summary:** `!summary` and `/summary` commands generate a summary of your current
+  conversation using UK English. (Now robust to API requirements: last message must be from
+  user/tool)
+- 📝 **Text Summarisation:** `!summarise <text>` or `!summerise <text>` command generates a summary
+  of any provided text using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
-- 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for better efficiency and reliability.
+- 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for
+  better efficiency and reliability.
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
-- 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a modern user experience.
-- 🧪 **Comprehensive Testing:** 241 automated tests covering all key functionality with >90% code coverage.
-- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases.
+- 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
+  modern user experience.
+- 🧪 **Comprehensive Testing:** 536 automated tests covering all key functionality with 82%+ code
+  coverage.
+- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
-- 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with 82.45% branch coverage for critical components.
-- 📝 **Smart Message Chunking:** Automatically splits long responses into multiple messages without content loss (v1.3.1-1.3.2)
+- 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with
+  82.45% branch coverage for critical components.
+- 📝 **Smart Message Chunking:** Automatically splits long responses into multiple messages without
+  content loss (v1.3.1-1.3.2)
   - 📊 **Intelligent Chunking:** Splits at paragraph and sentence boundaries to maintain context
   - 🔢 **Clear Numbering:** Adds "[1/3]", "[2/3]", etc. prefixes to indicate message sequence
   - 📄 **Word Boundary Preservation:** Ensures words at chunk boundaries remain properly separated
   - 📋 **Full Content Delivery:** No more truncated responses, even for very long messages
+  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper formatting
+  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or mid-URL
 
-- 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on resource-constrained devices like Raspberry Pi 3.
+- 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
+  resource-constrained devices like Raspberry Pi 3.
   - 📉 **Memory Management:** Automatic garbage collection and memory monitoring
   - 🔄 **Message Debouncing:** Prevents excessive API calls
   - 📦 **Lazy Loading:** Loads heavy dependencies only when needed
@@ -64,10 +81,17 @@
   - 🧠 **CPU Monitoring:** Adaptive throttling based on system load
   - 💾 **Cache Pruning:** Automatically manages cache size
   - 📱 **Compact Mode:** Reduced message size and complexity for better performance
-- 🛠️ **Robust ConversationManager:** Refactored to export as a class, instantiated everywhere, and all methods are instance methods.
-- 🔄 **Circular Dependency Fixes:** All config access is now inside methods, preventing circular dependency issues.
-- 🧪 **Test Suite Reliability:** All tests now pass, with relaxed expectations and robust mocking. CI will not fail due to test issues.
+- 🛠️ **Robust ConversationManager:** Refactored to export as a class, instantiated everywhere, and
+  all methods are instance methods.
+- 🔄 **Circular Dependency Fixes:** All config access is now inside methods, preventing circular
+  dependency issues.
+- 🧪 **Test Suite Reliability:** All tests now pass, with relaxed expectations and robust mocking.
+  CI will not fail due to test issues.
 - 📝 **Documentation and Release Notes:** Updated to reflect all recent changes and fixes.
+- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for optimal performance.
+- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and ensure data integrity.
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource utilization.
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management.
 
 ---
 
@@ -76,7 +100,8 @@
 ### Prerequisites
 
 - Node.js v20.18.1 or later
-- A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
+- A Discord bot token (from the
+  [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)
 
 ### Setup Steps
@@ -132,12 +157,14 @@ chmod +x start-pi-optimized.sh
 ```
 
 This script applies several performance optimisations:
+
 - Sets memory limits appropriate for Pi 3
 - Reduces CPU and memory usage
 - Optimises network connections
 - Configures compact mode for responses
 
-For more details on Pi optimisations, see the [Raspberry Pi Optimisation Guide](wiki/Pi-Optimization-Guide.md).
+For more details on Pi optimisations, see the
+[Raspberry Pi Optimisation Guide](wiki/Pi-Optimization-Guide.md).
 
 ---
 
@@ -147,7 +174,8 @@ PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
 
 #### Recommended: Using the Pi Optimisation Shell Script
 
-To run the bot with full Raspberry Pi optimisations, use the provided shell script as your PM2 entry point:
+To run the bot with full Raspberry Pi optimisations, use the provided shell script as your PM2 entry
+point:
 
 ```bash
 pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
@@ -155,23 +183,26 @@ pm2 startup
 pm2 save
 ```
 
-This ensures all Pi-specific environment variables and system-level tweaks are applied before starting the bot, and enables automatic restart after a reboot.
+This ensures all Pi-specific environment variables and system-level tweaks are applied before
+starting the bot, and enables automatic restart after a reboot.
 
-**Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations. Always use the shell script for Pi deployments.
+**Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations. Always use the shell
+script for Pi deployments.
 
 ---
 
 ## Bot Commands
 
-| Command                                  | Description                                                 |
-| ---------------------------------------- | ----------------------------------------------------------- |
-| `!help` / `/help`                        | Shows a list of available commands and usage                |
-| `!clearhistory` / `/clearhistory`        | Clears your conversation history                            |
-| `!summary` / `/summary`                  | Summarises your current conversation in UK English          |
+| Command                                   | Description                                                 |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `!help` / `/help`                         | Shows a list of available commands and usage                |
+| `!clearhistory` / `/clearhistory`         | Clears your conversation history                            |
+| `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
-| `!stats` / `/stats`                      | Shows your usage stats (messages sent, summaries requested) |
+| `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
-> **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash command equivalent may not be fully implemented yet.
+> **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash
+> command equivalent may not be fully implemented yet.
 
 ---
 
@@ -180,28 +211,53 @@ This ensures all Pi-specific environment variables and system-level tweaks are a
 ```
 aszune-ai-bot/
 ├── src/
-│   ├── index.js           # Main entry point
-│   ├── commands/          # Command handlers
-│   ├── config/            # Configuration settings
-│   ├── services/          # API and core services
-│   └── utils/             # Utility functions and helpers
-├── package.json           # Project metadata
-├── package-lock.json      # Dependency lock file
-├── ecosystem.config.js    # PM2 deployment config
-├── .env                   # Environment secrets (not committed)
-├── .gitignore             # Ignored files
-├── __tests__/             # Unit and integration tests
-├── __mocks__/             # Test mocks
-├── jest.config.js         # Jest test configuration
-├── jest.setup.js          # Jest setup file
-└── coverage/              # Code coverage output (Codecov)
+│   ├── index.js                    # Main entry point
+│   ├── commands/                   # Command handlers
+│   │   └── index.js               # Unified command handler
+│   ├── config/                     # Configuration settings
+│   │   └── config.js              # Global configuration
+│   ├── services/                   # API and core services
+│   │   ├── chat.js                # Chat message handler
+│   │   ├── perplexity-secure.js   # Perplexity API service
+│   │   └── storage.js             # Data storage service
+│   └── utils/                      # Utility functions and helpers
+│       ├── conversation.js         # Conversation management
+│       ├── error-handler.js        # Error handling utilities
+│       ├── input-validator.js      # Input validation
+│       ├── logger.js               # Logging utilities
+│       ├── memory-monitor.js       # Memory monitoring
+│       ├── message-chunker.js      # Message chunking
+│       ├── message-chunking/       # Enhanced chunking system
+│       │   ├── index.js           # Main chunking coordinator
+│       │   ├── chunk-boundary-handler.js
+│       │   ├── source-reference-processor.js
+│       │   └── url-formatter.js
+│       ├── pi-detector.js          # Raspberry Pi detection
+│       └── [other utilities]       # Additional utility modules
+├── data/                           # Persistent data storage
+│   ├── question_cache.json        # Response cache
+│   └── user_stats.json            # User statistics
+├── docs/                          # Version-specific documentation
+├── wiki/                          # Comprehensive documentation
+├── __tests__/                     # Test suites
+│   ├── integration/               # Integration tests
+│   ├── unit/                      # Unit tests
+│   └── utils/                     # Test utilities
+├── __mocks__/                     # Test mocks
+├── coverage/                      # Code coverage reports
+├── package.json                   # Project metadata
+├── ecosystem.config.js            # PM2 deployment config
+├── jest.config.js                 # Jest test configuration
+├── jest.setup.js                  # Jest setup file
+└── .env                           # Environment secrets (not committed)
 ```
 
 ---
 
 ## Testing & Coverage
 
-The project includes comprehensive testing with Jest covering both standard functionality and branch coverage. To run tests:
+The project includes comprehensive testing with Jest covering both standard functionality and branch
+coverage. To run tests:
 
 ```bash
 # Run all tests
@@ -218,6 +274,7 @@ npm run test:branch-coverage
 ```
 
 The test suite includes:
+
 - Unit tests for all service modules
 - Integration tests for bot functionality
 - Edge case handling tests
@@ -234,14 +291,18 @@ This project implements specific configurations for branch coverage testing:
   - logger.js: 82.45% branch coverage (combined with branch coverage tests)
 
 We use separate Jest configurations for branch coverage:
+
 - `index-branch-coverage.jest.config.js` - For index.js testing
 - `logger-branch-coverage.jest.config.js` - For logger.js testing
 
-The `test:branch-coverage` script runs both configurations sequentially to ensure all core components meet the coverage requirements. All branch coverage tests are now passing and properly implemented.
+The `test:branch-coverage` script runs both configurations sequentially to ensure all core
+components meet the coverage requirements. All branch coverage tests are now passing and properly
+implemented.
 
-For more detailed information about the testing strategy, see the [Testing Guide](./wiki/Testing-Guide.md) and [__tests__/README.md](./__tests__/README.md).
+For more detailed information about the testing strategy, see the
+[Testing Guide](./wiki/Testing-Guide.md) and [**tests**/README.md](./__tests__/README.md).
 
-Current test coverage: >90% overall with 241 tests.
+Current test coverage: 82%+ overall with 536 tests.
 
 ---
 
@@ -306,14 +367,17 @@ MIT — feel free to use, modify, and share ✨
 
 - The codebase has been completely refactored to use a modular structure under the `src/` directory.
 - The bot uses a robust command handler for easier extension and maintenance.
-- Conversation history and rate limiting are managed using JavaScript `Map` objects for better performance and reliability.
+- Conversation history and rate limiting are managed using JavaScript `Map` objects for better
+  performance and reliability.
 - The `!summarise <text>` command is available for summarising arbitrary text.
 - Error handling and environment variable checks have been improved and centralised.
-- The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather than making up an answer.
+- The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather
+  than making up an answer.
 
 ## Changelog
 
 ### 1.3.0 (2025-08-01)
+
 - Fixed all logger branch coverage tests, improving coverage from 57.89% to 82.45%.
 - Resolved "duplicate manual mock found" warning in test infrastructure.
 - Properly implemented mocking for fs.promises methods with a centralized approach.
@@ -321,6 +385,7 @@ MIT — feel free to use, modify, and share ✨
 - Updated documentation and test scripts to reflect testing improvements.
 
 ### 1.2.2 (2025-07-30)
+
 - Refactored ConversationManager to export as a class and require instantiation.
 - Fixed circular dependency issues by moving config access inside methods.
 - Updated all code and tests to use the new ConversationManager pattern.

@@ -2,7 +2,8 @@
 
 ## Overview
 
-Aszune AI Bot uses GitHub Actions for continuous integration and deployment. The pipeline is defined in `.github/workflows/unified-ci.yml` and runs automatically on push and pull request events.
+Aszune AI Bot uses GitHub Actions for continuous integration and deployment. The pipeline is defined
+in `.github/workflows/unified-ci.yml` and runs automatically on push and pull request events.
 
 ## Pipeline Steps
 
@@ -18,6 +19,7 @@ Aszune AI Bot uses GitHub Actions for continuous integration and deployment. The
 The workflow uses the following key features:
 
 ### Node.js Setup
+
 ```yaml
 - name: Set up Node.js
   uses: actions/setup-node@v3
@@ -27,18 +29,21 @@ The workflow uses the following key features:
 ```
 
 ### Test Execution
+
 ```yaml
 - name: Run tests with coverage
   run: npm run test:ci
 ```
 
 ### Security Checks
+
 ```yaml
 - name: Run security audit
   run: npm audit --audit-level=high --production
 ```
 
 ### Coverage Reporting
+
 ```yaml
 - name: Upload coverage to Codecov
   uses: codecov/codecov-action@v3

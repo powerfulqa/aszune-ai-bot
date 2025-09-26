@@ -1,10 +1,14 @@
 # Aszune AI Bot Documentation
 
-Welcome to the Aszune AI Bot Wiki! This documentation provides detailed information about setup, usage, and development of the Aszune AI Bot.
+Welcome to the Aszune AI Bot Wiki! This documentation provides detailed information about setup,
+usage, and development of the Aszune AI Bot.
 
 ## What is Aszune AI Bot?
 
-Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using the Perplexity API with the **sonar** model. It maintains a short conversation history for each user and adds fun emoji reactions based on keywords found in messages. The bot supports both traditional `!` commands and modern Discord slash commands.
+Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
+the Perplexity API with the **sonar** model. It maintains a short conversation history for each user
+and adds fun emoji reactions based on keywords found in messages. The bot supports both traditional
+`!` commands and modern Discord slash commands.
 
 ## Navigation
 
@@ -21,6 +25,18 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 
 ## Version Information
 
+- **v1.4.0** - Comprehensive Testing & Coverage Enhancement (2025-01-22)
+  - Massive test coverage improvement from 77.79% to 82%+
+  - Added comprehensive test suites for memory monitoring, message chunking, and command handling
+  - Expanded test count from 371 to 380+ passing tests
+  - Enhanced error handling and recovery mechanisms across all modules
+  - Production-ready quality with extensive test coverage
+  - New utility modules for error handling, input validation, memory monitoring, and performance tracking
+  - Enhanced message chunking with advanced boundary detection and source link processing
+  - Comprehensive input sanitization and validation system
+  - Advanced memory management and garbage collection
+  - Real-time performance monitoring and optimization
+
 - **v1.3.2** - Message Chunking Enhancement (2025-08-06)
   - Fixed critical bug where words at chunk boundaries could be incorrectly joined
   - Improved word boundary detection to ensure proper text formatting
@@ -30,7 +46,6 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
   - Added automatic message chunking to prevent long responses from being truncated
   - Intelligently splits messages at paragraph and sentence boundaries
   - Added numbering prefixes to indicate message sequence
-  
 - **v1.3.0** - Enhanced Testing & Code Quality (2025-08-01)
   - Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%
   - Resolved "duplicate manual mock found: discord" warning by reorganizing mock files
@@ -59,7 +74,6 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
   - Improved error handling in Perplexity service
   - Updated CI security audit configuration for production dependencies
   - Fixed all test failures and improved code coverage
-  
 - **v1.1.0** - Refactor and feature update
   - Complete refactor to modular architecture
   - Added stats tracking and slash command support
@@ -73,7 +87,8 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 
 ## Features
 
-- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar** model
+- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar**
+  model
 - 🧠 **Context Awareness:** Remembers recent user messages with a configurable history length
 - 🔁 **Command Support:** Users can clear their history at any time
 - 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc
@@ -88,8 +103,14 @@ Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guid
 - 🆕 **Stats Tracking:** Shows per-user message and summary counts
 - 🆕 **Slash Command Support:** All major commands available as Discord slash commands
 - 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
-- 🧪 **Comprehensive Testing:** 140 automated tests with >90% code coverage
+- 🧪 **Comprehensive Testing:** 380+ automated tests with 82%+ code coverage
 - 🧾 **Branch Coverage Testing:** 82.45% branch coverage for critical components like logger.js
 - 🔧 **Improved Code Quality:** Refactored complex functions into smaller, maintainable units
 - 🔒 **Enhanced Security:** Fixed permissions issues and improved API validation
 - ✨ **Code Consistency:** Added ESLint configuration for consistent coding style
+- 🛡️ **Comprehensive Error Handling:** Advanced error handling system with context-aware error messages
+- 🔍 **Input Validation:** Complete input sanitization and validation system
+- 🧠 **Memory Management:** Advanced memory monitoring and automatic garbage collection
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management
+- 🎯 **Advanced Chunking:** Enhanced message chunking with intelligent boundary detection and source link processing

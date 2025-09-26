@@ -1,87 +1,119 @@
 # Technical Documentation
 
-This page provides technical details about the architecture, code structure, and implementation of the Aszune AI Bot.
+This page provides technical details about the architecture, code structure, and implementation of
+the Aszune AI Bot.
 
 ## Architecture Overview
 
-Aszune AI Bot is built using Node.js and the Discord.js library, with the Perplexity API serving as the AI backend. The bot uses a modular architecture to separate concerns and make the codebase more maintainable.
+Aszune AI Bot is built using Node.js and the Discord.js library, with the Perplexity API serving as
+the AI backend. The bot uses a modular architecture to separate concerns and make the codebase more
+maintainable.
 
 ### Core Components
 
 1. **Discord Interface** - Handles interactions with Discord's API
-2. **Command Handler** - Processes and routes commands
-3. **Perplexity API Client** - Manages communication with Perplexity's API
-4. **Conversation Manager** - Tracks and stores user conversations
+2. **Command Handler** - Processes and routes commands (both text and slash commands)
+3. **Perplexity API Client** - Manages communication with Perplexity's API with secure caching
+4. **Conversation Manager** - Tracks and stores user conversations with class-based architecture
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Message Chunker** - Intelligently splits long messages into multiple chunks while preserving content and formatting
-8. **Response Caching System** - Securely stores and retrieves responses to save API calls for repeated questions
-9. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-10. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell script, which sets environment variables and applies system-level tweaks before launching Node.js. For production deployments, use PM2 with the shell script as the entry point:
+7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while preserving
+   content and formatting with advanced boundary detection
+8. **Response Caching System** - Securely stores and retrieves responses to save API calls for
+   repeated questions
+9. **Error Handler** - Comprehensive error handling and recovery system
+10. **Input Validator** - Input sanitization and validation system
+11. **Memory Monitor** - Advanced memory usage tracking and garbage collection
+12. **Performance Monitor** - Real-time performance tracking and optimization
+13. **Storage Service** - Data persistence and management
+14. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
+15. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
+    optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
+    script, which sets environment variables and applies system-level tweaks before launching
+    Node.js. For production deployments, use PM2 with the shell script as the entry point:
 
 ```bash
 pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
 ```
 
-This ensures all optimisations are applied. Running `pm2 start src/index.js` will NOT enable Pi optimisations.
+This ensures all optimisations are applied. Running `pm2 start src/index.js` will NOT enable Pi
+optimisations.
 
 ## Project Structure
 
 ```
 aszune-ai-bot/
 ├── src/
-│   ├── index.js           # Main entry point
-│   ├── commands/          # Command handlers
-│   │   ├── clearHistory.js
-│   │   ├── help.js
-│   │   ├── stats.js
-│   │   ├── summarise.js
-│   │   └── summary.js
-│   ├── config/            # Configuration settings
-│   │   └── config.js      # Global configuration
-│   ├── services/          # API and core services
-│   │   ├── perplexityService.js
-│   │   └── conversationService.js
-│   └── utils/             # Utility functions and helpers
-│       ├── emojiUtils.js
-│       ├── message-chunker.js # Message splitting utility
-│       ├── rateLimiter.js
-│       └── stringUtils.js
-├── scripts/               # Development and utility scripts
-│   ├── test-chunking.js   # Test script for message chunking
-│   ├── test-chunking.bat  # Windows batch file to run chunking test
-│   └── test-chunking.sh   # Unix shell script to run chunking test
-├── docs/                  # Documentation and version-specific release notes
-│   ├── README.md          # Index of available release notes
-│   ├── v1.3.0.md          # Version 1.3.0 release notes
-│   ├── v1.3.1.md          # Version 1.3.1 release notes
-│   └── v1.3.2.md          # Version 1.3.2 release notes
-├── package.json           # Project metadata
-├── package-lock.json      # Dependency lock file
-├── ecosystem.config.js    # PM2 deployment config
-├── .env                   # Environment secrets (not committed)
-├── .gitignore             # Ignored files
-├── __tests__/             # Unit and integration tests
-├── __mocks__/             # Test mocks
-├── .github/               # GitHub-specific templates and workflows
-│   ├── COMMIT_TEMPLATE.md # Template for commit messages
-│   └── pull_request_template.md # Template for pull requests
-├── jest.config.js         # Jest test configuration
-├── jest.setup.js          # Jest setup file
-├── RELEASE-NOTES.md       # Master release notes with links to detailed versions
-└── coverage/              # Code coverage output
+│   ├── index.js                    # Main entry point
+│   ├── commands/                   # Command handlers
+│   │   └── index.js               # Unified command handler
+│   ├── config/                     # Configuration settings
+│   │   └── config.js              # Global configuration
+│   ├── services/                   # API and core services
+│   │   ├── chat.js                # Chat message handler
+│   │   ├── perplexity-secure.js   # Perplexity API service with caching
+│   │   └── storage.js             # Data storage service
+│   └── utils/                      # Utility functions and helpers
+│       ├── conversation.js         # Conversation management (class-based)
+│       ├── error-handler.js        # Error handling utilities
+│       ├── input-validator.js      # Input validation and sanitization
+│       ├── logger.js               # Logging utilities
+│       ├── memory-monitor.js       # Memory monitoring and GC
+│       ├── message-chunker.js      # Basic message chunking
+│       ├── message-chunking/       # Enhanced chunking system
+│       │   ├── index.js           # Main chunking coordinator
+│       │   ├── chunk-boundary-handler.js
+│       │   ├── source-reference-processor.js
+│       │   └── url-formatter.js
+│       ├── pi-detector.js          # Raspberry Pi detection
+│       ├── performance-monitor.js  # Performance tracking
+│       ├── cache-pruner.js         # Cache management
+│       ├── connection-throttler.js # Connection limiting
+│       ├── debouncer.js            # Message debouncing
+│       ├── lazy-loader.js          # Lazy loading utilities
+│       └── [other utilities]       # Additional utility modules
+├── data/                           # Persistent data storage
+│   ├── question_cache.json        # Response cache
+│   └── user_stats.json            # User statistics
+├── scripts/                        # Development and utility scripts
+│   ├── test-chunking.js           # Test script for message chunking
+│   ├── test-chunking.bat          # Windows batch file to run chunking test
+│   └── test-chunking.sh           # Unix shell script to run chunking test
+├── docs/                          # Documentation and version-specific release notes
+│   ├── README.md                  # Index of available release notes
+│   ├── v1.3.0.md                 # Version 1.3.0 release notes
+│   ├── v1.3.1.md                 # Version 1.3.1 release notes
+│   ├── v1.3.2.md                 # Version 1.3.2 release notes
+│   └── v1.4.0.md                 # Version 1.4.0 release notes
+├── wiki/                          # Comprehensive documentation
+├── __tests__/                     # Test suites
+│   ├── integration/               # Integration tests
+│   ├── unit/                      # Unit tests
+│   └── utils/                     # Test utilities
+├── __mocks__/                     # Test mocks
+├── coverage/                      # Code coverage reports
+├── package.json                   # Project metadata
+├── package-lock.json              # Dependency lock file
+├── ecosystem.config.js            # PM2 deployment config
+├── jest.config.js                 # Jest test configuration
+├── jest.setup.js                  # Jest setup file
+├── RELEASE-NOTES.md               # Master release notes
+└── .env                           # Environment secrets (not committed)
 ```
 
 ## Response Caching System
 
-Aszune AI Bot implements a secure file-based caching system to improve performance and reduce API calls.
+Aszune AI Bot implements a secure file-based caching system to improve performance and reduce API
+calls.
 
 ### How Caching Works
 
 1. **Cache Storage**: Responses from the Perplexity API are stored in `data/question_cache.json`
-2. **Secure File Permissions**: Cache files use strict permissions (0o644 for files, 0o755 for directories)
+2. **Secure File Permissions**: Cache files use strict permissions (0o644 for files, 0o755 for
+   directories)
 3. **Cache Keying**: Questions are hashed using MD5 to create unique cache keys
-4. **Cache Hit Behavior**: When a question matches a cached entry, the response is served immediately without calling the API
+4. **Cache Hit Behavior**: When a question matches a cached entry, the response is served
+   immediately without calling the API
 5. **Cache Pruning**: The cache is automatically pruned to maintain performance
    - Limits entries to the configured maximum (default 100)
    - Older entries are removed first
@@ -91,31 +123,83 @@ Aszune AI Bot implements a secure file-based caching system to improve performan
 
 Caching behavior can be controlled through the Pi optimization settings:
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `PI_OPTIMIZATIONS.CACHE_ENABLED` | Enable/disable response caching | `true` |
-| `PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES` | Maximum cache entries | `100` |
+| Setting                              | Description                     | Default |
+| ------------------------------------ | ------------------------------- | ------- |
+| `PI_OPTIMIZATIONS.CACHE_ENABLED`     | Enable/disable response caching | `true`  |
+| `PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES` | Maximum cache entries           | `100`   |
 
-Individual API calls can also override the cache behavior by setting `caching: false` in the options.
+Individual API calls can also override the cache behavior by setting `caching: false` in the
+options.
 
 ### Cache Security
 
 All cache files are created with secure permissions:
+
 - Files: 0o644 (Owner can read/write, others can only read)
 - Directories: 0o755 (Owner can read/write/execute, others can read/execute)
 
-This ensures that only the bot process can modify cached data while still allowing the files to be read by monitoring tools.
+This ensures that only the bot process can modify cached data while still allowing the files to be
+read by monitoring tools.
+
+## Enhanced Architecture (v1.4.0+)
+
+### New Utility Modules
+
+The bot now includes a comprehensive set of utility modules for enhanced functionality:
+
+#### Error Handling System
+- **`error-handler.js`**: Centralized error handling with context-aware error messages
+- Comprehensive error recovery mechanisms
+- Structured error logging and reporting
+- Graceful degradation for API failures
+
+#### Input Validation System
+- **`input-validator.js`**: Input sanitization and validation
+- Prevents malicious input and ensures data integrity
+- Configurable validation rules for different input types
+- Comprehensive error reporting for invalid inputs
+
+#### Memory Management
+- **`memory-monitor.js`**: Advanced memory usage tracking
+- Automatic garbage collection triggers
+- Memory limit monitoring and alerts
+- Resource usage optimization
+
+#### Performance Monitoring
+- **`performance-monitor.js`**: Real-time performance tracking
+- API response time monitoring
+- Resource utilization metrics
+- Performance optimization recommendations
+
+#### Enhanced Caching System
+- **`cache-pruner.js`**: Intelligent cache management
+- **`enhanced-cache.js`**: Advanced caching with TTL and size limits
+- Automatic cache cleanup and optimization
+- Memory-efficient cache storage
+
+#### Connection Management
+- **`connection-throttler.js`**: Network connection limiting
+- **`debouncer.js`**: Message debouncing to prevent spam
+- Adaptive throttling based on system load
+- Resource-constrained device optimization
+
+#### Lazy Loading System
+- **`lazy-loader.js`**: On-demand module loading
+- Reduces initial memory footprint
+- Improves startup performance
+- Dynamic dependency management
 
 ## Core Modules
 
 ### 1. Discord Interface (index.js)
 
-The main entry point initializes the Discord client, sets up event handlers, and connects the bot to Discord's API.
+The main entry point initializes the Discord client, sets up event handlers, and connects the bot to
+Discord's API.
 
 ```javascript
 // Simplified example
-const { Client, IntentsBitField } = require("discord.js");
-const commandHandler = require("./commands");
+const { Client, IntentsBitField } = require('discord.js');
+const commandHandler = require('./commands');
 
 const client = new Client({
   intents: [
@@ -125,15 +209,15 @@ const client = new Client({
   ],
 });
 
-client.on("ready", () => {
-  console.log("Discord bot is online!");
+client.on('ready', () => {
+  console.log('Discord bot is online!');
 });
 
-client.on("messageCreate", async (message) => {
+client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   // Handle command or send to conversation handler
-  if (message.content.startsWith("!")) {
+  if (message.content.startsWith('!')) {
     commandHandler.handleCommand(message);
   } else if (message.mentions.has(client.user)) {
     // Handle mention
@@ -150,11 +234,11 @@ Processes user commands and routes them to the appropriate handler function.
 ```javascript
 // Simplified example of command handler
 const commands = {
-  help: require("./commands/help"),
-  clearhistory: require("./commands/clearHistory"),
-  summary: require("./commands/summary"),
-  summarise: require("./commands/summarise"),
-  stats: require("./commands/stats"),
+  help: require('./commands/help'),
+  clearhistory: require('./commands/clearHistory'),
+  summary: require('./commands/summary'),
+  summarise: require('./commands/summarise'),
+  stats: require('./commands/stats'),
 };
 
 function handleCommand(message) {
@@ -164,7 +248,7 @@ function handleCommand(message) {
   if (commands[command]) {
     commands[command].execute(message, args);
   } else {
-    message.reply("Unknown command. Use !help to see available commands.");
+    message.reply('Unknown command. Use !help to see available commands.');
   }
 }
 ```
@@ -175,27 +259,27 @@ Manages communication with the Perplexity AI API.
 
 ```javascript
 // Simplified example
-const axios = require("axios");
+const axios = require('axios');
 
 async function sendChatCompletion(messages) {
   try {
     const response = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+      'https://api.perplexity.ai/chat/completions',
       {
-        model: "sonar",
+        model: 'sonar',
         messages: messages,
       },
       {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
         },
-      },
+      }
     );
 
     return response.data.choices[0].message.content;
   } catch (error) {
-    console.error("Error calling Perplexity API:", error);
+    console.error('Error calling Perplexity API:', error);
     throw error;
   }
 }
@@ -257,7 +341,8 @@ function isRateLimited(userId) {
 
 ### 6. Message Chunker
 
-Handles the splitting of long messages into multiple smaller chunks to work around Discord's message character limits while preserving content integrity and formatting.
+Handles the splitting of long messages into multiple smaller chunks to work around Discord's message
+character limits while preserving content integrity and formatting.
 
 ```javascript
 // Simplified example from message-chunker.js
@@ -269,21 +354,21 @@ function chunkMessage(message, maxLength = 2000) {
 
   const chunks = [];
   let currentChunk = '';
-  
+
   // Account for chunk numbering prefix (e.g., "[1/2] ") in max length
   const prefixBuffer = 7; // "[xx/xx] "
   const effectiveMaxLength = maxLength - prefixBuffer;
-  
+
   // Split by paragraphs first
   const paragraphs = message.split('\n\n');
-  
+
   for (const paragraph of paragraphs) {
     // If paragraph would exceed limit, split into smaller chunks
     if ((currentChunk + paragraph).length + 2 > effectiveMaxLength && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       currentChunk = '';
     }
-    
+
     // Process paragraph content
     if (paragraph.length > effectiveMaxLength) {
       // Split long paragraphs by sentences
@@ -293,29 +378,28 @@ function chunkMessage(message, maxLength = 2000) {
       currentChunk += paragraph + '\n\n';
     }
   }
-  
+
   // Check for word breaks at chunk boundaries to prevent words from merging
   for (let i = 0; i < chunks.length - 1; i++) {
     const currentChunk = chunks[i];
     const nextChunk = chunks[i + 1];
-    
+
     // If current chunk ends with a word and next chunk starts with a word
     // Add a space to prevent words from merging (e.g., "an" + "officer" → "anofficer")
     if (/\w$/.test(currentChunk) && /^\w/.test(nextChunk)) {
       chunks[i] = currentChunk + ' ';
     }
   }
-  
+
   // Add numbering prefix to each chunk
-  return chunks.map((chunk, index) => 
-    `[${index + 1}/${chunks.length}] ${chunk}`
-  );
+  return chunks.map((chunk, index) => `[${index + 1}/${chunks.length}] ${chunk}`);
 }
 ```
 
 ### 7. Pi Optimization System
 
-Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available resources.
+Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available
+resources.
 
 ```javascript
 // Simplified example from pi-detector.js
@@ -326,17 +410,17 @@ async function detectPiModel() {
       isPi: false,
       model: 'unknown',
       ram: os.totalmem() / (1024 * 1024 * 1024), // RAM in GB
-      cores: os.cpus().length
+      cores: os.cpus().length,
     };
 
     // Look for Raspberry Pi specific files
     if (os.platform() === 'linux') {
       const cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
-      
+
       // Check if this is a Pi
       if (cpuInfo.includes('Raspberry Pi')) {
         result.isPi = true;
-        
+
         // Extract model information
         if (cpuInfo.includes('BCM2835')) {
           result.model = result.ram < 1 ? 'pi3' : 'pi4';
@@ -347,7 +431,7 @@ async function detectPiModel() {
         }
       }
     }
-    
+
     return result;
   } catch (error) {
     return { isPi: false, model: 'unknown' };
@@ -358,7 +442,7 @@ async function detectPiModel() {
 function generateOptimizedConfig(detectedPi) {
   // Base configuration
   const config = { ENABLED: true, MAX_CONNECTIONS: 2 };
-  
+
   // Model-specific optimizations
   switch (detectedPi.model) {
     case 'pi3':
@@ -377,7 +461,7 @@ function generateOptimizedConfig(detectedPi) {
       config.MAX_CONNECTIONS = detectedPi.ram >= 8 ? 10 : 8;
       break;
   }
-  
+
   return config;
 }
 ```
@@ -397,22 +481,23 @@ The project uses Jest for testing, with separate test files for each module:
 
 ```javascript
 // Example test for the emoji utility
-const { addEmojiReactions } = require("../src/utils/emojiUtils");
+const { addEmojiReactions } = require('../src/utils/emojiUtils');
 
-describe("Emoji Utilities", () => {
+describe('Emoji Utilities', () => {
   test('should add correct emoji for keyword "hello"', async () => {
     const message = {
-      content: "Hello everyone!",
+      content: 'Hello everyone!',
       react: jest.fn().mockResolvedValue(true),
     };
 
     await addEmojiReactions(message);
-    expect(message.react).toHaveBeenCalledWith("👋");
+    expect(message.react).toHaveBeenCalledWith('👋');
   });
 });
 ```
 
-> For comprehensive information about testing, see the [Testing Guide](Testing-Guide) and [CI/CD Pipeline](CI-CD-Pipeline) pages.
+> For comprehensive information about testing, see the [Testing Guide](Testing-Guide) and
+> [CI/CD Pipeline](CI-CD-Pipeline) pages.
 
 ## Performance Considerations
 
@@ -445,14 +530,14 @@ async function shutdown(signal) {
     logger.info(`Shutdown already in progress. Ignoring additional ${signal} signal.`);
     return;
   }
-  
+
   isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
-  
+
   // Track any errors that occur during shutdown
   const errors = [];
   let shutdownStatus = true;
-  
+
   try {
     // Clean up conversation manager (save stats, clear timers)
     await conversationManager.destroy();
@@ -461,7 +546,7 @@ async function shutdown(signal) {
     errors.push(error);
     logger.error('Error shutting down conversation manager', error);
   }
-  
+
   try {
     // Destroy Discord client connection
     await client.destroy();
@@ -471,7 +556,7 @@ async function shutdown(signal) {
     errors.push(error);
     logger.error('Shutdown error', error);
   }
-  
+
   // Log individual errors for easier debugging
   if (errors.length > 0) {
     errors.forEach((err, index) => {
@@ -499,6 +584,40 @@ async function shutdown(signal) {
 - Webhook support for external integrations
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
+
+## v1.4.0 Comprehensive Testing & Coverage Enhancement (2025-01-22)
+
+### Major Testing Infrastructure Improvements
+
+- **Test Coverage Expansion**: Increased overall test coverage from 77.79% to 82%+
+- **New Test Modules**: Added comprehensive test suites for previously untested modules
+- **Test Count Growth**: Expanded from 371 to 536 passing tests
+- **Production Readiness**: All critical modules now have extensive test coverage
+
+### New Test Suites Added
+
+- **Memory Monitor Tests** (`__tests__/unit/memory-monitor.test.js`): Complete test coverage for
+  memory monitoring, garbage collection, and resource management
+- **Message Chunking Tests** (`__tests__/unit/message-chunking/index.test.js`): Comprehensive
+  testing of enhanced message chunking functionality
+- **Chunk Boundary Handler Tests**
+  (`__tests__/unit/message-chunking/chunk-boundary-handler.test.js`): Full test coverage for
+  intelligent chunk boundary detection and fixing
+- **Enhanced Commands Tests**: Expanded test coverage for all command handling scenarios
+
+### Technical Improvements
+
+- **Error Handling**: Enhanced error handling and recovery mechanisms across all modules
+- **Input Validation**: Comprehensive testing of input validation and sanitization
+- **API Reliability**: Improved API interaction reliability with extensive error scenario testing
+- **Resource Management**: Better memory and resource management with complete test coverage
+
+### Quality Assurance
+
+- **Code Quality**: All modules now have robust error handling and input validation
+- **Stability**: Extensive testing ensures production stability and reliability
+- **Maintainability**: Well-tested code is easier to maintain and extend
+- **Debugging**: Enhanced error reporting and logging for better troubleshooting
 
 ## v1.3.0 Enhanced Testing & Code Quality (2025-08-01)
 

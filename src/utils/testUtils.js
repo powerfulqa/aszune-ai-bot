@@ -3,6 +3,9 @@
  * This file contains utility functions for testing the Discord bot
  * See __tests__/unit/testUtils.test.js for the consolidated tests of these utilities
  */
+
+// Default Discord user ID for testing
+const DEFAULT_TEST_USER_ID = '123456789012345678';
 const mockReply = jest.fn().mockResolvedValue({});
 const mockReact = jest.fn().mockResolvedValue({});
 const mockSendTyping = jest.fn().mockResolvedValue({});
@@ -15,12 +18,12 @@ const mockSendTyping = jest.fn().mockResolvedValue({});
 function createMockMessage(options = {}) {
   // Extract only expected properties to avoid overriding critical mock properties
   const { content, isBot, userId, ...safeOptions } = options;
-  
+
   return {
     content: content || '',
     author: {
       bot: isBot || false,
-      id: userId || '12345',
+      id: userId || DEFAULT_TEST_USER_ID,
     },
     reply: mockReply,
     react: mockReact,
@@ -48,7 +51,7 @@ function resetMocks() {
 function createMockInteraction(options = {}) {
   return {
     user: {
-      id: options.userId || '12345',
+      id: options.userId || '123456789012345678',
     },
     commandName: options.commandName || 'help',
     isChatInputCommand: () => true,
