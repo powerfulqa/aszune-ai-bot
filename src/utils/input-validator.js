@@ -556,7 +556,7 @@ class InputValidator {
         
         
         // Sanitize content
-        const sanitizationResult = this.sanitizeContent(input);
+        this.sanitizeContent(input);
         
         // Allow empty strings
         if (input.length === 0) {

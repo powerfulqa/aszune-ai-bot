@@ -21,6 +21,20 @@
       "error",
       { "max": 50, "skipBlankLines": true, "skipComments": true }
     ],
-    "max-statements": ["error", 25]
-  }
+    "max-statements": ["error", 25],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.js", "**/*.test.js"],
+      "rules": {
+        "max-lines-per-function": ["error", { "max": 200, "skipBlankLines": true, "skipComments": true }],
+        "max-statements": ["error", 100],
+        "complexity": ["error", { "max": 30 }],
+        "max-depth": ["error", 6],
+        "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+        "no-console": "off"
+      }
+    }
+  ]
 }

@@ -104,16 +104,12 @@ function fixChunkBoundaryAt(chunks, index, safeMaxLength) {
   const domainFix = fixDomainBoundary(chunks, index, safeMaxLength);
   if (domainFix.fixed) {
     chunks = domainFix.chunks;
-    currentChunk = chunks[index];
-    nextChunk = chunks[index + 1];
   }
 
   // Apply numbered list fixes
   const numberFix = fixNumberedListBoundary(chunks, index, safeMaxLength);
   if (numberFix.fixed) {
     chunks = numberFix.chunks;
-    currentChunk = chunks[index];
-    nextChunk = chunks[index + 1];
   }
 
   // Apply markdown link fixes

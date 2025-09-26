@@ -123,31 +123,26 @@ function checkTemperatureCapability() {
  * @returns {Promise<Object>} Modified result object
  */
 async function processLinuxPiDetection(result) {
-  try {
-    const cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
+  const cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
 
-    // Check if this is a Pi using multiple methods
-    if (!isRaspberryPi(cpuInfo)) {
-      return result;
-    }
-
-    result.isPi = true;
-    result.model = determinePiModel(cpuInfo, result);
-
-    // Store CPU frequency
-    const frequency = extractCpuFrequency(cpuInfo);
-    if (frequency) {
-      result.cpuInfo.maxFrequency = frequency;
-    }
-
-    // Get temperature capability
-    result.cpuInfo.canReadTemp = checkTemperatureCapability();
-    
+  // Check if this is a Pi using multiple methods
+  if (!isRaspberryPi(cpuInfo)) {
     return result;
-  } catch (error) {
-    // Re-throw error so it can be logged by the calling function
-    throw error;
   }
+
+  result.isPi = true;
+  result.model = determinePiModel(cpuInfo, result);
+
+  // Store CPU frequency
+  const frequency = extractCpuFrequency(cpuInfo);
+  if (frequency) {
+    result.cpuInfo.maxFrequency = frequency;
+  }
+
+  // Get temperature capability
+  result.cpuInfo.canReadTemp = checkTemperatureCapability();
+  
+  return result;
 }
 
 async function detectPiModel() {
