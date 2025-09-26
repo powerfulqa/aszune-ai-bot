@@ -70,8 +70,8 @@ describe('Chat Service - Advanced', () => {
     expect(message.reply).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalledWith({
       embeds: [{
-        color: expect.any(Number),
-        description: expect.stringContaining('service is temporarily unavailable'),
+        color: "#5865F2",
+        description: "The service is temporarily unavailable. Please try again later.",
         footer: { text: 'Aszai Bot' }
       }]
     });
@@ -158,8 +158,8 @@ describe('Chat Service - Advanced', () => {
 
     expect(message.reply).toHaveBeenCalledWith({
       embeds: [{
-        color: expect.any(Number),
-        description: expect.stringContaining('unexpected error occurred'),
+        color: "#5865F2",
+        description: "An unexpected error occurred. Please try again later.",
         footer: { text: 'Aszai Bot' }
       }]
     });
@@ -173,8 +173,8 @@ describe('Chat Service - Advanced', () => {
 
     expect(message.reply).toHaveBeenCalledWith({
       embeds: [{
-        color: expect.any(Number),
-        description: expect.stringContaining('service is currently busy'),
+        color: "#5865F2",
+        description: "The service is currently busy. Please wait a moment and try again.",
         footer: { text: 'Aszai Bot' }
       }]
     });

@@ -1,55 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="23" failures="0" errors="0" time="11.274">
-  <testsuite name="PerplexitySecure Service - Advanced" errors="0" failures="0" skipped="0" timestamp="2025-09-26T07:42:42" time="6.993" tests="10">
-    <testcase classname="PerplexitySecure Service - Advanced question caching should cache questions and return cached responses" name="PerplexitySecure Service - Advanced question caching should cache questions and return cached responses" time="0.262">
+<testsuites name="jest tests" tests="11" failures="0" errors="0" time="1.333">
+  <testsuite name="Chat Service - Advanced" errors="0" failures="0" skipped="0" timestamp="2025-09-26T08:07:54" time="1.196" tests="11">
+    <testcase classname="Chat Service - Advanced should handle AI response generation errors" name="Chat Service - Advanced should handle AI response generation errors" time="0.122">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced question caching should not cache when caching is disabled" name="PerplexitySecure Service - Advanced question caching should not cache when caching is disabled" time="0.008">
+    <testcase classname="Chat Service - Advanced should add emojis to responses when not in low CPU mode" name="Chat Service - Advanced should add emojis to responses when not in low CPU mode" time="0.032">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced question caching should handle cache file read errors gracefully" name="PerplexitySecure Service - Advanced question caching should handle cache file read errors gracefully" time="0.068">
+    <testcase classname="Chat Service - Advanced should handle long responses with chunking" name="Chat Service - Advanced should handle long responses with chunking" time="0.026">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced question caching should handle cache file write errors gracefully" name="PerplexitySecure Service - Advanced question caching should handle cache file write errors gracefully" time="0.099">
+    <testcase classname="Chat Service - Advanced should handle special characters in messages" name="Chat Service - Advanced should handle special characters in messages" time="0.025">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced question caching should handle corrupted cache data" name="PerplexitySecure Service - Advanced question caching should handle corrupted cache data" time="0.114">
+    <testcase classname="Chat Service - Advanced should handle multiline messages" name="Chat Service - Advanced should handle multiline messages" time="0.025">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced file permission security should handle file permission errors gracefully" name="PerplexitySecure Service - Advanced file permission security should handle file permission errors gracefully" time="0.191">
+    <testcase classname="Chat Service - Advanced should handle messages with URLs" name="Chat Service - Advanced should handle messages with URLs" time="0.024">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced file permission security should create cache directory with proper permissions" name="PerplexitySecure Service - Advanced file permission security should create cache directory with proper permissions" time="0.16">
+    <testcase classname="Chat Service - Advanced should handle messages with emojis" name="Chat Service - Advanced should handle messages with emojis" time="0.036">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced retry mechanism should retry on temporary failures" name="PerplexitySecure Service - Advanced retry mechanism should retry on temporary failures" time="1.163">
+    <testcase classname="Chat Service - Advanced should handle empty conversation history" name="Chat Service - Advanced should handle empty conversation history" time="0.026">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced retry mechanism should not retry on permanent failures" name="PerplexitySecure Service - Advanced retry mechanism should not retry on permanent failures" time="0.1">
+    <testcase classname="Chat Service - Advanced should handle conversation history with multiple messages" name="Chat Service - Advanced should handle conversation history with multiple messages" time="0.018">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Advanced retry mechanism should handle timeout errors" name="PerplexitySecure Service - Advanced retry mechanism should handle timeout errors" time="1.205">
+    <testcase classname="Chat Service - Advanced should handle network timeouts gracefully" name="Chat Service - Advanced should handle network timeouts gracefully" time="0.04">
     </testcase>
-  </testsuite>
-  <testsuite name="PerplexitySecure Service - Core" errors="0" failures="0" skipped="0" timestamp="2025-09-26T07:42:49" time="1.913" tests="11">
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle rate limiting with 429 status code" name="PerplexitySecure Service - Core generateChatResponse should handle rate limiting with 429 status code" time="0.247">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle API errors gracefully" name="PerplexitySecure Service - Core generateChatResponse should handle API errors gracefully" time="0.233">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle network errors" name="PerplexitySecure Service - Core generateChatResponse should handle network errors" time="0.134">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle invalid response format" name="PerplexitySecure Service - Core generateChatResponse should handle invalid response format" time="0.111">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle empty response" name="PerplexitySecure Service - Core generateChatResponse should handle empty response" time="0.144">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle successful response" name="PerplexitySecure Service - Core generateChatResponse should handle successful response" time="0.1">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle backward compatibility with boolean caching parameter" name="PerplexitySecure Service - Core generateChatResponse should handle backward compatibility with boolean caching parameter" time="0.004">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateChatResponse should handle object options parameter" name="PerplexitySecure Service - Core generateChatResponse should handle object options parameter" time="0.006">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateSummary should generate summary for conversation history" name="PerplexitySecure Service - Core generateSummary should generate summary for conversation history" time="0.005">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateSummary should handle empty conversation history" name="PerplexitySecure Service - Core generateSummary should handle empty conversation history" time="0.091">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Core generateSummary should handle summary generation errors" name="PerplexitySecure Service - Core generateSummary should handle summary generation errors" time="0.081">
-    </testcase>
-  </testsuite>
-  <testsuite name="Error handling" errors="0" failures="0" skipped="0" timestamp="2025-09-26T07:42:51" time="1.585" tests="2">
-    <testcase classname="Error handling handles failed Perplexity API response during chat" name="Error handling handles failed Perplexity API response during chat" time="0.026">
-    </testcase>
-    <testcase classname="Error handling handles failed summary API response" name="Error handling handles failed summary API response" time="0.004">
+    <testcase classname="Chat Service - Advanced should handle rate limit errors from API" name="Chat Service - Advanced should handle rate limit errors from API" time="0.023">
     </testcase>
   </testsuite>
 </testsuites>
