@@ -13,30 +13,6 @@ const { chunkMessage } = require('../utils/enhanced-message-chunker');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 
-// Simple lazy loading function to use in tests (currently unused)
-// const lazyLoad = (importFn) => {
-//   let module;
-//   return function () {
-//     if (!module) {
-//       try {
-//         module = importFn();
-//       } catch (e) {
-//         // Return mock in test environment
-//         if (process.env.NODE_ENV === 'test') {
-//           return {
-//             processImage: async () => ({ url: 'https://example.com/image.png' }),
-//             convertToImageUrl: async () => 'https://example.com/image.png',
-//           };
-//         }
-//         throw e;
-//       }
-//     }
-//     return module;
-//   };
-// };
-
-// Lazy load heavier dependencies (commented out as not currently used)
-// const imageHandler = lazyLoad(() => require('../utils/image-handler'));
 
 const conversationManager = new ConversationManager();
 
@@ -225,7 +201,6 @@ async function handleChatMessage(message) {
   }
 }
 
-module.exports = {
-  handleChatMessage,
-  default: handleChatMessage,
-};
+module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;

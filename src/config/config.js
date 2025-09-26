@@ -14,9 +14,20 @@ if (missingEnvVars.length > 0) {
 // Export the basic config first - Pi optimizations will be initialized later dynamically
 /**
  * Helper function to parse integer environment variables with fallback
- * @param {string} envVar - Environment variable name
- * @param {number} defaultValue - Default value if env var is not set or invalid
- * @returns {number} Parsed integer value or default
+ * Safely parses environment variables as integers, returning a default value
+ * if the environment variable is not set, empty, or contains invalid data.
+ * 
+ * @param {string} envVar - The name of the environment variable to parse
+ * @param {number} defaultValue - The default value to return if parsing fails
+ * @returns {number} The parsed integer value or the default value
+ * 
+ * @example
+ * // Parse PORT environment variable with default 3000
+ * const port = getIntEnvVar('PORT', 3000);
+ * 
+ * @example
+ * // Parse CPU_THRESHOLD with default 80
+ * const threshold = getIntEnvVar('CPU_THRESHOLD_PERCENT', 80);
  */
 function getIntEnvVar(envVar, defaultValue) {
   const parsed = parseInt(process.env[envVar], 10);

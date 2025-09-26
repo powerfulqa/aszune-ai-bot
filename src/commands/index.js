@@ -248,20 +248,24 @@ const commands = {
       return this._generateSummary(interaction, userId, textValidation.sanitized, textValidation.warnings);
     },
 
-    _extractTextFromInteraction(interaction) {
-      let text;
-
-      // Handle both text commands and slash commands
-      if (interaction.options) {
-        // This is a slash command
-        text = interaction.options.getString('text');
-      } else {
-        // This is a text command
-        const commandText = interaction.content || '';
-        // Match both spellings: summarise and summerise
-        const match = commandText.match(/^!sum[me]?[ae]rise\s+(.+)/i);
-        text = match ? match[1] : '';
+    _extractTextFromSlashCommand(interaction) {
+      const text = interaction.options.getString('text');
+      
+      if (!text || text.trim().length === 0) {
+        return {
+          success: false,
+          errorMessage: 'Please provide text to summarize.'
+        };
       }
+
+      return { success: true, text };
+    },
+
+    _extractTextFromTextCommand(interaction) {
+      const commandText = interaction.content || '';
+      // Match both spellings: summarise and summerise
+      const match = commandText.match(/^!sum[me]?[ae]rise\s+(.+)/i);
+      const text = match ? match[1] : '';
 
       if (!text || text.trim().length === 0) {
         return {
@@ -271,6 +275,17 @@ const commands = {
       }
 
       return { success: true, text };
+    },
+
+    _extractTextFromInteraction(interaction) {
+      // Handle both text commands and slash commands
+      if (interaction.options) {
+        // This is a slash command
+        return this._extractTextFromSlashCommand(interaction);
+      } else {
+        // This is a text command
+        return this._extractTextFromTextCommand(interaction);
+      }
     },
 
     async _generateSummary(interaction, userId, sanitizedText, warnings) {

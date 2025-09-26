@@ -594,7 +594,8 @@ class PerplexityService {
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
       
-      return this._generateErrorMessage(error, errorResponse);
+      // Re-throw the error to maintain error handling contract
+      throw error;
     }
   }
 
