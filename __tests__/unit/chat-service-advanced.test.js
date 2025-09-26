@@ -68,7 +68,13 @@ describe('Chat Service - Advanced', () => {
     await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalled();
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is temporarily unavailable'));
+    expect(message.reply).toHaveBeenCalledWith({
+      embeds: [{
+        color: expect.any(Number),
+        description: expect.stringContaining('service is temporarily unavailable'),
+        footer: { text: 'Aszai Bot' }
+      }]
+    });
   });
 
   it('should add emojis to responses when not in low CPU mode', async () => {
@@ -150,7 +156,13 @@ describe('Chat Service - Advanced', () => {
 
     await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('unexpected error occurred'));
+    expect(message.reply).toHaveBeenCalledWith({
+      embeds: [{
+        color: expect.any(Number),
+        description: expect.stringContaining('unexpected error occurred'),
+        footer: { text: 'Aszai Bot' }
+      }]
+    });
   });
 
   it('should handle rate limit errors from API', async () => {
@@ -159,6 +171,12 @@ describe('Chat Service - Advanced', () => {
 
     await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(expect.stringContaining('service is currently busy'));
+    expect(message.reply).toHaveBeenCalledWith({
+      embeds: [{
+        color: expect.any(Number),
+        description: expect.stringContaining('service is currently busy'),
+        footer: { text: 'Aszai Bot' }
+      }]
+    });
   });
 });
