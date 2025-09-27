@@ -677,63 +677,8 @@ class InputValidator {
       url: (input) => InputValidator.validateUrl(input),
       command: (input) => InputValidator.validateCommand(input),
       message: (input) => InputValidator.validateMessageContent(input),
-      text: (input) => {
-        // Check length limits first
-        if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
-          return {
-            valid: false,
-            error: 'Input is too long',
-          };
-        }
-        
-        // Check for dangerous patterns first (before sanitization)
-        const dangerousPatterns = [
-          /<script[^>]*>.*?<\/script>/gi,
-          /javascript:/gi,
-          /data:/gi,
-          /vbscript:/gi,
-          /on\w+\s*=/gi,
-          /eval\s*\(/gi,
-          /expression\s*\(/gi,
-          /setTimeout\s*\(/gi,
-          /setInterval\s*\(/gi,
-        ];
-        
-        const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
-        if (hasDangerousContent) {
-          return {
-            valid: false,
-            error: 'Input contains potentially unsafe content',
-          };
-        }
-        
-        
-        // Sanitize content
-        const sanitizedResult = this.sanitizeContent(input);
-        const sanitizedInput = sanitizedResult.content;
-        
-        // Allow empty strings
-        if (sanitizedInput.length === 0) {
-          return { valid: true };
-        }
-        
-        if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
-          return {
-            valid: false,
-            error: 'Input contains unsafe characters',
-          };
-        }
-        return { valid: true };
-      },
-      email: (input) => {
-        if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
-          return {
-            valid: false,
-            error: 'Invalid email format',
-          };
-        }
-        return { valid: true };
-      },
+      text: (input) => InputValidator._validateTextType(input),
+      email: (input) => InputValidator._validateEmailType(input),
     };
 
     if (typeValidators[type]) {
@@ -744,6 +689,64 @@ class InputValidator {
       valid: false,
       error: `Unknown input type: ${type}`,
     };
+  }
+
+  static _validateTextType(input) {
+    // Check length limits first
+    if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
+      return {
+        valid: false,
+        error: 'Input is too long',
+      };
+    }
+    
+    // Check for dangerous patterns first (before sanitization)
+    const dangerousPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /data:/gi,
+      /vbscript:/gi,
+      /on\w+\s*=/gi,
+      /eval\s*\(/gi,
+      /expression\s*\(/gi,
+      /setTimeout\s*\(/gi,
+      /setInterval\s*\(/gi,
+    ];
+    
+    const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
+    if (hasDangerousContent) {
+      return {
+        valid: false,
+        error: 'Input contains potentially unsafe content',
+      };
+    }
+    
+    // Sanitize content
+    const sanitizedResult = this.sanitizeContent(input);
+    const sanitizedInput = sanitizedResult.content;
+    
+    // Allow empty strings
+    if (sanitizedInput.length === 0) {
+      return { valid: true };
+    }
+    
+    if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
+      return {
+        valid: false,
+        error: 'Input contains unsafe characters',
+      };
+    }
+    return { valid: true };
+  }
+
+  static _validateEmailType(input) {
+    if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
+      return {
+        valid: false,
+        error: 'Invalid email format',
+      };
+    }
+    return { valid: true };
   }
 
   /**

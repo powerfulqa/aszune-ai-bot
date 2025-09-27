@@ -81,23 +81,17 @@ function fixChunkBoundaries(chunks, safeMaxLength) {
 }
 
 function fixChunkBoundaryAt(chunks, index, safeMaxLength) {
-  let currentChunk = chunks[index];
-  let nextChunk = chunks[index + 1];
 
   // Apply sentence boundary fixes
   const sentenceFix = fixSentenceBoundary(chunks, index, safeMaxLength);
   if (sentenceFix.fixed) {
     chunks = sentenceFix.chunks;
-    currentChunk = chunks[index];
-    nextChunk = chunks[index + 1];
   }
 
   // Apply URL boundary fixes
   const urlFix = fixUrlBoundary(chunks, index, safeMaxLength);
   if (urlFix.fixed) {
     chunks = urlFix.chunks;
-    currentChunk = chunks[index];
-    nextChunk = chunks[index + 1];
   }
 
   // Apply domain boundary fixes
@@ -143,79 +137,75 @@ function fixSentenceBoundary(chunks, index, safeMaxLength) {
   return { fixed: false, chunks };
 }
 
-function fixUrlBoundary(chunks, index, safeMaxLength) {
+/**
+ * Generic boundary fixer that handles common patterns
+ * @param {string[]} chunks - Array of chunks
+ * @param {number} index - Current chunk index
+ * @param {number} safeMaxLength - Safe maximum length
+ * @param {RegExp} endPattern - Pattern that matches the end of current chunk
+ * @param {RegExp} startPattern - Pattern that matches the start of next chunk (optional)
+ * @param {RegExp} splitPattern - Pattern to split the current chunk
+ * @param {string} separator - Separator to use when joining chunks
+ * @returns {Object} - Result object with fixed flag and updated chunks
+ */
+function fixGenericBoundary(chunks, index, safeMaxLength, endPattern, startPattern, splitPattern, separator = ' ') {
   const currentChunk = chunks[index];
   const nextChunk = chunks[index + 1];
 
-  // Check for a URL that might be split between chunks
-  if (/https?:\/\/[^\s]*$/.test(currentChunk) && /^[^\s]*/.test(nextChunk)) {
-    const urlStartMatch = /^(.*)(https?:\/\/[^\s]*)$/.exec(currentChunk);
-    if (urlStartMatch) {
-      const textBeforeUrl = urlStartMatch[1];
-      const partialUrl = urlStartMatch[2];
+  // Check if the boundary condition is met
+  if (!endPattern.test(currentChunk) || (startPattern && !startPattern.test(nextChunk))) {
+    return { fixed: false, chunks };
+  }
 
-      if (textBeforeUrl.length > 0 && nextChunk.length + partialUrl.length <= safeMaxLength) {
-        chunks[index] = textBeforeUrl.trim();
-        chunks[index + 1] = partialUrl + ' ' + nextChunk;
-        return { fixed: true, chunks };
-      }
-    }
+  const match = splitPattern.exec(currentChunk);
+  if (!match) {
+    return { fixed: false, chunks };
+  }
+
+  const textBefore = match[1];
+  const partialContent = match[2] || currentChunk.substring(textBefore.length);
+
+  if (textBefore.length > 0 && nextChunk.length + partialContent.length <= safeMaxLength) {
+    chunks[index] = textBefore.trim();
+    chunks[index + 1] = partialContent + separator + nextChunk;
+    return { fixed: true, chunks };
   }
 
   return { fixed: false, chunks };
+}
+
+function fixUrlBoundary(chunks, index, safeMaxLength) {
+  return fixGenericBoundary(
+    chunks,
+    index,
+    safeMaxLength,
+    /https?:\/\/[^\s]*$/, // endPattern
+    /^[^\s]*/, // startPattern
+    /^(.*)(https?:\/\/[^\s]*)$/ // splitPattern
+  );
 }
 
 function fixDomainBoundary(chunks, index, safeMaxLength) {
-  const currentChunk = chunks[index];
-  const nextChunk = chunks[index + 1];
-
-  // Check for domains that might be split by periods
-  if (
-    /\.[^\s]*$/.test(currentChunk) &&
-    /^(?:com|org|net|edu|gov|io|me)[\/\s]/.test(nextChunk)
-  ) {
-    const domainMatch = /^(.*)(\.[^\s]*)$/.exec(currentChunk);
-    if (domainMatch) {
-      const textBeforeDomain = domainMatch[1];
-      const domainPart = domainMatch[2];
-
-      if (
-        textBeforeDomain.length > 0 &&
-        nextChunk.length + domainPart.length <= safeMaxLength
-      ) {
-        chunks[index] = textBeforeDomain.trim();
-        chunks[index + 1] = domainPart + nextChunk;
-        return { fixed: true, chunks };
-      }
-    }
-  }
-
-  return { fixed: false, chunks };
+  return fixGenericBoundary(
+    chunks,
+    index,
+    safeMaxLength,
+    /\.[^\s]*$/, // endPattern
+    /^(?:com|org|net|edu|gov|io|me)[/\s]/, // startPattern
+    /^(.*)(\.[^\s]*)$/, // splitPattern
+    '' // separator (no space for domains)
+  );
 }
 
 function fixNumberedListBoundary(chunks, index, safeMaxLength) {
-  const currentChunk = chunks[index];
-  const nextChunk = chunks[index + 1];
-
-  // Check for numbered list items being split
-  if (/\d+\.\s*$/.test(currentChunk)) {
-    const numberMatch = /^(.*?)(\d+\.\s*)$/.exec(currentChunk);
-    if (numberMatch) {
-      const textBeforeNumber = numberMatch[1];
-      const numberPart = numberMatch[2];
-
-      if (
-        textBeforeNumber.length > 0 &&
-        nextChunk.length + numberPart.length <= safeMaxLength
-      ) {
-        chunks[index] = textBeforeNumber.trim();
-        chunks[index + 1] = numberPart + nextChunk;
-        return { fixed: true, chunks };
-      }
-    }
-  }
-
-  return { fixed: false, chunks };
+  return fixGenericBoundary(
+    chunks,
+    index,
+    safeMaxLength,
+    /\d+\.\s*$/, // endPattern
+    null, // startPattern (not needed)
+    /^(.*?)(\d+\.\s*)$/ // splitPattern
+  );
 }
 
 function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {

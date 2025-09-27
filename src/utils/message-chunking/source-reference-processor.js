@@ -5,6 +5,53 @@
 const { ErrorHandler } = require('../error-handler');
 
 /**
+ * Process pattern 1 matches: (n) followed by URL
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern1(match, sources) {
+  const sourceNum = match[1];
+  const sourceUrl = match[2];
+  sources[sourceNum] = sourceUrl;
+}
+
+/**
+ * Process pattern 2 matches: ([n][url]) format
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern2(match, sources) {
+  const sourceNum = match[1];
+  let sourceUrl = match[2] || match[3];
+
+  if (sourceUrl) {
+    sourceUrl = sourceUrl.replace(/\)$/, '');
+    if (!sourceUrl.startsWith('http')) {
+      sourceUrl = 'https://' + sourceUrl;
+    }
+    sources[sourceNum] = sourceUrl;
+  }
+}
+
+/**
+ * Process pattern 3 matches: ([n][url] without closing bracket
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern3(match, sources) {
+  const sourceNum = match[1];
+  let sourceUrl = match[2];
+
+  if (sourceUrl && !sourceUrl.startsWith('http')) {
+    sourceUrl = 'https://' + sourceUrl;
+  }
+
+  if (sourceUrl) {
+    sources[sourceNum] = sourceUrl;
+  }
+}
+
+/**
  * Collect all source references and their URLs from text
  * @param {string} text - The text to process
  * @returns {Object} - Map of source numbers to URLs
@@ -13,54 +60,19 @@ function collectSourceReferences(text) {
   try {
     const sources = {};
 
-    // Pattern 1 & 2 & 3: (n) followed by URL in various formats
-    const pattern1 = /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g;
-    let match;
-    while ((match = pattern1.exec(text)) !== null) {
-      const sourceNum = match[1];
-      const sourceUrl = match[2];
-      sources[sourceNum] = sourceUrl;
-    }
+    // Process all patterns using a pattern array
+    const patterns = [
+      { regex: /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g, processor: processPattern1 },
+      { regex: /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s)]+))\)/g, processor: processPattern2 },
+      { regex: /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g, processor: processPattern3 }
+    ];
 
-    // Pattern 4 & 5: ([n][url]) format - handle both with and without brackets
-    const pattern2 = /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s\)]+))\)/g;
-    while ((match = pattern2.exec(text)) !== null) {
-      const sourceNum = match[1];
-      // Use either the bracketed URL or the non-bracketed one, whichever is found
-      let sourceUrl = match[2] || match[3];
-
-      // Clean up the URL if it contains undesirable characters
-      if (sourceUrl) {
-        // Remove any trailing characters that shouldn't be part of the URL
-        sourceUrl = sourceUrl.replace(/\)$/, '');
+    patterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.regex.exec(text)) !== null) {
+        pattern.processor(match, sources);
       }
-
-      // Add http:// prefix if missing
-      if (sourceUrl && !sourceUrl.startsWith('http')) {
-        sourceUrl = 'https://' + sourceUrl;
-      }
-
-      if (sourceUrl) {
-        sources[sourceNum] = sourceUrl;
-      }
-    }
-
-    // Additional pattern for square bracket format without closing bracket
-    // e.g. ([3][www.youtube. (broken across lines)
-    const pattern3 = /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g;
-    while ((match = pattern3.exec(text)) !== null) {
-      const sourceNum = match[1];
-      let sourceUrl = match[2];
-
-      // Add http:// prefix if missing
-      if (sourceUrl && !sourceUrl.startsWith('http')) {
-        sourceUrl = 'https://' + sourceUrl;
-      }
-
-      if (sourceUrl) {
-        sources[sourceNum] = sourceUrl;
-      }
-    }
+    });
 
     return sources;
   } catch (error) {

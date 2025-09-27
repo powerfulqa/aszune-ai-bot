@@ -58,7 +58,7 @@ function formatSocialMediaLinks(text) {
 
     // Handle plain text r/subreddit references (but not when part of another domain)
     formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/|\/|\.com\/[^\/]*)(r\/[\w\d_]+)(?=[\s.,;!?]|$)/g,
+      /(?<!\(|\[|:\/\/|\/|\.com\/[^/]*)(r\/[\w\d_]+)(?=[\s.,;!?]|$)/g,
       '[Reddit: $1](https://reddit.com/$1)'
     );
 
