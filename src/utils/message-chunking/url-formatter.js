@@ -166,127 +166,183 @@ function formatYouTubeLinks(text) {
  * @returns {string} - Text with formatted Starsector links
  */
 function formatStarsectorLinks(text) {
+  let result = text; // Default to original text
+  
   try {
-    // Input validation
+    // Input validation - early exit if not a string
     if (typeof text !== 'string') {
-      return text;
+      return result;
     }
     
-    let formattedText = text;
-
-    // Fix any fractalsoftworks URLs specifically (common issue)
-    formattedText = formattedText.replace(
-      /https:\/\/fractalsoftworks\/\.com/g,
-      'https://fractalsoftworks.com'
-    );
-    formattedText = formattedText.replace(
-      /https:\/\/fractalsoftworks\./g,
-      'https://fractalsoftworks.com'
-    );
-    formattedText = formattedText.replace(
-      /(https?:\/\/)?fractalsoftworks\/\./g,
-      'https://fractalsoftworks.'
-    );
-    formattedText = formattedText.replace(
-      /\(https:\/\/fractalsoftworks\//g,
-      '(https://fractalsoftworks.'
-    );
-
-    // Fix forum URLs with specific patterns (seen in screenshot)
-    formattedText = formattedText.replace(
-      /\(https:\/\/\[fractalsoftworks\.com\]/g,
-      '(https://fractalsoftworks.com'
-    );
-    formattedText = formattedText.replace(
-      /\(https:\/\/fractalsoftworks\.comcom/g,
-      '(https://fractalsoftworks.com'
-    );
-
-    // Clean up forum URLs that might get double domain or malformed forum paths
-    formattedText = formattedText.replace(/fractalsoftworks\.com\.com/g, 'fractalsoftworks.com');
-    formattedText = formattedText.replace(/fractalsoftworks\.comcom/g, 'fractalsoftworks.com');
-    formattedText = formattedText.replace(/fractalsoftworks\.c\s*\n*com/g, 'fractalsoftworks.com');
-
-    // Fix spaces in topic numbers
-    formattedText = formattedText.replace(/topic=(\d+)\.\s+(\d+)/g, 'topic=$1.$2');
-
-    // Fix specific cases of line breaks in URLs
-    formattedText = formattedText.replace(/(https:\/\/[^\s]+)\n([^\s]+)/g, '$1$2');
-    formattedText = formattedText.replace(/(\n[^\s]*php\?topic=[^\s]+)\n([^\s]+)/g, '$1$2');
-
-    // Handle specific nested markdown patterns in forum links
-    formattedText = formattedText.replace(
-      /\[\[fractalsoftworks\.com\]\(https:\/\/fractalsoftworks(?:\.com)?\//g,
-      '[fractalsoftworks.com](https://fractalsoftworks.com/'
-    );
-
-    // Fix specific forum link format issues seen in Discord messages
-    formattedText = formattedText.replace(
-      /\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g,
-      '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)'
-    );
-
-    // Convert plain text URLs to proper links with descriptive text
-    formattedText = formattedText.replace(
-      /(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+))/g,
-      (match, url) => {
-        let fullUrl = url;
-        if (!fullUrl.startsWith('http')) {
-          fullUrl = 'https://' + fullUrl;
-        }
-        return `[Starsector Forum](${fullUrl})`;
-      }
-    );
-
-    // Fix specific source references with forum URLs
-    formattedText = formattedText.replace(
-      /\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
-      (match, sourceNum, path) => {
-        const fullUrl = 'https://fractalsoftworks.com' + path;
-        return `[(Source ${sourceNum})](${fullUrl})`;
-      }
-    );
-
-    // Fix forum URLs with missing http prefix and add descriptive text
-    formattedText = formattedText.replace(
-      /\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g,
-      (match, path) => {
-        const fullUrl = 'https://fractalsoftworks.com' + path;
-        return `([Starsector Forum](${fullUrl}))`;
-      }
-    );
-    formattedText = formattedText.replace(
-      /\(fractalsoftworks\.com/g,
-      '(https://fractalsoftworks.com'
-    );
-    formattedText = formattedText.replace(
-      /\[fractalsoftworks\.com\](?!\()/g,
-      '[Starsector Website](https://fractalsoftworks.com)'
-    );
-
-    // Fix direct URLs that are inside markdown brackets but not properly formatted
-    formattedText = formattedText.replace(
-      /\[(?:https?:\/\/)?(?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+)\](?!\()/g,
-      (match, topicId1, topicId2) => {
-        const fullUrl = `https://fractalsoftworks.com/forum/index.php?topic=${topicId1}.${topicId2}`;
-        return `[Starsector Forum](${fullUrl})`;
-      }
-    );
-
-    // Fix specific forum link pattern seen in the screenshot
-    formattedText = formattedText.replace(
-      /\(https:\/\/fractalsoftworks(?:\.com)?com\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g,
-      '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)'
-    );
-
-    return formattedText;
+    result = performStarsectorLinkFormatting(text);
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting Starsector links', {
       textLength: text?.length || 0,
     });
     console.error(`Starsector formatting error: ${errorResponse.message}`);
-    return text;
+    // result remains as original text on error
   }
+  
+  return result;
+}
+
+/**
+ * Perform the actual Starsector link formatting logic
+ * @param {string} text - Text to format
+ * @returns {string} - Formatted text
+ */
+function performStarsectorLinkFormatting(text) {
+  let formattedText = text;
+
+  // Fix any fractalsoftworks URLs specifically (common issue)
+  formattedText = applyBasicUrlFixes(formattedText);
+  
+  // Fix forum URLs with specific patterns
+  formattedText = applyForumUrlFixes(formattedText);
+  
+  // Clean up malformed URLs
+  formattedText = applyMalformedUrlFixes(formattedText);
+  
+  // Fix spacing and line break issues
+  formattedText = applySpacingFixes(formattedText);
+  
+  // Handle markdown link patterns
+  formattedText = applyMarkdownLinkFixes(formattedText);
+  
+  // Convert plain URLs to proper links
+  formattedText = applyPlainUrlConversion(formattedText);
+  
+  // Fix source references
+  formattedText = applySourceReferenceFixes(formattedText);
+  
+  // Fix forum URLs with missing prefixes
+  formattedText = applyPrefixFixes(formattedText);
+  
+  // Fix direct URLs in brackets
+  formattedText = applyDirectUrlFixes(formattedText);
+  
+  // Fix specific forum link patterns
+  formattedText = applySpecificPatternFixes(formattedText);
+
+  return formattedText;
+}
+
+/**
+ * Apply basic URL fixes for common fractalsoftworks issues
+ */
+function applyBasicUrlFixes(text) {
+  return text
+    .replace(/https:\/\/fractalsoftworks\/\.com/g, 'https://fractalsoftworks.com')
+    .replace(/https:\/\/fractalsoftworks\./g, 'https://fractalsoftworks.com')
+    .replace(/(https?:\/\/)?fractalsoftworks\/\./g, 'https://fractalsoftworks.')
+    .replace(/\(https:\/\/fractalsoftworks\//g, '(https://fractalsoftworks.');
+}
+
+/**
+ * Apply forum URL pattern fixes
+ */
+function applyForumUrlFixes(text) {
+  return text
+    .replace(/\(https:\/\/\[fractalsoftworks\.com\]/g, '(https://fractalsoftworks.com')
+    .replace(/\(https:\/\/fractalsoftworks\.comcom/g, '(https://fractalsoftworks.com');
+}
+
+/**
+ * Apply fixes for malformed URLs
+ */
+function applyMalformedUrlFixes(text) {
+  return text
+    .replace(/fractalsoftworks\.com\.com/g, 'fractalsoftworks.com')
+    .replace(/fractalsoftworks\.comcom/g, 'fractalsoftworks.com')
+    .replace(/fractalsoftworks\.c\s*\n*com/g, 'fractalsoftworks.com');
+}
+
+/**
+ * Apply spacing and line break fixes
+ */
+function applySpacingFixes(text) {
+  return text
+    .replace(/topic=(\d+)\.\s+(\d+)/g, 'topic=$1.$2')
+    .replace(/(https:\/\/[^\s]+)\n([^\s]+)/g, '$1$2')
+    .replace(/(\n[^\s]*php\?topic=[^\s]+)\n([^\s]+)/g, '$1$2');
+}
+
+/**
+ * Apply markdown link pattern fixes
+ */
+function applyMarkdownLinkFixes(text) {
+  return text.replace(
+    /\[\[fractalsoftworks\.com\]\(https:\/\/fractalsoftworks(?:\.com)?\//g,
+    '[fractalsoftworks.com](https://fractalsoftworks.com/'
+  );
+}
+
+/**
+ * Apply specific forum link format fixes
+ */
+function applySpecificPatternFixes(text) {
+  return text.replace(
+    /\(https:\/\/fractalsoftworks\.com\)\(\/forum\/index\.php\?topic=(\d+)\.(\d+)\)/g,
+    '(https://fractalsoftworks.com/forum/index.php?topic=$1.$2)'
+  );
+}
+
+/**
+ * Convert plain text URLs to proper links with descriptive text
+ */
+function applyPlainUrlConversion(text) {
+  return text.replace(
+    /(?<!\(|\[|:\/\/)((?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+))/g,
+    (match, url) => {
+      let fullUrl = url;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = 'https://' + fullUrl;
+      }
+      return `[Starsector Forum](${fullUrl})`;
+    }
+  );
+}
+
+/**
+ * Fix source references with forum URLs
+ */
+function applySourceReferenceFixes(text) {
+  return text.replace(
+    /\(\[([\d]+)\]\[(?:https:\/\/)?fractalsoftworks\.com([^\]]+)\]/g,
+    (match, sourceNum, path) => {
+      const fullUrl = 'https://fractalsoftworks.com' + path;
+      return `[(Source ${sourceNum})](${fullUrl})`;
+    }
+  );
+}
+
+/**
+ * Fix forum URLs with missing http prefix and add descriptive text
+ */
+function applyPrefixFixes(text) {
+  return text
+    .replace(
+      /\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g,
+      (match, path) => {
+        const fullUrl = 'https://fractalsoftworks.com' + path;
+        return `([Starsector Forum](${fullUrl}))`;
+      }
+    )
+    .replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com')
+    .replace(/\[fractalsoftworks\.com\](?!\()/g, '[Starsector Website](https://fractalsoftworks.com)');
+}
+
+/**
+ * Fix direct URLs that are inside markdown brackets but not properly formatted
+ */
+function applyDirectUrlFixes(text) {
+  return text.replace(
+    /\[(?:https?:\/\/)?(?:www\.)?fractalsoftworks\.com\/forum\/index\.php\?topic=(\d+)\.(\d+)\](?!\()/g,
+    (match, topicId1, topicId2) => {
+      const fullUrl = `https://fractalsoftworks.com/forum/index.php?topic=${topicId1}.${topicId2}`;
+      return `[Starsector Forum](${fullUrl})`;
+    }
+  );
 }
 
 /**
