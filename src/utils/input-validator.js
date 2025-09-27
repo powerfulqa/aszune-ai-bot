@@ -85,19 +85,86 @@ const DANGEROUS_PATTERNS = [
  */
 class InputValidator {
   /**
+   * Common validation helper - checks if value is required
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateRequired(value, fieldName) {
+    if (!value) {
+      return { valid: false, error: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if value is a string
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateStringType(value, fieldName) {
+    if (typeof value !== 'string') {
+      return { valid: false, error: `${fieldName} must be a string` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if value is an array
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateArrayType(value, fieldName) {
+    if (!Array.isArray(value)) {
+      return { valid: false, error: `${fieldName} must be an array` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks string length
+   * @param {string} value - Value to check
+   * @param {number} maxLength - Maximum allowed length
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateStringLength(value, maxLength, fieldName) {
+    if (value.length > maxLength) {
+      return {
+        valid: false,
+        error: `${fieldName} too long. Maximum length is ${maxLength} characters`
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if string is empty
+   * @param {string} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateNotEmpty(value, fieldName) {
+    if (value.length === 0) {
+      return { valid: false, error: `${fieldName} cannot be empty` };
+    }
+    return null;
+  }
+  /**
    * Validate a Discord user ID
    * @param {string} userId - User ID to validate
    * @returns {Object} - Validation result
    */
   static validateUserId(userId) {
     try {
-      if (!userId) {
-        return { valid: false, error: 'User ID is required' };
-      }
+      // Use common validation helpers
+      const requiredCheck = this._validateRequired(userId, 'User ID');
+      if (requiredCheck) return requiredCheck;
 
-      if (typeof userId !== 'string') {
-        return { valid: false, error: 'User ID must be a string' };
-      }
+      const stringCheck = this._validateStringType(userId, 'User ID');
+      if (stringCheck) return stringCheck;
 
       if (!VALIDATION_PATTERNS.DISCORD_USER_ID.test(userId)) {
         return { valid: false, error: 'Invalid Discord user ID format' };
@@ -169,17 +236,15 @@ class InputValidator {
    * Validate basic content properties
    */
   static _validateBasicContent(content) {
-    if (!content) {
-      return { valid: false, error: 'Message content is required' };
-    }
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(content, 'Message content');
+    if (requiredCheck) return requiredCheck;
 
-    if (typeof content !== 'string') {
-      return { valid: false, error: 'Message content must be a string' };
-    }
+    const stringCheck = this._validateStringType(content, 'Message content');
+    if (stringCheck) return stringCheck;
 
-    if (content.length === 0) {
-      return { valid: false, error: 'Message content cannot be empty' };
-    }
+    const notEmptyCheck = this._validateNotEmpty(content, 'Message content');
+    if (notEmptyCheck) return notEmptyCheck;
 
     return { valid: true };
   }
@@ -245,20 +310,15 @@ class InputValidator {
    * Validate basic command properties
    */
   static _validateBasicCommand(command) {
-    if (!command) {
-      return { valid: false, error: 'Command is required' };
-    }
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(command, 'Command');
+    if (requiredCheck) return requiredCheck;
 
-    if (typeof command !== 'string') {
-      return { valid: false, error: 'Command must be a string' };
-    }
+    const stringCheck = this._validateStringType(command, 'Command');
+    if (stringCheck) return stringCheck;
 
-    if (command.length > VALIDATION_LIMITS.MAX_COMMAND_LENGTH) {
-      return {
-        valid: false,
-        error: `Command too long. Maximum length is ${VALIDATION_LIMITS.MAX_COMMAND_LENGTH} characters`,
-      };
-    }
+    const lengthCheck = this._validateStringLength(command, VALIDATION_LIMITS.MAX_COMMAND_LENGTH, 'Command');
+    if (lengthCheck) return lengthCheck;
 
     return { valid: true };
   }
@@ -286,9 +346,8 @@ class InputValidator {
   static validateConversationHistory(history) {
     try {
       // Early validation checks
-      if (!Array.isArray(history)) {
-        return { valid: false, error: 'Conversation history must be an array' };
-      }
+      const arrayCheck = this._validateArrayType(history, 'Conversation history');
+      if (arrayCheck) return arrayCheck;
       if (history.length > VALIDATION_LIMITS.MAX_HISTORY_LENGTH) {
         return {
           valid: false,
@@ -401,20 +460,15 @@ class InputValidator {
    * Validate basic URL properties
    */
   static _validateBasicUrl(url) {
-    if (!url) {
-      return { valid: false, error: 'URL is required' };
-    }
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(url, 'URL');
+    if (requiredCheck) return requiredCheck;
 
-    if (typeof url !== 'string') {
-      return { valid: false, error: 'URL must be a string' };
-    }
+    const stringCheck = this._validateStringType(url, 'URL');
+    if (stringCheck) return stringCheck;
 
-    if (url.length > VALIDATION_LIMITS.MAX_URL_LENGTH) {
-      return {
-        valid: false,
-        error: `URL too long. Maximum length is ${VALIDATION_LIMITS.MAX_URL_LENGTH} characters`,
-      };
-    }
+    const lengthCheck = this._validateStringLength(url, VALIDATION_LIMITS.MAX_URL_LENGTH, 'URL');
+    if (lengthCheck) return lengthCheck;
 
     return { valid: true };
   }
