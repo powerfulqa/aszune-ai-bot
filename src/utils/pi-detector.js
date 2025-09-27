@@ -34,9 +34,7 @@ function createDefaultResult() {
  */
 function isRaspberryPi(cpuInfo) {
   const isPiByHardware =
-    cpuInfo.includes('Raspberry Pi') ||
-    cpuInfo.includes('BCM27') ||
-    cpuInfo.includes('BCM28');
+    cpuInfo.includes('Raspberry Pi') || cpuInfo.includes('BCM27') || cpuInfo.includes('BCM28');
 
   const isPiByModel =
     cpuInfo.includes('Pi 3') || cpuInfo.includes('Pi 4') || cpuInfo.includes('Pi 5');
@@ -89,7 +87,7 @@ function determinePiModel(cpuInfo, result) {
   } else if (pi3Score > 0) {
     return 'pi3';
   }
-  
+
   return 'unknown';
 }
 
@@ -141,7 +139,7 @@ async function processLinuxPiDetection(result) {
 
   // Get temperature capability
   result.cpuInfo.canReadTemp = checkTemperatureCapability();
-  
+
   return result;
 }
 
@@ -339,14 +337,44 @@ function generateOptimizedConfig(detectedPi) {
  */
 function createEnvOverrides(optimizedConfig) {
   return {
-    ENABLED: process.env.PI_OPTIMIZATIONS_ENABLED !== undefined ? process.env.PI_OPTIMIZATIONS_ENABLED === 'true' : (process.env.ENABLE_PI_OPTIMIZATIONS !== undefined ? process.env.ENABLE_PI_OPTIMIZATIONS === 'true' : optimizedConfig.ENABLED),
-    LOW_CPU_MODE: process.env.PI_LOW_CPU_MODE !== undefined ? process.env.PI_LOW_CPU_MODE === 'true' : optimizedConfig.LOW_CPU_MODE,
-    COMPACT_MODE: process.env.PI_OPTIMIZATIONS_COMPACT_MODE !== undefined ? process.env.PI_OPTIMIZATIONS_COMPACT_MODE === 'true' : (process.env.PI_COMPACT_MODE !== undefined ? process.env.PI_COMPACT_MODE === 'true' : optimizedConfig.COMPACT_MODE),
-    CACHE_ENABLED: process.env.PI_CACHE_ENABLED !== undefined ? process.env.PI_CACHE_ENABLED === 'true' : optimizedConfig.CACHE_ENABLED,
-    MAX_CONNECTIONS: process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS !== undefined ? parseInt(process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS) : (process.env.PI_MAX_CONNECTIONS !== undefined ? parseInt(process.env.PI_MAX_CONNECTIONS) : optimizedConfig.MAX_CONNECTIONS),
-    DEBOUNCE_MS: process.env.PI_DEBOUNCE_MS !== undefined ? parseInt(process.env.PI_DEBOUNCE_MS) : optimizedConfig.DEBOUNCE_MS,
-    REACTION_LIMIT: process.env.PI_REACTION_LIMIT !== undefined ? parseInt(process.env.PI_REACTION_LIMIT) : optimizedConfig.REACTION_LIMIT,
-    STREAM_RESPONSES: process.env.PI_STREAM_RESPONSES !== undefined ? process.env.PI_STREAM_RESPONSES === 'true' : optimizedConfig.STREAM_RESPONSES,
+    ENABLED:
+      process.env.PI_OPTIMIZATIONS_ENABLED !== undefined
+        ? process.env.PI_OPTIMIZATIONS_ENABLED === 'true'
+        : process.env.ENABLE_PI_OPTIMIZATIONS !== undefined
+          ? process.env.ENABLE_PI_OPTIMIZATIONS === 'true'
+          : optimizedConfig.ENABLED,
+    LOW_CPU_MODE:
+      process.env.PI_LOW_CPU_MODE !== undefined
+        ? process.env.PI_LOW_CPU_MODE === 'true'
+        : optimizedConfig.LOW_CPU_MODE,
+    COMPACT_MODE:
+      process.env.PI_OPTIMIZATIONS_COMPACT_MODE !== undefined
+        ? process.env.PI_OPTIMIZATIONS_COMPACT_MODE === 'true'
+        : process.env.PI_COMPACT_MODE !== undefined
+          ? process.env.PI_COMPACT_MODE === 'true'
+          : optimizedConfig.COMPACT_MODE,
+    CACHE_ENABLED:
+      process.env.PI_CACHE_ENABLED !== undefined
+        ? process.env.PI_CACHE_ENABLED === 'true'
+        : optimizedConfig.CACHE_ENABLED,
+    MAX_CONNECTIONS:
+      process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS !== undefined
+        ? parseInt(process.env.PI_OPTIMIZATIONS_MAX_CONNECTIONS)
+        : process.env.PI_MAX_CONNECTIONS !== undefined
+          ? parseInt(process.env.PI_MAX_CONNECTIONS)
+          : optimizedConfig.MAX_CONNECTIONS,
+    DEBOUNCE_MS:
+      process.env.PI_DEBOUNCE_MS !== undefined
+        ? parseInt(process.env.PI_DEBOUNCE_MS)
+        : optimizedConfig.DEBOUNCE_MS,
+    REACTION_LIMIT:
+      process.env.PI_REACTION_LIMIT !== undefined
+        ? parseInt(process.env.PI_REACTION_LIMIT)
+        : optimizedConfig.REACTION_LIMIT,
+    STREAM_RESPONSES:
+      process.env.PI_STREAM_RESPONSES !== undefined
+        ? process.env.PI_STREAM_RESPONSES === 'true'
+        : optimizedConfig.STREAM_RESPONSES,
   };
 }
 

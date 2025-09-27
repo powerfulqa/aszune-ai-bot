@@ -17,8 +17,8 @@ maintainable.
 4. **Conversation Manager** - Tracks and stores user conversations with class-based architecture
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while preserving
-   content and formatting with advanced boundary detection
+7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while
+   preserving content and formatting with advanced boundary detection
 8. **Response Caching System** - Securely stores and retrieves responses to save API calls for
    repeated questions
 9. **Error Handler** - Comprehensive error handling and recovery system
@@ -148,42 +148,49 @@ read by monitoring tools.
 The bot now includes a comprehensive set of utility modules for enhanced functionality:
 
 #### Error Handling System
+
 - **`error-handler.js`**: Centralized error handling with context-aware error messages
 - Comprehensive error recovery mechanisms
 - Structured error logging and reporting
 - Graceful degradation for API failures
 
 #### Input Validation System
+
 - **`input-validator.js`**: Input sanitization and validation
 - Prevents malicious input and ensures data integrity
 - Configurable validation rules for different input types
 - Comprehensive error reporting for invalid inputs
 
 #### Memory Management
+
 - **`memory-monitor.js`**: Advanced memory usage tracking
 - Automatic garbage collection triggers
 - Memory limit monitoring and alerts
 - Resource usage optimization
 
 #### Performance Monitoring
+
 - **`performance-monitor.js`**: Real-time performance tracking
 - API response time monitoring
 - Resource utilization metrics
 - Performance optimization recommendations
 
 #### Enhanced Caching System
+
 - **`cache-pruner.js`**: Intelligent cache management
 - **`enhanced-cache.js`**: Advanced caching with TTL and size limits
 - Automatic cache cleanup and optimization
 - Memory-efficient cache storage
 
 #### Connection Management
+
 - **`connection-throttler.js`**: Network connection limiting
 - **`debouncer.js`**: Message debouncing to prevent spam
 - Adaptive throttling based on system load
 - Resource-constrained device optimization
 
 #### Lazy Loading System
+
 - **`lazy-loader.js`**: On-demand module loading
 - Reduces initial memory footprint
 - Improves startup performance

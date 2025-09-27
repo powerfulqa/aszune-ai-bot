@@ -83,7 +83,7 @@ describe('Command Handling - Basic', () => {
 
   test('handles unknown commands gracefully', async () => {
     const msg = createMockMessage('!unknowncommand');
-    
+
     // Should not throw an error
     expect(() => {
       // Mock command handler would return null for unknown commands
@@ -92,7 +92,7 @@ describe('Command Handling - Basic', () => {
 
   test('ignores messages that do not start with !', async () => {
     const msg = createMockMessage('Hello, how are you?');
-    
+
     // Should not process as command
     expect(msg.content.startsWith('!')).toBe(false);
   });

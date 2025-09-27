@@ -61,23 +61,23 @@ describe('Main Index - Advanced', () => {
 
   it('should handle bootWithOptimizations function', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(mainIndex).toHaveProperty('bootWithOptimizations');
     expect(typeof mainIndex.bootWithOptimizations).toBe('function');
   });
 
   it('should handle registerSlashCommands function', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(mainIndex).toHaveProperty('registerSlashCommands');
     expect(typeof mainIndex.registerSlashCommands).toBe('function');
   });
 
   it('should handle Pi optimization detection', async () => {
     const piDetector = require('../../src/utils/pi-detector');
-    
+
     const result = await piDetector.detectPiModel();
-    
+
     expect(result).toHaveProperty('model');
     expect(result).toHaveProperty('totalMemoryMB');
     expect(result).toHaveProperty('cpuCores');
@@ -88,9 +88,9 @@ describe('Main Index - Advanced', () => {
 
   it('should handle enhanced cache initialization', () => {
     const EnhancedCache = require('../../src/utils/enhanced-cache');
-    
+
     const cache = new EnhancedCache();
-    
+
     expect(cache).toHaveProperty('get');
     expect(cache).toHaveProperty('set');
     expect(cache).toHaveProperty('delete');
@@ -101,7 +101,7 @@ describe('Main Index - Advanced', () => {
 
   it('should handle perplexity service initialization', () => {
     const perplexityService = require('../../src/services/perplexity-secure');
-    
+
     expect(perplexityService).toHaveProperty('generateChatResponse');
     expect(perplexityService).toHaveProperty('generateSummary');
     expect(perplexityService).toHaveProperty('getCacheStats');
@@ -118,23 +118,23 @@ describe('Main Index - Advanced', () => {
   it('should handle multiple imports without conflicts', () => {
     const index1 = require('../../src/index');
     const index2 = require('../../src/index');
-    
+
     expect(index1).toBe(index2);
   });
 
   it('should handle environment variable changes', () => {
     const originalEnv = process.env.NODE_ENV;
-    
+
     process.env.NODE_ENV = 'test';
     expect(() => {
       mainIndex = require('../../src/index');
     }).not.toThrow();
-    
+
     process.env.NODE_ENV = 'production';
     expect(() => {
       mainIndex = require('../../src/index');
     }).not.toThrow();
-    
+
     process.env.NODE_ENV = originalEnv;
   });
 

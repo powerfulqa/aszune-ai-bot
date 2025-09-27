@@ -49,20 +49,20 @@ function addParagraphToChunk(paragraph, currentChunk) {
  */
 function processParagraphWithLineBreaks(paragraph, effectiveMaxLength, currentChunk, chunks) {
   const lines = paragraph.split('\n');
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    
+
     if (line.length > 0) {
       currentChunk = processLine(line, effectiveMaxLength, currentChunk, chunks);
     }
-    
+
     // Add line break after each line except the last one
     if (i < lines.length - 1 && currentChunk.length > 0) {
       currentChunk += '\n';
     }
   }
-  
+
   return currentChunk;
 }
 
@@ -78,7 +78,7 @@ function processLine(line, effectiveMaxLength, currentChunk, chunks) {
   if ((currentChunk + line).length + 1 <= effectiveMaxLength) {
     return currentChunk + line;
   }
-  
+
   // Start new chunk
   if (currentChunk.length > 0) {
     chunks.push(currentChunk.trim());
@@ -96,11 +96,11 @@ function processLine(line, effectiveMaxLength, currentChunk, chunks) {
  */
 function processParagraphBySentences(paragraph, effectiveMaxLength, currentChunk, chunks) {
   const sentences = paragraph.split(/(?<=[.!?])\s+/);
-  
+
   for (const sentence of sentences) {
     currentChunk = processSentence(sentence, effectiveMaxLength, currentChunk, chunks);
   }
-  
+
   return currentChunk;
 }
 
@@ -169,17 +169,17 @@ function splitVeryLongWord(word, effectiveMaxLength, currentChunk, chunks) {
   while (remainingWord.length > 0) {
     const chunkSize = Math.max(1, Math.min(effectiveMaxLength, remainingWord.length));
     const wordChunk = remainingWord.substring(0, chunkSize);
-    
+
     if (currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       currentChunk = '';
     }
-    
+
     // Prevent infinite loop by ensuring we always make progress
     if (chunkSize <= 0) {
       break;
     }
-    
+
     chunks.push(wordChunk);
     remainingWord = remainingWord.substring(chunkSize);
   }
@@ -190,11 +190,11 @@ function processLongSentence(sentence, effectiveMaxLength, currentChunk, chunks)
   // Check if sentence contains URLs - if so, handle them specially
   const urlRegex = /https?:\/\/[^\s]+/g;
   const urls = sentence.match(urlRegex);
-  
+
   if (urls && urls.length > 0) {
     return processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chunks, urls);
   }
-  
+
   const words = sentence.split(/\s+/);
   let sentencePart = '';
 
@@ -235,14 +235,14 @@ function processUrlInSentence(url, sentencePart, effectiveMaxLength, currentChun
   if ((sentencePart + url).length <= effectiveMaxLength) {
     return { sentencePart: sentencePart + url, currentChunk };
   }
-  
+
   // URL doesn't fit, flush current part and start new chunk
   if (sentencePart.length > 0) {
     currentChunk += sentencePart;
     chunks.push(currentChunk.trim());
     currentChunk = '';
   }
-  
+
   // If URL itself is too long, split it
   if (url.length > effectiveMaxLength) {
     let remainingUrl = url;
@@ -254,7 +254,7 @@ function processUrlInSentence(url, sentencePart, effectiveMaxLength, currentChun
     }
     return { sentencePart: '', currentChunk };
   }
-  
+
   return { sentencePart: url, currentChunk };
 }
 
@@ -271,17 +271,17 @@ function processRemainingWords(sentencePart, effectiveMaxLength, currentChunk, c
   if (sentencePart.length <= effectiveMaxLength) {
     return sentencePart;
   }
-  
+
   // Flush current chunk and start fresh
   flushCurrentChunk(currentChunk, chunks);
-  
+
   const words = sentencePart.split(/\s+/);
   let wordPart = '';
-  
+
   for (const word of words) {
     wordPart = processWord(word, wordPart, effectiveMaxLength, chunks);
   }
-  
+
   return wordPart;
 }
 
@@ -306,21 +306,21 @@ function flushCurrentChunk(currentChunk, chunks) {
  */
 function processWord(word, wordPart, effectiveMaxLength, chunks) {
   const newWordPart = wordPart + (wordPart ? ' ' : '') + word;
-  
+
   if (newWordPart.length <= effectiveMaxLength) {
     return newWordPart;
   }
-  
+
   // Current word part is full, flush it
   if (wordPart) {
     chunks.push(wordPart.trim());
   }
-  
+
   // Handle very long single words
   if (word.length > effectiveMaxLength) {
     return processVeryLongWord(word, effectiveMaxLength, chunks);
   }
-  
+
   return word;
 }
 
@@ -333,14 +333,14 @@ function processWord(word, wordPart, effectiveMaxLength, chunks) {
  */
 function processVeryLongWord(word, effectiveMaxLength, chunks) {
   let remainingWord = word;
-  
+
   while (remainingWord.length > 0) {
     const chunkSize = Math.min(effectiveMaxLength, remainingWord.length);
     const wordChunk = remainingWord.substring(0, chunkSize);
     chunks.push(wordChunk);
     remainingWord = remainingWord.substring(chunkSize);
   }
-  
+
   return '';
 }
 
@@ -356,31 +356,37 @@ function processVeryLongWord(word, effectiveMaxLength, chunks) {
 function processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chunks, urls) {
   let remainingSentence = sentence;
   let sentencePart = '';
-  
+
   // Process each URL
   for (const url of urls) {
     const urlIndex = remainingSentence.indexOf(url);
     const beforeUrl = remainingSentence.substring(0, urlIndex);
     const afterUrl = remainingSentence.substring(urlIndex + url.length);
-    
+
     // Add text before URL
     if (beforeUrl.length > 0) {
       sentencePart += beforeUrl;
     }
-    
+
     // Process the URL
-    const result = processUrlInSentence(url, sentencePart, effectiveMaxLength, currentChunk, chunks);
+    const result = processUrlInSentence(
+      url,
+      sentencePart,
+      effectiveMaxLength,
+      currentChunk,
+      chunks
+    );
     sentencePart = result.sentencePart;
     currentChunk = result.currentChunk;
-    
+
     remainingSentence = afterUrl;
   }
-  
+
   // Add any remaining text after the last URL
   if (remainingSentence.length > 0) {
     sentencePart += remainingSentence;
   }
-  
+
   // Process remaining content
   return processRemainingWords(sentencePart, effectiveMaxLength, currentChunk, chunks);
 }
@@ -436,13 +442,14 @@ function chunkMessage(message, maxLength = 2000) {
     if (/\w$/.test(currentChunk) && /^\w/.test(nextChunk)) {
       // Check if this looks like a word that was split across chunks
       // by looking for patterns that suggest the chunks are parts of the same word/URL
-      
+
       // Check if this looks like a split word/URL by examining the content
       const combinedText = currentChunk + nextChunk;
-      const looksLikeSplitWord = /^https?:\/\//.test(combinedText) || // URL
-                                /^\w+$/.test(combinedText.replace(/\s+/g, '')) || // Single word
-                                (currentChunk.length <= 3 && nextChunk.length <= 3); // Very short chunks (likely split word)
-      
+      const looksLikeSplitWord =
+        /^https?:\/\//.test(combinedText) || // URL
+        /^\w+$/.test(combinedText.replace(/\s+/g, '')) || // Single word
+        (currentChunk.length <= 3 && nextChunk.length <= 3); // Very short chunks (likely split word)
+
       // Don't add space if this looks like a split word/URL
       if (!looksLikeSplitWord) {
         chunks[i] = currentChunk + ' ';

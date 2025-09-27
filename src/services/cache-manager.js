@@ -36,7 +36,7 @@ class CacheManager {
     }
 
     this.cacheCleanupInterval = setInterval(() => {
-      this.cleanupCache().catch(error => {
+      this.cleanupCache().catch((error) => {
         const errorResponse = ErrorHandler.handleError(error, 'cache cleanup');
         logger.warn(`Cache cleanup error: ${errorResponse.message}`);
       });
@@ -57,9 +57,10 @@ class CacheManager {
       if (config?.PI_OPTIMIZATIONS?.ENABLED) {
         return {
           enabled: Boolean(config.PI_OPTIMIZATIONS.CACHE_ENABLED),
-          maxEntries: typeof config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES === 'number'
-            ? config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES
-            : defaultConfig.maxEntries,
+          maxEntries:
+            typeof config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES === 'number'
+              ? config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES
+              : defaultConfig.maxEntries,
         };
       }
     } catch (configError) {
@@ -77,10 +78,7 @@ class CacheManager {
    * @returns {boolean} True if caching should be used
    */
   shouldUseCache(options, cacheConfig) {
-    return Boolean(
-      options.caching !== false && 
-      cacheConfig.enabled
-    );
+    return Boolean(options.caching !== false && cacheConfig.enabled);
   }
 
   /**
@@ -143,7 +141,7 @@ class CacheManager {
    */
   async ensureCacheSize(maxEntries) {
     const cacheStats = this.cache.getStats();
-    
+
     if (cacheStats.totalEntries >= maxEntries) {
       // Remove oldest entries to make room
       const entriesToRemove = Math.floor(maxEntries * 0.1); // Remove 10%
@@ -200,7 +198,7 @@ class CacheManager {
       if (error.code === 'ENOENT') {
         return {}; // Return empty cache if file doesn't exist
       }
-      
+
       const errorResponse = ErrorHandler.handleError(error, 'loading cache');
       logger.warn(`Cache load error: ${errorResponse.message}`);
       return {};

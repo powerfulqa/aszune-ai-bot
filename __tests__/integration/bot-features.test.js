@@ -50,7 +50,7 @@ jest.mock('../../src/services/chat', () => ({
       if (mockInstance.isRateLimited && mockInstance.isRateLimited()) {
         return; // Don't process if rate limited
       }
-      
+
       // Simulate the actual message handling logic
       if (message.content.startsWith('!')) {
         const commandHandler = require('../../src/commands');
@@ -62,7 +62,7 @@ jest.mock('../../src/services/chat', () => ({
         // Simulate chat message handling
         await message.reply('Mock response');
       }
-      
+
       // Simulate emoji reactions (this is what the test is checking for)
       const emojiManager = require('../../src/utils/emoji');
       await emojiManager.addReactionsToMessage(message);
@@ -113,7 +113,9 @@ jest.mock('../../src/utils/input-validator', () => ({
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
     validateInput: jest.fn().mockReturnValue({ valid: true }),
     sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest.fn().mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
+    validateAndSanitize: jest
+      .fn()
+      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
   },
 }));
 
@@ -243,7 +245,9 @@ jest.mock('../../src/utils/input-validator', () => ({
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
     validateInput: jest.fn().mockReturnValue({ valid: true }),
     sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest.fn().mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
+    validateAndSanitize: jest
+      .fn()
+      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
   },
 }));
 
@@ -430,7 +434,7 @@ describe('Bot Integration - Features', () => {
 
   it('adds emoji reactions for keywords', async () => {
     message.content = 'Hello happy world!';
-    
+
     await messageCreateHandler(message);
 
     expect(message.react).toHaveBeenCalledWith('😊');
@@ -438,7 +442,7 @@ describe('Bot Integration - Features', () => {
 
   it('adds multiple emoji reactions for multiple keywords', async () => {
     message.content = 'Hello happy world! This is great!';
-    
+
     await messageCreateHandler(message);
 
     expect(message.react).toHaveBeenCalledWith('😊');
@@ -460,7 +464,7 @@ describe('Bot Integration - Features', () => {
     // Create a new message object with the mock rejection
     const errorMessage = {
       ...message,
-      reply: jest.fn().mockRejectedValue(new Error('API Error'))
+      reply: jest.fn().mockRejectedValue(new Error('API Error')),
     };
 
     // The test should not throw an error
@@ -471,10 +475,8 @@ describe('Bot Integration - Features', () => {
 
   it('handles API error when summarising', async () => {
     message.content = '!summary';
-    conversationManager.getHistory.mockReturnValue([
-      { role: 'user', content: 'Hello' }
-    ]);
-    
+    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'Hello' }]);
+
     const perplexityService = require('../../src/services/perplexity-secure');
     perplexityService.generateSummary.mockRejectedValue(new Error('API Error'));
 
@@ -492,10 +494,12 @@ describe('Bot Integration - Features', () => {
 
   it('truncates very long conversation history', async () => {
     message.content = '!summary';
-    const longHistory = Array(1000).fill().map((_, i) => ({
-      role: 'user',
-      content: `Message ${i}`
-    }));
+    const longHistory = Array(1000)
+      .fill()
+      .map((_, i) => ({
+        role: 'user',
+        content: `Message ${i}`,
+      }));
     conversationManager.getHistory.mockReturnValue(longHistory);
 
     await messageCreateHandler(message);

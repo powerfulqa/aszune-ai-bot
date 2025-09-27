@@ -97,9 +97,9 @@ describe('Conversation Manager - Basic Operations', () => {
       const userId = '123456789012345678';
       conversationManager.addMessage(userId, 'user', 'hello');
       conversationManager.addMessage(userId, 'assistant', 'hi');
-      
+
       expect(conversationManager.getHistory(userId)).toHaveLength(2);
-      
+
       conversationManager.clearHistory(userId);
       expect(conversationManager.getHistory(userId)).toHaveLength(0);
     });
@@ -107,13 +107,13 @@ describe('Conversation Manager - Basic Operations', () => {
     it('clears all conversation data when no userId provided', () => {
       const userId1 = '123456789012345678';
       const userId2 = '987654321098765432';
-      
+
       conversationManager.addMessage(userId1, 'user', 'hello');
       conversationManager.addMessage(userId2, 'user', 'hi');
-      
+
       expect(conversationManager.getHistory(userId1)).toHaveLength(1);
       expect(conversationManager.getHistory(userId2)).toHaveLength(1);
-      
+
       conversationManager.clearHistory();
       expect(conversationManager.getHistory(userId1)).toHaveLength(0);
       expect(conversationManager.getHistory(userId2)).toHaveLength(0);

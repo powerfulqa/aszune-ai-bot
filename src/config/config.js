@@ -16,15 +16,15 @@ if (missingEnvVars.length > 0) {
  * Helper function to parse integer environment variables with fallback
  * Safely parses environment variables as integers, returning a default value
  * if the environment variable is not set, empty, or contains invalid data.
- * 
+ *
  * @param {string} envVar - The name of the environment variable to parse
  * @param {number} defaultValue - The default value to return if parsing fails
  * @returns {number} The parsed integer value or the default value
- * 
+ *
  * @example
  * // Parse PORT environment variable with default 3000
  * const port = getIntEnvVar('PORT', 3000);
- * 
+ *
  * @example
  * // Parse CPU_THRESHOLD with default 80 (used in config object)
  * CPU_THRESHOLD_PERCENT: getIntEnvVar('CPU_THRESHOLD_PERCENT', 80),
@@ -36,7 +36,7 @@ function getIntEnvVar(envVar, defaultValue) {
   if (!Number.isInteger(defaultValue)) {
     throw new TypeError(`getIntEnvVar: defaultValue must be a valid integer, got ${defaultValue}`);
   }
-  
+
   const parsed = parseInt(process.env[envVar], 10);
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }

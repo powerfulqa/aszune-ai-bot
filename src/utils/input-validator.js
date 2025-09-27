@@ -134,7 +134,7 @@ class InputValidator {
     if (value.length > maxLength) {
       return {
         valid: false,
-        error: `${fieldName} too long. Maximum length is ${maxLength} characters`
+        error: `${fieldName} too long. Maximum length is ${maxLength} characters`,
       };
     }
     return null;
@@ -186,7 +186,7 @@ class InputValidator {
    */
   static validateMessageContent(content) {
     let result = { valid: false, error: 'Unknown validation error' };
-    
+
     try {
       // Perform all validation checks
       const validationResult = this._performMessageContentValidation(content);
@@ -197,7 +197,7 @@ class InputValidator {
       });
       result = { valid: false, error: errorResponse.message };
     }
-    
+
     return result;
   }
 
@@ -270,7 +270,7 @@ class InputValidator {
    */
   static validateCommand(command) {
     let result = { valid: false, error: 'Unknown validation error' };
-    
+
     try {
       // Perform all validation checks
       const validationResult = this._performCommandValidation(command);
@@ -281,7 +281,7 @@ class InputValidator {
       });
       result = { valid: false, error: errorResponse.message };
     }
-    
+
     return result;
   }
 
@@ -317,7 +317,11 @@ class InputValidator {
     const stringCheck = this._validateStringType(command, 'Command');
     if (stringCheck) return stringCheck;
 
-    const lengthCheck = this._validateStringLength(command, VALIDATION_LIMITS.MAX_COMMAND_LENGTH, 'Command');
+    const lengthCheck = this._validateStringLength(
+      command,
+      VALIDATION_LIMITS.MAX_COMMAND_LENGTH,
+      'Command'
+    );
     if (lengthCheck) return lengthCheck;
 
     return { valid: true };
@@ -420,7 +424,7 @@ class InputValidator {
    */
   static validateUrl(url) {
     let result = { valid: false, error: 'Unknown validation error' };
-    
+
     try {
       // Perform all validation checks
       const validationResult = this._performUrlValidation(url);
@@ -431,7 +435,7 @@ class InputValidator {
       });
       result = { valid: false, error: errorResponse.message };
     }
-    
+
     return result;
   }
 
@@ -533,7 +537,7 @@ class InputValidator {
     ];
 
     // Apply removal patterns
-    sanitizationRules.forEach(rule => {
+    sanitizationRules.forEach((rule) => {
       if (rule.pattern.test(sanitized)) {
         sanitized = sanitized.replace(rule.pattern, '');
         warnings.push(rule.message);
@@ -699,7 +703,7 @@ class InputValidator {
         error: 'Input is too long',
       };
     }
-    
+
     // Check for dangerous patterns first (before sanitization)
     const dangerousPatterns = [
       /<script[^>]*>.*?<\/script>/gi,
@@ -712,24 +716,24 @@ class InputValidator {
       /setTimeout\s*\(/gi,
       /setInterval\s*\(/gi,
     ];
-    
-    const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
+
+    const hasDangerousContent = dangerousPatterns.some((pattern) => pattern.test(input));
     if (hasDangerousContent) {
       return {
         valid: false,
         error: 'Input contains potentially unsafe content',
       };
     }
-    
+
     // Sanitize content
     const sanitizedResult = this.sanitizeContent(input);
     const sanitizedInput = sanitizedResult.content;
-    
+
     // Allow empty strings
     if (sanitizedInput.length === 0) {
       return { valid: true };
     }
-    
+
     if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
       return {
         valid: false,

@@ -37,7 +37,7 @@ describe('Config - Branch Coverage', () => {
     it('should handle different NODE_ENV values', () => {
       process.env.DISCORD_BOT_TOKEN = 'test-token';
       process.env.PERPLEXITY_API_KEY = 'test-key';
-      
+
       // Test development environment
       process.env.NODE_ENV = 'development';
       const devConfig = require('../../src/config/config');
@@ -57,11 +57,11 @@ describe('Config - Branch Coverage', () => {
     it('should handle different LOG_LEVEL values', () => {
       process.env.DISCORD_BOT_TOKEN = 'test-token';
       process.env.PERPLEXITY_API_KEY = 'test-key';
-      
+
       // Test different log levels
       const logLevels = ['debug', 'info', 'warn', 'error'];
-      
-      logLevels.forEach(level => {
+
+      logLevels.forEach((level) => {
         process.env.LOG_LEVEL = level;
         const config = require('../../src/config/config');
         expect(config).toBeDefined();
@@ -71,7 +71,7 @@ describe('Config - Branch Coverage', () => {
     it('should handle PI_OPTIMIZATIONS_ENABLED environment variable', () => {
       process.env.DISCORD_BOT_TOKEN = 'test-token';
       process.env.PERPLEXITY_API_KEY = 'test-key';
-      
+
       // Test enabled
       process.env.PI_OPTIMIZATIONS_ENABLED = 'true';
       const enabledConfig = require('../../src/config/config');
@@ -92,7 +92,7 @@ describe('Config - Branch Coverage', () => {
 
     it('should have all required configuration sections', () => {
       const config = require('../../src/config/config');
-      
+
       expect(config).toHaveProperty('DISCORD_BOT_TOKEN');
       expect(config).toHaveProperty('PERPLEXITY_API_KEY');
       expect(config).toHaveProperty('MESSAGE_LIMITS');
@@ -103,7 +103,7 @@ describe('Config - Branch Coverage', () => {
 
     it('should handle nested configuration objects', () => {
       const config = require('../../src/config/config');
-      
+
       expect(config.MESSAGE_LIMITS).toHaveProperty('DISCORD_MAX_LENGTH');
       expect(config.MESSAGE_LIMITS).toHaveProperty('EMBED_MAX_LENGTH');
       expect(config.CACHE).toHaveProperty('DEFAULT_MAX_ENTRIES');
@@ -117,7 +117,7 @@ describe('Config - Branch Coverage', () => {
     it('should handle empty string environment variables', () => {
       process.env.DISCORD_BOT_TOKEN = '';
       process.env.PERPLEXITY_API_KEY = '';
-      
+
       expect(() => {
         require('../../src/config/config');
       }).toThrow();
@@ -126,7 +126,7 @@ describe('Config - Branch Coverage', () => {
     it('should handle undefined environment variables', () => {
       delete process.env.DISCORD_BOT_TOKEN;
       delete process.env.PERPLEXITY_API_KEY;
-      
+
       expect(() => {
         require('../../src/config/config');
       }).toThrow();
@@ -135,7 +135,7 @@ describe('Config - Branch Coverage', () => {
     it('should handle null environment variables', () => {
       delete process.env.DISCORD_BOT_TOKEN;
       delete process.env.PERPLEXITY_API_KEY;
-      
+
       expect(() => {
         require('../../src/config/config');
       }).toThrow();

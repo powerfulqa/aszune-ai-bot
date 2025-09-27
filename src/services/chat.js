@@ -13,7 +13,6 @@ const { chunkMessage } = require('../utils/enhanced-message-chunker');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 
-
 const conversationManager = new ConversationManager();
 
 /**
@@ -202,7 +201,7 @@ async function handleChatMessage(message) {
       description: errorResponse.message,
       footer: { text: 'Aszai Bot' },
     });
-    
+
     message.reply({ embeds: [embed] });
   }
 }

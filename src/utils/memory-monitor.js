@@ -105,7 +105,9 @@ class MemoryMonitor {
           memoryLimit: this.memoryLimit,
           criticalMemory: this.criticalMemory,
         });
-        logger.error(`Memory check error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+        logger.error(
+          `Memory check error: ${errorResponse?.message || error.message || 'Unknown error'}`
+        );
       } catch (handlerError) {
         logger.error(`Memory check error: ${error.message || 'Unknown error'}`);
       }
@@ -144,7 +146,9 @@ class MemoryMonitor {
           lastGcTime: this.lastGcTime,
           isLowMemory: this.isLowMemory,
         });
-        logger.error(`Garbage collection error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+        logger.error(
+          `Garbage collection error: ${errorResponse?.message || error.message || 'Unknown error'}`
+        );
       } catch (handlerError) {
         logger.error(`Garbage collection error: ${error.message || 'Unknown error'}`);
       }
@@ -170,7 +174,9 @@ class MemoryMonitor {
     } catch (error) {
       try {
         const errorResponse = ErrorHandler.handleError(error, 'getting memory usage');
-        logger.error(`Memory usage error: ${errorResponse?.message || error.message || 'Unknown error'}`);
+        logger.error(
+          `Memory usage error: ${errorResponse?.message || error.message || 'Unknown error'}`
+        );
         return {};
       } catch (handlerError) {
         logger.error(`Memory usage error: ${error.message || 'Unknown error'}`);

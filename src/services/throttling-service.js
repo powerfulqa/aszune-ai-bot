@@ -62,7 +62,7 @@ class ThrottlingService {
   getThrottlerStatus() {
     return {
       enabled: this.isThrottlingEnabled(),
-      available: this.connectionThrottler !== null
+      available: this.connectionThrottler !== null,
     };
   }
 }

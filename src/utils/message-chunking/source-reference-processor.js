@@ -64,10 +64,10 @@ function collectSourceReferences(text) {
     const patterns = [
       { regex: /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g, processor: processPattern1 },
       { regex: /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s)]+))\)/g, processor: processPattern2 },
-      { regex: /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g, processor: processPattern3 }
+      { regex: /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g, processor: processPattern3 },
     ];
 
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       let match;
       while ((match = pattern.regex.exec(text)) !== null) {
         pattern.processor(match, sources);
@@ -92,13 +92,13 @@ function collectSourceReferences(text) {
  */
 function formatSourceReferences(text, sourceMap) {
   let result = text; // Default to original text
-  
+
   try {
     // Input validation - early exit if invalid
     if (!text || !sourceMap) {
       return result;
     }
-    
+
     result = performSourceReferenceFormatting(text, sourceMap);
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting source references', {
@@ -108,7 +108,7 @@ function formatSourceReferences(text, sourceMap) {
     console.error(`Source reference formatting error: ${errorResponse.message}`);
     // result remains as original text on error
   }
-  
+
   return result;
 }
 
@@ -123,16 +123,16 @@ function performSourceReferenceFormatting(text, sourceMap) {
 
   // Step 1: Pre-processing fixes
   formattedText = applyPreprocessingFixes(formattedText);
-  
+
   // Step 2: Clean up duplicate URLs
   formattedText = applyDuplicateUrlCleanup(formattedText);
-  
+
   // Step 3: Replace source references with markdown links
   formattedText = applySourceReferenceReplacement(formattedText, sourceMap);
-  
+
   // Step 4: Post-processing cleanup
   formattedText = applyPostprocessingCleanup(formattedText);
-  
+
   // Step 5: Handle unlinked references
   formattedText = applyUnlinkedReferenceHandling(formattedText, sourceMap);
 
@@ -158,15 +158,12 @@ function applyPreprocessingFixes(text) {
  * Clean up duplicate URL occurrences
  */
 function applyDuplicateUrlCleanup(text) {
-  return text.replace(
-    /\(\[(\d+)\]\[([^\]]+)\]([^\)]+)\)/g,
-    (match, num, url1, url2) => {
-      if (url1.includes(url2) || url2.includes(url1)) {
-        return `([${num}][${url1}])`;
-      }
-      return match;
+  return text.replace(/\(\[(\d+)\]\[([^\]]+)\]([^)]+)\)/g, (match, num, url1, url2) => {
+    if (url1.includes(url2) || url2.includes(url1)) {
+      return `([${num}][${url1}])`;
     }
-  );
+    return match;
+  });
 }
 
 /**
@@ -178,10 +175,10 @@ function applySourceReferenceReplacement(text, sourceMap) {
   Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
     // Handle square bracket format: ([n][url])
     formattedText = replaceSquareBracketFormat(formattedText, sourceNum, sourceUrl);
-    
+
     // Handle standard format with URL: (n) (url) or (n)(url) or (n) url
     formattedText = replaceStandardFormat(formattedText, sourceNum, sourceUrl);
-    
+
     // Handle standalone references (n) not already formatted
     formattedText = replaceStandaloneReferences(formattedText, sourceNum, sourceUrl);
   });
@@ -220,14 +217,16 @@ function replaceStandaloneReferences(text, sourceNum, sourceUrl) {
  * Apply post-processing cleanup for common URL issues
  */
 function applyPostprocessingCleanup(text) {
-  return text
-    // Fix URLs where domain is broken by extra characters
-    .replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1')
-    // Fix URLs that lost their dots
-    .replace(/examplecom/g, 'example.com')
-    .replace(/youtubecom/g, 'youtube.com')
-    .replace(/fractalsoftworkscom/g, 'fractalsoftworks.com')
-    .replace(/testorg/g, 'test.org');
+  return (
+    text
+      // Fix URLs where domain is broken by extra characters
+      .replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1')
+      // Fix URLs that lost their dots
+      .replace(/examplecom/g, 'example.com')
+      .replace(/youtubecom/g, 'youtube.com')
+      .replace(/fractalsoftworkscom/g, 'fractalsoftworks.com')
+      .replace(/testorg/g, 'test.org')
+  );
 }
 
 /**
@@ -255,7 +254,7 @@ function replaceUnlinkedReference(text, refNum, url) {
   const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
   const linkText = generateLinkText(url, refNum);
   const fullUrl = ensureHttpPrefix(url);
-  
+
   return text.replace(replaceRegex, `[${linkText}](${fullUrl})`);
 }
 

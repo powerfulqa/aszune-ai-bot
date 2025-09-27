@@ -246,16 +246,21 @@ const commands = {
       }
 
       // Generate summary
-      return this._generateSummary(interaction, userId, textValidation.sanitized, textValidation.warnings);
+      return this._generateSummary(
+        interaction,
+        userId,
+        textValidation.sanitized,
+        textValidation.warnings
+      );
     },
 
     _extractTextFromSlashCommand(interaction) {
       const text = interaction.options.getString('text');
-      
+
       if (!text || text.trim().length === 0) {
         return {
           success: false,
-          errorMessage: 'Please provide text to summarize.'
+          errorMessage: 'Please provide text to summarize.',
         };
       }
 
@@ -271,7 +276,7 @@ const commands = {
       if (!text || text.trim().length === 0) {
         return {
           success: false,
-          errorMessage: 'Please provide text to summarize.'
+          errorMessage: 'Please provide text to summarize.',
         };
       }
 
@@ -367,7 +372,9 @@ async function handleTextCommand(message) {
         try {
           return await message.reply(errorResponse.message);
         } catch (replyError) {
-          logger.error(`Failed to send error reply for text command ${name}: ${replyError.message}`);
+          logger.error(
+            `Failed to send error reply for text command ${name}: ${replyError.message}`
+          );
         }
       }
     }
@@ -424,7 +431,9 @@ async function handleSlashCommand(interaction) {
         await interaction.reply(reply);
       }
     } catch (replyError) {
-      logger.error(`Failed to send error reply for slash command ${interaction.commandName}: ${replyError.message}`);
+      logger.error(
+        `Failed to send error reply for slash command ${interaction.commandName}: ${replyError.message}`
+      );
     }
   }
 }

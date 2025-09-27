@@ -76,9 +76,9 @@ describe('index.js - Event Handler Branch Coverage', () => {
 
     it('should handle error events', () => {
       const mockError = new Error('Test error');
-      
+
       // Simulate an error event
-      const errorHandler = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+      const errorHandler = mockClient.on.mock.calls.find((call) => call[0] === 'error')[1];
       errorHandler(mockError);
 
       // Verify error was logged
@@ -87,9 +87,9 @@ describe('index.js - Event Handler Branch Coverage', () => {
 
     it('should handle warning events', () => {
       const mockWarning = 'Test warning';
-      
+
       // Simulate a warn event
-      const warnHandler = mockClient.on.mock.calls.find(call => call[0] === 'warn')[1];
+      const warnHandler = mockClient.on.mock.calls.find((call) => call[0] === 'warn')[1];
       warnHandler(mockWarning);
 
       // Verify warning was logged
@@ -103,7 +103,9 @@ describe('index.js - Event Handler Branch Coverage', () => {
       };
 
       // Simulate an interaction event
-      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      const interactionHandler = mockClient.on.mock.calls.find(
+        (call) => call[0] === 'interactionCreate'
+      )[1];
       await interactionHandler(mockInteraction);
 
       // Verify no command handler was called
@@ -118,7 +120,9 @@ describe('index.js - Event Handler Branch Coverage', () => {
       };
 
       // Simulate an interaction event
-      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      const interactionHandler = mockClient.on.mock.calls.find(
+        (call) => call[0] === 'interactionCreate'
+      )[1];
       await interactionHandler(mockInteraction);
 
       // Verify command handler was called
@@ -209,12 +213,12 @@ describe('index.js - Event Handler Branch Coverage', () => {
         }));
         return MockConversationManager;
       });
-      
+
       jest.doMock('../../src/services/perplexity-secure', () => ({
         generateChatResponse: jest.fn(),
         generateSummary: jest.fn(),
       }));
-      
+
       // Keep NODE_ENV as 'test' to prevent process.exit calls
       mockClient.login.mockRejectedValue(new Error('Login failed'));
 
@@ -222,7 +226,7 @@ describe('index.js - Event Handler Branch Coverage', () => {
       require('../../src/index');
 
       // Wait for login attempt
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(

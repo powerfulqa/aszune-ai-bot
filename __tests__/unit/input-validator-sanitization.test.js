@@ -15,7 +15,7 @@ describe('InputValidator - Sanitization', () => {
     it('should validate and sanitize clean input', () => {
       const input = 'Hello world!';
       const result = InputValidator.validateAndSanitize(input, 'text');
-      
+
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe(input);
       expect(result.error).toBeUndefined();
@@ -24,7 +24,7 @@ describe('InputValidator - Sanitization', () => {
     it('should sanitize HTML content', () => {
       const input = '<p>Hello <strong>world</strong>!</p>';
       const result = InputValidator.validateAndSanitize(input, 'text');
-      
+
       expect(result.valid).toBe(true);
       expect(result.sanitized).not.toContain('<p>');
       expect(result.sanitized).not.toContain('<strong>');
@@ -34,21 +34,21 @@ describe('InputValidator - Sanitization', () => {
     it('should reject dangerous content', () => {
       const input = '<script>alert("xss")</script>';
       const result = InputValidator.validateAndSanitize(input, 'text');
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('unsafe');
     });
 
     it('should handle empty input', () => {
       const result = InputValidator.validateAndSanitize('', 'text');
-      
+
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('');
     });
 
     it('should handle null input', () => {
       const result = InputValidator.validateAndSanitize(null, 'text');
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toBeDefined();
     });

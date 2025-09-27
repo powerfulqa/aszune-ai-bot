@@ -74,7 +74,8 @@ describe('URL Formatter - YouTube', () => {
     });
 
     it('should handle mixed content', () => {
-      const input = 'Check reddit.com/r/programming, youtube.com/watch?v=abc123, and github.com/user/repo';
+      const input =
+        'Check reddit.com/r/programming, youtube.com/watch?v=abc123, and github.com/user/repo';
       const result = urlFormatter.formatAllUrls(input);
       expect(result).toContain('(https://reddit.com/r/programming)');
       expect(result).toContain('[YouTube Video](https://youtube.com/watch?v=abc123)');
@@ -102,7 +103,7 @@ describe('URL Formatter - YouTube', () => {
       const result2 = urlFormatter.formatYouTubeLinks('');
       const result3 = urlFormatter.fixLinkFormatting('');
       const result4 = urlFormatter.formatAllUrls('');
-      
+
       expect(result1).toBe('');
       expect(result2).toBe('');
       expect(result3).toBe('');

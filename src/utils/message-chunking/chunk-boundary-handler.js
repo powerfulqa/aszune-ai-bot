@@ -81,7 +81,6 @@ function fixChunkBoundaries(chunks, safeMaxLength) {
 }
 
 function fixChunkBoundaryAt(chunks, index, safeMaxLength) {
-
   // Apply sentence boundary fixes
   const sentenceFix = fixSentenceBoundary(chunks, index, safeMaxLength);
   if (sentenceFix.fixed) {
@@ -148,7 +147,15 @@ function fixSentenceBoundary(chunks, index, safeMaxLength) {
  * @param {string} separator - Separator to use when joining chunks
  * @returns {Object} - Result object with fixed flag and updated chunks
  */
-function fixGenericBoundary(chunks, index, safeMaxLength, endPattern, startPattern, splitPattern, separator = ' ') {
+function fixGenericBoundary(
+  chunks,
+  index,
+  safeMaxLength,
+  endPattern,
+  startPattern,
+  splitPattern,
+  separator = ' '
+) {
   const currentChunk = chunks[index];
   const nextChunk = chunks[index + 1];
 

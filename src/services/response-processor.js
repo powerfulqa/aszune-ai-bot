@@ -65,25 +65,29 @@ class ResponseProcessor {
    */
   isRetryableError(error) {
     if (!error || !error.message) return false;
-    
+
     const message = error.message.toLowerCase();
-    
+
     // Retry on temporary/network errors
-    if (message.includes('temporary') || 
-        message.includes('network') || 
-        message.includes('timeout') ||
-        message.includes('429')) {
+    if (
+      message.includes('temporary') ||
+      message.includes('network') ||
+      message.includes('timeout') ||
+      message.includes('429')
+    ) {
       return true;
     }
-    
+
     // Don't retry on permanent errors
-    if (message.includes('permanent') || 
-        message.includes('invalid') ||
-        message.includes('unauthorized') ||
-        message.includes('forbidden')) {
+    if (
+      message.includes('permanent') ||
+      message.includes('invalid') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden')
+    ) {
       return false;
     }
-    
+
     // Default to not retryable for unknown errors
     return false;
   }
@@ -103,10 +107,10 @@ class ResponseProcessor {
     } catch (apiError) {
       // Check if it's a retryable error and we should retry
       const isRetryableError = this.isRetryableError(apiError);
-      
+
       if (isRetryableError && retries > 0) {
-        const errorResponse = ErrorHandler.handleError(apiError, 'API retry', { retries });
-        
+        ErrorHandler.handleError(apiError, 'API retry', { retries });
+
         // Wait before retrying
         await this.delay(retryDelay);
 
@@ -137,7 +141,7 @@ class ResponseProcessor {
     if (typeof options === 'boolean') {
       return { caching: options };
     }
-    
+
     return options || {};
   }
 
@@ -148,11 +152,11 @@ class ResponseProcessor {
    */
   standardizeOptions(options) {
     const normalizedOptions = this.normalizeOptions(options);
-    
+
     return {
       caching: true,
       retryOnRateLimit: false,
-      ...normalizedOptions
+      ...normalizedOptions,
     };
   }
 }

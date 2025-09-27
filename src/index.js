@@ -136,7 +136,7 @@ const shutdown = async (signal) => {
 
   // Perform shutdown steps and collect errors
   const errors = await performShutdownSteps();
-  
+
   // Handle shutdown completion
   handleShutdownCompletion(errors);
 };

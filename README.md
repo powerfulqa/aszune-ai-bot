@@ -59,7 +59,8 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   modern user experience.
 - 🧪 **Comprehensive Testing:** 536 automated tests covering all key functionality with 82%+ code
   coverage.
-- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with comprehensive error recovery.
+- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
+  comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with
   82.45% branch coverage for critical components.
@@ -69,8 +70,10 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   - 🔢 **Clear Numbering:** Adds "[1/3]", "[2/3]", etc. prefixes to indicate message sequence
   - 📄 **Word Boundary Preservation:** Ensures words at chunk boundaries remain properly separated
   - 📋 **Full Content Delivery:** No more truncated responses, even for very long messages
-  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper formatting
-  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or mid-URL
+  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper
+    formatting
+  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or
+    mid-URL
 
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
   resource-constrained devices like Raspberry Pi 3.
@@ -88,10 +91,14 @@ Raspberry Pi devices from Pi 3 to Pi 5.
 - 🧪 **Test Suite Reliability:** All tests now pass, with relaxed expectations and robust mocking.
   CI will not fail due to test issues.
 - 📝 **Documentation and Release Notes:** Updated to reflect all recent changes and fixes.
-- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for optimal performance.
-- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and ensure data integrity.
-- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource utilization.
-- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management.
+- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for
+  optimal performance.
+- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and
+  ensure data integrity.
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource
+  utilization.
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling,
+  and resource management.
 
 ---
 

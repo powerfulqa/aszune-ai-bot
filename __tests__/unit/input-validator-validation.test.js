@@ -3,10 +3,7 @@
  * Tests general validation patterns and limits
  */
 
-const {
-  InputValidator,
-  VALIDATION_LIMITS,
-} = require('../../src/utils/input-validator');
+const { InputValidator, VALIDATION_LIMITS } = require('../../src/utils/input-validator');
 
 describe('InputValidator - General Validation', () => {
   describe('validateInput', () => {
@@ -28,7 +25,7 @@ describe('InputValidator - General Validation', () => {
     it('should reject inputs that exceed length limits', () => {
       const longInput = 'a'.repeat(VALIDATION_LIMITS.TEXT_MAX_LENGTH + 1);
       const result = InputValidator.validateInput(longInput, 'text');
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('too long');
     });
@@ -49,18 +46,9 @@ describe('InputValidator - General Validation', () => {
     });
 
     it('should validate email format', () => {
-      const validEmails = [
-        'user@example.com',
-        'test.email@domain.co.uk',
-        'user+tag@example.org',
-      ];
+      const validEmails = ['user@example.com', 'test.email@domain.co.uk', 'user+tag@example.org'];
 
-      const invalidEmails = [
-        'invalid-email',
-        '@example.com',
-        'user@',
-        'user@.com',
-      ];
+      const invalidEmails = ['invalid-email', '@example.com', 'user@', 'user@.com'];
 
       validEmails.forEach((email) => {
         const result = InputValidator.validateInput(email, 'email');
@@ -80,11 +68,7 @@ describe('InputValidator - General Validation', () => {
         'https://subdomain.example.com/path',
       ];
 
-      const invalidUrls = [
-        'not-a-url',
-        'ftp://example.com',
-        'javascript:alert("xss")',
-      ];
+      const invalidUrls = ['not-a-url', 'ftp://example.com', 'javascript:alert("xss")'];
 
       validUrls.forEach((url) => {
         const result = InputValidator.validateInput(url, 'url');
@@ -102,7 +86,7 @@ describe('InputValidator - General Validation', () => {
     it('should sanitize HTML content', () => {
       const input = '<p>Hello <strong>world</strong>!</p>';
       const result = InputValidator.sanitizeInput(input);
-      
+
       expect(result).not.toContain('<p>');
       expect(result).not.toContain('<strong>');
       expect(result).toContain('Hello world!');
@@ -111,7 +95,7 @@ describe('InputValidator - General Validation', () => {
     it('should remove dangerous scripts', () => {
       const input = 'Hello <script>alert("xss")</script> world';
       const result = InputValidator.sanitizeInput(input);
-      
+
       expect(result).not.toContain('<script>');
       expect(result).not.toContain('alert');
       expect(result).toContain('Hello');
@@ -121,7 +105,7 @@ describe('InputValidator - General Validation', () => {
     it('should preserve safe content', () => {
       const input = 'This is safe content with numbers 123 and symbols !@#';
       const result = InputValidator.sanitizeInput(input);
-      
+
       expect(result).toBe(input);
     });
   });

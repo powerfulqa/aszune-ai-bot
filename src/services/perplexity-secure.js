@@ -7,6 +7,8 @@
  * Service for interacting with the Perplexity API
  * Version 1.4.0 - Refactored for better maintainability and reduced complexity
  */
+const fs = require('fs').promises;
+const path = require('path');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
@@ -40,7 +42,6 @@ const lazyLoadModule = (importPath) => {
 };
 
 // Lazy load optimization utilities
-const connectionThrottler = lazyLoadModule('../utils/connection-throttler');
 const getCachePruner = lazyLoadModule('../utils/cache-pruner');
 
 /**
@@ -346,7 +347,7 @@ class PerplexityService {
     // Parse response as JSON
     try {
       const responseData = await body.json();
-      
+
       // Validate response structure for malformed responses
       if (!responseData || typeof responseData !== 'object') {
         throw ErrorHandler.createError(
@@ -354,15 +355,19 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for required choices array
-      if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
+      if (
+        !responseData.choices ||
+        !Array.isArray(responseData.choices) ||
+        responseData.choices.length === 0
+      ) {
         throw ErrorHandler.createError(
           'Invalid response: missing or empty choices array',
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for valid choice structure
       const firstChoice = responseData.choices[0];
       if (!firstChoice || typeof firstChoice !== 'object') {
@@ -371,7 +376,7 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for required message field in choice
       if (!firstChoice.message || typeof firstChoice.message !== 'object') {
         throw ErrorHandler.createError(
@@ -379,7 +384,7 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       return responseData;
     } catch (error) {
       throw ErrorHandler.createError(
@@ -485,7 +490,6 @@ class PerplexityService {
     }
   }
 
-
   /**
    * Generate chat response for user query
    * @param {Array} history - Chat history
@@ -511,7 +515,7 @@ class PerplexityService {
     } else if (error.message && error.message.includes('invalid')) {
       return 'Unexpected response format received.';
     }
-    
+
     return errorResponse.message;
   }
 
@@ -550,7 +554,7 @@ class PerplexityService {
         shouldUseCache: opts.caching !== false,
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
-      
+
       // Re-throw the error to maintain error handling contract
       throw error;
     }
@@ -572,7 +576,7 @@ class PerplexityService {
     } catch (apiError) {
       // Check if it's a retryable error and we should retry
       const isRetryableError = this._isRetryableError(apiError);
-      
+
       if (isRetryableError && retries > 0) {
         const errorResponse = ErrorHandler.handleError(apiError, 'API retry', { retries });
         logger.info(`Retryable error, retrying after ${retryDelay}ms: ${errorResponse.message}`);
@@ -596,25 +600,29 @@ class PerplexityService {
    */
   _isRetryableError(error) {
     if (!error || !error.message) return false;
-    
+
     const message = error.message.toLowerCase();
-    
+
     // Retry on temporary/network errors
-    if (message.includes('temporary') || 
-        message.includes('network') || 
-        message.includes('timeout') ||
-        message.includes('429')) {
+    if (
+      message.includes('temporary') ||
+      message.includes('network') ||
+      message.includes('timeout') ||
+      message.includes('429')
+    ) {
       return true;
     }
-    
+
     // Don't retry on permanent errors
-    if (message.includes('permanent') || 
-        message.includes('invalid') ||
-        message.includes('unauthorized') ||
-        message.includes('forbidden')) {
+    if (
+      message.includes('permanent') ||
+      message.includes('invalid') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden')
+    ) {
       return false;
     }
-    
+
     // Default to not retryable for unknown errors
     return false;
   }
@@ -660,7 +668,6 @@ class PerplexityService {
 
     return defaultConfig;
   }
-
 
   /**
    * Try to save response to cache
@@ -733,14 +740,14 @@ class PerplexityService {
         isText: isText,
       });
       logger.error(`Failed to generate summary: ${errorResponse.message}`);
-      
+
       // Return specific error messages based on error type
       if (history.length === 0) {
         return 'No conversation history provided to summarize.';
       } else if (error.message && error.message.includes('Summary generation failed')) {
         return 'Unable to generate summary at this time.';
       }
-      
+
       return errorResponse.message;
     }
   }

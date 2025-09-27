@@ -69,7 +69,11 @@ class ErrorHandler {
 
   static _categorizeApiError(statusCode, message) {
     // Check for rate limit errors first (regardless of status code)
-    if (statusCode === 429 || message.includes('429') || message.toLowerCase().includes('rate limit')) {
+    if (
+      statusCode === 429 ||
+      message.includes('429') ||
+      message.toLowerCase().includes('rate limit')
+    ) {
       return ERROR_TYPES.RATE_LIMIT_ERROR;
     }
 

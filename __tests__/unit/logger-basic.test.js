@@ -84,7 +84,9 @@ describe('Logger - Basic', () => {
   it('handles messages with special characters', () => {
     logger.debug('Message with !@#$%^&*()_+-=[]{}|;:,.<>?');
     expect(console.log).toHaveBeenCalled();
-    expect(console.log.mock.calls[0][0]).toContain('[DEBUG] Message with !@#$%^&*()_+-=[]{}|;:,.<>?');
+    expect(console.log.mock.calls[0][0]).toContain(
+      '[DEBUG] Message with !@#$%^&*()_+-=[]{}|;:,.<>?'
+    );
   });
 
   it('handles messages with unicode characters', () => {

@@ -3,7 +3,9 @@
  * Tests edge cases and conditional branches in source-reference-processor.js
  */
 
-const { processSourceReferences } = require('../../src/utils/message-chunking/source-reference-processor');
+const {
+  processSourceReferences,
+} = require('../../src/utils/message-chunking/source-reference-processor');
 
 describe('Source Reference Processor - Branch Coverage', () => {
   describe('processSourceReferences', () => {
@@ -33,7 +35,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [1] reference and [2] another one and [3] third one.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThanOrEqual(0);
@@ -49,7 +51,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [999] reference.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -67,7 +69,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [a1] reference.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -83,7 +85,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [1] reference at the end and [2] another one.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -98,7 +100,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [1] reference and tabs:\tTab content.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -116,7 +118,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with 1. numbered lists and [1] reference.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -139,7 +141,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         '[1][2][3]',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });
@@ -157,7 +159,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
       for (let i = 1; i <= 100; i++) {
         text += `[${i}] reference `;
       }
-      
+
       const result = processSourceReferences(text);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
@@ -172,7 +174,7 @@ describe('Source Reference Processor - Branch Coverage', () => {
         'Text with [1] valid and [1a] invalid reference.',
       ];
 
-      testCases.forEach(text => {
+      testCases.forEach((text) => {
         const result = processSourceReferences(text);
         expect(typeof result).toBe('string');
       });

@@ -184,7 +184,7 @@ describe('index.js - Function Branch Coverage', () => {
         destroy: jest.fn().mockResolvedValue(),
         user: null, // Client not ready
       }));
-      
+
       jest.doMock('discord.js', () => ({
         Client: MockClient,
         GatewayIntentBits: {
@@ -220,7 +220,9 @@ describe('index.js - Function Branch Coverage', () => {
       await indexModule.registerSlashCommands();
 
       // Verify warning was logged
-      expect(mockLogger.error).toHaveBeenCalledWith('Cannot register slash commands: Client not ready');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Cannot register slash commands: Client not ready'
+      );
     });
 
     it('should handle errors during slash command registration', async () => {

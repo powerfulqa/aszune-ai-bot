@@ -79,10 +79,7 @@ describe('Memory Monitor - Utils', () => {
     const errorSpy = jest.spyOn(ErrorHandler, 'handleError');
     const usage = memoryMonitor.getMemoryUsage();
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.any(Error),
-      'getting memory usage'
-    );
+    expect(errorSpy).toHaveBeenCalledWith(expect.any(Error), 'getting memory usage');
     expect(usage).toEqual({});
   });
 

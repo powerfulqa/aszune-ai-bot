@@ -108,7 +108,7 @@ describe('index.js - Core Branch Coverage', () => {
 
     // Reset all mocks before each test
     jest.clearAllMocks();
-    
+
     // Reset mock client state
     mockClient.on.mockClear();
     mockClient.once.mockClear();
@@ -145,19 +145,19 @@ describe('index.js - Core Branch Coverage', () => {
 
   it('handles error events', () => {
     const mockError = new Error('Test error');
-    
+
     // Mock commands module
     jest.doMock('../../src/commands', () => ({
       getSlashCommandsData: jest.fn().mockReturnValue([]),
       handleSlashCommand: jest.fn(),
       handleTextCommand: jest.fn(),
     }));
-    
+
     // Require the module
     require('../../src/index');
 
     // Simulate an error event
-    const errorHandler = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+    const errorHandler = mockClient.on.mock.calls.find((call) => call[0] === 'error')[1];
     errorHandler(mockError);
 
     // Verify error was logged
@@ -166,19 +166,19 @@ describe('index.js - Core Branch Coverage', () => {
 
   it('handles warn events', () => {
     const mockWarning = 'Test warning';
-    
+
     // Mock commands module
     jest.doMock('../../src/commands', () => ({
       getSlashCommandsData: jest.fn().mockReturnValue([]),
       handleSlashCommand: jest.fn(),
       handleTextCommand: jest.fn(),
     }));
-    
+
     // Require the module
     require('../../src/index');
 
     // Simulate a warn event
-    const warnHandler = mockClient.on.mock.calls.find(call => call[0] === 'warn')[1];
+    const warnHandler = mockClient.on.mock.calls.find((call) => call[0] === 'warn')[1];
     warnHandler(mockWarning);
 
     // Verify warning was logged
@@ -193,7 +193,7 @@ describe('index.js - Core Branch Coverage', () => {
 
     // Clear modules first
     jest.resetModules();
-    
+
     // Mock commands module before requiring index
     const mockHandleSlashCommand = jest.fn();
     jest.doMock('../../src/commands', () => ({
@@ -206,11 +206,13 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate an interaction event
-    const interactionCall = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate');
+    const interactionCall = mockClient.on.mock.calls.find(
+      (call) => call[0] === 'interactionCreate'
+    );
     if (interactionCall) {
       const interactionHandler = interactionCall[1];
       interactionHandler(mockInteraction);
-      
+
       // Verify interaction was handled
       expect(mockHandleSlashCommand).toHaveBeenCalledWith(mockInteraction);
     } else {
@@ -225,7 +227,7 @@ describe('index.js - Core Branch Coverage', () => {
       setToken: jest.fn().mockReturnThis(),
       put: jest.fn().mockRejectedValue(new Error('Registration failed')),
     };
-    
+
     jest.doMock('discord.js', () => ({
       Client: jest.fn(() => mockClient),
       GatewayIntentBits: {
@@ -250,7 +252,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -266,7 +268,7 @@ describe('index.js - Core Branch Coverage', () => {
   it('handles PI optimizations', async () => {
     // Clear the module cache first
     jest.resetModules();
-    
+
     // Mock config with PI optimizations enabled
     const mockInitializePiOptimizations = jest.fn().mockResolvedValue();
     jest.doMock('../../src/config/config', () => ({
@@ -283,13 +285,13 @@ describe('index.js - Core Branch Coverage', () => {
     }));
 
     require('../../src/index');
-    
+
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
-      
+
       // Verify PI optimizations were initialized
       expect(mockInitializePiOptimizations).toHaveBeenCalled();
     } else {
@@ -317,7 +319,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find(call => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -343,12 +345,12 @@ describe('index.js - Core Branch Coverage', () => {
       }));
       return MockConversationManager;
     });
-    
+
     jest.doMock('../../src/services/perplexity-secure', () => ({
       generateChatResponse: jest.fn(),
       generateSummary: jest.fn(),
     }));
-    
+
     jest.doMock('../../src/config/config', () => ({
       DISCORD_BOT_TOKEN: 'test-token',
       CACHE: {
@@ -360,7 +362,7 @@ describe('index.js - Core Branch Coverage', () => {
       },
       initializePiOptimizations: jest.fn(),
     }));
-    
+
     // Mock commands module
     jest.doMock('../../src/commands', () => ({
       getSlashCommandsData: jest.fn().mockReturnValue([]),
@@ -375,7 +377,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Wait for login attempt
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify error was logged
     expect(mockLogger.error).toHaveBeenCalledWith(

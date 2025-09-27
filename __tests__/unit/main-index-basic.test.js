@@ -61,7 +61,7 @@ describe('Main Index - Basic', () => {
 
   it('should export required functions', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(mainIndex).toHaveProperty('client');
     expect(mainIndex).toHaveProperty('handleChatMessage');
     expect(mainIndex).toHaveProperty('shutdown');
@@ -71,26 +71,26 @@ describe('Main Index - Basic', () => {
 
   it('should initialize client properly', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(mainIndex.client).toBeDefined();
     expect(typeof mainIndex.client).toBe('object');
   });
 
   it('should have handleChatMessage function', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(typeof mainIndex.handleChatMessage).toBe('function');
   });
 
   it('should have shutdown function', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(typeof mainIndex.shutdown).toBe('function');
   });
 
   it('should have error handler functions', () => {
     mainIndex = require('../../src/index');
-    
+
     expect(typeof mainIndex.unhandledRejectionHandler).toBe('function');
     expect(typeof mainIndex.uncaughtExceptionHandler).toBe('function');
   });

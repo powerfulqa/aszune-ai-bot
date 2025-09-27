@@ -1,27 +1,27 @@
 /**
  * @module url-formatter
  * @fileoverview Provides comprehensive URL formatting capabilities for message content.
- * 
- * This module includes functions to detect, format, and fix various types of URLs 
- * (including Reddit, Imgur, GitHub, Twitter/X, YouTube, and Starsector forum links) 
+ *
+ * This module includes functions to detect, format, and fix various types of URLs
+ * (including Reddit, Imgur, GitHub, Twitter/X, YouTube, and Starsector forum links)
  * within text, ensuring consistent and user-friendly presentation.
- * 
+ *
  * ## Exports
  * {@link formatSocialMediaLinks}: Formats Reddit, Imgur, GitHub, and Twitter/X links.
  * {@link formatYouTubeLinks}: Formats YouTube links with descriptive text.
  * {@link formatStarsectorLinks}: Formats Starsector forum links.
- * 
+ *
  * ## Error Handling
- * All formatting functions use a centralized {@link ErrorHandler} to catch and log errors, 
+ * All formatting functions use a centralized {@link ErrorHandler} to catch and log errors,
  * returning the original text in case of failure.
- * 
+ *
  * ## Usage Example
  * ```javascript
  * const { formatSocialMediaLinks, formatYouTubeLinks, formatStarsectorLinks } = require('./url-formatter');
  * const input = "Check this out: reddit.com/r/example and https://youtu.be/abc123";
  * const formatted = formatSocialMediaLinks(formatYouTubeLinks(input));
  * ```
- * 
+ *
  * @author
  * @version 1.0.0
  */
@@ -38,7 +38,7 @@ function formatSocialMediaLinks(text) {
     if (typeof text !== 'string') {
       return text;
     }
-    
+
     let formattedText = text;
 
     // Handle basic Reddit URLs - convert to proper links (case insensitive, handle www, https/http prefixes)
@@ -103,7 +103,7 @@ function formatYouTubeLinks(text) {
     if (typeof text !== 'string') {
       return text;
     }
-    
+
     let formattedText = text;
 
     // Fix YouTube links appearing on separate lines by removing the preceding newline
@@ -167,13 +167,13 @@ function formatYouTubeLinks(text) {
  */
 function formatStarsectorLinks(text) {
   let result = text; // Default to original text
-  
+
   try {
     // Input validation - early exit if not a string
     if (typeof text !== 'string') {
       return result;
     }
-    
+
     result = performStarsectorLinkFormatting(text);
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting Starsector links', {
@@ -182,7 +182,7 @@ function formatStarsectorLinks(text) {
     console.error(`Starsector formatting error: ${errorResponse.message}`);
     // result remains as original text on error
   }
-  
+
   return result;
 }
 
@@ -196,31 +196,31 @@ function performStarsectorLinkFormatting(text) {
 
   // Fix any fractalsoftworks URLs specifically (common issue)
   formattedText = applyBasicUrlFixes(formattedText);
-  
+
   // Fix forum URLs with specific patterns
   formattedText = applyForumUrlFixes(formattedText);
-  
+
   // Clean up malformed URLs
   formattedText = applyMalformedUrlFixes(formattedText);
-  
+
   // Fix spacing and line break issues
   formattedText = applySpacingFixes(formattedText);
-  
+
   // Handle markdown link patterns
   formattedText = applyMarkdownLinkFixes(formattedText);
-  
+
   // Convert plain URLs to proper links
   formattedText = applyPlainUrlConversion(formattedText);
-  
+
   // Fix source references
   formattedText = applySourceReferenceFixes(formattedText);
-  
+
   // Fix forum URLs with missing prefixes
   formattedText = applyPrefixFixes(formattedText);
-  
+
   // Fix direct URLs in brackets
   formattedText = applyDirectUrlFixes(formattedText);
-  
+
   // Fix specific forum link patterns
   formattedText = applySpecificPatternFixes(formattedText);
 
@@ -321,15 +321,15 @@ function applySourceReferenceFixes(text) {
  */
 function applyPrefixFixes(text) {
   return text
-    .replace(
-      /\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g,
-      (match, path) => {
-        const fullUrl = 'https://fractalsoftworks.com' + path;
-        return `([Starsector Forum](${fullUrl}))`;
-      }
-    )
+    .replace(/\(fractalsoftworks\.com(\/forum\/index\.php\?topic=\d+\.\d+)\)/g, (match, path) => {
+      const fullUrl = 'https://fractalsoftworks.com' + path;
+      return `([Starsector Forum](${fullUrl}))`;
+    })
     .replace(/\(fractalsoftworks\.com/g, '(https://fractalsoftworks.com')
-    .replace(/\[fractalsoftworks\.com\](?!\()/g, '[Starsector Website](https://fractalsoftworks.com)');
+    .replace(
+      /\[fractalsoftworks\.com\](?!\()/g,
+      '[Starsector Website](https://fractalsoftworks.com)'
+    );
 }
 
 /**
@@ -356,7 +356,7 @@ function fixLinkFormatting(text) {
     if (typeof text !== 'string') {
       return text;
     }
-    
+
     let formattedText = text;
 
     // Fix malformed markdown links missing closing parentheses
@@ -365,7 +365,10 @@ function fixLinkFormatting(text) {
     // Handle links followed by space and more text
     formattedText = formattedText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\s/g, '[$1]($2) ');
     // Handle links followed by other text (like "and")
-    formattedText = formattedText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\s+(\w)/g, '[$1]($2) $3');
+    formattedText = formattedText.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\s+(\w)/g,
+      '[$1]($2) $3'
+    );
 
     // Fix links with improper spacing in Markdown syntax - excluding source references
     // Only add a space after a closing bracket if it's not part of a source reference pattern

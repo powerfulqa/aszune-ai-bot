@@ -20,7 +20,7 @@ class MessageFormatter {
    */
   formatResponse(content, options = {}) {
     if (!this.compact) return content;
-    
+
     // Handle null or undefined input
     if (!content) {
       return '';
@@ -156,7 +156,7 @@ class MessageFormatter {
       } catch (e) {
         // Use fallback if config is not available
       }
-      
+
       compactEmbed.description = this.formatResponse(compactEmbed.description, {
         maxLength,
       });

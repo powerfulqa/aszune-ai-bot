@@ -89,7 +89,7 @@ class CacheEntry {
 function getCacheConfigWithDefaults(config) {
   // Use optional chaining and provide defaults instead of throwing errors
   const cacheConfig = config?.CACHE || {};
-  
+
   return {
     DEFAULT_MAX_ENTRIES: cacheConfig.DEFAULT_MAX_ENTRIES ?? 1000,
     DEFAULT_MAX_SIZE: cacheConfig.DEFAULT_MAX_SIZE ?? 1000, // Per-entry size limit
@@ -107,7 +107,7 @@ class EnhancedCache {
   constructor(options = {}) {
     // Validate config and set cache parameters with resilient defaults
     const validatedConfig = getCacheConfigWithDefaults(config);
-    
+
     this.maxEntries = options.maxEntries || validatedConfig.DEFAULT_MAX_ENTRIES;
     this.maxSize = options.maxSize || validatedConfig.DEFAULT_MAX_SIZE; // Per-entry size limit
     this.maxMemory = options.maxMemory || validatedConfig.MAX_MEMORY_MB * 1024 * 1024;
@@ -361,9 +361,12 @@ class EnhancedCache {
     ) {
       return; // No eviction needed
     }
-    
+
     // If we're at or will exceed the limit, evict before adding
-    if (this.entries.size >= this.maxEntries || this.metrics.totalMemory + newEntry.size > this.maxMemory) {
+    if (
+      this.entries.size >= this.maxEntries ||
+      this.metrics.totalMemory + newEntry.size > this.maxMemory
+    ) {
       // Perform eviction based on strategy
       switch (this.evictionStrategy) {
       case EVICTION_STRATEGIES.LRU:
@@ -406,7 +409,9 @@ class EnhancedCache {
    */
   evictLFU() {
     const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries()).toSorted((a, b) => a[1] - b[1]);
+    const sortedByFrequency = Array.from(this.frequencyMap.entries()).toSorted(
+      (a, b) => a[1] - b[1]
+    );
 
     for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {
       const key = sortedByFrequency[i][0];
@@ -510,7 +515,7 @@ class EnhancedCache {
     if (process.env.NODE_ENV === 'test') {
       return; // Don't start cleanup in test environment
     }
-    
+
     if (this.cleanupInterval > 0) {
       this.cleanupTimer = setInterval(() => {
         this.cleanup();

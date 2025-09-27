@@ -54,10 +54,7 @@ class ApiClient {
    */
   isLowCpuMode() {
     try {
-      return Boolean(
-        config.PI_OPTIMIZATIONS?.ENABLED && 
-        config.PI_OPTIMIZATIONS?.LOW_CPU_MODE
-      );
+      return Boolean(config.PI_OPTIMIZATIONS?.ENABLED && config.PI_OPTIMIZATIONS?.LOW_CPU_MODE);
     } catch {
       return false;
     }
@@ -71,7 +68,7 @@ class ApiClient {
    */
   async makeRequest(endpoint, payload) {
     const fullUrl = this.baseUrl + endpoint;
-    
+
     try {
       const response = await request(fullUrl, {
         method: 'POST',
@@ -99,14 +96,14 @@ class ApiClient {
     }
 
     const statusCode = response.statusCode || response.status;
-    
+
     if (statusCode >= 400) {
       await this.handleErrorResponse(statusCode, response.body);
     }
 
     try {
       const body = await response.body.json();
-      
+
       // Validate response structure
       if (!body || !body.choices || !Array.isArray(body.choices) || body.choices.length === 0) {
         throw ErrorHandler.createError(
@@ -139,7 +136,7 @@ class ApiClient {
    */
   async handleErrorResponse(statusCode, body) {
     let responseText = 'Could not read response body';
-    
+
     if (body && typeof body.text === 'function') {
       try {
         responseText = await body.text();
@@ -148,10 +145,11 @@ class ApiClient {
       }
     }
 
-    const errorMessage = `API request failed with status ${statusCode}: ${
-      responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)
-    }${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
-    
+    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(
+      0,
+      config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH
+    )}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
+
     const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
     error.statusCode = statusCode;
     throw error;
@@ -166,11 +164,8 @@ class ApiClient {
     if (error.statusCode) {
       return error; // Already handled by handleErrorResponse
     }
-    
-    return ErrorHandler.createError(
-      `Request failed: ${error.message}`,
-      ERROR_TYPES.NETWORK_ERROR
-    );
+
+    return ErrorHandler.createError(`Request failed: ${error.message}`, ERROR_TYPES.NETWORK_ERROR);
   }
 }
 

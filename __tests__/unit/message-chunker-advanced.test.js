@@ -4,7 +4,8 @@ const { chunkMessage } = require('../../src/utils/message-chunker');
 describe('Message Chunker - Advanced', () => {
   test('should not cut off sentences at chunk boundaries', () => {
     // Create a long message with sentences that would be near the chunk boundary
-    const longMessage = 'This is a very long sentence that should not be cut off in the middle. '.repeat(20);
+    const longMessage =
+      'This is a very long sentence that should not be cut off in the middle. '.repeat(20);
     const chunks = chunkMessage(longMessage, 200);
 
     // Check that no chunk ends with a partial sentence
@@ -73,13 +74,14 @@ describe('Message Chunker - Advanced', () => {
     const chunks = chunkMessage(longWord, 100);
 
     expect(chunks.length).toBeGreaterThan(1);
-    chunks.forEach(chunk => {
+    chunks.forEach((chunk) => {
       expect(chunk.length).toBeLessThanOrEqual(100 + 10); // chunk size + numbering overhead
     });
   });
 
   test('should handle mixed content types', () => {
-    const mixedMessage = 'Text with **bold** and *italic* and `code` and https://example.com and emoji 🎉';
+    const mixedMessage =
+      'Text with **bold** and *italic* and `code` and https://example.com and emoji 🎉';
     const chunks = chunkMessage(mixedMessage, 30);
 
     expect(chunks.length).toBeGreaterThan(1);
@@ -92,7 +94,8 @@ describe('Message Chunker - Advanced', () => {
   });
 
   test('should maintain chunk order', () => {
-    const longMessage = 'This is a very long message that will be split into multiple chunks. '.repeat(10);
+    const longMessage =
+      'This is a very long message that will be split into multiple chunks. '.repeat(10);
     const chunks = chunkMessage(longMessage, 100);
 
     // Check that chunks are in correct order
@@ -107,7 +110,7 @@ describe('Message Chunker - Advanced', () => {
     const chunks = chunkMessage(exactSizeMessage, 50);
 
     expect(chunks.length).toBeGreaterThan(1);
-    chunks.forEach(chunk => {
+    chunks.forEach((chunk) => {
       expect(chunk.length).toBeLessThanOrEqual(50 + 10); // chunk size + numbering overhead
     });
   });

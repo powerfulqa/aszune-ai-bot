@@ -3,7 +3,9 @@
  * Tests edge cases and conditional branches in chunk-boundary-handler.js
  */
 
-const { validateChunkBoundaries } = require('../../src/utils/message-chunking/chunk-boundary-handler');
+const {
+  validateChunkBoundaries,
+} = require('../../src/utils/message-chunking/chunk-boundary-handler');
 
 describe('Chunk Boundary Handler - Branch Coverage', () => {
   describe('validateChunkBoundaries', () => {
@@ -30,7 +32,7 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
         ['Chunk with 1. numbered lists.', 'Chunk with more content.'],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -47,7 +49,7 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
         ['Chunk with ```incomplete code block', 'Another chunk.'],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -62,7 +64,7 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
         ['Chunk with tabs:\tTab content', 'Another chunk.'],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -77,7 +79,7 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
         ['Chunk 1', 'Chunk 2', 'Chunk 3', 'Chunk 4'],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -94,7 +96,7 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
         [undefined, undefined],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -104,27 +106,18 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
       const testCases = [
         [
           '## Header\n\nThis is a paragraph with **bold** and *italic* text.',
-          'Another paragraph with `code` and [links](https://example.com).'
+          'Another paragraph with `code` and [links](https://example.com).',
         ],
-        [
-          '```javascript\nconst code = "example";\n```',
-          'This is regular text after a code block.'
-        ],
-        [
-          '> This is a quote\n> with multiple lines',
-          'This is text after the quote.'
-        ],
-        [
-          '- List item 1\n- List item 2\n- List item 3',
-          'Text after the list.'
-        ],
+        ['```javascript\nconst code = "example";\n```', 'This is regular text after a code block.'],
+        ['> This is a quote\n> with multiple lines', 'This is text after the quote.'],
+        ['- List item 1\n- List item 2\n- List item 3', 'Text after the list.'],
         [
           '1. Numbered item 1\n2. Numbered item 2\n3. Numbered item 3',
-          'Text after the numbered list.'
+          'Text after the numbered list.',
         ],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
@@ -134,19 +127,19 @@ describe('Chunk Boundary Handler - Branch Coverage', () => {
       const testCases = [
         [
           'Mixed content with **bold**, *italic*, `code`, and [links](https://example.com).',
-          'More content with # headers and > quotes.'
+          'More content with # headers and > quotes.',
         ],
         [
           'Content with emojis 🎉 and unicode 中文 mixed with **markdown**.',
-          'Regular text after mixed content.'
+          'Regular text after mixed content.',
         ],
         [
           'Content with special characters @#$%^&*() and **markdown**.',
-          'More content with different special characters.'
+          'More content with different special characters.',
         ],
       ];
 
-      testCases.forEach(chunks => {
+      testCases.forEach((chunks) => {
         const result = validateChunkBoundaries(chunks);
         expect(typeof result).toBe('boolean');
       });
