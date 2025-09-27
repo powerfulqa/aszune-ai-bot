@@ -17,10 +17,10 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }]),
 }));
 
-let conversationHistory;
+let _conversationHistory;
 
 beforeEach(() => {
-  conversationHistory = new Map();
+  _conversationHistory = new Map();
 });
 
 describe('Command Handling - Advanced', () => {

@@ -3,7 +3,7 @@
  * Tests edge cases and conditional branches in config.js
  */
 
-const config = require('../../src/config/config');
+const _config = require('../../src/config/config');
 
 describe('Config - Branch Coverage', () => {
   beforeEach(() => {

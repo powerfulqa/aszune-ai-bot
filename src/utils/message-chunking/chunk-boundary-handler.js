@@ -2,6 +2,7 @@
  * Chunk Boundary Handler
  * Handles intelligent chunking of messages to avoid breaking content at inappropriate boundaries
  */
+const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 
 /**
@@ -257,19 +258,19 @@ function validateChunkBoundaries(chunks) {
 
       // Check for incomplete markdown links
       if (/\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk)) {
-        console.warn(`Chunk ${i + 1} has incomplete markdown link`);
+        logger.warn(`Chunk ${i + 1} has incomplete markdown link`);
         return false;
       }
 
       // Check for incomplete URLs
       if (/https?:\/\/[^\s]*$/.test(chunk) && i < chunks.length - 1) {
-        console.warn(`Chunk ${i + 1} has incomplete URL`);
+        logger.warn(`Chunk ${i + 1} has incomplete URL`);
         return false;
       }
 
       // Check for incomplete numbered lists
       if (/\d+\.\s*$/.test(chunk) && i < chunks.length - 1) {
-        console.warn(`Chunk ${i + 1} has incomplete numbered list`);
+        logger.warn(`Chunk ${i + 1} has incomplete numbered list`);
         return false;
       }
     }
@@ -279,7 +280,7 @@ function validateChunkBoundaries(chunks) {
     const errorResponse = ErrorHandler.handleError(error, 'validating chunk boundaries', {
       chunkCount: chunks?.length || 0,
     });
-    console.error(`Chunk boundary validation error: ${errorResponse.message}`);
+    logger.error(`Chunk boundary validation error: ${errorResponse.message}`);
     return false;
   }
 }

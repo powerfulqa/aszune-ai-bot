@@ -21,7 +21,7 @@ afterAll(() => {
 
 describe('Bot Shutdown', () => {
   let index;
-  let discordMock;
+  let _discordMock;
   let shutdownFunction;
 
   beforeEach(() => {

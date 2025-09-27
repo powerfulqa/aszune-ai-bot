@@ -2,6 +2,7 @@
  * Source Reference Processor
  * Handles collection and formatting of source references in messages
  */
+const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 
 /**
@@ -79,7 +80,7 @@ function collectSourceReferences(text) {
     const errorResponse = ErrorHandler.handleError(error, 'collecting source references', {
       textLength: text?.length || 0,
     });
-    console.error(`Source reference collection error: ${errorResponse.message}`);
+    logger.error(`Source reference collection error: ${errorResponse.message}`);
     return {};
   }
 }
@@ -105,7 +106,7 @@ function formatSourceReferences(text, sourceMap) {
       textLength: text?.length || 0,
       sourceCount: Object.keys(sourceMap || {}).length,
     });
-    console.error(`Source reference formatting error: ${errorResponse.message}`);
+    logger.error(`Source reference formatting error: ${errorResponse.message}`);
     // result remains as original text on error
   }
 
@@ -294,7 +295,7 @@ function processSourceReferences(text) {
     const errorResponse = ErrorHandler.handleError(error, 'processing source references', {
       textLength: text?.length || 0,
     });
-    console.error(`Source reference processing error: ${errorResponse.message}`);
+    logger.error(`Source reference processing error: ${errorResponse.message}`);
     return text; // Return original text if processing fails
   }
 }

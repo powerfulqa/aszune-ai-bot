@@ -82,7 +82,7 @@ describe('Command Handling - Basic', () => {
   });
 
   test('handles unknown commands gracefully', async () => {
-    const msg = createMockMessage('!unknowncommand');
+    const _msg = createMockMessage('!unknowncommand');
 
     // Should not throw an error
     expect(() => {

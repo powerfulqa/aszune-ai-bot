@@ -25,6 +25,7 @@
  * @author
  * @version 1.0.0
  */
+const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 
 /**
@@ -87,7 +88,7 @@ function formatSocialMediaLinks(text) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting social media links', {
       textLength: text?.length || 0,
     });
-    console.error(`Social media formatting error: ${errorResponse.message}`);
+    logger.error(`Social media formatting error: ${errorResponse.message}`);
     return text;
   }
 }
@@ -155,7 +156,7 @@ function formatYouTubeLinks(text) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting YouTube links', {
       textLength: text?.length || 0,
     });
-    console.error(`YouTube formatting error: ${errorResponse.message}`);
+    logger.error(`YouTube formatting error: ${errorResponse.message}`);
     return text;
   }
 }
@@ -179,7 +180,7 @@ function formatStarsectorLinks(text) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting Starsector links', {
       textLength: text?.length || 0,
     });
-    console.error(`Starsector formatting error: ${errorResponse.message}`);
+    logger.error(`Starsector formatting error: ${errorResponse.message}`);
     // result remains as original text on error
   }
 
@@ -402,7 +403,7 @@ function fixLinkFormatting(text) {
     const errorResponse = ErrorHandler.handleError(error, 'fixing link formatting', {
       textLength: text?.length || 0,
     });
-    console.error(`Link formatting error: ${errorResponse.message}`);
+    logger.error(`Link formatting error: ${errorResponse.message}`);
     return text;
   }
 }
@@ -429,7 +430,7 @@ function formatAllUrls(text) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting all URLs', {
       textLength: text?.length || 0,
     });
-    console.error(`URL formatting error: ${errorResponse.message}`);
+    logger.error(`URL formatting error: ${errorResponse.message}`);
     return text;
   }
 }
