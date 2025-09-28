@@ -181,19 +181,24 @@ responding further.
 ## v1.4.0 Updates
 
 ### Enhanced Command System
-- **Unified Command Handler**: All commands now use a single, centralized handler (`commands/index.js`)
+
+- **Unified Command Handler**: All commands now use a single, centralized handler
+  (`commands/index.js`)
 - **Comprehensive Input Validation**: All user inputs are validated and sanitized before processing
 - **Enhanced Error Handling**: Robust error handling with user-friendly error messages
 - **Improved Testing**: Complete test coverage for all command scenarios
 
 ### New Features
+
 - **Input Sanitization**: Automatic cleaning of user inputs to prevent errors
 - **Enhanced Validation**: Comprehensive validation for all command parameters
 - **Better Error Messages**: Clear, actionable error messages for users
 - **Performance Optimization**: Optimized command processing for better responsiveness
 
 ### Technical Improvements
-- **Class-based Architecture**: ConversationManager and other core components use modern class-based architecture
+
+- **Class-based Architecture**: ConversationManager and other core components use modern class-based
+  architecture
 - **Modular Design**: Enhanced modularity for better maintainability
 - **Comprehensive Testing**: 380+ tests with 82%+ coverage ensuring reliability
 - **Memory Management**: Advanced memory monitoring and optimization

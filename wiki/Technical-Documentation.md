@@ -13,21 +13,26 @@ maintainable.
 
 1. **Discord Interface** - Handles interactions with Discord's API
 2. **Command Handler** - Processes and routes commands (both text and slash commands)
-3. **Perplexity API Client** - Manages communication with Perplexity's API with secure caching
+3. **Service-Oriented Perplexity API** - Modular service architecture with focused classes:
+   - **ApiClient** - HTTP requests and API communication
+   - **CacheManager** - Response caching and cleanup management
+   - **ResponseProcessor** - API response processing and formatting
+   - **ThrottlingService** - Rate limiting and connection throttling
 4. **Conversation Manager** - Tracks and stores user conversations with class-based architecture
 5. **Rate Limiter** - Prevents spam and excessive API usage
 6. **Emoji Manager** - Handles emoji reactions based on keywords
-7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while preserving
-   content and formatting with advanced boundary detection
+7. **Enhanced Message Chunker** - Intelligently splits long messages into multiple chunks while
+   preserving content and formatting with advanced boundary detection
 8. **Response Caching System** - Securely stores and retrieves responses to save API calls for
    repeated questions
 9. **Error Handler** - Comprehensive error handling and recovery system
-10. **Input Validator** - Input sanitization and validation system
+10. **Input Validator** - Enhanced input sanitization and validation system with common helpers
 11. **Memory Monitor** - Advanced memory usage tracking and garbage collection
 12. **Performance Monitor** - Real-time performance tracking and optimization
 13. **Storage Service** - Data persistence and management
 14. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
-15. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
+15. **Logging Infrastructure** - Comprehensive logging system replacing all console statements
+16. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
     optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
     script, which sets environment variables and applies system-level tweaks before launching
     Node.js. For production deployments, use PM2 with the shell script as the entry point:
@@ -148,42 +153,49 @@ read by monitoring tools.
 The bot now includes a comprehensive set of utility modules for enhanced functionality:
 
 #### Error Handling System
+
 - **`error-handler.js`**: Centralized error handling with context-aware error messages
 - Comprehensive error recovery mechanisms
 - Structured error logging and reporting
 - Graceful degradation for API failures
 
 #### Input Validation System
+
 - **`input-validator.js`**: Input sanitization and validation
 - Prevents malicious input and ensures data integrity
 - Configurable validation rules for different input types
 - Comprehensive error reporting for invalid inputs
 
 #### Memory Management
+
 - **`memory-monitor.js`**: Advanced memory usage tracking
 - Automatic garbage collection triggers
 - Memory limit monitoring and alerts
 - Resource usage optimization
 
 #### Performance Monitoring
+
 - **`performance-monitor.js`**: Real-time performance tracking
 - API response time monitoring
 - Resource utilization metrics
 - Performance optimization recommendations
 
 #### Enhanced Caching System
+
 - **`cache-pruner.js`**: Intelligent cache management
 - **`enhanced-cache.js`**: Advanced caching with TTL and size limits
 - Automatic cache cleanup and optimization
 - Memory-efficient cache storage
 
 #### Connection Management
+
 - **`connection-throttler.js`**: Network connection limiting
 - **`debouncer.js`**: Message debouncing to prevent spam
 - Adaptive throttling based on system load
 - Resource-constrained device optimization
 
 #### Lazy Loading System
+
 - **`lazy-loader.js`**: On-demand module loading
 - Reduces initial memory footprint
 - Improves startup performance
@@ -584,6 +596,61 @@ async function shutdown(signal) {
 - Webhook support for external integrations
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
+
+## v1.4.1 Code Quality Excellence & Architecture Refinement (2025-09-28)
+
+### Service Architecture Refactoring
+
+- **PerplexityService Decomposition**: Split monolithic service into focused, single-responsibility
+  classes:
+  - **ApiClient** (`src/services/api-client.js`): Handles HTTP requests, headers, and payload
+    building
+  - **CacheManager** (`src/services/cache-manager.js`): Manages response caching, cleanup, and
+    configuration
+  - **ResponseProcessor** (`src/services/response-processor.js`): Processes and formats API
+    responses
+  - **ThrottlingService** (`src/services/throttling-service.js`): Manages rate limiting and
+    connection throttling
+- **Modular Design**: Enhanced separation of concerns for better maintainability and testing
+- **Service Composition**: PerplexityService now composes these focused services internally
+
+### Code Quality Excellence
+
+- **ESLint Issue Reduction**: Massive improvement from 861 to 45 issues (94.8% reduction)
+- **Console Statement Elimination**: Replaced ALL console statements with proper logger calls in
+  production code
+  - `src/services/chat.js`: `console.log` → `logger.debug`
+  - `src/utils/message-chunking/*`: `console.warn/error` → `logger.warn/error`
+  - `src/utils/emoji.js`: `console.error` → `logger.error`
+- **Unused Variable Cleanup**: Comprehensive cleanup across test files with `_` prefix convention
+- **qlty Philosophy Adherence**: Following modern code quality principles throughout codebase
+
+### Input Validation Enhancement
+
+- **Code Duplication Elimination**: Removed duplicate validation logic in `input-validator.js`
+- **Common Validation Helpers**: Implemented reusable helper methods:
+  - `_validateRequired()`: Common required field validation
+  - `_validateStringType()`: String type validation
+  - `_validateArrayType()`: Array type validation
+  - `_validateStringLength()`: String length validation
+  - `_validateNotEmpty()`: Empty string validation
+- **Sanitization Bug Fixes**: Fixed critical issues where sanitization return values were discarded
+- **Consistent Validation Patterns**: Standardized validation approaches across all methods
+
+### Logging Infrastructure Enhancement
+
+- **Production Code Cleanup**: Complete elimination of console statements from production code
+- **Logger Integration**: Added appropriate logger imports to all modules requiring logging
+- **Consistent Logging Levels**: Standardized logging levels across the application
+- **Enhanced Debugging**: Improved debugging capabilities with proper logging infrastructure
+
+### Technical Improvements
+
+- **Method Organization**: Better encapsulation and organization of methods within classes
+- **Parameter Validation**: Simplified validation logic using proper JavaScript methods like
+  `Number.isInteger()`
+- **Error Handling**: Enhanced error handling with proper context and information
+- **Resource Management**: Improved resource management through service separation
 
 ## v1.4.0 Comprehensive Testing & Coverage Enhancement (2025-01-22)
 

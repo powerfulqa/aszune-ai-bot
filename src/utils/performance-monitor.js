@@ -14,18 +14,18 @@ class PerformanceMonitor {
     this.highLoadCount = 0;
     this.lastCpuInfo = null;
     this.lastCpuTimes = { idle: 0, total: 0 };
-    
+
     // Alias for tests
     Object.defineProperty(this, 'intervalId', {
       get: () => this.checkInterval,
-      set: (value) => { this.checkInterval = value; }
+      set: (value) => {
+        this.checkInterval = value;
+      },
     });
     // CPU usage threshold (as decimal, e.g., 0.8 for 80%)
     try {
       const percent = config.PERFORMANCE?.CPU_THRESHOLD_PERCENT;
-      this.cpuThreshold = (typeof percent === 'number' && !isNaN(percent))
-        ? percent / 100
-        : 0.8;
+      this.cpuThreshold = typeof percent === 'number' && !isNaN(percent) ? percent / 100 : 0.8;
     } catch (error) {
       this.cpuThreshold = 0.8;
     }
@@ -264,7 +264,7 @@ class PerformanceMonitor {
    */
   throttle(func, delay) {
     let lastCall = 0;
-    return function(...args) {
+    return function (...args) {
       const now = Date.now();
       if (now - lastCall >= delay) {
         lastCall = now;
@@ -281,7 +281,7 @@ class PerformanceMonitor {
    */
   debounce(func, delay) {
     let timeoutId;
-    return function(...args) {
+    return function (...args) {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func.apply(this, args), delay);
     };

@@ -2,6 +2,7 @@
  * Utility for handling emoji reactions
  */
 const config = require('../config/config');
+const logger = require('./logger');
 
 // Legacy emoji mappings - ensuring compatibility with older tests
 const legacyEmojiMap = {
@@ -89,7 +90,7 @@ class EmojiManager {
       try {
         await message.react(emoji);
       } catch (error) {
-        console.error(`Error reacting with ${emoji}:`, error);
+        logger.error(`Error reacting with ${emoji}:`, error);
       }
     }
   }

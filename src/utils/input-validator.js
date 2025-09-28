@@ -85,19 +85,86 @@ const DANGEROUS_PATTERNS = [
  */
 class InputValidator {
   /**
+   * Common validation helper - checks if value is required
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateRequired(value, fieldName) {
+    if (!value) {
+      return { valid: false, error: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if value is a string
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateStringType(value, fieldName) {
+    if (typeof value !== 'string') {
+      return { valid: false, error: `${fieldName} must be a string` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if value is an array
+   * @param {any} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateArrayType(value, fieldName) {
+    if (!Array.isArray(value)) {
+      return { valid: false, error: `${fieldName} must be an array` };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks string length
+   * @param {string} value - Value to check
+   * @param {number} maxLength - Maximum allowed length
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateStringLength(value, maxLength, fieldName) {
+    if (value.length > maxLength) {
+      return {
+        valid: false,
+        error: `${fieldName} too long. Maximum length is ${maxLength} characters`,
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Common validation helper - checks if string is empty
+   * @param {string} value - Value to check
+   * @param {string} fieldName - Name of the field for error message
+   * @returns {Object|null} - Error object if invalid, null if valid
+   */
+  static _validateNotEmpty(value, fieldName) {
+    if (value.length === 0) {
+      return { valid: false, error: `${fieldName} cannot be empty` };
+    }
+    return null;
+  }
+  /**
    * Validate a Discord user ID
    * @param {string} userId - User ID to validate
    * @returns {Object} - Validation result
    */
   static validateUserId(userId) {
     try {
-      if (!userId) {
-        return { valid: false, error: 'User ID is required' };
-      }
+      // Use common validation helpers
+      const requiredCheck = this._validateRequired(userId, 'User ID');
+      if (requiredCheck) return requiredCheck;
 
-      if (typeof userId !== 'string') {
-        return { valid: false, error: 'User ID must be a string' };
-      }
+      const stringCheck = this._validateStringType(userId, 'User ID');
+      if (stringCheck) return stringCheck;
 
       if (!VALIDATION_PATTERNS.DISCORD_USER_ID.test(userId)) {
         return { valid: false, error: 'Invalid Discord user ID format' };
@@ -118,43 +185,82 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateMessageContent(content) {
+    let result = { valid: false, error: 'Unknown validation error' };
+
     try {
-      if (!content) {
-        return { valid: false, error: 'Message content is required' };
-      }
-
-      if (typeof content !== 'string') {
-        return { valid: false, error: 'Message content must be a string' };
-      }
-
-      if (content.length > VALIDATION_LIMITS.MAX_MESSAGE_LENGTH) {
-        return {
-          valid: false,
-          error: `Message too long. Maximum length is ${VALIDATION_LIMITS.MAX_MESSAGE_LENGTH} characters`,
-        };
-      }
-
-      if (content.length === 0) {
-        return { valid: false, error: 'Message content cannot be empty' };
-      }
-
-      // Check for dangerous patterns
-      const sanitizationResult = this.sanitizeContent(content);
-      if (sanitizationResult.warnings.length > 0) {
-        return {
-          valid: false,
-          error: 'Message contains potentially dangerous content',
-          warnings: sanitizationResult.warnings,
-        };
-      }
-
-      return { valid: true, sanitized: sanitizationResult.content };
+      // Perform all validation checks
+      const validationResult = this._performMessageContentValidation(content);
+      result = validationResult;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'validating message content', {
         contentLength: content?.length || 0,
       });
-      return { valid: false, error: errorResponse.message };
+      result = { valid: false, error: errorResponse.message };
     }
+
+    return result;
+  }
+
+  /**
+   * Perform the actual message content validation logic
+   * @param {string} content - Content to validate
+   * @returns {Object} - Validation result
+   */
+  static _performMessageContentValidation(content) {
+    // Basic validation checks
+    const basicValidation = this._validateBasicContent(content);
+    if (!basicValidation.valid) {
+      return basicValidation;
+    }
+
+    // Length validation
+    const lengthValidation = this._validateContentLength(content);
+    if (!lengthValidation.valid) {
+      return lengthValidation;
+    }
+
+    // Sanitization and safety checks
+    const sanitizationResult = this.sanitizeContent(content);
+    if (sanitizationResult.warnings.length > 0) {
+      return {
+        valid: false,
+        error: 'Message contains potentially dangerous content',
+        warnings: sanitizationResult.warnings,
+      };
+    }
+
+    return { valid: true, sanitized: sanitizationResult.content };
+  }
+
+  /**
+   * Validate basic content properties
+   */
+  static _validateBasicContent(content) {
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(content, 'Message content');
+    if (requiredCheck) return requiredCheck;
+
+    const stringCheck = this._validateStringType(content, 'Message content');
+    if (stringCheck) return stringCheck;
+
+    const notEmptyCheck = this._validateNotEmpty(content, 'Message content');
+    if (notEmptyCheck) return notEmptyCheck;
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate content length
+   */
+  static _validateContentLength(content) {
+    if (content.length > VALIDATION_LIMITS.MAX_MESSAGE_LENGTH) {
+      return {
+        valid: false,
+        error: `Message too long. Maximum length is ${VALIDATION_LIMITS.MAX_MESSAGE_LENGTH} characters`,
+      };
+    }
+
+    return { valid: true };
   }
 
   /**
@@ -163,34 +269,62 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateCommand(command) {
+    let result = { valid: false, error: 'Unknown validation error' };
+
     try {
-      // Early validation checks
-      if (!command) {
-        return { valid: false, error: 'Command is required' };
-      }
-      if (typeof command !== 'string') {
-        return { valid: false, error: 'Command must be a string' };
-      }
-      if (command.length > VALIDATION_LIMITS.MAX_COMMAND_LENGTH) {
-        return {
-          valid: false,
-          error: `Command too long. Maximum length is ${VALIDATION_LIMITS.MAX_COMMAND_LENGTH} characters`,
-        };
-      }
-
-      // Validate command structure
-      const validationResult = this._validateCommandStructure(command);
-      if (!validationResult.valid) {
-        return validationResult;
-      }
-
-      return { valid: true };
+      // Perform all validation checks
+      const validationResult = this._performCommandValidation(command);
+      result = validationResult;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'validating command', {
         commandLength: command?.length || 0,
       });
-      return { valid: false, error: errorResponse.message };
+      result = { valid: false, error: errorResponse.message };
     }
+
+    return result;
+  }
+
+  /**
+   * Perform the actual command validation logic
+   * @param {string} command - Command to validate
+   * @returns {Object} - Validation result
+   */
+  static _performCommandValidation(command) {
+    // Basic validation checks
+    const basicValidation = this._validateBasicCommand(command);
+    if (!basicValidation.valid) {
+      return basicValidation;
+    }
+
+    // Structure validation
+    const structureValidation = this._validateCommandStructure(command);
+    if (!structureValidation.valid) {
+      return structureValidation;
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate basic command properties
+   */
+  static _validateBasicCommand(command) {
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(command, 'Command');
+    if (requiredCheck) return requiredCheck;
+
+    const stringCheck = this._validateStringType(command, 'Command');
+    if (stringCheck) return stringCheck;
+
+    const lengthCheck = this._validateStringLength(
+      command,
+      VALIDATION_LIMITS.MAX_COMMAND_LENGTH,
+      'Command'
+    );
+    if (lengthCheck) return lengthCheck;
+
+    return { valid: true };
   }
 
   static _validateCommandStructure(command) {
@@ -216,9 +350,8 @@ class InputValidator {
   static validateConversationHistory(history) {
     try {
       // Early validation checks
-      if (!Array.isArray(history)) {
-        return { valid: false, error: 'Conversation history must be an array' };
-      }
+      const arrayCheck = this._validateArrayType(history, 'Conversation history');
+      if (arrayCheck) return arrayCheck;
       if (history.length > VALIDATION_LIMITS.MAX_HISTORY_LENGTH) {
         return {
           valid: false,
@@ -290,34 +423,58 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateUrl(url) {
+    let result = { valid: false, error: 'Unknown validation error' };
+
     try {
-      // Early validation checks
-      if (!url) {
-        return { valid: false, error: 'URL is required' };
-      }
-      if (typeof url !== 'string') {
-        return { valid: false, error: 'URL must be a string' };
-      }
-      if (url.length > VALIDATION_LIMITS.MAX_URL_LENGTH) {
-        return {
-          valid: false,
-          error: `URL too long. Maximum length is ${VALIDATION_LIMITS.MAX_URL_LENGTH} characters`,
-        };
-      }
-
-      // Validate URL format and safety
-      const urlValidation = this._validateUrlFormatAndSafety(url);
-      if (!urlValidation.valid) {
-        return urlValidation;
-      }
-
-      return { valid: true };
+      // Perform all validation checks
+      const validationResult = this._performUrlValidation(url);
+      result = validationResult;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'validating URL', {
         urlLength: url?.length || 0,
       });
-      return { valid: false, error: errorResponse.message };
+      result = { valid: false, error: errorResponse.message };
     }
+
+    return result;
+  }
+
+  /**
+   * Perform the actual URL validation logic
+   * @param {string} url - URL to validate
+   * @returns {Object} - Validation result
+   */
+  static _performUrlValidation(url) {
+    // Basic validation checks
+    const basicValidation = this._validateBasicUrl(url);
+    if (!basicValidation.valid) {
+      return basicValidation;
+    }
+
+    // Format and safety validation
+    const formatValidation = this._validateUrlFormatAndSafety(url);
+    if (!formatValidation.valid) {
+      return formatValidation;
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate basic URL properties
+   */
+  static _validateBasicUrl(url) {
+    // Use common validation helpers
+    const requiredCheck = this._validateRequired(url, 'URL');
+    if (requiredCheck) return requiredCheck;
+
+    const stringCheck = this._validateStringType(url, 'URL');
+    if (stringCheck) return stringCheck;
+
+    const lengthCheck = this._validateStringLength(url, VALIDATION_LIMITS.MAX_URL_LENGTH, 'URL');
+    if (lengthCheck) return lengthCheck;
+
+    return { valid: true };
   }
 
   static _validateUrlFormatAndSafety(url) {
@@ -380,7 +537,7 @@ class InputValidator {
     ];
 
     // Apply removal patterns
-    sanitizationRules.forEach(rule => {
+    sanitizationRules.forEach((rule) => {
       if (rule.pattern.test(sanitized)) {
         sanitized = sanitized.replace(rule.pattern, '');
         warnings.push(rule.message);
@@ -524,63 +681,8 @@ class InputValidator {
       url: (input) => InputValidator.validateUrl(input),
       command: (input) => InputValidator.validateCommand(input),
       message: (input) => InputValidator.validateMessageContent(input),
-      text: (input) => {
-        // Check length limits first
-        if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
-          return {
-            valid: false,
-            error: 'Input is too long',
-          };
-        }
-        
-        // Check for dangerous patterns first (before sanitization)
-        const dangerousPatterns = [
-          /<script[^>]*>.*?<\/script>/gi,
-          /javascript:/gi,
-          /data:/gi,
-          /vbscript:/gi,
-          /on\w+\s*=/gi,
-          /eval\s*\(/gi,
-          /expression\s*\(/gi,
-          /setTimeout\s*\(/gi,
-          /setInterval\s*\(/gi,
-        ];
-        
-        const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
-        if (hasDangerousContent) {
-          return {
-            valid: false,
-            error: 'Input contains potentially unsafe content',
-          };
-        }
-        
-        
-        // Sanitize content
-        const sanitizedResult = this.sanitizeContent(input);
-        const sanitizedInput = sanitizedResult.content;
-        
-        // Allow empty strings
-        if (sanitizedInput.length === 0) {
-          return { valid: true };
-        }
-        
-        if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
-          return {
-            valid: false,
-            error: 'Input contains unsafe characters',
-          };
-        }
-        return { valid: true };
-      },
-      email: (input) => {
-        if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
-          return {
-            valid: false,
-            error: 'Invalid email format',
-          };
-        }
-        return { valid: true };
-      },
+      text: (input) => InputValidator._validateTextType(input),
+      email: (input) => InputValidator._validateEmailType(input),
     };
 
     if (typeValidators[type]) {
@@ -591,6 +693,64 @@ class InputValidator {
       valid: false,
       error: `Unknown input type: ${type}`,
     };
+  }
+
+  static _validateTextType(input) {
+    // Check length limits first
+    if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
+      return {
+        valid: false,
+        error: 'Input is too long',
+      };
+    }
+
+    // Check for dangerous patterns first (before sanitization)
+    const dangerousPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /data:/gi,
+      /vbscript:/gi,
+      /on\w+\s*=/gi,
+      /eval\s*\(/gi,
+      /expression\s*\(/gi,
+      /setTimeout\s*\(/gi,
+      /setInterval\s*\(/gi,
+    ];
+
+    const hasDangerousContent = dangerousPatterns.some((pattern) => pattern.test(input));
+    if (hasDangerousContent) {
+      return {
+        valid: false,
+        error: 'Input contains potentially unsafe content',
+      };
+    }
+
+    // Sanitize content
+    const sanitizedResult = this.sanitizeContent(input);
+    const sanitizedInput = sanitizedResult.content;
+
+    // Allow empty strings
+    if (sanitizedInput.length === 0) {
+      return { valid: true };
+    }
+
+    if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
+      return {
+        valid: false,
+        error: 'Input contains unsafe characters',
+      };
+    }
+    return { valid: true };
+  }
+
+  static _validateEmailType(input) {
+    if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
+      return {
+        valid: false,
+        error: 'Invalid email format',
+      };
+    }
+    return { valid: true };
   }
 
   /**

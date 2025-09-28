@@ -49,15 +49,15 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Cached response'
-            }
-          }
-        ]
+              content: 'Cached response',
+            },
+          },
+        ],
       };
 
       // Mock both calls since cache loading fails in tests
       request.mockResolvedValue(mockSuccessResponse(mockResponse));
-      
+
       const messages1 = [{ role: 'user', content: 'What is JavaScript?' }];
       const result1 = await perplexityService.generateChatResponse(messages1);
 
@@ -77,19 +77,19 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Fresh response'
-            }
-          }
-        ]
+              content: 'Fresh response',
+            },
+          },
+        ],
       };
 
       request.mockResolvedValue(mockSuccessResponse(mockResponse));
 
       const messages = [{ role: 'user', content: 'What is JavaScript?' }];
-      
+
       // First call
       await perplexityService.generateChatResponse(messages, { caching: false });
-      
+
       // Second call
       await perplexityService.generateChatResponse(messages, { caching: false });
 
@@ -103,10 +103,10 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Fresh response despite cache error'
-            }
-          }
-        ]
+              content: 'Fresh response despite cache error',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -123,10 +123,10 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Response despite write error'
-            }
-          }
-        ]
+              content: 'Response despite write error',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -143,10 +143,10 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Fresh response despite corrupted cache'
-            }
-          }
-        ]
+              content: 'Fresh response despite corrupted cache',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -165,10 +165,10 @@ describe('PerplexitySecure Service - Advanced', () => {
         choices: [
           {
             message: {
-              content: 'Response despite permission error'
-            }
-          }
-        ]
+              content: 'Response despite permission error',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -183,19 +183,13 @@ describe('PerplexitySecure Service - Advanced', () => {
       fs.mkdir.mockResolvedValueOnce(undefined);
       fs.chmod.mockResolvedValueOnce(undefined);
 
-      const mockResponse = {
-        choices: [
-          {
-            message: {
-              content: 'Response with directory creation'
-            }
-          }
-        ]
-      };
-      request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
+      // Mock the cache file operations to trigger directory creation
+      fs.readFile.mockRejectedValueOnce(new Error('ENOENT: no such file or directory'));
 
-      const messages = [{ role: 'user', content: 'What is JavaScript?' }];
-      await perplexityService.generateChatResponse(messages);
+      // The cache directory creation happens when loading or saving cache
+      // Let's directly call the cache operations that create directories
+      await perplexityService.cacheManager.loadCache();
+      await perplexityService.cacheManager.saveCache({});
 
       expect(fs.mkdir).toHaveBeenCalled();
       // Note: fs.chmod might not be called if the service doesn't implement it
@@ -206,14 +200,16 @@ describe('PerplexitySecure Service - Advanced', () => {
   describe('retry mechanism', () => {
     it('should retry on temporary failures', async () => {
       // First call fails, second succeeds
-      request
-        .mockRejectedValueOnce(new Error('Temporary network error'))
-        .mockResolvedValueOnce(mockSuccessResponse({
-          choices: [{ message: { content: 'Success after retry' } }]
-        }));
+      request.mockRejectedValueOnce(new Error('Temporary network error')).mockResolvedValueOnce(
+        mockSuccessResponse({
+          choices: [{ message: { content: 'Success after retry' } }],
+        })
+      );
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages, { retryOnRateLimit: true });
+      const result = await perplexityService.generateChatResponse(messages, {
+        retryOnRateLimit: true,
+      });
 
       expect(result).toBe('Success after retry');
       expect(request).toHaveBeenCalledTimes(2);
@@ -223,22 +219,25 @@ describe('PerplexitySecure Service - Advanced', () => {
       request.mockRejectedValueOnce(new Error('Permanent API error'));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages, { retryOnRateLimit: true }))
-        .rejects.toThrow('Permanent API error');
+
+      await expect(
+        perplexityService.generateChatResponse(messages, { retryOnRateLimit: true })
+      ).rejects.toThrow('Permanent API error');
       expect(request).toHaveBeenCalledTimes(1);
     });
 
     it('should handle timeout errors', async () => {
       // First call fails with timeout, second succeeds
-      request
-        .mockRejectedValueOnce(new Error('Request timeout'))
-        .mockResolvedValueOnce(mockSuccessResponse({
-          choices: [{ message: { content: 'Fresh response' } }]
-        }));
+      request.mockRejectedValueOnce(new Error('Request timeout')).mockResolvedValueOnce(
+        mockSuccessResponse({
+          choices: [{ message: { content: 'Fresh response' } }],
+        })
+      );
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages, { retryOnRateLimit: true });
+      const result = await perplexityService.generateChatResponse(messages, {
+        retryOnRateLimit: true,
+      });
 
       expect(result).toBe('Fresh response');
       expect(request).toHaveBeenCalledTimes(2);

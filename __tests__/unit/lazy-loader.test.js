@@ -44,7 +44,10 @@ describe('Lazy Loader', () => {
     it('should memoize the loaded module', () => {
       const mockModule1 = { id: 1 };
       const mockModule2 = { id: 2 };
-      const mockLoader = jest.fn().mockReturnValueOnce(mockModule1).mockReturnValueOnce(mockModule2);
+      const mockLoader = jest
+        .fn()
+        .mockReturnValueOnce(mockModule1)
+        .mockReturnValueOnce(mockModule2);
       const lazyLoad = lazyLoader.lazyLoad(mockLoader);
 
       const firstResult = lazyLoad();

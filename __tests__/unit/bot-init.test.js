@@ -43,7 +43,7 @@ beforeEach(() => {
 });
 
 describe('Bot Initialization', () => {
-  let index;
+  let _index;
   let discordMock;
 
   beforeEach(() => {

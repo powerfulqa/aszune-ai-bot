@@ -60,9 +60,9 @@ describe('Message Chunker - Basic', () => {
   test('should handle very small chunk size', () => {
     const message = 'This is a test message';
     const chunks = chunkMessage(message, 5);
-    
+
     expect(chunks.length).toBeGreaterThan(1);
-    chunks.forEach(chunk => {
+    chunks.forEach((chunk) => {
       expect(chunk.length).toBeLessThanOrEqual(5 + 10); // chunk size + numbering overhead
     });
   });

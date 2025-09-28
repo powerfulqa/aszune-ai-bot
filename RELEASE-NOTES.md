@@ -7,18 +7,35 @@ notes, see the [docs/](./docs/) directory.
 
 ## Version History
 
+### v1.4.1 - Code Quality Excellence & Architecture Refinement
+
+- **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
+- **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient,
+  CacheManager, ResponseProcessor, ThrottlingService)
+- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls
+  (100% elimination)
+- **Code Duplication Elimination**: Systematic removal of duplicate patterns across services and
+  validation
+- **Enhanced Input Validation**: Common validation helpers and improved sanitization logic
+- **Logging Infrastructure Enhancement**: Comprehensive logging improvements across all modules
+- **qlty Philosophy Adherence**: Following modern code quality principles for maintainability
+- **All Tests Passing**: Maintained 536 passing tests throughout architectural improvements
+- Full details in [RELEASE-NOTES-v1.4.1.md](./RELEASE-NOTES-v1.4.1.md)
+
 ### v1.4.0 - Comprehensive Testing & Coverage Enhancement
 
 - Massive test coverage improvement from 77.79% to 82%+
 - Added comprehensive test suites for memory monitoring, message chunking, and command handling
 - Expanded test count from 371 to 536 passing tests
 - Enhanced error handling and recovery mechanisms across all modules
-- New utility modules for error handling, input validation, memory monitoring, and performance tracking
+- New utility modules for error handling, input validation, memory monitoring, and performance
+  tracking
 - Enhanced message chunking with advanced boundary detection and source link processing
 - Comprehensive input sanitization and validation system
 - Advanced memory management and garbage collection
 - Real-time performance monitoring and optimization
-- **Recent Code Quality Improvements**: Fixed critical security vulnerabilities, import inconsistencies, and code duplication issues identified through code review
+- **Recent Code Quality Improvements**: Fixed critical security vulnerabilities, import
+  inconsistencies, and code duplication issues identified through code review
 - Full details in [RELEASE-NOTES-v1.4.0.md](./RELEASE-NOTES-v1.4.0.md)
 
 ### v1.3.6 - Performance and Stability Enhancements

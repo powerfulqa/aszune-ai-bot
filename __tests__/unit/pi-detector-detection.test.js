@@ -80,7 +80,9 @@ describe('Pi Detector - Detection', () => {
     });
 
     it('should handle CPU frequency detection', async () => {
-      fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2\nCPU max MHz: 1500.0\nRevision: c03112');
+      fs.readFile.mockResolvedValue(
+        'Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2\nCPU max MHz: 1500.0\nRevision: c03112'
+      );
       execSync.mockReturnValue('temp=42.3\'C');
 
       const result = await piDetector.detectPiModel();

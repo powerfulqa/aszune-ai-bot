@@ -13,7 +13,6 @@ const { chunkMessage } = require('../utils/enhanced-message-chunker');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 
-
 const conversationManager = new ConversationManager();
 
 /**
@@ -27,12 +26,12 @@ async function sendResponse(message, responseText) {
   // Further reduced to prevent truncation issues with source links and URL formatting
   const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH ?? 1900;
 
-  console.log(`Preparing to send response of length: ${responseText.length}`);
+  logger.debug(`Preparing to send response of length: ${responseText.length}`);
 
   // Split the message into chunks with our smaller max length
   const messageChunks = chunkMessage(responseText, MAX_EMBED_LENGTH);
 
-  console.log(`Response split into ${messageChunks.length} chunks`);
+  logger.debug(`Response split into ${messageChunks.length} chunks`);
 
   // If there's only one chunk, send it as normal
   if (messageChunks.length === 1) {
@@ -49,7 +48,7 @@ async function sendResponse(message, responseText) {
 
   // Send multiple chunks sequentially
   for (const [index, chunk] of messageChunks.entries()) {
-    console.log(`Sending chunk ${index + 1}/${messageChunks.length}, length: ${chunk.length}`);
+    logger.debug(`Sending chunk ${index + 1}/${messageChunks.length}, length: ${chunk.length}`);
 
     const embed = messageFormatter.createCompactEmbed({
       color: config.COLORS.PRIMARY,
@@ -202,7 +201,7 @@ async function handleChatMessage(message) {
       description: errorResponse.message,
       footer: { text: 'Aszai Bot' },
     });
-    
+
     message.reply({ embeds: [embed] });
   }
 }

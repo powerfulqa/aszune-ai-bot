@@ -2,7 +2,55 @@
  * Source Reference Processor
  * Handles collection and formatting of source references in messages
  */
+const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
+
+/**
+ * Process pattern 1 matches: (n) followed by URL
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern1(match, sources) {
+  const sourceNum = match[1];
+  const sourceUrl = match[2];
+  sources[sourceNum] = sourceUrl;
+}
+
+/**
+ * Process pattern 2 matches: ([n][url]) format
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern2(match, sources) {
+  const sourceNum = match[1];
+  let sourceUrl = match[2] || match[3];
+
+  if (sourceUrl) {
+    sourceUrl = sourceUrl.replace(/\)$/, '');
+    if (!sourceUrl.startsWith('http')) {
+      sourceUrl = 'https://' + sourceUrl;
+    }
+    sources[sourceNum] = sourceUrl;
+  }
+}
+
+/**
+ * Process pattern 3 matches: ([n][url] without closing bracket
+ * @param {Array} match - Regex match result
+ * @param {Object} sources - Sources object to update
+ */
+function processPattern3(match, sources) {
+  const sourceNum = match[1];
+  let sourceUrl = match[2];
+
+  if (sourceUrl && !sourceUrl.startsWith('http')) {
+    sourceUrl = 'https://' + sourceUrl;
+  }
+
+  if (sourceUrl) {
+    sources[sourceNum] = sourceUrl;
+  }
+}
 
 /**
  * Collect all source references and their URLs from text
@@ -13,61 +61,26 @@ function collectSourceReferences(text) {
   try {
     const sources = {};
 
-    // Pattern 1 & 2 & 3: (n) followed by URL in various formats
-    const pattern1 = /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g;
-    let match;
-    while ((match = pattern1.exec(text)) !== null) {
-      const sourceNum = match[1];
-      const sourceUrl = match[2];
-      sources[sourceNum] = sourceUrl;
-    }
+    // Process all patterns using a pattern array
+    const patterns = [
+      { regex: /\((\d+)\)(?:\s*(?:\(|\s))?(https?:\/\/[^\s)]+)/g, processor: processPattern1 },
+      { regex: /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s)]+))\)/g, processor: processPattern2 },
+      { regex: /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g, processor: processPattern3 },
+    ];
 
-    // Pattern 4 & 5: ([n][url]) format - handle both with and without brackets
-    const pattern2 = /\(\[(\d+)\](?:\[([^\]]+)\]|\s*([^\s\)]+))\)/g;
-    while ((match = pattern2.exec(text)) !== null) {
-      const sourceNum = match[1];
-      // Use either the bracketed URL or the non-bracketed one, whichever is found
-      let sourceUrl = match[2] || match[3];
-
-      // Clean up the URL if it contains undesirable characters
-      if (sourceUrl) {
-        // Remove any trailing characters that shouldn't be part of the URL
-        sourceUrl = sourceUrl.replace(/\)$/, '');
+    patterns.forEach((pattern) => {
+      let match;
+      while ((match = pattern.regex.exec(text)) !== null) {
+        pattern.processor(match, sources);
       }
-
-      // Add http:// prefix if missing
-      if (sourceUrl && !sourceUrl.startsWith('http')) {
-        sourceUrl = 'https://' + sourceUrl;
-      }
-
-      if (sourceUrl) {
-        sources[sourceNum] = sourceUrl;
-      }
-    }
-
-    // Additional pattern for square bracket format without closing bracket
-    // e.g. ([3][www.youtube. (broken across lines)
-    const pattern3 = /\(\[(\d+)\]\[([^\]]+)(?=$|\s)/g;
-    while ((match = pattern3.exec(text)) !== null) {
-      const sourceNum = match[1];
-      let sourceUrl = match[2];
-
-      // Add http:// prefix if missing
-      if (sourceUrl && !sourceUrl.startsWith('http')) {
-        sourceUrl = 'https://' + sourceUrl;
-      }
-
-      if (sourceUrl) {
-        sources[sourceNum] = sourceUrl;
-      }
-    }
+    });
 
     return sources;
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'collecting source references', {
       textLength: text?.length || 0,
     });
-    console.error(`Source reference collection error: ${errorResponse.message}`);
+    logger.error(`Source reference collection error: ${errorResponse.message}`);
     return {};
   }
 }
@@ -79,110 +92,191 @@ function collectSourceReferences(text) {
  * @returns {string} - Text with properly formatted source references
  */
 function formatSourceReferences(text, sourceMap) {
+  let result = text; // Default to original text
+
   try {
-    // Create a working copy of the text
-    let formattedText = text;
-
-    // Pre-processing: Convert any incomplete URLs or broken brackets
-    // Handle cases where bracket format is broken, like ([3][www.youtube.
-    formattedText = formattedText.replace(/\(\[(\d+)\]\[([^\]]+)(?=\s|$)/g, (match, num, url) => {
-      if (url.includes('www.') && !url.includes('.com')) {
-        // It's likely a broken domain like www.youtube (without .com)
-        const domain = url.trim();
-        if (domain.startsWith('www.')) {
-          return `([${num}][${domain}.com]`;
-        }
-      }
-      return match;
-    });
-
-    // Clean up any double occurrences of URLs
-    // For example, patterns like ([3][www.youtube.com]www.youtube.com)
-    formattedText = formattedText.replace(
-      /\(\[(\d+)\]\[([^\]]+)\]([^\)]+)\)/g,
-      (match, num, url1, url2) => {
-        // If both URLs are similar, keep just the bracketed version
-        if (url1.includes(url2) || url2.includes(url1)) {
-          return `([${num}][${url1}])`;
-        }
-        return match; // Otherwise leave as is
-      }
-    );
-
-    // Replace each source reference with a proper markdown link
-    Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
-      // First, handle the square bracket format: ([n][url])
-      // This needs to be more aggressive to catch partial matches
-      const patternBrackets = new RegExp(`\\(\\[${sourceNum}\\][^)]*\\)`, 'g');
-      formattedText = formattedText.replace(patternBrackets, `[(${sourceNum})](${sourceUrl})`);
-
-      // Then handle the standard format with a URL: (n) (url) or (n)(url) or (n) url
-      const patternWithUrl = new RegExp(
-        `\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))`,
-        'g'
-      );
-      formattedText = formattedText.replace(patternWithUrl, `[(${sourceNum})](${sourceUrl})`);
-
-      // Finally, handle standalone references (n) not already formatted
-      // This needs to be done last to avoid double-replacing
-      const patternStandalone = new RegExp(`(?<!\\[)\\(${sourceNum}\\)(?!\\]\\()`, 'g');
-      formattedText = formattedText.replace(patternStandalone, `[(${sourceNum})](${sourceUrl})`);
-    });
-
-    // Post-processing cleanup for common URL issues
-
-    // Fix any URLs where the domain is broken by extra characters
-    formattedText = formattedText.replace(
-      /(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g,
-      '$1'
-    );
-
-    // Fix any URLs that lost their dots
-    formattedText = formattedText.replace(/examplecom/g, 'example.com');
-    formattedText = formattedText.replace(/youtubecom/g, 'youtube.com');
-    formattedText = formattedText.replace(/fractalsoftworkscom/g, 'fractalsoftworks.com');
-    formattedText = formattedText.replace(/testorg/g, 'test.org');
-
-    // Handle references where the URL is part of the text but not properly linked
-    const urlRegex = /\[(\d+)\]\s*(?!\()/g;
-    const urlMatches = formattedText.matchAll(urlRegex);
-
-    for (const match of urlMatches) {
-      const refNum = match[1];
-      if (sourceMap[refNum]) {
-        const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
-
-        // Special handling for different URL types to provide better descriptive text
-        let linkText;
-        const url = sourceMap[refNum];
-
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
-          linkText = 'YouTube Video';
-        } else if (url.includes('fractalsoftworks.com/forum')) {
-          linkText = 'Starsector Forum';
-        } else {
-          linkText = 'Source ' + refNum;
-        }
-
-        // Make sure the URL is complete and properly formatted
-        let fullUrl = url;
-        if (!fullUrl.startsWith('http')) {
-          fullUrl = 'https://' + fullUrl;
-        }
-
-        formattedText = formattedText.replace(replaceRegex, `[${linkText}](${fullUrl})`);
-      }
+    // Input validation - early exit if invalid
+    if (!text || !sourceMap) {
+      return result;
     }
 
-    return formattedText;
+    result = performSourceReferenceFormatting(text, sourceMap);
   } catch (error) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting source references', {
       textLength: text?.length || 0,
       sourceCount: Object.keys(sourceMap || {}).length,
     });
-    console.error(`Source reference formatting error: ${errorResponse.message}`);
-    return text; // Return original text if formatting fails
+    logger.error(`Source reference formatting error: ${errorResponse.message}`);
+    // result remains as original text on error
   }
+
+  return result;
+}
+
+/**
+ * Perform the actual source reference formatting logic
+ * @param {string} text - Text to format
+ * @param {Object} sourceMap - Map of source numbers to URLs
+ * @returns {string} - Formatted text
+ */
+function performSourceReferenceFormatting(text, sourceMap) {
+  let formattedText = text;
+
+  // Step 1: Pre-processing fixes
+  formattedText = applyPreprocessingFixes(formattedText);
+
+  // Step 2: Clean up duplicate URLs
+  formattedText = applyDuplicateUrlCleanup(formattedText);
+
+  // Step 3: Replace source references with markdown links
+  formattedText = applySourceReferenceReplacement(formattedText, sourceMap);
+
+  // Step 4: Post-processing cleanup
+  formattedText = applyPostprocessingCleanup(formattedText);
+
+  // Step 5: Handle unlinked references
+  formattedText = applyUnlinkedReferenceHandling(formattedText, sourceMap);
+
+  return formattedText;
+}
+
+/**
+ * Apply pre-processing fixes for broken bracket formats
+ */
+function applyPreprocessingFixes(text) {
+  return text.replace(/\(\[(\d+)\]\[([^\]]+)(?=\s|$)/g, (match, num, url) => {
+    if (url.includes('www.') && !url.includes('.com')) {
+      const domain = url.trim();
+      if (domain.startsWith('www.')) {
+        return `([${num}][${domain}.com]`;
+      }
+    }
+    return match;
+  });
+}
+
+/**
+ * Clean up duplicate URL occurrences
+ */
+function applyDuplicateUrlCleanup(text) {
+  return text.replace(/\(\[(\d+)\]\[([^\]]+)\]([^)]+)\)/g, (match, num, url1, url2) => {
+    if (url1.includes(url2) || url2.includes(url1)) {
+      return `([${num}][${url1}])`;
+    }
+    return match;
+  });
+}
+
+/**
+ * Replace source references with proper markdown links
+ */
+function applySourceReferenceReplacement(text, sourceMap) {
+  let formattedText = text;
+
+  Object.entries(sourceMap).forEach(([sourceNum, sourceUrl]) => {
+    // Handle square bracket format: ([n][url])
+    formattedText = replaceSquareBracketFormat(formattedText, sourceNum, sourceUrl);
+
+    // Handle standard format with URL: (n) (url) or (n)(url) or (n) url
+    formattedText = replaceStandardFormat(formattedText, sourceNum, sourceUrl);
+
+    // Handle standalone references (n) not already formatted
+    formattedText = replaceStandaloneReferences(formattedText, sourceNum, sourceUrl);
+  });
+
+  return formattedText;
+}
+
+/**
+ * Replace square bracket format references
+ */
+function replaceSquareBracketFormat(text, sourceNum, sourceUrl) {
+  const patternBrackets = new RegExp(`\\(\\[${sourceNum}\\][^)]*\\)`, 'g');
+  return text.replace(patternBrackets, `[(${sourceNum})](${sourceUrl})`);
+}
+
+/**
+ * Replace standard format references
+ */
+function replaceStandardFormat(text, sourceNum, sourceUrl) {
+  const patternWithUrl = new RegExp(
+    `\\(${sourceNum}\\)(?:\\s*(?:\\(|\\s)(?:https?:\\/\\/[^\\s)]+))`,
+    'g'
+  );
+  return text.replace(patternWithUrl, `[(${sourceNum})](${sourceUrl})`);
+}
+
+/**
+ * Replace standalone references
+ */
+function replaceStandaloneReferences(text, sourceNum, sourceUrl) {
+  const patternStandalone = new RegExp(`(?<!\\[)\\(${sourceNum}\\)(?!\\]\\()`, 'g');
+  return text.replace(patternStandalone, `[(${sourceNum})](${sourceUrl})`);
+}
+
+/**
+ * Apply post-processing cleanup for common URL issues
+ */
+function applyPostprocessingCleanup(text) {
+  return (
+    text
+      // Fix URLs where domain is broken by extra characters
+      .replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1')
+      // Fix URLs that lost their dots
+      .replace(/examplecom/g, 'example.com')
+      .replace(/youtubecom/g, 'youtube.com')
+      .replace(/fractalsoftworkscom/g, 'fractalsoftworks.com')
+      .replace(/testorg/g, 'test.org')
+  );
+}
+
+/**
+ * Handle references where URL is part of text but not properly linked
+ */
+function applyUnlinkedReferenceHandling(text, sourceMap) {
+  let formattedText = text;
+  const urlRegex = /\[(\d+)\]\s*(?!\()/g;
+  const urlMatches = formattedText.matchAll(urlRegex);
+
+  for (const match of urlMatches) {
+    const refNum = match[1];
+    if (sourceMap[refNum]) {
+      formattedText = replaceUnlinkedReference(formattedText, refNum, sourceMap[refNum]);
+    }
+  }
+
+  return formattedText;
+}
+
+/**
+ * Replace a specific unlinked reference with proper markdown link
+ */
+function replaceUnlinkedReference(text, refNum, url) {
+  const replaceRegex = new RegExp(`\\[${refNum}\\]\\s*(?!\\()`, 'g');
+  const linkText = generateLinkText(url, refNum);
+  const fullUrl = ensureHttpPrefix(url);
+
+  return text.replace(replaceRegex, `[${linkText}](${fullUrl})`);
+}
+
+/**
+ * Generate appropriate link text based on URL type
+ */
+function generateLinkText(url, refNum) {
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    return 'YouTube Video';
+  } else if (url.includes('fractalsoftworks.com/forum')) {
+    return 'Starsector Forum';
+  } else {
+    return 'Source ' + refNum;
+  }
+}
+
+/**
+ * Ensure URL has proper HTTP prefix
+ */
+function ensureHttpPrefix(url) {
+  return url.startsWith('http') ? url : 'https://' + url;
 }
 
 /**
@@ -201,7 +295,7 @@ function processSourceReferences(text) {
     const errorResponse = ErrorHandler.handleError(error, 'processing source references', {
       textLength: text?.length || 0,
     });
-    console.error(`Source reference processing error: ${errorResponse.message}`);
+    logger.error(`Source reference processing error: ${errorResponse.message}`);
     return text; // Return original text if processing fails
   }
 }

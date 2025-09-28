@@ -46,20 +46,20 @@ describe('Conversation Manager - Advanced Features', () => {
     it('returns true for users within rate limit window', () => {
       const userId = '123456789012345678';
       const now = Date.now();
-      
+
       // Set timestamp to current time
       conversationManager.lastMessageTimestamps.set(userId, now);
-      
+
       expect(conversationManager.isRateLimited(userId)).toBe(true);
     });
 
     it('returns false for users outside rate limit window', () => {
       const userId = '123456789012345678';
       const pastTime = Date.now() - (config.RATE_LIMIT_WINDOW + 1000);
-      
+
       // Set timestamp to past time
       conversationManager.lastMessageTimestamps.set(userId, pastTime);
-      
+
       expect(conversationManager.isRateLimited(userId)).toBe(false);
     });
   });
@@ -82,7 +82,7 @@ describe('Conversation Manager - Advanced Features', () => {
         summaries: 2,
         lastActive: Date.now(),
       };
-      
+
       conversationManager.userStats.set(userId, mockStats);
       const stats = conversationManager.getUserStats(userId);
       expect(stats).toEqual(mockStats);
@@ -93,7 +93,7 @@ describe('Conversation Manager - Advanced Features', () => {
     it('updates message count', () => {
       const userId = '123456789012345678';
       conversationManager.updateUserStats(userId, 'messages');
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.messages).toBe(1);
     });
@@ -101,7 +101,7 @@ describe('Conversation Manager - Advanced Features', () => {
     it('updates summary count', () => {
       const userId = '123456789012345678';
       conversationManager.updateUserStats(userId, 'summaries');
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.summaries).toBe(1);
     });
@@ -111,7 +111,7 @@ describe('Conversation Manager - Advanced Features', () => {
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'summaries');
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.messages).toBe(2);
       expect(stats.summaries).toBe(1);
@@ -122,7 +122,7 @@ describe('Conversation Manager - Advanced Features', () => {
       const beforeUpdate = Date.now();
       conversationManager.updateUserStats(userId, 'messages');
       const afterUpdate = Date.now();
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.lastActive).toBeGreaterThanOrEqual(beforeUpdate);
       expect(stats.lastActive).toBeLessThanOrEqual(afterUpdate);
@@ -134,13 +134,13 @@ describe('Conversation Manager - Advanced Features', () => {
       // Start intervals
       conversationManager.startCleanupInterval();
       conversationManager.startSaveStatsInterval();
-      
+
       expect(conversationManager.cleanupInterval).toBeDefined();
       expect(conversationManager.saveStatsInterval).toBeDefined();
-      
+
       // Destroy should clear intervals
       conversationManager.destroy();
-      
+
       expect(conversationManager.cleanupInterval).toBeNull();
       expect(conversationManager.saveStatsInterval).toBeNull();
     });
@@ -148,12 +148,12 @@ describe('Conversation Manager - Advanced Features', () => {
     it('clears all conversation data', () => {
       const userId = '123456789012345678';
       conversationManager.addMessage(userId, 'user', 'hello');
-      
+
       expect(conversationManager.getHistory(userId)).toHaveLength(1);
       expect(conversationManager.getUserStats(userId).messages).toBe(1);
-      
+
       conversationManager.destroy();
-      
+
       expect(conversationManager.getHistory(userId)).toHaveLength(0);
       expect(conversationManager.getUserStats(userId).messages).toBe(0);
     });

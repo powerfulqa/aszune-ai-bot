@@ -240,7 +240,7 @@ class ConversationManager {
     } else if (statType === 'summaries') {
       stats.summaries += 1;
     }
-    
+
     // Update last active timestamp
     stats.lastActive = Date.now();
 

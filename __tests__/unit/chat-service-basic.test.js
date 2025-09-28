@@ -58,7 +58,7 @@ describe('Chat Service - Basic', () => {
     mockConversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
     mockConversationManager.addMessage.mockImplementation(() => {});
     mockConversationManager.updateTimestamp.mockImplementation(() => {});
-    
+
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
     commandHandler.handleTextCommand.mockResolvedValue();
@@ -107,7 +107,9 @@ describe('Chat Service - Basic', () => {
 
     await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith('Please wait a few seconds before sending another message.');
+    expect(message.reply).toHaveBeenCalledWith(
+      'Please wait a few seconds before sending another message.'
+    );
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
 });

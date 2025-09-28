@@ -152,7 +152,8 @@ describe('Message Formatter - Advanced', () => {
     });
 
     it('should handle messages with mixed content types', () => {
-      const mixedMessage = 'Text with **bold** and *italic* and `code` and https://example.com and emoji 🎉';
+      const mixedMessage =
+        'Text with **bold** and *italic* and `code` and https://example.com and emoji 🎉';
       const formattedMessage = messageFormatter.formatResponse(mixedMessage);
       expect(formattedMessage).toContain('**bold**');
       expect(formattedMessage).toContain('*italic*');

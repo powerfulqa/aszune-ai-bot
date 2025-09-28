@@ -25,12 +25,12 @@ describe('Logger - Advanced', () => {
 
   it('respects log level filtering', () => {
     process.env.PI_LOG_LEVEL = 'INFO';
-    
+
     logger.debug('This should not be logged');
     logger.info('This should be logged');
     logger.warn('This should be logged');
     logger.error('This should be logged');
-    
+
     expect(console.log).toHaveBeenCalledTimes(1); // info only (debug should not be logged with INFO level)
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -38,12 +38,12 @@ describe('Logger - Advanced', () => {
 
   it('handles log level ERROR only', () => {
     process.env.PI_LOG_LEVEL = 'ERROR';
-    
+
     logger.debug('This should not be logged');
     logger.info('This should not be logged');
     logger.warn('This should not be logged');
     logger.error('This should be logged');
-    
+
     expect(console.log).not.toHaveBeenCalled();
     expect(console.warn).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -51,12 +51,12 @@ describe('Logger - Advanced', () => {
 
   it('handles log level WARN and above', () => {
     process.env.PI_LOG_LEVEL = 'WARN';
-    
+
     logger.debug('This should not be logged');
     logger.info('This should not be logged');
     logger.warn('This should be logged');
     logger.error('This should be logged');
-    
+
     expect(console.log).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -64,12 +64,12 @@ describe('Logger - Advanced', () => {
 
   it('handles log level INFO and above', () => {
     process.env.PI_LOG_LEVEL = 'INFO';
-    
+
     logger.debug('This should not be logged');
     logger.info('This should be logged');
     logger.warn('This should be logged');
     logger.error('This should be logged');
-    
+
     expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -77,12 +77,12 @@ describe('Logger - Advanced', () => {
 
   it('handles log level DEBUG (all messages)', () => {
     process.env.PI_LOG_LEVEL = 'DEBUG';
-    
+
     logger.debug('This should be logged');
     logger.info('This should be logged');
     logger.warn('This should be logged');
     logger.error('This should be logged');
-    
+
     expect(console.log).toHaveBeenCalledTimes(2); // debug and info
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -90,12 +90,12 @@ describe('Logger - Advanced', () => {
 
   it('handles invalid log level gracefully', () => {
     process.env.PI_LOG_LEVEL = 'INVALID';
-    
+
     logger.debug('This should be logged');
     logger.info('This should be logged');
     logger.warn('This should be logged');
     logger.error('This should be logged');
-    
+
     // Should default to INFO level
     expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -112,12 +112,12 @@ describe('Logger - Advanced', () => {
             numbers: 42,
             booleans: true,
             nulls: null,
-            undefined: undefined
-          }
-        }
-      }
+            undefined: undefined,
+          },
+        },
+      },
     };
-    
+
     logger.debug('Complex data test', complexData);
     expect(console.log).toHaveBeenCalledTimes(2);
     expect(console.log.mock.calls[1][0]).toEqual(complexData);
@@ -126,7 +126,7 @@ describe('Logger - Advanced', () => {
   it('handles circular references in data', () => {
     const circularData = { name: 'test' };
     circularData.self = circularData;
-    
+
     logger.debug('Circular data test', circularData);
     expect(console.log).toHaveBeenCalledTimes(2);
     expect(console.log.mock.calls[1][0]).toEqual(circularData);
@@ -165,7 +165,7 @@ describe('Logger - Advanced', () => {
     const data1 = { test: 'data1' };
     const data2 = { test: 'data2' };
     const data3 = { test: 'data3' };
-    
+
     logger.debug('Multiple data test', data1, data2, data3);
     expect(console.log).toHaveBeenCalledTimes(4); // message + 3 data objects
     expect(console.log.mock.calls[1][0]).toEqual(data1);

@@ -5,16 +5,17 @@
 
 /**
  * Service for interacting with the Perplexity API
- * Version 1.3.0 - Improved for better maintainability and performance
+ * Version 1.4.0 - Refactored for better maintainability and reduced complexity
  */
-const { request } = require('undici');
-const config = require('../config/config');
 const fs = require('fs').promises;
 const path = require('path');
+const config = require('../config/config');
 const logger = require('../utils/logger');
-const crypto = require('crypto');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
-const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache');
+const { ApiClient } = require('./api-client');
+const { CacheManager } = require('./cache-manager');
+const { ResponseProcessor } = require('./response-processor');
+const { ThrottlingService } = require('./throttling-service');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -41,7 +42,6 @@ const lazyLoadModule = (importPath) => {
 };
 
 // Lazy load optimization utilities
-const connectionThrottler = lazyLoadModule('../utils/connection-throttler');
 const getCachePruner = lazyLoadModule('../utils/cache-pruner');
 
 /**
@@ -55,23 +55,11 @@ class PerplexityService {
     // File permission constants
     this.FILE_PERMISSIONS = config.FILE_PERMISSIONS;
 
-    // Track active intervals for proper cleanup
-    this.activeIntervals = new Set();
-
-    // Initialize enhanced cache
-    this.cache = new EnhancedCache({
-      maxSize: config.CACHE.DEFAULT_MAX_ENTRIES,
-      maxMemory: config.CACHE.MAX_MEMORY_MB * 1024 * 1024,
-      evictionStrategy: EVICTION_STRATEGIES.HYBRID,
-      defaultTtl: config.CACHE.DEFAULT_TTL_MS,
-      cleanupInterval: config.CACHE.CLEANUP_INTERVAL_MS,
-    });
-
-    // Set up cache cleanup interval (if not in test environment)
-    this.cacheCleanupInterval = null;
-    if (process.env.NODE_ENV !== 'test') {
-      this._setupCacheCleanup();
-    }
+    // Initialize service components
+    this.apiClient = new ApiClient(this.apiKey, this.baseUrl);
+    this.cacheManager = new CacheManager();
+    this.responseProcessor = new ResponseProcessor();
+    this.throttlingService = new ThrottlingService();
   }
 
   /**
@@ -359,7 +347,7 @@ class PerplexityService {
     // Parse response as JSON
     try {
       const responseData = await body.json();
-      
+
       // Validate response structure for malformed responses
       if (!responseData || typeof responseData !== 'object') {
         throw ErrorHandler.createError(
@@ -367,15 +355,19 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for required choices array
-      if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
+      if (
+        !responseData.choices ||
+        !Array.isArray(responseData.choices) ||
+        responseData.choices.length === 0
+      ) {
         throw ErrorHandler.createError(
           'Invalid response: missing or empty choices array',
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for valid choice structure
       const firstChoice = responseData.choices[0];
       if (!firstChoice || typeof firstChoice !== 'object') {
@@ -384,7 +376,7 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       // Check for required message field in choice
       if (!firstChoice.message || typeof firstChoice.message !== 'object') {
         throw ErrorHandler.createError(
@@ -392,7 +384,7 @@ class PerplexityService {
           ERROR_TYPES.API_ERROR
         );
       }
-      
+
       return responseData;
     } catch (error) {
       throw ErrorHandler.createError(
@@ -471,16 +463,12 @@ class PerplexityService {
    * @returns {Promise<Object>} API response
    */
   async sendChatRequest(messages, options = {}) {
-    const endpoint = this.baseUrl + config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
-    const requestPayload = this._buildRequestPayload(messages, options);
+    const endpoint = config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
+    const requestPayload = this.apiClient.buildRequestPayload(messages, options);
 
     // Define API request function
     const makeApiRequest = async () => {
-      return await request(endpoint, {
-        method: 'POST',
-        headers: this._getHeaders(),
-        body: JSON.stringify(requestPayload),
-      });
+      return await this.apiClient.makeRequest(endpoint, requestPayload);
     };
 
     try {
@@ -489,33 +477,16 @@ class PerplexityService {
 
       let response;
       if (piOptSettings.enabled) {
-        response = await this._executeWithThrottling(makeApiRequest);
+        response = await this.throttlingService.executeWithThrottling(makeApiRequest);
       } else {
         response = await makeApiRequest();
       }
 
-      return await this._handleApiResponse(response);
+      return response;
     } catch (error) {
       const errorResponse = ErrorHandler.handleApiError(error, 'Perplexity API');
       logger.error(`API request failed: ${errorResponse.message}`);
       throw error;
-    }
-  }
-
-  /**
-   * Execute request with throttling if available
-   * @param {Function} requestFn - Request function to execute
-   * @returns {Promise<Object>} - API response
-   * @private
-   */
-  async _executeWithThrottling(requestFn) {
-    try {
-      const throttler = connectionThrottler();
-      return await throttler.executeRequest(requestFn, 'Perplexity API');
-    } catch (throttlerError) {
-      const errorResponse = ErrorHandler.handleError(throttlerError, 'connection throttling');
-      logger.warn(`Throttler error, falling back to direct request: ${errorResponse.message}`);
-      return await requestFn();
     }
   }
 
@@ -544,46 +515,36 @@ class PerplexityService {
     } else if (error.message && error.message.includes('invalid')) {
       return 'Unexpected response format received.';
     }
-    
+
     return errorResponse.message;
   }
 
   async generateChatResponse(history, options = {}) {
-    // Backward compatibility: if options is a boolean, treat as caching flag
-    let normalizedOptions;
-    if (typeof options === 'boolean') {
-      normalizedOptions = { caching: options };
-    } else {
-      normalizedOptions = options || {};
-    }
-    
-    // Standardize options - always expect an object
-    const opts = {
-      caching: true,
-      ...normalizedOptions
-    };
+    // Standardize options
+    const opts = this.responseProcessor.standardizeOptions(options);
 
     try {
       // Get cache configuration
-      const cacheConfig = this._getCacheConfiguration();
+      const cacheConfig = this.cacheManager.getCacheConfiguration();
 
       // Determine if caching should be used
-      const shouldUseCache = this._shouldUseCache(opts, cacheConfig);
+      const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
 
       // Try to get from cache first if enabled
       if (shouldUseCache) {
-        const cachedContent = await this._tryGetFromCache(history);
+        const cachedContent = await this.cacheManager.tryGetFromCache(history);
         if (cachedContent) return cachedContent;
       }
 
       // Try to generate new response with retry for rate limits
-      const response = await this._generateResponseWithRetry(history, opts);
+      const requestFn = () => this.sendChatRequest(history);
+      const response = await this.responseProcessor.generateResponseWithRetry(requestFn, opts);
 
-      const content = this._extractResponseContent(response);
+      const content = this.responseProcessor.extractResponseContent(response);
 
       // Save to cache if enabled
       if (shouldUseCache) {
-        await this._trySaveToCache(history, content, cacheConfig.maxEntries);
+        await this.cacheManager.trySaveToCache(history, content, cacheConfig.maxEntries);
       }
 
       return content;
@@ -593,7 +554,7 @@ class PerplexityService {
         shouldUseCache: opts.caching !== false,
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
-      
+
       // Re-throw the error to maintain error handling contract
       throw error;
     }
@@ -615,7 +576,7 @@ class PerplexityService {
     } catch (apiError) {
       // Check if it's a retryable error and we should retry
       const isRetryableError = this._isRetryableError(apiError);
-      
+
       if (isRetryableError && retries > 0) {
         const errorResponse = ErrorHandler.handleError(apiError, 'API retry', { retries });
         logger.info(`Retryable error, retrying after ${retryDelay}ms: ${errorResponse.message}`);
@@ -639,25 +600,29 @@ class PerplexityService {
    */
   _isRetryableError(error) {
     if (!error || !error.message) return false;
-    
+
     const message = error.message.toLowerCase();
-    
+
     // Retry on temporary/network errors
-    if (message.includes('temporary') || 
-        message.includes('network') || 
-        message.includes('timeout') ||
-        message.includes('429')) {
+    if (
+      message.includes('temporary') ||
+      message.includes('network') ||
+      message.includes('timeout') ||
+      message.includes('429')
+    ) {
       return true;
     }
-    
+
     // Don't retry on permanent errors
-    if (message.includes('permanent') || 
-        message.includes('invalid') ||
-        message.includes('unauthorized') ||
-        message.includes('forbidden')) {
+    if (
+      message.includes('permanent') ||
+      message.includes('invalid') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden')
+    ) {
       return false;
     }
-    
+
     // Default to not retryable for unknown errors
     return false;
   }
@@ -702,56 +667,6 @@ class PerplexityService {
     }
 
     return defaultConfig;
-  }
-
-  /**
-   * Try to get response from cache
-   * @param {Array} history - Conversation history
-   * @returns {Promise<string|null>} Cached content or null if not found
-   * @private
-   */
-  async _tryGetFromCache(history) {
-    try {
-      const cacheKey = this._generateCacheKey(history);
-      const cache = await this._loadCache();
-
-      // Check if we have a cache entry for this key
-      if (cache && cache[cacheKey]) {
-        logger.debug('Cache hit for query');
-        const entry = cache[cacheKey];
-
-        // Handle object entries
-        if (typeof entry === 'object' && entry !== null) {
-          // Test format in cache
-          if (entry.answer) {
-            return entry.answer;
-          }
-          // Standard format
-          if (entry.content) {
-            return entry.content;
-          }
-          // Handle cache format with hashed keys
-          const hashedKey = Object.keys(entry)[0];
-          if (hashedKey && entry[hashedKey] && entry[hashedKey].answer) {
-            return entry[hashedKey].answer;
-          }
-        }
-
-        // Handle string entries as fallback
-        if (typeof entry === 'string') {
-          return entry;
-        }
-      }
-    } catch (cacheError) {
-      const errorResponse = ErrorHandler.handleFileError(
-        cacheError,
-        'reading from cache',
-        'question_cache.json'
-      );
-      logger.warn(`Cache read error: ${errorResponse.message}`);
-    }
-
-    return null;
   }
 
   /**
@@ -825,14 +740,14 @@ class PerplexityService {
         isText: isText,
       });
       logger.error(`Failed to generate summary: ${errorResponse.message}`);
-      
+
       // Return specific error messages based on error type
       if (history.length === 0) {
         return 'No conversation history provided to summarize.';
       } else if (error.message && error.message.includes('Summary generation failed')) {
         return 'Unable to generate summary at this time.';
       }
-      
+
       return errorResponse.message;
     }
   }

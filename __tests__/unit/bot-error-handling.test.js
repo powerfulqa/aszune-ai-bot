@@ -20,7 +20,7 @@ const uncaughtExceptionHandler = (error) => {
   // Don't exit in tests
 };
 
-const unhandledRejectionHandler = (reason, promise) => {
+const unhandledRejectionHandler = (reason, _promise) => {
   mockLogger.error('Unhandled Promise Rejection:', reason);
   // Don't exit in tests
 };

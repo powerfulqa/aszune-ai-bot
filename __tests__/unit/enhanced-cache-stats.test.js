@@ -26,13 +26,13 @@ describe('EnhancedCache - Statistics', () => {
   describe('Statistics and Metrics', () => {
     it('should track hit and miss statistics', () => {
       cache.set('key1', 'value1');
-      
+
       // Hit
       cache.get('key1');
-      
+
       // Miss
       cache.get('nonexistent');
-      
+
       const stats = cache.getStats();
       expect(stats.hits).toBe(1);
       expect(stats.misses).toBe(1);
@@ -41,7 +41,7 @@ describe('EnhancedCache - Statistics', () => {
     it('should track memory usage', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
-      
+
       const stats = cache.getStats();
       expect(stats.totalMemory).toBeGreaterThan(0);
       expect(stats.entryCount).toBe(2);
@@ -94,8 +94,8 @@ describe('EnhancedCache - Statistics', () => {
     it('should create cache entries with correct properties', () => {
       cache.set('key1', 'value1');
       const detailedInfo = cache.getDetailedInfo();
-      const entry = detailedInfo.entries.find(e => e.key === 'key1');
-      
+      const entry = detailedInfo.entries.find((e) => e.key === 'key1');
+
       expect(entry).toBeDefined();
       expect(entry.value).toBe('value1');
       expect(entry.age).toBeDefined();
@@ -110,21 +110,21 @@ describe('EnhancedCache - Statistics', () => {
       cache.get('key1');
 
       const detailedInfo = cache.getDetailedInfo();
-      const entry = detailedInfo.entries.find(e => e.key === 'key1');
+      const entry = detailedInfo.entries.find((e) => e.key === 'key1');
       expect(entry.accessCount).toBe(3);
     });
 
     it('should update last accessed time on get', (done) => {
       cache.set('key1', 'value1');
       const detailedInfo1 = cache.getDetailedInfo();
-      const entry1 = detailedInfo1.entries.find(e => e.key === 'key1');
+      const entry1 = detailedInfo1.entries.find((e) => e.key === 'key1');
       const initialAccessTime = entry1.lastAccessed;
 
       // Wait a bit and access again
       setTimeout(() => {
         cache.get('key1');
         const detailedInfo2 = cache.getDetailedInfo();
-        const entry2 = detailedInfo2.entries.find(e => e.key === 'key1');
+        const entry2 = detailedInfo2.entries.find((e) => e.key === 'key1');
         expect(entry2.lastAccessed).toBeGreaterThan(initialAccessTime);
         done();
       }, 10);
@@ -147,17 +147,20 @@ describe('EnhancedCache - Statistics', () => {
     it('should use default configuration when none provided', () => {
       const defaultCache = new EnhancedCache();
       const stats = defaultCache.getStats();
-      
+
       expect(stats.maxSize).toBeDefined();
       expect(stats.maxEntries).toBeDefined();
     });
 
     it('should handle invalid configuration gracefully', () => {
-      expect(() => new EnhancedCache({
-        maxSize: -1,
-        maxEntries: -1,
-        evictionStrategy: 'invalid',
-      })).not.toThrow();
+      expect(
+        () =>
+          new EnhancedCache({
+            maxSize: -1,
+            maxEntries: -1,
+            evictionStrategy: 'invalid',
+          })
+      ).not.toThrow();
     });
   });
 });

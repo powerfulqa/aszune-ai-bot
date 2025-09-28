@@ -10,6 +10,7 @@ let config;
 try {
   config = require('./config/config');
 } catch (error) {
+  // Use console.error as fallback since logger is not yet available
   console.error('Failed to load configuration:', error.message);
   process.exit(1);
 }
@@ -136,7 +137,7 @@ const shutdown = async (signal) => {
 
   // Perform shutdown steps and collect errors
   const errors = await performShutdownSteps();
-  
+
   // Handle shutdown completion
   handleShutdownCompletion(errors);
 };

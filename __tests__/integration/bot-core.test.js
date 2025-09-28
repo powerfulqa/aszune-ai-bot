@@ -46,7 +46,9 @@ jest.mock('../../src/commands', () => ({
 
     if (message.content.startsWith('!summary')) {
       // Use the global conversation manager instance
-      const history = mockGlobalConversationManager ? mockGlobalConversationManager.getHistory() : [];
+      const history = mockGlobalConversationManager
+        ? mockGlobalConversationManager.getHistory()
+        : [];
       if (history.length === 0) {
         await message.reply('No conversation history to summarize.');
       } else {
@@ -100,14 +102,14 @@ jest.mock('../../src/services/chat', () => {
       if (message.author && message.author.bot) {
         return; // Don't process bot messages
       }
-      
+
       // Check rate limiting first
       const ConversationManager = require('../../src/utils/conversation');
       const mockInstance = ConversationManager.mock.results[0].value;
       if (mockInstance.isRateLimited && mockInstance.isRateLimited()) {
         return; // Don't process if rate limited
       }
-      
+
       // Simulate the actual message handling logic
       if (message.content.startsWith('!')) {
         const commandHandler = require('../../src/commands');
@@ -119,7 +121,7 @@ jest.mock('../../src/services/chat', () => {
         // Simulate chat message handling
         await message.reply('Mock response');
       }
-      
+
       // Simulate emoji reactions (this is what the test is checking for)
       const emojiManager = require('../../src/utils/emoji');
       await emojiManager.addReactionsToMessage(message);
@@ -128,7 +130,7 @@ jest.mock('../../src/services/chat', () => {
       console.error('Error in message handling:', error.message);
     }
   });
-  
+
   return mockHandleChatMessage;
 });
 
@@ -154,7 +156,6 @@ jest.mock('../../src/utils/emoji', () => ({
   }),
 }));
 
-
 jest.mock('../../src/utils/message-formatter', () => ({
   formatResponse: jest.fn().mockImplementation((text) => text),
 }));
@@ -178,7 +179,9 @@ jest.mock('../../src/utils/input-validator', () => ({
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
     validateInput: jest.fn().mockReturnValue({ valid: true }),
     sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest.fn().mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
+    validateAndSanitize: jest
+      .fn()
+      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
   },
 }));
 
@@ -230,7 +233,9 @@ jest.mock('../../src/utils/input-validator', () => ({
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
     validateInput: jest.fn().mockReturnValue({ valid: true }),
     sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest.fn().mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
+    validateAndSanitize: jest
+      .fn()
+      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
   },
 }));
 
@@ -240,7 +245,7 @@ jest.mock('../../src/utils/error-handler', () => ({
       console.log('ErrorHandler called with:', {
         error: error.message || error,
         context,
-        additionalData
+        additionalData,
       });
       return { message: 'Test error message' };
     }),
@@ -419,7 +424,7 @@ describe('Bot Integration - Core', () => {
       updateUserStats: jest.fn(),
       addMessage: jest.fn(),
     };
-    
+
     // Set the global conversation manager for the command handler mock
     mockGlobalConversationManager = conversationManager;
 
@@ -474,7 +479,7 @@ describe('Bot Integration - Core', () => {
     message.content = '!summary';
     conversationManager.getHistory.mockReturnValue([
       { role: 'user', content: 'Hello' },
-      { role: 'assistant', content: 'Hi there!' }
+      { role: 'assistant', content: 'Hi there!' },
     ]);
 
     await messageCreateHandler(message);

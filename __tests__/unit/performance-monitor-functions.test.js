@@ -118,7 +118,7 @@ describe('Performance Monitor - Functions', () => {
   describe('_getCpuInfo', () => {
     it('should return CPU information', () => {
       const cpuInfo = performanceMonitor._getCpuInfo();
-      
+
       expect(cpuInfo).toHaveProperty('idle');
       expect(cpuInfo).toHaveProperty('total');
       expect(typeof cpuInfo.idle).toBe('number');
@@ -129,7 +129,7 @@ describe('Performance Monitor - Functions', () => {
   describe('_checkPerformance', () => {
     it('should log performance metrics', () => {
       performanceMonitor._checkPerformance();
-      
+
       // The method doesn't log debug messages by default, only info messages when under high load
       // Since we're not under high load in the test, no logging should occur
       expect(logger.debug).not.toHaveBeenCalled();

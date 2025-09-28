@@ -120,15 +120,15 @@ class Logger {
     if (this._getLogLevel() <= this.levels.DEBUG) {
       const formattedMessage = this._formatMessage('DEBUG', message);
       console.log(formattedMessage);
-      
+
       // Log each data argument
-      dataArgs.forEach(data => {
+      dataArgs.forEach((data) => {
         if (data !== undefined) console.log(data);
       });
 
       // Write to file
       this._writeToFile(formattedMessage);
-      dataArgs.forEach(data => {
+      dataArgs.forEach((data) => {
         if (data !== undefined) {
           try {
             this._writeToFile(JSON.stringify(data));

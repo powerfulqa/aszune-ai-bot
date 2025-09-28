@@ -29,10 +29,10 @@ jest.mock('../../src/commands');
 jest.mock('../../src/utils/input-validator', () => ({
   InputValidator: {
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateAndSanitize: jest.fn().mockReturnValue({ 
-      valid: true, 
+    validateAndSanitize: jest.fn().mockReturnValue({
+      valid: true,
       sanitized: 'Hello! @#$%^&*()_+-=[]{}|;:,.<>?',
-      warnings: []
+      warnings: [],
     }),
   },
 }));
@@ -69,11 +69,13 @@ describe('Chat Service - Advanced', () => {
 
     expect(message.reply).toHaveBeenCalled();
     expect(message.reply).toHaveBeenCalledWith({
-      embeds: [{
-        color: '#5865F2',
-        description: 'The service is temporarily unavailable. Please try again later.',
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: '#5865F2',
+          description: 'The service is temporarily unavailable. Please try again later.',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   });
 
@@ -157,11 +159,13 @@ describe('Chat Service - Advanced', () => {
     await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalledWith({
-      embeds: [{
-        color: '#5865F2',
-        description: 'An unexpected error occurred. Please try again later.',
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: '#5865F2',
+          description: 'An unexpected error occurred. Please try again later.',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   });
 
@@ -172,11 +176,13 @@ describe('Chat Service - Advanced', () => {
     await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalledWith({
-      embeds: [{
-        color: '#5865F2',
-        description: 'The service is currently busy. Please wait a moment and try again.',
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: '#5865F2',
+          description: 'The service is currently busy. Please wait a moment and try again.',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   });
 });

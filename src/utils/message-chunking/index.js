@@ -3,6 +3,7 @@
  * Coordinates all chunking functionality with proper source reference handling
  */
 const config = require('../../config/config');
+const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 const originalChunker = require('../message-chunker');
 const { processSourceReferences } = require('./source-reference-processor');
@@ -39,7 +40,7 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
 
     // Validate the final chunks
     if (!validateChunkBoundaries(fixedChunks)) {
-      console.warn('Chunk boundary validation failed, but continuing with fixed chunks');
+      logger.warn('Chunk boundary validation failed, but continuing with fixed chunks');
     }
 
     return fixedChunks;
@@ -48,7 +49,7 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
       messageLength: message?.length || 0,
       maxLength,
     });
-    console.error(`Enhanced chunking error: ${errorResponse.message}`);
+    logger.error(`Enhanced chunking error: ${errorResponse.message}`);
 
     // Fallback to original chunker if enhanced chunking fails
     try {
@@ -62,7 +63,7 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
           maxLength,
         }
       );
-      console.error(`Fallback chunking error: ${fallbackErrorResponse.message}`);
+      logger.error(`Fallback chunking error: ${fallbackErrorResponse.message}`);
 
       // Last resort: return the original message as a single chunk
       return [message];
@@ -84,7 +85,7 @@ function formatUrls(text) {
     const errorResponse = ErrorHandler.handleError(error, 'formatting URLs', {
       textLength: text?.length || 0,
     });
-    console.error(`URL formatting error: ${errorResponse.message}`);
+    logger.error(`URL formatting error: ${errorResponse.message}`);
     return text;
   }
 }
@@ -113,7 +114,7 @@ function getChunkingStats(chunks) {
     const errorResponse = ErrorHandler.handleError(error, 'getting chunking stats', {
       chunkCount: chunks?.length || 0,
     });
-    console.error(`Chunking stats error: ${errorResponse.message}`);
+    logger.error(`Chunking stats error: ${errorResponse.message}`);
     return {
       chunkCount: 0,
       totalLength: 0,

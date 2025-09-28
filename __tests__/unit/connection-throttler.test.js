@@ -1,6 +1,6 @@
 const connectionThrottler = require('../../src/utils/connection-throttler');
 const logger = require('../../src/utils/logger');
-const config = require('../../src/config/config');
+const _config = require('../../src/config/config');
 
 // Mock dependencies
 jest.mock('../../src/utils/logger');

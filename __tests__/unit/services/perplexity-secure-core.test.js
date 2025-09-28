@@ -48,45 +48,50 @@ describe('PerplexitySecure Service - Core', () => {
       request.mockResolvedValueOnce(mockErrorResponse({ error: 'Rate limit exceeded' }, 429));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages))
-        .rejects.toThrow('API request failed with status 429');
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'API request failed with status 429'
+      );
     });
 
     it('should handle API errors gracefully', async () => {
       request.mockResolvedValueOnce(mockErrorResponse({ error: 'API Error' }, 500));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages))
-        .rejects.toThrow('API request failed with status 500');
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'API request failed with status 500'
+      );
     });
 
     it('should handle network errors', async () => {
       request.mockRejectedValueOnce(new Error('Network error'));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages))
-        .rejects.toThrow('Network error');
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'Network error'
+      );
     });
 
     it('should handle invalid response format', async () => {
       request.mockResolvedValueOnce(mockSuccessResponse({ invalid: 'format' }));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages))
-        .rejects.toThrow('Invalid response: missing or empty choices array');
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'Invalid response: missing or empty choices array'
+      );
     });
 
     it('should handle empty response', async () => {
       request.mockResolvedValueOnce(mockSuccessResponse({ choices: [] }));
 
       const messages = [{ role: 'user', content: 'Hello' }];
-      
-      await expect(perplexityService.generateChatResponse(messages))
-        .rejects.toThrow('Invalid response: missing or empty choices array');
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'Invalid response: missing or empty choices array'
+      );
     });
 
     it('should handle successful response', async () => {
@@ -94,10 +99,10 @@ describe('PerplexitySecure Service - Core', () => {
         choices: [
           {
             message: {
-              content: 'Hello! How can I help you today?'
-            }
-          }
-        ]
+              content: 'Hello! How can I help you today?',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -112,10 +117,10 @@ describe('PerplexitySecure Service - Core', () => {
         choices: [
           {
             message: {
-              content: 'Test response'
-            }
-          }
-        ]
+              content: 'Test response',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -130,10 +135,10 @@ describe('PerplexitySecure Service - Core', () => {
         choices: [
           {
             message: {
-              content: 'Test response'
-            }
-          }
-        ]
+              content: 'Test response',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
@@ -150,16 +155,16 @@ describe('PerplexitySecure Service - Core', () => {
         choices: [
           {
             message: {
-              content: 'This conversation covered topics about programming and development.'
-            }
-          }
-        ]
+              content: 'This conversation covered topics about programming and development.',
+            },
+          },
+        ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
       const messages = [
         { role: 'user', content: 'What is JavaScript?' },
-        { role: 'assistant', content: 'JavaScript is a programming language.' }
+        { role: 'assistant', content: 'JavaScript is a programming language.' },
       ];
       const result = await perplexityService.generateSummary(messages);
 

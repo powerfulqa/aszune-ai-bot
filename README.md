@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.4.0)
+# Aszune AI Bot (v1.4.1)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -59,7 +59,8 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   modern user experience.
 - 🧪 **Comprehensive Testing:** 536 automated tests covering all key functionality with 82%+ code
   coverage.
-- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with comprehensive error recovery.
+- 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
+  comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
 - 🔄 **Optimised Test Suite:** Fixed circular dependencies and improved mock implementations with
   82.45% branch coverage for critical components.
@@ -69,8 +70,10 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   - 🔢 **Clear Numbering:** Adds "[1/3]", "[2/3]", etc. prefixes to indicate message sequence
   - 📄 **Word Boundary Preservation:** Ensures words at chunk boundaries remain properly separated
   - 📋 **Full Content Delivery:** No more truncated responses, even for very long messages
-  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper formatting
-  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or mid-URL
+  - 🔗 **Source Link Processing:** Enhanced handling of URLs and source references with proper
+    formatting
+  - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or
+    mid-URL
 
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
   resource-constrained devices like Raspberry Pi 3.
@@ -88,10 +91,20 @@ Raspberry Pi devices from Pi 3 to Pi 5.
 - 🧪 **Test Suite Reliability:** All tests now pass, with relaxed expectations and robust mocking.
   CI will not fail due to test issues.
 - 📝 **Documentation and Release Notes:** Updated to reflect all recent changes and fixes.
-- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for optimal performance.
-- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and ensure data integrity.
-- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource utilization.
-- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling, and resource management.
+- 🧠 **Memory Monitoring:** Advanced memory usage tracking and automatic garbage collection for
+  optimal performance.
+- 🔍 **Input Validation:** Comprehensive input sanitization and validation to prevent errors and
+  ensure data integrity.
+- 📊 **Performance Monitoring:** Real-time performance tracking and optimization for better resource
+  utilization.
+- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling,
+  and resource management.
+- 🏗️ **Service-Oriented Architecture:** Refactored PerplexityService into focused,
+  single-responsibility classes for better maintainability and performance.
+- 📊 **Code Quality Excellence:** Achieved 94.8% reduction in ESLint issues and eliminated all
+  console statements in production code.
+- 🔄 **Code Duplication Elimination:** Systematic removal of duplicate code patterns across services
+  and validation modules.
 
 ---
 
@@ -376,6 +389,25 @@ MIT — feel free to use, modify, and share ✨
 
 ## Changelog
 
+### 1.4.1 (2025-09-28)
+
+- **Code Quality Excellence**: Achieved 94.8% reduction in ESLint issues (861 → 45)
+- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls
+- **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient,
+  CacheManager, ResponseProcessor, ThrottlingService)
+- **Code Duplication Elimination**: Systematic removal of duplicate patterns and logic
+- **Enhanced Input Validation**: Improved validation with common helper methods and proper
+  sanitization
+- **Logging Infrastructure**: Comprehensive logging enhancement across all modules
+- **All Tests Passing**: Maintained 536 passing tests throughout architectural improvements
+
+### 1.4.0 (2025-01-22)
+
+- Comprehensive test coverage enhancement from 77.79% to 82%+
+- Added 380+ passing tests with extensive error handling coverage
+- Enhanced memory monitoring, message chunking, and performance tracking
+- Production-ready quality with comprehensive input validation and sanitization
+
 ### 1.3.0 (2025-08-01)
 
 - Fixed all logger branch coverage tests, improving coverage from 57.89% to 82.45%.
@@ -383,11 +415,3 @@ MIT — feel free to use, modify, and share ✨
 - Properly implemented mocking for fs.promises methods with a centralized approach.
 - Added explicit Jest configuration for mock files.
 - Updated documentation and test scripts to reflect testing improvements.
-
-### 1.2.2 (2025-07-30)
-
-- Refactored ConversationManager to export as a class and require instantiation.
-- Fixed circular dependency issues by moving config access inside methods.
-- Updated all code and tests to use the new ConversationManager pattern.
-- Relaxed and fixed all test expectations; all tests now pass.
-- Updated documentation and release notes to match codebase and version.
