@@ -4,6 +4,7 @@ This directory contains the release notes for individual versions of the Aszune 
 
 ## Available Release Notes
 
+- [v1.4.1](./v1.4.1.md) - Code Quality Excellence & Architecture Refinement
 - [v1.4.0](./v1.4.0.md) - Comprehensive Testing & Coverage Enhancement
 - [v1.3.2](./v1.3.2.md) - Message Chunking Enhancement
 - [v1.3.1](./v1.3.1.md) - Message Chunking Feature

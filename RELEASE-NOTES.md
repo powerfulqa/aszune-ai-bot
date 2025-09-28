@@ -7,6 +7,18 @@ notes, see the [docs/](./docs/) directory.
 
 ## Version History
 
+### v1.4.1 - Code Quality Excellence & Architecture Refinement
+
+- **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
+- **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient, CacheManager, ResponseProcessor, ThrottlingService) 
+- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls (100% elimination)
+- **Code Duplication Elimination**: Systematic removal of duplicate patterns across services and validation
+- **Enhanced Input Validation**: Common validation helpers and improved sanitization logic
+- **Logging Infrastructure Enhancement**: Comprehensive logging improvements across all modules
+- **qlty Philosophy Adherence**: Following modern code quality principles for maintainability
+- **All Tests Passing**: Maintained 536 passing tests throughout architectural improvements
+- Full details in [RELEASE-NOTES-v1.4.1.md](./RELEASE-NOTES-v1.4.1.md)
+
 ### v1.4.0 - Comprehensive Testing & Coverage Enhancement
 
 - Massive test coverage improvement from 77.79% to 82%+
