@@ -199,6 +199,7 @@ async function initializePiOptimizations() {
     }
     return config;
   } catch (error) {
+    // Use console.error as fallback since logger may not be available during config init
     console.error('Failed to initialize Pi optimizations:', error);
     return config;
   }

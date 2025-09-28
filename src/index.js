@@ -10,6 +10,7 @@ let config;
 try {
   config = require('./config/config');
 } catch (error) {
+  // Use console.error as fallback since logger is not yet available
   console.error('Failed to load configuration:', error.message);
   process.exit(1);
 }

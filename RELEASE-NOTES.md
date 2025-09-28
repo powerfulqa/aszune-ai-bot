@@ -10,9 +10,12 @@ notes, see the [docs/](./docs/) directory.
 ### v1.4.1 - Code Quality Excellence & Architecture Refinement
 
 - **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
-- **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient, CacheManager, ResponseProcessor, ThrottlingService) 
-- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls (100% elimination)
-- **Code Duplication Elimination**: Systematic removal of duplicate patterns across services and validation
+- **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient,
+  CacheManager, ResponseProcessor, ThrottlingService)
+- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls
+  (100% elimination)
+- **Code Duplication Elimination**: Systematic removal of duplicate patterns across services and
+  validation
 - **Enhanced Input Validation**: Common validation helpers and improved sanitization logic
 - **Logging Infrastructure Enhancement**: Comprehensive logging improvements across all modules
 - **qlty Philosophy Adherence**: Following modern code quality principles for maintainability

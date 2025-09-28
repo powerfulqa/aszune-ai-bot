@@ -601,18 +601,24 @@ async function shutdown(signal) {
 
 ### Service Architecture Refactoring
 
-- **PerplexityService Decomposition**: Split monolithic service into focused, single-responsibility classes:
-  - **ApiClient** (`src/services/api-client.js`): Handles HTTP requests, headers, and payload building
-  - **CacheManager** (`src/services/cache-manager.js`): Manages response caching, cleanup, and configuration
-  - **ResponseProcessor** (`src/services/response-processor.js`): Processes and formats API responses
-  - **ThrottlingService** (`src/services/throttling-service.js`): Manages rate limiting and connection throttling
+- **PerplexityService Decomposition**: Split monolithic service into focused, single-responsibility
+  classes:
+  - **ApiClient** (`src/services/api-client.js`): Handles HTTP requests, headers, and payload
+    building
+  - **CacheManager** (`src/services/cache-manager.js`): Manages response caching, cleanup, and
+    configuration
+  - **ResponseProcessor** (`src/services/response-processor.js`): Processes and formats API
+    responses
+  - **ThrottlingService** (`src/services/throttling-service.js`): Manages rate limiting and
+    connection throttling
 - **Modular Design**: Enhanced separation of concerns for better maintainability and testing
 - **Service Composition**: PerplexityService now composes these focused services internally
 
 ### Code Quality Excellence
 
 - **ESLint Issue Reduction**: Massive improvement from 861 to 45 issues (94.8% reduction)
-- **Console Statement Elimination**: Replaced ALL console statements with proper logger calls in production code
+- **Console Statement Elimination**: Replaced ALL console statements with proper logger calls in
+  production code
   - `src/services/chat.js`: `console.log` → `logger.debug`
   - `src/utils/message-chunking/*`: `console.warn/error` → `logger.warn/error`
   - `src/utils/emoji.js`: `console.error` → `logger.error`
@@ -641,7 +647,8 @@ async function shutdown(signal) {
 ### Technical Improvements
 
 - **Method Organization**: Better encapsulation and organization of methods within classes
-- **Parameter Validation**: Simplified validation logic using proper JavaScript methods like `Number.isInteger()`
+- **Parameter Validation**: Simplified validation logic using proper JavaScript methods like
+  `Number.isInteger()`
 - **Error Handling**: Enhanced error handling with proper context and information
 - **Resource Management**: Improved resource management through service separation
 
