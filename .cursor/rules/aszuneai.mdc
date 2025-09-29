@@ -8,7 +8,7 @@ alwaysApply: true
 
 ## 🎯 Overview
 
-This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions.
+This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions. The project follows qlty code quality standards for unified linting, security scanning, and maintainability analysis.
 
 ## 📁 Codebase Architecture
 
@@ -21,6 +21,16 @@ src/
 └── utils/            # Utility functions and helpers
     ├── message-chunking/  # Advanced message splitting
     └── [various utilities]
+.qlty/                # Code quality configuration (qlty tooling)
+├── qlty.toml         # Main qlty configuration
+└── configs/          # Tool-specific configurations
+    ├── .eslintrc.json
+    ├── .prettierrc
+    ├── .markdownlint.json
+    └── .gitleaks.toml
+docs/                 # Enhanced documentation
+├── QLTY_INTEGRATION.md
+└── QLTY_IMPLEMENTATION_SUMMARY.md
 ```
 
 ### Key Components
@@ -31,6 +41,28 @@ src/
 - **Error Handler**: Comprehensive error handling system
 - **Message Chunker**: Intelligent message splitting with boundary detection
 - **Input Validator**: Content sanitization and validation
+
+### Standard Documentation Files (Professional Standards)
+The project includes industry-standard documentation:
+
+#### Security & Community
+- **`SECURITY.md`**: Security policy, vulnerability reporting procedures
+- **`CODE_OF_CONDUCT.md`**: Community guidelines (Contributor Covenant v2.1)
+- **`CONTRIBUTING.md`**: Comprehensive contribution guidelines and quality standards
+
+#### Project Management
+- **`CHANGELOG.md`**: Standardized changelog following Keep a Changelog format
+- **`README.md`**: Enhanced with code quality section and qlty integration info
+- **`docs/QLTY_INTEGRATION.md`**: Detailed qlty usage guide and best practices
+- **`docs/QLTY_IMPLEMENTATION_SUMMARY.md`**: Complete implementation overview
+
+#### Quality Configuration
+- **`.qlty/qlty.toml`**: Main qlty configuration with all enabled plugins
+- **`.qlty/configs/`**: Centralized tool-specific configurations
+  - `.eslintrc.json`: JavaScript linting rules
+  - `.prettierrc`: Code formatting preferences  
+  - `.markdownlint.json`: Documentation formatting rules
+  - `.gitleaks.toml`: Secret detection patterns
 
 ## 🚨 Critical Error Handling Patterns
 
@@ -138,7 +170,67 @@ const result = await service.method();
 expect(result).toContain('error message');
 ```
 
-## 🔧 Module Export Patterns
+## �️ Security & Quality Requirements (qlty Standards)
+
+### Mandatory Security Practices
+This project enforces strict security standards through automated scanning:
+
+#### Secret Detection (Gitleaks)
+- **Zero tolerance** for hardcoded secrets, tokens, or API keys
+- All sensitive data must use environment variables
+- Custom patterns detect Discord tokens and API keys
+- **Pre-commit verification required**: `npm run security:secrets`
+
+#### Vulnerability Management (Trivy)  
+- All high/critical vulnerabilities must be addressed
+- Dependency scanning covers all languages/technologies
+- Regular security audits via `npm run security:dependencies`
+
+#### Static Application Security Testing (Semgrep)
+- SAST analysis identifies security anti-patterns
+- Code injection vulnerabilities automatically detected
+- Security best practices enforced
+
+### Code Quality Thresholds
+Automated quality gates enforce these limits:
+
+#### Complexity Limits
+```toml
+[smells]
+file_complexity.threshold = 15      # Max complexity per file
+function_complexity.threshold = 10  # Max complexity per function  
+```
+
+#### Duplication Limits
+```toml  
+identical_code.threshold = 50       # Max identical lines
+similar_code.threshold = 80         # Max similarity percentage
+```
+
+#### Coverage Requirements
+- **Minimum test coverage**: 82% (currently 536+ tests)
+- **Branch coverage**: 60%+ for critical components
+- **Error scenario coverage**: All error paths tested
+
+### Quality Enforcement Tools
+1. **ESLint**: Strict JavaScript linting rules
+2. **Prettier**: Consistent code formatting
+3. **Markdownlint**: Documentation formatting standards
+4. **Gitleaks**: Secret detection in code and git history
+5. **Trivy**: Comprehensive vulnerability scanning
+6. **Semgrep**: Static security analysis
+7. **Complexity Analysis**: Cyclomatic complexity monitoring
+8. **Duplication Detection**: Code duplication tracking
+
+### Violation Handling
+When quality checks fail:
+1. **Auto-fix first**: Run `npm run quality:fix`
+2. **Manual fixes**: Address remaining issues individually
+3. **Security issues**: Must be resolved before merge
+4. **Complexity violations**: Refactor to meet thresholds
+5. **Test failures**: All tests must pass
+
+## �🔧 Module Export Patterns
 
 ### Backward Compatibility Requirements
 The codebase maintains strict backward compatibility:
@@ -291,18 +383,72 @@ Always test error scenarios:
 **Symptoms**: Jest shows exact values instead of matchers
 **Solution**: Use exact string matches instead of `expect.stringContaining()`
 
+## 🎯 qlty Code Quality Standards
+
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and maintainability analysis.
+
+### Quality Standards Enforced
+- **File Complexity**: Maximum 15 per file
+- **Function Complexity**: Maximum 10 per function  
+- **Code Duplication**: Maximum 50 lines identical code
+- **Security**: Zero tolerance for secrets in code
+- **Test Coverage**: Maintain 82%+ overall coverage
+
+### qlty Configuration
+Located in `.qlty/qlty.toml` with enabled plugins:
+- `eslint` - JavaScript linting
+- `prettier` - Code formatting  
+- `gitleaks` - Secret detection
+- `trivy` - Dependency vulnerability scanning
+- `semgrep` - Static application security testing (SAST)
+- `complexity` - Code complexity analysis
+- `duplication` - Duplicate code detection
+- `markdownlint` - Documentation formatting
+
+### Quality Workflow Commands
+```bash
+# Quick quality checks
+npm run quality:check        # Sample quality analysis
+npm run quality:fix          # Auto-fix formatting issues  
+npm run quality:metrics      # View code metrics
+npm run quality:smells       # Detect code smells
+
+# Security scanning
+npm run security:secrets     # Secret detection
+npm run security:dependencies # Vulnerability scan
+npm run security:all         # Complete security audit
+
+# Direct qlty commands (if qlty CLI installed)
+qlty check --all            # Comprehensive analysis
+qlty fmt --all              # Auto-format all files
+qlty smells --all           # Code smell detection
+qlty metrics --all          # Quality metrics
+```
+
+### CI/CD Integration
+The GitHub Actions workflow automatically runs:
+- qlty quality checks on every PR
+- Security scanning (gitleaks + trivy)
+- Quality report generation
+- Coverage reporting to qlty Cloud
+
 ## 📋 Code Quality Checklist
 
 Before committing changes:
 
 - [ ] All tests pass (`npm test`)
+- [ ] **qlty quality checks pass** (`npm run quality:check`)
+- [ ] **No security issues detected** (`npm run security:all`)
+- [ ] **Code complexity within limits** (file ≤15, function ≤10)
+- [ ] **No code duplication introduced** 
 - [ ] Error handling follows contract (throw, don't return)
 - [ ] Module exports maintain backward compatibility
 - [ ] Error messages sent as embeds, not plain text
 - [ ] No circular dependencies introduced
 - [ ] Proper cleanup in tests
 - [ ] Documentation updated if needed
-- [ ] No dead code or commented-out code
+- [ ] **No secrets committed** (verified by gitleaks)
+- [ ] **Markdown properly formatted** (markdownlint compliant)
 
 ## 🚀 Performance Considerations
 
@@ -337,6 +483,7 @@ Before committing changes:
 
 ## ⚡ Quick Reference Commands
 
+### Testing Commands
 ```bash
 # Run all tests
 npm test
@@ -349,7 +496,29 @@ npm run test:coverage
 
 # Run branch coverage tests
 npm run test:branch-coverage
+```
 
+### Quality & Security Commands  
+```bash
+# Quality checks and fixes
+npm run quality:check        # Quick quality sample
+npm run quality:fix          # Auto-fix issues
+npm run quality:metrics      # Code metrics
+npm run quality:smells       # Code smell detection
+
+# Security scanning
+npm run security:secrets     # Find secrets
+npm run security:dependencies # Vulnerability scan  
+npm run security:all         # Full security audit
+
+# Linting and formatting (legacy, prefer qlty)
+npm run lint                 # ESLint check
+npm run lint:fix             # ESLint fix
+npm run format               # Prettier format
+```
+
+### Application Commands
+```bash
 # Start development mode
 npm run dev
 
@@ -360,18 +529,25 @@ npm start
 ## 🎯 Success Metrics
 
 A successful implementation should achieve:
-- ✅ All tests passing (395+ tests)
-- ✅ 80%+ code coverage
+- ✅ All tests passing (536+ tests)
+- ✅ **82%+ code coverage** (current standard)
+- ✅ **qlty quality checks passing** (`npm run quality:check`)
+- ✅ **No security vulnerabilities** (`npm run security:all`)
+- ✅ **Code complexity within limits** (≤15 file, ≤10 function)
+- ✅ **No code duplication** (≤50 lines identical)
+- ✅ **No secrets in code** (gitleaks scan clean)
 - ✅ No circular dependencies
 - ✅ Proper error handling contracts
 - ✅ Backward compatibility maintained
 - ✅ Clean, maintainable code
 - ✅ Comprehensive error scenario coverage
+- ✅ **Documentation properly formatted** (markdownlint compliant)
 
 ---
 
 ## 📝 Notes for Future AI Agents
 
+### Critical Development Guidelines
 1. **Always read existing tests** before making changes to understand expected behavior
 2. **Test error scenarios extensively** - this codebase has complex error handling
 3. **Maintain backward compatibility** - breaking changes are not acceptable
@@ -380,4 +556,33 @@ A successful implementation should achieve:
 6. **Clean up after yourself** - reset mocks and global state in tests
 7. **Document your changes** - update relevant documentation files
 
-This codebase has been through extensive iterations and debugging. The patterns and solutions documented here represent hard-won knowledge from many failed attempts. Follow these guidelines to avoid repeating the same mistakes and ensure efficient, successful development.
+### qlty-Specific Guidelines
+8. **Run quality checks before committing** - `npm run quality:check` must pass
+9. **Fix formatting automatically** - Use `npm run quality:fix` before manual fixes
+10. **Monitor code complexity** - Keep functions under 10 complexity, files under 15
+11. **Prevent code duplication** - Check with `npm run quality:smells`
+12. **Security first** - Always run `npm run security:all` before commits
+13. **No secrets in code** - Use environment variables, verify with gitleaks
+14. **Format documentation** - Ensure markdownlint compliance for all .md files
+15. **Follow qlty configuration** - Don't modify `.qlty/qlty.toml` without good reason
+16. **Use standard files** - Follow SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md standards
+
+### Quality Integration Workflow
+```bash
+# Recommended pre-commit workflow
+npm test                    # Ensure tests pass
+npm run quality:check      # Check code quality  
+npm run security:all       # Security scan
+npm run quality:fix        # Auto-fix issues
+git add . && git commit    # Commit changes
+```
+
+### Project Standards Documentation
+- **qlty Integration Guide**: `docs/QLTY_INTEGRATION.md`  
+- **Implementation Summary**: `docs/QLTY_IMPLEMENTATION_SUMMARY.md`
+- **Security Policy**: `SECURITY.md`
+- **Contribution Guidelines**: `CONTRIBUTING.md`
+- **Code of Conduct**: `CODE_OF_CONDUCT.md`
+- **Changelog**: `CHANGELOG.md` (follows Keep a Changelog format)
+
+This codebase has been through extensive iterations and debugging. The patterns and solutions documented here represent hard-won knowledge from many failed attempts. The qlty integration adds professional-grade quality standards that must be maintained. Follow these guidelines to avoid repeating the same mistakes and ensure efficient, successful development that meets modern code quality standards.

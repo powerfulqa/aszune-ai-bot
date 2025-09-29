@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.4.1)
+# Aszune AI Bot (v1.5.0)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)

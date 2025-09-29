@@ -1,12 +1,16 @@
 {
   "name": "aszuneai",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
+    "test:critical": "jest --config=jest.critical-coverage.config.js --coverage",
+    "test:critical:ci": "jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci",
+    "coverage:critical": "jest --config=jest.critical-coverage.config.js --coverage --coverageReporters=lcov --coverageReporters=text-summary",
+    "precommit": "npm run test:critical:ci",
     "security": "npm audit --audit-level=high",
     "format:md": "prettier --write '**/*.md'",
     "test:branch-coverage:index": "jest --config=index-branch-coverage.jest.config.js __tests__/unit/index-branch-coverage.test.js",

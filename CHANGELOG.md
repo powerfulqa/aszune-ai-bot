@@ -7,17 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-09-29
+
 ### Added
-- qlty code quality tooling integration
-- Comprehensive security scanning with gitleaks and semgrep  
-- Code complexity and duplication monitoring
+- qlty code quality tooling integration with 8 unified plugins
+- Comprehensive security scanning with Gitleaks, Trivy, and Semgrep
+- Code complexity and duplication monitoring with automated thresholds
 - Standard project documentation (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
 - Markdownlint configuration for consistent documentation formatting
 - Unified code quality configuration in `.qlty/qlty.toml`
+- 7 new npm scripts for quality workflow automation
+- Enhanced CI/CD pipeline with automated quality gates
+- Professional documentation standards and contribution guidelines
 
 ### Changed
-- Moved linting configurations to `.qlty/configs/` directory
+- Moved linting configurations to `.qlty/configs/` directory for centralized management
 - Enhanced .gitignore with qlty-specific exclusions
+- Updated all project documentation to reflect quality standards
+- Improved development workflow with integrated quality tooling
+
+### Security
+- Multi-layered security scanning preventing secret commits
+- Automated vulnerability detection in dependencies
+- Static application security testing (SAST) integration
 
 ## [1.4.1] - 2025-09-28
 
@@ -189,7 +201,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JavaScript `Map` objects for conversation history and rate limiting
 - Enhanced error handling and environment variable validation
 
-[Unreleased]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.6...v1.4.0
 [1.3.6]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.5...v1.3.6

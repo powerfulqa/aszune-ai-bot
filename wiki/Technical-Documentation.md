@@ -1,6 +1,8 @@
 # Technical Documentation
 
-This page provides technical details about the architecture, code structure, and implementation of
+This page provides technical details about the architecture, code │   ├── v1.4.0.md                 # Version 1.4.0 release notes
+│   ├── v1.4.1.md                 # Version 1.4.1 release notes
+│   └── v1.5.0.md                 # Version 1.5.0 release notes (qlty integration)ructure, and implementation of
 the Aszune AI Bot.
 
 ## Architecture Overview
@@ -77,6 +79,13 @@ aszune-ai-bot/
 │       ├── debouncer.js            # Message debouncing
 │       ├── lazy-loader.js          # Lazy loading utilities
 │       └── [other utilities]       # Additional utility modules
+├── .qlty/                          # Code quality configuration (qlty tooling)
+│   ├── qlty.toml                  # Main qlty configuration with all plugins
+│   └── configs/                   # Tool-specific configurations
+│       ├── .eslintrc.json         # JavaScript linting rules
+│       ├── .prettierrc            # Code formatting preferences
+│       ├── .markdownlint.json     # Documentation formatting rules
+│       └── .gitleaks.toml         # Secret detection patterns
 ├── data/                           # Persistent data storage
 │   ├── question_cache.json        # Response cache
 │   └── user_stats.json            # User statistics
@@ -84,12 +93,14 @@ aszune-ai-bot/
 │   ├── test-chunking.js           # Test script for message chunking
 │   ├── test-chunking.bat          # Windows batch file to run chunking test
 │   └── test-chunking.sh           # Unix shell script to run chunking test
-├── docs/                          # Documentation and version-specific release notes
+├── docs/                          # Enhanced documentation
 │   ├── README.md                  # Index of available release notes
 │   ├── v1.3.0.md                 # Version 1.3.0 release notes
 │   ├── v1.3.1.md                 # Version 1.3.1 release notes
 │   ├── v1.3.2.md                 # Version 1.3.2 release notes
-│   └── v1.4.0.md                 # Version 1.4.0 release notes
+│   ├── v1.4.0.md                 # Version 1.4.0 release notes
+│   ├── QLTY_INTEGRATION.md        # Comprehensive qlty usage guide
+│   └── QLTY_IMPLEMENTATION_SUMMARY.md # qlty integration overview
 ├── wiki/                          # Comprehensive documentation
 ├── __tests__/                     # Test suites
 │   ├── integration/               # Integration tests
@@ -97,7 +108,11 @@ aszune-ai-bot/
 │   └── utils/                     # Test utilities
 ├── __mocks__/                     # Test mocks
 ├── coverage/                      # Code coverage reports
-├── package.json                   # Project metadata
+├── SECURITY.md                    # Security policy and vulnerability reporting
+├── CONTRIBUTING.md                # Enhanced contribution guidelines with quality standards
+├── CODE_OF_CONDUCT.md             # Community guidelines (Contributor Covenant v2.1)
+├── CHANGELOG.md                   # Standardized project changelog
+├── package.json                   # Enhanced project metadata with qlty scripts
 ├── package-lock.json              # Dependency lock file
 ├── ecosystem.config.js            # PM2 deployment config
 ├── jest.config.js                 # Jest test configuration
@@ -105,6 +120,59 @@ aszune-ai-bot/
 ├── RELEASE-NOTES.md               # Master release notes
 └── .env                           # Environment secrets (not committed)
 ```
+
+## Code Quality & Security Systems
+
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and maintainability analysis.
+
+### Quality Tools Integration
+
+1. **ESLint** - JavaScript code linting with strict rules
+2. **Prettier** - Consistent code formatting for JS, JSON, Markdown
+3. **Markdownlint** - Documentation formatting standards
+4. **Gitleaks** - Secret detection in code and git history
+5. **Trivy** - Comprehensive dependency vulnerability scanning
+6. **Semgrep** - Static Application Security Testing (SAST)
+7. **Complexity Analysis** - Cyclomatic complexity monitoring
+8. **Duplication Detection** - Code duplication tracking
+
+### Quality Standards
+
+- **File Complexity**: Maximum 15 per file
+- **Function Complexity**: Maximum 10 per function
+- **Code Duplication**: Maximum 50 lines identical code
+- **Security**: Zero tolerance for secrets in code
+- **Test Coverage**: 82%+ overall coverage (536+ tests)
+- **Documentation**: Markdownlint compliant formatting
+
+### Quality Workflow Commands
+
+```bash
+# Quality checks and automation
+npm run quality:check        # Quick quality sample
+npm run quality:fix          # Auto-fix formatting issues
+npm run quality:metrics      # View code metrics
+npm run quality:smells       # Detect code smells
+
+# Security scanning
+npm run security:secrets     # Secret detection with gitleaks
+npm run security:dependencies # Vulnerability scanning with trivy
+npm run security:all         # Complete security audit
+
+# Legacy commands (still supported)
+npm run lint                 # ESLint check
+npm run lint:fix             # ESLint fix
+npm run format               # Prettier format
+```
+
+### CI/CD Integration
+
+The GitHub Actions workflow automatically:
+- Installs qlty CLI
+- Runs quality checks on every PR
+- Performs security scanning (gitleaks + trivy)
+- Generates quality reports and uploads artifacts
+- Maintains coverage reporting to qlty Cloud
 
 ## Response Caching System
 
@@ -146,7 +214,7 @@ All cache files are created with secure permissions:
 This ensures that only the bot process can modify cached data while still allowing the files to be
 read by monitoring tools.
 
-## Enhanced Architecture (v1.4.0+)
+## Enhanced Architecture (v1.4.0+) & Quality Systems (v1.5.0+)
 
 ### New Utility Modules
 
@@ -596,6 +664,34 @@ async function shutdown(signal) {
 - Webhook support for external integrations
 - Support for more complex conversation flows
 - Enhanced error handling with automatic recovery
+
+## Recent Updates
+
+## v1.5.0 qlty Code Quality Integration & Professional Standards (2025-09-29)
+
+### Complete Quality Transformation
+- **qlty Integration**: Unified code quality tooling with 8 specialized plugins
+- **Multi-layered Security**: Comprehensive scanning (Gitleaks, Trivy, Semgrep)
+- **Professional Documentation**: Industry-standard files (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
+- **Quality Automation**: 7 new npm scripts for streamlined workflow
+- **Code Standards**: Complexity limits (≤15 file, ≤10 function), zero duplication
+- **CI/CD Enhancement**: Automated quality gates and security scanning
+- **Documentation Standards**: Markdownlint for consistent formatting
+- **Centralized Configuration**: All quality settings in `.qlty/qlty.toml`
+
+### Quality Workflow
+```bash
+npm run quality:check      # Comprehensive analysis
+npm run quality:fix        # Auto-fix formatting issues
+npm run security:all       # Complete security scan
+npm run quality:metrics    # Detailed quality metrics
+```
+
+### Security Enhancement
+- **Zero Secrets**: Gitleaks prevents accidental credential commits
+- **Vulnerability Scanning**: Trivy monitors dependencies
+- **Static Analysis**: Semgrep detects code vulnerabilities
+- **Automated Prevention**: CI/CD integration blocks insecure code
 
 ## v1.4.1 Code Quality Excellence & Architecture Refinement (2025-09-28)
 

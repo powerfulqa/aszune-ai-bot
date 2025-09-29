@@ -13,6 +13,13 @@
 - [Contributing](Contributing)
 - [Release Notes](../docs/README.md)
 
+### Code Quality
+
+- [qlty Integration Guide](../docs/QLTY_INTEGRATION.md)
+- [Implementation Summary](../docs/QLTY_IMPLEMENTATION_SUMMARY.md)
+- [Contributing Guidelines](../CONTRIBUTING.md)
+- [Security Policy](../SECURITY.md)
+
 ### External Links
 
 - [GitHub Repository](https://github.com/chrishaycock/aszune-ai-bot)
