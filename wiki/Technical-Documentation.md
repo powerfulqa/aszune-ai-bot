@@ -1,8 +1,7 @@
 # Technical Documentation
 
-This page provides technical details about the architecture, code │ ├── v1.4.0.md # Version 1.4.0
-release notes │ ├── v1.4.1.md # Version 1.4.1 release notes │ └── v1.5.0.md # Version 1.5.0 release
-notes (qlty integration)ructure, and implementation of the Aszune AI Bot.
+This page provides technical details about the architecture, code structure, and implementation of
+the Aszune AI Bot.
 
 ## Architecture Overview
 

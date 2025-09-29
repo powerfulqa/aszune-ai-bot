@@ -116,7 +116,7 @@ class ErrorHandler {
   }
 
   static _categorizeValidationError(message) {
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = message ? message.toLowerCase() : '';
     if (lowerMessage.includes('validation')) {
       return ERROR_TYPES.VALIDATION_ERROR;
     }
