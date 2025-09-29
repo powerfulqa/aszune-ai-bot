@@ -1,5 +1,8 @@
 name: Aszune AI Bot CI/CD
 
+# Updated CI workflow to use working npm scripts instead of problematic qlty CLI commands
+# This ensures reliable quality checks while maintaining all functionality
+
 on:
   push:
     branches:
