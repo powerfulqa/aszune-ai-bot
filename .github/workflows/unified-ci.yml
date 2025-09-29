@@ -32,20 +32,12 @@ jobs:
       - name: Clear Jest cache
         run: npx jest --clearCache
 
-      - name: Install qlty CLI
-        run: |
-          curl -fsSL https://qlty.sh | bash
-          echo "$HOME/.qlty/bin" >> $GITHUB_PATH
+      - name: Run quality checks
+        run: npm run quality:check
+        continue-on-error: false
 
-      - name: Run qlty quality checks
-        run: |
-          qlty check --sample=20
-        continue-on-error: true
-
-      - name: Run qlty security scans
-        run: |
-          qlty check --plugin=gitleaks
-          qlty check --plugin=trivy
+      - name: Run security scans
+        run: npm run security:dependencies
         continue-on-error: true
 
       - name: Security audit
@@ -59,28 +51,9 @@ jobs:
           JEST_JUNIT_OUTPUT_DIR: ./test-results/
           JEST_JUNIT_OUTPUT_NAME: junit.xml
         
-      - name: Upload coverage to QLTY
-        uses: qltysh/qlty-action/coverage@v1
+      - name: Run additional quality metrics
+        run: npm run quality:metrics
         continue-on-error: true
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        with:
-          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-          files: coverage/lcov.info
-
-      - name: Generate qlty quality report
-        run: |
-          qlty metrics --format json > quality-metrics.json
-          qlty smells --format json > code-smells.json
-        continue-on-error: true
-
-      - name: Upload quality artifacts
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: quality-reports
-          path: |
-            quality-metrics.json
-            code-smells.json
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
