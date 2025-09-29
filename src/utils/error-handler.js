@@ -116,7 +116,8 @@ class ErrorHandler {
   }
 
   static _categorizeValidationError(message) {
-    if (message.includes('validation') || message.includes('invalid')) {
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('validation')) {
       return ERROR_TYPES.VALIDATION_ERROR;
     }
     return null;
@@ -159,14 +160,25 @@ class ErrorHandler {
     const errorType = this.categorizeError(error);
     const userMessage = this.getUserFriendlyMessage(errorType, error);
 
+    // Handle null/undefined errors safely
+    const safeError = error || { message: 'Unknown error', stack: null };
+    
+    // Safely access potentially problematic properties
+    let stack = null;
+    try {
+      stack = safeError.stack;
+    } catch (stackError) {
+      // Ignore getter errors for stack property
+    }
+    
     // Enhanced error logging with structured data
     const errorLog = {
       type: errorType,
       context: context,
-      message: error.message || 'Unknown error',
-      stack: error.stack,
-      code: error.code,
-      statusCode: error.statusCode || error.status,
+      message: safeError.message || 'Unknown error',
+      stack: stack,
+      code: safeError.code,
+      statusCode: safeError.statusCode || safeError.status,
       timestamp: new Date().toISOString(),
       ...additionalData,
     };

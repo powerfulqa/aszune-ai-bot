@@ -116,7 +116,7 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
     });
 
     it('should truncate long values', () => {
-      const error = new Error('Validation failed');
+      const error = new Error('Invalid data format');
       const longValue = 'a'.repeat(200);
       const result = ErrorHandler.handleValidationError(error, 'field', longValue);
 

@@ -261,7 +261,7 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
       
       expect(ErrorHandler.handleFileError).toHaveBeenCalledWith(
         error,
-        'saving user stats during shutdown',
+        'saving user stats',
         'user_stats.json'
       );
       expect(logger.error).toHaveBeenCalled();
@@ -449,6 +449,9 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
   describe('Test Environment Handling', () => {
     it('should not load stats in test environment', () => {
       process.env.NODE_ENV = 'test';
+      
+      // Clear the mock to reset call count from beforeEach setup
+      dataStorage.loadUserStats.mockClear();
       
       new ConversationManager();
       
