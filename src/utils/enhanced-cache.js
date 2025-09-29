@@ -221,12 +221,11 @@ class EnhancedCache {
       this.metrics.sets++;
       return true;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache set operation', {
+      ErrorHandler.handleError(error, 'cache set operation', {
         key,
         valueType: typeof value,
         options,
       });
-      ErrorHandler.logError(errorResponse, { operation: 'cacheSet', key, options });
       return false;
     }
   }
@@ -345,7 +344,7 @@ class EnhancedCache {
 
     return {
       stats,
-      entries: entries.toSorted((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
+      entries: entries.sort((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
     };
   }
 
