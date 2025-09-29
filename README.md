@@ -60,7 +60,7 @@ Raspberry Pi devices from Pi 3 to Pi 5.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
-- 🧪 **Comprehensive Testing:** 536 automated tests covering all key functionality with 82%+ code
+- 🧪 **Comprehensive Testing:** 853 automated tests covering all key functionality with 79%+ code
   coverage.
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
   comprehensive error recovery.
@@ -284,7 +284,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage**: 82%+ overall coverage with 536 automated tests
+- **Test Coverage**: 80.32% overall coverage with 853 automated tests
 - **Code Complexity**: Max 15 complexity per file, 10 per function
 - **Security**: Zero tolerance for secrets in code, regular vulnerability scanning
 - **Documentation**: Comprehensive documentation with consistent formatting
@@ -376,7 +376,7 @@ implemented.
 For more detailed information about the testing strategy, see the
 [Testing Guide](./wiki/Testing-Guide.md) and [**tests**/README.md](./__tests__/README.md).
 
-Current test coverage: 82%+ overall with 536 tests.
+Current test coverage: 79%+ overall with 853 tests.
 
 ---
 
