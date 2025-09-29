@@ -25,6 +25,9 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   - [Running with PM2 (for Production)](#running-with-pm2-for-production)
 - [Bot Commands](#bot-commands)
 - [Project Structure](#project-structure)
+- [Code Quality](#code-quality)
+  - [Quality Standards](#quality-standards)
+  - [Running Quality Checks](#running-quality-checks)
 - [Testing & Coverage](#testing--coverage)
   - [Branch Coverage Testing](#branch-coverage-testing)
 - [Troubleshooting](#troubleshooting)
@@ -258,12 +261,69 @@ aszune-ai-bot/
 │   └── utils/                     # Test utilities
 ├── __mocks__/                     # Test mocks
 ├── coverage/                      # Code coverage reports
+├── .qlty/                         # Code quality configuration
+│   ├── qlty.toml                 # Main qlty configuration
+│   └── configs/                   # Tool-specific configurations
 ├── package.json                   # Project metadata
 ├── ecosystem.config.js            # PM2 deployment config
 ├── jest.config.js                 # Jest test configuration
 ├── jest.setup.js                  # Jest setup file
+├── SECURITY.md                    # Security policy and guidelines
+├── CONTRIBUTING.md                # Contribution guidelines
+├── CODE_OF_CONDUCT.md             # Community code of conduct
+├── CHANGELOG.md                   # Project changelog
 └── .env                           # Environment secrets (not committed)
 ```
+
+---
+
+## Code Quality
+
+This project maintains high code quality standards using [qlty](https://qlty.sh/) for unified linting, formatting, security scanning, and maintainability analysis.
+
+### Quality Standards
+
+- **Test Coverage**: 82%+ overall coverage with 536 automated tests
+- **Code Complexity**: Max 15 complexity per file, 10 per function
+- **Security**: Zero tolerance for secrets in code, regular vulnerability scanning
+- **Documentation**: Comprehensive documentation with consistent formatting
+- **Linting**: Strict ESLint rules with automatic fixing
+- **Formatting**: Consistent code style with Prettier
+
+### Running Quality Checks
+
+```bash
+# Quick quality check (sample of issues)
+npm run quality:check
+
+# Auto-fix formatting and linting issues
+npm run quality:fix
+
+# View code metrics and complexity
+npm run quality:metrics
+
+# Detect code smells and duplication
+npm run quality:smells
+
+# Security scanning
+npm run security:all
+
+# Individual security tools
+npm run security:secrets      # Secret detection
+npm run security:dependencies # Vulnerability scanning
+```
+
+### Integrated Tools
+
+- **ESLint**: JavaScript linting with strict rules
+- **Prettier**: Code formatting for JavaScript, JSON, and Markdown  
+- **Gitleaks**: Secret detection in code and git history
+- **Trivy**: Dependency vulnerability scanning
+- **Semgrep**: Static application security testing (SAST)
+- **Complexity Analysis**: Cyclomatic and cognitive complexity monitoring
+- **Duplication Detection**: Identifies and tracks code duplication
+
+For detailed information, see [docs/QLTY_INTEGRATION.md](docs/QLTY_INTEGRATION.md).
 
 ---
 

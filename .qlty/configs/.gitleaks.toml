@@ -1,0 +1,36 @@
+# Gitleaks configuration for secret detection
+title = "Gitleaks configuration for aszune-ai-bot"
+
+[extend]
+useDefault = true
+
+[[rules]]
+description = "Discord Bot Token"
+id = "discord-bot-token"
+regex = '''[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}'''
+keywords = [
+    "discord",
+    "bot",
+    "token",
+]
+
+[[rules]]
+description = "API Key"
+id = "api-key"
+regex = '''(?i)api[_-]?key[_-]?[=:\s]*['""]?([a-z0-9]{32,})'''
+keywords = [
+    "api",
+    "key",
+    "perplexity",
+]
+
+[allowlist]
+description = "Allowlist for test files and documentation"
+paths = [
+    '''**/__tests__/**''',
+    '''**/__mocks__/**''',
+    '''**/docs/**''',
+    '''**/wiki/**''',
+    '''README.md''',
+    '''RELEASE-NOTES*.md''',
+]

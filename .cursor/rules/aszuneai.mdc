@@ -1,0 +1,383 @@
+---
+description: AI Agent Instructions for Aszune AI Bot Codebase - Comprehensive guidance for development patterns, testing, error handling, and best practices
+globs:
+alwaysApply: true
+---
+
+# AI Agent Instructions for Aszune AI Bot Codebase
+
+## 🎯 Overview
+
+This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions.
+
+## 📁 Codebase Architecture
+
+### Core Structure
+```
+src/
+├── commands/          # Command handlers (slash + text commands)
+├── config/           # Configuration management
+├── services/         # External API clients and services
+└── utils/            # Utility functions and helpers
+    ├── message-chunking/  # Advanced message splitting
+    └── [various utilities]
+```
+
+### Key Components
+- **Discord Interface**: Handles Discord API interactions
+- **Command Handler**: Processes both slash commands and text commands
+- **Perplexity API Client**: Manages AI API communication with secure caching
+- **Conversation Manager**: Class-based conversation tracking
+- **Error Handler**: Comprehensive error handling system
+- **Message Chunker**: Intelligent message splitting with boundary detection
+- **Input Validator**: Content sanitization and validation
+
+## 🚨 Critical Error Handling Patterns
+
+### ⚠️ MAJOR ISSUE: Error Handling Contract Violations
+
+**Problem**: The codebase has strict error handling contracts that MUST be maintained:
+- Services should **THROW** errors, not return error strings
+- Tests expect **THROWN** exceptions, not returned error messages
+- Error messages to users should be sent as **Discord embeds**, not plain text
+
+**Common Mistakes**:
+```javascript
+// ❌ WRONG - Returns error string
+catch (error) {
+  return "Error occurred: " + error.message;
+}
+
+// ✅ CORRECT - Throws error
+catch (error) {
+  throw error;
+}
+```
+
+**Test Pattern**:
+```javascript
+// ❌ WRONG - Expects returned string
+expect(result).toContain('error message');
+
+// ✅ CORRECT - Expects thrown exception
+await expect(service.method()).rejects.toThrow('error message');
+```
+
+### Error Handler Usage
+```javascript
+const errorResponse = ErrorHandler.handleError(error, 'context', additionalData);
+// errorResponse.message contains user-friendly message
+// errorResponse.type contains error category
+```
+
+## 🧪 Testing Patterns & Common Issues
+
+### Mock Structure Requirements
+The codebase uses complex mocking patterns that must be followed exactly:
+
+#### Discord.js Mocking
+```javascript
+// Always mock discord.js early in test files
+jest.mock('discord.js', () => {
+  const mockClient = {
+    on: jest.fn().mockReturnThis(),
+    once: jest.fn().mockImplementation((event, handler) => {
+      if (event === 'ready') handler();
+      return mockClient;
+    }),
+    login: jest.fn().mockResolvedValue('Logged in'),
+    // ... other methods
+  };
+  
+  return {
+    Client: jest.fn(() => mockClient),
+    GatewayIntentBits: { /* ... */ },
+    REST: jest.fn(() => ({ /* ... */ })),
+  };
+});
+```
+
+#### Service Mocking
+```javascript
+// Mock services with proper method signatures
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+  // Always include all methods used in tests
+}));
+```
+
+### Test Assertion Patterns
+
+#### Embed Format Testing
+```javascript
+// ✅ CORRECT - Test embed structure
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [{
+    color: "#5865F2",  // Use exact color values
+    description: "Exact error message text",  // Use exact strings
+    footer: { text: 'Aszai Bot' }
+  }]
+});
+
+// ❌ WRONG - Using matchers that don't work reliably
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [expect.objectContaining({
+    description: expect.stringContaining('partial text'),
+    color: expect.any(Number)
+  })]
+});
+```
+
+#### Error Testing
+```javascript
+// ✅ CORRECT - Test for thrown errors
+await expect(service.method()).rejects.toThrow('Expected error message');
+
+// ❌ WRONG - Test for returned error strings
+const result = await service.method();
+expect(result).toContain('error message');
+```
+
+## 🔧 Module Export Patterns
+
+### Backward Compatibility Requirements
+The codebase maintains strict backward compatibility:
+
+```javascript
+// ✅ CORRECT - Maintains all export patterns
+module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;
+
+// ❌ WRONG - Breaking change
+module.exports = {
+  handleChatMessage,
+  default: handleChatMessage,
+};
+```
+
+## 📝 Command Handling Patterns
+
+### Dual Command Support
+The bot supports both slash commands and text commands:
+
+```javascript
+// Text command handling
+const mockInteraction = {
+  user: message.author,
+  channel: message.channel,
+  content: message.content,
+  reply: (content) => message.reply(content),
+  deferReply: async () => message.channel.sendTyping(),
+  editReply: (content) => message.reply(content),
+};
+```
+
+### Command Extraction
+```javascript
+// Separate methods for different command types
+_extractTextFromSlashCommand(interaction) {
+  return interaction.options.getString('text');
+}
+
+_extractTextFromTextCommand(interaction) {
+  const match = interaction.content.match(/^!command\s+(.+)/i);
+  return match ? match[1] : '';
+}
+```
+
+## 🛠️ Common Development Issues & Solutions
+
+### 1. Circular Dependency Issues
+**Problem**: Config access in module-level code causes circular dependencies
+**Solution**: Move config access inside functions/methods
+
+```javascript
+// ❌ WRONG - Module level config access
+const config = require('../config/config');
+const someValue = config.SOME_VALUE;
+
+// ✅ CORRECT - Function level config access
+function someFunction() {
+  const config = require('../config/config');
+  return config.SOME_VALUE;
+}
+```
+
+### 2. Test Mock Conflicts
+**Problem**: Multiple mock files with same names cause conflicts
+**Solution**: Use unique naming and proper mock organization
+
+```javascript
+// Use descriptive mock names
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+}));
+```
+
+### 3. Error Message Format Inconsistency
+**Problem**: Tests expect different error message formats
+**Solution**: Always use exact string matches in tests
+
+```javascript
+// Use exact error messages from ErrorHandler
+const expectedMessage = "The service is temporarily unavailable. Please try again later.";
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [{ description: expectedMessage }]
+});
+```
+
+### 4. Memory Leak Prevention
+**Problem**: Conversation history and caches can grow indefinitely
+**Solution**: Implement proper cleanup and pruning
+
+```javascript
+// Always clean up in tests
+afterEach(() => {
+  conversationManager.clearAll();
+  // Reset other global state
+});
+```
+
+## 🎯 Testing Best Practices
+
+### 1. Test File Organization
+- Unit tests in `__tests__/unit/`
+- Integration tests in `__tests__/integration/`
+- Use descriptive test names
+- Group related tests in describe blocks
+
+### 2. Mock Management
+```javascript
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Reset any global state
+});
+
+afterEach(() => {
+  // Clean up after each test
+});
+```
+
+### 3. Error Scenario Testing
+Always test error scenarios:
+- API failures
+- Network timeouts
+- Invalid responses
+- Rate limiting
+- Memory errors
+
+### 4. Coverage Requirements
+- Maintain 80%+ statement coverage
+- Test all error paths
+- Include edge cases
+- Test both success and failure scenarios
+
+## 🔍 Debugging Common Issues
+
+### 1. Test Failures Due to Error Handling Changes
+**Symptoms**: Tests fail with "Expected string, got thrown error"
+**Solution**: Update tests to expect thrown errors instead of returned strings
+
+### 2. Mock Not Working
+**Symptoms**: Tests fail with "Cannot read property of undefined"
+**Solution**: Ensure mocks are defined before imports and include all required methods
+
+### 3. Circular Dependency Errors
+**Symptoms**: "Cannot access before initialization" errors
+**Solution**: Move config/import access inside functions
+
+### 4. Embed Format Test Failures
+**Symptoms**: Jest shows exact values instead of matchers
+**Solution**: Use exact string matches instead of `expect.stringContaining()`
+
+## 📋 Code Quality Checklist
+
+Before committing changes:
+
+- [ ] All tests pass (`npm test`)
+- [ ] Error handling follows contract (throw, don't return)
+- [ ] Module exports maintain backward compatibility
+- [ ] Error messages sent as embeds, not plain text
+- [ ] No circular dependencies introduced
+- [ ] Proper cleanup in tests
+- [ ] Documentation updated if needed
+- [ ] No dead code or commented-out code
+
+## 🚀 Performance Considerations
+
+### Memory Management
+- Use `Map` instead of plain objects for better performance
+- Implement proper cleanup for conversation history
+- Monitor memory usage in production
+
+### API Optimization
+- Implement proper caching strategies
+- Use connection throttling
+- Handle rate limiting gracefully
+
+### Raspberry Pi Optimizations
+- Detect Pi hardware and apply optimizations
+- Use lazy loading for heavy dependencies
+- Implement message debouncing
+
+## 📚 Key Files to Understand
+
+### Critical Files
+- `src/services/perplexity-secure.js` - Main AI service
+- `src/services/chat.js` - Chat message handling
+- `src/commands/index.js` - Command processing
+- `src/utils/error-handler.js` - Error handling system
+- `src/config/config.js` - Configuration management
+
+### Test Files
+- `__tests__/unit/services/perplexity-secure-*.test.js` - Service tests
+- `__tests__/unit/chat-service-advanced.test.js` - Chat service tests
+- `__tests__/integration/error.test.js` - Error handling tests
+
+## ⚡ Quick Reference Commands
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test __tests__/unit/specific-test.test.js
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run branch coverage tests
+npm run test:branch-coverage
+
+# Start development mode
+npm run dev
+
+# Start production mode
+npm start
+```
+
+## 🎯 Success Metrics
+
+A successful implementation should achieve:
+- ✅ All tests passing (395+ tests)
+- ✅ 80%+ code coverage
+- ✅ No circular dependencies
+- ✅ Proper error handling contracts
+- ✅ Backward compatibility maintained
+- ✅ Clean, maintainable code
+- ✅ Comprehensive error scenario coverage
+
+---
+
+## 📝 Notes for Future AI Agents
+
+1. **Always read existing tests** before making changes to understand expected behavior
+2. **Test error scenarios extensively** - this codebase has complex error handling
+3. **Maintain backward compatibility** - breaking changes are not acceptable
+4. **Use exact string matches** in tests rather than matchers for reliability
+5. **Follow the established patterns** - don't reinvent the wheel
+6. **Clean up after yourself** - reset mocks and global state in tests
+7. **Document your changes** - update relevant documentation files
+
+This codebase has been through extensive iterations and debugging. The patterns and solutions documented here represent hard-won knowledge from many failed attempts. Follow these guidelines to avoid repeating the same mistakes and ensure efficient, successful development.

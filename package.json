@@ -16,12 +16,35 @@
     "serve": "node src/index.js",
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "lint": "eslint src __tests__",
-    "lint:fix": "eslint src __tests__ --fix"
+    "lint:fix": "eslint src __tests__ --fix",
+    "quality:check": "qlty check --sample=10",
+    "quality:fix": "qlty fmt --all",
+    "quality:metrics": "qlty metrics --all",
+    "quality:smells": "qlty smells --all",
+    "security:secrets": "qlty check --plugin=gitleaks",
+    "security:dependencies": "qlty check --plugin=trivy",
+    "security:all": "npm run security && npm run security:secrets && npm run security:dependencies"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "discord",
+    "bot",
+    "ai",
+    "gaming",
+    "perplexity",
+    "nodejs",
+    "raspberry-pi"
+  ],
+  "author": "Chris Haycock <chrishaycock@users.noreply.github.com>",
+  "license": "MIT",
+  "description": "A Discord bot specialized in gaming lore, game logic, guides, and advice using the Perplexity API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrishaycock/aszune-ai-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chrishaycock/aszune-ai-bot/issues"
+  },
+  "homepage": "https://github.com/chrishaycock/aszune-ai-bot#readme",
   "dependencies": {
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",

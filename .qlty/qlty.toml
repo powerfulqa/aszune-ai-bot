@@ -1,0 +1,65 @@
+config_version = "0"
+
+[[source]]
+name = "default"
+default = true
+
+# Core code quality plugins
+[plugins.enabled]
+eslint = "latest"
+prettier = "latest"
+gitleaks = "latest"
+trivy = "latest"
+semgrep = "latest"
+complexity = "latest"
+duplication = "latest"
+markdownlint = "latest"
+
+# JavaScript/Node.js specific settings
+[language.javascript]
+enabled = true
+globs = ["**/*.js", "**/*.mjs", "**/*.cjs"]
+
+[language.json]
+enabled = true
+globs = ["**/*.json"]
+
+[language.markdown]
+enabled = true
+globs = ["**/*.md"]
+
+[language.yaml]
+enabled = true
+globs = ["**/*.yml", "**/*.yaml"]
+
+# Exclude patterns for files we don't want to analyze
+exclude_patterns = [
+  "node_modules/**",
+  "coverage/**",
+  "logs/**",
+  "data/**",
+  "test-results/**",
+  "__mocks__/**",
+  "*.log",
+  ".env*"
+]
+
+# Code smell detection configuration
+[smells]
+identical_code.enabled = true
+identical_code.threshold = 50
+similar_code.enabled = true
+similar_code.threshold = 80
+file_complexity.enabled = true
+file_complexity.threshold = 15
+function_complexity.enabled = true
+function_complexity.threshold = 10
+
+# Test patterns
+test_patterns = [
+  "**/__tests__/**",
+  "**/*.test.js",
+  "**/*.spec.js",
+  "**/jest.*.js",
+  "**/test/**"
+]
