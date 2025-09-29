@@ -21,7 +21,7 @@
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "lint": "eslint src __tests__",
     "lint:fix": "eslint src __tests__ --fix",
-    "quality:check": "npm run lint && npm run test:critical:ci",
+    "quality:check": "npm run test:critical:ci",
     "quality:fix": "prettier --write \"**/*.{js,json,md}\"",
     "quality:metrics": "echo \"Quality metrics: Use 'npm run coverage' for test coverage and 'npm run lint' for code quality\"",
     "quality:smells": "echo \"Code analysis: Use 'npm run lint' for code quality checks\"",

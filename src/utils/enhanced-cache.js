@@ -369,22 +369,22 @@ class EnhancedCache {
     ) {
       // Perform eviction based on strategy
       switch (this.evictionStrategy) {
-        case EVICTION_STRATEGIES.LRU:
-          this.evictLRU();
-          break;
-        case EVICTION_STRATEGIES.LFU:
-          this.evictLFU();
-          break;
-        case EVICTION_STRATEGIES.TTL:
-          this.evictExpired();
-          break;
-        case EVICTION_STRATEGIES.SIZE_BASED:
-          this.evictBySize();
-          break;
-        case EVICTION_STRATEGIES.HYBRID:
-        default:
-          this.evictHybrid();
-          break;
+      case EVICTION_STRATEGIES.LRU:
+        this.evictLRU();
+        break;
+      case EVICTION_STRATEGIES.LFU:
+        this.evictLFU();
+        break;
+      case EVICTION_STRATEGIES.TTL:
+        this.evictExpired();
+        break;
+      case EVICTION_STRATEGIES.SIZE_BASED:
+        this.evictBySize();
+        break;
+      case EVICTION_STRATEGIES.HYBRID:
+      default:
+        this.evictHybrid();
+        break;
       }
     }
   }
