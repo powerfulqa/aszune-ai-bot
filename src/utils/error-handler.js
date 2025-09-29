@@ -168,7 +168,8 @@ class ErrorHandler {
     try {
       stack = safeError.stack;
     } catch (stackError) {
-      // Ignore getter errors for stack property
+      // Fallback value if stack getter throws
+      stack = '[stack unavailable: error accessing stack property]';
     }
     
     // Enhanced error logging with structured data
