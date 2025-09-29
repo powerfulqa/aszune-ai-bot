@@ -81,7 +81,7 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     chatService = require('../../src/services/chat');
-    
+
     mockMessage = {
       author: {
         id: '123456789',
@@ -103,11 +103,11 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
       description: 'Response',
       footer: { text: 'Aszai Bot' },
     });
-    
+
     // Set up input validation defaults
     mockInputValidator.validateUserId.mockReturnValue({ valid: true });
-    mockInputValidator.validateAndSanitize.mockReturnValue({ 
-      valid: true, 
+    mockInputValidator.validateAndSanitize.mockReturnValue({
+      valid: true,
       sanitized: 'Hello bot!',
       warnings: [],
     });
@@ -117,9 +117,9 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
   describe('Bot Message Filtering', () => {
     it('should ignore messages from bots', async () => {
       mockMessage.author.bot = true;
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
       expect(mockMessage.reply).not.toHaveBeenCalled();
     });
@@ -127,9 +127,9 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
     it('should process messages from real users', async () => {
       mockMessage.author.bot = false;
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
     });
   });
@@ -137,15 +137,15 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
   describe('Empty Message Filtering', () => {
     it('should ignore empty string messages', async () => {
       mockMessage.content = '';
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
 
     it('should ignore whitespace-only messages', async () => {
       mockMessage.content = '   \n  \t  ';
-      
+
       // Mock validation to return invalid for whitespace-only content
       mockInputValidator.validateAndSanitize.mockReturnValue({
         valid: false,
@@ -153,35 +153,35 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
         sanitized: '',
         warnings: [],
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
       expect(mockMessage.reply).toHaveBeenCalledWith('❌ Message contains only whitespace');
     });
 
     it('should ignore null content', async () => {
       mockMessage.content = null;
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
 
     it('should ignore undefined content', async () => {
       mockMessage.content = undefined;
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
 
     it('should process valid non-empty messages', async () => {
       mockMessage.content = 'Valid message';
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
     });
   });
@@ -189,9 +189,9 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
   describe('Rate Limiting Branch Coverage', () => {
     it('should show rate limit message when user is rate limited', async () => {
       mockConversationManager.isRateLimited.mockReturnValue(true);
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockMessage.reply).toHaveBeenCalledWith(
         'Please wait a few seconds before sending another message.'
       );
@@ -201,9 +201,9 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
     it('should proceed normally when user is not rate limited', async () => {
       mockConversationManager.isRateLimited.mockReturnValue(false);
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
       expect(mockMessage.reply).toHaveBeenCalled();
     });

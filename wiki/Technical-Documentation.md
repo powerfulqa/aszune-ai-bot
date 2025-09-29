@@ -1,9 +1,8 @@
 # Technical Documentation
 
-This page provides technical details about the architecture, code │   ├── v1.4.0.md                 # Version 1.4.0 release notes
-│   ├── v1.4.1.md                 # Version 1.4.1 release notes
-│   └── v1.5.0.md                 # Version 1.5.0 release notes (qlty integration)ructure, and implementation of
-the Aszune AI Bot.
+This page provides technical details about the architecture, code │ ├── v1.4.0.md # Version 1.4.0
+release notes │ ├── v1.4.1.md # Version 1.4.1 release notes │ └── v1.5.0.md # Version 1.5.0 release
+notes (qlty integration)ructure, and implementation of the Aszune AI Bot.
 
 ## Architecture Overview
 
@@ -123,7 +122,8 @@ aszune-ai-bot/
 
 ## Code Quality & Security Systems
 
-This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and maintainability analysis.
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and
+maintainability analysis.
 
 ### Quality Tools Integration
 
@@ -168,6 +168,7 @@ npm run format               # Prettier format
 ### CI/CD Integration
 
 The GitHub Actions workflow automatically:
+
 - Installs qlty CLI
 - Runs quality checks on every PR
 - Performs security scanning (gitleaks + trivy)
@@ -670,9 +671,11 @@ async function shutdown(signal) {
 ## v1.5.0 qlty Code Quality Integration & Professional Standards (2025-09-29)
 
 ### Complete Quality Transformation
+
 - **qlty Integration**: Unified code quality tooling with 8 specialized plugins
 - **Multi-layered Security**: Comprehensive scanning (Gitleaks, Trivy, Semgrep)
-- **Professional Documentation**: Industry-standard files (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
+- **Professional Documentation**: Industry-standard files (SECURITY.md, CONTRIBUTING.md,
+  CODE_OF_CONDUCT.md)
 - **Quality Automation**: 7 new npm scripts for streamlined workflow
 - **Code Standards**: Complexity limits (≤15 file, ≤10 function), zero duplication
 - **CI/CD Enhancement**: Automated quality gates and security scanning
@@ -680,6 +683,7 @@ async function shutdown(signal) {
 - **Centralized Configuration**: All quality settings in `.qlty/qlty.toml`
 
 ### Quality Workflow
+
 ```bash
 npm run quality:check      # Comprehensive analysis
 npm run quality:fix        # Auto-fix formatting issues
@@ -688,6 +692,7 @@ npm run quality:metrics    # Detailed quality metrics
 ```
 
 ### Security Enhancement
+
 - **Zero Secrets**: Gitleaks prevents accidental credential commits
 - **Vulnerability Scanning**: Trivy monitors dependencies
 - **Static Analysis**: Semgrep detects code vulnerabilities

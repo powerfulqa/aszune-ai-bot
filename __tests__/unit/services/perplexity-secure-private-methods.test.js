@@ -37,7 +37,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     perplexityService = PerplexityService;
-    
+
     // Default mock implementations
     fs.readFile.mockRejectedValue(new Error('File not found'));
   });
@@ -103,7 +103,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
     });
 
     it('should handle function headers', () => {
-      const headers = function() {};
+      const headers = function () {};
       headers.get = jest.fn().mockReturnValue('test-value');
       const result = perplexityService._safeGetHeader(headers, 'content-type');
       expect(result).toBe('test-value');
@@ -121,12 +121,12 @@ describe('PerplexitySecure Service - Private Methods', () => {
     it('should return true when in test environment', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'test';
-      
+
       const options = {};
       const cacheConfig = { enabled: false };
       const result = perplexityService._shouldUseCache(options, cacheConfig);
       expect(result).toBe(true);
-      
+
       process.env.NODE_ENV = originalEnv;
     });
 
@@ -143,7 +143,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const options = {};
       const result = perplexityService._buildRequestPayload(messages, options);
-      
+
       expect(result).toHaveProperty('model');
       expect(result).toHaveProperty('messages', messages);
       expect(result).toHaveProperty('max_tokens');
@@ -158,7 +158,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
         temperature: 0.8,
       };
       const result = perplexityService._buildRequestPayload(messages, options);
-      
+
       expect(result.model).toBe('custom-model');
       expect(result.max_tokens).toBe(100);
       expect(result.temperature).toBe(0.8);
@@ -170,13 +170,13 @@ describe('PerplexitySecure Service - Private Methods', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
       delete mockConfig.PI_OPTIMIZATIONS;
-      
+
       const result = perplexityService._getPiOptimizationSettings();
       expect(result).toEqual({
         enabled: false,
         lowCpuMode: false,
       });
-      
+
       // Restore original config
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
     });
@@ -193,19 +193,21 @@ describe('PerplexitySecure Service - Private Methods', () => {
     it('should handle config access errors gracefully', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
-      
+
       // Make config access throw error
       Object.defineProperty(mockConfig, 'PI_OPTIMIZATIONS', {
-        get: () => { throw new Error('Config error'); },
+        get: () => {
+          throw new Error('Config error');
+        },
         configurable: true,
       });
-      
+
       const result = perplexityService._getPiOptimizationSettings();
       expect(result).toEqual({
         enabled: false,
         lowCpuMode: false,
       });
-      
+
       // Restore original config
       delete mockConfig.PI_OPTIMIZATIONS;
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
@@ -215,10 +217,10 @@ describe('PerplexitySecure Service - Private Methods', () => {
   describe('_generateCacheKey method', () => {
     it('should generate consistent cache key for same history', () => {
       const history = [{ role: 'user', content: 'Hello' }];
-      
+
       const key1 = perplexityService._generateCacheKey(history);
       const key2 = perplexityService._generateCacheKey(history);
-      
+
       expect(key1).toBe(key2);
       expect(key1).toBe('mock-hash-123');
       expect(crypto.createHash).toHaveBeenCalledWith('md5');
@@ -227,11 +229,11 @@ describe('PerplexitySecure Service - Private Methods', () => {
     it('should generate different keys for different history', () => {
       const history1 = [{ role: 'user', content: 'Hello' }];
       const history2 = [{ role: 'user', content: 'Hi' }];
-      
+
       // Test that crypto is called for both
       perplexityService._generateCacheKey(history1);
       perplexityService._generateCacheKey(history2);
-      
+
       // Both will be 'mock-hash-123' due to mocking, but this tests the method calls crypto correctly
       expect(crypto.createHash).toHaveBeenCalledTimes(2);
       expect(crypto.createHash).toHaveBeenCalledWith('md5');
@@ -242,7 +244,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
     it('should format string entry with timestamp', () => {
       const entry = 'test content';
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'test content',
@@ -257,7 +259,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
         otherProperty: 'test',
       };
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'existing content',
@@ -272,7 +274,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
         otherProperty: 'test',
       };
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'content without timestamp',
@@ -284,7 +286,7 @@ describe('PerplexitySecure Service - Private Methods', () => {
     it('should handle null entry', () => {
       const entry = null;
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: null,

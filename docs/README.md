@@ -4,13 +4,17 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Code Quality & Standards
 
-- **[qlty Integration Guide](./QLTY_INTEGRATION.md)** - Comprehensive guide to using qlty for code quality
-- **[Implementation Summary](./QLTY_IMPLEMENTATION_SUMMARY.md)** - Complete overview of qlty integration
+- **[qlty Integration Guide](./QLTY_INTEGRATION.md)** - Comprehensive guide to using qlty for code
+  quality
+- **[Implementation Summary](./QLTY_IMPLEMENTATION_SUMMARY.md)** - Complete overview of qlty
+  integration
 
 ## Development Documentation
 
-- **[Critical Coverage CI Integration](./CRITICAL-COVERAGE-CI-INTEGRATION.md)** - CI integration for critical test coverage
-- **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of critical coverage implementation
+- **[Critical Coverage CI Integration](./CRITICAL-COVERAGE-CI-INTEGRATION.md)** - CI integration for
+  critical test coverage
+- **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of
+  critical coverage implementation
 - **[PR Description Template](./PR-DESCRIPTION.md)** - Template for pull request descriptions
 
 ## Release Notes Archive

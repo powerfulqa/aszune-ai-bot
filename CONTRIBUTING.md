@@ -1,6 +1,7 @@
 # Contributing to Aszune AI Bot
 
-Thank you for your interest in contributing to Aszune AI Bot! We welcome contributions from the community and are pleased to have you join us.
+Thank you for your interest in contributing to Aszune AI Bot! We welcome contributions from the
+community and are pleased to have you join us.
 
 ## Table of Contents
 
@@ -15,7 +16,8 @@ Thank you for your interest in contributing to Aszune AI Bot! We welcome contrib
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project and everyone participating in it is governed by our
+[Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## Getting Started
 
@@ -207,20 +209,24 @@ README.md       # Main project documentation
 
 ```markdown
 ## Description
+
 Brief description of changes made.
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] New tests added for new functionality
 - [ ] Manual testing performed
 
 ## Checklist
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -252,8 +258,10 @@ If you need help with your contribution:
 ## Recognition
 
 Contributors are recognized in:
+
 - GitHub contributors list
 - Release notes for significant contributions
 - Project documentation acknowledgments
 
-Thank you for contributing to Aszune AI Bot! Your contributions help make this project better for everyone.
+Thank you for contributing to Aszune AI Bot! Your contributions help make this project better for
+everyone.

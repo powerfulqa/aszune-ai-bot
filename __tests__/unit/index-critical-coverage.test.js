@@ -16,7 +16,7 @@ jest.mock('../../src/utils/logger', () => mockLogger);
 jest.mock('../../src/config/config', () => ({
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-key',
-  PI_OPTIMIZATIONS: { 
+  PI_OPTIMIZATIONS: {
     ENABLED: true,
     CLEANUP_INTERVAL_MINUTES: 5,
   },
@@ -113,7 +113,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    
+
     // Mock process methods
     process.on = jest.fn();
     process.exit = jest.fn();
@@ -126,7 +126,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
     it('should initialize Pi optimizations in production environment', () => {
       index = require('../../src/index');
-      
+
       // Verify Pi optimization modules are loaded
       expect(mockMemoryMonitor.initialize).toHaveBeenCalled();
       expect(mockPerformanceMonitor.initialize).toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
     it('should not initialize Pi optimizations in development', () => {
       index = require('../../src/index');
-      
+
       // Pi optimization modules should not be called in development
       expect(mockMemoryMonitor.initialize).not.toHaveBeenCalled();
       expect(mockPerformanceMonitor.initialize).not.toHaveBeenCalled();
@@ -173,24 +173,23 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
     it('should handle ready event and register slash commands', async () => {
       // Simulate ready event
-      const readyHandler = mockClient.once.mock.calls.find(call => call[0] === 'ready')[1];
-      
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+
       await readyHandler();
 
       expect(mockLogger.info).toHaveBeenCalledWith('Discord bot is online as TestBot#0000!');
-      expect(mockRest.put).toHaveBeenCalledWith(
-        'applications/123456789/commands',
-        { body: expect.any(Array) }
-      );
+      expect(mockRest.put).toHaveBeenCalledWith('applications/123456789/commands', {
+        body: expect.any(Array),
+      });
       expect(mockLogger.info).toHaveBeenCalledWith('Slash commands registered successfully');
     });
 
     it('should handle slash command registration errors', async () => {
       // Mock REST to throw error
       mockRest.put.mockRejectedValueOnce(new Error('Registration failed'));
-      
-      const readyHandler = mockClient.once.mock.calls.find(call => call[0] === 'ready')[1];
-      
+
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+
       await readyHandler();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -202,37 +201,39 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should handle client not ready during slash command registration', async () => {
       // Mock client without user but provide a fallback for tag access
       mockClient.user = null;
-      
-      const readyHandler = mockClient.once.mock.calls.find(call => call[0] === 'ready')[1];
-      
+
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+
       // Should throw error when trying to access user.tag
       await expect(readyHandler()).rejects.toThrow();
     });
 
     it('should handle error events', () => {
-      const errorHandler = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+      const errorHandler = mockClient.on.mock.calls.find((call) => call[0] === 'error')[1];
       const testError = new Error('Discord client error');
-      
+
       errorHandler(testError);
 
       expect(mockLogger.error).toHaveBeenCalledWith('Discord client error:', testError);
     });
 
     it('should handle warn events', () => {
-      const warnHandler = mockClient.on.mock.calls.find(call => call[0] === 'warn')[1];
+      const warnHandler = mockClient.on.mock.calls.find((call) => call[0] === 'warn')[1];
       const testWarning = 'Discord client warning';
-      
+
       warnHandler(testWarning);
 
       expect(mockLogger.warn).toHaveBeenCalledWith('Discord client warning:', testWarning);
     });
 
     it('should handle interaction events', async () => {
-      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      const interactionHandler = mockClient.on.mock.calls.find(
+        (call) => call[0] === 'interactionCreate'
+      )[1];
       const mockInteraction = {
         isChatInputCommand: () => true,
       };
-      
+
       await interactionHandler(mockInteraction);
 
       const commandHandler = require('../../src/commands');
@@ -240,11 +241,13 @@ describe('index.js - Critical Coverage Enhancement', () => {
     });
 
     it('should ignore non-slash interactions', async () => {
-      const interactionHandler = mockClient.on.mock.calls.find(call => call[0] === 'interactionCreate')[1];
+      const interactionHandler = mockClient.on.mock.calls.find(
+        (call) => call[0] === 'interactionCreate'
+      )[1];
       const mockInteraction = {
         isChatInputCommand: () => false,
       };
-      
+
       await interactionHandler(mockInteraction);
 
       const commandHandler = require('../../src/commands');
@@ -260,8 +263,10 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
     it('should handle conversation manager shutdown errors', async () => {
       // Mock conversation manager to throw error on destroy
-      mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conversation manager error'));
-      
+      mockConversationManager.destroy.mockRejectedValueOnce(
+        new Error('Conversation manager error')
+      );
+
       await index.shutdown('SIGINT');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -273,7 +278,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should handle Discord client shutdown errors', async () => {
       // Mock client to throw error on destroy
       mockClient.destroy.mockRejectedValueOnce(new Error('Client shutdown error'));
-      
+
       await index.shutdown('SIGINT');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -286,7 +291,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
       // Start shutdown
       const shutdownPromise1 = index.shutdown('SIGINT');
       const shutdownPromise2 = index.shutdown('SIGTERM');
-      
+
       await Promise.all([shutdownPromise1, shutdownPromise2]);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -298,10 +303,10 @@ describe('index.js - Critical Coverage Enhancement', () => {
       // Mock both conversation manager and client to fail
       mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conv error'));
       mockClient.destroy.mockRejectedValueOnce(new Error('Client error'));
-      
+
       // Mock process.exit in non-test environment
       process.env.NODE_ENV = 'production';
-      
+
       await index.shutdown('SIGINT');
 
       expect(mockLogger.error).toHaveBeenCalledWith('Shutdown completed with 2 error(s)');
@@ -313,7 +318,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should handle Discord login failures in production', () => {
       process.env.NODE_ENV = 'production';
       mockClient.login.mockRejectedValueOnce(new Error('Login failed'));
-      
+
       index = require('../../src/index');
 
       // In production, process.exit would be called on login failure
@@ -323,7 +328,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should handle Discord login failures in test mode', () => {
       process.env.NODE_ENV = 'test';
       mockClient.login.mockRejectedValueOnce(new Error('Login failed'));
-      
+
       expect(() => {
         index = require('../../src/index');
       }).not.toThrow();
@@ -338,9 +343,9 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should handle Pi optimization errors in bootWithOptimizations', async () => {
       const config = require('../../src/config/config');
       config.initializePiOptimizations.mockRejectedValueOnce(new Error('Pi init failed'));
-      
+
       index = require('../../src/index');
-      
+
       await index.bootWithOptimizations();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -352,9 +357,9 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should skip Pi optimizations when disabled', async () => {
       const config = require('../../src/config/config');
       config.PI_OPTIMIZATIONS.ENABLED = false;
-      
+
       index = require('../../src/index');
-      
+
       await index.bootWithOptimizations();
 
       expect(config.initializePiOptimizations).not.toHaveBeenCalled();
@@ -363,9 +368,9 @@ describe('index.js - Critical Coverage Enhancement', () => {
     it('should skip Pi optimizations when config is null', async () => {
       const config = require('../../src/config/config');
       config.PI_OPTIMIZATIONS = null;
-      
+
       index = require('../../src/index');
-      
+
       await index.bootWithOptimizations();
 
       expect(config.initializePiOptimizations).not.toHaveBeenCalled();

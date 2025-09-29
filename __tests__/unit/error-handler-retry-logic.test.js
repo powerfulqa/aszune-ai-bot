@@ -14,8 +14,8 @@ jest.mock('../../src/utils/logger', () => ({
 jest.mock('../../src/config/config', () => ({
   RATE_LIMITS: {
     MAX_RETRIES: 3,
-    RETRY_DELAY_MS: 1000
-  }
+    RETRY_DELAY_MS: 1000,
+  },
 }));
 
 describe('ErrorHandler - Retry Logic and Edge Cases', () => {
@@ -38,7 +38,7 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
 
       const result = await ErrorHandler.withRetry(operation, {
         maxRetries: 3,
-        delay: 10
+        delay: 10,
       });
 
       expect(result).toBe('success');
@@ -48,10 +48,12 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
     it('should not retry non-retryable errors', async () => {
       const operation = jest.fn().mockRejectedValue(new Error('Validation error'));
 
-      await expect(ErrorHandler.withRetry(operation, {
-        maxRetries: 3,
-        delay: 10
-      })).rejects.toThrow('Validation error');
+      await expect(
+        ErrorHandler.withRetry(operation, {
+          maxRetries: 3,
+          delay: 10,
+        })
+      ).rejects.toThrow('Validation error');
 
       expect(operation).toHaveBeenCalledTimes(1);
     });
@@ -63,10 +65,12 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
         throw error;
       });
 
-      await expect(ErrorHandler.withRetry(operation, {
-        maxRetries: 2,
-        delay: 10
-      })).rejects.toThrow('Rate limit');
+      await expect(
+        ErrorHandler.withRetry(operation, {
+          maxRetries: 2,
+          delay: 10,
+        })
+      ).rejects.toThrow('Rate limit');
 
       expect(operation).toHaveBeenCalledTimes(3); // Initial + 2 retries
     });
@@ -77,11 +81,11 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
       const error = {
         message: 'Large error',
         data: 'x'.repeat(100000),
-        nested: { deep: { error: 'info' } }
+        nested: { deep: { error: 'info' } },
       };
-      
+
       const result = ErrorHandler.handleError(error, 'large error test');
-      
+
       expect(result.type).toBe('UNKNOWN_ERROR');
       expect(result.message).toBeTruthy();
     });
@@ -89,7 +93,7 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
     it('should handle circular reference errors', () => {
       const error = new Error('Circular error');
       error.self = error;
-      
+
       expect(() => {
         ErrorHandler.handleError(error, 'circular test');
       }).not.toThrow();
@@ -100,14 +104,14 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
     it('should handle file operation errors', () => {
       const error = { code: 'EACCES', message: 'Permission denied' };
       const result = ErrorHandler.handleFileError(error, 'read', '/path/to/file');
-      
+
       expect(result.type).toBe('PERMISSION_ERROR');
     });
 
     it('should handle validation errors with field info', () => {
       const error = new Error('Invalid email format');
       const result = ErrorHandler.handleValidationError(error, 'email', 'invalid-email');
-      
+
       expect(result.type).toBe('UNKNOWN_ERROR'); // Since message doesn't contain "validation"
     });
 
@@ -115,7 +119,7 @@ describe('ErrorHandler - Retry Logic and Edge Cases', () => {
       const error = new Error('Validation failed');
       const longValue = 'a'.repeat(200);
       const result = ErrorHandler.handleValidationError(error, 'field', longValue);
-      
+
       expect(result.type).toBe('UNKNOWN_ERROR');
     });
   });

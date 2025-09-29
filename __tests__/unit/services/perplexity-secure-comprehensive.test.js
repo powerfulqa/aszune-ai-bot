@@ -39,7 +39,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     perplexityService = PerplexityService;
-    
+
     // Default mock implementations
     fs.readFile.mockRejectedValue(new Error('File not found'));
   });
@@ -105,7 +105,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     });
 
     it('should handle function headers', () => {
-      const headers = function() {};
+      const headers = function () {};
       headers.get = jest.fn().mockReturnValue('test-value');
       const result = perplexityService._safeGetHeader(headers, 'content-type');
       expect(result).toBe('test-value');
@@ -123,12 +123,12 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return true when in test environment', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'test';
-      
+
       const options = {};
       const cacheConfig = { enabled: false };
       const result = perplexityService._shouldUseCache(options, cacheConfig);
       expect(result).toBe(true);
-      
+
       process.env.NODE_ENV = originalEnv;
     });
 
@@ -145,7 +145,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const options = {};
       const result = perplexityService._buildRequestPayload(messages, options);
-      
+
       expect(result).toHaveProperty('model');
       expect(result).toHaveProperty('messages', messages);
       expect(result).toHaveProperty('max_tokens');
@@ -160,7 +160,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         temperature: 0.8,
       };
       const result = perplexityService._buildRequestPayload(messages, options);
-      
+
       expect(result.model).toBe('custom-model');
       expect(result.max_tokens).toBe(100);
       expect(result.temperature).toBe(0.8);
@@ -169,7 +169,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should handle streaming when PI optimizations enabled', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const options = { stream: true };
-      
+
       // Test that the payload is built correctly - streaming will depend on actual config
       const result = perplexityService._buildRequestPayload(messages, options);
       expect(result).toHaveProperty('model');
@@ -182,7 +182,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should not enable streaming in low CPU mode', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const options = { stream: true };
-      
+
       const result = perplexityService._buildRequestPayload(messages, options);
       // Test that the basic payload structure is correct
       expect(result).toHaveProperty('model');
@@ -195,13 +195,13 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
       delete mockConfig.PI_OPTIMIZATIONS;
-      
+
       const result = perplexityService._getPiOptimizationSettings();
       expect(result).toEqual({
         enabled: false,
         lowCpuMode: false,
       });
-      
+
       // Restore original config
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
     });
@@ -218,19 +218,21 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should handle config access errors gracefully', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
-      
+
       // Make config access throw error
       Object.defineProperty(mockConfig, 'PI_OPTIMIZATIONS', {
-        get: () => { throw new Error('Config error'); },
+        get: () => {
+          throw new Error('Config error');
+        },
         configurable: true,
       });
-      
+
       const result = perplexityService._getPiOptimizationSettings();
       expect(result).toEqual({
         enabled: false,
         lowCpuMode: false,
       });
-      
+
       // Restore original config
       delete mockConfig.PI_OPTIMIZATIONS;
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
@@ -257,7 +259,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           text: jest.fn().mockResolvedValue('{"error":"Bad request"}'),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'API request failed with status 400'
       );
@@ -268,7 +270,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         statusCode: 200,
         body: null,
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: body is missing or does not have json method'
       );
@@ -279,7 +281,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         statusCode: 200,
         body: {},
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: body is missing or does not have json method'
       );
@@ -292,7 +294,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           json: jest.fn().mockRejectedValue(new Error('JSON parse error')),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Failed to parse response as JSON'
       );
@@ -305,7 +307,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           json: jest.fn().mockResolvedValue('not-an-object'),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: response is not a valid object'
       );
@@ -318,7 +320,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           json: jest.fn().mockResolvedValue({}),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: missing or empty choices array'
       );
@@ -333,7 +335,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           }),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: invalid choice structure'
       );
@@ -348,7 +350,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           }),
         },
       };
-      
+
       await expect(perplexityService._handleApiResponse(response)).rejects.toThrow(
         'Invalid response: choice missing required message field'
       );
@@ -370,7 +372,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           json: jest.fn().mockResolvedValue(responseData),
         },
       };
-      
+
       const result = await perplexityService._handleApiResponse(response);
       expect(result).toEqual(responseData);
     });
@@ -381,7 +383,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const body = {
         text: jest.fn().mockResolvedValue('{"error":"Test error"}'),
       };
-      
+
       await expect(perplexityService._handleErrorResponse(400, body)).rejects.toThrow(
         'API request failed with status 400: {"error":"Test error"}'
       );
@@ -397,7 +399,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const body = {
         text: jest.fn().mockRejectedValue(new Error('Text read error')),
       };
-      
+
       await expect(perplexityService._handleErrorResponse(500, body)).rejects.toThrow(
         'API request failed with status 500: Error reading response body: Text read error'
       );
@@ -408,7 +410,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const body = {
         text: jest.fn().mockResolvedValue(longError),
       };
-      
+
       try {
         await perplexityService._handleErrorResponse(400, body);
       } catch (error) {
@@ -429,7 +431,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           },
         ],
       };
-      
+
       const result = perplexityService._extractResponseContent(response);
       expect(result).toBe('Test message content');
     });
@@ -442,7 +444,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           },
         ],
       };
-      
+
       const result = perplexityService._extractResponseContent(response);
       expect(result).toBe('Direct choice content');
     });
@@ -464,7 +466,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           },
         ],
       };
-      
+
       const result = perplexityService._extractResponseContent(response);
       expect(result).toBe('Sorry, I could not extract content from the response.');
     });
@@ -474,7 +476,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return rate limit message for 429 status', () => {
       const error = { statusCode: 429 };
       const errorResponse = { message: 'Rate limit exceeded' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('Rate limit exceeded. Please try again later.');
     });
@@ -482,7 +484,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return service unavailable message for 5xx status', () => {
       const error = { statusCode: 500 };
       const errorResponse = { message: 'Server error' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('The service is temporarily unavailable. Please try again later.');
     });
@@ -490,7 +492,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return network error message for network errors', () => {
       const error = { message: 'Network connection failed' };
       const errorResponse = { message: 'Network error' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('Network connection issue. Please check your connection and try again.');
     });
@@ -498,7 +500,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return empty response message for empty response errors', () => {
       const error = { message: 'Empty response received' };
       const errorResponse = { message: 'Empty response' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('Empty response received from the service.');
     });
@@ -506,7 +508,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return unexpected format message for invalid errors', () => {
       const error = { message: 'invalid response format' };
       const errorResponse = { message: 'Invalid format' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('Unexpected response format received.');
     });
@@ -514,7 +516,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should return original error message for unknown errors', () => {
       const error = { message: 'Unknown error' };
       const errorResponse = { message: 'Unknown error occurred' };
-      
+
       const result = perplexityService._generateErrorMessage(error, errorResponse);
       expect(result).toBe('Unknown error occurred');
     });
@@ -586,11 +588,11 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
       delete mockConfig.PI_OPTIMIZATIONS;
-      
+
       const result = perplexityService._getCacheConfiguration();
       expect(result.enabled).toBe(false);
       expect(result).toHaveProperty('maxEntries');
-      
+
       // Restore original config
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
     });
@@ -607,16 +609,18 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should handle config access errors', () => {
       const mockConfig = require('../../../src/config/config');
       const originalConfig = mockConfig.PI_OPTIMIZATIONS;
-      
+
       // Make config access throw error
       Object.defineProperty(mockConfig, 'PI_OPTIMIZATIONS', {
-        get: () => { throw new Error('Config error'); },
+        get: () => {
+          throw new Error('Config error');
+        },
         configurable: true,
       });
-      
+
       const result = perplexityService._getCacheConfiguration();
       expect(result.enabled).toBe(false);
-      
+
       // Restore original config
       delete mockConfig.PI_OPTIMIZATIONS;
       mockConfig.PI_OPTIMIZATIONS = originalConfig;
@@ -627,7 +631,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should format string entry with timestamp', () => {
       const entry = 'test content';
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'test content',
@@ -642,7 +646,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         otherProperty: 'test',
       };
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'existing content',
@@ -657,7 +661,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         otherProperty: 'test',
       };
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: 'content without timestamp',
@@ -669,7 +673,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should handle null entry', () => {
       const entry = null;
       const timestamp = 12345;
-      
+
       const result = perplexityService._formatCacheEntry(entry, timestamp);
       expect(result).toEqual({
         content: null,
@@ -681,10 +685,10 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   describe('_generateCacheKey method', () => {
     it('should generate consistent cache key for same history', () => {
       const history = [{ role: 'user', content: 'Hello' }];
-      
+
       const key1 = perplexityService._generateCacheKey(history);
       const key2 = perplexityService._generateCacheKey(history);
-      
+
       expect(key1).toBe(key2);
       expect(key1).toBe('mock-hash-123');
       expect(crypto.createHash).toHaveBeenCalledWith('md5');
@@ -693,11 +697,11 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should generate different keys for different history', () => {
       const history1 = [{ role: 'user', content: 'Hello' }];
       const history2 = [{ role: 'user', content: 'Hi' }];
-      
+
       // Test that crypto is called for both
       perplexityService._generateCacheKey(history1);
       perplexityService._generateCacheKey(history2);
-      
+
       // Both will be 'mock-hash-123' due to mocking, but this tests the method calls crypto correctly
       expect(crypto.createHash).toHaveBeenCalledTimes(2);
       expect(crypto.createHash).toHaveBeenCalledWith('md5');
@@ -716,10 +720,10 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
         ],
       };
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
-      
+
       const text = 'Long text to be summarized...';
       const result = await perplexityService.generateTextSummary(text);
-      
+
       expect(result).toBe('This is a summary of the text.');
       expect(request).toHaveBeenCalledWith(
         expect.any(String),
@@ -731,7 +735,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
 
     it('should handle text summary errors', async () => {
       request.mockRejectedValueOnce(new Error('Summary API error'));
-      
+
       const text = 'Text to summarize';
       await expect(perplexityService.generateTextSummary(text)).rejects.toThrow(
         'Summary API error'
@@ -749,7 +753,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           hitRate: 0.67,
         }),
       };
-      
+
       const result = perplexityService.getCacheStats();
       expect(result.hits).toBe(10);
       expect(result.misses).toBe(5);
@@ -763,7 +767,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
           throw new Error('Cache error');
         }),
       };
-      
+
       const result = perplexityService.getCacheStats();
       expect(result.hits).toBe(0);
       expect(result.error).toBeDefined();
@@ -773,7 +777,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     it('should handle missing cache gracefully', () => {
       // Remove cache
       delete perplexityService.cache;
-      
+
       const result = perplexityService.getCacheStats();
       expect(result.hits).toBe(0);
       expect(result.error).toBeDefined();
@@ -785,30 +789,30 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       // Mock active intervals
       const mockInterval1 = setInterval(() => {}, 1000);
       const mockInterval2 = setInterval(() => {}, 2000);
-      
+
       perplexityService.activeIntervals = new Set([mockInterval1, mockInterval2]);
-      
+
       // Spy on clearInterval
       const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      
+
       perplexityService.shutdown();
-      
+
       expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval1);
       expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval2);
       expect(perplexityService.activeIntervals.size).toBe(0);
-      
+
       clearIntervalSpy.mockRestore();
     });
 
     it('should handle shutdown when no intervals exist', () => {
       perplexityService.activeIntervals = new Set();
-      
+
       const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      
+
       perplexityService.shutdown();
-      
+
       expect(clearIntervalSpy).not.toHaveBeenCalled();
-      
+
       clearIntervalSpy.mockRestore();
     });
   });

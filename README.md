@@ -279,7 +279,8 @@ aszune-ai-bot/
 
 ## Code Quality
 
-This project maintains high code quality standards using [qlty](https://qlty.sh/) for unified linting, formatting, security scanning, and maintainability analysis.
+This project maintains high code quality standards using [qlty](https://qlty.sh/) for unified
+linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
@@ -316,7 +317,7 @@ npm run security:dependencies # Vulnerability scanning
 ### Integrated Tools
 
 - **ESLint**: JavaScript linting with strict rules
-- **Prettier**: Code formatting for JavaScript, JSON, and Markdown  
+- **Prettier**: Code formatting for JavaScript, JSON, and Markdown
 - **Gitleaks**: Secret detection in code and git history
 - **Trivy**: Dependency vulnerability scanning
 - **Semgrep**: Static application security testing (SAST)

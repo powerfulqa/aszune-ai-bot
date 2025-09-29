@@ -6,7 +6,7 @@
 module.exports = {
   // Extend from main configuration
   ...require('./jest.config.js'),
-  
+
   // Override coverage thresholds for critical files
   coverageThreshold: {
     // Global thresholds (maintain existing standards)
@@ -16,10 +16,10 @@ module.exports = {
       lines: 60,
       statements: 60,
     },
-    
+
     // Critical Files - MUST maintain 80%+ coverage for build to pass
     // These are the most important files that could break the entire application
-    
+
     // 🎯 Tier 1: Core Critical Files (Main Entry & Configuration)
     './src/index.js': {
       branches: 80,
@@ -33,8 +33,8 @@ module.exports = {
       lines: 80,
       statements: 80,
     },
-    
-    // 🎯 Tier 2: Service Layer Critical Files  
+
+    // 🎯 Tier 2: Service Layer Critical Files
     './src/commands/index.js': {
       branches: 80,
       functions: 80,
@@ -53,7 +53,7 @@ module.exports = {
       lines: 80,
       statements: 80,
     },
-    
+
     // 🎯 Tier 3: Utility Layer Critical Files
     './src/utils/logger.js': {
       branches: 80,
@@ -74,10 +74,10 @@ module.exports = {
       statements: 80,
     },
   },
-  
+
   // Enhanced reporting for critical coverage failures
   verbose: true,
-  
+
   // Ensure we collect coverage from all critical files
   collectCoverageFrom: [
     'src/**/*.js',
@@ -91,14 +91,7 @@ module.exports = {
     '!src/services/perplexity.js',
     '!src/services/perplexity-improved.js',
   ],
-  
+
   // Generate detailed coverage reports
-  coverageReporters: [
-    'text',
-    'text-summary',
-    'html',
-    'lcov',
-    'json-summary',
-  ],
-  
+  coverageReporters: ['text', 'text-summary', 'html', 'lcov', 'json-summary'],
 };

@@ -66,10 +66,10 @@ describe('Config - Environment Variable Validation', () => {
     it('should return default value for invalid integer strings', () => {
       // Test indirectly through config values that use getIntEnvVar
       process.env.MAX_HISTORY = 'invalid';
-      
+
       // Should use default value when invalid and not throw
       expect(() => require('../../src/config/config')).not.toThrow();
-      
+
       // Should fall back to default value
       const config = require('../../src/config/config');
       expect(typeof config.MAX_HISTORY).toBe('number');
@@ -78,34 +78,34 @@ describe('Config - Environment Variable Validation', () => {
     it('should handle valid integer environment variables', () => {
       process.env.CPU_THRESHOLD_PERCENT = '75';
       process.env.MEMORY_THRESHOLD_PERCENT = '90';
-      
+
       const config = require('../../src/config/config');
-      
+
       expect(config.PERFORMANCE.CPU_THRESHOLD_PERCENT).toBe(75);
       expect(config.PERFORMANCE.MEMORY_THRESHOLD_PERCENT).toBe(90);
     });
 
     it('should handle zero values correctly', () => {
       process.env.CHECK_INTERVAL_MS = '0';
-      
+
       const config = require('../../src/config/config');
-      
+
       expect(config.PERFORMANCE.CHECK_INTERVAL_MS).toBe(0);
     });
 
     it('should handle negative integer values', () => {
       process.env.BACKOFF_MIN_MS = '-100';
-      
+
       const config = require('../../src/config/config');
-      
+
       expect(config.PERFORMANCE.BACKOFF_MIN_MS).toBe(-100);
     });
 
     it('should handle large integer values', () => {
       process.env.BACKOFF_MAX_MS = '999999';
-      
+
       const config = require('../../src/config/config');
-      
+
       expect(config.PERFORMANCE.BACKOFF_MAX_MS).toBe(999999);
     });
   });
@@ -118,28 +118,28 @@ describe('Config - Environment Variable Validation', () => {
 
     it('should handle ENABLE_PI_OPTIMIZATIONS=true', () => {
       process.env.ENABLE_PI_OPTIMIZATIONS = 'true';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.ENABLED).toBe(true);
     });
 
     it('should handle ENABLE_PI_OPTIMIZATIONS=false', () => {
       process.env.ENABLE_PI_OPTIMIZATIONS = 'false';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.ENABLED).toBe(false);
     });
 
     it('should default to false when ENABLE_PI_OPTIMIZATIONS is undefined', () => {
       delete process.env.ENABLE_PI_OPTIMIZATIONS;
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.ENABLED).toBe(false);
     });
 
     it('should handle malformed boolean environment variables', () => {
       process.env.PI_OPTIMIZATIONS_ENABLED = 'maybe';
-      
+
       const config = require('../../src/config/config');
       // Should default to false for non-true values
       expect(config.PI_OPTIMIZATIONS.ENABLED).toBe(false);

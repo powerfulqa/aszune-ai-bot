@@ -51,27 +51,27 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     originalEnv = { ...process.env };
     process.env.NODE_ENV = 'development';
-    
+
     dataStorage.loadUserStats.mockResolvedValue({});
     dataStorage.saveUserStats.mockResolvedValue();
-    
+
     InputValidator.validateUserId.mockReturnValue({ valid: true });
-    InputValidator.validateAndSanitize.mockReturnValue({ 
-      valid: true, 
-      sanitized: 'sanitized content' 
+    InputValidator.validateAndSanitize.mockReturnValue({
+      valid: true,
+      sanitized: 'sanitized content',
     });
-    
+
     ErrorHandler.handleFileError.mockReturnValue({ message: 'File error message' });
-    
+
     conversationManager = new ConversationManager();
   });
 
   afterEach(async () => {
     process.env = originalEnv;
-    
+
     if (conversationManager) {
       await conversationManager.destroy();
     }
@@ -80,22 +80,22 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
   describe('Rate Limiting Advanced Scenarios', () => {
     it('should handle rate limiting with custom windows', () => {
       const userId = 'rate-limited-user';
-      
+
       // First message should not be rate limited
       expect(conversationManager.isRateLimited(userId)).toBe(false);
-      
+
       // Update timestamp
       conversationManager.updateTimestamp(userId);
-      
+
       // Immediately after should be rate limited
       expect(conversationManager.isRateLimited(userId)).toBe(true);
-      
+
       // Mock time passage
       jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 2000);
-      
+
       // After window expires should not be rate limited
       expect(conversationManager.isRateLimited(userId)).toBe(false);
-      
+
       Date.now.mockRestore();
     });
 
@@ -103,59 +103,55 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
       const user1 = 'user1';
       const user2 = 'user2';
       const user3 = 'user3';
-      
+
       // Set different timestamps
       conversationManager.updateTimestamp(user1);
-      
+
       // Wait for user2 (simulate delay)
       jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 500);
       conversationManager.updateTimestamp(user2);
-      
+
       // Check rate limiting states
       expect(conversationManager.isRateLimited(user1)).toBe(true);
       expect(conversationManager.isRateLimited(user2)).toBe(true);
       expect(conversationManager.isRateLimited(user3)).toBe(false);
-      
+
       Date.now.mockRestore();
     });
   });
 
   describe('Input Validation Edge Cases', () => {
     it('should handle invalid user ID in getHistory', () => {
-      InputValidator.validateUserId.mockReturnValue({ 
-        valid: false, 
-        error: 'Invalid user ID' 
+      InputValidator.validateUserId.mockReturnValue({
+        valid: false,
+        error: 'Invalid user ID',
       });
-      
+
       const history = conversationManager.getHistory('invalid-user');
-      
+
       expect(history).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Invalid user ID in getHistory: Invalid user ID'
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Invalid user ID in getHistory: Invalid user ID');
     });
 
     it('should handle invalid user ID in addMessage', () => {
-      InputValidator.validateUserId.mockReturnValue({ 
-        valid: false, 
-        error: 'Invalid user ID' 
+      InputValidator.validateUserId.mockReturnValue({
+        valid: false,
+        error: 'Invalid user ID',
       });
-      
+
       conversationManager.addMessage('invalid-user', 'user', 'test message');
-      
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Invalid user ID in addMessage: Invalid user ID'
-      );
+
+      expect(logger.warn).toHaveBeenCalledWith('Invalid user ID in addMessage: Invalid user ID');
     });
 
     it('should handle invalid message content', () => {
-      InputValidator.validateAndSanitize.mockReturnValue({ 
-        valid: false, 
-        error: 'Invalid content' 
+      InputValidator.validateAndSanitize.mockReturnValue({
+        valid: false,
+        error: 'Invalid content',
       });
-      
+
       conversationManager.addMessage('user', 'user', 'invalid content');
-      
+
       expect(logger.warn).toHaveBeenCalledWith(
         'Invalid message content in addMessage: Invalid content'
       );
@@ -163,17 +159,15 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
 
     it('should handle invalid role in addMessage', () => {
       conversationManager.addMessage('user', 'invalid-role', 'test message');
-      
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Invalid role in addMessage: invalid-role'
-      );
+
+      expect(logger.warn).toHaveBeenCalledWith('Invalid role in addMessage: invalid-role');
     });
 
     it('should accept valid roles', () => {
-      ['user', 'assistant', 'system'].forEach(role => {
+      ['user', 'assistant', 'system'].forEach((role) => {
         conversationManager.addMessage('test-user', role, 'test message');
       });
-      
+
       const history = conversationManager.getHistory('test-user');
       expect(history).toHaveLength(3);
       expect(history[0].role).toBe('user');
@@ -186,20 +180,20 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
     it('should initialize user stats for new users', () => {
       const userId = 'new-user';
       const stats = conversationManager.getUserStats(userId);
-      
+
       expect(stats).toEqual({
         messages: 0,
         summaries: 0,
-        lastActive: null
+        lastActive: null,
       });
     });
 
     it('should update message count correctly', () => {
       const userId = 'message-user';
-      
+
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'messages');
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.messages).toBe(2);
       expect(stats.lastActive).toBeTruthy();
@@ -207,9 +201,9 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
 
     it('should handle invalid stat types gracefully', () => {
       const userId = 'invalid-stat-user';
-      
+
       conversationManager.updateUserStats(userId, 'invalid-type');
-      
+
       const stats = conversationManager.getUserStats(userId);
       expect(stats.messages).toBe(0);
       expect(stats.summaries).toBe(0);

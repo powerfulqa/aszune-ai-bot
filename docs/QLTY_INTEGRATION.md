@@ -1,6 +1,7 @@
 # Code Quality with qlty
 
-This project uses [qlty](https://qlty.sh/) for unified code quality, linting, formatting, and security scanning.
+This project uses [qlty](https://qlty.sh/) for unified code quality, linting, formatting, and
+security scanning.
 
 ## Setup
 
@@ -10,7 +11,7 @@ This project uses [qlty](https://qlty.sh/) for unified code quality, linting, fo
 # Install on Windows
 powershell -c "iwr https://qlty.sh | iex"
 
-# Install on macOS/Linux  
+# Install on macOS/Linux
 curl https://qlty.sh | bash
 ```
 
@@ -22,16 +23,36 @@ qlty init
 
 ## Usage
 
-### Quick Quality Check
+### Working npm Scripts
+
+The project uses alternative implementations for quality checks due to qlty configuration challenges:
 
 ```bash
-# Run a sample of quality checks
+# Comprehensive quality check (ESLint + Critical Coverage Tests)
 npm run quality:check
 
-# Check specific files
+# Format all files with Prettier
+npm run quality:fix
+
+# Security audit for dependencies
+npm run security:dependencies
+
+# Get quality metrics information
+npm run quality:metrics
+```
+
+### Direct qlty Usage (Advanced)
+
+If qlty is properly installed and configured:
+
+```bash
+# Basic quality check (may require additional setup)
+qlty check --sample=10
+
+# Check specific files (if working)
 qlty check src/services/chat.js
 
-# Check all files
+# Check all files (if working)
 qlty check --all
 ```
 
@@ -74,16 +95,19 @@ npm run security:dependencies
 ## Enabled Tools
 
 ### Linting and Formatting
+
 - **ESLint**: JavaScript code linting
 - **Prettier**: Code formatting
 - **Markdownlint**: Markdown formatting
 
 ### Security Scanning
+
 - **Gitleaks**: Secret detection in code and history
 - **Trivy**: Dependency vulnerability scanning
 - **Semgrep**: Static application security testing (SAST)
 
 ### Code Quality Analysis
+
 - **Complexity Analysis**: Cyclomatic and cognitive complexity
 - **Duplication Detection**: Identifies duplicate code blocks
 - **Code Smells**: Detects maintainability issues
@@ -98,7 +122,7 @@ qlty is configured via `.qlty/qlty.toml`:
 config_version = "0"
 
 [[source]]
-name = "default"  
+name = "default"
 default = true
 
 [plugins.enabled]
@@ -126,19 +150,23 @@ Tool configurations are stored in `.qlty/configs/`:
 The project maintains the following quality standards:
 
 ### Code Coverage
+
 - **Minimum**: 82% overall coverage
 - **Branch Coverage**: 60% for critical components
 
 ### Code Complexity
+
 - **File Complexity**: Max 15 per file
 - **Function Complexity**: Max 10 per function
 - **Max Depth**: 4 levels of nesting
 
 ### Code Duplication
+
 - **Identical Code**: Max 50 lines
 - **Similar Code**: Max 80 similarity threshold
 
 ### Security
+
 - **No Secrets**: Zero tolerance for committed secrets
 - **Vulnerability Scanning**: All high/critical vulnerabilities must be addressed
 - **Dependency Auditing**: Regular security audits of dependencies
@@ -153,7 +181,7 @@ Quality checks are integrated into the CI/CD pipeline:
   run: |
     qlty check --all
     qlty smells --all
-    
+
 - name: Security scanning
   run: |
     qlty check --plugin=gitleaks
@@ -173,6 +201,7 @@ Install the qlty VS Code extension for real-time feedback:
 5. Restart VS Code
 
 Features:
+
 - Real-time linting and formatting
 - Quality metrics in editor
 - Security issue highlighting
@@ -183,6 +212,7 @@ Features:
 ### Common Issues
 
 **qlty command not found:**
+
 ```bash
 # Add to PATH (Windows PowerShell)
 $env:PATH += ";$env:USERPROFILE\.qlty\bin"
@@ -192,6 +222,7 @@ export PATH="$HOME/.qlty/bin:$PATH"
 ```
 
 **Permission denied errors:**
+
 ```bash
 # Windows - Run as administrator
 # macOS/Linux - Check file permissions
@@ -199,6 +230,7 @@ chmod +x ~/.qlty/bin/qlty
 ```
 
 **Plugin installation issues:**
+
 ```bash
 # Clear plugin cache and reinstall
 qlty plugins list
@@ -224,12 +256,14 @@ View detailed quality metrics and trends:
 ### For Contributors
 
 1. **Run quality checks** before committing:
+
    ```bash
    npm run quality:check
    npm run quality:fix
    ```
 
 2. **Check security** before pushing:
+
    ```bash
    npm run security:all
    ```

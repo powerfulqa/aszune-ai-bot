@@ -24,7 +24,7 @@ describe('Config - Pi Optimization Branch Coverage', () => {
   describe('Pi Optimization Environment Variables', () => {
     it('should handle various debounce values', () => {
       process.env.PI_DEBOUNCE_MS = '500';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.DEBOUNCE_MS).toBe(500);
     });
@@ -32,7 +32,7 @@ describe('Config - Pi Optimization Branch Coverage', () => {
     it('should handle various memory limit values', () => {
       process.env.PI_MEMORY_LIMIT = '150';
       process.env.PI_MEMORY_CRITICAL = '200';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.MEMORY_LIMITS.RAM_THRESHOLD_MB).toBe(150);
       expect(config.PI_OPTIMIZATIONS.MEMORY_LIMITS.RAM_CRITICAL_MB).toBe(200);
@@ -40,7 +40,7 @@ describe('Config - Pi Optimization Branch Coverage', () => {
 
     it('should handle max connections setting', () => {
       process.env.PI_MAX_CONNECTIONS = '1';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.MAX_CONNECTIONS).toBe(1);
     });
@@ -50,9 +50,9 @@ describe('Config - Pi Optimization Branch Coverage', () => {
       delete process.env.PI_DEBOUNCE_MS;
       delete process.env.PI_MEMORY_LIMIT;
       delete process.env.PI_MAX_CONNECTIONS;
-      
+
       const config = require('../../src/config/config');
-      
+
       // Should have default values
       expect(config.PI_OPTIMIZATIONS.DEBOUNCE_MS).toBe(300);
       expect(config.PI_OPTIMIZATIONS.MEMORY_LIMITS.RAM_THRESHOLD_MB).toBe(200);
@@ -81,13 +81,13 @@ describe('Config - Pi Optimization Branch Coverage', () => {
         LOW_CPU_MODE: true,
       };
       mockPiDetector.initPiOptimizations.mockResolvedValue(expectedOptimizations);
-      
+
       // Enable Pi optimizations for this test
       process.env.ENABLE_PI_OPTIMIZATIONS = 'true';
-      
+
       const config = require('../../src/config/config');
       const result = await config.initializePiOptimizations();
-      
+
       expect(result).toBe(config); // Returns entire config object
       expect(result.PI_OPTIMIZATIONS.MAX_CONNECTIONS).toBe(1);
       expect(mockPiDetector.initPiOptimizations).toHaveBeenCalled();
@@ -95,10 +95,10 @@ describe('Config - Pi Optimization Branch Coverage', () => {
 
     it('should handle pi-detector errors gracefully', async () => {
       mockPiDetector.initPiOptimizations.mockRejectedValue(new Error('Pi detection failed'));
-      
+
       const config = require('../../src/config/config');
       const result = await config.initializePiOptimizations();
-      
+
       // Should return the config object even when error occurs
       expect(result).toBe(config);
       expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
@@ -110,9 +110,9 @@ describe('Config - Pi Optimization Branch Coverage', () => {
       mockPiDetector.initPiOptimizations.mockImplementation(() => {
         throw new Error('Module not found');
       });
-      
+
       const config = require('../../src/config/config');
-      
+
       // Function should handle missing module gracefully
       const result = await config.initializePiOptimizations();
       expect(result).toBe(config);
@@ -121,10 +121,10 @@ describe('Config - Pi Optimization Branch Coverage', () => {
 
     it('should handle pi-detector returning null', async () => {
       mockPiDetector.initPiOptimizations.mockResolvedValue(null);
-      
+
       const config = require('../../src/config/config');
       const result = await config.initializePiOptimizations();
-      
+
       // Should return config when pi-detector returns null
       expect(result).toBe(config);
       expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
@@ -133,10 +133,10 @@ describe('Config - Pi Optimization Branch Coverage', () => {
 
     it('should handle pi-detector returning undefined', async () => {
       mockPiDetector.initPiOptimizations.mockResolvedValue(undefined);
-      
+
       const config = require('../../src/config/config');
       const result = await config.initializePiOptimizations();
-      
+
       // Should return config when pi-detector returns undefined
       expect(result).toBe(config);
       expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
@@ -147,7 +147,7 @@ describe('Config - Pi Optimization Branch Coverage', () => {
   describe('Configuration Structure Edge Cases', () => {
     it('should handle different PI_LOG_LEVEL values', () => {
       process.env.PI_LOG_LEVEL = 'DEBUG';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.LOG_LEVEL).toBe('DEBUG');
     });
@@ -155,7 +155,7 @@ describe('Config - Pi Optimization Branch Coverage', () => {
     it('should handle boolean environment variables correctly', () => {
       process.env.PI_COMPACT_MODE = 'true';
       process.env.PI_LOW_CPU_MODE = 'false';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.COMPACT_MODE).toBe(true);
       expect(config.PI_OPTIMIZATIONS.LOW_CPU_MODE).toBe(false);
@@ -163,21 +163,21 @@ describe('Config - Pi Optimization Branch Coverage', () => {
 
     it('should handle reaction limit values', () => {
       process.env.PI_REACTION_LIMIT = '5';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.REACTION_LIMIT).toBe(5);
     });
 
     it('should handle stream responses setting', () => {
       process.env.PI_STREAM_RESPONSES = 'false';
-      
+
       const config = require('../../src/config/config');
       expect(config.PI_OPTIMIZATIONS.STREAM_RESPONSES).toBe(false);
     });
 
     it('should have all required configuration sections', () => {
       const config = require('../../src/config/config');
-      
+
       expect(config).toHaveProperty('API');
       expect(config).toHaveProperty('PI_OPTIMIZATIONS');
       expect(config).toHaveProperty('COLORS');

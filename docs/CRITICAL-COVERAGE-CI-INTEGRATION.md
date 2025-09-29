@@ -9,61 +9,61 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   critical-coverage:
     runs-on: ubuntu-latest
     name: Critical File Coverage Check
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run Critical Coverage Tests
-      run: |
-        npx jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests
-        echo "Critical coverage check completed"
-      env:
-        CI: true
-        NODE_ENV: test
-    
-    - name: Upload Coverage Reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: critical-files
-        name: critical-coverage
-        fail_ci_if_error: true
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Critical Coverage Tests
+        run: |
+          npx jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests
+          echo "Critical coverage check completed"
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: critical-files
+          name: critical-coverage
+          fail_ci_if_error: true
 
   full-test-suite:
     runs-on: ubuntu-latest
-    needs: critical-coverage  # Only run if critical coverage passes
-    
+    needs: critical-coverage # Only run if critical coverage passes
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run Full Test Suite
-      run: npm test
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Full Test Suite
+        run: npm test
 ```
 
 ## Package.json Scripts
@@ -105,19 +105,20 @@ echo "✅ Critical coverage check passed!"
 
 ### Current Status (as of last run)
 
-| File | Statements | Branches | Functions | Lines | Status |
-|------|------------|----------|-----------|--------|--------|
-| `src/index.js` | 92.91% | 93.33% | 80% | 92.91% | ✅ **PASSED** |
-| `src/config/config.js` | 90% | 33.33% | 100% | 90% | ⚠️ Branches need improvement |
-| `src/services/chat.js` | 58.85% | 47.61% | 87.5% | 58.85% | ❌ Needs improvement |
-| `src/services/perplexity-secure.js` | 73.54% | 86.02% | 71.42% | 73.54% | ❌ Close to threshold |
-| `src/utils/logger.js` | 84.08% | 72.5% | 90.9% | 84.08% | ⚠️ Branches need improvement |
-| `src/utils/error-handler.js` | 98.72% | 89.47% | 100% | 98.72% | ✅ **PASSED** |
-| `src/utils/conversation.js` | 96.45% | 90.9% | 100% | 96.45% | ✅ **PASSED** |
+| File                                | Statements | Branches | Functions | Lines  | Status                       |
+| ----------------------------------- | ---------- | -------- | --------- | ------ | ---------------------------- |
+| `src/index.js`                      | 92.91%     | 93.33%   | 80%       | 92.91% | ✅ **PASSED**                |
+| `src/config/config.js`              | 90%        | 33.33%   | 100%      | 90%    | ⚠️ Branches need improvement |
+| `src/services/chat.js`              | 58.85%     | 47.61%   | 87.5%     | 58.85% | ❌ Needs improvement         |
+| `src/services/perplexity-secure.js` | 73.54%     | 86.02%   | 71.42%    | 73.54% | ❌ Close to threshold        |
+| `src/utils/logger.js`               | 84.08%     | 72.5%    | 90.9%     | 84.08% | ⚠️ Branches need improvement |
+| `src/utils/error-handler.js`        | 98.72%     | 89.47%   | 100%      | 98.72% | ✅ **PASSED**                |
+| `src/utils/conversation.js`         | 96.45%     | 90.9%    | 100%      | 96.45% | ✅ **PASSED**                |
 
 ### Overall Project Coverage
+
 - **Statements**: 80.64% (Target: ✅ Achieved!)
-- **Branches**: 73.16% 
+- **Branches**: 73.16%
 - **Functions**: 83.95%
 - **Lines**: 80.64%
 

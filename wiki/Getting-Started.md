@@ -29,11 +29,11 @@ Follow these steps to set up the Aszune AI Bot:
    ```
 
    Optional: Install qlty for code quality checks during development:
-   
+
    ```bash
    # macOS/Linux
    curl -sSL https://qlty.sh/install | sh
-   
+
    # Windows (PowerShell)
    Invoke-RestMethod -Uri "https://qlty.sh/install.ps1" | Invoke-Expression
    ```
@@ -114,7 +114,8 @@ npm run test:coverage
 ## Next Steps
 
 - Check out the [Usage Guide](Usage-Guide) to learn how to interact with the bot
-- Explore the [Command Reference](Command-Reference) for detailed information about available commands
+- Explore the [Command Reference](Command-Reference) for detailed information about available
+  commands
 - Read the [Contributing Guidelines](../CONTRIBUTING.md) if you want to contribute to the project
 - Review the [Code Quality Documentation](../docs/QLTY_INTEGRATION.md) for development standards
 - Visit the [Troubleshooting](Troubleshooting) page if you encounter any issues

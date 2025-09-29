@@ -10,7 +10,8 @@
 
 ## Reporting a Vulnerability
 
-We take the security of Aszune AI Bot seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of Aszune AI Bot seriously. If you discover a security vulnerability, please
+follow these steps:
 
 ### How to Report
 
@@ -42,6 +43,7 @@ When using Aszune AI Bot, please ensure:
 ### Scope
 
 This security policy applies to:
+
 - The main application code in the `src/` directory
 - Configuration files and deployment scripts
 - Dependencies and third-party integrations
@@ -50,6 +52,7 @@ This security policy applies to:
 ### Out of Scope
 
 The following are generally out of scope:
+
 - Issues in third-party dependencies (report to the respective maintainers)
 - Denial of service attacks against the Discord API
 - Social engineering attacks
@@ -68,4 +71,5 @@ The project implements several security measures:
 
 ## Contact
 
-For security-related questions or concerns, please contact the project maintainers through the repository's issue tracker (for non-sensitive matters) or via email for sensitive security issues.
+For security-related questions or concerns, please contact the project maintainers through the
+repository's issue tracker (for non-sensitive matters) or via email for sensitive security issues.

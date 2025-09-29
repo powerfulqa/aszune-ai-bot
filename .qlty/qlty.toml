@@ -63,3 +63,21 @@ test_patterns = [
   "**/jest.*.js",
   "**/test/**"
 ]
+
+[[plugin]]
+name = "eslint"
+
+[[plugin]]
+name = "prettier"
+
+[[plugin]]
+name = "gitleaks"
+
+[[plugin]]
+name = "trivy"
+
+[[plugin]]
+name = "semgrep"
+
+[[plugin]]
+name = "markdownlint"

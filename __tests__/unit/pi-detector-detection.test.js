@@ -39,7 +39,7 @@ describe('Pi Detector - Detection', () => {
       fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2');
 
       // Mock successful temperature check
-      execSync.mockReturnValue('temp=42.3\'C');
+      execSync.mockReturnValue("temp=42.3'C");
 
       const result = await piDetector.detectPiModel();
 
@@ -54,7 +54,7 @@ describe('Pi Detector - Detection', () => {
       fs.readFile.mockResolvedValue('Hardware : BCM2837 Raspberry Pi 3 Model B Rev 1.2');
 
       // Mock successful temperature check
-      execSync.mockReturnValue('temp=45.1\'C');
+      execSync.mockReturnValue("temp=45.1'C");
 
       const result = await piDetector.detectPiModel();
 
@@ -69,7 +69,7 @@ describe('Pi Detector - Detection', () => {
       fs.readFile.mockResolvedValue('Hardware : BCM2712 Raspberry Pi 5 Model B Rev 1.0');
 
       // Mock successful temperature check
-      execSync.mockReturnValue('temp=38.7\'C');
+      execSync.mockReturnValue("temp=38.7'C");
 
       const result = await piDetector.detectPiModel();
 
@@ -83,7 +83,7 @@ describe('Pi Detector - Detection', () => {
       fs.readFile.mockResolvedValue(
         'Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2\nCPU max MHz: 1500.0\nRevision: c03112'
       );
-      execSync.mockReturnValue('temp=42.3\'C');
+      execSync.mockReturnValue("temp=42.3'C");
 
       const result = await piDetector.detectPiModel();
 

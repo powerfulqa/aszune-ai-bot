@@ -12,16 +12,16 @@ jest.mock('fs', () => ({
     appendFile: jest.fn(),
     rename: jest.fn(),
     readdir: jest.fn(),
-    unlink: jest.fn()
-  }
+    unlink: jest.fn(),
+  },
 }));
 
 // Mock config
 jest.mock('../../src/config/config', () => ({
   LOGGING: {
     DEFAULT_MAX_SIZE_MB: 10,
-    MAX_LOG_FILES: 5
-  }
+    MAX_LOG_FILES: 5,
+  },
 }));
 
 describe('Logger - Log Level Filtering', () => {
@@ -31,7 +31,7 @@ describe('Logger - Log Level Filtering', () => {
   const setupTestEnvironment = () => {
     originalEnv = { ...process.env };
     originalConsole = { ...console };
-    
+
     // Mock console methods
     console.log = jest.fn();
     console.warn = jest.fn();
@@ -62,9 +62,9 @@ describe('Logger - Log Level Filtering', () => {
     process.env.PI_LOG_LEVEL = 'INFO';
     delete require.cache[require.resolve('../../src/utils/logger')];
     const testLogger = require('../../src/utils/logger');
-    
+
     testLogger.debug('debug message');
-    
+
     expect(console.log).not.toHaveBeenCalled();
   });
 
@@ -72,9 +72,9 @@ describe('Logger - Log Level Filtering', () => {
     process.env.PI_LOG_LEVEL = 'WARN';
     delete require.cache[require.resolve('../../src/utils/logger')];
     const testLogger = require('../../src/utils/logger');
-    
+
     testLogger.info('info message');
-    
+
     expect(console.log).not.toHaveBeenCalled();
   });
 
@@ -82,9 +82,9 @@ describe('Logger - Log Level Filtering', () => {
     process.env.PI_LOG_LEVEL = 'ERROR';
     delete require.cache[require.resolve('../../src/utils/logger')];
     const testLogger = require('../../src/utils/logger');
-    
+
     testLogger.warn('warn message');
-    
+
     expect(console.warn).not.toHaveBeenCalled();
   });
 
@@ -92,12 +92,12 @@ describe('Logger - Log Level Filtering', () => {
     process.env.PI_LOG_LEVEL = 'DEBUG';
     delete require.cache[require.resolve('../../src/utils/logger')];
     const testLogger = require('../../src/utils/logger');
-    
+
     testLogger.debug('debug message');
     testLogger.info('info message');
     testLogger.warn('warn message');
     testLogger.error('error message');
-    
+
     expect(console.log).toHaveBeenCalledTimes(2); // debug and info
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -107,11 +107,11 @@ describe('Logger - Log Level Filtering', () => {
     process.env.PI_LOG_LEVEL = 'INVALID_LEVEL';
     delete require.cache[require.resolve('../../src/utils/logger')];
     const testLogger = require('../../src/utils/logger');
-    
+
     // Should default to INFO level
     testLogger.debug('debug message');
     testLogger.info('info message');
-    
+
     expect(console.log).toHaveBeenCalledTimes(1); // Only info should show
   });
 });

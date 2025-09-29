@@ -14,7 +14,8 @@ notes, see the [docs/](./docs/) directory.
 - **Professional Documentation**: Standard files (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
 - **Quality Automation**: 7 new npm scripts for streamlined quality workflow
 - **CI/CD Enhancement**: Automated qlty checks and security scanning in GitHub Actions
-- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero secrets
+- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
+  secrets
 - **Documentation Standards**: Markdownlint configuration for consistent formatting
 - **Developer Experience**: Enhanced development workflow with integrated quality tooling
 - **Centralized Configuration**: Unified quality settings in `.qlty/qlty.toml`

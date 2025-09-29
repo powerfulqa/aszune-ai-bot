@@ -39,7 +39,7 @@ from everyone who wishes to improve the bot.
    curl https://qlty.sh | bash
    ```
 
-4. **Set Up Environment Variables**
+5. **Set Up Environment Variables**
 
    Create a `.env` file with your development credentials:
 
@@ -49,7 +49,7 @@ from everyone who wishes to improve the bot.
    DEBUG=true
    ```
 
-5. **Create a Development Bot**
+6. **Create a Development Bot**
 
    For testing, create a separate Discord bot application through the
    [Discord Developer Portal](https://discord.com/developers/applications) rather than using the
@@ -57,9 +57,11 @@ from everyone who wishes to improve the bot.
 
 ## Code Quality Standards
 
-This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and maintainability analysis.
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and
+maintainability analysis.
 
 ### Quality Requirements
+
 - **Test Coverage**: Maintain 82%+ overall coverage (currently 536+ tests)
 - **File Complexity**: Maximum 15 per file
 - **Function Complexity**: Maximum 10 per function

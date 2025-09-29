@@ -42,7 +42,7 @@ jest.mock('../../src/utils/input-validator', () => ({
 
 const mockMessageFormatter = {
   createCompactEmbed: jest.fn().mockReturnValue({ description: 'Error embed' }),
-  formatResponse: jest.fn().mockImplementation(text => text),
+  formatResponse: jest.fn().mockImplementation((text) => text),
 };
 jest.mock('../../src/utils/message-formatter', () => mockMessageFormatter);
 
@@ -78,22 +78,22 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Set up default mock behaviors
     mockInputValidator.validateUserId.mockReturnValue({ valid: true });
-    mockInputValidator.validateAndSanitize.mockReturnValue({ 
-      valid: true, 
+    mockInputValidator.validateAndSanitize.mockReturnValue({
+      valid: true,
       sanitized: 'test message',
-      warnings: []
+      warnings: [],
     });
     mockConversationManager.isRateLimited.mockReturnValue(false);
     mockConversationManager.getHistory.mockReturnValue([]);
     mockChunkMessage.mockResolvedValue(['Response chunk']);
     mockErrorHandler.handleError.mockReturnValue({
       type: 'ERROR',
-      message: 'An error occurred'
+      message: 'An error occurred',
     });
-    
+
     chatService = require('../../src/services/chat');
 
     // Mock Discord message
@@ -116,9 +116,9 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         valid: false,
         error: 'Invalid user ID format',
       });
-      
+
       const result = await chatService(mockMessage);
-      
+
       expect(result).toBeUndefined();
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
@@ -131,7 +131,7 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'VALIDATION_ERROR',
         message: 'Validation error occurred',
       });
-      
+
       // Should handle the error gracefully
       await expect(chatService(mockMessage)).rejects.toThrow('Validation failed');
     });
@@ -146,18 +146,20 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'TIMEOUT_ERROR',
         message: 'Request timed out',
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         expect.any(Error),
         'chat generation',
         expect.any(Object)
       );
       expect(mockMessage.reply).toHaveBeenCalledWith({
-        embeds: [expect.objectContaining({
-          description: expect.any(String),
-        })],
+        embeds: [
+          expect.objectContaining({
+            description: expect.any(String),
+          }),
+        ],
       });
     });
 
@@ -169,18 +171,20 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'RATE_LIMIT_ERROR',
         message: 'Too many requests',
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         expect.any(Error),
         'chat generation',
         expect.any(Object)
       );
       expect(mockMessage.reply).toHaveBeenCalledWith({
-        embeds: [expect.objectContaining({
-          description: expect.any(String),
-        })],
+        embeds: [
+          expect.objectContaining({
+            description: expect.any(String),
+          }),
+        ],
       });
     });
 
@@ -192,18 +196,20 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'API_ERROR',
         message: 'Service unavailable',
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         expect.any(Error),
         'chat generation',
         expect.any(Object)
       );
       expect(mockMessage.reply).toHaveBeenCalledWith({
-        embeds: [expect.objectContaining({
-          description: expect.any(String),
-        })],
+        embeds: [
+          expect.objectContaining({
+            description: expect.any(String),
+          }),
+        ],
       });
     });
   });
@@ -212,9 +218,9 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
     it('should skip emoji processing in low CPU mode', async () => {
       mockConfig.PI_OPTIMIZATIONS.LOW_CPU_MODE = true;
       mockPerplexityService.generateChatResponse.mockResolvedValue('Response');
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockEmojiManager.addReactionsToMessage).not.toHaveBeenCalled();
     });
 
@@ -223,9 +229,9 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
       mockPerplexityService.generateChatResponse.mockResolvedValue('Response');
       // Set up successful chunking to ensure the flow reaches emoji processing
       mockChunkMessage.mockReturnValue(['Single chunk response']);
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockEmojiManager.addReactionsToMessage).toHaveBeenCalledWith(mockMessage);
     });
 
@@ -233,10 +239,10 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
       mockConfig.PI_OPTIMIZATIONS.LOW_CPU_MODE = false;
       mockPerplexityService.generateChatResponse.mockResolvedValue('Response');
       mockEmojiManager.addReactionsToMessage.mockRejectedValue(new Error('Emoji error'));
-      
+
       // Should not throw error despite emoji processing failure
       await expect(chatService(mockMessage)).resolves.toBeUndefined();
-      
+
       // Should still send response even if emoji processing fails
       expect(mockChunkMessage).toHaveBeenCalled();
     });
@@ -249,9 +255,9 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'FORMAT_ERROR',
         message: 'Formatting failed',
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockErrorHandler.handleError).toHaveBeenCalled();
     });
 
@@ -264,9 +270,9 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
         type: 'CHUNK_ERROR',
         message: 'Message chunking failed',
       });
-      
+
       await chatService(mockMessage);
-      
+
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         expect.any(Error),
         'chat generation',
