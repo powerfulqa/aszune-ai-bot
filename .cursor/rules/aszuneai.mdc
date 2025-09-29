@@ -1,0 +1,588 @@
+---
+description: AI Agent Instructions for Aszune AI Bot Codebase - Comprehensive guidance for development patterns, testing, error handling, and best practices
+globs:
+alwaysApply: true
+---
+
+# AI Agent Instructions for Aszune AI Bot Codebase
+
+## 🎯 Overview
+
+This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions. The project follows qlty code quality standards for unified linting, security scanning, and maintainability analysis.
+
+## 📁 Codebase Architecture
+
+### Core Structure
+```
+src/
+├── commands/          # Command handlers (slash + text commands)
+├── config/           # Configuration management
+├── services/         # External API clients and services
+└── utils/            # Utility functions and helpers
+    ├── message-chunking/  # Advanced message splitting
+    └── [various utilities]
+.qlty/                # Code quality configuration (qlty tooling)
+├── qlty.toml         # Main qlty configuration
+└── configs/          # Tool-specific configurations
+    ├── .eslintrc.json
+    ├── .prettierrc
+    ├── .markdownlint.json
+    └── .gitleaks.toml
+docs/                 # Enhanced documentation
+├── QLTY_INTEGRATION.md
+└── QLTY_IMPLEMENTATION_SUMMARY.md
+```
+
+### Key Components
+- **Discord Interface**: Handles Discord API interactions
+- **Command Handler**: Processes both slash commands and text commands
+- **Perplexity API Client**: Manages AI API communication with secure caching
+- **Conversation Manager**: Class-based conversation tracking
+- **Error Handler**: Comprehensive error handling system
+- **Message Chunker**: Intelligent message splitting with boundary detection
+- **Input Validator**: Content sanitization and validation
+
+### Standard Documentation Files (Professional Standards)
+The project includes industry-standard documentation:
+
+#### Security & Community
+- **`SECURITY.md`**: Security policy, vulnerability reporting procedures
+- **`CODE_OF_CONDUCT.md`**: Community guidelines (Contributor Covenant v2.1)
+- **`CONTRIBUTING.md`**: Comprehensive contribution guidelines and quality standards
+
+#### Project Management
+- **`CHANGELOG.md`**: Standardized changelog following Keep a Changelog format
+- **`README.md`**: Enhanced with code quality section and qlty integration info
+- **`docs/QLTY_INTEGRATION.md`**: Detailed qlty usage guide and best practices
+- **`docs/QLTY_IMPLEMENTATION_SUMMARY.md`**: Complete implementation overview
+
+#### Quality Configuration
+- **`.qlty/qlty.toml`**: Main qlty configuration with all enabled plugins
+- **`.qlty/configs/`**: Centralized tool-specific configurations
+  - `.eslintrc.json`: JavaScript linting rules
+  - `.prettierrc`: Code formatting preferences  
+  - `.markdownlint.json`: Documentation formatting rules
+  - `.gitleaks.toml`: Secret detection patterns
+
+## 🚨 Critical Error Handling Patterns
+
+### ⚠️ MAJOR ISSUE: Error Handling Contract Violations
+
+**Problem**: The codebase has strict error handling contracts that MUST be maintained:
+- Services should **THROW** errors, not return error strings
+- Tests expect **THROWN** exceptions, not returned error messages
+- Error messages to users should be sent as **Discord embeds**, not plain text
+
+**Common Mistakes**:
+```javascript
+// ❌ WRONG - Returns error string
+catch (error) {
+  return "Error occurred: " + error.message;
+}
+
+// ✅ CORRECT - Throws error
+catch (error) {
+  throw error;
+}
+```
+
+**Test Pattern**:
+```javascript
+// ❌ WRONG - Expects returned string
+expect(result).toContain('error message');
+
+// ✅ CORRECT - Expects thrown exception
+await expect(service.method()).rejects.toThrow('error message');
+```
+
+### Error Handler Usage
+```javascript
+const errorResponse = ErrorHandler.handleError(error, 'context', additionalData);
+// errorResponse.message contains user-friendly message
+// errorResponse.type contains error category
+```
+
+## 🧪 Testing Patterns & Common Issues
+
+### Mock Structure Requirements
+The codebase uses complex mocking patterns that must be followed exactly:
+
+#### Discord.js Mocking
+```javascript
+// Always mock discord.js early in test files
+jest.mock('discord.js', () => {
+  const mockClient = {
+    on: jest.fn().mockReturnThis(),
+    once: jest.fn().mockImplementation((event, handler) => {
+      if (event === 'ready') handler();
+      return mockClient;
+    }),
+    login: jest.fn().mockResolvedValue('Logged in'),
+    // ... other methods
+  };
+  
+  return {
+    Client: jest.fn(() => mockClient),
+    GatewayIntentBits: { /* ... */ },
+    REST: jest.fn(() => ({ /* ... */ })),
+  };
+});
+```
+
+#### Service Mocking
+```javascript
+// Mock services with proper method signatures
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+  // Always include all methods used in tests
+}));
+```
+
+### Test Assertion Patterns
+
+#### Embed Format Testing
+```javascript
+// ✅ CORRECT - Test embed structure
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [{
+    color: "#5865F2",  // Use exact color values
+    description: "Exact error message text",  // Use exact strings
+    footer: { text: 'Aszai Bot' }
+  }]
+});
+
+// ❌ WRONG - Using matchers that don't work reliably
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [expect.objectContaining({
+    description: expect.stringContaining('partial text'),
+    color: expect.any(Number)
+  })]
+});
+```
+
+#### Error Testing
+```javascript
+// ✅ CORRECT - Test for thrown errors
+await expect(service.method()).rejects.toThrow('Expected error message');
+
+// ❌ WRONG - Test for returned error strings
+const result = await service.method();
+expect(result).toContain('error message');
+```
+
+## �️ Security & Quality Requirements (qlty Standards)
+
+### Mandatory Security Practices
+This project enforces strict security standards through automated scanning:
+
+#### Secret Detection (Gitleaks)
+- **Zero tolerance** for hardcoded secrets, tokens, or API keys
+- All sensitive data must use environment variables
+- Custom patterns detect Discord tokens and API keys
+- **Pre-commit verification required**: `npm run security:secrets`
+
+#### Vulnerability Management (Trivy)  
+- All high/critical vulnerabilities must be addressed
+- Dependency scanning covers all languages/technologies
+- Regular security audits via `npm run security:dependencies`
+
+#### Static Application Security Testing (Semgrep)
+- SAST analysis identifies security anti-patterns
+- Code injection vulnerabilities automatically detected
+- Security best practices enforced
+
+### Code Quality Thresholds
+Automated quality gates enforce these limits:
+
+#### Complexity Limits
+```toml
+[smells]
+file_complexity.threshold = 15      # Max complexity per file
+function_complexity.threshold = 10  # Max complexity per function  
+```
+
+#### Duplication Limits
+```toml  
+identical_code.threshold = 50       # Max identical lines
+similar_code.threshold = 80         # Max similarity percentage
+```
+
+#### Coverage Requirements
+- **Minimum test coverage**: 82% (currently 536+ tests)
+- **Branch coverage**: 60%+ for critical components
+- **Error scenario coverage**: All error paths tested
+
+### Quality Enforcement Tools
+1. **ESLint**: Strict JavaScript linting rules
+2. **Prettier**: Consistent code formatting
+3. **Markdownlint**: Documentation formatting standards
+4. **Gitleaks**: Secret detection in code and git history
+5. **Trivy**: Comprehensive vulnerability scanning
+6. **Semgrep**: Static security analysis
+7. **Complexity Analysis**: Cyclomatic complexity monitoring
+8. **Duplication Detection**: Code duplication tracking
+
+### Violation Handling
+When quality checks fail:
+1. **Auto-fix first**: Run `npm run quality:fix`
+2. **Manual fixes**: Address remaining issues individually
+3. **Security issues**: Must be resolved before merge
+4. **Complexity violations**: Refactor to meet thresholds
+5. **Test failures**: All tests must pass
+
+## �🔧 Module Export Patterns
+
+### Backward Compatibility Requirements
+The codebase maintains strict backward compatibility:
+
+```javascript
+// ✅ CORRECT - Maintains all export patterns
+module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;
+
+// ❌ WRONG - Breaking change
+module.exports = {
+  handleChatMessage,
+  default: handleChatMessage,
+};
+```
+
+## 📝 Command Handling Patterns
+
+### Dual Command Support
+The bot supports both slash commands and text commands:
+
+```javascript
+// Text command handling
+const mockInteraction = {
+  user: message.author,
+  channel: message.channel,
+  content: message.content,
+  reply: (content) => message.reply(content),
+  deferReply: async () => message.channel.sendTyping(),
+  editReply: (content) => message.reply(content),
+};
+```
+
+### Command Extraction
+```javascript
+// Separate methods for different command types
+_extractTextFromSlashCommand(interaction) {
+  return interaction.options.getString('text');
+}
+
+_extractTextFromTextCommand(interaction) {
+  const match = interaction.content.match(/^!command\s+(.+)/i);
+  return match ? match[1] : '';
+}
+```
+
+## 🛠️ Common Development Issues & Solutions
+
+### 1. Circular Dependency Issues
+**Problem**: Config access in module-level code causes circular dependencies
+**Solution**: Move config access inside functions/methods
+
+```javascript
+// ❌ WRONG - Module level config access
+const config = require('../config/config');
+const someValue = config.SOME_VALUE;
+
+// ✅ CORRECT - Function level config access
+function someFunction() {
+  const config = require('../config/config');
+  return config.SOME_VALUE;
+}
+```
+
+### 2. Test Mock Conflicts
+**Problem**: Multiple mock files with same names cause conflicts
+**Solution**: Use unique naming and proper mock organization
+
+```javascript
+// Use descriptive mock names
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+}));
+```
+
+### 3. Error Message Format Inconsistency
+**Problem**: Tests expect different error message formats
+**Solution**: Always use exact string matches in tests
+
+```javascript
+// Use exact error messages from ErrorHandler
+const expectedMessage = "The service is temporarily unavailable. Please try again later.";
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [{ description: expectedMessage }]
+});
+```
+
+### 4. Memory Leak Prevention
+**Problem**: Conversation history and caches can grow indefinitely
+**Solution**: Implement proper cleanup and pruning
+
+```javascript
+// Always clean up in tests
+afterEach(() => {
+  conversationManager.clearAll();
+  // Reset other global state
+});
+```
+
+## 🎯 Testing Best Practices
+
+### 1. Test File Organization
+- Unit tests in `__tests__/unit/`
+- Integration tests in `__tests__/integration/`
+- Use descriptive test names
+- Group related tests in describe blocks
+
+### 2. Mock Management
+```javascript
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Reset any global state
+});
+
+afterEach(() => {
+  // Clean up after each test
+});
+```
+
+### 3. Error Scenario Testing
+Always test error scenarios:
+- API failures
+- Network timeouts
+- Invalid responses
+- Rate limiting
+- Memory errors
+
+### 4. Coverage Requirements
+- Maintain 80%+ statement coverage
+- Test all error paths
+- Include edge cases
+- Test both success and failure scenarios
+
+## 🔍 Debugging Common Issues
+
+### 1. Test Failures Due to Error Handling Changes
+**Symptoms**: Tests fail with "Expected string, got thrown error"
+**Solution**: Update tests to expect thrown errors instead of returned strings
+
+### 2. Mock Not Working
+**Symptoms**: Tests fail with "Cannot read property of undefined"
+**Solution**: Ensure mocks are defined before imports and include all required methods
+
+### 3. Circular Dependency Errors
+**Symptoms**: "Cannot access before initialization" errors
+**Solution**: Move config/import access inside functions
+
+### 4. Embed Format Test Failures
+**Symptoms**: Jest shows exact values instead of matchers
+**Solution**: Use exact string matches instead of `expect.stringContaining()`
+
+## 🎯 qlty Code Quality Standards
+
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and maintainability analysis.
+
+### Quality Standards Enforced
+- **File Complexity**: Maximum 15 per file
+- **Function Complexity**: Maximum 10 per function  
+- **Code Duplication**: Maximum 50 lines identical code
+- **Security**: Zero tolerance for secrets in code
+- **Test Coverage**: Maintain 82%+ overall coverage
+
+### qlty Configuration
+Located in `.qlty/qlty.toml` with enabled plugins:
+- `eslint` - JavaScript linting
+- `prettier` - Code formatting  
+- `gitleaks` - Secret detection
+- `trivy` - Dependency vulnerability scanning
+- `semgrep` - Static application security testing (SAST)
+- `complexity` - Code complexity analysis
+- `duplication` - Duplicate code detection
+- `markdownlint` - Documentation formatting
+
+### Quality Workflow Commands
+```bash
+# Quick quality checks
+npm run quality:check        # Sample quality analysis
+npm run quality:fix          # Auto-fix formatting issues  
+npm run quality:metrics      # View code metrics
+npm run quality:smells       # Detect code smells
+
+# Security scanning
+npm run security:secrets     # Secret detection
+npm run security:dependencies # Vulnerability scan
+npm run security:all         # Complete security audit
+
+# Direct qlty commands (if qlty CLI installed)
+qlty check --all            # Comprehensive analysis
+qlty fmt --all              # Auto-format all files
+qlty smells --all           # Code smell detection
+qlty metrics --all          # Quality metrics
+```
+
+### CI/CD Integration
+The GitHub Actions workflow automatically runs:
+- qlty quality checks on every PR
+- Security scanning (gitleaks + trivy)
+- Quality report generation
+- Coverage reporting to qlty Cloud
+
+## 📋 Code Quality Checklist
+
+Before committing changes:
+
+- [ ] All tests pass (`npm test`)
+- [ ] **qlty quality checks pass** (`npm run quality:check`)
+- [ ] **No security issues detected** (`npm run security:all`)
+- [ ] **Code complexity within limits** (file ≤15, function ≤10)
+- [ ] **No code duplication introduced** 
+- [ ] Error handling follows contract (throw, don't return)
+- [ ] Module exports maintain backward compatibility
+- [ ] Error messages sent as embeds, not plain text
+- [ ] No circular dependencies introduced
+- [ ] Proper cleanup in tests
+- [ ] Documentation updated if needed
+- [ ] **No secrets committed** (verified by gitleaks)
+- [ ] **Markdown properly formatted** (markdownlint compliant)
+
+## 🚀 Performance Considerations
+
+### Memory Management
+- Use `Map` instead of plain objects for better performance
+- Implement proper cleanup for conversation history
+- Monitor memory usage in production
+
+### API Optimization
+- Implement proper caching strategies
+- Use connection throttling
+- Handle rate limiting gracefully
+
+### Raspberry Pi Optimizations
+- Detect Pi hardware and apply optimizations
+- Use lazy loading for heavy dependencies
+- Implement message debouncing
+
+## 📚 Key Files to Understand
+
+### Critical Files
+- `src/services/perplexity-secure.js` - Main AI service
+- `src/services/chat.js` - Chat message handling
+- `src/commands/index.js` - Command processing
+- `src/utils/error-handler.js` - Error handling system
+- `src/config/config.js` - Configuration management
+
+### Test Files
+- `__tests__/unit/services/perplexity-secure-*.test.js` - Service tests
+- `__tests__/unit/chat-service-advanced.test.js` - Chat service tests
+- `__tests__/integration/error.test.js` - Error handling tests
+
+## ⚡ Quick Reference Commands
+
+### Testing Commands
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test __tests__/unit/specific-test.test.js
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run branch coverage tests
+npm run test:branch-coverage
+```
+
+### Quality & Security Commands  
+```bash
+# Quality checks and fixes
+npm run quality:check        # Quick quality sample
+npm run quality:fix          # Auto-fix issues
+npm run quality:metrics      # Code metrics
+npm run quality:smells       # Code smell detection
+
+# Security scanning
+npm run security:secrets     # Find secrets
+npm run security:dependencies # Vulnerability scan  
+npm run security:all         # Full security audit
+
+# Linting and formatting (legacy, prefer qlty)
+npm run lint                 # ESLint check
+npm run lint:fix             # ESLint fix
+npm run format               # Prettier format
+```
+
+### Application Commands
+```bash
+# Start development mode
+npm run dev
+
+# Start production mode
+npm start
+```
+
+## 🎯 Success Metrics
+
+A successful implementation should achieve:
+- ✅ All tests passing (536+ tests)
+- ✅ **82%+ code coverage** (current standard)
+- ✅ **qlty quality checks passing** (`npm run quality:check`)
+- ✅ **No security vulnerabilities** (`npm run security:all`)
+- ✅ **Code complexity within limits** (≤15 file, ≤10 function)
+- ✅ **No code duplication** (≤50 lines identical)
+- ✅ **No secrets in code** (gitleaks scan clean)
+- ✅ No circular dependencies
+- ✅ Proper error handling contracts
+- ✅ Backward compatibility maintained
+- ✅ Clean, maintainable code
+- ✅ Comprehensive error scenario coverage
+- ✅ **Documentation properly formatted** (markdownlint compliant)
+
+---
+
+## 📝 Notes for Future AI Agents
+
+### Critical Development Guidelines
+1. **Always read existing tests** before making changes to understand expected behavior
+2. **Test error scenarios extensively** - this codebase has complex error handling
+3. **Maintain backward compatibility** - breaking changes are not acceptable
+4. **Use exact string matches** in tests rather than matchers for reliability
+5. **Follow the established patterns** - don't reinvent the wheel
+6. **Clean up after yourself** - reset mocks and global state in tests
+7. **Document your changes** - update relevant documentation files
+
+### qlty-Specific Guidelines
+8. **Run quality checks before committing** - `npm run quality:check` must pass
+9. **Fix formatting automatically** - Use `npm run quality:fix` before manual fixes
+10. **Monitor code complexity** - Keep functions under 10 complexity, files under 15
+11. **Prevent code duplication** - Check with `npm run quality:smells`
+12. **Security first** - Always run `npm run security:all` before commits
+13. **No secrets in code** - Use environment variables, verify with gitleaks
+14. **Format documentation** - Ensure markdownlint compliance for all .md files
+15. **Follow qlty configuration** - Don't modify `.qlty/qlty.toml` without good reason
+16. **Use standard files** - Follow SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md standards
+
+### Quality Integration Workflow
+```bash
+# Recommended pre-commit workflow
+npm test                    # Ensure tests pass
+npm run quality:check      # Check code quality  
+npm run security:all       # Security scan
+npm run quality:fix        # Auto-fix issues
+git add . && git commit    # Commit changes
+```
+
+### Project Standards Documentation
+- **qlty Integration Guide**: `docs/QLTY_INTEGRATION.md`  
+- **Implementation Summary**: `docs/QLTY_IMPLEMENTATION_SUMMARY.md`
+- **Security Policy**: `SECURITY.md`
+- **Contribution Guidelines**: `CONTRIBUTING.md`
+- **Code of Conduct**: `CODE_OF_CONDUCT.md`
+- **Changelog**: `CHANGELOG.md` (follows Keep a Changelog format)
+
+This codebase has been through extensive iterations and debugging. The patterns and solutions documented here represent hard-won knowledge from many failed attempts. The qlty integration adds professional-grade quality standards that must be maintained. Follow these guidelines to avoid repeating the same mistakes and ensure efficient, successful development that meets modern code quality standards.

@@ -9,10 +9,12 @@ in `.github/workflows/unified-ci.yml` and runs automatically on push and pull re
 
 1. **Setup**: Checks out code and sets up Node.js environment
 2. **Dependencies**: Installs npm dependencies with caching for faster builds
-3. **Testing**: Runs all tests with coverage reporting
-4. **Security**: Performs security audits with npm
-5. **Coverage Reporting**: Uploads coverage data to Codecov and QLTY
-6. **Deployment**: Prepares for deployment when merging to the main branch
+3. **Code Quality**: Runs comprehensive quality checks with qlty integration
+4. **Testing**: Runs all tests with coverage reporting
+5. **Security Scanning**: Performs multi-layered security analysis (npm audit, qlty security)
+6. **Coverage Reporting**: Uploads coverage data to Codecov and QLTY
+7. **Quality Gates**: Enforces code quality standards and metrics
+8. **Deployment**: Prepares for deployment when merging to the main branch
 
 ## Workflow Configuration
 
@@ -73,11 +75,34 @@ The current status of the CI pipeline is displayed on the README:
 3. **Codecov**: View detailed coverage reports
 4. **QLTY**: Check code quality metrics
 
+## Code Quality Integration
+
+The pipeline now includes comprehensive code quality checks with qlty:
+
+```yaml
+- name: Run quality checks
+  run: npm run quality:check
+
+- name: Run security scan
+  run: npm run security:all
+```
+
+### Quality Enforcement
+
+- **Code Complexity**: Enforces complexity limits (≤15 per file, ≤10 per function)
+- **Security Scanning**: Multi-tool security analysis (Gitleaks, Trivy, Semgrep)
+- **Code Standards**: ESLint, Prettier, and documentation formatting
+- **Duplication Detection**: Identifies and prevents code duplication
+- **Secret Detection**: Prevents accidental secret commits
+
 ## Recent Improvements
 
 The CI/CD pipeline was recently enhanced with:
 
-1. **Improved Test Reporting**: Added JUnit format output for better test visualization
-2. **Enhanced Coverage Reporting**: Added integration with both Codecov and QLTY
-3. **Security Scanning**: Added npm audit checks
-4. **Deployment Preparation**: Added configuration for automatic deployment
+1. **qlty Integration**: Complete unified code quality and security tooling
+2. **Enhanced Security**: Multi-layered security scanning with 3 specialized tools
+3. **Quality Gates**: Automated quality thresholds and standards enforcement
+4. **Improved Test Reporting**: Added JUnit format output for better test visualization
+5. **Enhanced Coverage Reporting**: Added integration with both Codecov and QLTY
+6. **Professional Documentation**: Standardized security and contribution guidelines
+7. **Deployment Preparation**: Added configuration for automatic deployment

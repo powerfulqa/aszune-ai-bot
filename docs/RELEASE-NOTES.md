@@ -7,40 +7,19 @@ notes, see the [docs/](./docs/) directory.
 
 ## Version History
 
-### v1.5.0 - qlty Code Quality Integration & Professional Standards ✅ COMPLETED (December 2024)
+### v1.5.0 - qlty Code Quality Integration & Professional Standards (2025-09-29)
 
-#### 🎯 **MAJOR ACHIEVEMENT**: 99.76% Quality Issue Reduction (21,492 → 51 total issues)
-
-**Quality Transformation Completed**:
-- **Line Ending Crisis Resolved**: 21,441 CRLF/LF conflicts eliminated (100% fixed)
-- **Test Success Rate**: 100% (853 of 853 tests passing)
-- **Code Coverage**: 81.51% comprehensive coverage achieved 
-- **Repository Organization**: 69% reduction in root directory clutter
-- **CI/CD Pipeline**: Stable npm-based quality automation implemented
-
-**Infrastructure Achievements**:
 - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
-- **Working npm Scripts**: Reliable quality automation (`npm run quality:check`, `quality:fix`, `lint:fix`)
-- **Multi-layered Security**: Comprehensive scanning with Gitleaks, Trivy, and Semgrep + npm audit
-- **Professional Documentation**: Standard files plus comprehensive integration guides
-- **Quality Automation**: 7 working npm scripts for streamlined quality workflow
-- **CI/CD Enhancement**: Automated quality checks adapted for npm script reliability
-- **Code Standards**: ESLint with complexity limits, 51 manageable remaining issues
-- **Documentation Standards**: Organized `/docs` structure with transparent status reporting
+- **Multi-layered Security**: Comprehensive scanning with Gitleaks, Trivy, and Semgrep
+- **Professional Documentation**: Standard files (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
+- **Quality Automation**: 7 new npm scripts for streamlined quality workflow
+- **CI/CD Enhancement**: Automated qlty checks and security scanning in GitHub Actions
+- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
+  secrets
+- **Documentation Standards**: Markdownlint configuration for consistent formatting
 - **Developer Experience**: Enhanced development workflow with integrated quality tooling
 - **Centralized Configuration**: Unified quality settings in `.qlty/qlty.toml`
-
-**Measurable Success Metrics**:
-```
-Total Issues:     21,492 → 51    (99.76% reduction)
-Line Endings:     21,441 → 0     (100% resolved)
-Test Coverage:    N/A → 81.51%   (Excellent)
-Test Success:     N/A → 98.5%    (840/853 passing)
-Build Stability:  Failing → ✅   (Reliable CI)
-```
-
-- Full implementation details in [RELEASE-NOTES-v1.5.0.md](./RELEASE-NOTES-v1.5.0.md)
-- Complete transformation summary in [docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md](./docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md)
+- Full details in [RELEASE-NOTES-v1.5.0.md](./RELEASE-NOTES-v1.5.0.md)
 
 ### v1.4.1 - Code Quality Excellence & Architecture Refinement
 

@@ -23,7 +23,32 @@ and adds fun emoji reactions based on keywords found in messages. The bot suppor
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers
 
+## Code Quality & Standards
+
+The project follows modern code quality practices with [qlty](https://qlty.sh/) integration:
+
+- **[Code Quality Documentation](../docs/QLTY_INTEGRATION.md)** - Comprehensive qlty usage guide
+- **[Implementation Summary](../docs/QLTY_IMPLEMENTATION_SUMMARY.md)** - qlty integration overview
+- **[Security Policy](../SECURITY.md)** - Security guidelines and vulnerability reporting
+- **[Contributing Guidelines](../CONTRIBUTING.md)** - Enhanced contribution standards with quality
+  requirements
+- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Changelog](../CHANGELOG.md)** - Standardized project changelog
+
 ## Version Information
+
+- **v1.5.0** - qlty Code Quality Integration (2025-09-29)
+  - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
+  - **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration for comprehensive
+    security
+  - **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md,
+    CHANGELOG.md
+  - **Quality Automation**: 7 new npm scripts for streamlined quality workflow
+  - **CI/CD Enhancement**: Automated qlty checks and security scanning in GitHub Actions
+  - **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
+    secrets
+  - **Developer Experience**: Unified quality interface replacing fragmented tooling
+  - **Backward Compatibility**: All existing functionality and 82%+ test coverage maintained
 
 - **v1.4.1** - Code Quality Excellence & Architecture Refinement (2025-09-28)
   - **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)

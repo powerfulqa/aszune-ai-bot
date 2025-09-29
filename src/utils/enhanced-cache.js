@@ -167,8 +167,7 @@ class EnhancedCache {
       this.metrics.hits++;
       return entry.value;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache get operation', { key });
-      ErrorHandler.logError(errorResponse, { operation: 'cacheGet', key });
+      ErrorHandler.handleError(error, 'cache get operation', { key });
       this.metrics.misses++;
       return null;
     }
@@ -221,12 +220,11 @@ class EnhancedCache {
       this.metrics.sets++;
       return true;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache set operation', {
+      ErrorHandler.handleError(error, 'cache set operation', {
         key,
         valueType: typeof value,
         options,
       });
-      ErrorHandler.logError(errorResponse, { operation: 'cacheSet', key, options });
       return false;
     }
   }
@@ -249,8 +247,7 @@ class EnhancedCache {
       this.metrics.deletes++;
       return true;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache delete operation', { key });
-      ErrorHandler.logError(errorResponse, { operation: 'cacheDelete', key });
+      ErrorHandler.handleError(error, 'cache delete operation', { key });
       return false;
     }
   }
@@ -265,8 +262,7 @@ class EnhancedCache {
       this.frequencyMap.clear();
       this.metrics.totalMemory = 0;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache clear operation');
-      ErrorHandler.logError(errorResponse, { operation: 'cacheClear' });
+      ErrorHandler.handleError(error, 'cache clear operation');
     }
   }
 
@@ -288,8 +284,7 @@ class EnhancedCache {
 
       return invalidated;
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache tag invalidation', { tag });
-      ErrorHandler.logError(errorResponse, { operation: 'cacheTagInvalidation', tag });
+      ErrorHandler.handleError(error, 'cache tag invalidation', { tag });
       return 0;
     }
   }
@@ -345,7 +340,7 @@ class EnhancedCache {
 
     return {
       stats,
-      entries: entries.toSorted((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
+      entries: entries.sort((a, b) => b.lastAccessed - a.lastAccessed), // Sort by most recent access
     };
   }
 
@@ -395,7 +390,7 @@ class EnhancedCache {
   evictLRU() {
     // Evict enough entries to make room for new ones
     const entriesToEvict = Math.max(1, Math.ceil(this.maxEntries * 0.1)); // At least 1, or 10%
-    const sortedByAccess = Array.from(this.accessOrder.entries()).toSorted((a, b) => a[1] - b[1]);
+    const sortedByAccess = Array.from(this.accessOrder.entries()).sort((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {
       const key = sortedByAccess[i][0];
@@ -409,7 +404,7 @@ class EnhancedCache {
    */
   evictLFU() {
     const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries()).toSorted(
+    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort(
       (a, b) => a[1] - b[1]
     );
 
@@ -540,8 +535,7 @@ class EnhancedCache {
     try {
       this.evictExpired();
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cache cleanup');
-      ErrorHandler.logError(errorResponse, { operation: 'cacheCleanup' });
+      ErrorHandler.handleError(error, 'cache cleanup');
     }
   }
 

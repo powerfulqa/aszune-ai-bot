@@ -7,7 +7,7 @@ This project uses Jest for testing and has specific configurations for branch co
 ### Coverage Requirements
 
 - Overall branch coverage requirement: 60%
-- Current coverage metrics (v1.4.0):
+- Current coverage metrics (v1.5.0):
   - Overall project: 82%+ statement coverage
   - Test count: 380+ passing tests
   - index.js: 80% branch coverage
@@ -58,7 +58,15 @@ We are now using both the regular `logger.test.js` file and the specialized
 2. `logger-branch-coverage.test.js` provides additional branch coverage, testing edge cases
 3. Together they provide comprehensive testing of the logger module's branches
 
-### Recent Improvements (v1.4.0)
+### Recent Improvements (v1.5.0)
+
+- **qlty Integration**: Comprehensive code quality tooling with 8 unified plugins
+- **Security Enhancement**: Multi-layered security scanning (Gitleaks, Trivy, Semgrep)
+- **Quality Automation**: 7 new npm scripts for streamlined quality workflow
+- **Documentation Standards**: Professional contribution and security guidelines
+- **CI/CD Enhancement**: Automated quality gates and security scanning
+
+### Previous Improvements (v1.4.0)
 
 1. ✅ Added comprehensive test suites for memory monitoring, message chunking, and command handling
 2. ✅ Increased overall test coverage from 77.79% to 82%+

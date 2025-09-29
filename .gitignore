@@ -9,3 +9,8 @@ junit.xml
 .DS_Store
 commit_message.txt
 commit_msg.txt
+
+# Qlty output directories
+.qlty/logs/
+.qlty/out/
+.qlty/tmp/

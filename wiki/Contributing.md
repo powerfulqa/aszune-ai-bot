@@ -29,7 +29,17 @@ from everyone who wishes to improve the bot.
    npm install
    ```
 
-4. **Set Up Environment Variables**
+4. **Install qlty CLI** (Recommended for local quality checks)
+
+   ```bash
+   # Windows
+   powershell -c "iwr https://qlty.sh | iex"
+
+   # macOS/Linux
+   curl https://qlty.sh | bash
+   ```
+
+5. **Set Up Environment Variables**
 
    Create a `.env` file with your development credentials:
 
@@ -39,15 +49,72 @@ from everyone who wishes to improve the bot.
    DEBUG=true
    ```
 
-5. **Create a Development Bot**
+6. **Create a Development Bot**
 
    For testing, create a separate Discord bot application through the
    [Discord Developer Portal](https://discord.com/developers/applications) rather than using the
    production bot.
 
+## Code Quality Standards
+
+This project uses [qlty](https://qlty.sh/) for unified code quality, security scanning, and
+maintainability analysis.
+
+### Quality Requirements
+
+- **Test Coverage**: Maintain 82%+ overall coverage (currently 536+ tests)
+- **File Complexity**: Maximum 15 per file
+- **Function Complexity**: Maximum 10 per function
+- **Code Duplication**: Maximum 50 lines identical code
+- **Security**: Zero tolerance for secrets in code
+- **Documentation**: Markdownlint compliant formatting
+
+### Pre-Commit Workflow
+
+```bash
+# Recommended workflow before committing
+npm test                    # Ensure all tests pass
+npm run quality:check      # Check code quality
+npm run security:all       # Security scan
+npm run quality:fix        # Auto-fix issues
+git add . && git commit    # Commit changes
+```
+
+### Quality Commands
+
+```bash
+# Quality checks and fixes
+npm run quality:check        # Quick quality sample
+npm run quality:fix          # Auto-fix formatting issues
+npm run quality:metrics      # View code metrics
+npm run quality:smells       # Detect code smells
+
+# Security scanning
+npm run security:secrets     # Secret detection
+npm run security:dependencies # Vulnerability scan
+npm run security:all         # Complete security audit
+```
+
 ### Project Structure
 
 Familiarize yourself with the project structure:
+
+```
+aszune-ai-bot/
+├── src/                    # Source code
+├── __tests__/              # Test suites
+├── .qlty/                  # Code quality configuration
+│   ├── qlty.toml          # Main qlty configuration
+│   └── configs/           # Tool-specific configurations
+├── docs/                   # Project documentation
+│   ├── QLTY_INTEGRATION.md
+│   └── QLTY_IMPLEMENTATION_SUMMARY.md
+├── wiki/                   # Comprehensive documentation
+├── SECURITY.md             # Security policy
+├── CONTRIBUTING.md         # Contribution guidelines
+├── CODE_OF_CONDUCT.md      # Community guidelines
+└── CHANGELOG.md            # Project changelog
+```
 
 ```
 aszune-ai-bot/
