@@ -8,6 +8,9 @@ const config = require('../config/config');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 const { ApplicationCommandOptionType } = require('discord.js');
+const DiscordAnalytics = require('../utils/discord-analytics');
+const ResourceOptimizer = require('../utils/resource-optimizer');
+const PerformanceDashboard = require('../utils/performance-dashboard');
 
 const conversationManager = new ConversationManager();
 
@@ -26,6 +29,9 @@ const commands = {
           '`/summary` or `!summary` - Summarise your current conversation\n' +
           '`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n' +
           '`/stats` or `!stats` - Show your usage stats\n' +
+          '`/analytics` or `!analytics` - Show Discord server analytics\n' +
+          '`/dashboard` or `!dashboard` - Show performance dashboard\n' +
+          '`/resources` or `!resources` - Show resource optimization status\n' +
           'Simply chat as normal to talk to the bot!'
       );
     },
@@ -205,6 +211,173 @@ const commands = {
       );
     },
     textCommand: '!stats',
+  },
+
+  analytics: {
+    data: {
+      name: 'analytics',
+      description: 'Show Discord server analytics and insights',
+    },
+    async execute(interaction) {
+      try {
+        await interaction.deferReply();
+        
+        // Generate daily analytics report
+        const analyticsData = await DiscordAnalytics.generateDailyReport();
+        const serverInsights = await DiscordAnalytics.generateServerInsights();
+        
+        const embed = {
+          color: config.COLORS.PRIMARY,
+          title: '📊 Discord Analytics Dashboard',
+          fields: [
+            {
+              name: '🏢 Server Overview',
+              value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
+              inline: true
+            },
+            {
+              name: '📈 Performance',
+              value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
+              inline: true
+            },
+            {
+              name: '🎯 Top Commands',
+              value: analyticsData.commandStats.slice(0, 3).map((cmd, i) => 
+                `${i + 1}. ${cmd.command} (${cmd.count})`
+              ).join('\n') || 'No data yet',
+              inline: true
+            },
+            {
+              name: '💡 Server Insights',
+              value: serverInsights.recommendations.slice(0, 2).join('\n') || 'All systems optimal!',
+              inline: false
+            }
+          ],
+          footer: { text: 'Aszai Bot Analytics' },
+          timestamp: new Date().toISOString()
+        };
+
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        logger.error('Error fetching analytics:', error);
+        const errorResponse = ErrorHandler.handleError(error, 'analytics_command');
+        return interaction.editReply({ content: errorResponse.message });
+      }
+    },
+    textCommand: '!analytics',
+  },
+
+  dashboard: {
+    data: {
+      name: 'dashboard',
+      description: 'Show comprehensive performance dashboard',
+    },
+    async execute(interaction) {
+      try {
+        await interaction.deferReply();
+        
+        // Generate comprehensive dashboard
+        const dashboardData = await PerformanceDashboard.generateDashboardReport();
+        const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
+        
+        const embed = {
+          color: dashboardData.overview.status === 'healthy' ? '#00FF00' : 
+            dashboardData.overview.status === 'warning' ? '#FFA500' : '#FF0000',
+          title: '🖥️ Performance Dashboard',
+          fields: [
+            {
+              name: '🚦 System Status',
+              value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
+              inline: true
+            },
+            {
+              name: '⚡ Performance',
+              value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
+              inline: true
+            },
+            {
+              name: '📊 Activity',
+              value: `Servers: ${dashboardData.overview.serverCount}\nActive Users: ${dashboardData.overview.activeUsers}\nCommands: ${dashboardData.overview.totalCommands}`,
+              inline: true
+            },
+            {
+              name: '🚨 Active Alerts',
+              value: dashboardData.alerts.length > 0 ? 
+                dashboardData.alerts.slice(0, 3).map(alert => 
+                  `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
+                ).join('\n') : '✅ No active alerts',
+              inline: false
+            }
+          ],
+          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
+          timestamp: new Date().toISOString()
+        };
+
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        logger.error('Error fetching dashboard:', error);
+        const errorResponse = ErrorHandler.handleError(error, 'dashboard_command');
+        return interaction.editReply({ content: errorResponse.message });
+      }
+    },
+    textCommand: '!dashboard',
+  },
+
+  resources: {
+    data: {
+      name: 'resources',
+      description: 'Show resource optimization status and recommendations',
+    },
+    async execute(interaction) {
+      try {
+        await interaction.deferReply();
+        
+        // Get resource optimization data
+        const resourceStatus = await ResourceOptimizer.monitorResources();
+        const analyticsData = await DiscordAnalytics.generateDailyReport();
+        const recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
+          analyticsData, 
+          { averageResponseTime: resourceStatus.performance.responseTime }
+        );
+        
+        const embed = {
+          color: resourceStatus.memory.status === 'good' ? '#00FF00' : 
+            resourceStatus.memory.status === 'warning' ? '#FFA500' : '#FF0000',
+          title: '🔧 Resource Optimization',
+          fields: [
+            {
+              name: '💾 Memory Status',
+              value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
+              inline: true
+            },
+            {
+              name: '⚙️ Performance',
+              value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
+              inline: true
+            },
+            {
+              name: '📈 Optimization Tier',
+              value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${analyticsData.summary.totalServers}\nRecommended: Auto-scaling active`,
+              inline: true
+            },
+            {
+              name: '💡 Recommendations',
+              value: recommendations.slice(0, 3).join('\n') || '✅ All systems optimized!',
+              inline: false
+            }
+          ],
+          footer: { text: 'Aszai Bot Resource Monitor' },
+          timestamp: new Date().toISOString()
+        };
+
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        logger.error('Error fetching resource data:', error);
+        const errorResponse = ErrorHandler.handleError(error, 'resources_command');
+        return interaction.editReply({ content: errorResponse.message });
+      }
+    },
+    textCommand: '!resources',
   },
 
   summarise: {
