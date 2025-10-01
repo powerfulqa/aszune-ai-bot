@@ -1,7 +1,19 @@
-# Aszune AI Bot - [Table of Contents](#table-of-contents)
+# Aszune AI Bot (v1.6.0)
+
+[![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml) 
+[![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
+[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot) 
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE) 
+[![Tests](https://img.shields.io/badge/Tests-991%20Passing-brightgreen.svg)](#testing--coverage)
+
+[Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
+
+**Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities with comprehensive analytics and monitoring features. Built for gaming communities, it provides lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time performance dashboards and server analytics directly within Discord. Features enterprise-grade code quality with 991+ automated tests and built-in license protection system.
+
+## Table of Contents
 
 - [Features](#features)
-- [License & Usage](#license--usage)
+- [License & Usage](#license--usage)  
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Setup Steps](#setup-steps)
@@ -18,15 +30,7 @@
   - [Branch Coverage Testing](#branch-coverage-testing)
 - [Troubleshooting](#troubleshooting)
 - [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)(https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
-[![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
-[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-991%20Passing-brightgreen.svg)](#testing--coverage)
-
-[Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
-
-**Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities with comprehensive analytics and monitoring features. Built for gaming communities, it provides lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time performance dashboards and server analytics directly within Discord. Features enterprise-grade code quality with 991+ automated tests and built-in license protection system.
+- [Contributing](#contributing)
 
 ---
 
