@@ -19,7 +19,7 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Release Notes Archive
 
-- [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Phase B+C Analytics Integration & Discord Monitoring (LATEST)
+- [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Analytics Integration & Discord Monitoring (LATEST)
 - [v1.5.0](./RELEASE-NOTES-v1.5.0.md) - qlty Code Quality Integration & Professional Standards  
 - [v1.4.1](./v1.4.1.md) - Code Quality Excellence & Architecture Refinement
 - [v1.4.0](./v1.4.0.md) - Comprehensive Testing & Coverage Enhancement

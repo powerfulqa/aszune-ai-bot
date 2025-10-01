@@ -1,6 +1,6 @@
 /**
  * Performance Dashboard - Unified dashboard for Discord bot monitoring and optimization
- * Part of Phase B+C enhancements combining analytics and resource optimization
+ * Performance dashboard combining analytics and resource optimization
  */
 
 const DiscordAnalytics = require('./discord-analytics');

@@ -1,6 +1,6 @@
 /**
  * Resource Optimizer - Dynamic resource allocation and scaling for Discord bot
- * Part of Phase B+C enhancements for automatic performance optimization
+ * Automatic performance optimization and resource monitoring
  */
 
 const logger = require('./logger');

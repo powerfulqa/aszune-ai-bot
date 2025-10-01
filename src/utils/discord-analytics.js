@@ -1,6 +1,6 @@
 /**
  * Discord Analytics - Monitor Discord-specific bot usage patterns and insights
- * Part of Phase B+C enhancements for Discord bot optimization
+ * Discord server analytics and monitoring for bot optimization
  */
 
 const logger = require('./logger');

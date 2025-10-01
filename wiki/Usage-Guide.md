@@ -4,7 +4,7 @@ This guide explains how to interact with Aszune AI Bot and get the most out of i
 
 ## What's New in v1.6.0
 
-Version 1.6.0 introduces **Phase B+C Analytics Integration** - comprehensive system monitoring directly in Discord:
+Version 1.6.0 introduces **Analytics Integration** - comprehensive system monitoring directly in Discord:
 
 ### New Analytics Commands
 - **`/analytics`** - Complete Discord server analytics with user engagement statistics, command usage patterns, and performance insights
@@ -38,7 +38,7 @@ Aszune AI Bot can be interacted with in two ways:
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
-### Phase B+C Analytics Commands (NEW)
+### Analytics Commands (NEW)
 | Command                    | Description                                                     |
 | -------------------------- | --------------------------------------------------------------- |
 | `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
