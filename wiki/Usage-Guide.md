@@ -2,13 +2,23 @@
 
 This guide explains how to interact with Aszune AI Bot and get the most out of its features.
 
-## What's New in v1.3.2
+## What's New in v1.6.0
 
-Version 1.3.2 includes an important enhancement to the message chunking system introduced in v1.3.1:
+Version 1.6.0 introduces **Phase B+C Analytics Integration** - comprehensive system monitoring directly in Discord:
 
-- Fixed a bug where words at chunk boundaries could be incorrectly joined together
-- Now all messages are properly formatted with correct spacing between words
-- Ensures complete content preservation when long messages are split into multiple chunks
+### New Analytics Commands
+- **`/analytics`** - Complete Discord server analytics with user engagement statistics, command usage patterns, and performance insights
+- **`/dashboard`** - Real-time performance dashboard showing system status, resource utilization, and operational health
+- **`/resources`** - Resource optimization monitoring with automated recommendations for performance improvements
+
+### Key Features
+- **Discord-Native Access**: All analytics accessible directly in Discord without external tools
+- **Real-time Monitoring**: Live system metrics and performance data
+- **Automated Insights**: AI-powered recommendations for optimization
+- **Complete Integration**: Seamless integration with existing bot functionality
+- **Full Test Coverage**: All 991 tests passing with comprehensive analytics coverage
+
+This update eliminates the need to access your Raspberry Pi directly for system monitoring - everything is now available through Discord commands!
 
 ## Basic Interaction
 
@@ -19,6 +29,7 @@ Aszune AI Bot can be interacted with in two ways:
 
 ## Available Commands
 
+### Core Commands
 | Command                                   | Description                                                 |
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `!help` / `/help`                         | Shows a list of available commands and usage                |
@@ -26,6 +37,13 @@ Aszune AI Bot can be interacted with in two ways:
 | `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
+
+### Phase B+C Analytics Commands (NEW)
+| Command                    | Description                                                     |
+| -------------------------- | --------------------------------------------------------------- |
+| `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
+| `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
+| `!resources` / `/resources` | View resource optimization status and recommendations           |
 
 ## Asking Questions
 
@@ -115,6 +133,48 @@ or
 ```
 /stats
 ```
+
+## Using Analytics Features
+
+### Server Analytics
+Get comprehensive Discord server analytics and insights:
+
+```text
+/analytics
+```
+
+This shows:
+- Daily activity summary
+- Command usage statistics
+- User engagement metrics
+- Performance trends
+
+### Performance Dashboard
+View real-time system performance and health:
+
+```text
+/dashboard
+```
+
+This displays:
+- System status overview
+- Memory and CPU usage
+- Response time metrics
+- Error rates and alerts
+- Performance recommendations
+
+### Resource Monitoring
+Monitor system resources and get optimization tips:
+
+```text
+/resources
+```
+
+This provides:
+- Memory usage analysis
+- Performance status
+- Optimization recommendations
+- System health warnings
 
 ## Emoji Reactions
 

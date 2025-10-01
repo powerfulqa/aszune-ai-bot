@@ -145,6 +145,83 @@ Messages sent: 42
 Summaries requested: 7
 ```
 
+---
+
+## Phase B+C Analytics Commands
+
+### Analytics Command
+
+**Usage:**
+
+- `!analytics`
+- `/analytics`
+
+**Description:** Displays comprehensive Discord server analytics including user engagement statistics, command usage patterns, and system performance metrics.
+
+**Example:**
+
+```
+/analytics
+```
+
+**Output:**
+Shows a detailed analytics dashboard with:
+- Daily activity summary
+- Command usage statistics
+- User engagement metrics
+- Server performance insights
+- Trend analysis and recommendations
+
+---
+
+### Dashboard Command
+
+**Usage:**
+
+- `!dashboard`
+- `/dashboard`
+
+**Description:** Displays a comprehensive performance dashboard with real-time system status, resource utilization, and operational health metrics.
+
+**Example:**
+
+```
+/dashboard
+```
+
+**Output:**
+Shows performance dashboard with:
+- System status overview
+- Memory and CPU usage
+- Response time metrics
+- Error rates and alerts
+- Performance recommendations
+
+---
+
+### Resources Command
+
+**Usage:**
+
+- `!resources`
+- `/resources`
+
+**Description:** Displays resource optimization status and recommendations for system performance improvements.
+
+**Example:**
+
+```
+/resources
+```
+
+**Output:**
+Shows resource monitoring with:
+- Memory usage analysis
+- Performance status
+- Optimization recommendations
+- System health warnings
+- Resource utilization tips
+
 ## Chatting with the Bot
 
 You can chat with the bot in two ways:
@@ -178,27 +255,37 @@ To prevent spam, the bot enforces a short cooldown period (typically a few secon
 from the same user. If you send messages too quickly, the bot will remind you to wait before
 responding further.
 
-## v1.4.0 Updates
+## Version Updates
 
-### Enhanced Command System
+### v1.6.0 - Phase B+C Analytics Integration (Current)
 
-- **Unified Command Handler**: All commands now use a single, centralized handler
-  (`commands/index.js`)
+- **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`) provide comprehensive system monitoring directly in Discord
+- **Real-time Performance Monitoring**: Live system status, resource utilization, and performance metrics
+- **Server Insights**: Discord server analytics with user engagement and command usage patterns
+- **Resource Optimization**: Automated recommendations for system performance improvements
+- **Integrated Reporting**: All Phase B+C analytics features accessible without leaving Discord
+- **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
+
+### v1.5.0 - qlty Code Quality Integration
+
+- **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
+- **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration for comprehensive security
+- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md
+- **Quality Automation**: 7 new npm scripts for streamlined quality workflow
+- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero secrets
+
+### v1.4.1 - Code Quality Excellence & Architecture Refinement
+
+- **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
+- **Service Architecture Refactoring**: Split PerplexityService into focused classes
+- **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger calls
+- **Code Duplication Elimination**: Systematic removal of duplicate patterns across services
+
+### v1.4.0 - Comprehensive Testing & Coverage Enhancement
+
+- **Unified Command Handler**: All commands now use a single, centralized handler (`commands/index.js`)
 - **Comprehensive Input Validation**: All user inputs are validated and sanitized before processing
 - **Enhanced Error Handling**: Robust error handling with user-friendly error messages
-- **Improved Testing**: Complete test coverage for all command scenarios
-
-### New Features
-
-- **Input Sanitization**: Automatic cleaning of user inputs to prevent errors
-- **Enhanced Validation**: Comprehensive validation for all command parameters
-- **Better Error Messages**: Clear, actionable error messages for users
-- **Performance Optimization**: Optimized command processing for better responsiveness
-
-### Technical Improvements
-
-- **Class-based Architecture**: ConversationManager and other core components use modern class-based
-  architecture
-- **Modular Design**: Enhanced modularity for better maintainability
 - **Comprehensive Testing**: 380+ tests with 82%+ coverage ensuring reliability
+- **Class-based Architecture**: ConversationManager and other core components use modern class-based architecture
 - **Memory Management**: Advanced memory monitoring and optimization

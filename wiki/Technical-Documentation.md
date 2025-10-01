@@ -32,6 +32,10 @@ maintainable.
 13. **Storage Service** - Data persistence and management
 14. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
 15. **Logging Infrastructure** - Comprehensive logging system replacing all console statements
+16. **Analytics System (Phase B+C)** - Comprehensive monitoring and analytics platform:
+    - **DiscordAnalytics** - Server engagement metrics and usage patterns
+    - **PerformanceDashboard** - Real-time system monitoring and health assessment
+    - **ResourceOptimizer** - Performance optimization analysis and recommendations
 16. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
     optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
     script, which sets environment variables and applies system-level tweaks before launching
@@ -76,6 +80,9 @@ aszune-ai-bot/
 │       ├── connection-throttler.js # Connection limiting
 │       ├── debouncer.js            # Message debouncing
 │       ├── lazy-loader.js          # Lazy loading utilities
+│       ├── discord-analytics.js    # Discord server analytics (Phase B+C)
+│       ├── performance-dashboard.js # Real-time performance dashboard (Phase B+C)
+│       ├── resource-optimizer.js   # Resource optimization analysis (Phase B+C)
 │       └── [other utilities]       # Additional utility modules
 ├── .qlty/                          # Code quality configuration (qlty tooling)
 │   ├── qlty.toml                  # Main qlty configuration with all plugins
@@ -474,7 +481,128 @@ function chunkMessage(message, maxLength = 2000) {
 }
 ```
 
-### 7. Pi Optimization System
+### 7. Analytics System (Phase B+C)
+
+Comprehensive monitoring and analytics platform providing real-time insights through Discord commands.
+
+#### Discord Analytics Service (`/analytics`)
+
+Tracks and analyzes Discord server activity, user engagement, and command usage patterns:
+
+```javascript
+// Simplified example from discord-analytics.js
+class DiscordAnalytics {
+  static async generateDailyReport() {
+    const activityData = this.getActivityHistory();
+    return {
+      totalMessages: activityData.filter(a => a.type === 'message').length,
+      activeUsers: new Set(activityData.map(a => a.userId)).size,
+      popularCommands: this.analyzeCommandUsage(activityData),
+      engagement: this.calculateEngagementMetrics(activityData)
+    };
+  }
+
+  static async trackServerActivity(serverId, action, metadata = {}) {
+    const activity = {
+      timestamp: Date.now(),
+      serverId,
+      action,
+      ...metadata
+    };
+    this.activityHistory.push(activity);
+  }
+}
+```
+
+#### Performance Dashboard Service (`/dashboard`)
+
+Real-time system monitoring with resource utilization and performance metrics:
+
+```javascript
+// Simplified example from performance-dashboard.js  
+class PerformanceDashboard {
+  static async generateDashboardReport() {
+    const systemStatus = this.getRealTimeStatus();
+    const alerts = this.generateAlerts(systemStatus);
+    
+    return {
+      overview: systemStatus,
+      performance: {
+        responseTime: this.getAverageResponseTime(),
+        errorRate: this.getErrorRate(),
+        uptime: process.uptime()
+      },
+      alerts,
+      recommendations: this.generateRecommendations(systemStatus)
+    };
+  }
+
+  static getRealTimeStatus() {
+    const memUsage = process.memoryUsage();
+    return {
+      status: this.calculateOverallStatus(),
+      memory: {
+        used: Math.round(memUsage.heapUsed / 1024 / 1024),
+        total: Math.round(memUsage.heapTotal / 1024 / 1024),
+        percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100)
+      },
+      uptime: {
+        seconds: Math.floor(process.uptime()),
+        formatted: this.formatUptime(process.uptime())
+      }
+    };
+  }
+}
+```
+
+#### Resource Optimizer Service (`/resources`)
+
+Performance optimization analysis with automated recommendations:
+
+```javascript
+// Simplified example from resource-optimizer.js
+class ResourceOptimizer {
+  static monitorResources(systemStats = {}) {
+    const memoryUsage = process.memoryUsage();
+    const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
+    
+    const monitoring = {
+      memory: {
+        used: Math.round(memoryMB),
+        status: this._getMemoryStatus(memoryMB)
+      },
+      performance: {
+        responseTime: systemStats.avgResponseTime || 0,
+        status: this._getPerformanceStatus(systemStats)  
+      },
+      overall: {
+        status: this._calculateOverallStatus(memory, performance)
+      }
+    };
+
+    return {
+      ...monitoring,
+      recommendations: this._generateResourceRecommendations(monitoring)
+    };
+  }
+
+  static _generateResourceRecommendations(monitoring) {
+    const recommendations = [];
+    
+    if (monitoring.memory.status === 'high') {
+      recommendations.push('Consider clearing cache or restarting to free memory');
+    }
+    
+    if (monitoring.performance.status === 'degraded') {
+      recommendations.push('System performance is degraded - check resource usage');
+    }
+
+    return recommendations;
+  }
+}
+```
+
+### 8. Pi Optimization System
 
 Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available
 resources.

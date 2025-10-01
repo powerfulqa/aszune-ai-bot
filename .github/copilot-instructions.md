@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 
-This is the Aszune AI Bot codebase - a Discord bot with AI capabilities that follows strict quality standards using qlty tooling. When working on this codebase, please follow these comprehensive guidelines for architecture patterns, testing approaches, and best practices.
+This is the Aszune AI Bot codebase - a Discord bot with AI capabilities and comprehensive analytics integration that follows strict quality standards using qlty tooling. The project includes Phase B+C analytics features accessible through Discord commands (`/analytics`, `/dashboard`, `/resources`). When working on this codebase, please follow these comprehensive guidelines for architecture patterns, testing approaches, and best practices.
 
 ## 📁 Architecture & Structure
 
@@ -19,12 +19,14 @@ src/
 
 ### Key Components
 - **Discord Interface**: Handles Discord API interactions
-- **Command Handler**: Processes both slash commands and text commands
+- **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
 - **Perplexity API Client**: Manages AI API communication with secure caching
 - **Conversation Manager**: Class-based conversation tracking
 - **Error Handler**: Comprehensive error handling system
 - **Message Chunker**: Intelligent message splitting with boundary detection
 - **Input Validator**: Content sanitization and validation
+- **Analytics System**: Discord analytics, performance dashboard, and resource monitoring (`/analytics`, `/dashboard`, `/resources`)
+- **Performance Monitoring**: Real-time system metrics and optimization recommendations
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -331,7 +333,7 @@ npm run format            # Prettier format
 ## 🎯 Success Metrics
 
 A successful implementation should achieve:
-- ✅ All 536+ tests passing
+- ✅ All 991+ tests passing (current standard)
 - ✅ 82%+ code coverage maintained
 - ✅ qlty quality checks passing
 - ✅ No security vulnerabilities
@@ -341,6 +343,8 @@ A successful implementation should achieve:
 - ✅ No circular dependencies
 - ✅ Proper error handling contracts
 - ✅ Backward compatibility maintained
+- ✅ Analytics commands functional (`/analytics`, `/dashboard`, `/resources`)
+- ✅ Phase B+C integration complete
 
 ## 📚 Additional Resources
 
@@ -379,4 +383,4 @@ A successful implementation should achieve:
 
 **WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives failed. Follow them exactly or expect test failures and runtime errors.
 
-**Remember**: 536+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt, follow existing patterns exactly.
+**Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt, follow existing patterns exactly.

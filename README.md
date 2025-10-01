@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.5.0)
+# Aszune AI Bot (v1.6.0)
 
 ![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -108,6 +108,9 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   console statements in production code.
 - 🔄 **Code Duplication Elimination:** Systematic removal of duplicate code patterns across services
   and validation modules.
+- 📊 **Phase B+C Analytics Integration:** Comprehensive Discord analytics with `/analytics`, `/dashboard`, and `/resources` commands for real-time monitoring
+- 🔍 **Performance Insights:** Live system status, resource optimization, and automated performance recommendations accessible directly in Discord
+- 📈 **Server Analytics:** Discord engagement metrics, usage patterns, and trend analysis with actionable insights
 
 ---
 
@@ -209,6 +212,7 @@ script for Pi deployments.
 
 ## Bot Commands
 
+### Core Commands
 | Command                                   | Description                                                 |
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `!help` / `/help`                         | Shows a list of available commands and usage                |
@@ -216,6 +220,13 @@ script for Pi deployments.
 | `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
+
+### Phase B+C Analytics Commands (NEW in v1.6.0)
+| Command                    | Description                                                     |
+| -------------------------- | --------------------------------------------------------------- |
+| `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
+| `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
+| `!resources` / `/resources` | View resource optimization status and recommendations           |
 
 > **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash
 > command equivalent may not be fully implemented yet.
@@ -449,6 +460,22 @@ MIT — feel free to use, modify, and share ✨
   than making up an answer.
 
 ## Changelog
+
+### 1.6.0 (2025-10-01)
+
+- **Phase B+C Analytics Integration**: Added comprehensive Discord analytics system with three new commands
+- **Discord Analytics Command** (`/analytics`): Server engagement metrics, usage patterns, and performance insights
+- **Performance Dashboard** (`/dashboard`): Real-time system monitoring with resource utilization and health metrics
+- **Resource Optimization** (`/resources`): Automated performance recommendations and system optimization tips
+- **Complete Test Coverage**: All 991 tests passing with full analytics integration
+- **Enhanced User Experience**: All monitoring features accessible directly in Discord without external tools
+
+### 1.5.0 (2025-09-29)
+
+- **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
+- **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration
+- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md
+- **Quality Automation**: 7 new npm scripts for streamlined quality workflow
 
 ### 1.4.1 (2025-09-28)
 
