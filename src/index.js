@@ -18,8 +18,22 @@ try {
 // Set up logger early
 const logger = require('./utils/logger');
 
+// Initialize license validation
+const LicenseValidator = require('./utils/license-validator');
+const licenseValidator = new LicenseValidator();
+
 // Initialize Pi-specific optimizations if enabled
 async function bootWithOptimizations() {
+  // Validate license before starting
+  logger.info('Validating software license...');
+  const licenseValid = await licenseValidator.enforceLicense();
+  
+  if (!licenseValid) {
+    logger.error('License validation failed - see above for details');
+    // Will exit in licenseValidator.enforceLicense() if needed
+  } else {
+    logger.info('License validation successful - starting bot...');
+  }
   try {
     if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {
       logger.info('Initializing Raspberry Pi optimizations...');

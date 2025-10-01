@@ -1,6 +1,6 @@
 /**
  * Security Monitor - Enhanced input validation and threat detection
- * Part of Phase 1 enhancements for enterprise-grade security monitoring
+ * Provides enterprise-grade security monitoring features for user input
  */
 
 class SecurityMonitor {

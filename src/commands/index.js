@@ -223,8 +223,10 @@ const commands = {
         await interaction.deferReply();
         
         // Generate daily analytics report
-        const analyticsData = await DiscordAnalytics.generateDailyReport();
-        const serverInsights = await DiscordAnalytics.generateServerInsights();
+        const serverId = interaction.guild?.id;
+        const activityHistory = []; // TODO: Implement activity history collection
+        const analyticsData = await DiscordAnalytics.generateDailyReport(activityHistory);
+        const serverInsights = await DiscordAnalytics.generateServerInsights(serverId, activityHistory);
         
         const embed = {
           color: config.COLORS.PRIMARY,
@@ -302,7 +304,7 @@ const commands = {
             },
             {
               name: '🚨 Active Alerts',
-              value: dashboardData.alerts.length > 0 ? 
+              value: (dashboardData.alerts && dashboardData.alerts.length > 0) ?
                 dashboardData.alerts.slice(0, 3).map(alert => 
                   `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
                 ).join('\n') : '✅ No active alerts',

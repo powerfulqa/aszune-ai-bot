@@ -1,16 +1,32 @@
-# Aszune AI Bot (v1.6.0)
+# Aszune AI Bot - [Table of Contents](#table-of-contents)
 
-![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
+- [Features](#features)
+- [License & Usage](#license--usage)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Setup Steps](#setup-steps)
+- [Usage](#usage)
+  - [Running the Bot Manually](#running-the-bot-manually)
+  - [Running with PM2 (for Production)](#running-with-pm2-for-production)
+- [Bot Commands](#bot-commands)
+- [Analytics & Monitoring](#analytics--monitoring)
+- [Project Structure](#project-structure)
+- [Code Quality](#code-quality)
+  - [Quality Standards](#quality-standards)
+  - [Running Quality Checks](#running-quality-checks)
+- [Testing & Coverage](#testing--coverage)
+  - [Branch Coverage Testing](#branch-coverage-testing)
+- [Troubleshooting](#troubleshooting)
+- [Future Enhancements](#future-enhancements)
+- [Contributing](#contributing)(https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-991%20Passing-brightgreen.svg)](#testing--coverage)
 
 [Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
 
-**Aszune AI Bot** is a Discord bot designed to provide gaming lore, game logic, guides, and advice
-using the Perplexity API with the **sonar** model. It maintains a short conversation history for
-each user and adds fun emoji reactions based on keywords found in messages. Now supports both
-traditional `!` commands and modern Discord slash commands. Optimised to run efficiently on
-Raspberry Pi devices from Pi 3 to Pi 5.
+**Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities with comprehensive analytics and monitoring features. Built for gaming communities, it provides lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time performance dashboards and server analytics directly within Discord. Features enterprise-grade code quality with 991+ automated tests and built-in license protection system.
 
 ---
 
@@ -60,8 +76,8 @@ Raspberry Pi devices from Pi 3 to Pi 5.
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
-- 🧪 **Comprehensive Testing:** 853 automated tests covering all key functionality with 79%+ code
-  coverage.
+- 🧪 **Comprehensive Testing:** 991+ automated tests covering all key functionality with 74%+ code
+  coverage and enterprise-grade quality assurance.
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
   comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
@@ -108,9 +124,12 @@ Raspberry Pi devices from Pi 3 to Pi 5.
   console statements in production code.
 - 🔄 **Code Duplication Elimination:** Systematic removal of duplicate code patterns across services
   and validation modules.
-- 📊 **Analytics Integration:** Comprehensive Discord analytics with `/analytics`, `/dashboard`, and `/resources` commands for real-time monitoring
-- 🔍 **Performance Insights:** Live system status, resource optimization, and automated performance recommendations accessible directly in Discord
-- 📈 **Server Analytics:** Discord engagement metrics, usage patterns, and trend analysis with actionable insights
+- 📊 **Analytics Integration:** Enterprise-grade Discord analytics with `/analytics`, `/dashboard`, and `/resources` commands
+- 🔍 **Performance Dashboard:** Real-time system monitoring, resource optimization, and automated recommendations
+- 📈 **Server Analytics:** User engagement metrics, command usage patterns, and trend analysis with actionable insights
+- 🛡️ **License Protection:** Built-in license validation with automated enforcement and violation detection
+- 🏠 **Self-Hosted Control:** Complete ownership with proprietary licensing for personal, community, and commercial use
+- 🍓 **Raspberry Pi Optimized:** Specialized license server setup for Pi 3+ with automated monitoring
 
 ---
 
@@ -138,11 +157,18 @@ Raspberry Pi devices from Pi 3 to Pi 5.
    npm install
    ```
 
-3. **Create a `.env` file**
+3. **Register for License (Required)**
+
+   **Free Personal License**: [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+   
+   ⚠️ **Note**: The bot requires a valid license to run. Free personal licenses are available for non-commercial use.
+
+4. **Create a `.env` file**
 
    ```env
    DISCORD_BOT_TOKEN=your_discord_bot_token_here
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
+   ASZUNE_LICENSE_KEY=your_license_key_here
    ```
 
 ---
@@ -230,6 +256,51 @@ script for Pi deployments.
 
 > **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash
 > command equivalent may not be fully implemented yet.
+
+---
+
+## Analytics & Monitoring
+
+### 📊 Real-time Discord Analytics
+
+Version 1.6.0 introduces comprehensive analytics accessible directly within Discord:
+
+#### `/analytics` - Server Analytics Dashboard
+- **User Engagement**: Active users, message patterns, engagement trends
+- **Command Usage**: Most popular commands, success rates, usage statistics  
+- **Performance Metrics**: Response times, error rates, system health correlation
+- **Trend Analysis**: Historical data with actionable insights for community management
+
+#### `/dashboard` - Performance Monitoring
+- **System Status**: Real-time CPU, memory, and network utilization
+- **Response Times**: API performance tracking and latency monitoring
+- **Error Monitoring**: Automated error detection and pattern analysis
+- **Health Alerts**: Proactive warnings for performance degradation
+- **Optimization Tips**: AI-powered recommendations for performance improvements
+
+#### `/resources` - Resource Optimization
+- **Resource Analysis**: Detailed system resource usage and optimization opportunities
+- **Performance Recommendations**: Automated suggestions for improving bot performance
+- **Capacity Planning**: Usage projections and scaling recommendations
+- **System Health**: Comprehensive health assessments and maintenance guidance
+
+### 🔧 License Monitoring System
+
+Built-in license validation and monitoring:
+
+- **Automatic Validation**: License checked every 24 hours
+- **Violation Detection**: Unauthorized usage automatically reported
+- **Grace Period**: 7-day grace period for new installations
+- **Remote Monitoring**: Optional license server for centralized tracking
+- **Raspberry Pi Integration**: Specialized setup for Pi-based monitoring
+
+### 📈 Benefits
+
+- **No External Tools Required**: All monitoring accessible within Discord
+- **Proactive Management**: Early warning system for issues
+- **Data-Driven Decisions**: Usage analytics for community optimization
+- **Cost Reduction**: Eliminates need for third-party monitoring services
+- **Complete Control**: Self-hosted solution with full data ownership
 
 ---
 
@@ -440,9 +511,51 @@ Pull requests and ideas are always welcome! Please:
 
 ---
 
-## Licence
+## License & Usage
 
-MIT — feel free to use, modify, and share ✨
+**🔐 PROPRIETARY SOFTWARE** — Licensed usage only
+
+### 📋 License Options
+
+| License Type | Price | Usage | Servers | Support |
+|-------------|-------|-------|---------|---------|
+| **Personal** | FREE | Personal Discord servers | 1 | Community |
+| **Community** | $29/month | Non-profit gaming communities | 3 | Email |
+| **Commercial** | $299/month | Commercial Discord servers | Unlimited | Priority |
+| **Enterprise** | Custom | White-label + source access | Unlimited | Professional SLA |
+
+### 🚀 Getting Your License
+
+1. **Personal License (Free)**: [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+2. **Commercial License**: [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
+3. **Enterprise License**: Email chrishaycock@users.noreply.github.com
+
+### ⚡ Quick Start (Personal License)
+
+```bash
+# 1. Register for free personal license (required)
+# 2. Set your license key
+export ASZUNE_LICENSE_KEY="your-license-key-here"
+
+# 3. Install and run
+npm install
+npm start
+```
+
+### 🛡️ License Enforcement
+
+- ✅ **Built-in validation** - Software validates license on startup
+- ✅ **Grace period** - 7 days for new users to register
+- ✅ **Usage tracking** - Monitors compliance automatically
+- ❌ **Unauthorized use** - Terminates after grace period
+
+### 📧 Questions?
+
+- **License Issues**: Create a GitHub issue
+- **Commercial Inquiries**: chrishaycock@users.noreply.github.com
+- **Technical Support**: Included with paid licenses
+
+**[📄 View Full License Terms](./LICENSE)**
 
 ---
 
@@ -461,7 +574,36 @@ MIT — feel free to use, modify, and share ✨
 
 ## Changelog
 
-### 1.6.0 (2025-10-01)
+### 1.6.0 (2025-01-21) - Analytics & Professional Licensing
+**🔄 License Change**: Migrated from MIT to Proprietary License with Free Personal Use
+
+**🎯 Major Features**:
+- **Analytics & Monitoring System**: Complete Discord analytics integration
+  - `/analytics` - Real-time Discord server analytics and insights
+  - `/dashboard` - Performance monitoring and system health metrics
+  - `/resources` - Resource optimization recommendations and monitoring
+- **Proprietary Licensing System**: Built-in license validation and enforcement
+  - Automated license validation on startup
+  - 7-day grace period for new installations
+  - Usage tracking and compliance monitoring
+  - Commercial license protection with technical enforcement
+- **Raspberry Pi Optimization**: Enhanced Pi deployment with automated setup
+  - Optimized performance for resource-constrained environments
+  - Automated license server deployment scripts
+  - PM2 process management integration
+
+**🛠️ Technical Improvements**:
+- Enhanced command parameter validation and error handling
+- Professional code quality with removed internal development terminology
+- Comprehensive test suite expanded to 991+ tests
+- Improved Discord embed formatting and user experience
+- Robust error handling with user-friendly messaging
+
+**📚 Documentation**:
+- Complete documentation overhaul with licensing information
+- Professional positioning for commercial use
+- Enhanced user guides and setup instructions
+- Comprehensive feature documentation for all analytics capabilities
 
 - **Analytics Integration**: Added comprehensive Discord analytics system with three new commands
 - **Discord Analytics Command** (`/analytics`): Server engagement metrics, usage patterns, and performance insights

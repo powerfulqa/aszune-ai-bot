@@ -1,6 +1,6 @@
 /**
  * Performance Tracker - Monitor and analyze bot performance metrics
- * Part of Phase 1 enhancements for enterprise-grade performance monitoring
+ * Enterprise-grade performance monitoring and analysis
  */
 
 class PerformanceTracker {

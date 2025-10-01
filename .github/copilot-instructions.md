@@ -27,6 +27,8 @@ src/
 - **Input Validator**: Content sanitization and validation
 - **Analytics System**: Discord analytics, performance dashboard, and resource monitoring (`/analytics`, `/dashboard`, `/resources`)
 - **Performance Monitoring**: Real-time system metrics and optimization recommendations
+- **License Validation System**: Built-in proprietary license validation with automated enforcement and reporting
+- **License Server**: Express.js-based licensing management system with web dashboard and violation tracking
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -288,9 +290,11 @@ Before committing changes, ensure:
 ### Critical Files
 - `src/services/perplexity-secure.js` - Main AI service
 - `src/services/chat.js` - Chat message handling  
-- `src/commands/index.js` - Command processing
+- `src/commands/index.js` - Command processing with analytics integration
 - `src/utils/error-handler.js` - Error handling system
 - `src/config/config.js` - Configuration management
+- `src/utils/license-validator.js` - License validation with enforcement
+- `src/utils/license-server.js` - License management server
 
 ### Important Test Files
 - `__tests__/unit/services/perplexity-secure-*.test.js` - Service tests
@@ -363,7 +367,7 @@ A successful implementation should achieve:
 
 ## 🎯 CRITICAL SUCCESS FACTORS
 
-**This codebase has 536+ tests and strict contracts. Breaking any of these will cause cascading failures:**
+**This codebase has 991+ tests and strict contracts. Breaking any of these will cause cascading failures:**
 
 ### Absolutely Required:
 1. **Error Handling Contract**: Services THROW errors, tests expect .rejects.toThrow()

@@ -1,6 +1,6 @@
 /**
  * Enhanced Conversation Context - Advanced conversation state management
- * Part of Phase 1 enhancements for enterprise-grade context handling
+ * Enterprise-grade conversation context handling and state management
  */
 
 const logger = require('./logger');

@@ -39,7 +39,7 @@
     "raspberry-pi"
   ],
   "author": "Chris Haycock <chrishaycock@users.noreply.github.com>",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "description": "A Discord bot specialized in gaming lore, game logic, guides, and advice using the Perplexity API",
   "repository": {
     "type": "git",
