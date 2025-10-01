@@ -88,9 +88,7 @@ aszune-ai-bot/
 │   ├── question_cache.json        # Response cache
 │   └── user_stats.json            # User statistics
 ├── scripts/                        # Development and utility scripts
-│   ├── test-chunking.js           # Test script for message chunking
-│   ├── test-chunking.bat          # Windows batch file to run chunking test
-│   └── test-chunking.sh           # Unix shell script to run chunking test
+│   └── [utility scripts]          # Various development utility scripts
 ├── docs/                          # Enhanced documentation
 │   ├── README.md                  # Index of available release notes
 │   ├── v1.3.0.md                 # Version 1.3.0 release notes

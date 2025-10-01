@@ -47,7 +47,7 @@ const mockMessageFormatter = {
 jest.mock('../../src/utils/message-formatter', () => mockMessageFormatter);
 
 const mockChunkMessage = jest.fn();
-jest.mock('../../src/utils/enhanced-message-chunker', () => ({
+jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: mockChunkMessage,
 }));
 

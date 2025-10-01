@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const commandHandler = require('../commands');
 const messageFormatter = require('../utils/message-formatter');
-const { chunkMessage } = require('../utils/enhanced-message-chunker');
+const { chunkMessage } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 

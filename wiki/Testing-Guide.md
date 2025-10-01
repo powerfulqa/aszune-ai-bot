@@ -52,11 +52,13 @@ npm test
 npm run test:coverage
 
 # Test specific message chunking functionality
-cd scripts && node test-chunking.js
-# or on Windows
-scripts\test-chunking.bat
-# or on Unix/Linux
-bash scripts/test-chunking.sh
+### Message Chunking Test
+
+The message chunking functionality is tested through the comprehensive unit test suite:
+
+```bash
+npm test __tests__/unit/message-chunker-*.test.js
+```
 npm run coverage
 
 # Run branch coverage tests

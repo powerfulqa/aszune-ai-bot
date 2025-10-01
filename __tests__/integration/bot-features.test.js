@@ -104,7 +104,7 @@ jest.mock('../../src/utils/enhanced-cache', () => ({
   set: jest.fn(),
 }));
 
-jest.mock('../../src/utils/enhanced-message-chunker', () => ({
+jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: jest.fn().mockImplementation((message) => [message]),
 }));
 

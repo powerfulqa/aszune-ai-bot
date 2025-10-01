@@ -208,7 +208,7 @@ similar_code.threshold = 80         # Max similarity percentage
 ```
 
 #### Coverage Requirements
-- **Minimum test coverage**: 82% (currently 536+ tests)
+- **Minimum test coverage**: 82% (currently 853+ tests)
 - **Branch coverage**: 60%+ for critical components
 - **Error scenario coverage**: All error paths tested
 
@@ -529,7 +529,7 @@ npm start
 ## 🎯 Success Metrics
 
 A successful implementation should achieve:
-- ✅ All tests passing (536+ tests)
+- ✅ All tests passing (853+ tests)
 - ✅ **82%+ code coverage** (current standard)
 - ✅ **qlty quality checks passing** (`npm run quality:check`)
 - ✅ **No security vulnerabilities** (`npm run security:all`)

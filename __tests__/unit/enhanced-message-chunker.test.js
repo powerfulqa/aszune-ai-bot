@@ -4,7 +4,7 @@
 const {
   chunkMessage,
   processSourceReferences,
-} = require('../../src/utils/enhanced-message-chunker');
+} = require('../../src/utils/message-chunking');
 
 describe('Enhanced Message Chunker', () => {
   test('processes source references correctly', () => {

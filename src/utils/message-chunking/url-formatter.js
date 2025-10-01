@@ -121,8 +121,6 @@ function formatYouTubeLinks(text) {
     formattedText = formattedText.replace(
       /(^|\s)((?:www\.)?youtube\.com\/watch\?v=([^\s&.,;!?]+)|youtu\.be\/([^\s.,;!?]+))(?=[\s.,;!?]|$)/g,
       (match, prefix, url) => {
-        // Get the actual video ID, whether it came from the first or second pattern
-        // const videoId = videoId1 || videoId2; // Currently unused
         // Make sure we have the proper full URL with protocol
         let fullUrl = url;
         if (!fullUrl.startsWith('http')) {

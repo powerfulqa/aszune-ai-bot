@@ -1,5 +1,3 @@
-// const { EventEmitter } = require('events'); // Currently unused
-// const { request } = require('undici'); // Currently unused
 jest.mock('undici');
 
 // Mock the commands module first to avoid circular dependencies

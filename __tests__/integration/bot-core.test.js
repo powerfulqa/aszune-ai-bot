@@ -160,7 +160,7 @@ jest.mock('../../src/utils/message-formatter', () => ({
   formatResponse: jest.fn().mockImplementation((text) => text),
 }));
 
-jest.mock('../../src/utils/enhanced-message-chunker', () => ({
+jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: jest.fn().mockImplementation((text) => [text]),
 }));
 
@@ -361,7 +361,6 @@ describe('Bot Integration - Core', () => {
   let mockDestroy;
   let messageCreateHandler;
   let message;
-  // let conversation; // Currently unused
   let conversationManager;
   let consoleLogSpy, consoleErrorSpy;
 

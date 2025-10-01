@@ -1,6 +1,4 @@
 const createMockMessage = require('../../__mocks__/discordMessageMock');
-// const { Client } = require('discord.js'); // Currently unused
-// const { request } = require('undici'); // Currently unused
 jest.mock('undici');
 
 // Mock the commands module first to avoid circular dependencies
@@ -82,11 +80,12 @@ describe('Command Handling - Basic', () => {
   });
 
   test('handles unknown commands gracefully', async () => {
-    const _msg = createMockMessage('!unknowncommand');
+    const msg = createMockMessage('!unknowncommand');
 
-    // Should not throw an error
+    // Should not throw an error - verify message creation works
     expect(() => {
       // Mock command handler would return null for unknown commands
+      expect(msg.content).toBe('!unknowncommand');
     }).not.toThrow();
   });
 

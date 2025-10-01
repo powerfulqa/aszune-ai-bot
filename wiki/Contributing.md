@@ -125,8 +125,7 @@ aszune-ai-bot/
 │   ├── services/          # API and core services
 │   └── utils/             # Utility functions and helpers
 ├── scripts/               # Development and utility scripts
-│   ├── test-chunking.js   # Test script for message chunking
-│   └── test-chunking.bat  # Windows batch script to run message chunking test
+│   └── [utility scripts]  # Development utility scripts
 ├── docs/                  # Documentation and version-specific release notes
 │   ├── v1.3.0.md          # Version 1.3.0 release notes
 │   ├── v1.3.1.md          # Version 1.3.1 release notes

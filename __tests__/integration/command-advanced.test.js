@@ -1,6 +1,4 @@
 const createMockMessage = require('../../__mocks__/discordMessageMock');
-// const { Client } = require('discord.js'); // Currently unused
-// const { request } = require('undici'); // Currently unused
 jest.mock('undici');
 
 // Mock the commands module first to avoid circular dependencies
@@ -17,10 +15,8 @@ jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }]),
 }));
 
-let _conversationHistory;
-
 beforeEach(() => {
-  _conversationHistory = new Map();
+  // Reset any global state if needed
 });
 
 describe('Command Handling - Advanced', () => {
