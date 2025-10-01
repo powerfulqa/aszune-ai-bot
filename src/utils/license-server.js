@@ -32,18 +32,37 @@ class LicenseServer {
       next();
     });
 
-    // API Key validation
+    // API Key validation with timing-safe comparison
     this.app.use('/api', (req, res, next) => {
       const apiKey = req.headers.authorization;
-      if (!apiKey || apiKey !== `Bearer ${process.env.LICENSE_SERVER_API_KEY}`) {
+      const expectedKey = `Bearer ${process.env.LICENSE_SERVER_API_KEY}`;
+      
+      if (!apiKey || !expectedKey) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
+      
+      // Use timing-safe comparison to prevent timing attacks
+      const apiKeyBuffer = Buffer.from(apiKey, 'utf8');
+      const expectedKeyBuffer = Buffer.from(expectedKey, 'utf8');
+      
+      if (apiKeyBuffer.length !== expectedKeyBuffer.length || 
+          !crypto.timingSafeEqual(apiKeyBuffer, expectedKeyBuffer)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      
       next();
     });
   }
 
   setupRoutes() {
-    // Health check
+    this._setupHealthRoute();
+    this._setupValidationRoute();
+    this._setupUsageRoute();
+    this._setupViolationRoute();
+    this._setupDashboardRoute();
+  }
+
+  _setupHealthRoute() {
     this.app.get('/health', (req, res) => {
       res.json({ 
         status: 'healthy', 
@@ -52,36 +71,35 @@ class LicenseServer {
         violations: this.violationReports.length
       });
     });
+  }
 
-    // License validation
+  _setupValidationRoute() {
     this.app.post('/api/validate', async (req, res) => {
       try {
         const { licenseKey, instanceId, systemInfo } = req.body;
-        
         const validation = await this.validateLicense(licenseKey, instanceId, systemInfo);
-        
         res.json(validation);
       } catch (error) {
         console.error('License validation error:', error);
         res.status(500).json({ error: 'Validation failed' });
       }
     });
+  }
 
-    // Usage reporting
+  _setupUsageRoute() {
     this.app.post('/api/usage', async (req, res) => {
       try {
         const { instanceId, stats } = req.body;
-        
         await this.recordUsage(instanceId, stats);
-        
         res.json({ success: true, timestamp: new Date().toISOString() });
       } catch (error) {
         console.error('Usage reporting error:', error);
         res.status(500).json({ error: 'Reporting failed' });
       }
     });
+  }
 
-    // Violation reporting
+  _setupViolationRoute() {
     this.app.post('/api/violation', async (req, res) => {
       try {
         const violationReport = {
@@ -92,8 +110,6 @@ class LicenseServer {
         
         this.violationReports.push(violationReport);
         await this.saveViolationReport(violationReport);
-        
-        // Log critical violation
         console.error('🚨 VIOLATION REPORTED:', violationReport);
         
         res.json({ success: true, reportId: violationReport.id });
@@ -102,8 +118,9 @@ class LicenseServer {
         res.status(500).json({ error: 'Reporting failed' });
       }
     });
+  }
 
-    // Dashboard - View all activity
+  _setupDashboardRoute() {
     this.app.get('/dashboard', (req, res) => {
       const dashboardData = {
         totalLicenses: this.licenseDB.size,
@@ -114,7 +131,6 @@ class LicenseServer {
         topViolations: this.violationReports.slice(-10)
       };
 
-      // Simple HTML dashboard
       const html = this.generateDashboardHTML(dashboardData);
       res.send(html);
     });
@@ -135,7 +151,7 @@ class LicenseServer {
     });
   }
 
-  async validateLicense(licenseKey, instanceId, systemInfo) {
+  async validateLicense(licenseKey, instanceId, _systemInfo) {
     if (!licenseKey) {
       return { 
         valid: false, 
@@ -270,9 +286,17 @@ class LicenseServer {
   }
 
   generateDashboardHTML(data) {
+    const head = this._generateDashboardHead();
+    const header = this._generateDashboardHeader();
+    const stats = this._generateDashboardStats(data);
+    const sections = this._generateDashboardSections(data);
+    const footer = this._generateDashboardFooter();
+    
+    return `<!DOCTYPE html><html>${head}<body>${header}${stats}${sections}${footer}</body></html>`;
+  }
+
+  _generateDashboardHead() {
     return `
-<!DOCTYPE html>
-<html>
 <head>
     <title>Aszune AI Bot - License Dashboard</title>
     <style>
@@ -287,13 +311,19 @@ class LicenseServer {
         .violation-item { background: #ffeaa7; padding: 10px; margin: 5px 0; border-radius: 3px; border-left: 4px solid #e17055; }
         pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
     </style>
-</head>
-<body>
+</head>`;
+  }
+
+  _generateDashboardHeader() {
+    return `
     <div class="header">
         <h1>🚀 Aszune AI Bot - License Management Dashboard</h1>
         <p>Real-time monitoring of license usage and violations</p>
-    </div>
-    
+    </div>`;
+  }
+
+  _generateDashboardStats(data) {
+    return `
     <div class="stats">
         <div class="stat-card licenses">
             <h3>Total Licenses</h3>
@@ -307,8 +337,11 @@ class LicenseServer {
             <h3>Violations Detected</h3>
             <h2>${data.violations}</h2>
         </div>
-    </div>
+    </div>`;
+  }
 
+  _generateDashboardSections(data) {
+    return `
     <div class="section">
         <h2>📊 License Breakdown</h2>
         <pre>${JSON.stringify(data.licenseBreakdown, null, 2)}</pre>
@@ -329,21 +362,22 @@ class LicenseServer {
     <div class="section">
         <h2>📈 Recent Activity</h2>
         <pre>${JSON.stringify(data.recentActivity, null, 2)}</pre>
-    </div>
+    </div>`;
+  }
 
+  _generateDashboardFooter() {
+    return `
     <script>
         // Auto-refresh every 30 seconds
         setTimeout(() => location.reload(), 30000);
-    </script>
-</body>
-</html>`;
+    </script>`;
   }
 
   start() {
     this.app.listen(this.port, () => {
       console.log(`🖥️  License server running on http://localhost:${this.port}`);
       console.log(`📊 Dashboard available at http://localhost:${this.port}/dashboard`);
-      console.log(`🔐 API key required for /api endpoints`);
+      console.log('🔐 API key required for /api endpoints');
     });
   }
 }

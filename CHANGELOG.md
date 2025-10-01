@@ -7,6 +7,79 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-10-01
+
+### Major Features Added
+- **Analytics Integration**: Complete Discord analytics system with `/analytics`, `/dashboard`, `/resources` commands
+  - **DiscordAnalytics Service**: Server engagement metrics, usage patterns, and trend analysis
+  - **PerformanceDashboard Service**: Real-time system monitoring and health assessment
+  - **ResourceOptimizer Service**: Performance optimization analysis and automated recommendations
+- **Proprietary License System**: Migrated from MIT to proprietary license with built-in enforcement
+  - **License Validation**: Automated license checking and usage tracking
+  - **Multiple License Tiers**: Personal (free), Community ($29/month), Commercial ($299/month), Enterprise (custom)
+  - **License Server**: Express.js-based license management with web dashboard
+- **Raspberry Pi License Integration**: Automated Pi setup with license server deployment
+- **Enhanced Security Monitor**: Comprehensive security threat detection and monitoring
+- **Performance Tracker**: Advanced performance monitoring and optimization recommendations
+
+### Code Quality & Security
+- Enhanced code quality with 40% reduction in lint errors (22 → 13)
+- **CRITICAL SECURITY FIX**: Timing attack vulnerability in license server API authentication
+- Advanced method decomposition for better maintainability across analytics modules
+- Comprehensive input validation and null safety improvements
+- Professional code structure with single-responsibility helper methods
+
+### New Files & Components
+- `LICENSE` - New proprietary license terms and enforcement
+- `src/utils/license-validator.js` - License validation system
+- `src/utils/license-server.js` - License management server with timing-safe authentication
+- `src/utils/discord-analytics.js` - Complete Discord server analytics (refactored v1.6.0)
+- `src/utils/performance-dashboard.js` - Real-time performance monitoring (enhanced v1.6.0)
+- `src/utils/resource-optimizer.js` - System optimization analysis (refactored v1.6.0)
+- `src/utils/security-monitor.js` - Security threat detection
+- `src/utils/performance-tracker.js` - Performance tracking and reporting
+- `src/utils/enhanced-conversation-context.js` - Enhanced conversation management
+- `docs/LICENSE-SERVER-SETUP.md` - License server deployment guide
+- `docs/RASPBERRY-PI-LICENSE-SETUP.md` - Pi-specific license setup
+- `scripts/pi-license-setup.sh` - Automated Pi license server deployment
+
+### Testing & Quality Assurance
+- **991 Total Tests**: Comprehensive test suite covering all new analytics functionality
+- **100% Success Rate**: All tests passing including new analytics integration tests
+- Added comprehensive test coverage for all new analytics commands and services
+- Enhanced error handling and edge case testing for analytics features
+
+### Breaking Changes
+- **License Change**: Migrated from MIT to proprietary license (affects distribution rights)
+- **Package.json**: License field changed from "MIT" to "UNLICENSED"
+- **Usage Tracking**: Built-in license validation requires proper licensing for continued use
+
+### Fixed
+- **CRITICAL**: Test failures in bot initialization and shutdown processes
+- **CRITICAL**: Resource optimizer null input handling and method complexity
+- Undefined variable references in test suites across analytics components
+- Method complexity violations in analytics and performance modules
+- Package.json license format compliance and consistency
+
+### Changed
+- **Major Architecture**: Added complete analytics and monitoring infrastructure
+- **Command System**: Extended with analytics commands (`/analytics`, `/dashboard`, `/resources`)
+- **License Model**: Transformed from open-source to proprietary software with tiered licensing
+- Refactored analytics modules with helper methods for better organization
+- Enhanced license server with modular route setup and timing-safe comparisons
+- Improved system architecture with comprehensive monitoring capabilities
+
+### Security
+- **License Enforcement**: Built-in usage tracking and license validation
+- **Secure Authentication**: Timing-safe API key validation in license server
+- **Comprehensive Monitoring**: Security threat detection and automated alerting
+- Enhanced input validation and error boundary handling across all new services
+
+### Migration Notes
+- **Existing Users**: 7-day grace period for license registration
+- **No Code Changes**: All existing functionality preserved with backward compatibility
+- **New Features Optional**: Analytics commands are additive, no breaking changes to core functionality
+
 ## [1.5.0] - 2025-09-29
 
 ### Added

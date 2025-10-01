@@ -29,69 +29,75 @@ class ResourceOptimizer {
    * @returns {Object} - Optimized configuration
    */
   static optimizeForServerCount(serverCount = 0, activeUsers = 0, performanceMetrics = {}) {
-    // Handle invalid inputs
-    if (typeof serverCount !== 'number' || isNaN(serverCount) || serverCount < 0) {
-      serverCount = 0;
-    }
+    const validatedServerCount = ResourceOptimizer._validateServerCount(serverCount);
+    const tier = ResourceOptimizer._determineTier(validatedServerCount, activeUsers);
+    const baseConfig = ResourceOptimizer._getBaseConfig(tier);
     
-    // Determine optimization tier
-    let tier = 'small';
-    if (serverCount >= 100) tier = 'enterprise';
-    else if (serverCount >= 50) tier = 'large';
-    else if (serverCount >= 20) tier = 'medium';
+    const performanceAdjustments = ResourceOptimizer._applyPerformanceAdjustments(baseConfig, performanceMetrics);
+    const piOptimizations = ResourceOptimizer._applyPiOptimizations(baseConfig);
     
-    // Base configurations for each tier
-    const configurations = {
-      small: {
-        memoryAllocation: 128,
-        cacheSize: 50,
-        maxConcurrentRequests: 10
-      },
-      medium: {
-        memoryAllocation: 256,
-        cacheSize: 100,
-        maxConcurrentRequests: 25
-      },
-      large: {
-        memoryAllocation: 512,
-        cacheSize: 200,
-        maxConcurrentRequests: 50
-      },
-      enterprise: {
-        memoryAllocation: 1024,
-        cacheSize: 500,
-        maxConcurrentRequests: 100
-      }
-    };
+    const result = ResourceOptimizer._buildOptimizationResult(
+      tier, baseConfig, validatedServerCount, activeUsers, 
+      performanceAdjustments, piOptimizations
+    );
 
-    const baseConfig = configurations[tier];
-    
-    // Apply performance adjustments if metrics indicate issues
-    let performanceAdjustments = null;
+    ResourceOptimizer._logOptimization(validatedServerCount, tier, result);
+    return result;
+  }
+
+  /**
+   * Validates server count input
+   * @private
+   */
+  static _validateServerCount(serverCount) {
+    if (typeof serverCount !== 'number' || isNaN(serverCount) || serverCount < 0) {
+      return 0;
+    }
+    return serverCount;
+  }
+
+  /**
+   * Applies performance adjustments based on metrics
+   * @private
+   */
+  static _applyPerformanceAdjustments(baseConfig, performanceMetrics) {
     if (performanceMetrics.avgResponseTime > 3000 || performanceMetrics.errorRate > 5) {
-      performanceAdjustments = {
+      const adjustments = {
         responseTimeAdjustment: performanceMetrics.avgResponseTime > 3000,
         errorRateAdjustment: performanceMetrics.errorRate > 5
       };
       
-      // Increase resources for poor performance
       baseConfig.memoryAllocation = Math.round(baseConfig.memoryAllocation * 1.2);
       baseConfig.maxConcurrentRequests = Math.round(baseConfig.maxConcurrentRequests * 0.8);
+      
+      return adjustments;
     }
+    return null;
+  }
 
-    // Apply Pi-specific optimizations if enabled
-    let piOptimizations = false;
+  /**
+   * Applies Pi-specific optimizations
+   * @private
+   */
+  static _applyPiOptimizations(baseConfig) {
     try {
       const config = require('../config/config');
       if (config.PI_OPTIMIZATIONS) {
-        piOptimizations = true;
         baseConfig.memoryAllocation = Math.min(baseConfig.memoryAllocation * 0.7, 200);
         baseConfig.cacheSize = Math.min(baseConfig.cacheSize * 0.6, 100);
+        return true;
       }
     } catch (error) {
       // Config not available, continue without Pi optimizations
     }
+    return false;
+  }
 
+  /**
+   * Builds the optimization result object
+   * @private
+   */
+  static _buildOptimizationResult(tier, baseConfig, serverCount, activeUsers, performanceAdjustments, piOptimizations) {
     const result = {
       tier,
       memoryAllocation: baseConfig.memoryAllocation,
@@ -110,7 +116,39 @@ class ResourceOptimizer {
       result.piOptimizations = piOptimizations;
     }
 
-    // Log optimization changes
+    return result;
+  }
+
+  /**
+   * Determines tier based on server count and users
+   * @private
+   */
+  static _determineTier(serverCount, activeUsers) {
+    if (serverCount >= 100 || activeUsers >= 100000) return 'enterprise';
+    if (serverCount >= 50 || activeUsers >= 25000) return 'large';
+    if (serverCount >= 20 || activeUsers >= 5000) return 'medium';
+    return 'small';
+  }
+
+  /**
+   * Gets base configuration for tier
+   * @private
+   */
+  static _getBaseConfig(tier) {
+    const configs = {
+      small: { memoryAllocation: 128, cacheSize: 50, maxConcurrentRequests: 20 },
+      medium: { memoryAllocation: 256, cacheSize: 100, maxConcurrentRequests: 40 },
+      large: { memoryAllocation: 400, cacheSize: 200, maxConcurrentRequests: 80 },
+      enterprise: { memoryAllocation: 512, cacheSize: 300, maxConcurrentRequests: 100 }
+    };
+    return { ...configs[tier] };
+  }
+
+  /**
+   * Logs optimization changes
+   * @private
+   */
+  static _logOptimization(serverCount, tier, result) {
     logger.info(`Resource optimization applied for ${serverCount} servers (${tier} tier)`, {
       tier,
       memoryAllocation: result.memoryAllocation,
@@ -138,7 +176,7 @@ class ResourceOptimizer {
       used: Math.round(memoryMB),
       total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
       percentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
-      status: this._getMemoryStatus(memoryMB)
+      status: ResourceOptimizer._getMemoryStatus(memoryMB)
     };
     
     // Performance monitoring
@@ -146,7 +184,7 @@ class ResourceOptimizer {
       cpuUsage: systemStats.cpuUsage || 0,
       responseTime: systemStats.avgResponseTime || 0,
       errorRate: systemStats.errorRate || 0,
-      status: this._getPerformanceStatus(systemStats)
+      status: ResourceOptimizer._getPerformanceStatus(systemStats)
     };
     
     // Network monitoring (placeholder)
@@ -169,7 +207,7 @@ class ResourceOptimizer {
     const overall = { status: overallStatus };
     
     // Generate recommendations
-    const recommendations = this._generateResourceRecommendations({ memory, performance });
+    const recommendations = ResourceOptimizer._generateResourceRecommendations({ memory, performance });
     
     const monitoring = {
       memory,
@@ -209,9 +247,7 @@ class ResourceOptimizer {
     const serverCount = metrics.serverCount || 0;
     
     // Determine if scaling is needed
-    const needsScaling = avgResponseTime > 3000 || errorRate > 5 || serverCount > 50;
-    
-    if (!needsScaling) {
+    if (!ResourceOptimizer._shouldScale(avgResponseTime, errorRate, serverCount)) {
       return {
         scaled: false,
         reason: 'performance is within acceptable limits - no scaling needed',
@@ -223,21 +259,9 @@ class ResourceOptimizer {
     const newConfig = { ...currentConfig };
     const adjustments = [];
     
-    if (avgResponseTime > 3000) {
-      newConfig.memoryAllocation = (newConfig.memoryAllocation || 200) * 1.2;
-      newConfig.maxConcurrentRequests = Math.max((newConfig.maxConcurrentRequests || 20) * 0.8, 5);
-      adjustments.push('Increased memory allocation due to slow response times');
-    }
-    
-    if (errorRate > 5) {
-      newConfig.maxConcurrentRequests = Math.max((newConfig.maxConcurrentRequests || 20) * 0.7, 3);
-      adjustments.push('Reduced concurrent requests due to high error rate');
-    }
-    
-    if (serverCount > 50) {
-      newConfig.cacheSize = (newConfig.cacheSize || 100) * 1.5;
-      adjustments.push('Increased cache size for high server count');
-    }
+    ResourceOptimizer._applyResponseTimeScaling(newConfig, avgResponseTime, adjustments);
+    ResourceOptimizer._applyErrorRateScaling(newConfig, errorRate, adjustments);
+    ResourceOptimizer._applyServerCountScaling(newConfig, serverCount, adjustments);
 
     logger.info('Dynamic scaling applied', {
       avgResponseTime,
@@ -255,6 +279,48 @@ class ResourceOptimizer {
   }
 
   /**
+   * Determines if scaling is needed based on metrics
+   * @private
+   */
+  static _shouldScale(avgResponseTime, errorRate, serverCount) {
+    return avgResponseTime > 3000 || errorRate > 5 || serverCount > 50;
+  }
+
+  /**
+   * Applies response time scaling adjustments
+   * @private
+   */
+  static _applyResponseTimeScaling(config, avgResponseTime, adjustments) {
+    if (avgResponseTime > 3000) {
+      config.memoryAllocation = (config.memoryAllocation || 200) * 1.2;
+      config.maxConcurrentRequests = Math.max((config.maxConcurrentRequests || 20) * 0.8, 5);
+      adjustments.push('Increased memory allocation due to slow response times');
+    }
+  }
+
+  /**
+   * Applies error rate scaling adjustments
+   * @private
+   */
+  static _applyErrorRateScaling(config, errorRate, adjustments) {
+    if (errorRate > 5) {
+      config.maxConcurrentRequests = Math.max((config.maxConcurrentRequests || 20) * 0.7, 3);
+      adjustments.push('Reduced concurrent requests due to high error rate');
+    }
+  }
+
+  /**
+   * Applies server count scaling adjustments
+   * @private
+   */
+  static _applyServerCountScaling(config, serverCount, adjustments) {
+    if (serverCount > 50) {
+      config.cacheSize = (config.cacheSize || 100) * 1.5;
+      adjustments.push('Increased cache size for high server count');
+    }
+  }
+
+  /**
    * Generates optimization recommendations based on usage patterns
    * @param {Object} analyticsData - Discord analytics data
    * @param {Object} performanceData - Performance metrics
@@ -262,45 +328,12 @@ class ResourceOptimizer {
    */
   static generateOptimizationRecommendations(analyticsData = {}, performanceData = {}) {
     const recommendations = [];
-
-    // Handle null inputs gracefully
-    if (!analyticsData) analyticsData = {};
-    if (!performanceData) performanceData = {};
+    const metrics = ResourceOptimizer._extractMetrics(analyticsData, performanceData);
     
-    // Extract data safely
-    const serverCount = (analyticsData.summary && analyticsData.summary.totalServers) || analyticsData.serverCount || 0;
-    const avgResponseTime = performanceData.averageResponseTime || performanceData.avgResponseTime || 0;
-    const errorRate = (analyticsData.summary && analyticsData.summary.errorRate) || performanceData.errorRate || 0;
-
-    // Server scaling recommendations
-    if (serverCount > 80) {
-      recommendations.push('Consider implementing horizontal scaling for large server count');
-    } else if (serverCount > 50) {
-      recommendations.push('Monitor server performance closely - approaching scaling threshold');
-    }
-
-    // Performance recommendations
-    if (avgResponseTime > 4000) {
-      recommendations.push('Response times are slow - consider performance optimization');
-    } else if (avgResponseTime > 2500) {
-      recommendations.push('Response times are elevated - monitor performance trends');
-    }
-
-    // Error rate recommendations
-    if (errorRate > 10) {
-      recommendations.push('High error rate detected - investigate reliability issues');
-    } else if (errorRate > 5) {
-      recommendations.push('Elevated error rate - monitor for patterns');
-    }
-
-    // Memory recommendations
-    const memoryUsage = performanceData.memoryUsage || 0;
-    if (memoryUsage > 400) {
-      recommendations.push('High memory usage - consider memory optimization strategies');
-    }
-
-    // Default recommendation if no issues
-    if (recommendations.length === 0) {
+    ResourceOptimizer._addServerRecommendations(metrics.serverCount, recommendations);
+    ResourceOptimizer._addPerformanceRecommendations(metrics.avgResponseTime, recommendations);
+    ResourceOptimizer._addErrorRateRecommendations(metrics.errorRate, recommendations);
+    ResourceOptimizer._addMemoryRecommendations(metrics.memoryUsage, recommendations);    if (recommendations.length === 0) {
       recommendations.push('System performance is good - continue monitoring');
     }
 
@@ -308,135 +341,70 @@ class ResourceOptimizer {
   }
 
   /**
-   * Determines optimization tier based on scale
-   * @param {number} serverCount - Number of servers
-   * @param {number} activeUsers - Number of active users
-   * @returns {string} - Optimization tier
+   * Extracts metrics from analytics and performance data
    * @private
    */
-  static _determineTier(serverCount, activeUsers) {
-    if (serverCount >= 1000 || activeUsers >= 250000) return 'enterprise';
-    if (serverCount >= 200 || activeUsers >= 50000) return 'large';
-    if (serverCount >= 50 || activeUsers >= 10000) return 'medium';
-    return 'small';
-  }
-
-  /**
-   * Gets base configuration for optimization tier
-   * @param {string} tier - Optimization tier
-   * @returns {Object} - Base configuration
-   * @private
-   */
-  static _getBaseConfig(tier) {
-    const configs = {
-      small: {
-        cacheSize: 100,
-        maxConnections: 5,
-        connectionTimeout: 10000,
-        debounceDelay: 300,
-        memoryLimit: 128,
-        enablePriorityQueuing: false,
-        maxConcurrentRequests: 3,
-        cacheEvictionRate: 'normal'
-      },
-      medium: {
-        cacheSize: 300,
-        maxConnections: 10,
-        connectionTimeout: 8000,
-        debounceDelay: 200,
-        memoryLimit: 256,
-        enablePriorityQueuing: true,
-        maxConcurrentRequests: 6,
-        cacheEvictionRate: 'normal'
-      },
-      large: {
-        cacheSize: 500,
-        maxConnections: 15,
-        connectionTimeout: 6000,
-        debounceDelay: 150,
-        memoryLimit: 512,
-        enablePriorityQueuing: true,
-        maxConcurrentRequests: 10,
-        cacheEvictionRate: 'lazy'
-      },
-      enterprise: {
-        cacheSize: 1000,
-        maxConnections: 25,
-        connectionTimeout: 5000,
-        debounceDelay: 100,
-        memoryLimit: 1024,
-        enablePriorityQueuing: true,
-        maxConcurrentRequests: 15,
-        cacheEvictionRate: 'lazy'
-      }
+  static _extractMetrics(analyticsData = {}, performanceData = {}) {
+    // Handle null inputs
+    if (!analyticsData) analyticsData = {};
+    if (!performanceData) performanceData = {};
+    
+    return {
+      serverCount: (analyticsData.summary && analyticsData.summary.totalServers) || analyticsData.serverCount || 0,
+      avgResponseTime: performanceData.averageResponseTime || performanceData.avgResponseTime || 0,
+      errorRate: (analyticsData.summary && analyticsData.summary.errorRate) || performanceData.errorRate || 0,
+      memoryUsage: performanceData.memoryUsage || 0
     };
-
-    return configs[tier] || configs.small;
   }
 
   /**
-   * Applies performance-based configuration adjustments
-   * @param {Object} baseConfig - Base configuration
-   * @param {Object} performanceMetrics - Performance metrics
-   * @returns {Object} - Adjusted configuration
+   * Adds server scaling recommendations
    * @private
    */
-  static _applyPerformanceAdjustments(baseConfig, performanceMetrics) {
-    const adjusted = { ...baseConfig };
-
-    // Adjust based on response time
-    if (performanceMetrics.avgResponseTime > 3000) {
-      adjusted.maxConnections = Math.min(adjusted.maxConnections + 3, 25);
-      adjusted.connectionTimeout = Math.max(adjusted.connectionTimeout - 2000, 3000);
+  static _addServerRecommendations(serverCount, recommendations) {
+    if (serverCount > 80) {
+      recommendations.push('Consider implementing horizontal scaling for large server count');
+    } else if (serverCount > 50) {
+      recommendations.push('Monitor server performance closely - approaching scaling threshold');
     }
-
-    // Adjust based on error rate
-    if (performanceMetrics.errorRate > 10) {
-      adjusted.maxConcurrentRequests = Math.max(adjusted.maxConcurrentRequests - 2, 2);
-      adjusted.debounceDelay = Math.min(adjusted.debounceDelay + 100, 1000);
-    }
-
-    // Adjust based on memory usage
-    const memoryMB = (performanceMetrics.memoryUsage || 0) / 1024 / 1024;
-    if (memoryMB > 300) {
-      adjusted.cacheSize = Math.max(adjusted.cacheSize * 0.7, 50);
-      adjusted.cacheEvictionRate = 'aggressive';
-    }
-
-    return adjusted;
   }
 
   /**
-   * Applies Pi-specific optimizations
-   * @param {Object} config - Configuration to optimize
-   * @param {number} serverCount - Number of servers
-   * @returns {Object} - Pi-optimized configuration
+   * Adds performance recommendations
    * @private
    */
-  static _applyPiOptimizations(config, serverCount) {
-    const piConfig = { ...config };
+  static _addPerformanceRecommendations(avgResponseTime, recommendations) {
+    if (avgResponseTime > 4000) {
+      recommendations.push('Response times are slow - consider performance optimization');
+    } else if (avgResponseTime > 2500) {
+      recommendations.push('Response times are elevated - monitor performance trends');
+    }
+  }
 
-    // Reduce resource usage for Pi
-    piConfig.cacheSize = Math.min(piConfig.cacheSize * 0.6, 200);
-    piConfig.maxConnections = Math.min(piConfig.maxConnections, 8);
-    piConfig.memoryLimit = Math.min(piConfig.memoryLimit, 256);
+  /**
+   * Adds error rate recommendations
+   * @private
+   */
+  static _addErrorRateRecommendations(errorRate, recommendations) {
+    if (errorRate > 10) {
+      recommendations.push('High error rate detected - investigate reliability issues');
+    } else if (errorRate > 5) {
+      recommendations.push('Elevated error rate - monitor for patterns');
+    }
+  }
 
-    // Increase timeouts for Pi's slower processing
-    piConfig.connectionTimeout = Math.max(piConfig.connectionTimeout * 1.5, 8000);
-    piConfig.debounceDelay = Math.max(piConfig.debounceDelay * 1.2, 400);
-
-    // Enable aggressive cleanup for Pi
-    piConfig.cacheEvictionRate = 'aggressive';
-    piConfig.enablePriorityQueuing = serverCount > 5;
-
-    logger.info('Pi-specific optimizations applied', {
-      originalCacheSize: config.cacheSize,
-      piCacheSize: piConfig.cacheSize,
-      originalConnections: config.maxConnections,
-      piConnections: piConfig.maxConnections
-    });
-
-    return piConfig;
+  /**
+   * Adds memory usage recommendations
+   * @private
+   */
+  /**
+   * Adds memory usage recommendations
+   * @private
+   */
+  static _addMemoryRecommendations(memoryUsage, recommendations) {
+    if (memoryUsage > 400) {
+      recommendations.push('High memory usage - consider memory optimization strategies');
+    }
   }
 
   /**

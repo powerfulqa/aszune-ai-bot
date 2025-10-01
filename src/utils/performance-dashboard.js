@@ -66,67 +66,79 @@ class PerformanceDashboard {
    * @private
    */
   static _collectDashboardData(activityHistory, performanceMetrics) {
-    // Get analytics data with error handling
-    let analyticsReport, usagePatterns;
-    try {
-      analyticsReport = DiscordAnalytics.generateDailyReport(activityHistory);
-      usagePatterns = DiscordAnalytics.analyzeUsagePatterns(activityHistory);
-    } catch (error) {
-      analyticsReport = { summary: { totalServers: 0, totalUsers: 0, errorRate: 0 } };
-      usagePatterns = { commandPopularity: [], userEngagement: 'low', growthTrend: 'stable' };
-    }
-    
-    // Get performance data with error handling
-    let performanceAnalysis, performanceReport;
-    try {
-      performanceAnalysis = PerformanceTracker.analyzePerformanceTrends(performanceMetrics);
-      performanceReport = PerformanceTracker.generatePerformanceReport(performanceMetrics);
-    } catch (error) {
-      performanceAnalysis = { averageResponseTime: 0, slowOperations: 0, totalOperations: 0 };
-      performanceReport = { summary: 'Performance service unavailable' };
-    }
-    
-    // Get resource optimization data with null safety
-    const serverCount = (analyticsReport && analyticsReport.summary) ? analyticsReport.summary.totalServers : 0;
-    const activeUsers = (analyticsReport && analyticsReport.summary) ? analyticsReport.summary.totalUsers : 0;
-    const avgResponseTime = performanceAnalysis ? performanceAnalysis.averageResponseTime : 0;
-    
-    // Get resource optimization with error handling
-    let optimizedConfig, resourceMonitoring, optimizationRecommendations;
-    try {
-      const errorRate = (analyticsReport && analyticsReport.summary) ? analyticsReport.summary.errorRate : 0;
-      
-      optimizedConfig = ResourceOptimizer.optimizeForServerCount(
-        serverCount, 
-        activeUsers, 
-        { avgResponseTime, errorRate }
-      );
-      
-      resourceMonitoring = ResourceOptimizer.monitorResources({
-        avgResponseTime,
-        errorRate,
-        cpuUsage: 0 // Would be populated from system monitoring
-      });
-      
-      optimizationRecommendations = ResourceOptimizer.generateOptimizationRecommendations(
-        analyticsReport,
-        performanceAnalysis
-      );
-    } catch (error) {
-      optimizedConfig = { tier: 'unknown' };
-      resourceMonitoring = { memory: { used: 0, status: 'unknown' }, performance: { status: 'unknown' } };
-      optimizationRecommendations = ['Resource optimization service unavailable'];
-    }
+    const analyticsData = this._getAnalyticsData(activityHistory);
+    const performanceData = this._getPerformanceData(performanceMetrics);
+    const resourceData = this._getResourceData(analyticsData, performanceData);
 
     return {
-      analyticsReport,
-      usagePatterns,
-      performanceAnalysis,
-      performanceReport,
-      optimizedConfig,
-      resourceMonitoring,
-      optimizationRecommendations
+      ...analyticsData,
+      ...performanceData,
+      ...resourceData
     };
+  }
+
+  /**
+   * Gets analytics data with error handling
+   * @private
+   */
+  static _getAnalyticsData(activityHistory) {
+    try {
+      return {
+        analyticsReport: DiscordAnalytics.generateDailyReport(activityHistory),
+        usagePatterns: DiscordAnalytics.analyzeUsagePatterns(activityHistory)
+      };
+    } catch (error) {
+      return {
+        analyticsReport: { summary: { totalServers: 0, totalUsers: 0, errorRate: 0 } },
+        usagePatterns: { commandPopularity: [], userEngagement: 'low', growthTrend: 'stable' }
+      };
+    }
+  }
+
+  /**
+   * Gets performance data with error handling
+   * @private
+   */
+  static _getPerformanceData(performanceMetrics) {
+    try {
+      return {
+        performanceAnalysis: PerformanceTracker.analyzePerformanceTrends(performanceMetrics),
+        performanceReport: PerformanceTracker.generatePerformanceReport(performanceMetrics)
+      };
+    } catch (error) {
+      return {
+        performanceAnalysis: { averageResponseTime: 0, slowOperations: 0, totalOperations: 0 },
+        performanceReport: { summary: 'Performance service unavailable' }
+      };
+    }
+  }
+
+  /**
+   * Gets resource optimization data with error handling
+   * @private
+   */
+  static _getResourceData(analyticsData, performanceData) {
+    const serverCount = analyticsData.analyticsReport?.summary?.totalServers || 0;
+    const activeUsers = analyticsData.analyticsReport?.summary?.totalUsers || 0;
+    const avgResponseTime = performanceData.performanceAnalysis?.averageResponseTime || 0;
+    const errorRate = analyticsData.analyticsReport?.summary?.errorRate || 0;
+
+    try {
+      return {
+        optimizedConfig: ResourceOptimizer.optimizeForServerCount(serverCount, activeUsers, { avgResponseTime, errorRate }),
+        resourceMonitoring: ResourceOptimizer.monitorResources({ avgResponseTime, errorRate, cpuUsage: 0 }),
+        optimizationRecommendations: ResourceOptimizer.generateOptimizationRecommendations(
+          analyticsData.analyticsReport, 
+          performanceData.performanceAnalysis
+        )
+      };
+    } catch (error) {
+      return {
+        optimizedConfig: { tier: 'unknown' },
+        resourceMonitoring: { memory: { used: 0, status: 'unknown' }, performance: { status: 'unknown' } },
+        optimizationRecommendations: ['Resource optimization service unavailable']
+      };
+    }
   }
 
   /**

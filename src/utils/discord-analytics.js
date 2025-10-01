@@ -19,7 +19,7 @@ class DiscordAnalytics {
   }
 
   /**
-   * Tracks Discord server activity
+   * Tracks vity
    * @param {Object} activityData - Activity information
    * @param {string} activityData.serverId - Server ID
    * @param {string} activityData.userId - User ID
@@ -56,16 +56,44 @@ class DiscordAnalytics {
    */
   static analyzeUsagePatterns(activityHistory) {
     if (!activityHistory || activityHistory.length === 0) {
-      return {
-        commandPopularity: [],
-        serverActivity: [],
-        userEngagement: 'low',
-        peakUsageHours: [],
-        growthTrend: 'stable'
-      };
+      return this._getEmptyUsagePatterns();
     }
 
-    // Analyze command popularity
+    const counts = this._extractActivityCounts(activityHistory);
+    const commandPopularity = this._getCommandPopularity(counts.commands);
+    const serverActivity = this._getServerActivity(counts.servers);
+    const userEngagement = this._calculateUserEngagement(activityHistory.length, counts.uniqueUsers.size);
+    const peakUsageHours = this._getPeakUsageHours(counts.hours);
+    const growthTrend = this._calculateGrowthTrend(activityHistory);
+
+    return {
+      commandPopularity,
+      serverActivity,
+      userEngagement,
+      peakUsageHours,
+      growthTrend
+    };
+  }
+
+  /**
+   * Returns empty usage patterns structure
+   * @private
+   */
+  static _getEmptyUsagePatterns() {
+    return {
+      commandPopularity: [],
+      serverActivity: [],
+      userEngagement: 'low',
+      peakUsageHours: [],
+      growthTrend: 'stable'
+    };
+  }
+
+  /**
+   * Extracts activity counts from history
+   * @private
+   */
+  static _extractActivityCounts(activityHistory) {
     const commandCounts = {};
     const serverCounts = {};
     const uniqueUsers = new Set();
@@ -75,61 +103,81 @@ class DiscordAnalytics {
       if (activity.command) {
         commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
       }
-      
       if (activity.serverId) {
         serverCounts[activity.serverId] = (serverCounts[activity.serverId] || 0) + 1;
       }
-      
       if (activity.userId) {
         uniqueUsers.add(activity.userId);
       }
-      
       if (activity.timestamp) {
         const hour = new Date(activity.timestamp).getHours();
         hourCounts[hour] = (hourCounts[hour] || 0) + 1;
       }
     });
 
-    // Convert to sorted arrays
-    const commandPopularity = Object.entries(commandCounts)
+    return { commands: commandCounts, servers: serverCounts, uniqueUsers, hours: hourCounts };
+  }
+
+  /**
+   * Gets sorted command popularity data
+   * @private
+   */
+  static _getCommandPopularity(commandCounts) {
+    return Object.entries(commandCounts)
       .map(([command, count]) => ({ command, count }))
       .sort((a, b) => b.count - a.count);
+  }
 
-    const serverActivity = Object.entries(serverCounts)
+  /**
+   * Gets sorted server activity data
+   * @private
+   */
+  static _getServerActivity(serverCounts) {
+    return Object.entries(serverCounts)
       .map(([serverId, activityCount]) => ({ serverId, activityCount }))
       .sort((a, b) => b.activityCount - a.activityCount);
+  }
 
-    // Determine user engagement
-    const avgActivitiesPerUser = activityHistory.length / Math.max(uniqueUsers.size, 1);
-    let userEngagement = 'low';
-    if (avgActivitiesPerUser > 3) userEngagement = 'high';
-    else if (avgActivitiesPerUser > 1.5) userEngagement = 'medium';
+  /**
+   * Calculates user engagement level
+   * @private
+   */
+  static _calculateUserEngagement(totalActivities, uniqueUserCount) {
+    const avgActivitiesPerUser = totalActivities / Math.max(uniqueUserCount, 1);
+    if (avgActivitiesPerUser > 3) return 'high';
+    if (avgActivitiesPerUser > 1.5) return 'medium';
+    return 'low';
+  }
 
-    // Find peak usage hours
-    const peakUsageHours = Object.entries(hourCounts)
+  /**
+   * Gets peak usage hours
+   * @private
+   */
+  static _getPeakUsageHours(hourCounts) {
+    return Object.entries(hourCounts)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 3)
       .map(([hour]) => `${hour}:00-${parseInt(hour) + 1}:00`);
+  }
 
-    // Determine growth trend (simplified)
+  /**
+   * Calculates growth trend
+   * @private
+   */
+  static _calculateGrowthTrend(activityHistory) {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    
     const recentActivity = activityHistory.filter(a => 
-      Date.now() - new Date(a.timestamp).getTime() < 24 * 60 * 60 * 1000
+      now - new Date(a.timestamp).getTime() < dayMs
     );
     const olderActivity = activityHistory.filter(a => 
-      Date.now() - new Date(a.timestamp).getTime() >= 24 * 60 * 60 * 1000
+      now - new Date(a.timestamp).getTime() >= dayMs
     );
     
-    let growthTrend = 'stable';
-    if (recentActivity.length > olderActivity.length * 1.1) growthTrend = 'growing';
-    else if (recentActivity.length < olderActivity.length * 0.9) growthTrend = 'declining';
-
-    return {
-      commandPopularity,
-      serverActivity,
-      userEngagement,
-      peakUsageHours,
-      growthTrend
-    };
+    if (recentActivity.length > olderActivity.length * 1.1) return 'growing';
+    if (recentActivity.length < olderActivity.length * 0.9) return 'declining';
+    return 'stable';
   }
 
   /**
@@ -490,25 +538,7 @@ class DiscordAnalytics {
     return { level, totalUsers, activeUsers, engagementRatio };
   }
 
-  /**
-   * Calculates growth trend
-   * @param {Array} activityHistory - Activity data
-   * @returns {string} - Growth trend
-   * @private
-   */
-  static _calculateGrowthTrend(activityHistory) {
-    if (activityHistory.length < 14) return 'insufficient_data';
 
-    const recent = activityHistory.slice(-7);
-    const previous = activityHistory.slice(-14, -7);
-
-    const recentActivity = recent.length;
-    const previousActivity = previous.length;
-
-    if (recentActivity > previousActivity * 1.1) return 'growing';
-    if (recentActivity < previousActivity * 0.9) return 'declining';
-    return 'stable';
-  }
 
   /**
    * Generates usage-based recommendations
