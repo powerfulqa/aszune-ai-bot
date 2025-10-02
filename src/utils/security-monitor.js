@@ -165,7 +165,7 @@ class SecurityMonitor {
       threatScore += 70;
     }
     
-    if ((content.match(/@/g) || []).length > 5) {
+    if ((content.match(SecurityMonitor.MENTION_REGEX) || []).length > 5) {
       threats.push('excessive_mentions');
       threatScore += 20;
     }
@@ -259,6 +259,9 @@ class SecurityMonitor {
     }
   }
 }
+
+// Pre-compiled regex for better performance
+SecurityMonitor.MENTION_REGEX = /@/g;
 
 module.exports = SecurityMonitor;
 module.exports.SecurityMonitor = SecurityMonitor;

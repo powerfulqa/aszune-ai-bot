@@ -33,6 +33,7 @@ class PerformanceDashboard {
     try {
       dataComponents = this._collectDashboardData(activityHistory, performanceMetrics);
     } catch (error) {
+      logger.error('Failed to collect dashboard data, using fallback data.', { error });
       // Fallback if services fail
       dataComponents = {
         analyticsReport: { summary: { totalServers: 0, totalUsers: 0, errorRate: 0 } },

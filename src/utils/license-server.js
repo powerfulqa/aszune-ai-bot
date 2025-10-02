@@ -36,11 +36,17 @@ class LicenseServer {
     // API Key validation with timing-safe comparison
     this.app.use('/api', (req, res, next) => {
       const apiKey = req.headers.authorization;
-      const expectedKey = `Bearer ${process.env.LICENSE_SERVER_API_KEY}`;
+      const envApiKey = process.env.LICENSE_SERVER_API_KEY;
       
-      if (!apiKey || !expectedKey) {
+      // Ensure both the provided API key and the expected API key are defined and non-empty strings
+      if (
+        typeof apiKey !== 'string' || !apiKey ||
+        typeof envApiKey !== 'string' || !envApiKey
+      ) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
+      
+      const expectedKey = `Bearer ${envApiKey}`;
       
       // Use timing-safe comparison to prevent timing attacks
       const apiKeyBuffer = Buffer.from(apiKey, 'utf8');

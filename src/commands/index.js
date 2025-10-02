@@ -244,7 +244,7 @@ const commands = {
             },
             {
               name: '🎯 Top Commands',
-              value: analyticsData.commandStats.slice(0, 3).map((cmd, i) => 
+              value: analyticsData?.commandStats?.slice(0, 3).map((cmd, i) => 
                 `${i + 1}. ${cmd.command} (${cmd.count})`
               ).join('\n') || 'No data yet',
               inline: true
