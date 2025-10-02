@@ -1,149 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="72" failures="0" errors="0" time="1">
-  <testsuite name="PerplexitySecure Service - Comprehensive Coverage" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:12:56" time="0.906" tests="72">
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for null headers" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for null headers" time="0.005">
+<testsuites name="jest tests" tests="9" failures="0" errors="0" time="2.109">
+  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:11" time="1.141" tests="3">
+    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.009">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for undefined headers" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for undefined headers" time="0.001">
+    <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.002">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for null key" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should return empty string for null key" time="0.002">
+    <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.002">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should get header using Headers.get() method" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should get header using Headers.get() method" time="0.002">
+  </testsuite>
+  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:12" time="0.414" tests="3">
+    <testcase classname="Dashboard Command should handle dashboard command successfully" name="Dashboard Command should handle dashboard command successfully" time="0.003">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should fall back to object property access" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should fall back to object property access" time="0.001">
+    <testcase classname="Dashboard Command should handle dashboard command error" name="Dashboard Command should handle dashboard command error" time="0.002">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should check lowercase header names" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should check lowercase header names" time="0.001">
+    <testcase classname="Dashboard Command should handle dashboard with degraded performance" name="Dashboard Command should handle dashboard with degraded performance" time="0.002">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should check uppercase header names" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should check uppercase header names" time="0.001">
+  </testsuite>
+  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:13" time="0.398" tests="3">
+    <testcase classname="Resources Command should handle resources command successfully" name="Resources Command should handle resources command successfully" time="0.003">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle Headers.get() throwing error" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle Headers.get() throwing error" time="0.001">
+    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.001">
     </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle non-object headers" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle non-object headers" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle function headers" name="PerplexitySecure Service - Comprehensive Coverage _safeGetHeader method should handle function headers" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return false when caching is explicitly disabled" name="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return false when caching is explicitly disabled" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return true when in test environment" name="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return true when in test environment" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return true when cache is enabled and caching not disabled" name="PerplexitySecure Service - Comprehensive Coverage _shouldUseCache method should return true when cache is enabled and caching not disabled" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should build basic request payload with defaults" name="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should build basic request payload with defaults" time="0.01">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should use custom options when provided" name="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should use custom options when provided" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should handle streaming when PI optimizations enabled" name="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should handle streaming when PI optimizations enabled" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should not enable streaming in low CPU mode" name="PerplexitySecure Service - Comprehensive Coverage _buildRequestPayload method should not enable streaming in low CPU mode" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should return default settings when PI_OPTIMIZATIONS is not configured" name="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should return default settings when PI_OPTIMIZATIONS is not configured" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should return settings from config when available" name="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should return settings from config when available" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should handle config access errors gracefully" name="PerplexitySecure Service - Comprehensive Coverage _getPiOptimizationSettings method should handle config access errors gracefully" time="0.003">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should throw error for null response" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should throw error for null response" time="0.038">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should throw error for undefined response" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should throw error for undefined response" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle error status codes" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle error status codes" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle response without body" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle response without body" time="0.004">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle body without json method" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle body without json method" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle JSON parsing errors" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle JSON parsing errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle invalid response object" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle invalid response object" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle missing choices array" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle missing choices array" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle invalid choice structure" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle invalid choice structure" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle missing message field" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should handle missing message field" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should return valid response data" name="PerplexitySecure Service - Comprehensive Coverage _handleApiResponse method should return valid response data" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle error response with text body" name="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle error response with text body" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle error response without body" name="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle error response without body" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle body text error" name="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should handle body text error" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should truncate long error messages" name="PerplexitySecure Service - Comprehensive Coverage _handleErrorResponse method should truncate long error messages" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should extract content from message.content" name="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should extract content from message.content" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should extract content from choice.content" name="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should extract content from choice.content" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should handle empty response" name="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should handle empty response" time="0.035">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should handle empty choices" name="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should handle empty choices" time="0.015">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should return default message for invalid structure" name="PerplexitySecure Service - Comprehensive Coverage _extractResponseContent method should return default message for invalid structure" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return rate limit message for 429 status" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return rate limit message for 429 status" time="0">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return service unavailable message for 5xx status" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return service unavailable message for 5xx status" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return network error message for network errors" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return network error message for network errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return empty response message for empty response errors" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return empty response message for empty response errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return unexpected format message for invalid errors" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return unexpected format message for invalid errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return original error message for unknown errors" name="PerplexitySecure Service - Comprehensive Coverage _generateErrorMessage method should return original error message for unknown errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for null error" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for null error" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for error without message" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for error without message" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for temporary errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for temporary errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for network errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for network errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for 429 errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return true for 429 errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for permanent errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for permanent errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for invalid errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for invalid errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for unauthorized errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for unauthorized errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for forbidden errors" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for forbidden errors" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for unknown errors by default" name="PerplexitySecure Service - Comprehensive Coverage _isRetryableError method should return false for unknown errors by default" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should return default config when PI_OPTIMIZATIONS not configured" name="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should return default config when PI_OPTIMIZATIONS not configured" time="0.003">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should return cache config when PI optimizations enabled" name="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should return cache config when PI optimizations enabled" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should handle config access errors" name="PerplexitySecure Service - Comprehensive Coverage _getCacheConfiguration method should handle config access errors" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should format string entry with timestamp" name="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should format string entry with timestamp" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should preserve existing object entry with timestamp" name="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should preserve existing object entry with timestamp" time="0">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should add timestamp to object entry without one" name="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should add timestamp to object entry without one" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should handle null entry" name="PerplexitySecure Service - Comprehensive Coverage _formatCacheEntry method should handle null entry" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateCacheKey method should generate consistent cache key for same history" name="PerplexitySecure Service - Comprehensive Coverage _generateCacheKey method should generate consistent cache key for same history" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage _generateCacheKey method should generate different keys for different history" name="PerplexitySecure Service - Comprehensive Coverage _generateCacheKey method should generate different keys for different history" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage generateTextSummary method should generate text summary with correct options" name="PerplexitySecure Service - Comprehensive Coverage generateTextSummary method should generate text summary with correct options" time="0.002">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage generateTextSummary method should handle text summary errors" name="PerplexitySecure Service - Comprehensive Coverage generateTextSummary method should handle text summary errors" time="0.014">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should return cache stats when available" name="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should return cache stats when available" time="0.001">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should return error stats when cache throws" name="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should return error stats when cache throws" time="0.012">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should handle missing cache gracefully" name="PerplexitySecure Service - Comprehensive Coverage getCacheStats method should handle missing cache gracefully" time="0.01">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage shutdown method should clear all active intervals" name="PerplexitySecure Service - Comprehensive Coverage shutdown method should clear all active intervals" time="0.015">
-    </testcase>
-    <testcase classname="PerplexitySecure Service - Comprehensive Coverage shutdown method should handle shutdown when no intervals exist" name="PerplexitySecure Service - Comprehensive Coverage shutdown method should handle shutdown when no intervals exist" time="0.013">
+    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>

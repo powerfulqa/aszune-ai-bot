@@ -86,7 +86,7 @@ describe('Analytics Command', () => {
     expect(DiscordAnalytics.generateServerInsights).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [{
-        color: '#5865F2',
+        color: 0x5865F2,
         title: '📊 Discord Analytics Dashboard',
         fields: [
           { 
@@ -143,6 +143,14 @@ describe('Analytics Command', () => {
     });
 
     DiscordAnalytics.generateServerInsights.mockResolvedValue({
+      serverId: 'test-server',
+      totalActivities: 0,
+      uniqueUsers: 0,
+      commandsExecuted: 0,
+      averageResponseTime: 0,
+      errorRate: 0,
+      mostActiveUser: null,
+      popularCommands: [],
       recommendations: []
     });
 
@@ -150,7 +158,7 @@ describe('Analytics Command', () => {
 
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [{
-        color: '#5865F2',
+        color: 0x5865F2,
         title: '📊 Discord Analytics Dashboard',
         fields: [
           { 
@@ -170,7 +178,7 @@ describe('Analytics Command', () => {
           },
           {
             name: '💡 Server Insights',
-            value: 'All systems optimal!',
+            value: 'Active Users: 0\nCommands: 0\nError Rate: 0%',
             inline: false
           }
         ],

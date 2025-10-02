@@ -229,7 +229,7 @@ const commands = {
         const serverInsights = await DiscordAnalytics.generateServerInsights(serverId, activityHistory);
         
         const embed = {
-          color: config.COLORS.PRIMARY,
+          color: 0x5865F2,
           title: '📊 Discord Analytics Dashboard',
           fields: [
             {
@@ -251,7 +251,7 @@ const commands = {
             },
             {
               name: '💡 Server Insights',
-              value: serverInsights.recommendations.slice(0, 2).join('\n') || 'All systems optimal!',
+              value: serverInsights.recommendations?.slice(0, 2).join('\n') || `Active Users: ${serverInsights.uniqueUsers}\nCommands: ${serverInsights.commandsExecuted}\nError Rate: ${serverInsights.errorRate}%`,
               inline: false
             }
           ],
