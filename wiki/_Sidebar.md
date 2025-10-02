@@ -13,6 +13,12 @@
 - [Contributing](Contributing)
 - [Release Notes](../docs/README.md)
 
+### Analytics Features (NEW)
+
+- [Analytics Commands Guide](Command-Reference#phase-bc-analytics-commands)
+- [Performance Monitoring](Usage-Guide#using-analytics-features)
+- [v1.6.0 Release Notes](../docs/RELEASE-NOTES-v1.6.0.md)
+
 ### Code Quality
 
 - [qlty Integration Guide](../docs/QLTY_INTEGRATION.md)

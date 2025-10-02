@@ -8,7 +8,7 @@ alwaysApply: true
 
 ## 🎯 Overview
 
-This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions. The project follows qlty code quality standards for unified linting, security scanning, and maintainability analysis.
+This document provides comprehensive guidance for AI agents working on the Aszune AI Bot codebase. It covers architecture patterns, common issues, testing approaches, and best practices learned through extensive iterations and debugging sessions. The project includes analytics features (internally referenced as Phase B+C) accessible through Discord commands (`/analytics`, `/dashboard`, `/resources`) and follows qlty code quality standards for unified linting, security scanning, and maintainability analysis.
 
 ## 📁 Codebase Architecture
 
@@ -35,12 +35,14 @@ docs/                 # Enhanced documentation
 
 ### Key Components
 - **Discord Interface**: Handles Discord API interactions
-- **Command Handler**: Processes both slash commands and text commands
+- **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
 - **Perplexity API Client**: Manages AI API communication with secure caching
 - **Conversation Manager**: Class-based conversation tracking
 - **Error Handler**: Comprehensive error handling system
 - **Message Chunker**: Intelligent message splitting with boundary detection
 - **Input Validator**: Content sanitization and validation
+- **Analytics System**: Discord analytics, performance dashboard, and resource monitoring (`/analytics`, `/dashboard`, `/resources`)
+- **Performance Monitoring**: Real-time system metrics and optimization recommendations
 
 ### Standard Documentation Files (Professional Standards)
 The project includes industry-standard documentation:
@@ -529,7 +531,7 @@ npm start
 ## 🎯 Success Metrics
 
 A successful implementation should achieve:
-- ✅ All tests passing (853+ tests)
+- ✅ All tests passing (991+ tests)
 - ✅ **82%+ code coverage** (current standard)
 - ✅ **qlty quality checks passing** (`npm run quality:check`)
 - ✅ **No security vulnerabilities** (`npm run security:all`)
@@ -542,6 +544,8 @@ A successful implementation should achieve:
 - ✅ Clean, maintainable code
 - ✅ Comprehensive error scenario coverage
 - ✅ **Documentation properly formatted** (markdownlint compliant)
+- ✅ **Analytics commands functional** (`/analytics`, `/dashboard`, `/resources`)
+- ✅ **Analytics integration complete**
 
 ---
 

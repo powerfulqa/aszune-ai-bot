@@ -21,14 +21,13 @@ afterAll(() => {
 
 describe('Bot Shutdown', () => {
   let index;
-  let _discordMock;
   let shutdownFunction;
 
   beforeEach(() => {
     jest.clearAllMocks();
     process.exit.mockClear();
     jest.resetModules();
-    discordMock = require('../__mocks__/discord.mock.module.js');
+    require('../__mocks__/discord.mock.module.js');
     index = require('../../src/index');
     shutdownFunction = index.shutdown;
     conversationManager = new ConversationManager();

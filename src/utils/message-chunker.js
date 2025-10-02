@@ -392,6 +392,119 @@ function processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chu
 }
 
 /**
+ * Checks if a line is a table separator (like |---|---|)
+ * @param {string} line - Line to check
+ * @returns {boolean} - True if it's a separator line
+ */
+function isTableSeparator(line) {
+  return line.match(/^\|[\s\-=:]+\|$/);
+}
+
+/**
+ * Parses a table row into cells
+ * @param {string} line - Table row line
+ * @returns {string[]|null} - Array of cells or null if not a valid table row
+ */
+function parseTableRow(line) {
+  if (!line.includes('|')) {
+    return null;
+  }
+  
+  const cells = line.split('|')
+    .map(cell => cell.trim())
+    .filter(cell => cell !== ''); // Allow empty cells but filter out empty strings from split edges
+    
+  // Valid table row needs at least one cell between pipes
+  return cells.length >= 1 ? cells : null;
+}
+
+/**
+ * Formats a table data row as bullet points
+ * @param {string[]} headers - Table headers
+ * @param {string[]} cells - Row data
+ * @returns {string} - Formatted row content
+ */
+function formatTableDataRow(headers, cells) {
+  let content = `• **${headers[0]}**: ${cells[0]}\n`;
+  for (let i = 1; i < cells.length; i++) {
+    content += `  *${headers[i]}*: ${cells[i]}\n`;
+  }
+  return content + '\n';
+}
+
+/**
+ * Processes a single line for table formatting
+ * @param {string} line - Line to process
+ * @param {Object} state - Current processing state
+ * @returns {Object} - Updated state
+ */
+function processTableLine(line, state) {
+  const { formattedContent, inTable, headers } = state;
+  const trimmed = line.trim();
+  
+  // Skip separator lines
+  if (isTableSeparator(trimmed)) {
+    return state;
+  }
+  
+  const cells = parseTableRow(trimmed);
+  
+  if (cells) {
+    if (!inTable) {
+      // First table row - headers
+      return {
+        formattedContent: formattedContent + `**${cells.join(' | ')}:**\n`,
+        inTable: true,
+        headers: cells
+      };
+    } else if (cells.length === headers.length) {
+      // Valid data row
+      return {
+        ...state,
+        formattedContent: formattedContent + formatTableDataRow(headers, cells)
+      };
+    }
+  }
+  
+  // Not a valid table row or mismatched columns
+  const endTableMarker = inTable ? '\n' : '';
+  return {
+    formattedContent: formattedContent + endTableMarker + line + '\n',
+    inTable: false,
+    headers: []
+  };
+}
+
+/**
+ * Converts table-like content to formatted lists for Discord embeds
+ * @param {string} content - Raw response content
+ * @returns {string} - Formatted content suitable for embeds
+ */
+function formatTablesForDiscord(content) {
+  // Handle null/undefined input
+  if (!content) return content;
+  
+  // Detect table patterns (basic detection for | separated content)
+  const tableRegex = /^\s*\|.*\|\s*$/gm;
+  const hasTables = tableRegex.test(content);
+  
+  if (!hasTables) return content;
+  
+  const lines = content.split('\n');
+  let state = {
+    formattedContent: '',
+    inTable: false,
+    headers: []
+  };
+  
+  for (const line of lines) {
+    state = processTableLine(line, state);
+  }
+  
+  return state.formattedContent.trim();
+}
+
+/**
  * Splits a long message into multiple chunks to avoid truncation
  * @param {string} message - The full response message
  * @param {number} maxLength - Maximum length per message chunk (default: 2000)
@@ -465,6 +578,7 @@ function chunkMessage(message, maxLength = 2000) {
 
 module.exports = {
   chunkMessage,
+  formatTablesForDiscord,
   // Export helper functions for testing purposes
   _processParagraph: processParagraph,
   _processSentence: processSentence,

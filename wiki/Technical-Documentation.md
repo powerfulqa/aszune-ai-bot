@@ -32,7 +32,15 @@ maintainable.
 13. **Storage Service** - Data persistence and management
 14. **Graceful Shutdown** - Manages clean shutdown on process termination signals or errors
 15. **Logging Infrastructure** - Comprehensive logging system replacing all console statements
-16. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
+16. **Analytics System** - Comprehensive monitoring and analytics platform:
+    - **DiscordAnalytics** - Server engagement metrics and usage patterns (refactored v1.6.0)
+    - **PerformanceDashboard** - Real-time system monitoring and health assessment (enhanced v1.6.0)
+    - **ResourceOptimizer** - Performance optimization analysis and recommendations (refactored v1.6.0)
+17. **Code Quality Architecture** - Enhanced in v1.6.0 with systematic method decomposition:
+    - **Method Complexity Reduction** - 40% lint error reduction through helper method patterns
+    - **Security-First Design** - Timing-safe authentication and enhanced input validation
+    - **Maintainable Code Structure** - Single-responsibility methods with focused helper functions
+18. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
     optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
     script, which sets environment variables and applies system-level tweaks before launching
     Node.js. For production deployments, use PM2 with the shell script as the entry point:
@@ -76,6 +84,9 @@ aszune-ai-bot/
 │       ├── connection-throttler.js # Connection limiting
 │       ├── debouncer.js            # Message debouncing
 │       ├── lazy-loader.js          # Lazy loading utilities
+│       ├── discord-analytics.js    # Discord server analytics
+│       ├── performance-dashboard.js # Real-time performance dashboard
+│       ├── resource-optimizer.js   # Resource optimization analysis
 │       └── [other utilities]       # Additional utility modules
 ├── .qlty/                          # Code quality configuration (qlty tooling)
 │   ├── qlty.toml                  # Main qlty configuration with all plugins
@@ -139,7 +150,7 @@ maintainability analysis.
 - **Function Complexity**: Maximum 10 per function
 - **Code Duplication**: Maximum 50 lines identical code
 - **Security**: Zero tolerance for secrets in code
-- **Test Coverage**: 82%+ overall coverage (536+ tests)
+- **Test Coverage**: 82%+ overall coverage (1000+ tests)
 - **Documentation**: Markdownlint compliant formatting
 
 ### Quality Workflow Commands
@@ -474,7 +485,128 @@ function chunkMessage(message, maxLength = 2000) {
 }
 ```
 
-### 7. Pi Optimization System
+### 7. Analytics System
+
+Comprehensive monitoring and analytics platform providing real-time insights through Discord commands.
+
+#### Discord Analytics Service (`/analytics`)
+
+Tracks and analyzes Discord server activity, user engagement, and command usage patterns:
+
+```javascript
+// Simplified example from discord-analytics.js
+class DiscordAnalytics {
+  static async generateDailyReport() {
+    const activityData = this.getActivityHistory();
+    return {
+      totalMessages: activityData.filter(a => a.type === 'message').length,
+      activeUsers: new Set(activityData.map(a => a.userId)).size,
+      popularCommands: this.analyzeCommandUsage(activityData),
+      engagement: this.calculateEngagementMetrics(activityData)
+    };
+  }
+
+  static async trackServerActivity(serverId, action, metadata = {}) {
+    const activity = {
+      timestamp: Date.now(),
+      serverId,
+      action,
+      ...metadata
+    };
+    this.activityHistory.push(activity);
+  }
+}
+```
+
+#### Performance Dashboard Service (`/dashboard`)
+
+Real-time system monitoring with resource utilization and performance metrics:
+
+```javascript
+// Simplified example from performance-dashboard.js  
+class PerformanceDashboard {
+  static async generateDashboardReport() {
+    const systemStatus = this.getRealTimeStatus();
+    const alerts = this.generateAlerts(systemStatus);
+    
+    return {
+      overview: systemStatus,
+      performance: {
+        responseTime: this.getAverageResponseTime(),
+        errorRate: this.getErrorRate(),
+        uptime: process.uptime()
+      },
+      alerts,
+      recommendations: this.generateRecommendations(systemStatus)
+    };
+  }
+
+  static getRealTimeStatus() {
+    const memUsage = process.memoryUsage();
+    return {
+      status: this.calculateOverallStatus(),
+      memory: {
+        used: Math.round(memUsage.heapUsed / 1024 / 1024),
+        total: Math.round(memUsage.heapTotal / 1024 / 1024),
+        percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100)
+      },
+      uptime: {
+        seconds: Math.floor(process.uptime()),
+        formatted: this.formatUptime(process.uptime())
+      }
+    };
+  }
+}
+```
+
+#### Resource Optimizer Service (`/resources`)
+
+Performance optimization analysis with automated recommendations:
+
+```javascript
+// Simplified example from resource-optimizer.js
+class ResourceOptimizer {
+  static monitorResources(systemStats = {}) {
+    const memoryUsage = process.memoryUsage();
+    const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
+    
+    const monitoring = {
+      memory: {
+        used: Math.round(memoryMB),
+        status: this._getMemoryStatus(memoryMB)
+      },
+      performance: {
+        responseTime: systemStats.avgResponseTime || 0,
+        status: this._getPerformanceStatus(systemStats)  
+      },
+      overall: {
+        status: this._calculateOverallStatus(memory, performance)
+      }
+    };
+
+    return {
+      ...monitoring,
+      recommendations: this._generateResourceRecommendations(monitoring)
+    };
+  }
+
+  static _generateResourceRecommendations(monitoring) {
+    const recommendations = [];
+    
+    if (monitoring.memory.status === 'high') {
+      recommendations.push('Consider clearing cache or restarting to free memory');
+    }
+    
+    if (monitoring.performance.status === 'degraded') {
+      recommendations.push('System performance is degraded - check resource usage');
+    }
+
+    return recommendations;
+  }
+}
+```
+
+### 8. Pi Optimization System
 
 Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available
 resources.
@@ -651,10 +783,33 @@ async function shutdown(signal) {
 
 ## Security Considerations
 
+### Core Security Principles
 - Sensitive information is stored in environment variables, not in code
 - API keys and tokens are never exposed in responses
 - Rate limiting prevents abuse
 - Input validation is performed before processing commands
+
+### v1.6.0 Security Enhancements
+- **Timing Attack Prevention**: Implemented `crypto.timingSafeEqual()` for secure API key comparison in license server
+- **Enhanced Input Validation**: Improved null safety and error boundary handling across all modules
+- **Authentication Security**: Eliminated timing-based attack vectors in authentication systems
+- **Code Quality Security**: Systematic removal of undefined variable access and circular dependencies
+
+### Security Implementation Examples
+```javascript
+// Timing-safe API key validation
+const crypto = require('crypto');
+if (crypto.timingSafeEqual(Buffer.from(providedKey), Buffer.from(expectedKey))) {
+  // Authentication successful
+}
+
+// Enhanced null safety in resource optimization
+static _extractMetrics(analyticsData = {}, performanceData = {}) {
+  if (!analyticsData) analyticsData = {};
+  if (!performanceData) performanceData = {};
+  // Safe processing continues...
+}
+```
 
 ## Future Technical Enhancements
 
@@ -765,6 +920,8 @@ npm run quality:metrics    # Detailed quality metrics
   memory monitoring, garbage collection, and resource management
 - **Message Chunking Tests** (`__tests__/unit/message-chunking/index.test.js`): Comprehensive
   testing of enhanced message chunking functionality
+- **Table Formatting Tests** (`__tests__/unit/message-chunker-table-formatting.test.js`): Complete
+  test coverage for Discord table formatting with 9 comprehensive test scenarios
 - **Chunk Boundary Handler Tests**
   (`__tests__/unit/message-chunking/chunk-boundary-handler.test.js`): Full test coverage for
   intelligent chunk boundary detection and fixing

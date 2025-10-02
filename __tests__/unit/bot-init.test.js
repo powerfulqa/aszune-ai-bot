@@ -43,7 +43,6 @@ beforeEach(() => {
 });
 
 describe('Bot Initialization', () => {
-  let _index;
   let discordMock;
 
   beforeEach(() => {
@@ -56,8 +55,8 @@ describe('Bot Initialization', () => {
     // Import the discord mock to verify calls
     discordMock = require('discord.js');
 
-    // Import index last after all mocks are set up
-    index = require('../../src/index');
+    // Import index last after all mocks are set up - this initializes the bot
+    require('../../src/index');
   });
 
   it('should create a Discord client and log in', async () => {
