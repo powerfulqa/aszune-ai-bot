@@ -95,7 +95,7 @@ describe('Resources Command', () => {
     expect(ResourceOptimizer.generateOptimizationRecommendations).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [{
-        color: '#00FF00',
+        color: 0x00FF00,
         title: '🔧 Resource Optimization',
         fields: [
           {
@@ -164,7 +164,7 @@ describe('Resources Command', () => {
 
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [{
-        color: '#FFA500',
+        color: 0xFFA500,
         title: '🔧 Resource Optimization',
         fields: [
           {

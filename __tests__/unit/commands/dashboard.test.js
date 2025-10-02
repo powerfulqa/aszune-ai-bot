@@ -87,7 +87,7 @@ describe('Dashboard Command', () => {
       expect.objectContaining({
         embeds: expect.arrayContaining([
           expect.objectContaining({
-            color: '#00FF00',
+            color: 0x00FF00,
             title: expect.stringContaining('Performance Dashboard'),
             fields: expect.arrayContaining([
               expect.objectContaining({
@@ -159,7 +159,7 @@ describe('Dashboard Command', () => {
       expect.objectContaining({
         embeds: expect.arrayContaining([
           expect.objectContaining({
-            color: '#FFA500',
+            color: 0xFFA500,
             title: expect.stringContaining('Performance Dashboard'),
             fields: expect.arrayContaining([
               expect.objectContaining({
