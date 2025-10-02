@@ -220,12 +220,11 @@ function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
   const currentChunk = chunks[index];
   const nextChunk = chunks[index + 1];
 
-  // Check for Markdown link being split across chunks
-  if (
-    /\[[^\]]*$/.test(currentChunk) ||
-    /\][^(]*$/.test(currentChunk) ||
-    /\([^)]*$/.test(currentChunk)
-  ) {
+  // Check for Markdown link being split across chunks (but exclude citation-style references)
+  const hasIncompleteLink = /\[[^\]]*$/.test(currentChunk) || /\][^(]*$/.test(currentChunk) || /\([^)]*$/.test(currentChunk);
+  const isCitationReference = /\[\d+\]?$/.test(currentChunk); // Allow citation references like [1], [2], etc.
+  
+  if (hasIncompleteLink && !isCitationReference) {
     const brokenMarkdownMatch =
       /^(.*)\[[^\]]*$/.exec(currentChunk) ||
       /^(.*)\][^(]*$/.exec(currentChunk) ||
@@ -256,15 +255,18 @@ function validateChunkBoundaries(chunks) {
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
 
-      // Check for incomplete markdown links
-      if (/\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk)) {
-        logger.warn(`Chunk ${i + 1} has incomplete markdown link`);
+      // Check for incomplete markdown links (but exclude citation-style references like [1], [2], etc.)
+      const incompleteLink = /\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk);
+      const isCitationReference = /\[\d+\]$/.test(chunk); // Allow citation references like [1], [2], etc.
+      
+      if (incompleteLink && !isCitationReference) {
+        logger.debug(`Chunk ${i + 1} has incomplete markdown link`);
         return false;
       }
 
       // Check for incomplete URLs
       if (/https?:\/\/[^\s]*$/.test(chunk) && i < chunks.length - 1) {
-        logger.warn(`Chunk ${i + 1} has incomplete URL`);
+        logger.debug(`Chunk ${i + 1} has incomplete URL`);
         return false;
       }
 

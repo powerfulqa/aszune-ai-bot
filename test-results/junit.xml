@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="21" failures="0" errors="0" time="0.691">
-  <testsuite name="Chat Service - Advanced" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:01:37" time="0.444" tests="11">
+<testsuites name="jest tests" tests="11" failures="0" errors="0" time="0.514">
+  <testsuite name="Chat Service - Advanced" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:08:23" time="0.433" tests="11">
     <testcase classname="Chat Service - Advanced should handle AI response generation errors" name="Chat Service - Advanced should handle AI response generation errors" time="0.06">
     </testcase>
     <testcase classname="Chat Service - Advanced should add emojis to responses when not in low CPU mode" name="Chat Service - Advanced should add emojis to responses when not in low CPU mode" time="0.002">
@@ -15,35 +15,13 @@
     </testcase>
     <testcase classname="Chat Service - Advanced should handle messages with emojis" name="Chat Service - Advanced should handle messages with emojis" time="0.002">
     </testcase>
-    <testcase classname="Chat Service - Advanced should handle empty conversation history" name="Chat Service - Advanced should handle empty conversation history" time="0.002">
+    <testcase classname="Chat Service - Advanced should handle empty conversation history" name="Chat Service - Advanced should handle empty conversation history" time="0.001">
     </testcase>
     <testcase classname="Chat Service - Advanced should handle conversation history with multiple messages" name="Chat Service - Advanced should handle conversation history with multiple messages" time="0.001">
     </testcase>
     <testcase classname="Chat Service - Advanced should handle network timeouts gracefully" name="Chat Service - Advanced should handle network timeouts gracefully" time="0.013">
     </testcase>
     <testcase classname="Chat Service - Advanced should handle rate limit errors from API" name="Chat Service - Advanced should handle rate limit errors from API" time="0.007">
-    </testcase>
-  </testsuite>
-  <testsuite name="Chat Service - Error Handling Branch Coverage" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:01:37" time="0.149" tests="10">
-    <testcase classname="Chat Service - Error Handling Branch Coverage Input Validation Error Branches should handle invalid input validation" name="Chat Service - Error Handling Branch Coverage Input Validation Error Branches should handle invalid input validation" time="0.01">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Input Validation Error Branches should handle input validation exceptions" name="Chat Service - Error Handling Branch Coverage Input Validation Error Branches should handle input validation exceptions" time="0.014">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle timeout errors" name="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle timeout errors" time="0.003">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle rate limit errors" name="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle rate limit errors" time="0.003">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle generic API errors" name="Chat Service - Error Handling Branch Coverage AI Service Error Branches should handle generic API errors" time="0.002">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should skip emoji processing in low CPU mode" name="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should skip emoji processing in low CPU mode" time="0.002">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should process emojis when not in low CPU mode" name="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should process emojis when not in low CPU mode" time="0.002">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should handle emoji processing errors gracefully" name="Chat Service - Error Handling Branch Coverage Pi Optimization Branch Coverage should handle emoji processing errors gracefully" time="0.005">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Message Formatting Error Branches should handle message formatting errors" name="Chat Service - Error Handling Branch Coverage Message Formatting Error Branches should handle message formatting errors" time="0.001">
-    </testcase>
-    <testcase classname="Chat Service - Error Handling Branch Coverage Message Formatting Error Branches should handle chunking errors" name="Chat Service - Error Handling Branch Coverage Message Formatting Error Branches should handle chunking errors" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>
