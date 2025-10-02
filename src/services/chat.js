@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const commandHandler = require('../commands');
 const messageFormatter = require('../utils/message-formatter');
-const { chunkMessage } = require('../utils/message-chunking');
+const { chunkMessage, formatTablesForDiscord } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 
@@ -151,11 +151,14 @@ async function generateBotResponse(userId) {
   const history = conversationManager.getHistory(userId);
   const reply = await perplexityService.generateChatResponse(history);
 
+  // Format tables for Discord embeds before other processing
+  const tableFormattedReply = formatTablesForDiscord(reply);
+
   // Add emojis based on reply content (limit number of emojis on Pi)
   const emojiLimit = config.PI_OPTIMIZATIONS.ENABLED
     ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
     : 10;
-  const enhancedReply = emojiManager.addEmojisToResponse(reply, { maxEmojis: emojiLimit });
+  const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, { maxEmojis: emojiLimit });
 
   // Format response for Pi if optimizations enabled
   return messageFormatter.formatResponse(enhancedReply);
