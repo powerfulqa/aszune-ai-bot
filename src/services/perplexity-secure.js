@@ -505,7 +505,11 @@ class PerplexityService {
    * @private
    */
   _generateErrorMessage(error, errorResponse) {
-    if (error.statusCode === 429) {
+    if (error.statusCode === 400) {
+      return 'The service is temporarily unavailable due to configuration issues. Please try again later.';
+    } else if (error.statusCode === 401) {
+      return 'Authentication error with the AI service. Please try again later.';
+    } else if (error.statusCode === 429) {
       return 'Rate limit exceeded. Please try again later.';
     } else if (error.statusCode >= 500) {
       return 'The service is temporarily unavailable. Please try again later.';

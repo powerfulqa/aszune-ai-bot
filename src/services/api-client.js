@@ -4,6 +4,7 @@
  */
 const { request } = require('undici');
 const config = require('../config/config');
+const logger = require('../utils/logger');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
 
 /**
@@ -143,6 +144,11 @@ class ApiClient {
       } catch (textError) {
         responseText = `Error reading response body: ${textError.message}`;
       }
+    }
+
+    // Log 400 errors with more detail for troubleshooting
+    if (statusCode === 400) {
+      logger.error(`API 400 Error - Bad Request. Response: ${responseText}`);
     }
 
     const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(
