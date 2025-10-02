@@ -4,7 +4,7 @@
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot) 
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE) 
-[![Tests](https://img.shields.io/badge/Tests-991%20Passing-brightgreen.svg)](#testing--coverage)
+[![Tests](https://img.shields.io/badge/Tests-1000%20Passing-brightgreen.svg)](#testing--coverage)
 
 [Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
 
@@ -80,7 +80,7 @@
 - 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
-- 🧪 **Comprehensive Testing:** 991+ automated tests covering all key functionality with 74%+ code
+- 🧪 **Comprehensive Testing:** 1000+ automated tests covering all key functionality with 74%+ code
   coverage and enterprise-grade quality assurance.
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
   comprehensive error recovery.
@@ -97,6 +97,11 @@
     formatting
   - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or
     mid-URL
+- 📊 **Discord Table Formatting:** Automatically converts markdown tables to readable Discord-friendly format
+  - 🔧 **Intelligent Detection:** Recognizes markdown table patterns and converts to bullet-point lists
+  - 📋 **Enhanced Readability:** Tables display as organized bullet points instead of broken formatting
+  - 🛡️ **Content Preservation:** Maintains all table data while improving Discord embed compatibility
+  - 🔄 **Seamless Integration:** Works automatically with all AI responses containing tables
 
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
   resource-constrained devices like Raspberry Pi 3.
@@ -386,7 +391,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage**: 82%+ overall coverage with 991 automated tests
+- **Test Coverage**: 82%+ overall coverage with 1000 automated tests
 - **Code Quality**: 40% reduction in lint errors (22 → 13) with systematic method decomposition
 - **Security**: Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity**: Max 15 complexity per file, 10 per function with enforced decomposition
@@ -479,7 +484,7 @@ implemented.
 For more detailed information about the testing strategy, see the
 [Testing Guide](./wiki/Testing-Guide.md) and [**tests**/README.md](./__tests__/README.md).
 
-Current test coverage: 82%+ overall with 991 tests.
+Current test coverage: 82%+ overall with 1000 tests.
 
 ---
 

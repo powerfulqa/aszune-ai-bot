@@ -150,7 +150,7 @@ maintainability analysis.
 - **Function Complexity**: Maximum 10 per function
 - **Code Duplication**: Maximum 50 lines identical code
 - **Security**: Zero tolerance for secrets in code
-- **Test Coverage**: 82%+ overall coverage (536+ tests)
+- **Test Coverage**: 82%+ overall coverage (1000+ tests)
 - **Documentation**: Markdownlint compliant formatting
 
 ### Quality Workflow Commands
@@ -920,6 +920,8 @@ npm run quality:metrics    # Detailed quality metrics
   memory monitoring, garbage collection, and resource management
 - **Message Chunking Tests** (`__tests__/unit/message-chunking/index.test.js`): Comprehensive
   testing of enhanced message chunking functionality
+- **Table Formatting Tests** (`__tests__/unit/message-chunker-table-formatting.test.js`): Complete
+  test coverage for Discord table formatting with 9 comprehensive test scenarios
 - **Chunk Boundary Handler Tests**
   (`__tests__/unit/message-chunking/chunk-boundary-handler.test.js`): Full test coverage for
   intelligent chunk boundary detection and fixing

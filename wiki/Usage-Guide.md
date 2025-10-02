@@ -16,7 +16,8 @@ Version 1.6.0 introduces **Analytics Integration** - comprehensive system monito
 - **Real-time Monitoring**: Live system metrics and performance data
 - **Automated Insights**: AI-powered recommendations for optimization
 - **Complete Integration**: Seamless integration with existing bot functionality
-- **Full Test Coverage**: All 991 tests passing with comprehensive analytics coverage
+- **Discord Table Formatting**: Automatic conversion of markdown tables to readable Discord format
+- **Full Test Coverage**: All 1000 tests passing with comprehensive analytics coverage
 
 This update eliminates the need to access your Raspberry Pi directly for system monitoring - everything is now available through Discord commands!
 
@@ -69,6 +70,23 @@ Example:
 [1/2] This is the first part of a long response that has been automatically split by the bot's message chunking system. The chunking is done intelligently to preserve paragraph structure and sentence integrity...
 
 [2/2] ...and this is the continuation of the response. The message chunking system ensures that words at the boundary between chunks are properly separated with spaces.
+```
+
+## Table Formatting
+
+The bot automatically detects and formats tables in AI responses to make them more readable in Discord. When the AI generates a response containing markdown tables, the bot converts them into organized bullet-point lists for better Discord compatibility.
+
+Example transformation:
+```
+Original table:
+| Feature | Status |
+|---------|--------|
+| Analytics | ✅ Active |
+| Monitoring | ✅ Active |
+
+Becomes:
+• Feature: Analytics, Status: ✅ Active
+• Feature: Monitoring, Status: ✅ Active
 ```
 
 ## Conversation Context

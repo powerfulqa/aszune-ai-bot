@@ -249,6 +249,39 @@ include:
 - "game", "gaming" → 🎮
 - "thanks", "thank you" → 🙏
 
+### Message Features
+
+#### Table Formatting
+
+The bot automatically detects and formats tables in AI responses for better Discord readability:
+
+- **Automatic Detection**: Recognizes markdown table patterns in AI responses
+- **Discord Optimization**: Converts tables to organized bullet-point lists
+- **Content Preservation**: Maintains all table data while improving display
+- **Seamless Integration**: Works automatically without user intervention
+
+**Example:**
+```
+AI Response with table:
+| Command | Description |
+|---------|-------------|
+| /help   | Show help   |
+| /stats  | Show stats  |
+
+Becomes:
+• Command: /help, Description: Show help
+• Command: /stats, Description: Show stats
+```
+
+#### Long Message Chunking
+
+When responses exceed Discord's character limits, the bot intelligently splits them:
+
+- **Smart Boundaries**: Splits at paragraph and sentence boundaries
+- **Clear Numbering**: Adds [1/3], [2/3] prefixes for sequence clarity
+- **Content Integrity**: Preserves all information across multiple messages
+- **URL Protection**: Keeps links intact across chunks
+
 ### Rate Limiting
 
 To prevent spam, the bot enforces a short cooldown period (typically a few seconds) between messages
@@ -264,7 +297,8 @@ responding further.
 - **Server Insights**: Discord server analytics with user engagement and command usage patterns
 - **Resource Optimization**: Automated recommendations for system performance improvements
 - **Integrated Reporting**: All analytics features accessible without leaving Discord
-- **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
+- **Discord Table Formatting**: Automatic conversion of markdown tables to Discord-friendly bullet points
+- **Complete Test Coverage**: All 1000 tests passing with full analytics integration coverage
 
 ### v1.5.0 - qlty Code Quality Integration
 
