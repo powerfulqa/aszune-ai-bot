@@ -397,7 +397,8 @@ function processSentenceWithUrls(sentence, effectiveMaxLength, currentChunk, chu
  * @returns {boolean} - True if it's a separator line
  */
 function isTableSeparator(line) {
-  return line.match(/^\|[\s\-=:]+\|$/);
+  // Match lines that contain only pipes, dashes, spaces, equals, and colons
+  return line.match(/^[|\s\-=:]+$/);
 }
 
 /**

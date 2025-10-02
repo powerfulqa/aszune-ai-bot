@@ -132,6 +132,7 @@ module.exports = {
   processSourceReferences,
   formatUrls,
   getChunkingStats,
+  formatTablesForDiscord: originalChunker.formatTablesForDiscord,
   // Re-export original chunker functions for backward compatibility
   _processParagraph: originalChunker._processParagraph,
   _processSentence: originalChunker._processSentence,
