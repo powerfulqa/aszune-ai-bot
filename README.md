@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.6.0)
+# Aszune AI Bot (v1.6.1)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml) 
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
@@ -177,7 +177,7 @@
 
    The license validation system is currently **disabled by default** and behind feature flags for safe deployment. You can:
 
-   - **Use without license**: Bot works normally with all v1.6.0 analytics features
+   - **Use without license**: Bot works normally with all v1.6.1 analytics features
    - **Enable license features**: Set environment variables to test license functionality
    - **Development mode**: Set `NODE_ENV=development` to enable all license features
 
@@ -290,18 +290,19 @@ script for Pi deployments.
 
 Version 1.6.0 introduces comprehensive analytics accessible directly within Discord:
 
-#### `/analytics` - Server Analytics Dashboard
-- **User Engagement**: Active users, message patterns, engagement trends
-- **Command Usage**: Most popular commands, success rates, usage statistics  
-- **Performance Metrics**: Response times, error rates, system health correlation
-- **Trend Analysis**: Historical data with actionable insights for community management
+#### `/analytics` - Real-time Discord Server Analytics  
+- **Live Member Data**: Real Discord server statistics with timeout protection (v1.6.1)
+- **Active User Counts**: Live online/idle/dnd member filtering (e.g., "Active Users: 102")  
+- **Server Statistics**: Total members, bot counts, human member ratios
+- **Presence Detection**: Real-time member activity status from Discord API
+- **Fallback Protection**: Intelligent estimates when Discord API is slow or unavailable
 
-#### `/dashboard` - Performance Monitoring
-- **System Status**: Real-time CPU, memory, and network utilization
-- **Response Times**: API performance tracking and latency monitoring
-- **Error Monitoring**: Automated error detection and pattern analysis
-- **Health Alerts**: Proactive warnings for performance degradation
-- **Optimization Tips**: AI-powered recommendations for performance improvements
+#### `/dashboard` - Synchronized Performance Monitoring
+- **Consistent Data**: Same Discord member counts as `/analytics` for reliability (v1.6.1)
+- **System Metrics**: Real-time CPU, memory, and network utilization
+- **Performance Correlation**: System load analysis with actual Discord server activity  
+- **Resource Optimization**: Performance recommendations based on real usage patterns
+- **Timeout Protection**: 5-second response guarantee with graceful fallbacks
 
 #### `/resources` - Resource Optimization
 - **Resource Analysis**: Detailed system resource usage and optimization opportunities

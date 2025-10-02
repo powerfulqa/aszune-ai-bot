@@ -1,26 +1,27 @@
-# GitHub Copilot In### Key Components
+# GitHub Copilot Instructions for Aszune AI Bot
+
+## 🎯 Project Overview
+
+This is the Aszune AI Bot codebase - a Discord bot with AI capabilities and comprehensive analytics integration that follows strict quality standards using qlty tooling. The project includes analytics features (internally referenced as Phase B+C) accessible through Discord commands (`/analytics`, `/dashboard`, `/resources`). When working on this codebase, please follow these comprehensive guidelines for architecture patterns, testing approaches, and best practices.
+
+## 📁 Architecture & Structure
+
+### Core Structure
+```
+src/
+├── commands/          # Command handlers (slash + text commands)
+├── config/           # Configuration management
+├── services/         # External API clients and services
+└── utils/            # Utility functions and helpers
+    ├── message-chunking/  # Advanced message splitting
+    └── [various utilities]
+```
+
+### Key Components
 - **Discord Interface**: Handles Discord API interactions
 - **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
 - **Perplexity API Client**: Manages AI API communication with secure caching
-- **Conversation Manager**: Class-based con## 🛠️ Common Issues & Solutions
-
-### 3. Feature Flag Safety (CRITICAL)
-**DANGER:** Feature flag access must always be inside functions!
-
-```javascript
-// ❌ DEADLY MISTAKE - Module level feature flag checks
-const config = require('../config/config');
-const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // BREAKS APP
-
-// ✅ ALWAYS ACCESS FEATURE FLAGS INSIDE FUNCTIONS
-function checkLicenseFeature() {
-  const config = require('../config/config');
-  if (!config.FEATURES) return false; // Graceful fallback
-  return config.FEATURES.LICENSE_VALIDATION;
-}
-```
-
-### 4. Circular Dependency Preventionsation tracking
+- **Conversation Manager**: Class-based conversation tracking
 - **Error Handler**: Comprehensive error handling system
 - **Message Chunker**: Intelligent message splitting with boundary detection
 - **Input Validator**: Content sanitization and validation
@@ -134,6 +135,39 @@ jest.mock('discord.js', () => {
     REST: jest.fn(() => ({ /* ... */ })),
   };
 });
+```
+
+#### Discord Guild & Member Mocking (Analytics Commands)
+```javascript
+// ✅ CORRECT - Mock guild structure for analytics tests
+const mockGuild = {
+  memberCount: 150,
+  members: {
+    cache: {
+      filter: jest.fn((filterFn) => {
+        // Mock member collection with realistic data
+        const mockMembers = new Map([
+          ['user1', { user: { bot: false }, presence: { status: 'online' } }],
+          ['user2', { user: { bot: false }, presence: { status: 'idle' } }],
+          ['bot1', { user: { bot: true }, presence: { status: 'online' } }]
+        ]);
+        
+        const filtered = new Map();
+        mockMembers.forEach((member, id) => {
+          if (filterFn(member)) filtered.set(id, member);
+        });
+        return { size: filtered.size };
+      })
+    },
+    fetch: jest.fn().mockResolvedValue(mockMemberCollection)
+  }
+};
+
+// Mock Discord Collection behavior for member filtering
+const mockMemberCollection = {
+  filter: jest.fn(() => ({ size: 102 })), // Realistic active user count
+  size: 150
+};
 ```
 
 ### Test Assertions - Use Exact Values (CRITICAL)
@@ -379,7 +413,50 @@ afterEach(() => {
 
 **CRITICAL:** Do not bypass these components or create direct API calls!
 
-### 6. Error Handler Usage Patterns
+### 6. Discord API Patterns (CRITICAL)
+**Based on v1.6.1 analytics fixes - Discord API can be unreliable!**
+
+```javascript
+// ✅ CORRECT - Always use timeout protection for Discord API calls
+async function getDiscordData(guild) {
+  try {
+    const fetchPromise = guild.members.fetch({ limit: 1000 });
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Discord API timeout')), 5000)
+    );
+    
+    const members = await Promise.race([fetchPromise, timeoutPromise]);
+    
+    // Filter for real data processing
+    const activeMembers = members.filter(member => 
+      !member.user.bot && 
+      member.presence?.status && 
+      ['online', 'idle', 'dnd'].includes(member.presence.status)
+    );
+    
+    return { activeUsers: activeMembers.size, totalMembers: guild.memberCount };
+  } catch (error) {
+    // ALWAYS provide fallback estimates
+    return { 
+      activeUsers: Math.floor(guild.memberCount * 0.2), // 20% active estimate
+      totalMembers: guild.memberCount,
+      fallbackUsed: true 
+    };
+  }
+}
+
+// ❌ WRONG - Direct Discord API calls without timeout protection
+const members = await guild.members.fetch(); // Will hang in large servers!
+```
+
+**CRITICAL Discord API Requirements:**
+- **Timeout Protection**: Use Promise.race() with 5-second timeouts
+- **Fallback Data**: Always provide realistic estimates when API fails
+- **Member Limits**: Restrict to 1000 members max for performance
+- **Permission Checks**: Verify "View Server Members" permission
+- **Intent Requirements**: "Server Members Intent" and "Presence Intent" must be enabled
+
+### 7. Error Handler Usage Patterns
 ```javascript
 // ✅ CORRECT - Use ErrorHandler for all errors
 const errorResponse = ErrorHandler.handleError(error, 'context', additionalData);
@@ -436,6 +513,13 @@ const response = await perplexityService.generateChatResponse(history); // ✅
 const response = await directApiCall(history); // ❌ Bypasses caching/throttling
 ```
 
+### Discord API Critical Warnings (v1.6.1 Lessons)
+1. **Member Fetching Can Hang**: Always use Promise.race() with timeouts
+2. **Large Server Performance**: guild.members.fetch() without limits will timeout
+3. **Permission Dependencies**: Analytics requires "Server Members Intent" enabled
+4. **Fallback Requirements**: Always provide realistic estimates when Discord API fails
+5. **Member Cache Behavior**: Don't assume member cache is populated immediately
+
 ## ⚡ Development Commands
 
 ### Testing
@@ -468,7 +552,9 @@ A successful implementation should achieve:
 - ✅ Proper error handling contracts
 - ✅ Backward compatibility maintained
 - ✅ Analytics commands functional (`/analytics`, `/dashboard`, `/resources`)
-- ✅ Analytics integration complete
+- ✅ Analytics integration complete with real Discord API data (v1.6.1)
+- ✅ Discord API timeout protection implemented (Promise.race patterns)
+- ✅ Member presence filtering working (online/idle/dnd detection)
 - ✅ Feature flag system implemented (license features safely disabled by default)
 - ✅ Safe config access patterns followed (no module-level feature flag access)
 - ✅ Graceful feature flag fallbacks (handles missing FEATURES property)
@@ -499,6 +585,8 @@ A successful implementation should achieve:
 4. **Embed Responses**: All user errors as embeds with exact ErrorHandler messages
 5. **Test Assertions**: Use exact values, never expect.objectContaining() or expect.stringContaining()
 6. **Service Architecture**: Don't bypass ApiClient, CacheManager, ResponseProcessor, ThrottlingService
+7. **Discord API Timeout Protection**: Always use Promise.race() with 5-second timeouts (v1.6.1)
+8. **Analytics Fallbacks**: Provide realistic estimates when Discord API unavailable
 
 ### Common Breaking Changes to AVOID:
 - Returning error strings instead of throwing
@@ -507,7 +595,11 @@ A successful implementation should achieve:
 - Using test matchers instead of exact values
 - Modifying service component architecture
 - Breaking module export patterns
+- Direct Discord API calls without timeout protection (v1.6.1)
+- Analytics without fallback estimates for Discord API failures
 
 **WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives failed. Follow them exactly or expect test failures and runtime errors.
+
+**v1.6.1 Discord API Lessons**: The analytics integration revealed critical Discord API behaviors - member fetching can hang in large servers, requiring Promise.race() timeout patterns and intelligent fallbacks. These patterns are now mandatory for any Discord API interactions.
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt, follow existing patterns exactly.

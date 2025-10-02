@@ -491,32 +491,60 @@ Comprehensive monitoring and analytics platform providing real-time insights thr
 
 #### Discord Analytics Service (`/analytics`)
 
-Tracks and analyzes Discord server activity, user engagement, and command usage patterns:
+**v1.6.1 Enhancement**: Real Discord server data integration with timeout protection.
+
+Provides live Discord server analytics by fetching member data directly from Discord API:
 
 ```javascript
-// Simplified example from discord-analytics.js
-class DiscordAnalytics {
-  static async generateDailyReport() {
-    const activityData = this.getActivityHistory();
+// Real implementation from analytics command in src/commands/index.js
+async function getDiscordAnalytics(guild) {
+  try {
+    // Fetch live member data with timeout protection
+    const fetchPromise = guild.members.fetch({ limit: 1000 });
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Member fetch timeout')), 5000)
+    );
+    
+    const members = await Promise.race([fetchPromise, timeoutPromise]);
+    
+    // Filter by presence for active user count
+    const activeMembers = members.filter(member => 
+      !member.user.bot && 
+      member.presence?.status && 
+      ['online', 'idle', 'dnd'].includes(member.presence.status)
+    );
+    
     return {
-      totalMessages: activityData.filter(a => a.type === 'message').length,
-      activeUsers: new Set(activityData.map(a => a.userId)).size,
-      popularCommands: this.analyzeCommandUsage(activityData),
-      engagement: this.calculateEngagementMetrics(activityData)
+      activeUsers: activeMembers.size,
+      totalMembers: guild.memberCount,
+      botCount: members.filter(member => member.user.bot).size
     };
-  }
-
-  static async trackServerActivity(serverId, action, metadata = {}) {
-    const activity = {
-      timestamp: Date.now(),
-      serverId,
-      action,
-      ...metadata
+  } catch (error) {
+    // Fallback estimates when Discord API is slow
+    const estimatedActive = Math.floor(guild.memberCount * 0.2); // 20% active estimate
+    const estimatedBots = Math.floor(guild.memberCount * 0.05);  // 5% bot estimate
+    
+    return {
+      activeUsers: estimatedActive,
+      totalMembers: guild.memberCount,
+      botCount: estimatedBots,
+      fallbackUsed: true
     };
-    this.activityHistory.push(activity);
   }
 }
 ```
+
+**Key Implementation Details:**
+- **Promise.race()** pattern prevents Discord API timeouts (5-second limit)
+- **Presence filtering** for accurate active user counts (online/idle/dnd vs offline)
+- **Member cache management** with 1000 member limit for performance
+- **Graceful fallbacks** with realistic estimates when API is unavailable
+- **Bot filtering** separates human members from bot accounts
+
+**Requirements:**
+- Discord Bot Token with "View Server Members" permission
+- "Server Members Intent" enabled in Discord Developer Portal  
+- "Presence Intent" enabled for accurate online status detection
 
 #### Performance Dashboard Service (`/dashboard`)
 

@@ -49,9 +49,17 @@ Follow these steps to set up the Aszune AI Bot:
 
    Replace the placeholder values with your actual tokens and keys.
 
-4. **Invite the bot to your server**
+4. **Configure Discord Bot Intents** (Required for Analytics)
    - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
    - Select your application
+   - Go to "Bot" section
+   - Under "Privileged Gateway Intents", enable:
+     - **Server Members Intent** (required for `/analytics` member counting)
+     - **Presence Intent** (required for accurate online status detection)
+   - Save changes
+
+5. **Invite the bot to your server**
+   - In the same Discord Developer Portal application
    - Go to OAuth2 > URL Generator
    - Select the following scopes:
      - `bot`
@@ -62,9 +70,10 @@ Follow these steps to set up the Aszune AI Bot:
      - Add Reactions
      - Use Slash Commands
      - Embed Links
+     - **View Server Members** (required for `/analytics` and `/dashboard` real member counts)
    - Use the generated URL to invite the bot to your server
 
-5. **Run the bot**
+6. **Run the bot**
 
    You can run the bot using one of the following methods:
 

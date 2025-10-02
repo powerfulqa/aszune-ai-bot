@@ -185,3 +185,49 @@ If you're still experiencing issues:
    - Error messages/logs
    - Environment information (Node.js version, OS, etc.)
    - Any relevant code snippets
+
+## Analytics Commands Issues
+
+### Analytics/Dashboard Commands Show "Aszune-AI is thinking..." Indefinitely
+
+**Symptoms:**
+- `/analytics` or `/dashboard` commands hang with "thinking" status
+- Commands eventually timeout without response
+
+**Cause:**
+Discord API member fetching can be slow or timeout in large servers (1000+ members)
+
+**Solutions:**
+1. **Wait for Timeout**: Commands have built-in 5-second timeout with fallback estimates
+2. **Check Server Size**: Large servers may experience slower member data fetching
+3. **Verify Bot Permissions**: Ensure bot has "View Server Members" permission
+4. **Network Issues**: Check Discord API status at https://discordstatus.com/
+
+### Analytics Showing "Active Users: 0" Despite Server Activity
+
+**Symptoms:**
+- Analytics commands report 0 active users
+- Visible members are online in the server
+
+**Cause:**
+Discord member presence data not properly accessible or cached
+
+**Solutions:**
+1. **Check Bot Permissions**: 
+   - Ensure bot has "View Server Members" permission
+   - Verify "Server Members Intent" is enabled in Discord Developer Portal
+2. **Member Cache**: Bot may need time to populate member cache after restart
+3. **Presence Intent**: Ensure "Presence Intent" is enabled for accurate online status
+4. **Fallback Mode**: Commands use estimated data when real data unavailable
+
+### Performance Issues with Analytics Commands
+
+**Symptoms:**
+- Slow response times from analytics commands
+- High memory usage during analytics execution
+
+**Solutions:**
+1. **Raspberry Pi Optimization**: Enable Pi optimizations in config if running on limited hardware
+2. **Member Limit**: Analytics commands limit to 1000 members to prevent performance issues
+3. **Cache Management**: Clear member cache periodically: `guild.members.cache.clear()`
+4. **Resource Monitoring**: Use `/resources` command to monitor system performance

@@ -165,12 +165,18 @@ Summaries requested: 7
 ```
 
 **Output:**
-Shows a detailed analytics dashboard with:
-- Daily activity summary
-- Command usage statistics
-- User engagement metrics
-- Server performance insights
-- Trend analysis and recommendations
+Shows real-time Discord server analytics with:
+- **Active Users**: Live count of online/idle/dnd members (e.g., "Active Users: 102")
+- **Server Statistics**: Total members, bot count, human member ratio
+- **Activity Summary**: Member engagement patterns and presence distribution
+- **Performance Metrics**: System resource usage and response times
+- **Data Source**: Real Discord server data with 5-second timeout protection
+
+**Technical Details:**
+- Uses Discord API `guild.members.fetch()` for live member data
+- Filters members by presence (online, idle, dnd vs offline)
+- Includes timeout protection with fallback estimates for large servers
+- Requires "View Server Members" and "Server Members Intent" permissions
 
 ---
 
@@ -190,12 +196,17 @@ Shows a detailed analytics dashboard with:
 ```
 
 **Output:**
-Shows performance dashboard with:
-- System status overview
-- Memory and CPU usage
-- Response time metrics
-- Error rates and alerts
-- Performance recommendations
+Shows synchronized performance dashboard with:
+- **Activity Section**: Same real Discord data as `/analytics` command
+- **System Status**: CPU, memory, and network utilization
+- **Performance Metrics**: Response times and system health indicators
+- **Resource Usage**: Current system resource consumption
+- **Optimization Tips**: AI-powered performance recommendations
+
+**Technical Details:**
+- Synchronized with `/analytics` command for consistent member counts
+- Uses same Discord API integration with timeout protection
+- Combines real server data with system performance metrics
 
 ---
 
