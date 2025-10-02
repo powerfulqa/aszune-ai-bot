@@ -397,10 +397,6 @@ class ResourceOptimizer {
    * Adds memory usage recommendations
    * @private
    */
-  /**
-   * Adds memory usage recommendations
-   * @private
-   */
   static _addMemoryRecommendations(memoryUsage, recommendations) {
     if (memoryUsage > 400) {
       recommendations.push('High memory usage - consider memory optimization strategies');

@@ -19,7 +19,7 @@ class DiscordAnalytics {
   }
 
   /**
-   * Tracks vity
+   * Tracks activity
    * @param {Object} activityData - Activity information
    * @param {string} activityData.serverId - Server ID
    * @param {string} activityData.userId - User ID
