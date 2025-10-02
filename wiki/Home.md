@@ -37,12 +37,15 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 
 ## Version Information
 
-- **v1.6.0** - Analytics Integration (2025-10-01)
+- **v1.6.0** - Analytics Integration & Feature-Flagged Licensing (2025-10-01)
   - **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`) provide comprehensive system monitoring directly in Discord
   - **Real-time Performance Monitoring**: Live system status, resource utilization, and performance metrics
   - **Server Insights**: Discord server analytics with user engagement and command usage patterns
   - **Resource Optimization**: Automated recommendations for system performance improvements
   - **Integrated Reporting**: All analytics features accessible without leaving Discord
+  - **Feature-Flagged Licensing**: Complete license validation system implemented but disabled by default for safe deployment
+  - **Safe Deployment Pattern**: License features behind environment variable flags for gradual rollout
+  - **Backward Compatible**: All existing functionality works without license configuration
   - **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
   - **Enhanced User Experience**: No need to access Pi directly - all monitoring through Discord
 

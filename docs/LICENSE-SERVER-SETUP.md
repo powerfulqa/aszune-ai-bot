@@ -1,6 +1,8 @@
 # License Server Setup & Monitoring Guide
 
-## 🖥️ Setting Up Your License Server
+> **⚠️ FEATURE FLAGGED**: The license server is currently **disabled by default** and behind feature flags. Enable with `ENABLE_LICENSE_SERVER=true` or `NODE_ENV=development`.
+
+## 🖥️ Setting Up Your License Server (When Enabled)
 
 ### 1. Server Requirements
 - **VPS/Cloud Server** (DigitalOcean, AWS, etc.)
@@ -24,7 +26,12 @@ NODE_ENV=production
 git clone https://github.com/chrishaycock/aszune-ai-bot.git
 cd aszune-ai-bot
 npm install
-node src/utils/license-server.js
+
+# Enable license server feature
+ENABLE_LICENSE_SERVER=true node src/utils/license-server.js
+
+# OR enable all license features for development
+NODE_ENV=development node src/utils/license-server.js
 ```
 
 ### 4. Process Management (Production)
@@ -32,7 +39,21 @@ node src/utils/license-server.js
 ```bash
 # Using PM2 for auto-restart
 npm install -g pm2
-pm2 start src/utils/license-server.js --name "license-server"
+
+# Create ecosystem file with license server enabled
+echo 'module.exports = {
+  apps: [{
+    name: "license-server",
+    script: "src/utils/license-server.js",
+    env: {
+      ENABLE_LICENSE_SERVER: "true",
+      LICENSE_SERVER_API_KEY: "your-api-key",
+      PORT: 3001
+    }
+  }]
+}' > ecosystem.license.config.js
+
+pm2 start ecosystem.license.config.js
 pm2 startup
 pm2 save
 ```
@@ -189,8 +210,15 @@ export ASZUNE_LICENSE_KEY="ASZUNE-PERS-20251001-A1B2C3D4"
 export ASZUNE_LICENSE_SERVER="https://your-server.com"
 export ASZUNE_LICENSE_API_KEY="your-api-key"
 
-# Bot validates on startup
+# Enable license features
+export ENABLE_LICENSE_VALIDATION=true
+export ENABLE_LICENSE_ENFORCEMENT=true
+
+# Bot validates on startup (when enabled)
 npm start
+
+# OR run in development mode (all license features enabled)
+NODE_ENV=development npm start
 ```
 
 ## 📈 Revenue Tracking

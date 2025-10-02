@@ -41,6 +41,27 @@ class LicenseValidator {
    * @returns {Promise<boolean>} - License validity
    */
   async validateLicense() {
+    // Get config inside method to avoid circular dependencies
+    const config = require('../config/config');
+    
+    // Ensure FEATURES property exists (for backward compatibility and tests)
+    if (!config.FEATURES) {
+      return {
+        isValid: true,
+        message: 'License validation disabled (no FEATURES config)',
+        skipValidation: true
+      };
+    }
+    
+    // Skip validation if feature is disabled
+    if (!config.FEATURES.LICENSE_VALIDATION && !config.FEATURES.DEVELOPMENT_MODE) {
+      return {
+        isValid: true,
+        message: 'License validation disabled via feature flag',
+        skipValidation: true
+      };
+    }
+
     try {
       // Check if validation is required
       if (this.lastValidation && (Date.now() - this.lastValidation) < this.validationInterval) {
@@ -192,7 +213,28 @@ class LicenseValidator {
    * @returns {boolean} - Whether to continue execution
    */
   async enforceLicense() {
+    // Get config inside method to avoid circular dependencies
+    const config = require('../config/config');
+    
+    // Ensure FEATURES property exists (for backward compatibility and tests)
+    if (!config.FEATURES) {
+      logger.info('License enforcement disabled (no FEATURES config)');
+      return true;
+    }
+    
+    // Skip enforcement if feature is disabled
+    if (!config.FEATURES.LICENSE_ENFORCEMENT && !config.FEATURES.DEVELOPMENT_MODE) {
+      logger.info('License enforcement disabled via feature flag');
+      return true;
+    }
+
     const isValid = await this.validateLicense();
+    
+    // Handle validation result object (new format when feature flags enabled)
+    if (typeof isValid === 'object' && isValid.skipValidation) {
+      logger.info(isValid.message);
+      return true;
+    }
     
     if (!isValid) {
       logger.error('License enforcement: Shutting down due to invalid license');

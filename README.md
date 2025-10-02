@@ -161,19 +161,35 @@
    npm install
    ```
 
-3. **Register for License (Required)**
-
-   **Free Personal License**: [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
-   
-   ⚠️ **Note**: The bot requires a valid license to run. Free personal licenses are available for non-commercial use.
-
-4. **Create a `.env` file**
+3. **Create a `.env` file**
 
    ```env
    DISCORD_BOT_TOKEN=your_discord_bot_token_here
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
-   ASZUNE_LICENSE_KEY=your_license_key_here
    ```
+
+4. **Optional: License System (Feature Flagged)**
+
+   The license validation system is currently **disabled by default** and behind feature flags for safe deployment. You can:
+
+   - **Use without license**: Bot works normally with all v1.6.0 analytics features
+   - **Enable license features**: Set environment variables to test license functionality
+   - **Development mode**: Set `NODE_ENV=development` to enable all license features
+
+   ```env
+   # Optional License Configuration (disabled by default)
+   ASZUNE_LICENSE_KEY=your_license_key_here
+   
+   # Enable specific license features for testing
+   ENABLE_LICENSE_VALIDATION=true
+   ENABLE_LICENSE_SERVER=true  
+   ENABLE_LICENSE_ENFORCEMENT=true
+   
+   # OR enable everything for development
+   NODE_ENV=development
+   ```
+
+   **License Registration** (when enabled): [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 
 ---
 
@@ -520,6 +536,8 @@ Pull requests and ideas are always welcome! Please:
 
 **🔐 PROPRIETARY SOFTWARE** — Licensed usage only
 
+> **⚠️ FEATURE FLAGGED**: The license validation system is currently **disabled by default** for safe deployment. All analytics and bot features work normally without licensing.
+
 ### 📋 License Options
 
 | License Type | Price | Usage | Servers | Support |
@@ -529,30 +547,50 @@ Pull requests and ideas are always welcome! Please:
 | **Commercial** | $299/month | Commercial Discord servers | Unlimited | Priority |
 | **Enterprise** | Custom | White-label + source access | Unlimited | Professional SLA |
 
-### 🚀 Getting Your License
-
-1. **Personal License (Free)**: [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
-2. **Commercial License**: [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
-3. **Enterprise License**: Email chrishaycock@users.noreply.github.com
-
-### ⚡ Quick Start (Personal License)
+### 🚀 Quick Start (No License Required Currently)
 
 ```bash
-# 1. Register for free personal license (required)
-# 2. Set your license key
-export ASZUNE_LICENSE_KEY="your-license-key-here"
-
-# 3. Install and run
+# 1. Install and run (no license needed)
 npm install
 npm start
+
+# 2. Optional: Enable license features for testing
+ENABLE_LICENSE_VALIDATION=true npm start
 ```
 
-### 🛡️ License Enforcement
+### 🔧 License Feature Flags
+
+License functionality is behind feature flags for gradual rollout:
+
+```bash
+# Default: License features disabled
+npm start
+
+# Enable license validation only
+ENABLE_LICENSE_VALIDATION=true npm start
+
+# Enable license server
+ENABLE_LICENSE_SERVER=true npm start
+
+# Enable enforcement (requires validation)
+ENABLE_LICENSE_ENFORCEMENT=true npm start
+
+# Development mode: Enable all features
+NODE_ENV=development npm start
+```
+
+### 🛡️ License Enforcement (When Enabled)
 
 - ✅ **Built-in validation** - Software validates license on startup
 - ✅ **Grace period** - 7 days for new users to register
 - ✅ **Usage tracking** - Monitors compliance automatically
 - ❌ **Unauthorized use** - Terminates after grace period
+
+### 🚀 Getting Your License (For Future Use)
+
+1. **Personal License (Free)**: [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+2. **Commercial License**: [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
+3. **Enterprise License**: Email chrishaycock@users.noreply.github.com
 
 ### 📧 Questions?
 
@@ -587,17 +625,18 @@ npm start
   - `/analytics` - Real-time Discord server analytics and insights
   - `/dashboard` - Performance monitoring and system health metrics
   - `/resources` - Resource optimization recommendations and monitoring
-- **Proprietary Licensing System**: Built-in license validation and enforcement
-  - Automated license validation on startup
-  - 7-day grace period for new installations
-  - Usage tracking and compliance monitoring
-  - Commercial license protection with technical enforcement
+- **Feature-Flagged Licensing System**: Built-in license validation and enforcement (disabled by default)
+  - **Safe Deployment**: License features behind feature flags for gradual rollout
+  - **No License Required**: Bot functions normally without license validation enabled
+  - **Development Ready**: License system implemented and ready for future activation
+  - **Testing Enabled**: Individual license features can be enabled via environment variables
 - **Raspberry Pi Optimization**: Enhanced Pi deployment with automated setup
   - Optimized performance for resource-constrained environments
-  - Automated license server deployment scripts
+  - Automated license server deployment scripts (when license features enabled)
   - PM2 process management integration
 
 **🛠️ Technical Improvements**:
+- **Feature Flag Architecture**: Safe deployment pattern for new functionality
 - Enhanced command parameter validation and error handling
 - Professional code quality with removed internal development terminology
 - Comprehensive test suite expanded to 991+ tests
@@ -605,10 +644,16 @@ npm start
 - Robust error handling with user-friendly messaging
 
 **📚 Documentation**:
-- Complete documentation overhaul with licensing information
-- Professional positioning for commercial use
+- Complete documentation overhaul with feature flag documentation
+- Professional positioning for future commercial use
 - Enhanced user guides and setup instructions
 - Comprehensive feature documentation for all analytics capabilities
+
+**🚀 Deployment Strategy**:
+- **v1.6.0 Ready**: All analytics features fully functional
+- **License System**: Ready but feature-flagged for future activation
+- **Backward Compatible**: Existing installations continue working normally
+- **Forward Compatible**: License system ready for activation when needed
 
 - **Analytics Integration**: Added comprehensive Discord analytics system with three new commands
 - **Discord Analytics Command** (`/analytics`): Server engagement metrics, usage patterns, and performance insights

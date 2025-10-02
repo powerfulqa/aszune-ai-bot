@@ -7,6 +7,7 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
+const logger = require('./logger');
 
 class LicenseServer {
   constructor(port = 3001) {
@@ -80,7 +81,7 @@ class LicenseServer {
         const validation = await this.validateLicense(licenseKey, instanceId, systemInfo);
         res.json(validation);
       } catch (error) {
-        console.error('License validation error:', error);
+        logger.error('License validation error:', error);
         res.status(500).json({ error: 'Validation failed' });
       }
     });
@@ -93,7 +94,7 @@ class LicenseServer {
         await this.recordUsage(instanceId, stats);
         res.json({ success: true, timestamp: new Date().toISOString() });
       } catch (error) {
-        console.error('Usage reporting error:', error);
+        logger.error('Usage reporting error:', error);
         res.status(500).json({ error: 'Reporting failed' });
       }
     });
@@ -110,11 +111,11 @@ class LicenseServer {
         
         this.violationReports.push(violationReport);
         await this.saveViolationReport(violationReport);
-        console.error('🚨 VIOLATION REPORTED:', violationReport);
+        logger.error('🚨 VIOLATION REPORTED:', violationReport);
         
         res.json({ success: true, reportId: violationReport.id });
       } catch (error) {
-        console.error('Violation reporting error:', error);
+        logger.error('Violation reporting error:', error);
         res.status(500).json({ error: 'Reporting failed' });
       }
     });
@@ -203,7 +204,7 @@ class LicenseServer {
     this.usageStats.set(instanceId, usageRecord);
     
     // Log for monitoring
-    console.log(`📊 Usage reported: ${instanceId} (${stats.licenseType})`);
+    logger.info(`📊 Usage reported: ${instanceId} (${stats.licenseType})`);
   }
 
   async saveViolationReport(report) {
@@ -214,7 +215,7 @@ class LicenseServer {
       await fs.mkdir(path.dirname(filepath), { recursive: true });
       await fs.writeFile(filepath, JSON.stringify(report, null, 2));
     } catch (error) {
-      console.error('Failed to save violation report:', error);
+      logger.error('Failed to save violation report:', error);
     }
   }
 
@@ -229,9 +230,9 @@ class LicenseServer {
         this.licenseDB.set(license.key, license);
       }
       
-      console.log(`📄 Loaded ${licenses.length} licenses from database`);
+      logger.info(`📄 Loaded ${licenses.length} licenses from database`);
     } catch (error) {
-      console.log('📄 No existing license database found, starting fresh');
+      logger.info('📄 No existing license database found, starting fresh');
       
       // Create sample licenses for testing
       this.createSampleLicenses();
@@ -266,7 +267,7 @@ class LicenseServer {
       this.licenseDB.set(license.key, license);
     }
 
-    console.log('📄 Created sample licenses for testing');
+    logger.info('📄 Created sample licenses for testing');
   }
 
   getRecentActivity() {
@@ -374,10 +375,25 @@ class LicenseServer {
   }
 
   start() {
+    // Get config inside method to avoid circular dependencies
+    const config = require('../config/config');
+    
+    // Ensure FEATURES property exists (for backward compatibility and tests)
+    if (!config.FEATURES) {
+      logger.info('🔐 License server disabled (no FEATURES config)');
+      return null;
+    }
+    
+    // Check if license server feature is enabled
+    if (!config.FEATURES.LICENSE_SERVER && !config.FEATURES.DEVELOPMENT_MODE) {
+      logger.info('🔐 License server disabled via feature flag');
+      return null;
+    }
+
     this.app.listen(this.port, () => {
-      console.log(`🖥️  License server running on http://localhost:${this.port}`);
-      console.log(`📊 Dashboard available at http://localhost:${this.port}/dashboard`);
-      console.log('🔐 API key required for /api endpoints');
+      logger.info(`🖥️  License server running on http://localhost:${this.port}`);
+      logger.info(`📊 Dashboard available at http://localhost:${this.port}/dashboard`);
+      logger.info('🔐 API key required for /api endpoints');
     });
   }
 }

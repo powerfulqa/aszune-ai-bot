@@ -10,29 +10,61 @@ let config;
 try {
   config = require('./config/config');
 } catch (error) {
-  // Use console.error as fallback since logger is not yet available
-  console.error('Failed to load configuration:', error.message);
+  // Use direct stderr write as fallback since logger is not yet available
+  process.stderr.write(`Failed to load configuration: ${error.message}\n`);
   process.exit(1);
 }
 
 // Set up logger early
 const logger = require('./utils/logger');
 
-// Initialize license validation
-const LicenseValidator = require('./utils/license-validator');
-const licenseValidator = new LicenseValidator();
+// Initialize license validation conditionally
+let licenseValidator = null;
+
+// Helper function to get config inside functions to avoid circular dependencies
+function getConfig() {
+  const config = require('./config/config');
+  
+  // Ensure FEATURES property exists (for backward compatibility and tests)
+  if (!config.FEATURES) {
+    config.FEATURES = {
+      LICENSE_VALIDATION: false,
+      LICENSE_SERVER: false,
+      LICENSE_ENFORCEMENT: false,
+      DEVELOPMENT_MODE: false,
+    };
+  }
+  
+  return config;
+}
 
 // Initialize Pi-specific optimizations if enabled
 async function bootWithOptimizations() {
-  // Validate license before starting
-  logger.info('Validating software license...');
-  const licenseValid = await licenseValidator.enforceLicense();
+  const currentConfig = getConfig();
   
-  if (!licenseValid) {
-    logger.error('License validation failed - see above for details');
-    // Will exit in licenseValidator.enforceLicense() if needed
+  // Initialize license validation only if enabled
+  if (currentConfig.FEATURES.LICENSE_VALIDATION || currentConfig.FEATURES.DEVELOPMENT_MODE) {
+    const LicenseValidator = require('./utils/license-validator');
+    licenseValidator = new LicenseValidator();
+    
+    logger.info('Validating software license...');
+    const licenseValid = await licenseValidator.enforceLicense();
+    
+    if (!licenseValid) {
+      logger.error('License validation failed - see above for details');
+      // Will exit in licenseValidator.enforceLicense() if needed
+    } else {
+      logger.info('License validation successful - starting bot...');
+    }
   } else {
-    logger.info('License validation successful - starting bot...');
+    logger.info('License validation disabled via feature flags - starting bot...');
+  }
+  
+  // Start license server if enabled
+  if (currentConfig.FEATURES.LICENSE_SERVER || currentConfig.FEATURES.DEVELOPMENT_MODE) {
+    const LicenseServer = require('./utils/license-server');
+    const server = new LicenseServer();
+    server.start();
   }
   try {
     if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {

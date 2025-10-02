@@ -1,4 +1,34 @@
-# GitHub Copilot Instructions for Aszune AI Bot
+# GitHub Copilot In### Key Components
+- **Discord Interface**: Handles Discord API interactions
+- **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
+- **Perplexity API Client**: Manages AI API communication with secure caching
+- **Conversation Manager**: Class-based con## 🛠️ Common Issues & Solutions
+
+### 3. Feature Flag Safety (CRITICAL)
+**DANGER:** Feature flag access must always be inside functions!
+
+```javascript
+// ❌ DEADLY MISTAKE - Module level feature flag checks
+const config = require('../config/config');
+const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // BREAKS APP
+
+// ✅ ALWAYS ACCESS FEATURE FLAGS INSIDE FUNCTIONS
+function checkLicenseFeature() {
+  const config = require('../config/config');
+  if (!config.FEATURES) return false; // Graceful fallback
+  return config.FEATURES.LICENSE_VALIDATION;
+}
+```
+
+### 4. Circular Dependency Preventionsation tracking
+- **Error Handler**: Comprehensive error handling system
+- **Message Chunker**: Intelligent message splitting with boundary detection
+- **Input Validator**: Content sanitization and validation
+- **Analytics System**: Discord analytics, performance dashboard, and resource monitoring (`/analytics`, `/dashboard`, `/resources`)
+- **Performance Monitoring**: Real-time system metrics and optimization recommendations
+- **License Validation System**: Built-in proprietary license validation with automated enforcement and reporting (feature-flagged for safe deployment)
+- **License Server**: Express.js-based licensing management system with web dashboard and violation tracking (feature-flagged for safe deployment)
+- **Feature Flag System**: Safe deployment pattern for license functionality and gradual rolloutor Aszune AI Bot
 
 ## 🎯 Project Overview
 
@@ -27,8 +57,8 @@ src/
 - **Input Validator**: Content sanitization and validation
 - **Analytics System**: Discord analytics, performance dashboard, and resource monitoring (`/analytics`, `/dashboard`, `/resources`)
 - **Performance Monitoring**: Real-time system metrics and optimization recommendations
-- **License Validation System**: Built-in proprietary license validation with automated enforcement and reporting
-- **License Server**: Express.js-based licensing management system with web dashboard and violation tracking
+- **License Validation System**: Built-in proprietary license validation with automated enforcement and reporting (feature-flagged)
+- **License Server**: Express.js-based licensing management system with web dashboard and violation tracking (feature-flagged)
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -162,7 +192,90 @@ npm run quality:fix          # Auto-fix formatting issues
 npm run security:all         # Complete security audit
 ```
 
-## 🔧 Module Export Requirements
+## � Feature Flag System
+
+### License System Feature Flags
+The license validation and enforcement system is implemented but **disabled by default** for safe deployment:
+
+```javascript
+// config/config.js - Feature flag configuration
+FEATURES: {
+  // License System Features (disabled by default for safe deployment)
+  LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
+  LICENSE_SERVER: process.env.ENABLE_LICENSE_SERVER === 'true' || false,
+  LICENSE_ENFORCEMENT: process.env.ENABLE_LICENSE_ENFORCEMENT === 'true' || false,
+
+  // Development mode detection (enables all features for testing)
+  DEVELOPMENT_MODE: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
+},
+```
+
+### Usage Patterns (CRITICAL - Follow Exactly)
+```javascript
+// ✅ CORRECT - Check feature flags inside methods to avoid circular dependencies
+function validateLicense() {
+  const config = require('../config/config');
+  
+  // ALWAYS check if FEATURES exists for backward compatibility
+  if (!config.FEATURES) {
+    return { isValid: true, message: 'License validation disabled (no FEATURES config)', skipValidation: true };
+  }
+  
+  if (!config.FEATURES.LICENSE_VALIDATION && !config.FEATURES.DEVELOPMENT_MODE) {
+    return { isValid: true, message: 'License validation disabled via feature flag', skipValidation: true };
+  }
+  
+  // License validation logic...
+}
+
+// ❌ DEADLY MISTAKE - Module-level feature checks (causes circular dependencies)
+const config = require('../config/config');
+if (config.FEATURES.LICENSE_VALIDATION) {
+  // This WILL break the entire application!
+}
+```
+
+### Safe Config Access Pattern (MANDATORY)
+```javascript
+// Helper function pattern for all config access
+function getConfig() {
+  const config = require('./config/config');
+  
+  // Ensure FEATURES property exists (for backward compatibility and tests)
+  if (!config.FEATURES) {
+    config.FEATURES = {
+      LICENSE_VALIDATION: false,
+      LICENSE_SERVER: false,
+      LICENSE_ENFORCEMENT: false,
+      DEVELOPMENT_MODE: false,
+    };
+  }
+  
+  return config;
+}
+```
+
+### Feature Flag Testing Requirements
+- **Mock Configuration**: Always include FEATURES in test mocks
+- **Graceful Fallback**: Handle missing FEATURES property
+- **No Breaking Changes**: Features disabled by default must not affect existing functionality  
+- **Test All States**: Test with features enabled/disabled/missing
+
+### Development Workflow
+```bash
+# Default: All license features disabled (safe for main branch)
+npm start
+
+# Development: Enable all features
+NODE_ENV=development npm start
+
+# Individual feature testing
+ENABLE_LICENSE_VALIDATION=true npm start
+ENABLE_LICENSE_SERVER=true npm start
+ENABLE_LICENSE_ENFORCEMENT=true npm start
+```
+
+## �🔧 Module Export Requirements
 
 ### Maintain Backward Compatibility
 ```javascript
@@ -204,10 +317,17 @@ const mockInteraction = {
 // ❌ DEADLY MISTAKE - Will break entire app
 const config = require('../config/config');
 const someValue = config.SOME_VALUE; // Module level access = circular dependency
+const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // Also breaks app!
 
 // ✅ ALWAYS ACCESS CONFIG INSIDE FUNCTIONS
 function someFunction() {
   const config = require('../config/config');
+  
+  // Always check FEATURES exists for backward compatibility
+  if (!config.FEATURES) {
+    config.FEATURES = { LICENSE_VALIDATION: false }; // Safe fallback
+  }
+  
   return config.SOME_VALUE;
 }
 ```
@@ -349,6 +469,9 @@ A successful implementation should achieve:
 - ✅ Backward compatibility maintained
 - ✅ Analytics commands functional (`/analytics`, `/dashboard`, `/resources`)
 - ✅ Analytics integration complete
+- ✅ Feature flag system implemented (license features safely disabled by default)
+- ✅ Safe config access patterns followed (no module-level feature flag access)
+- ✅ Graceful feature flag fallbacks (handles missing FEATURES property)
 
 ## 📚 Additional Resources
 
