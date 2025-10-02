@@ -333,7 +333,9 @@ class ResourceOptimizer {
     ResourceOptimizer._addServerRecommendations(metrics.serverCount, recommendations);
     ResourceOptimizer._addPerformanceRecommendations(metrics.avgResponseTime, recommendations);
     ResourceOptimizer._addErrorRateRecommendations(metrics.errorRate, recommendations);
-    ResourceOptimizer._addMemoryRecommendations(metrics.memoryUsage, recommendations);    if (recommendations.length === 0) {
+    ResourceOptimizer._addMemoryRecommendations(metrics.memoryUsage, recommendations);
+    
+    if (recommendations.length === 0) {
       recommendations.push('System performance is good - continue monitoring');
     }
 
