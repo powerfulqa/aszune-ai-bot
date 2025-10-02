@@ -283,8 +283,8 @@ const commands = {
         const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
         
         const embed = {
-          color: dashboardData.overview.status === 'healthy' ? '#00FF00' : 
-            dashboardData.overview.status === 'warning' ? '#FFA500' : '#FF0000',
+          color: dashboardData.overview.status === 'healthy' ? 0x00FF00 : 
+            dashboardData.overview.status === 'warning' ? 0xFFA500 : 0xFF0000,
           title: '🖥️ Performance Dashboard',
           fields: [
             {
@@ -343,8 +343,8 @@ const commands = {
         );
         
         const embed = {
-          color: resourceStatus.memory.status === 'good' ? '#00FF00' : 
-            resourceStatus.memory.status === 'warning' ? '#FFA500' : '#FF0000',
+          color: resourceStatus.memory.status === 'good' ? 0x00FF00 : 
+            resourceStatus.memory.status === 'warning' ? 0xFFA500 : 0xFF0000,
           title: '🔧 Resource Optimization',
           fields: [
             {
