@@ -15,6 +15,32 @@ class ResponseProcessor {
   }
 
   /**
+   * Clean HTML tags from text content
+   * @param {string} content - Text content that may contain HTML tags
+   * @returns {string} - Cleaned text content
+   */
+  cleanHtmlTags(content) {
+    if (typeof content !== 'string') {
+      return content;
+    }
+
+    return content
+      // Replace <br> and <br/> with line breaks
+      .replace(/<br\s*\/?>/gi, '\n')
+      // Replace other common HTML tags with appropriate text
+      .replace(/<p>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<div>/gi, '\n')
+      .replace(/<\/div>/gi, '\n')
+      // Remove any remaining HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Clean up multiple consecutive line breaks
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim whitespace
+      .trim();
+  }
+
+  /**
    * Extract content from API response
    * @param {Object} response - API response object
    * @returns {string} - Extracted content or default message
@@ -34,21 +60,22 @@ class ResponseProcessor {
       // Get the first choice
       const firstChoice = response.choices[0];
 
+      let content = '';
+
       // Extract content based on structure
       if (firstChoice.message && typeof firstChoice.message.content === 'string') {
-        return firstChoice.message.content;
+        content = firstChoice.message.content;
+      } else if (typeof firstChoice.text === 'string') {
+        content = firstChoice.text;
+      } else if (typeof firstChoice.content === 'string') {
+        content = firstChoice.content;
+      } else {
+        // If no content found, return a default message
+        return 'No content received from the service.';
       }
 
-      if (typeof firstChoice.text === 'string') {
-        return firstChoice.text;
-      }
-
-      if (typeof firstChoice.content === 'string') {
-        return firstChoice.content;
-      }
-
-      // If no content found, return a default message
-      return 'No content received from the service.';
+      // Clean HTML tags from the content
+      return this.cleanHtmlTags(content);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'extracting response content');
       throw ErrorHandler.createError(
