@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="9" failures="0" errors="0" time="2.109">
-  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:11" time="1.141" tests="3">
-    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.009">
+<testsuites name="jest tests" tests="9" failures="0" errors="0" time="2.374">
+  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:01:23" time="1.312" tests="3">
+    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.011">
     </testcase>
-    <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.002">
+    <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.003">
     </testcase>
-    <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.002">
+    <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:12" time="0.414" tests="3">
+  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:01:24" time="0.447" tests="3">
     <testcase classname="Dashboard Command should handle dashboard command successfully" name="Dashboard Command should handle dashboard command successfully" time="0.003">
     </testcase>
-    <testcase classname="Dashboard Command should handle dashboard command error" name="Dashboard Command should handle dashboard command error" time="0.002">
+    <testcase classname="Dashboard Command should handle dashboard command error" name="Dashboard Command should handle dashboard command error" time="0.003">
     </testcase>
     <testcase classname="Dashboard Command should handle dashboard with degraded performance" name="Dashboard Command should handle dashboard with degraded performance" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T18:46:13" time="0.398" tests="3">
+  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:01:24" time="0.445" tests="3">
     <testcase classname="Resources Command should handle resources command successfully" name="Resources Command should handle resources command successfully" time="0.003">
     </testcase>
-    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.001">
+    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.003">
     </testcase>
-    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.001">
+    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.002">
     </testcase>
   </testsuite>
 </testsuites>

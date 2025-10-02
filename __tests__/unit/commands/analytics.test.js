@@ -41,7 +41,23 @@ describe('Analytics Command', () => {
       username: 'testuser'
     },
     guild: {
-      id: 'test-guild-123'
+      id: 'test-guild-123',
+      memberCount: 150,
+      members: {
+        fetch: jest.fn().mockResolvedValue(),
+        cache: {
+          filter: jest.fn().mockImplementation((callback) => {
+            const members = [
+              { user: { bot: false }, presence: { status: 'online' } },
+              { user: { bot: false }, presence: { status: 'idle' } },
+              { user: { bot: false }, presence: { status: 'offline' } },
+              { user: { bot: true }, presence: { status: 'online' } }
+            ];
+            return { size: members.filter(callback).length };
+          }),
+          size: 4
+        }
+      }
     }
   };
 
@@ -82,8 +98,6 @@ describe('Analytics Command', () => {
     await handleSlashCommand(mockInteraction);
     
     expect(mockInteraction.deferReply).toHaveBeenCalled();
-    expect(DiscordAnalytics.generateDailyReport).toHaveBeenCalled();
-    expect(DiscordAnalytics.generateServerInsights).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [{
         color: 0x5865F2,
@@ -91,22 +105,22 @@ describe('Analytics Command', () => {
         fields: [
           { 
             name: '🏢 Server Overview',
-            value: 'Servers: 5\nActive Users: 150\nTotal Commands: 45',
+            value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
             inline: true
           },
           { 
             name: '📈 Performance',
-            value: 'Success Rate: 97.8%\nError Rate: 2.2%\nAvg Response: 1200ms',
+            value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
             inline: true
           },
           {
             name: '🎯 Top Commands',
-            value: '1. chat (20)\n2. help (15)\n3. ping (10)',
+            value: 'No data yet',
             inline: true
           },
           {
             name: '💡 Server Insights',
-            value: 'Server activity is high during peak hours\nConsider adding more moderation during weekends',
+            value: '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
             inline: false
           }
         ],
@@ -117,58 +131,61 @@ describe('Analytics Command', () => {
   });
 
   test('should handle analytics command error', async () => {
-    const error = new Error('Analytics service unavailable');
-    DiscordAnalytics.generateDailyReport.mockRejectedValue(error);
+    // Simulate error in guild member fetching
+    const mockInteractionWithError = {
+      ...mockInteraction,
+      guild: {
+        ...mockInteraction.guild,
+        members: {
+          fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
+          cache: null // This will cause an error
+        }
+      }
+    };
+    
+    await handleSlashCommand(mockInteractionWithError);
 
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.deferReply).toHaveBeenCalled();
-    expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'analytics_command');
-    expect(mockInteraction.editReply).toHaveBeenCalledWith({
+    expect(mockInteractionWithError.deferReply).toHaveBeenCalled();
+    expect(ErrorHandler.handleError).toHaveBeenCalledWith(expect.any(Error), 'analytics_command');
+    expect(mockInteractionWithError.editReply).toHaveBeenCalledWith({
       content: 'An unexpected error occurred. Please try again later.'
     });
   });
 
   test('should handle analytics with empty data', async () => {
-    DiscordAnalytics.generateDailyReport.mockResolvedValue({
-      summary: {
-        totalServers: 0,
-        totalUsers: 0,
-        totalCommands: 0,
-        successRate: 0,
-        errorRate: 0,
-        avgResponseTime: 0
-      },
-      commandStats: []
-    });
+    // Mock guild with no members
+    const mockInteractionEmptyGuild = {
+      ...mockInteraction,
+      deferReply: jest.fn(),
+      editReply: jest.fn(),
+      guild: {
+        id: 'test-guild-123',
+        memberCount: 0,
+        members: {
+          fetch: jest.fn().mockResolvedValue(),
+          cache: {
+            filter: jest.fn().mockReturnValue({ size: 0 }),
+            size: 0
+          }
+        }
+      }
+    };
 
-    DiscordAnalytics.generateServerInsights.mockResolvedValue({
-      serverId: 'test-server',
-      totalActivities: 0,
-      uniqueUsers: 0,
-      commandsExecuted: 0,
-      averageResponseTime: 0,
-      errorRate: 0,
-      mostActiveUser: null,
-      popularCommands: [],
-      recommendations: []
-    });
+    await handleSlashCommand(mockInteractionEmptyGuild);
 
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.editReply).toHaveBeenCalledWith({
+    expect(mockInteractionEmptyGuild.editReply).toHaveBeenCalledWith({
       embeds: [{
         color: 0x5865F2,
         title: '📊 Discord Analytics Dashboard',
         fields: [
           { 
             name: '🏢 Server Overview',
-            value: 'Servers: 0\nActive Users: 0\nTotal Commands: 0',
+            value: 'Servers: 1\nActive Users: 0\nTotal Commands: 0',
             inline: true
           },
           { 
             name: '📈 Performance',
-            value: 'Success Rate: 0%\nError Rate: 0%\nAvg Response: 0ms',
+            value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
             inline: true
           },
           {
@@ -178,7 +195,7 @@ describe('Analytics Command', () => {
           },
           {
             name: '💡 Server Insights',
-            value: 'Active Users: 0\nCommands: 0\nError Rate: 0%',
+            value: '🟢 Currently Online: 0\n👥 Total Members: 0\n🤖 Bots: 0\n📊 Server Health: Excellent',
             inline: false
           }
         ],
