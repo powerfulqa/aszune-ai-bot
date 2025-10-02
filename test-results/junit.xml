@@ -1,11 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="3" failures="0" errors="0" time="1.759">
-  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:15:13" time="1.64" tests="3">
-    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.009">
+<testsuites name="jest tests" tests="9" failures="0" errors="0" time="2.304">
+  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:27:00" time="1.285" tests="3">
+    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.012">
     </testcase>
     <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.003">
     </testcase>
     <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:27:02" time="0.421" tests="3">
+    <testcase classname="Dashboard Command should handle dashboard command successfully" name="Dashboard Command should handle dashboard command successfully" time="0.006">
+    </testcase>
+    <testcase classname="Dashboard Command should handle dashboard command error" name="Dashboard Command should handle dashboard command error" time="0.002">
+    </testcase>
+    <testcase classname="Dashboard Command should handle dashboard with degraded performance" name="Dashboard Command should handle dashboard with degraded performance" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-02T19:27:02" time="0.424" tests="3">
+    <testcase classname="Resources Command should handle resources command successfully" name="Resources Command should handle resources command successfully" time="0.004">
+    </testcase>
+    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.002">
+    </testcase>
+    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>
