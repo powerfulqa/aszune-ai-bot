@@ -140,7 +140,7 @@ const config = {
       ENDPOINTS: {
         CHAT_COMPLETIONS: '/chat/completions',
       },
-      DEFAULT_MODEL: 'sonar',
+      DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online',
       DEFAULT_TEMPERATURE: 0.0,
       MAX_TOKENS: {
         CHAT: 1024,
@@ -210,8 +210,8 @@ async function initializePiOptimizations() {
     }
     return config;
   } catch (error) {
-    // Use console.error as fallback since logger may not be available during config init
-    console.error('Failed to initialize Pi optimizations:', error);
+    // Silently continue without Pi optimizations if initialization fails
+    // Logger may not be available during config init phase
     return config;
   }
 }

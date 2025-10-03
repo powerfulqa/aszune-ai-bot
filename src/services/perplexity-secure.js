@@ -727,7 +727,11 @@ class PerplexityService {
   async generateSummary(history, isText = false) {
     try {
       if (isText) {
-        return await this.generateTextSummary(history);
+        // Extract text content from the message array
+        const textToSummarize = Array.isArray(history) && history[0]?.content 
+          ? history[0].content 
+          : history;
+        return await this.generateTextSummary(textToSummarize);
       }
 
       // Format the conversation in a summarizable way
