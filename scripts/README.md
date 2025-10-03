@@ -1,6 +1,6 @@
 # Aszune AI Bot - License Generation Scripts
 
-Automated license key generation and management tools for Aszune AI Bot v1.6.0.
+Automated license key generation and management tools for Aszune AI Bot v1.6.2.
 
 ## 🔑 **Quick Start**
 

@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.6.1)
+# Aszune AI Bot (v1.6.2)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml) 
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
@@ -177,7 +177,7 @@
 
    The license validation system is currently **disabled by default** and behind feature flags for safe deployment. You can:
 
-   - **Use without license**: Bot works normally with all v1.6.1 analytics features
+   - **Use without license**: Bot works normally with all v1.6.2 analytics features
    - **Enable license features**: Set environment variables to test license functionality
    - **Development mode**: Set `NODE_ENV=development` to enable all license features
 

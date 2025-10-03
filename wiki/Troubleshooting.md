@@ -231,3 +231,22 @@ Discord member presence data not properly accessible or cached
 2. **Member Limit**: Analytics commands limit to 1000 members to prevent performance issues
 3. **Cache Management**: Clear member cache periodically: `guild.members.cache.clear()`
 4. **Resource Monitoring**: Use `/resources` command to monitor system performance
+
+### Summarise Command Issues (Fixed in v1.6.2)
+
+**Symptoms:**
+- `!summarise <text>` or `!summerise <text>` commands failing
+- Error messages: "The service is temporarily unavailable. Please try again later."
+- API request failed with status 400 errors
+
+**Cause:**
+Previous versions (v1.6.0-v1.6.1) had Perplexity API model compatibility issues
+
+**Resolution:**
+✅ **Fixed in v1.6.2**: Updated to compatible Perplexity API model and fixed text extraction logic
+
+**If Still Experiencing Issues:**
+1. **Verify Version**: Ensure you're running v1.6.2 or later
+2. **Check API Key**: Verify Perplexity API key is valid and has sufficient quota
+3. **Text Length**: Try with shorter text (under 1000 characters initially)
+4. **Command Format**: Ensure proper format: `!summarise your text here`
