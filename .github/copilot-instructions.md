@@ -467,6 +467,42 @@ const errorResponse = ErrorHandler.handleError(error, 'context', additionalData)
 const customMessage = "Something went wrong: " + error.message;
 ```
 
+### 8. Perplexity API Model Evolution (CRITICAL - v1.6.3)
+**DANGER**: Perplexity frequently changes model names without warning!
+
+```javascript
+// ✅ CURRENT (v1.6.3) - Use simplified model names
+API: {
+  PERPLEXITY: {
+    DEFAULT_MODEL: 'sonar', // Current working model
+  }
+}
+
+// ❌ DEPRECATED (v1.6.2) - Old descriptive format
+DEFAULT_MODEL: 'llama-3.1-sonar-small-128k-chat', // No longer works
+
+// ❌ VERY OLD (v1.6.0-1.6.1) - Various failed attempts
+DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online', // Never worked
+```
+
+**Model Evolution History:**
+- **v1.6.0-1.6.1**: API integration struggles with various model attempts
+- **v1.6.2**: Temporary fix with `llama-3.1-sonar-small-128k-chat`
+- **v1.6.3**: ✅ Current working solution with `sonar`
+
+**Perplexity Model Categories (as of v1.6.3):**
+- `sonar` - Basic search (current default)
+- `sonar-pro` - Advanced search
+- `sonar-reasoning` - Reasoning tasks
+- `sonar-reasoning-pro` - Advanced reasoning
+- `sonar-deep-research` - Research tasks
+
+**CRITICAL API Monitoring:**
+- Watch for "Invalid model" API 400 errors
+- Test summarise commands (`!summerise`, `!summarise`) after deployments
+- Monitor Perplexity documentation for model changes
+- Always provide fallback error handling for API model issues
+
 ## 📋 Pre-Commit Checklist
 
 Before committing changes, ensure:
@@ -597,9 +633,12 @@ A successful implementation should achieve:
 - Breaking module export patterns
 - Direct Discord API calls without timeout protection (v1.6.1)
 - Analytics without fallback estimates for Discord API failures
+- Using deprecated Perplexity model names (v1.6.3)
 
 **WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives failed. Follow them exactly or expect test failures and runtime errors.
 
 **v1.6.1 Discord API Lessons**: The analytics integration revealed critical Discord API behaviors - member fetching can hang in large servers, requiring Promise.race() timeout patterns and intelligent fallbacks. These patterns are now mandatory for any Discord API interactions.
+
+**v1.6.3 Perplexity API Lessons**: Perplexity frequently changes model names without warning, requiring proactive monitoring and quick fixes. The summarise command (`!summerise`, `!summarise`) is particularly sensitive to these changes.
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt, follow existing patterns exactly.

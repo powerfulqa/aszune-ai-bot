@@ -232,21 +232,36 @@ Discord member presence data not properly accessible or cached
 3. **Cache Management**: Clear member cache periodically: `guild.members.cache.clear()`
 4. **Resource Monitoring**: Use `/resources` command to monitor system performance
 
-### Summarise Command Issues (Fixed in v1.6.2)
+### Summarise Command Issues (Fixed in v1.6.3)
 
 **Symptoms:**
 - `!summarise <text>` or `!summerise <text>` commands failing
-- Error messages: "The service is temporarily unavailable. Please try again later."
+- Error messages: "Invalid model 'llama-3.1-sonar-small-128k-chat'"
 - API request failed with status 400 errors
+- "The service is temporarily unavailable. Please try again later."
 
 **Cause:**
-Previous versions (v1.6.0-v1.6.1) had Perplexity API model compatibility issues
+Perplexity changed their API model naming scheme from descriptive format to simplified names
 
-**Resolution:**
-✅ **Fixed in v1.6.2**: Updated to compatible Perplexity API model and fixed text extraction logic
+**Resolution History:**
+- **v1.6.0-v1.6.1**: Initial API integration issues
+- **v1.6.2**: First model fix attempt (`llama-3.1-sonar-small-128k-chat`)
+- ✅ **v1.6.3**: Current fix using simplified model name (`sonar`)
+
+**Current Status:**
+✅ **Fixed in v1.6.3**: Updated to Perplexity's current `sonar` model naming scheme
 
 **If Still Experiencing Issues:**
-1. **Verify Version**: Ensure you're running v1.6.2 or later
-2. **Check API Key**: Verify Perplexity API key is valid and has sufficient quota
-3. **Text Length**: Try with shorter text (under 1000 characters initially)
-4. **Command Format**: Ensure proper format: `!summarise your text here`
+1. **Update Required**: Ensure you're running v1.6.3 or later (`git pull origin main`)
+2. **Restart Bot**: Restart your bot process (`pm2 restart aszune-ai`)
+3. **Check API Key**: Verify Perplexity API key is valid and has sufficient quota
+4. **Test Command**: Try `!summerise foundation` as a test
+5. **Command Format**: Ensure proper format: `!summarise your text here`
+
+**For Raspberry Pi Users:**
+```bash
+cd ~/aszune-ai-bot
+git pull origin main
+pm2 restart aszune-ai
+pm2 list  # Verify version shows 1.6.3
+```

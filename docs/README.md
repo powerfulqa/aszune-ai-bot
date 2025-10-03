@@ -19,7 +19,8 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Release Notes Archive
 
-- [v1.6.2](./RELEASE-NOTES-v1.6.2.md) - Summarise Command API Fix (LATEST)
+- [v1.6.3](./RELEASE-NOTES-v1.6.3.md) - Perplexity API Model Compatibility Fix (LATEST)
+- [v1.6.2](./RELEASE-NOTES-v1.6.2.md) - Summarise Command API Fix  
 - [v1.6.1](./RELEASE-NOTES-v1.6.1.md) - Analytics Data Integration & Documentation Updates
 - [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Analytics Integration & Discord Monitoring
 - [v1.5.0](./RELEASE-NOTES-v1.5.0.md) - qlty Code Quality Integration & Professional Standards  
