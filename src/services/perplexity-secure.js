@@ -84,7 +84,7 @@ class PerplexityService {
    */
   getCacheStats() {
     try {
-      return this.cache.getStats();
+      return this.cacheManager.getStats();
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
       logger.error(`Cache stats error: ${errorResponse.message}`);
@@ -97,6 +97,13 @@ class PerplexityService {
         hitRate: 0,
         entryCount: 0,
         memoryUsage: 0,
+        memoryUsageFormatted: '0 B',
+        maxMemory: 0,
+        maxMemoryFormatted: '0 B',
+        maxSize: 0,
+        uptime: 0,
+        uptimeFormatted: '0s',
+        evictionStrategy: 'hybrid',
         error: errorResponse.message,
       };
     }
@@ -108,13 +115,14 @@ class PerplexityService {
    */
   getDetailedCacheInfo() {
     try {
-      return this.cache.getDetailedInfo();
+      return this.cacheManager.getDetailedInfo();
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'getting detailed cache info');
       logger.error(`Detailed cache info error: ${errorResponse.message}`);
       return {
         error: errorResponse.message,
         stats: this.getCacheStats(),
+        entries: [],
       };
     }
   }
@@ -126,7 +134,7 @@ class PerplexityService {
    */
   invalidateCacheByTag(tag) {
     try {
-      return this.cache.invalidateByTag(tag);
+      return this.cacheManager.invalidateByTag(tag);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'invalidating cache by tag', { tag });
       logger.error(`Cache tag invalidation error: ${errorResponse.message}`);

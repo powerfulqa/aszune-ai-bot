@@ -227,6 +227,70 @@ class CacheManager {
   }
 
   /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getStats() {
+    try {
+      return this.cache.getStats();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
+      logger.error(`Cache stats error: ${errorResponse.message}`);
+      return {
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        evictions: 0,
+        hitRate: 0,
+        entryCount: 0,
+        memoryUsage: 0,
+        memoryUsageFormatted: '0 B',
+        maxMemory: 0,
+        maxMemoryFormatted: '0 B',
+        maxSize: 0,
+        uptime: 0,
+        uptimeFormatted: '0s',
+        evictionStrategy: 'hybrid',
+        error: errorResponse.message,
+      };
+    }
+  }
+
+  /**
+   * Get detailed cache information
+   * @returns {Object} Detailed cache information
+   */
+  getDetailedInfo() {
+    try {
+      return this.cache.getDetailedInfo();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'getting detailed cache info');
+      logger.error(`Detailed cache info error: ${errorResponse.message}`);
+      return {
+        error: errorResponse.message,
+        stats: this.getStats(),
+        entries: [],
+      };
+    }
+  }
+
+  /**
+   * Invalidate cache entries by tag
+   * @param {string} tag - Tag to invalidate
+   * @returns {number} Number of entries invalidated
+   */
+  invalidateByTag(tag) {
+    try {
+      return this.cache.invalidateByTag(tag);
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'invalidating cache by tag', { tag });
+      logger.error(`Cache tag invalidation error: ${errorResponse.message}`);
+      return 0;
+    }
+  }
+
+  /**
    * Shutdown cache manager
    */
   shutdown() {
