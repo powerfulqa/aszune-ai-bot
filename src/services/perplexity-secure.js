@@ -84,6 +84,10 @@ class PerplexityService {
    */
   getCacheStats() {
     try {
+      // Handle missing cacheManager
+      if (!this.cacheManager) {
+        throw new Error('Cache manager not available');
+      }
       return this.cacheManager.getStats();
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');

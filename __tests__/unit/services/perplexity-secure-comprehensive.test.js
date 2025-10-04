@@ -745,8 +745,8 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
 
   describe('getCacheStats method', () => {
     it('should return cache stats when available', () => {
-      // Mock cache with stats
-      perplexityService.cache = {
+      // Mock cacheManager with stats
+      perplexityService.cacheManager = {
         getStats: jest.fn().mockReturnValue({
           hits: 10,
           misses: 5,
@@ -761,8 +761,8 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     });
 
     it('should return error stats when cache throws', () => {
-      // Mock cache that throws error
-      perplexityService.cache = {
+      // Mock cacheManager that throws error
+      perplexityService.cacheManager = {
         getStats: jest.fn().mockImplementation(() => {
           throw new Error('Cache error');
         }),
@@ -775,8 +775,8 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     });
 
     it('should handle missing cache gracefully', () => {
-      // Remove cache
-      delete perplexityService.cache;
+      // Remove cacheManager
+      delete perplexityService.cacheManager;
 
       const result = perplexityService.getCacheStats();
       expect(result.hits).toBe(0);
