@@ -187,12 +187,30 @@ class DiscordAnalytics {
    */
   static generateDailyReport(activityHistory = []) {
     const timestamp = new Date().toISOString();
-    
-    // Count unique entities
+    const summaryData = this._calculateSummaryData(activityHistory);
+    const serverBreakdown = this._generateServerBreakdown(activityHistory);
+    const commandAnalysis = this._generateCommandAnalysis(activityHistory);
+    const performanceMetrics = this._generatePerformanceMetrics(activityHistory);
+    const recommendations = this._generateRecommendations(summaryData, activityHistory.length);
+
+    return {
+      timestamp,
+      summary: summaryData,
+      serverBreakdown,
+      commandAnalysis,
+      performanceMetrics,
+      recommendations
+    };
+  }
+
+  /**
+   * Calculate summary data from activity history
+   * @private
+   */
+  static _calculateSummaryData(activityHistory) {
     const uniqueServers = new Set();
     const uniqueUsers = new Set();
     let totalCommands = 0;
-    let totalActivities = activityHistory.length;
     let errors = 0;
     let totalResponseTime = 0;
     let responseTimeCount = 0;
@@ -208,11 +226,29 @@ class DiscordAnalytics {
       }
     });
 
+    const totalActivities = activityHistory.length;
     const errorRate = totalActivities > 0 ? Math.round((errors / totalActivities) * 100) : 0;
     const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+    const successRate = Math.max(0, 100 - errorRate);
 
-    // Server breakdown
+    return {
+      totalServers: uniqueServers.size,
+      totalUsers: uniqueUsers.size,
+      totalCommands,
+      totalActivities,
+      errorRate,
+      successRate, // Add for analytics command compatibility
+      avgResponseTime: averageResponseTime // Add for analytics command compatibility
+    };
+  }
+
+  /**
+   * Generate server breakdown data
+   * @private
+   */
+  static _generateServerBreakdown(activityHistory) {
     const serverStats = {};
+    
     activityHistory.forEach(activity => {
       if (!activity.serverId) return;
       if (!serverStats[activity.serverId]) {
@@ -228,15 +264,21 @@ class DiscordAnalytics {
       if (activity.action === 'command_executed') serverStats[activity.serverId].commands++;
     });
 
-    const serverBreakdown = Object.values(serverStats).map(stats => ({
+    return Object.values(serverStats).map(stats => ({
       serverId: stats.serverId,
       activities: stats.activities,
       users: stats.users.size,
       commands: stats.commands
     }));
+  }
 
-    // Command analysis
+  /**
+   * Generate command analysis data
+   * @private
+   */
+  static _generateCommandAnalysis(activityHistory) {
     const commandCounts = {};
+    
     activityHistory.forEach(activity => {
       if (activity.command) {
         commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
@@ -247,58 +289,73 @@ class DiscordAnalytics {
       .map(([command, count]) => ({ command, count }))
       .sort((a, b) => b.count - a.count);
 
-    // Performance metrics
+    return {
+      totalCommands: Object.values(commandCounts).reduce((sum, count) => sum + count, 0),
+      uniqueCommands: Object.keys(commandCounts).length,
+      popularCommands
+    };
+  }
+
+  /**
+   * Generate performance metrics data
+   * @private
+   */
+  static _generatePerformanceMetrics(activityHistory) {
     let slowestCommand = null;
     let fastestCommand = null;
     let maxResponseTime = 0;
     let minResponseTime = Infinity;
+    let totalResponseTime = 0;
+    let responseTimeCount = 0;
 
     activityHistory.forEach(activity => {
-      if (activity.metadata?.responseTime && activity.command) {
+      if (activity.metadata?.responseTime) {
         const responseTime = activity.metadata.responseTime;
-        if (responseTime > maxResponseTime) {
+        totalResponseTime += responseTime;
+        responseTimeCount++;
+        
+        if (activity.command && responseTime > maxResponseTime) {
           maxResponseTime = responseTime;
           slowestCommand = activity.command;
         }
-        if (responseTime < minResponseTime) {
+        if (activity.command && responseTime < minResponseTime) {
           minResponseTime = responseTime;
           fastestCommand = activity.command;
         }
       }
     });
 
-    // Generate recommendations
+    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+
+    return {
+      averageResponseTime,
+      slowestCommand,
+      fastestCommand
+    };
+  }
+
+  /**
+   * Generate recommendations based on data
+   * @private
+   */
+  static _generateRecommendations(summaryData, totalActivities) {
     const recommendations = [];
+    
     if (totalActivities === 0) {
       recommendations.push('No activity detected today');
     } else {
-      if (errorRate > 10) recommendations.push('High error rate detected - investigate issues');
-      if (averageResponseTime > 3000) recommendations.push('Slow response times - consider optimization');
-      if (uniqueServers.size > 50) recommendations.push('Growing server count - consider scaling resources');
+      if (summaryData.errorRate > 10) {
+        recommendations.push('High error rate detected - investigate issues');
+      }
+      if (summaryData.avgResponseTime > 3000) {
+        recommendations.push('Slow response times - consider optimization');
+      }
+      if (summaryData.totalServers > 50) {
+        recommendations.push('Growing server count - consider scaling resources');
+      }
     }
-
-    return {
-      timestamp,
-      summary: {
-        totalServers: uniqueServers.size,
-        totalUsers: uniqueUsers.size,
-        totalCommands,
-        totalActivities,
-        errorRate
-      },
-      serverBreakdown,
-      commandAnalysis: {
-        totalCommands,
-        uniqueCommands: Object.keys(commandCounts).length,
-        popularCommands
-      },
-      performanceMetrics: {
-        averageResponseTime,
-        slowestCommand,
-        fastestCommand
-      },
-      recommendations
-    };
+    
+    return recommendations;
   }
 
   /**
@@ -340,51 +397,82 @@ class DiscordAnalytics {
     const serverActivities = activityHistory.filter(a => a.serverId === serverId);
     
     if (serverActivities.length === 0) {
-      return {
-        serverId,
-        totalActivities: 0,
-        uniqueUsers: 0,
-        commandsExecuted: 0,
-        averageResponseTime: 0,
-        errorRate: 0,
-        mostActiveUser: null,
-        popularCommands: []
-      };
+      return this._getEmptyServerInsights(serverId);
     }
 
-    const uniqueUsers = new Set();
-    const userCounts = {};
-    const commandCounts = {};
+    const activityMetrics = this._calculateServerActivityMetrics(serverActivities);
+    const userAnalysis = this._analyzeServerUsers(serverActivities);
+    const commandAnalysis = this._analyzeServerCommands(serverActivities);
+
+    return {
+      serverId,
+      totalActivities: serverActivities.length,
+      uniqueUsers: userAnalysis.uniqueUsers,
+      commandsExecuted: activityMetrics.commandsExecuted,
+      averageResponseTime: activityMetrics.averageResponseTime,
+      errorRate: activityMetrics.errorRate,
+      mostActiveUser: userAnalysis.mostActiveUser,
+      popularCommands: commandAnalysis.popularCommands
+    };
+  }
+
+  /**
+   * Get empty server insights structure
+   * @private
+   */
+  static _getEmptyServerInsights(serverId) {
+    return {
+      serverId,
+      totalActivities: 0,
+      uniqueUsers: 0,
+      commandsExecuted: 0,
+      averageResponseTime: 0,
+      errorRate: 0,
+      mostActiveUser: null,
+      popularCommands: []
+    };
+  }
+
+  /**
+   * Calculate server activity metrics
+   * @private
+   */
+  static _calculateServerActivityMetrics(serverActivities) {
     let commandsExecuted = 0;
     let errors = 0;
     let totalResponseTime = 0;
     let responseTimeCount = 0;
 
     serverActivities.forEach(activity => {
-      if (activity.userId) {
-        uniqueUsers.add(activity.userId);
-        userCounts[activity.userId] = (userCounts[activity.userId] || 0) + 1;
-      }
-      
-      if (activity.action === 'command_executed') {
-        commandsExecuted++;
-      }
-      
-      if (activity.command) {
-        commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
-      }
-      
-      if (activity.metadata?.success === false) {
-        errors++;
-      }
-      
+      if (activity.action === 'command_executed') commandsExecuted++;
+      if (activity.metadata?.success === false) errors++;
       if (activity.metadata?.responseTime) {
         totalResponseTime += activity.metadata.responseTime;
         responseTimeCount++;
       }
     });
 
-    // Find most active user
+    const errorRate = serverActivities.length > 0 ? Math.round((errors / serverActivities.length) * 100) : 0;
+    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+
+    return { commandsExecuted, errorRate, averageResponseTime };
+  }
+
+  /**
+   * Analyze server user activity
+   * @private
+   */
+  static _analyzeServerUsers(serverActivities) {
+    const uniqueUsers = new Set();
+    const userCounts = {};
+
+    serverActivities.forEach(activity => {
+      if (activity.userId) {
+        uniqueUsers.add(activity.userId);
+        userCounts[activity.userId] = (userCounts[activity.userId] || 0) + 1;
+      }
+    });
+
     let mostActiveUser = null;
     let maxUserActivity = 0;
     Object.entries(userCounts).forEach(([userId, count]) => {
@@ -394,24 +482,27 @@ class DiscordAnalytics {
       }
     });
 
-    // Get popular commands
+    return { uniqueUsers: uniqueUsers.size, mostActiveUser };
+  }
+
+  /**
+   * Analyze server command usage
+   * @private
+   */
+  static _analyzeServerCommands(serverActivities) {
+    const commandCounts = {};
+
+    serverActivities.forEach(activity => {
+      if (activity.command) {
+        commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
+      }
+    });
+
     const popularCommands = Object.entries(commandCounts)
       .map(([command, count]) => ({ command, count }))
       .sort((a, b) => b.count - a.count);
 
-    const errorRate = serverActivities.length > 0 ? Math.round((errors / serverActivities.length) * 100) : 0;
-    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
-
-    return {
-      serverId,
-      totalActivities: serverActivities.length,
-      uniqueUsers: uniqueUsers.size,
-      commandsExecuted,
-      averageResponseTime,
-      errorRate,
-      mostActiveUser,
-      popularCommands
-    };
+    return { popularCommands };
   }
 
   /**

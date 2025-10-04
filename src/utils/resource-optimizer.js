@@ -168,33 +168,81 @@ class ResourceOptimizer {
     // Handle null/undefined inputs
     if (!systemStats) systemStats = {};
     
+    const memory = ResourceOptimizer._getMemoryMonitoring();
+    const performance = ResourceOptimizer._getPerformanceMonitoring(systemStats);
+    const network = ResourceOptimizer._getNetworkMonitoring();
+    const overall = ResourceOptimizer._getOverallStatus(memory, performance);
+    const recommendations = ResourceOptimizer._generateResourceRecommendations({ memory, performance });
+    
+    const monitoring = {
+      memory,
+      performance,
+      network,
+      overall,
+      recommendations,
+      optimizationTier: ResourceOptimizer._determineOptimizationTier(memory, performance)
+    };
+
+    return ResourceOptimizer._addPiOptimizations(monitoring, recommendations);
+  }
+
+  /**
+   * Gets memory monitoring data
+   * @returns {Object} - Memory monitoring data
+   * @private
+   */
+  static _getMemoryMonitoring() {
     const memoryUsage = process.memoryUsage();
     const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
+    const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
+    const usedMB = Math.round(memoryMB);
     
-    // Memory monitoring
-    const memory = {
-      used: Math.round(memoryMB),
-      total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+    return {
+      used: usedMB,
+      total: totalMB,
+      free: Math.max(0, totalMB - usedMB),
       percentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
       status: ResourceOptimizer._getMemoryStatus(memoryMB)
     };
-    
-    // Performance monitoring
-    const performance = {
+  }
+
+  /**
+   * Gets performance monitoring data
+   * @param {Object} systemStats - System statistics
+   * @returns {Object} - Performance monitoring data
+   * @private
+   */
+  static _getPerformanceMonitoring(systemStats) {
+    return {
       cpuUsage: systemStats.cpuUsage || 0,
       responseTime: systemStats.avgResponseTime || 0,
       errorRate: systemStats.errorRate || 0,
+      load: ResourceOptimizer._determineLoad(systemStats),
       status: ResourceOptimizer._getPerformanceStatus(systemStats)
     };
-    
-    // Network monitoring (placeholder)
-    const network = {
+  }
+
+  /**
+   * Gets network monitoring data (placeholder)
+   * @returns {Object} - Network monitoring data
+   * @private
+   */
+  static _getNetworkMonitoring() {
+    return {
       status: 'normal',
       latency: 0,
       throughput: 100
     };
-    
-    // Overall status
+  }
+
+  /**
+   * Calculates overall system status
+   * @param {Object} memory - Memory monitoring data
+   * @param {Object} performance - Performance monitoring data
+   * @returns {Object} - Overall status
+   * @private
+   */
+  static _getOverallStatus(memory, performance) {
     let overallStatus = 'healthy';
     if (memory.status === 'critical' || performance.status === 'poor') {
       overallStatus = 'critical';
@@ -204,20 +252,17 @@ class ResourceOptimizer {
       overallStatus = 'warning';
     }
     
-    const overall = { status: overallStatus };
-    
-    // Generate recommendations
-    const recommendations = ResourceOptimizer._generateResourceRecommendations({ memory, performance });
-    
-    const monitoring = {
-      memory,
-      performance,
-      network,
-      overall,
-      recommendations
-    };
+    return { status: overallStatus };
+  }
 
-    // Check for Pi optimizations
+  /**
+   * Adds Pi optimizations if available
+   * @param {Object} monitoring - Monitoring data
+   * @param {Array} recommendations - Recommendations array
+   * @returns {Object} - Updated monitoring data
+   * @private
+   */
+  static _addPiOptimizations(monitoring, recommendations) {
     try {
       const config = require('../config/config');
       if (config.PI_OPTIMIZATIONS) {
@@ -227,7 +272,7 @@ class ResourceOptimizer {
     } catch (error) {
       // Config not available
     }
-
+    
     return monitoring;
   }
 
@@ -467,6 +512,43 @@ class ResourceOptimizer {
     }
 
     return recommendations;
+  }
+
+  /**
+   * Determines system load based on performance metrics
+   * @param {Object} systemStats - System statistics
+   * @returns {string} - Load level (light, moderate, heavy)
+   * @private
+   */
+  static _determineLoad(systemStats) {
+    const responseTime = systemStats.avgResponseTime || 0;
+    const cpuUsage = systemStats.cpuUsage || 0;
+    const errorRate = systemStats.errorRate || 0;
+
+    if (responseTime > 2000 || cpuUsage > 80 || errorRate > 5) {
+      return 'heavy';
+    } else if (responseTime > 1000 || cpuUsage > 50 || errorRate > 2) {
+      return 'moderate';
+    }
+    return 'light';
+  }
+
+  /**
+   * Determines optimization tier based on current system status
+   * @param {Object} memory - Memory monitoring data
+   * @param {Object} performance - Performance monitoring data
+   * @returns {string} - Optimization tier
+   * @private
+   */
+  static _determineOptimizationTier(memory, performance) {
+    if (memory.status === 'critical' || performance.status === 'poor') {
+      return 'Critical';
+    } else if (memory.status === 'high' || performance.status === 'degraded') {
+      return 'High';
+    } else if (memory.percentage > 60 || performance.responseTime > 1500) {
+      return 'Standard';
+    }
+    return 'Optimal';
   }
 }
 

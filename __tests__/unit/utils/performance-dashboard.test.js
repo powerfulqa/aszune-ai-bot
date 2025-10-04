@@ -113,6 +113,17 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
     expect(report.overview.optimizationTier).toBe('small');
   });
 
+  it('should include both responseTime and averageResponseTime fields for dashboard compatibility', () => {
+    const report = PerformanceDashboard.generateDashboardReport(mockActivityHistory, mockPerformanceMetrics);
+
+    // Dashboard command expects responseTime field
+    expect(report.overview.responseTime).toBe('250ms');
+    // Keep averageResponseTime for backward compatibility
+    expect(report.overview.averageResponseTime).toBe('250ms');
+    // Both should have the same value
+    expect(report.overview.responseTime).toBe(report.overview.averageResponseTime);
+  });
+
   it('should call all required service methods', () => {
     PerformanceDashboard.generateDashboardReport(mockActivityHistory, mockPerformanceMetrics);
 

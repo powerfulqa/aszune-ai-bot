@@ -133,6 +133,40 @@ describe('ResourceOptimizer - monitorResources', () => {
     expect(Array.isArray(result.recommendations)).toBe(true);
     expect(result.recommendations.length).toBeGreaterThan(0);
   });
+
+  it('should include free memory field in monitoring results', () => {
+    const result = ResourceOptimizer.monitorResources(mockMetrics);
+
+    expect(result.memory).toHaveProperty('free');
+    expect(typeof result.memory.free).toBe('number');
+    expect(result.memory.free).toBeGreaterThanOrEqual(0);
+    expect(result.memory.used + result.memory.free).toBeLessThanOrEqual(result.memory.total);
+  });
+
+  it('should include load field in performance monitoring', () => {
+    const result = ResourceOptimizer.monitorResources(mockMetrics);
+
+    expect(result.performance).toHaveProperty('load');
+    expect(['light', 'moderate', 'heavy']).toContain(result.performance.load);
+  });
+
+  it('should include optimizationTier field', () => {
+    const result = ResourceOptimizer.monitorResources(mockMetrics);
+
+    expect(result).toHaveProperty('optimizationTier');
+    expect(['Optimal', 'Standard', 'High', 'Critical']).toContain(result.optimizationTier);
+  });
+
+  it('should determine load correctly based on metrics', () => {
+    const lightLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 500, cpuUsage: 30, errorRate: 1 });
+    expect(lightLoad.performance.load).toBe('light');
+
+    const moderateLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 1500, cpuUsage: 60, errorRate: 3 });
+    expect(moderateLoad.performance.load).toBe('moderate');
+
+    const heavyLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 3000, cpuUsage: 90, errorRate: 8 });
+    expect(heavyLoad.performance.load).toBe('heavy');
+  });
 });
 
 describe('ResourceOptimizer - applyDynamicScaling', () => {

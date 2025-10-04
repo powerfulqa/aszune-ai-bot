@@ -168,6 +168,7 @@ class PerformanceDashboard {
         activeUsers: (analyticsReport && analyticsReport.summary) ? analyticsReport.summary.totalUsers : 0,
         totalCommands: (analyticsReport && analyticsReport.summary) ? analyticsReport.summary.totalCommands : 0,
         errorRate: (analyticsReport && analyticsReport.summary) ? `${analyticsReport.summary.errorRate}%` : '0%',
+        responseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
         averageResponseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
         memoryUsage: (resourceMonitoring && resourceMonitoring.memory) ? `${resourceMonitoring.memory.used}MB` : '0MB',
         optimizationTier: optimizedConfig ? optimizedConfig.tier : 'unknown'

@@ -178,4 +178,20 @@ describe('DiscordAnalytics - generateDailyReport', () => {
     expect(report.serverBreakdown).toHaveLength(0);
     expect(report.recommendations).toContain('No activity detected today');
   });
+
+  it('should include successRate and avgResponseTime fields for analytics command compatibility', () => {
+    const report = DiscordAnalytics.generateDailyReport(mockActivityHistory);
+
+    // Analytics command expects successRate field  
+    expect(report.summary.successRate).toBeDefined();
+    expect(typeof report.summary.successRate).toBe('number');
+    
+    // Analytics command expects avgResponseTime field
+    expect(report.summary.avgResponseTime).toBeDefined();
+    expect(typeof report.summary.avgResponseTime).toBe('number');
+    
+    // Verify calculations are correct
+    expect(report.summary.successRate).toBe(100 - report.summary.errorRate);
+    expect(report.summary.avgResponseTime).toBe(report.performanceMetrics.averageResponseTime);
+  });
 });
