@@ -7,6 +7,37 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.5] - 2025-10-04
+
+### Critical Bug Fixes
+- **FIXED**: Cache command undefined values issue
+  - **Root Cause**: Missing method implementations in CacheManager and incorrect property references
+  - **Resolution**: Added `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods to CacheManager
+  - **Impact**: `/cache` command now displays proper values instead of "Memory Usage: undefined / undefined"
+  
+### Service Architecture Improvements
+- **Enhanced CacheManager**: Complete method implementation with comprehensive error handling
+- **PerplexityService Integration**: Fixed property references from `this.cache` to `this.cacheManager`
+- **Field Compatibility**: Added complete field coverage for Discord command requirements
+- **Error Resilience**: Improved fallback mechanisms with proper default values
+
+### Technical Enhancements
+- **Service Delegation**: Enforced proper service layer architecture patterns
+- **Method Contracts**: Established consistent API contracts across cache services
+- **Documentation**: Added comprehensive cache service architecture documentation
+- **Testing**: Enhanced error scenario testing and field validation
+
+### Display Improvements
+- **Cache Statistics**: All cache fields now display meaningful values
+- **Memory Usage**: Proper display format (e.g., "0 B / 50 MB") 
+- **Configuration**: Shows strategy and uptime (e.g., "Strategy: hybrid, Uptime: 28s")
+- **Performance Metrics**: Hit rate, operations count, and eviction statistics
+
+### Lessons Learned Integration
+- **Updated Copilot Instructions**: Added v1.6.5 architectural patterns and requirements
+- **Service Patterns**: Documented critical property naming and delegation requirements  
+- **Field Requirements**: Established complete field compatibility matrix for Discord commands
+
 ## [1.6.0] - 2025-10-01
 
 ### Major Features Added

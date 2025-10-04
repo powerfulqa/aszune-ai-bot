@@ -104,6 +104,31 @@ const errorResponse = ErrorHandler.handleError(error, 'context', additionalData)
 - Error messages use ErrorHandler.handleError() for consistent user-friendly messages
 - No plain text error responses - always embed format
 
+**Cache Service Architecture (CRITICAL - v1.6.5 Lessons):**
+- **Property Consistency**: Use descriptive service names (`this.cacheManager` not `this.cache`)
+- **Method Delegation**: Services MUST delegate to their components, never bypass
+- **Complete Field Coverage**: All expected Discord command fields must be provided
+- **Fallback Completeness**: Error scenarios must return complete objects with all expected fields
+
+```javascript
+// ❌ DEADLY MISTAKE - Calling undefined property
+getCacheStats() {
+  return this.cache.getStats(); // this.cache doesn't exist!
+}
+
+// ✅ CORRECT - Proper service delegation
+getCacheStats() {
+  return this.cacheManager.getStats(); // Uses initialized service
+}
+```
+
+**Cache Command Field Requirements (v1.6.5):**
+All cache statistics must include these exact fields or Discord will show "undefined":
+- Performance: `hitRate`, `hits`, `misses`
+- Operations: `sets`, `deletes`, `evictions`
+- Memory: `memoryUsageFormatted`, `maxMemoryFormatted`, `entryCount`, `maxSize`  
+- Configuration: `evictionStrategy`, `uptimeFormatted`
+
 **Module Export Contracts:**
 ```javascript
 // REQUIRED: All services must export in this exact pattern
@@ -412,6 +437,49 @@ afterEach(() => {
 - `ThrottlingService` - Rate limiting
 
 **CRITICAL:** Do not bypass these components or create direct API calls!
+
+### 6. Cache Service Integration Points (v1.6.5 Critical Fixes)
+**CacheManager Service Requirements:**
+```javascript
+// ✅ REQUIRED - All cache services must implement these methods
+class CacheManager {
+  getStats() {
+    // Must return all fields expected by Discord commands
+    return {
+      hits, misses, hitRate, sets, deletes, evictions,
+      memoryUsageFormatted, maxMemoryFormatted, entryCount, maxSize,
+      evictionStrategy, uptimeFormatted
+    };
+  }
+  
+  getDetailedInfo() {
+    // Must return stats + entries array
+  }
+  
+  invalidateByTag(tag) {
+    // Must support tag-based invalidation
+  }
+}
+```
+
+**Service Property Architecture (CRITICAL):**
+```javascript
+// ✅ CORRECT - Consistent service delegation pattern
+class PerplexityService {
+  constructor() {
+    this.cacheManager = new CacheManager(); // Descriptive property name
+  }
+  
+  getCacheStats() {
+    return this.cacheManager.getStats(); // Always delegate through service
+  }
+}
+
+// ❌ WRONG - Direct component access bypasses service layer
+getCacheStats() {
+  return this.cache.getStats(); // Property doesn't exist!
+}
+```
 
 ### 6. Discord API Patterns (CRITICAL)
 **Based on v1.6.1 analytics fixes - Discord API can be unreliable!**

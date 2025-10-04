@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.6.3)
+# Aszune AI Bot (v1.6.5)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml) 
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
@@ -278,6 +278,7 @@ script for Pi deployments.
 | `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
 | `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
 | `!resources` / `/resources` | View resource optimization status and recommendations           |
+| `!cache` / `/cache`         | Display cache statistics and performance metrics (Fixed v1.6.5) |
 
 > **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash
 > command equivalent may not be fully implemented yet.
@@ -309,6 +310,13 @@ Version 1.6.0 introduces comprehensive analytics accessible directly within Disc
 - **Performance Recommendations**: Automated suggestions for improving bot performance
 - **Capacity Planning**: Usage projections and scaling recommendations
 - **System Health**: Comprehensive health assessments and maintenance guidance
+
+#### `/cache` - Cache Statistics (Fixed v1.6.5)
+- **Performance Metrics**: Hit rate, cache hits/misses, operation counts
+- **Memory Usage**: Current cache memory usage and limits (e.g., "0 B / 50 MB")
+- **Configuration**: Eviction strategy and uptime information (e.g., "Strategy: hybrid, Uptime: 28s")
+- **Operations Tracking**: Sets, deletes, evictions statistics
+- **Complete Field Coverage**: All statistics display proper values (no more "undefined")
 
 ### 🔧 License Monitoring System
 
