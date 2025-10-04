@@ -15,7 +15,7 @@ maintainable.
 2. **Command Handler** - Processes and routes commands (both text and slash commands)
 3. **Service-Oriented Perplexity API** - Modular service architecture with focused classes:
    - **ApiClient** - HTTP requests and API communication
-   - **CacheManager** - Response caching and cleanup management
+   - **CacheManager** - Enhanced response caching and cleanup management (v1.6.5: Complete architecture overhaul with proper method implementation)
    - **ResponseProcessor** - API response processing and formatting
    - **ThrottlingService** - Rate limiting and connection throttling
 4. **Conversation Manager** - Tracks and stores user conversations with class-based architecture
@@ -823,6 +823,16 @@ async function shutdown(signal) {
 - Rate limiting prevents abuse
 - Input validation is performed before processing commands
 
+### v1.6.5 Cache Service Architecture Overhaul
+
+- **Cache Command Fix**: Resolved critical undefined values issue in `/cache` Discord command
+- **Service Architecture**: Complete CacheManager implementation with proper method delegation
+- **Method Implementation**: Added missing `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods
+- **Property Consistency**: Fixed PerplexityService property references from `this.cache` to `this.cacheManager`
+- **Field Compatibility**: Established comprehensive field coverage for Discord command requirements
+- **Error Resilience**: Enhanced fallback mechanisms with proper default values
+- **Test Coverage**: Added comprehensive 6-test suite covering all cache command scenarios
+
 ### v1.6.0 Security Enhancements
 
 - **Timing Attack Prevention**: Implemented `crypto.timingSafeEqual()` for secure API key comparison
@@ -847,6 +857,69 @@ static _extractMetrics(analyticsData = {}, performanceData = {}) {
   if (!performanceData) performanceData = {};
   // Safe processing continues...
 }
+```
+
+### v1.6.5 Architecture Implementation Examples
+
+```javascript
+// Enhanced CacheManager with complete method implementation (v1.6.5)
+class CacheManager {
+  getStats() {
+    try {
+      return this.cache.getStats();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
+      return {
+        // All expected fields with safe defaults
+        hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0,
+        hitRate: 0, entryCount: 0, memoryUsage: 0,
+        memoryUsageFormatted: '0 B', maxMemoryFormatted: '0 B',
+        maxSize: 0, uptime: 0, uptimeFormatted: '0s',
+        evictionStrategy: 'hybrid', error: errorResponse.message
+      };
+    }
+  }
+
+  getDetailedInfo() {
+    try {
+      const stats = this.getStats();
+      return {
+        stats,
+        entries: this.cache.getEntries() || []
+      };
+    } catch (error) {
+      return { stats: this.getStats(), entries: [] };
+    }
+  }
+}
+
+// Fixed PerplexityService property delegation (v1.6.5)
+class PerplexityService {
+  constructor() {
+    this.cacheManager = new CacheManager(); // ✅ Descriptive property name
+  }
+
+  getCacheStats() {
+    return this.cacheManager.getStats(); // ✅ Proper delegation
+  }
+}
+
+// Comprehensive test validation (v1.6.5)
+test('should display all required cache fields for v1.6.5 compatibility', async () => {
+  const embed = await executeCommand('/cache');
+  
+  // Ensure no undefined values in any field
+  embed.fields.forEach(field => {
+    expect(field.value).not.toContain('undefined');
+    expect(field.value).toBeTruthy();
+  });
+  
+  // Validate all expected fields present
+  const fieldNames = embed.fields.map(f => f.name);
+  expect(fieldNames).toContain('Performance');
+  expect(fieldNames).toContain('Memory Usage');
+  expect(fieldNames).toContain('Configuration');
+});
 ```
 
 ## Future Technical Enhancements

@@ -238,6 +238,51 @@ improvements.
 - System health warnings
 - Resource utilization tips
 
+---
+
+### Cache Command
+
+**Usage:**
+
+- `!cache`
+- `/cache`
+
+**Description:** Displays comprehensive cache statistics and performance metrics for the bot's caching system, including memory usage, hit rates, and operational statistics.
+
+**Example:**
+
+```
+/cache
+```
+
+**Output:** Shows detailed cache statistics with:
+
+- **Performance Metrics**: Hit rate, cache hits, and miss counts (e.g., "Hit Rate: 85%")
+- **Operations Statistics**: Sets, deletes, and evictions tracking
+- **Memory Usage**: Current cache memory usage and limits (e.g., "Memory Usage: 0 B / 50 MB")
+- **Configuration Details**: Cache strategy and uptime (e.g., "Strategy: hybrid, Uptime: 28s")
+- **Cache Entries**: Active cache entries with access counts and details
+
+**Technical Details:**
+
+- **Fixed in v1.6.5**: Resolved undefined values display issue
+- **Service Architecture**: Uses enhanced CacheManager with proper method delegation
+- **Error Handling**: Comprehensive fallback mechanisms with default values
+- **Field Validation**: All fields guaranteed to display proper values (no "undefined")
+- **Integration**: Works with enhanced-cache system and PerplexityService
+
+**Before v1.6.5 (Broken):**
+```
+Memory Usage: undefined / undefined
+Configuration: Strategy: undefined, Uptime: undefined
+```
+
+**After v1.6.5 (Fixed):**
+```
+Memory Usage: 0 B / 50 MB
+Configuration: Strategy: hybrid, Uptime: 28s
+```
+
 ## Chatting with the Bot
 
 You can chat with the bot in two ways:
