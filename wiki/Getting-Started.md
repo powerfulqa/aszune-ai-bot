@@ -123,8 +123,10 @@ npm run test:coverage
 ## Next Steps
 
 - Check out the [Usage Guide](Usage-Guide) to learn how to interact with the bot
-- **Try the new analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore the monitoring capabilities
-- Explore the [Command Reference](Command-Reference) for detailed information about all available commands including the new analytics commands
+- **Try the new analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore
+  the monitoring capabilities
+- Explore the [Command Reference](Command-Reference) for detailed information about all available
+  commands including the new analytics commands
 - Read the [Contributing Guidelines](../CONTRIBUTING.md) if you want to contribute to the project
 - Review the [Code Quality Documentation](../docs/QLTY_INTEGRATION.md) for development standards
 - Visit the [Troubleshooting](Troubleshooting) page if you encounter any issues
@@ -134,7 +136,8 @@ npm run test:coverage
 🎉 **Analytics Integration** - The bot now includes comprehensive monitoring and analytics features:
 
 - **`/analytics`** - Discord server analytics with user engagement insights
-- **`/dashboard`** - Real-time performance monitoring dashboard  
+- **`/dashboard`** - Real-time performance monitoring dashboard
 - **`/resources`** - Resource optimization analysis and recommendations
 
-All monitoring features are accessible directly in Discord - no need to access your Raspberry Pi separately!
+All monitoring features are accessible directly in Discord - no need to access your Raspberry Pi
+separately!

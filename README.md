@@ -1,19 +1,23 @@
 # Aszune AI Bot (v1.6.5)
 
-[![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml) 
-[![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot) 
-[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot) 
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE) 
+[![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
+[![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
+[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-1000%20Passing-brightgreen.svg)](#testing--coverage)
 
 [Release Notes](./docs/README.md) | [Documentation Wiki](./wiki/Home.md)
 
-**Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities with comprehensive analytics and monitoring features. Built for gaming communities, it provides lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time performance dashboards and server analytics directly within Discord. Features enterprise-grade code quality with 991+ automated tests and built-in license protection system.
+**Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
+with comprehensive analytics and monitoring features. Built for gaming communities, it provides
+lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time
+performance dashboards and server analytics directly within Discord. Features enterprise-grade code
+quality with 991+ automated tests and built-in license protection system.
 
 ## Table of Contents
 
 - [Features](#features)
-- [License & Usage](#license--usage)  
+- [License & Usage](#license--usage)
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Setup Steps](#setup-steps)
@@ -97,10 +101,14 @@
     formatting
   - 🎯 **Boundary Detection:** Intelligent chunking that avoids breaking content mid-sentence or
     mid-URL
-- 📊 **Discord Table Formatting:** Automatically converts markdown tables to readable Discord-friendly format
-  - 🔧 **Intelligent Detection:** Recognizes markdown table patterns and converts to bullet-point lists
-  - 📋 **Enhanced Readability:** Tables display as organized bullet points instead of broken formatting
-  - 🛡️ **Content Preservation:** Maintains all table data while improving Discord embed compatibility
+- 📊 **Discord Table Formatting:** Automatically converts markdown tables to readable
+  Discord-friendly format
+  - 🔧 **Intelligent Detection:** Recognizes markdown table patterns and converts to bullet-point
+    lists
+  - 📋 **Enhanced Readability:** Tables display as organized bullet points instead of broken
+    formatting
+  - 🛡️ **Content Preservation:** Maintains all table data while improving Discord embed
+    compatibility
   - 🔄 **Seamless Integration:** Works automatically with all AI responses containing tables
 
 - 🆕 **Raspberry Pi Optimisations:** Specialised performance optimisations for running on
@@ -133,12 +141,18 @@
   console statements in production code.
 - 🔄 **Code Duplication Elimination:** Systematic removal of duplicate code patterns across services
   and validation modules.
-- 📊 **Analytics Integration:** Enterprise-grade Discord analytics with `/analytics`, `/dashboard`, and `/resources` commands
-- 🔍 **Performance Dashboard:** Real-time system monitoring, resource optimization, and automated recommendations
-- 📈 **Server Analytics:** User engagement metrics, command usage patterns, and trend analysis with actionable insights
-- 🛡️ **License Protection:** Built-in license validation with automated enforcement and violation detection
-- 🏠 **Self-Hosted Control:** Complete ownership with proprietary licensing for personal, community, and commercial use
-- 🍓 **Raspberry Pi Optimized:** Specialized license server setup for Pi 3+ with automated monitoring
+- 📊 **Analytics Integration:** Enterprise-grade Discord analytics with `/analytics`, `/dashboard`,
+  and `/resources` commands
+- 🔍 **Performance Dashboard:** Real-time system monitoring, resource optimization, and automated
+  recommendations
+- 📈 **Server Analytics:** User engagement metrics, command usage patterns, and trend analysis with
+  actionable insights
+- 🛡️ **License Protection:** Built-in license validation with automated enforcement and violation
+  detection
+- 🏠 **Self-Hosted Control:** Complete ownership with proprietary licensing for personal, community,
+  and commercial use
+- 🍓 **Raspberry Pi Optimized:** Specialized license server setup for Pi 3+ with automated
+  monitoring
 
 ---
 
@@ -175,8 +189,8 @@
 
 4. **Optional: License System (Feature Flagged)**
 
-   The license validation system is currently **disabled by default** and behind feature flags for safe deployment. You can:
-
+   The license validation system is currently **disabled by default** and behind feature flags for
+   safe deployment. You can:
    - **Use without license**: Bot works normally with all v1.6.2 analytics features
    - **Enable license features**: Set environment variables to test license functionality
    - **Development mode**: Set `NODE_ENV=development` to enable all license features
@@ -184,17 +198,18 @@
    ```env
    # Optional License Configuration (disabled by default)
    ASZUNE_LICENSE_KEY=your_license_key_here
-   
+
    # Enable specific license features for testing
    ENABLE_LICENSE_VALIDATION=true
-   ENABLE_LICENSE_SERVER=true  
+   ENABLE_LICENSE_SERVER=true
    ENABLE_LICENSE_ENFORCEMENT=true
-   
+
    # OR enable everything for development
    NODE_ENV=development
    ```
 
-   **License Registration** (when enabled): [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+   **License Registration** (when enabled):
+   [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 
 ---
 
@@ -264,6 +279,7 @@ script for Pi deployments.
 ## Bot Commands
 
 ### Core Commands
+
 | Command                                   | Description                                                 |
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `!help` / `/help`                         | Shows a list of available commands and usage                |
@@ -273,8 +289,9 @@ script for Pi deployments.
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
 ### Analytics Commands (NEW in v1.6.0)
-| Command                    | Description                                                     |
-| -------------------------- | --------------------------------------------------------------- |
+
+| Command                     | Description                                                     |
+| --------------------------- | --------------------------------------------------------------- |
 | `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
 | `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
 | `!resources` / `/resources` | View resource optimization status and recommendations           |
@@ -291,30 +308,35 @@ script for Pi deployments.
 
 Version 1.6.0 introduces comprehensive analytics accessible directly within Discord:
 
-#### `/analytics` - Real-time Discord Server Analytics  
+#### `/analytics` - Real-time Discord Server Analytics
+
 - **Live Member Data**: Real Discord server statistics with timeout protection (v1.6.1)
-- **Active User Counts**: Live online/idle/dnd member filtering (e.g., "Active Users: 102")  
+- **Active User Counts**: Live online/idle/dnd member filtering (e.g., "Active Users: 102")
 - **Server Statistics**: Total members, bot counts, human member ratios
 - **Presence Detection**: Real-time member activity status from Discord API
 - **Fallback Protection**: Intelligent estimates when Discord API is slow or unavailable
 
 #### `/dashboard` - Synchronized Performance Monitoring
+
 - **Consistent Data**: Same Discord member counts as `/analytics` for reliability (v1.6.1)
 - **System Metrics**: Real-time CPU, memory, and network utilization
-- **Performance Correlation**: System load analysis with actual Discord server activity  
+- **Performance Correlation**: System load analysis with actual Discord server activity
 - **Resource Optimization**: Performance recommendations based on real usage patterns
 - **Timeout Protection**: 5-second response guarantee with graceful fallbacks
 
 #### `/resources` - Resource Optimization
+
 - **Resource Analysis**: Detailed system resource usage and optimization opportunities
 - **Performance Recommendations**: Automated suggestions for improving bot performance
 - **Capacity Planning**: Usage projections and scaling recommendations
 - **System Health**: Comprehensive health assessments and maintenance guidance
 
 #### `/cache` - Cache Statistics (Fixed v1.6.5)
+
 - **Performance Metrics**: Hit rate, cache hits/misses, operation counts
 - **Memory Usage**: Current cache memory usage and limits (e.g., "0 B / 50 MB")
-- **Configuration**: Eviction strategy and uptime information (e.g., "Strategy: hybrid, Uptime: 28s")
+- **Configuration**: Eviction strategy and uptime information (e.g., "Strategy: hybrid, Uptime:
+  28s")
 - **Operations Tracking**: Sets, deletes, evictions statistics
 - **Complete Field Coverage**: All statistics display proper values (no more "undefined")
 
@@ -550,16 +572,17 @@ Pull requests and ideas are always welcome! Please:
 
 **🔐 PROPRIETARY SOFTWARE** — Licensed usage only
 
-> **⚠️ FEATURE FLAGGED**: The license validation system is currently **disabled by default** for safe deployment. All analytics and bot features work normally without licensing.
+> **⚠️ FEATURE FLAGGED**: The license validation system is currently **disabled by default** for
+> safe deployment. All analytics and bot features work normally without licensing.
 
 ### 📋 License Options
 
-| License Type | Price | Usage | Servers | Support |
-|-------------|-------|-------|---------|---------|
-| **Personal** | FREE | Personal Discord servers | 1 | Community |
-| **Community** | $29/month | Non-profit gaming communities | 3 | Email |
-| **Commercial** | $299/month | Commercial Discord servers | Unlimited | Priority |
-| **Enterprise** | Custom | White-label + source access | Unlimited | Professional SLA |
+| License Type   | Price      | Usage                         | Servers   | Support          |
+| -------------- | ---------- | ----------------------------- | --------- | ---------------- |
+| **Personal**   | FREE       | Personal Discord servers      | 1         | Community        |
+| **Community**  | $29/month  | Non-profit gaming communities | 3         | Email            |
+| **Commercial** | $299/month | Commercial Discord servers    | Unlimited | Priority         |
+| **Enterprise** | Custom     | White-label + source access   | Unlimited | Professional SLA |
 
 ### 🚀 Quick Start (No License Required Currently)
 
@@ -602,8 +625,10 @@ NODE_ENV=development npm start
 
 ### 🚀 Getting Your License (For Future Use)
 
-1. **Personal License (Free)**: [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
-2. **Commercial License**: [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
+1. **Personal License (Free)**:
+   [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+2. **Commercial License**:
+   [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
 3. **Enterprise License**: Email chrishaycock@users.noreply.github.com
 
 ### 📧 Questions?
@@ -632,14 +657,17 @@ NODE_ENV=development npm start
 ## Changelog
 
 ### 1.6.0 (2025-01-21) - Analytics & Professional Licensing
+
 **🔄 License Change**: Migrated from MIT to Proprietary License with Free Personal Use
 
 **🎯 Major Features**:
+
 - **Analytics & Monitoring System**: Complete Discord analytics integration
   - `/analytics` - Real-time Discord server analytics and insights
   - `/dashboard` - Performance monitoring and system health metrics
   - `/resources` - Resource optimization recommendations and monitoring
-- **Feature-Flagged Licensing System**: Built-in license validation and enforcement (disabled by default)
+- **Feature-Flagged Licensing System**: Built-in license validation and enforcement (disabled by
+  default)
   - **Safe Deployment**: License features behind feature flags for gradual rollout
   - **No License Required**: Bot functions normally without license validation enabled
   - **Development Ready**: License system implemented and ready for future activation
@@ -650,6 +678,7 @@ NODE_ENV=development npm start
   - PM2 process management integration
 
 **🛠️ Technical Improvements**:
+
 - **Feature Flag Architecture**: Safe deployment pattern for new functionality
 - Enhanced command parameter validation and error handling
 - Professional code quality with removed internal development terminology
@@ -658,29 +687,36 @@ NODE_ENV=development npm start
 - Robust error handling with user-friendly messaging
 
 **📚 Documentation**:
+
 - Complete documentation overhaul with feature flag documentation
 - Professional positioning for future commercial use
 - Enhanced user guides and setup instructions
 - Comprehensive feature documentation for all analytics capabilities
 
 **🚀 Deployment Strategy**:
+
 - **v1.6.0 Ready**: All analytics features fully functional
 - **License System**: Ready but feature-flagged for future activation
 - **Backward Compatible**: Existing installations continue working normally
 - **Forward Compatible**: License system ready for activation when needed
 
 - **Analytics Integration**: Added comprehensive Discord analytics system with three new commands
-- **Discord Analytics Command** (`/analytics`): Server engagement metrics, usage patterns, and performance insights
-- **Performance Dashboard** (`/dashboard`): Real-time system monitoring with resource utilization and health metrics
-- **Resource Optimization** (`/resources`): Automated performance recommendations and system optimization tips
+- **Discord Analytics Command** (`/analytics`): Server engagement metrics, usage patterns, and
+  performance insights
+- **Performance Dashboard** (`/dashboard`): Real-time system monitoring with resource utilization
+  and health metrics
+- **Resource Optimization** (`/resources`): Automated performance recommendations and system
+  optimization tips
 - **Complete Test Coverage**: All 991 tests passing with full analytics integration
-- **Enhanced User Experience**: All monitoring features accessible directly in Discord without external tools
+- **Enhanced User Experience**: All monitoring features accessible directly in Discord without
+  external tools
 
 ### 1.5.0 (2025-09-29)
 
 - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
 - **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration
-- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md
+- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md,
+  CHANGELOG.md
 - **Quality Automation**: 7 new npm scripts for streamlined quality workflow
 
 ### 1.4.1 (2025-09-28)

@@ -14,7 +14,7 @@ class DiscordAnalytics {
       userStats: new Map(),
       hourlyActivity: new Array(24).fill(0),
       errors: [],
-      startTime: Date.now()
+      startTime: Date.now(),
     };
   }
 
@@ -36,14 +36,14 @@ class DiscordAnalytics {
       command: activityData.command,
       metadata: activityData.metadata || {},
       timestamp: new Date().toISOString(),
-      hour: new Date().getHours()
+      hour: new Date().getHours(),
     };
 
     // Log the activity tracking
     logger.info('Activity tracked', {
       serverId: activity.serverId,
       action: activity.action,
-      command: activity.command
+      command: activity.command,
     });
 
     return activity;
@@ -62,7 +62,10 @@ class DiscordAnalytics {
     const counts = this._extractActivityCounts(activityHistory);
     const commandPopularity = this._getCommandPopularity(counts.commands);
     const serverActivity = this._getServerActivity(counts.servers);
-    const userEngagement = this._calculateUserEngagement(activityHistory.length, counts.uniqueUsers.size);
+    const userEngagement = this._calculateUserEngagement(
+      activityHistory.length,
+      counts.uniqueUsers.size
+    );
     const peakUsageHours = this._getPeakUsageHours(counts.hours);
     const growthTrend = this._calculateGrowthTrend(activityHistory);
 
@@ -71,7 +74,7 @@ class DiscordAnalytics {
       serverActivity,
       userEngagement,
       peakUsageHours,
-      growthTrend
+      growthTrend,
     };
   }
 
@@ -85,7 +88,7 @@ class DiscordAnalytics {
       serverActivity: [],
       userEngagement: 'low',
       peakUsageHours: [],
-      growthTrend: 'stable'
+      growthTrend: 'stable',
     };
   }
 
@@ -99,7 +102,7 @@ class DiscordAnalytics {
     const uniqueUsers = new Set();
     const hourCounts = {};
 
-    activityHistory.forEach(activity => {
+    activityHistory.forEach((activity) => {
       if (activity.command) {
         commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
       }
@@ -155,7 +158,7 @@ class DiscordAnalytics {
    */
   static _getPeakUsageHours(hourCounts) {
     return Object.entries(hourCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([hour]) => `${hour}:00-${parseInt(hour) + 1}:00`);
   }
@@ -167,14 +170,14 @@ class DiscordAnalytics {
   static _calculateGrowthTrend(activityHistory) {
     const dayMs = 24 * 60 * 60 * 1000;
     const now = Date.now();
-    
-    const recentActivity = activityHistory.filter(a => 
-      now - new Date(a.timestamp).getTime() < dayMs
+
+    const recentActivity = activityHistory.filter(
+      (a) => now - new Date(a.timestamp).getTime() < dayMs
     );
-    const olderActivity = activityHistory.filter(a => 
-      now - new Date(a.timestamp).getTime() >= dayMs
+    const olderActivity = activityHistory.filter(
+      (a) => now - new Date(a.timestamp).getTime() >= dayMs
     );
-    
+
     if (recentActivity.length > olderActivity.length * 1.1) return 'growing';
     if (recentActivity.length < olderActivity.length * 0.9) return 'declining';
     return 'stable';
@@ -199,7 +202,7 @@ class DiscordAnalytics {
       serverBreakdown,
       commandAnalysis,
       performanceMetrics,
-      recommendations
+      recommendations,
     };
   }
 
@@ -215,7 +218,7 @@ class DiscordAnalytics {
     let totalResponseTime = 0;
     let responseTimeCount = 0;
 
-    activityHistory.forEach(activity => {
+    activityHistory.forEach((activity) => {
       if (activity.serverId) uniqueServers.add(activity.serverId);
       if (activity.userId) uniqueUsers.add(activity.userId);
       if (activity.action === 'command_executed') totalCommands++;
@@ -228,7 +231,8 @@ class DiscordAnalytics {
 
     const totalActivities = activityHistory.length;
     const errorRate = totalActivities > 0 ? Math.round((errors / totalActivities) * 100) : 0;
-    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+    const averageResponseTime =
+      responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
     const successRate = Math.max(0, 100 - errorRate);
 
     return {
@@ -238,7 +242,7 @@ class DiscordAnalytics {
       totalActivities,
       errorRate,
       successRate, // Add for analytics command compatibility
-      avgResponseTime: averageResponseTime // Add for analytics command compatibility
+      avgResponseTime: averageResponseTime, // Add for analytics command compatibility
     };
   }
 
@@ -248,15 +252,15 @@ class DiscordAnalytics {
    */
   static _generateServerBreakdown(activityHistory) {
     const serverStats = {};
-    
-    activityHistory.forEach(activity => {
+
+    activityHistory.forEach((activity) => {
       if (!activity.serverId) return;
       if (!serverStats[activity.serverId]) {
         serverStats[activity.serverId] = {
           serverId: activity.serverId,
           activities: 0,
           users: new Set(),
-          commands: 0
+          commands: 0,
         };
       }
       serverStats[activity.serverId].activities++;
@@ -264,11 +268,11 @@ class DiscordAnalytics {
       if (activity.action === 'command_executed') serverStats[activity.serverId].commands++;
     });
 
-    return Object.values(serverStats).map(stats => ({
+    return Object.values(serverStats).map((stats) => ({
       serverId: stats.serverId,
       activities: stats.activities,
       users: stats.users.size,
-      commands: stats.commands
+      commands: stats.commands,
     }));
   }
 
@@ -278,8 +282,8 @@ class DiscordAnalytics {
    */
   static _generateCommandAnalysis(activityHistory) {
     const commandCounts = {};
-    
-    activityHistory.forEach(activity => {
+
+    activityHistory.forEach((activity) => {
       if (activity.command) {
         commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
       }
@@ -292,7 +296,7 @@ class DiscordAnalytics {
     return {
       totalCommands: Object.values(commandCounts).reduce((sum, count) => sum + count, 0),
       uniqueCommands: Object.keys(commandCounts).length,
-      popularCommands
+      popularCommands,
     };
   }
 
@@ -308,12 +312,12 @@ class DiscordAnalytics {
     let totalResponseTime = 0;
     let responseTimeCount = 0;
 
-    activityHistory.forEach(activity => {
+    activityHistory.forEach((activity) => {
       if (activity.metadata?.responseTime) {
         const responseTime = activity.metadata.responseTime;
         totalResponseTime += responseTime;
         responseTimeCount++;
-        
+
         if (activity.command && responseTime > maxResponseTime) {
           maxResponseTime = responseTime;
           slowestCommand = activity.command;
@@ -325,12 +329,13 @@ class DiscordAnalytics {
       }
     });
 
-    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+    const averageResponseTime =
+      responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
 
     return {
       averageResponseTime,
       slowestCommand,
-      fastestCommand
+      fastestCommand,
     };
   }
 
@@ -340,7 +345,7 @@ class DiscordAnalytics {
    */
   static _generateRecommendations(summaryData, totalActivities) {
     const recommendations = [];
-    
+
     if (totalActivities === 0) {
       recommendations.push('No activity detected today');
     } else {
@@ -354,7 +359,7 @@ class DiscordAnalytics {
         recommendations.push('Growing server count - consider scaling resources');
       }
     }
-    
+
     return recommendations;
   }
 
@@ -373,7 +378,7 @@ class DiscordAnalytics {
       responseTime,
       success,
       timestamp: Date.now(),
-      memberCount: serverData.memberCount
+      memberCount: serverData.memberCount,
     };
 
     // Log slow commands
@@ -394,8 +399,8 @@ class DiscordAnalytics {
    * @returns {Object} - Server-specific insights
    */
   static generateServerInsights(serverId, activityHistory = []) {
-    const serverActivities = activityHistory.filter(a => a.serverId === serverId);
-    
+    const serverActivities = activityHistory.filter((a) => a.serverId === serverId);
+
     if (serverActivities.length === 0) {
       return this._getEmptyServerInsights(serverId);
     }
@@ -412,7 +417,7 @@ class DiscordAnalytics {
       averageResponseTime: activityMetrics.averageResponseTime,
       errorRate: activityMetrics.errorRate,
       mostActiveUser: userAnalysis.mostActiveUser,
-      popularCommands: commandAnalysis.popularCommands
+      popularCommands: commandAnalysis.popularCommands,
     };
   }
 
@@ -429,7 +434,7 @@ class DiscordAnalytics {
       averageResponseTime: 0,
       errorRate: 0,
       mostActiveUser: null,
-      popularCommands: []
+      popularCommands: [],
     };
   }
 
@@ -443,7 +448,7 @@ class DiscordAnalytics {
     let totalResponseTime = 0;
     let responseTimeCount = 0;
 
-    serverActivities.forEach(activity => {
+    serverActivities.forEach((activity) => {
       if (activity.action === 'command_executed') commandsExecuted++;
       if (activity.metadata?.success === false) errors++;
       if (activity.metadata?.responseTime) {
@@ -452,8 +457,10 @@ class DiscordAnalytics {
       }
     });
 
-    const errorRate = serverActivities.length > 0 ? Math.round((errors / serverActivities.length) * 100) : 0;
-    const averageResponseTime = responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
+    const errorRate =
+      serverActivities.length > 0 ? Math.round((errors / serverActivities.length) * 100) : 0;
+    const averageResponseTime =
+      responseTimeCount > 0 ? Math.round(totalResponseTime / responseTimeCount) : 0;
 
     return { commandsExecuted, errorRate, averageResponseTime };
   }
@@ -466,7 +473,7 @@ class DiscordAnalytics {
     const uniqueUsers = new Set();
     const userCounts = {};
 
-    serverActivities.forEach(activity => {
+    serverActivities.forEach((activity) => {
       if (activity.userId) {
         uniqueUsers.add(activity.userId);
         userCounts[activity.userId] = (userCounts[activity.userId] || 0) + 1;
@@ -492,7 +499,7 @@ class DiscordAnalytics {
   static _analyzeServerCommands(serverActivities) {
     const commandCounts = {};
 
-    serverActivities.forEach(activity => {
+    serverActivities.forEach((activity) => {
       if (activity.command) {
         commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
       }
@@ -514,7 +521,7 @@ class DiscordAnalytics {
   static _analyzeServerActivity(activityHistory) {
     const serverStats = new Map();
 
-    activityHistory.forEach(activity => {
+    activityHistory.forEach((activity) => {
       if (!serverStats.has(activity.serverId)) {
         serverStats.set(activity.serverId, {
           id: activity.serverId,
@@ -523,7 +530,7 @@ class DiscordAnalytics {
           messageCount: 0,
           commandCount: 0,
           errorCount: 0,
-          lastActivity: activity.timestamp
+          lastActivity: activity.timestamp,
         });
       }
 
@@ -535,7 +542,7 @@ class DiscordAnalytics {
     });
 
     const topServers = Array.from(serverStats.values())
-      .sort((a, b) => (b.messageCount + b.commandCount) - (a.messageCount + a.commandCount))
+      .sort((a, b) => b.messageCount + b.commandCount - (a.messageCount + a.commandCount))
       .slice(0, 10);
 
     return { topServers, serverStats };
@@ -549,8 +556,8 @@ class DiscordAnalytics {
    */
   static _analyzeTimePatterns(activityHistory) {
     const hourlyActivity = new Array(24).fill(0);
-    
-    activityHistory.forEach(activity => {
+
+    activityHistory.forEach((activity) => {
       const hour = new Date(activity.timestamp).getHours();
       hourlyActivity[hour]++;
     });
@@ -559,7 +566,7 @@ class DiscordAnalytics {
       .map((count, hour) => ({ hour, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 3)
-      .map(p => `${p.hour}:00-${p.hour + 1}:00`);
+      .map((p) => `${p.hour}:00-${p.hour + 1}:00`);
 
     return { peakHours, hourlyActivity };
   }
@@ -574,13 +581,13 @@ class DiscordAnalytics {
     const commandStats = new Map();
 
     activityHistory
-      .filter(a => a.action === 'command' && a.metadata?.command)
-      .forEach(activity => {
+      .filter((a) => a.action === 'command' && a.metadata?.command)
+      .forEach((activity) => {
         const cmd = activity.metadata.command;
         if (!commandStats.has(cmd)) {
           commandStats.set(cmd, { count: 0, avgResponseTime: 0, errorCount: 0 });
         }
-        
+
         const stats = commandStats.get(cmd);
         stats.count++;
         if (activity.metadata.responseTime) {
@@ -609,8 +616,8 @@ class DiscordAnalytics {
     const userActivity = new Map();
 
     activityHistory
-      .filter(a => a.metadata?.userId)
-      .forEach(activity => {
+      .filter((a) => a.metadata?.userId)
+      .forEach((activity) => {
         const userId = activity.metadata.userId;
         if (!userActivity.has(userId)) {
           userActivity.set(userId, 0);
@@ -619,7 +626,7 @@ class DiscordAnalytics {
       });
 
     const totalUsers = userActivity.size;
-    const activeUsers = Array.from(userActivity.values()).filter(count => count > 5).length;
+    const activeUsers = Array.from(userActivity.values()).filter((count) => count > 5).length;
     const engagementRatio = totalUsers > 0 ? activeUsers / totalUsers : 0;
 
     let level = 'low';
@@ -628,8 +635,6 @@ class DiscordAnalytics {
 
     return { level, totalUsers, activeUsers, engagementRatio };
   }
-
-
 
   /**
    * Generates usage-based recommendations
@@ -644,16 +649,20 @@ class DiscordAnalytics {
 
     // Peak usage recommendations
     if (patterns.peakHours.length > 0) {
-      recommendations.push(`Peak usage detected at ${patterns.peakHours[0]} - schedule maintenance outside these hours`);
+      recommendations.push(
+        `Peak usage detected at ${patterns.peakHours[0]} - schedule maintenance outside these hours`
+      );
     }
 
     // Server engagement recommendations
-    const lowEngagementServers = serverAnalysis.topServers.filter(s => 
-      (s.messageCount + s.commandCount) < s.memberCount * 0.01
+    const lowEngagementServers = serverAnalysis.topServers.filter(
+      (s) => s.messageCount + s.commandCount < s.memberCount * 0.01
     );
 
     if (lowEngagementServers.length > 0) {
-      recommendations.push(`${lowEngagementServers.length} servers have low engagement - consider outreach`);
+      recommendations.push(
+        `${lowEngagementServers.length} servers have low engagement - consider outreach`
+      );
     }
 
     // Performance recommendations
@@ -687,23 +696,24 @@ class DiscordAnalytics {
 
   static _analyzePerformanceMetrics(activityHistory) {
     const responseTimes = activityHistory
-      .filter(a => a.metadata?.responseTime)
-      .map(a => a.metadata.responseTime);
+      .filter((a) => a.metadata?.responseTime)
+      .map((a) => a.metadata.responseTime);
 
     return {
-      avgResponseTime: responseTimes.length > 0 
-        ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
-        : 0,
+      avgResponseTime:
+        responseTimes.length > 0
+          ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+          : 0,
       maxResponseTime: Math.max(...responseTimes, 0),
-      minResponseTime: Math.min(...responseTimes, 0)
+      minResponseTime: Math.min(...responseTimes, 0),
     };
   }
 
   static _analyzeErrorPatterns(activityHistory) {
-    const errors = activityHistory.filter(a => a.action === 'error');
+    const errors = activityHistory.filter((a) => a.action === 'error');
     const errorsByServer = new Map();
 
-    errors.forEach(error => {
+    errors.forEach((error) => {
       if (!errorsByServer.has(error.serverId)) {
         errorsByServer.set(error.serverId, []);
       }
@@ -713,14 +723,14 @@ class DiscordAnalytics {
     return {
       totalErrors: errors.length,
       errorsByServer: Object.fromEntries(errorsByServer),
-      commonErrors: this._getCommonErrorTypes(errors)
+      commonErrors: this._getCommonErrorTypes(errors),
     };
   }
 
   static _getCommonErrorTypes(errors) {
     const errorTypes = new Map();
-    
-    errors.forEach(error => {
+
+    errors.forEach((error) => {
       const type = error.metadata?.errorType || 'unknown';
       errorTypes.set(type, (errorTypes.get(type) || 0) + 1);
     });
@@ -743,16 +753,17 @@ class DiscordAnalytics {
   }
 
   static _countUniqueServers(activityHistory) {
-    return new Set(activityHistory.map(a => a.serverId)).size;
+    return new Set(activityHistory.map((a) => a.serverId)).size;
   }
 
   static _countUniqueUsers(activityHistory) {
-    return new Set(activityHistory.filter(a => a.metadata?.userId).map(a => a.metadata.userId)).size;
+    return new Set(activityHistory.filter((a) => a.metadata?.userId).map((a) => a.metadata.userId))
+      .size;
   }
 
   static _calculateErrorRate(activityHistory) {
     const totalActions = activityHistory.length;
-    const errors = activityHistory.filter(a => a.action === 'error').length;
+    const errors = activityHistory.filter((a) => a.action === 'error').length;
     return totalActions > 0 ? Math.round((errors / totalActions) * 100 * 100) / 100 : 0;
   }
 }

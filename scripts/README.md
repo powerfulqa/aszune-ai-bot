@@ -5,6 +5,7 @@ Automated license key generation and management tools for Aszune AI Bot v1.6.3.
 ## 🔑 **Quick Start**
 
 ### **Windows (Command Prompt)**
+
 ```cmd
 # Generate personal license (FREE)
 scripts\generate-license.bat personal
@@ -14,6 +15,7 @@ scripts\generate-license.bat commercial 1 save user@company.com
 ```
 
 ### **Windows (PowerShell)**
+
 ```powershell
 # Generate personal license
 .\scripts\generate-license.ps1 -Type personal
@@ -23,6 +25,7 @@ scripts\generate-license.bat commercial 1 save user@company.com
 ```
 
 ### **Cross-Platform (Node.js)**
+
 ```bash
 # Generate personal license
 node scripts/generate-license.js personal
@@ -36,16 +39,17 @@ node scripts/generate-license.js enterprise 1 --email "ceo@company.com" --save
 
 ## 📋 **License Types**
 
-| Type | Code | Price | Max Servers | Features |
-|------|------|-------|-------------|----------|
-| **Personal** | `PERS` | FREE | 1 | Basic analytics, Dashboard access |
-| **Community** | `COMM` | $29/month | 5 | Full analytics, Performance monitoring |
-| **Commercial** | `BIZZ` | $299/month | Unlimited | Enterprise analytics, Priority support |
-| **Enterprise** | `ENTR` | Custom | Unlimited | Full platform, Custom integrations |
+| Type           | Code   | Price      | Max Servers | Features                               |
+| -------------- | ------ | ---------- | ----------- | -------------------------------------- |
+| **Personal**   | `PERS` | FREE       | 1           | Basic analytics, Dashboard access      |
+| **Community**  | `COMM` | $29/month  | 5           | Full analytics, Performance monitoring |
+| **Commercial** | `BIZZ` | $299/month | Unlimited   | Enterprise analytics, Priority support |
+| **Enterprise** | `ENTR` | Custom     | Unlimited   | Full platform, Custom integrations     |
 
 ## 🚀 **Usage Examples**
 
 ### **Personal License (Free)**
+
 ```bash
 # Generate single personal license
 node scripts/generate-license.js personal
@@ -54,6 +58,7 @@ node scripts/generate-license.js personal
 ```
 
 ### **Commercial License**
+
 ```bash
 # Generate commercial license and save to database
 node scripts/generate-license.js commercial 1 --email "customer@business.com" --save
@@ -62,6 +67,7 @@ node scripts/generate-license.js commercial 1 --email "customer@business.com" --
 ```
 
 ### **Bulk Generation**
+
 ```bash
 # Generate 10 personal licenses for giveaway
 node scripts/generate-license.js personal 10 --save
@@ -79,7 +85,9 @@ node scripts/generate-license.js community 5 --save
 ## 🎯 **Workflow Integration**
 
 ### **1. GitHub Issue Response**
+
 When someone requests a license via GitHub issue:
+
 ```bash
 # Generate appropriate license
 node scripts/generate-license.js personal 1 --email "user@example.com" --save
@@ -89,6 +97,7 @@ node scripts/generate-license.js personal 1 --email "user@example.com" --save
 ```
 
 ### **2. License Database Management**
+
 ```bash
 # View license database
 type data\licenses.json
@@ -99,7 +108,9 @@ node src/utils/license-server.js
 ```
 
 ### **3. Automated Distribution**
+
 The script generates ready-to-use templates with:
+
 - ✅ License key
 - ✅ Setup instructions (Windows/Linux/Mac)
 - ✅ Feature details
@@ -148,6 +159,7 @@ The script generates ready-to-use templates with:
 ## 🔧 **Integration with License System**
 
 Generated licenses work seamlessly with:
+
 - **License Validator** (`src/utils/license-validator.js`)
 - **License Server** (`src/utils/license-server.js`)
 - **Bot startup validation** (automatic license checking)
@@ -161,4 +173,5 @@ Generated licenses work seamlessly with:
 
 ---
 
-**🎉 You now have a complete automated license generation system for professional Discord bot licensing!**
+**🎉 You now have a complete automated license generation system for professional Discord bot
+licensing!**

@@ -4,14 +4,20 @@ This guide explains how to interact with Aszune AI Bot and get the most out of i
 
 ## What's New in v1.6.0
 
-Version 1.6.0 introduces **Analytics Integration** - comprehensive system monitoring directly in Discord:
+Version 1.6.0 introduces **Analytics Integration** - comprehensive system monitoring directly in
+Discord:
 
 ### New Analytics Commands
-- **`/analytics`** - Complete Discord server analytics with user engagement statistics, command usage patterns, and performance insights
-- **`/dashboard`** - Real-time performance dashboard showing system status, resource utilization, and operational health
-- **`/resources`** - Resource optimization monitoring with automated recommendations for performance improvements
+
+- **`/analytics`** - Complete Discord server analytics with user engagement statistics, command
+  usage patterns, and performance insights
+- **`/dashboard`** - Real-time performance dashboard showing system status, resource utilization,
+  and operational health
+- **`/resources`** - Resource optimization monitoring with automated recommendations for performance
+  improvements
 
 ### Key Features
+
 - **Discord-Native Access**: All analytics accessible directly in Discord without external tools
 - **Real-time Monitoring**: Live system metrics and performance data
 - **Automated Insights**: AI-powered recommendations for optimization
@@ -19,7 +25,8 @@ Version 1.6.0 introduces **Analytics Integration** - comprehensive system monito
 - **Discord Table Formatting**: Automatic conversion of markdown tables to readable Discord format
 - **Full Test Coverage**: All 1000 tests passing with comprehensive analytics coverage
 
-This update eliminates the need to access your Raspberry Pi directly for system monitoring - everything is now available through Discord commands!
+This update eliminates the need to access your Raspberry Pi directly for system monitoring -
+everything is now available through Discord commands!
 
 ## Basic Interaction
 
@@ -31,6 +38,7 @@ Aszune AI Bot can be interacted with in two ways:
 ## Available Commands
 
 ### Core Commands
+
 | Command                                   | Description                                                 |
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `!help` / `/help`                         | Shows a list of available commands and usage                |
@@ -40,8 +48,9 @@ Aszune AI Bot can be interacted with in two ways:
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
 ### Analytics Commands (NEW)
-| Command                    | Description                                                     |
-| -------------------------- | --------------------------------------------------------------- |
+
+| Command                     | Description                                                     |
+| --------------------------- | --------------------------------------------------------------- |
 | `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
 | `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
 | `!resources` / `/resources` | View resource optimization status and recommendations           |
@@ -74,9 +83,12 @@ Example:
 
 ## Table Formatting
 
-The bot automatically detects and formats tables in AI responses to make them more readable in Discord. When the AI generates a response containing markdown tables, the bot converts them into organized bullet-point lists for better Discord compatibility.
+The bot automatically detects and formats tables in AI responses to make them more readable in
+Discord. When the AI generates a response containing markdown tables, the bot converts them into
+organized bullet-point lists for better Discord compatibility.
 
 Example transformation:
+
 ```
 Original table:
 | Feature | Status |
@@ -155,6 +167,7 @@ or
 ## Using Analytics Features
 
 ### Server Analytics
+
 Get comprehensive Discord server analytics and insights:
 
 ```text
@@ -162,12 +175,14 @@ Get comprehensive Discord server analytics and insights:
 ```
 
 This shows:
+
 - Daily activity summary
 - Command usage statistics
 - User engagement metrics
 - Performance trends
 
 ### Performance Dashboard
+
 View real-time system performance and health:
 
 ```text
@@ -175,6 +190,7 @@ View real-time system performance and health:
 ```
 
 This displays:
+
 - System status overview
 - Memory and CPU usage
 - Response time metrics
@@ -182,6 +198,7 @@ This displays:
 - Performance recommendations
 
 ### Resource Monitoring
+
 Monitor system resources and get optimization tips:
 
 ```text
@@ -189,6 +206,7 @@ Monitor system resources and get optimization tips:
 ```
 
 This provides:
+
 - Memory usage analysis
 - Performance status
 - Optimization recommendations

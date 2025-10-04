@@ -9,7 +9,7 @@ const SecurityMonitor = require('../../../src/utils/security-monitor');
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 describe('SecurityMonitor - Threat Analysis', () => {
@@ -25,16 +25,16 @@ describe('SecurityMonitor - Threat Analysis', () => {
       const message = {
         content: 'Hello world',
         author: { id: 'user123' },
-        channel: { id: 'channel456' }
+        channel: { id: 'channel456' },
       };
-      
+
       const result = SecurityMonitor.analyzeSecurityThreats(message);
-      
+
       expect(result).toEqual({
         threatLevel: 'low',
         threats: [],
         riskScore: 0,
-        recommendations: []
+        recommendations: [],
       });
     });
 
@@ -42,11 +42,11 @@ describe('SecurityMonitor - Threat Analysis', () => {
       const message = {
         content: '<script>document.location="http://evil.com"</script>',
         author: { id: 'user123' },
-        channel: { id: 'channel456' }
+        channel: { id: 'channel456' },
       };
-      
+
       const result = SecurityMonitor.analyzeSecurityThreats(message);
-      
+
       expect(result.threatLevel).toBe('high');
       expect(result.threats).toContain('xss_attempt');
       expect(result.riskScore).toBeGreaterThan(70);
@@ -57,11 +57,11 @@ describe('SecurityMonitor - Threat Analysis', () => {
       const message = {
         content: 'SELECT * FROM users WHERE password = "admin"',
         author: { id: 'user123' },
-        channel: { id: 'channel456' }
+        channel: { id: 'channel456' },
       };
-      
+
       const result = SecurityMonitor.analyzeSecurityThreats(message);
-      
+
       expect(result.threatLevel).toBe('medium');
       expect(result.threats).toContain('sql_pattern');
       expect(result.riskScore).toBeGreaterThan(30);
@@ -71,16 +71,16 @@ describe('SecurityMonitor - Threat Analysis', () => {
     it('should handle message without content', () => {
       const message = {
         author: { id: 'user123' },
-        channel: { id: 'channel456' }
+        channel: { id: 'channel456' },
       };
-      
+
       const result = SecurityMonitor.analyzeSecurityThreats(message);
-      
+
       expect(result).toEqual({
         threatLevel: 'low',
         threats: [],
         riskScore: 0,
-        recommendations: []
+        recommendations: [],
       });
     });
 
@@ -97,16 +97,16 @@ describe('SecurityMonitor - Threat Analysis', () => {
         type: 'input_validation',
         level: 'info',
         userId: 'user123',
-        details: { input: 'safe input' }
+        details: { input: 'safe input' },
       };
-      
+
       SecurityMonitor.logSecurityEvent(event);
-      
+
       expect(logger.info).toHaveBeenCalledWith('Security Event: input_validation', {
         level: 'info',
         userId: 'user123',
         details: { input: 'safe input' },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -115,30 +115,30 @@ describe('SecurityMonitor - Threat Analysis', () => {
         type: 'threat_detected',
         level: 'error',
         userId: 'user123',
-        details: { threat: 'xss_attempt', input: '<script>alert(1)</script>' }
+        details: { threat: 'xss_attempt', input: '<script>alert(1)</script>' },
       };
-      
+
       SecurityMonitor.logSecurityEvent(event);
-      
+
       expect(logger.error).toHaveBeenCalledWith('Security Event: threat_detected', {
         level: 'error',
         userId: 'user123',
         details: { threat: 'xss_attempt', input: '<script>alert(1)</script>' },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
     it('should handle missing event details', () => {
       const event = {
         type: 'unknown_event',
-        level: 'warn'
+        level: 'warn',
       };
-      
+
       SecurityMonitor.logSecurityEvent(event);
-      
+
       expect(logger.warn).toHaveBeenCalledWith('Security Event: unknown_event', {
         level: 'warn',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 

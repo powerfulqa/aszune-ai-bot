@@ -25,7 +25,8 @@ qlty init
 
 ### Working npm Scripts
 
-The project uses alternative implementations for quality checks due to qlty configuration challenges:
+The project uses alternative implementations for quality checks due to qlty configuration
+challenges:
 
 ```bash
 # Comprehensive quality check (ESLint + Critical Coverage Tests)

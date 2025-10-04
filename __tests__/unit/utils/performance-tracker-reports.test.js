@@ -14,11 +14,11 @@ describe('PerformanceTracker - Reporting', () => {
       const mockMetrics = [
         { duration: 2000, success: true, memoryUsage: { heapUsed: 1000000 } },
         { duration: 4000, success: false, memoryUsage: { heapUsage: 2000000 } },
-        { duration: 1000, success: true, memoryUsage: { heapUsed: 3000000 } }
+        { duration: 1000, success: true, memoryUsage: { heapUsed: 3000000 } },
       ];
-      
+
       const result = PerformanceTracker.generatePerformanceReport(mockMetrics);
-      
+
       expect(result).toEqual({
         timestamp: expect.any(String),
         summary: {
@@ -26,21 +26,23 @@ describe('PerformanceTracker - Reporting', () => {
           averageResponseTime: '2333ms',
           successRate: '66.67%',
           slowOperations: 0,
-          memoryTrend: 'insufficient_data'
+          memoryTrend: 'insufficient_data',
         },
-        recommendations: expect.any(Array)
+        recommendations: expect.any(Array),
       });
     });
 
     it('should generate recommendations for poor performance', () => {
-      const mockMetrics = Array(10).fill(null).map((_, i) => ({
-        duration: 4000, // High response time
-        success: i < 5, // 50% success rate
-        memoryUsage: { heapUsed: 1000000 * (i + 1) }
-      }));
-      
+      const mockMetrics = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          duration: 4000, // High response time
+          success: i < 5, // 50% success rate
+          memoryUsage: { heapUsed: 1000000 * (i + 1) },
+        }));
+
       const result = PerformanceTracker.generatePerformanceReport(mockMetrics);
-      
+
       expect(result.recommendations).toContain('Consider optimizing API response times');
       expect(result.recommendations).toContain('Investigate error causes to improve success rate');
     });
@@ -49,23 +51,25 @@ describe('PerformanceTracker - Reporting', () => {
       const mockMetrics = [
         { duration: 1000, success: true, memoryUsage: { heapUsed: 1000000 } },
         { duration: 1500, success: true, memoryUsage: { heapUsed: 1100000 } },
-        { duration: 800, success: true, memoryUsage: { heapUsed: 1000000 } }
+        { duration: 800, success: true, memoryUsage: { heapUsed: 1000000 } },
       ];
-      
+
       const result = PerformanceTracker.generatePerformanceReport(mockMetrics);
-      
+
       expect(result.recommendations).toContain('Performance metrics are within acceptable ranges');
     });
 
     it('should detect slow operations issue', () => {
-      const mockMetrics = Array(5).fill(null).map(() => ({
-        duration: 6000, // All slow operations
-        success: true,
-        memoryUsage: { heapUsed: 1000000 }
-      }));
-      
+      const mockMetrics = Array(5)
+        .fill(null)
+        .map(() => ({
+          duration: 6000, // All slow operations
+          success: true,
+          memoryUsage: { heapUsed: 1000000 },
+        }));
+
       const result = PerformanceTracker.generatePerformanceReport(mockMetrics);
-      
+
       expect(result.recommendations).toContain('High number of slow operations detected');
     });
 
@@ -75,12 +79,14 @@ describe('PerformanceTracker - Reporting', () => {
         { duration: 1000, success: true, memoryUsage: { heapUsed: 2000000 } },
         { duration: 1000, success: true, memoryUsage: { heapUsed: 3000000 } },
         { duration: 1000, success: true, memoryUsage: { heapUsed: 4000000 } },
-        { duration: 1000, success: true, memoryUsage: { heapUsed: 5000000 } }
+        { duration: 1000, success: true, memoryUsage: { heapUsed: 5000000 } },
       ];
-      
+
       const result = PerformanceTracker.generatePerformanceReport(mockMetrics);
-      
-      expect(result.recommendations).toContain('Memory usage is increasing, check for memory leaks');
+
+      expect(result.recommendations).toContain(
+        'Memory usage is increasing, check for memory leaks'
+      );
     });
   });
 
@@ -89,11 +95,11 @@ describe('PerformanceTracker - Reporting', () => {
       const mockMetrics = [
         { duration: 1000, success: true },
         { duration: 2000, success: false },
-        { duration: 3000, success: true }
+        { duration: 3000, success: true },
       ];
-      
+
       const result = PerformanceTracker._calculateBasicMetrics(mockMetrics);
-      
+
       expect(result.averageResponseTime).toBe(2000);
       expect(result.successRate).toBe(66.67);
       expect(result.slowOperations).toBe(0);
@@ -103,11 +109,11 @@ describe('PerformanceTracker - Reporting', () => {
       const mockMetrics = [
         { duration: 6000, success: true }, // Slow
         { duration: 2000, success: true },
-        { duration: 8000, success: true }  // Slow
+        { duration: 8000, success: true }, // Slow
       ];
-      
+
       const result = PerformanceTracker._calculateBasicMetrics(mockMetrics);
-      
+
       expect(result.slowOperations).toBe(2);
     });
   });
@@ -116,11 +122,11 @@ describe('PerformanceTracker - Reporting', () => {
     it('should return insufficient_data for small datasets', () => {
       const mockMetrics = [
         { memoryUsage: { heapUsed: 1000000 } },
-        { memoryUsage: { heapUsed: 2000000 } }
+        { memoryUsage: { heapUsed: 2000000 } },
       ];
-      
+
       const result = PerformanceTracker._analyzeMemoryTrend(mockMetrics);
-      
+
       expect(result).toBe('insufficient_data');
     });
   });
@@ -132,11 +138,11 @@ describe('PerformanceTracker - Reporting', () => {
         successRate: 95,
         slowOperations: 1,
         totalOperations: 10,
-        memoryTrend: 'stable'
+        memoryTrend: 'stable',
       };
-      
+
       const result = PerformanceTracker._generateRecommendations(analysis);
-      
+
       expect(result).toContain('Consider optimizing API response times');
     });
 
@@ -146,11 +152,11 @@ describe('PerformanceTracker - Reporting', () => {
         successRate: 80,
         slowOperations: 1,
         totalOperations: 10,
-        memoryTrend: 'stable'
+        memoryTrend: 'stable',
       };
-      
+
       const result = PerformanceTracker._generateRecommendations(analysis);
-      
+
       expect(result).toContain('Investigate error causes to improve success rate');
     });
 
@@ -160,11 +166,11 @@ describe('PerformanceTracker - Reporting', () => {
         successRate: 95,
         slowOperations: 1,
         totalOperations: 10,
-        memoryTrend: 'increasing'
+        memoryTrend: 'increasing',
       };
-      
+
       const result = PerformanceTracker._generateRecommendations(analysis);
-      
+
       expect(result).toContain('Memory usage is increasing, check for memory leaks');
     });
   });

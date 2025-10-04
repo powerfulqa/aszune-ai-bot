@@ -10,14 +10,14 @@ class ResourceOptimizer {
     this.currentConfig = {
       serverCount: 0,
       lastOptimization: Date.now(),
-      optimizationLevel: 'basic'
+      optimizationLevel: 'basic',
     };
-    
+
     this.thresholds = {
       small: { servers: 10, users: 1000 },
       medium: { servers: 50, users: 10000 },
       large: { servers: 200, users: 50000 },
-      enterprise: { servers: 1000, users: 250000 }
+      enterprise: { servers: 1000, users: 250000 },
     };
   }
 
@@ -32,13 +32,20 @@ class ResourceOptimizer {
     const validatedServerCount = ResourceOptimizer._validateServerCount(serverCount);
     const tier = ResourceOptimizer._determineTier(validatedServerCount, activeUsers);
     const baseConfig = ResourceOptimizer._getBaseConfig(tier);
-    
-    const performanceAdjustments = ResourceOptimizer._applyPerformanceAdjustments(baseConfig, performanceMetrics);
+
+    const performanceAdjustments = ResourceOptimizer._applyPerformanceAdjustments(
+      baseConfig,
+      performanceMetrics
+    );
     const piOptimizations = ResourceOptimizer._applyPiOptimizations(baseConfig);
-    
+
     const result = ResourceOptimizer._buildOptimizationResult(
-      tier, baseConfig, validatedServerCount, activeUsers, 
-      performanceAdjustments, piOptimizations
+      tier,
+      baseConfig,
+      validatedServerCount,
+      activeUsers,
+      performanceAdjustments,
+      piOptimizations
     );
 
     ResourceOptimizer._logOptimization(validatedServerCount, tier, result);
@@ -64,12 +71,12 @@ class ResourceOptimizer {
     if (performanceMetrics.avgResponseTime > 3000 || performanceMetrics.errorRate > 5) {
       const adjustments = {
         responseTimeAdjustment: performanceMetrics.avgResponseTime > 3000,
-        errorRateAdjustment: performanceMetrics.errorRate > 5
+        errorRateAdjustment: performanceMetrics.errorRate > 5,
       };
-      
+
       baseConfig.memoryAllocation = Math.round(baseConfig.memoryAllocation * 1.2);
       baseConfig.maxConcurrentRequests = Math.round(baseConfig.maxConcurrentRequests * 0.8);
-      
+
       return adjustments;
     }
     return null;
@@ -97,7 +104,14 @@ class ResourceOptimizer {
    * Builds the optimization result object
    * @private
    */
-  static _buildOptimizationResult(tier, baseConfig, serverCount, activeUsers, performanceAdjustments, piOptimizations) {
+  static _buildOptimizationResult(
+    tier,
+    baseConfig,
+    serverCount,
+    activeUsers,
+    performanceAdjustments,
+    piOptimizations
+  ) {
     const result = {
       tier,
       memoryAllocation: baseConfig.memoryAllocation,
@@ -105,13 +119,13 @@ class ResourceOptimizer {
       maxConcurrentRequests: baseConfig.maxConcurrentRequests,
       optimizedAt: new Date().toISOString(),
       serverCount,
-      activeUsers
+      activeUsers,
     };
 
     if (performanceAdjustments) {
       result.performanceAdjustments = performanceAdjustments;
     }
-    
+
     if (piOptimizations) {
       result.piOptimizations = piOptimizations;
     }
@@ -139,7 +153,7 @@ class ResourceOptimizer {
       small: { memoryAllocation: 128, cacheSize: 50, maxConcurrentRequests: 20 },
       medium: { memoryAllocation: 256, cacheSize: 100, maxConcurrentRequests: 40 },
       large: { memoryAllocation: 400, cacheSize: 200, maxConcurrentRequests: 80 },
-      enterprise: { memoryAllocation: 512, cacheSize: 300, maxConcurrentRequests: 100 }
+      enterprise: { memoryAllocation: 512, cacheSize: 300, maxConcurrentRequests: 100 },
     };
     return { ...configs[tier] };
   }
@@ -153,7 +167,7 @@ class ResourceOptimizer {
       tier,
       memoryAllocation: result.memoryAllocation,
       cacheSize: result.cacheSize,
-      maxConcurrentRequests: result.maxConcurrentRequests
+      maxConcurrentRequests: result.maxConcurrentRequests,
     });
 
     return result;
@@ -167,20 +181,23 @@ class ResourceOptimizer {
   static monitorResources(systemStats = {}) {
     // Handle null/undefined inputs
     if (!systemStats) systemStats = {};
-    
+
     const memory = ResourceOptimizer._getMemoryMonitoring();
     const performance = ResourceOptimizer._getPerformanceMonitoring(systemStats);
     const network = ResourceOptimizer._getNetworkMonitoring();
     const overall = ResourceOptimizer._getOverallStatus(memory, performance);
-    const recommendations = ResourceOptimizer._generateResourceRecommendations({ memory, performance });
-    
+    const recommendations = ResourceOptimizer._generateResourceRecommendations({
+      memory,
+      performance,
+    });
+
     const monitoring = {
       memory,
       performance,
       network,
       overall,
       recommendations,
-      optimizationTier: ResourceOptimizer._determineOptimizationTier(memory, performance)
+      optimizationTier: ResourceOptimizer._determineOptimizationTier(memory, performance),
     };
 
     return ResourceOptimizer._addPiOptimizations(monitoring, recommendations);
@@ -196,13 +213,13 @@ class ResourceOptimizer {
     const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
     const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
     const usedMB = Math.round(memoryMB);
-    
+
     return {
       used: usedMB,
       total: totalMB,
       free: Math.max(0, totalMB - usedMB),
       percentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
-      status: ResourceOptimizer._getMemoryStatus(memoryMB)
+      status: ResourceOptimizer._getMemoryStatus(memoryMB),
     };
   }
 
@@ -218,7 +235,7 @@ class ResourceOptimizer {
       responseTime: systemStats.avgResponseTime || 0,
       errorRate: systemStats.errorRate || 0,
       load: ResourceOptimizer._determineLoad(systemStats),
-      status: ResourceOptimizer._getPerformanceStatus(systemStats)
+      status: ResourceOptimizer._getPerformanceStatus(systemStats),
     };
   }
 
@@ -231,7 +248,7 @@ class ResourceOptimizer {
     return {
       status: 'normal',
       latency: 0,
-      throughput: 100
+      throughput: 100,
     };
   }
 
@@ -251,7 +268,7 @@ class ResourceOptimizer {
     } else if (memory.percentage > 70 || performance.responseTime > 3000) {
       overallStatus = 'warning';
     }
-    
+
     return { status: overallStatus };
   }
 
@@ -272,7 +289,7 @@ class ResourceOptimizer {
     } catch (error) {
       // Config not available
     }
-    
+
     return monitoring;
   }
 
@@ -286,24 +303,24 @@ class ResourceOptimizer {
     // Handle invalid inputs
     if (!currentConfig) currentConfig = {};
     if (!metrics) metrics = {};
-    
+
     const avgResponseTime = metrics.avgResponseTime || 0;
     const errorRate = metrics.errorRate || 0;
     const serverCount = metrics.serverCount || 0;
-    
+
     // Determine if scaling is needed
     if (!ResourceOptimizer._shouldScale(avgResponseTime, errorRate, serverCount)) {
       return {
         scaled: false,
         reason: 'performance is within acceptable limits - no scaling needed',
-        currentConfig
+        currentConfig,
       };
     }
-    
+
     // Apply scaling adjustments
     const newConfig = { ...currentConfig };
     const adjustments = [];
-    
+
     ResourceOptimizer._applyResponseTimeScaling(newConfig, avgResponseTime, adjustments);
     ResourceOptimizer._applyErrorRateScaling(newConfig, errorRate, adjustments);
     ResourceOptimizer._applyServerCountScaling(newConfig, serverCount, adjustments);
@@ -312,14 +329,14 @@ class ResourceOptimizer {
       avgResponseTime,
       errorRate,
       serverCount,
-      adjustments: adjustments.length
+      adjustments: adjustments.length,
     });
 
     return {
       scaled: true,
       adjustments,
       newConfig,
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
     };
   }
 
@@ -374,12 +391,12 @@ class ResourceOptimizer {
   static generateOptimizationRecommendations(analyticsData = {}, performanceData = {}) {
     const recommendations = [];
     const metrics = ResourceOptimizer._extractMetrics(analyticsData, performanceData);
-    
+
     ResourceOptimizer._addServerRecommendations(metrics.serverCount, recommendations);
     ResourceOptimizer._addPerformanceRecommendations(metrics.avgResponseTime, recommendations);
     ResourceOptimizer._addErrorRateRecommendations(metrics.errorRate, recommendations);
     ResourceOptimizer._addMemoryRecommendations(metrics.memoryUsage, recommendations);
-    
+
     if (recommendations.length === 0) {
       recommendations.push('System performance is good - continue monitoring');
     }
@@ -395,12 +412,18 @@ class ResourceOptimizer {
     // Handle null inputs
     if (!analyticsData) analyticsData = {};
     if (!performanceData) performanceData = {};
-    
+
     return {
-      serverCount: (analyticsData.summary && analyticsData.summary.totalServers) || analyticsData.serverCount || 0,
+      serverCount:
+        (analyticsData.summary && analyticsData.summary.totalServers) ||
+        analyticsData.serverCount ||
+        0,
       avgResponseTime: performanceData.averageResponseTime || performanceData.avgResponseTime || 0,
-      errorRate: (analyticsData.summary && analyticsData.summary.errorRate) || performanceData.errorRate || 0,
-      memoryUsage: performanceData.memoryUsage || 0
+      errorRate:
+        (analyticsData.summary && analyticsData.summary.errorRate) ||
+        performanceData.errorRate ||
+        0,
+      memoryUsage: performanceData.memoryUsage || 0,
     };
   }
 
@@ -490,7 +513,9 @@ class ResourceOptimizer {
 
     // Memory recommendations
     if (monitoring.memory.status === 'critical') {
-      recommendations.push('CRITICAL: Memory usage is very high - restart bot or reduce cache size');
+      recommendations.push(
+        'CRITICAL: Memory usage is very high - restart bot or reduce cache size'
+      );
     } else if (monitoring.memory.status === 'high') {
       recommendations.push('WARNING: High memory usage detected - consider cache cleanup');
     }

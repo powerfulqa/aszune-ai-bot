@@ -9,7 +9,7 @@ jest.useFakeTimers();
 jest.mock('../../../src/utils/logger');
 jest.mock('../../../src/utils/discord-analytics', () => ({
   generateDailyReport: jest.fn(),
-  generateServerInsights: jest.fn()
+  generateServerInsights: jest.fn(),
 }));
 jest.mock('../../../src/utils/error-handler');
 jest.mock('../../../src/config/config', () => require('../../../__mocks__/configMock'));
@@ -38,7 +38,7 @@ describe('Analytics Command', () => {
     editReply: jest.fn(),
     user: {
       id: 'test-user-123',
-      username: 'testuser'
+      username: 'testuser',
     },
     guild: {
       id: 'test-guild-123',
@@ -51,19 +51,19 @@ describe('Analytics Command', () => {
               { user: { bot: false }, presence: { status: 'online' } },
               { user: { bot: false }, presence: { status: 'idle' } },
               { user: { bot: false }, presence: { status: 'offline' } },
-              { user: { bot: true }, presence: { status: 'online' } }
+              { user: { bot: true }, presence: { status: 'online' } },
             ];
             return { size: members.filter(callback).length };
           }),
-          size: 4
-        }
-      }
-    }
+          size: 4,
+        },
+      },
+    },
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup default successful mocks
     DiscordAnalytics.generateDailyReport.mockResolvedValue({
       summary: {
@@ -72,61 +72,64 @@ describe('Analytics Command', () => {
         totalCommands: 45,
         successRate: 97.8,
         errorRate: 2.2,
-        avgResponseTime: 1200
+        avgResponseTime: 1200,
       },
       commandStats: [
         { command: 'chat', count: 20 },
         { command: 'help', count: 15 },
-        { command: 'ping', count: 10 }
-      ]
+        { command: 'ping', count: 10 },
+      ],
     });
 
     DiscordAnalytics.generateServerInsights.mockResolvedValue({
       recommendations: [
         'Server activity is high during peak hours',
-        'Consider adding more moderation during weekends'
-      ]
+        'Consider adding more moderation during weekends',
+      ],
     });
 
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
-      type: 'GENERAL_ERROR'
+      type: 'GENERAL_ERROR',
     });
   });
 
   test('should handle analytics command successfully', async () => {
     await handleSlashCommand(mockInteraction);
-    
+
     expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      embeds: [{
-        color: 0x5865F2,
-        title: '📊 Discord Analytics Dashboard',
-        fields: [
-          { 
-            name: '🏢 Server Overview',
-            value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
-            inline: true
-          },
-          { 
-            name: '📈 Performance',
-            value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
-            inline: true
-          },
-          {
-            name: '🎯 Top Commands',
-            value: 'No data yet',
-            inline: true
-          },
-          {
-            name: '💡 Server Insights',
-            value: '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
-            inline: false
-          }
-        ],
-        footer: { text: 'Aszai Bot Analytics' },
-        timestamp: expect.any(String)
-      }]
+      embeds: [
+        {
+          color: 0x5865f2,
+          title: '📊 Discord Analytics Dashboard',
+          fields: [
+            {
+              name: '🏢 Server Overview',
+              value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
+              inline: true,
+            },
+            {
+              name: '📈 Performance',
+              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
+              inline: true,
+            },
+            {
+              name: '🎯 Top Commands',
+              value: 'No data yet',
+              inline: true,
+            },
+            {
+              name: '💡 Server Insights',
+              value:
+                '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
+              inline: false,
+            },
+          ],
+          footer: { text: 'Aszai Bot Analytics' },
+          timestamp: expect.any(String),
+        },
+      ],
     });
   });
 
@@ -138,17 +141,17 @@ describe('Analytics Command', () => {
         ...mockInteraction.guild,
         members: {
           fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
-          cache: null // This will cause an error
-        }
-      }
+          cache: null, // This will cause an error
+        },
+      },
     };
-    
+
     await handleSlashCommand(mockInteractionWithError);
 
     expect(mockInteractionWithError.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(expect.any(Error), 'analytics_command');
     expect(mockInteractionWithError.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.'
+      content: 'An unexpected error occurred. Please try again later.',
     });
   });
 
@@ -165,43 +168,46 @@ describe('Analytics Command', () => {
           fetch: jest.fn().mockResolvedValue(),
           cache: {
             filter: jest.fn().mockReturnValue({ size: 0 }),
-            size: 0
-          }
-        }
-      }
+            size: 0,
+          },
+        },
+      },
     };
 
     await handleSlashCommand(mockInteractionEmptyGuild);
 
     expect(mockInteractionEmptyGuild.editReply).toHaveBeenCalledWith({
-      embeds: [{
-        color: 0x5865F2,
-        title: '📊 Discord Analytics Dashboard',
-        fields: [
-          { 
-            name: '🏢 Server Overview',
-            value: 'Servers: 1\nActive Users: 0\nTotal Commands: 0',
-            inline: true
-          },
-          { 
-            name: '📈 Performance',
-            value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
-            inline: true
-          },
-          {
-            name: '🎯 Top Commands',
-            value: 'No data yet',
-            inline: true
-          },
-          {
-            name: '💡 Server Insights',
-            value: '🟢 Currently Online: 0\n👥 Total Members: 0\n🤖 Bots: 0\n📊 Server Health: Excellent',
-            inline: false
-          }
-        ],
-        footer: { text: 'Aszai Bot Analytics' },
-        timestamp: expect.any(String)
-      }]
+      embeds: [
+        {
+          color: 0x5865f2,
+          title: '📊 Discord Analytics Dashboard',
+          fields: [
+            {
+              name: '🏢 Server Overview',
+              value: 'Servers: 1\nActive Users: 0\nTotal Commands: 0',
+              inline: true,
+            },
+            {
+              name: '📈 Performance',
+              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
+              inline: true,
+            },
+            {
+              name: '🎯 Top Commands',
+              value: 'No data yet',
+              inline: true,
+            },
+            {
+              name: '💡 Server Insights',
+              value:
+                '🟢 Currently Online: 0\n👥 Total Members: 0\n🤖 Bots: 0\n📊 Server Health: Excellent',
+              inline: false,
+            },
+          ],
+          footer: { text: 'Aszai Bot Analytics' },
+          timestamp: expect.any(String),
+        },
+      ],
     });
   });
 });

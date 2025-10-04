@@ -191,13 +191,14 @@ If you're still experiencing issues:
 ### Analytics/Dashboard Commands Show "Aszune-AI is thinking..." Indefinitely
 
 **Symptoms:**
+
 - `/analytics` or `/dashboard` commands hang with "thinking" status
 - Commands eventually timeout without response
 
-**Cause:**
-Discord API member fetching can be slow or timeout in large servers (1000+ members)
+**Cause:** Discord API member fetching can be slow or timeout in large servers (1000+ members)
 
 **Solutions:**
+
 1. **Wait for Timeout**: Commands have built-in 5-second timeout with fallback estimates
 2. **Check Server Size**: Large servers may experience slower member data fetching
 3. **Verify Bot Permissions**: Ensure bot has "View Server Members" permission
@@ -206,14 +207,15 @@ Discord API member fetching can be slow or timeout in large servers (1000+ membe
 ### Analytics Showing "Active Users: 0" Despite Server Activity
 
 **Symptoms:**
+
 - Analytics commands report 0 active users
 - Visible members are online in the server
 
-**Cause:**
-Discord member presence data not properly accessible or cached
+**Cause:** Discord member presence data not properly accessible or cached
 
 **Solutions:**
-1. **Check Bot Permissions**: 
+
+1. **Check Bot Permissions**:
    - Ensure bot has "View Server Members" permission
    - Verify "Server Members Intent" is enabled in Discord Developer Portal
 2. **Member Cache**: Bot may need time to populate member cache after restart
@@ -223,10 +225,12 @@ Discord member presence data not properly accessible or cached
 ### Performance Issues with Analytics Commands
 
 **Symptoms:**
+
 - Slow response times from analytics commands
 - High memory usage during analytics execution
 
 **Solutions:**
+
 1. **Raspberry Pi Optimization**: Enable Pi optimizations in config if running on limited hardware
 2. **Member Limit**: Analytics commands limit to 1000 members to prevent performance issues
 3. **Cache Management**: Clear member cache periodically: `guild.members.cache.clear()`
@@ -235,23 +239,26 @@ Discord member presence data not properly accessible or cached
 ### Summarise Command Issues (Fixed in v1.6.3)
 
 **Symptoms:**
+
 - `!summarise <text>` or `!summerise <text>` commands failing
 - Error messages: "Invalid model 'llama-3.1-sonar-small-128k-chat'"
 - API request failed with status 400 errors
 - "The service is temporarily unavailable. Please try again later."
 
-**Cause:**
-Perplexity changed their API model naming scheme from descriptive format to simplified names
+**Cause:** Perplexity changed their API model naming scheme from descriptive format to simplified
+names
 
 **Resolution History:**
+
 - **v1.6.0-v1.6.1**: Initial API integration issues
 - **v1.6.2**: First model fix attempt (`llama-3.1-sonar-small-128k-chat`)
 - ✅ **v1.6.3**: Current fix using simplified model name (`sonar`)
 
-**Current Status:**
-✅ **Fixed in v1.6.3**: Updated to Perplexity's current `sonar` model naming scheme
+**Current Status:** ✅ **Fixed in v1.6.3**: Updated to Perplexity's current `sonar` model naming
+scheme
 
 **If Still Experiencing Issues:**
+
 1. **Update Required**: Ensure you're running v1.6.3 or later (`git pull origin main`)
 2. **Restart Bot**: Restart your bot process (`pm2 restart aszune-ai`)
 3. **Check API Key**: Verify Perplexity API key is valid and has sufficient quota
@@ -259,6 +266,7 @@ Perplexity changed their API model naming scheme from descriptive format to simp
 5. **Command Format**: Ensure proper format: `!summarise your text here`
 
 **For Raspberry Pi Users:**
+
 ```bash
 cd ~/aszune-ai-bot
 git pull origin main

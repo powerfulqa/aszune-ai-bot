@@ -7,12 +7,12 @@ class PerformanceTracker {
   constructor() {
     this.metrics = [];
     this.thresholds = {
-      slowOperation: 5000,    // 5 seconds
+      slowOperation: 5000, // 5 seconds
       verySlowOperation: 10000, // 10 seconds
-      maxMetrics: 1000        // Keep last 1000 metrics
+      maxMetrics: 1000, // Keep last 1000 metrics
     };
   }
-  
+
   /**
    * Tracks an API call or operation performance
    * @param {string} operation - Operation name
@@ -28,27 +28,30 @@ class PerformanceTracker {
       success,
       metadata,
       timestamp: new Date().toISOString(),
-      memoryUsage: process.memoryUsage()
+      memoryUsage: process.memoryUsage(),
     };
-    
+
     // Log performance issues
     const logger = require('./logger');
-    
-    if (duration > 10000) { // 10 second threshold
+
+    if (duration > 10000) {
+      // 10 second threshold
       logger.warn(`Very slow operation detected: ${operation} took ${duration}ms`, metadata);
-    } else if (duration > 5000) { // 5 second threshold
+    } else if (duration > 5000) {
+      // 5 second threshold
       logger.info(`Slow operation detected: ${operation} took ${duration}ms`, metadata);
     }
-    
+
     // Log memory issues
     const memMB = metrics.memoryUsage.heapUsed / 1024 / 1024;
-    if (memMB > 100) { // 100MB threshold
+    if (memMB > 100) {
+      // 100MB threshold
       logger.warn(`High memory usage detected: ${memMB.toFixed(2)}MB during ${operation}`);
     }
-    
+
     return metrics;
   }
-  
+
   /**
    * Analyzes performance trends over time
    * @param {Array} metricsList - List of performance metrics
@@ -61,20 +64,20 @@ class PerformanceTracker {
         successRate: 100,
         slowOperations: 0,
         memoryTrend: 'stable',
-        totalOperations: 0
+        totalOperations: 0,
       };
     }
-    
+
     const analysis = PerformanceTracker._calculateBasicMetrics(metricsList);
     const memoryTrend = PerformanceTracker._analyzeMemoryTrend(metricsList);
-    
+
     return {
       ...analysis,
       memoryTrend,
-      totalOperations: metricsList.length
+      totalOperations: metricsList.length,
     };
   }
-  
+
   /**
    * Calculates basic performance metrics
    * @param {Array} metricsList - List of metrics
@@ -82,20 +85,20 @@ class PerformanceTracker {
    * @private
    */
   static _calculateBasicMetrics(metricsList) {
-    const durations = metricsList.map(m => m.duration);
-    const successes = metricsList.filter(m => m.success).length;
-    const slowOps = metricsList.filter(m => m.duration > 5000).length;
-    
+    const durations = metricsList.map((m) => m.duration);
+    const successes = metricsList.filter((m) => m.success).length;
+    const slowOps = metricsList.filter((m) => m.duration > 5000).length;
+
     const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
     const successRate = (successes / metricsList.length) * 100;
-    
+
     return {
       averageResponseTime: Math.round(avgDuration),
       successRate: Math.round(successRate * 100) / 100,
-      slowOperations: slowOps
+      slowOperations: slowOps,
     };
   }
-  
+
   /**
    * Analyzes memory usage trends
    * @param {Array} metricsList - List of metrics
@@ -104,20 +107,20 @@ class PerformanceTracker {
    */
   static _analyzeMemoryTrend(metricsList) {
     if (metricsList.length < 5) return 'insufficient_data';
-    
+
     const recentMetrics = metricsList.slice(-5);
-    const memoryValues = recentMetrics.map(m => m.memoryUsage.heapUsed);
-    
+    const memoryValues = recentMetrics.map((m) => m.memoryUsage.heapUsed);
+
     const avgEarly = memoryValues.slice(0, 2).reduce((a, b) => a + b, 0) / 2;
     const avgLate = memoryValues.slice(-2).reduce((a, b) => a + b, 0) / 2;
-    
+
     const changePercent = ((avgLate - avgEarly) / avgEarly) * 100;
-    
+
     if (changePercent > 20) return 'increasing';
     if (changePercent < -10) return 'decreasing';
     return 'stable';
   }
-  
+
   /**
    * Generates performance summary report
    * @param {Array} metricsList - List of metrics
@@ -125,7 +128,7 @@ class PerformanceTracker {
    */
   static generatePerformanceReport(metricsList) {
     const analysis = PerformanceTracker.analyzePerformanceTrends(metricsList);
-    
+
     const report = {
       timestamp: new Date().toISOString(),
       summary: {
@@ -133,14 +136,14 @@ class PerformanceTracker {
         averageResponseTime: `${analysis.averageResponseTime}ms`,
         successRate: `${analysis.successRate}%`,
         slowOperations: analysis.slowOperations,
-        memoryTrend: analysis.memoryTrend
+        memoryTrend: analysis.memoryTrend,
       },
-      recommendations: PerformanceTracker._generateRecommendations(analysis)
+      recommendations: PerformanceTracker._generateRecommendations(analysis),
     };
-    
+
     return report;
   }
-  
+
   /**
    * Generates performance recommendations
    * @param {Object} analysis - Performance analysis
@@ -149,27 +152,27 @@ class PerformanceTracker {
    */
   static _generateRecommendations(analysis) {
     const recommendations = [];
-    
+
     if (analysis.averageResponseTime > 3000) {
       recommendations.push('Consider optimizing API response times');
     }
-    
+
     if (analysis.successRate < 95) {
       recommendations.push('Investigate error causes to improve success rate');
     }
-    
-    if (analysis.slowOperations > (analysis.totalOperations * 0.1)) {
+
+    if (analysis.slowOperations > analysis.totalOperations * 0.1) {
       recommendations.push('High number of slow operations detected');
     }
-    
+
     if (analysis.memoryTrend === 'increasing') {
       recommendations.push('Memory usage is increasing, check for memory leaks');
     }
-    
+
     if (recommendations.length === 0) {
       recommendations.push('Performance metrics are within acceptable ranges');
     }
-    
+
     return recommendations;
   }
 }

@@ -10,50 +10,62 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.6.5] - 2025-10-04
 
 ### Critical Bug Fixes
+
 - **FIXED**: Cache command undefined values issue
   - **Root Cause**: Missing method implementations in CacheManager and incorrect property references
-  - **Resolution**: Added `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods to CacheManager
-  - **Impact**: `/cache` command now displays proper values instead of "Memory Usage: undefined / undefined"
-  
+  - **Resolution**: Added `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods to
+    CacheManager
+  - **Impact**: `/cache` command now displays proper values instead of "Memory Usage: undefined /
+    undefined"
+
 ### Service Architecture Improvements
+
 - **Enhanced CacheManager**: Complete method implementation with comprehensive error handling
-- **PerplexityService Integration**: Fixed property references from `this.cache` to `this.cacheManager`
+- **PerplexityService Integration**: Fixed property references from `this.cache` to
+  `this.cacheManager`
 - **Field Compatibility**: Added complete field coverage for Discord command requirements
 - **Error Resilience**: Improved fallback mechanisms with proper default values
 
 ### Technical Enhancements
+
 - **Service Delegation**: Enforced proper service layer architecture patterns
 - **Method Contracts**: Established consistent API contracts across cache services
 - **Documentation**: Added comprehensive cache service architecture documentation
 - **Testing**: Enhanced error scenario testing and field validation
 
 ### Display Improvements
+
 - **Cache Statistics**: All cache fields now display meaningful values
-- **Memory Usage**: Proper display format (e.g., "0 B / 50 MB") 
+- **Memory Usage**: Proper display format (e.g., "0 B / 50 MB")
 - **Configuration**: Shows strategy and uptime (e.g., "Strategy: hybrid, Uptime: 28s")
 - **Performance Metrics**: Hit rate, operations count, and eviction statistics
 
 ### Lessons Learned Integration
+
 - **Updated Copilot Instructions**: Added v1.6.5 architectural patterns and requirements
-- **Service Patterns**: Documented critical property naming and delegation requirements  
+- **Service Patterns**: Documented critical property naming and delegation requirements
 - **Field Requirements**: Established complete field compatibility matrix for Discord commands
 
 ## [1.6.0] - 2025-10-01
 
 ### Major Features Added
-- **Analytics Integration**: Complete Discord analytics system with `/analytics`, `/dashboard`, `/resources` commands
+
+- **Analytics Integration**: Complete Discord analytics system with `/analytics`, `/dashboard`,
+  `/resources` commands
   - **DiscordAnalytics Service**: Server engagement metrics, usage patterns, and trend analysis
   - **PerformanceDashboard Service**: Real-time system monitoring and health assessment
   - **ResourceOptimizer Service**: Performance optimization analysis and automated recommendations
 - **Proprietary License System**: Migrated from MIT to proprietary license with built-in enforcement
   - **License Validation**: Automated license checking and usage tracking
-  - **Multiple License Tiers**: Personal (free), Community ($29/month), Commercial ($299/month), Enterprise (custom)
+  - **Multiple License Tiers**: Personal (free), Community ($29/month), Commercial ($299/month),
+    Enterprise (custom)
   - **License Server**: Express.js-based license management with web dashboard
 - **Raspberry Pi License Integration**: Automated Pi setup with license server deployment
 - **Enhanced Security Monitor**: Comprehensive security threat detection and monitoring
 - **Performance Tracker**: Advanced performance monitoring and optimization recommendations
 
 ### Code Quality & Security
+
 - Enhanced code quality with 40% reduction in lint errors (22 → 13)
 - **CRITICAL SECURITY FIX**: Timing attack vulnerability in license server API authentication
 - Advanced method decomposition for better maintainability across analytics modules
@@ -61,6 +73,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Professional code structure with single-responsibility helper methods
 
 ### New Files & Components
+
 - `LICENSE` - New proprietary license terms and enforcement
 - `src/utils/license-validator.js` - License validation system
 - `src/utils/license-server.js` - License management server with timing-safe authentication
@@ -75,17 +88,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `scripts/pi-license-setup.sh` - Automated Pi license server deployment
 
 ### Testing & Quality Assurance
+
 - **991 Total Tests**: Comprehensive test suite covering all new analytics functionality
 - **100% Success Rate**: All tests passing including new analytics integration tests
 - Added comprehensive test coverage for all new analytics commands and services
 - Enhanced error handling and edge case testing for analytics features
 
 ### Breaking Changes
+
 - **License Change**: Migrated from MIT to proprietary license (affects distribution rights)
 - **Package.json**: License field changed from "MIT" to "UNLICENSED"
 - **Usage Tracking**: Built-in license validation requires proper licensing for continued use
 
 ### Fixed
+
 - **CRITICAL**: Test failures in bot initialization and shutdown processes
 - **CRITICAL**: Resource optimizer null input handling and method complexity
 - Undefined variable references in test suites across analytics components
@@ -93,6 +109,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Package.json license format compliance and consistency
 
 ### Changed
+
 - **Major Architecture**: Added complete analytics and monitoring infrastructure
 - **Command System**: Extended with analytics commands (`/analytics`, `/dashboard`, `/resources`)
 - **License Model**: Transformed from open-source to proprietary software with tiered licensing
@@ -101,15 +118,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Improved system architecture with comprehensive monitoring capabilities
 
 ### Security
+
 - **License Enforcement**: Built-in usage tracking and license validation
 - **Secure Authentication**: Timing-safe API key validation in license server
 - **Comprehensive Monitoring**: Security threat detection and automated alerting
 - Enhanced input validation and error boundary handling across all new services
 
 ### Migration Notes
+
 - **Existing Users**: 7-day grace period for license registration
 - **No Code Changes**: All existing functionality preserved with backward compatibility
-- **New Features Optional**: Analytics commands are additive, no breaking changes to core functionality
+- **New Features Optional**: Analytics commands are additive, no breaking changes to core
+  functionality
 
 ## [1.5.0] - 2025-09-29
 

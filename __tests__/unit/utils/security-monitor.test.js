@@ -9,7 +9,7 @@ const SecurityMonitor = require('../../../src/utils/security-monitor');
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 describe('SecurityMonitor - Input Validation', () => {
@@ -21,51 +21,51 @@ describe('SecurityMonitor - Input Validation', () => {
     it('should return valid for safe input', () => {
       const input = 'Hello, how are you today?';
       const result = SecurityMonitor.validateInput(input);
-      
+
       expect(result).toEqual({
         isValid: true,
         issues: [],
-        riskLevel: 'low'
+        riskLevel: 'low',
       });
     });
 
     it('should detect XSS attempts', () => {
       const input = '<script>alert("xss")</script>';
       const result = SecurityMonitor.validateInput(input);
-      
+
       expect(result).toEqual({
         isValid: false,
         issues: ['potential_xss'],
-        riskLevel: 'high'
+        riskLevel: 'high',
       });
     });
 
     it('should detect SQL injection attempts', () => {
-      const input = '\'; DROP TABLE users; --';
+      const input = "'; DROP TABLE users; --";
       const result = SecurityMonitor.validateInput(input);
-      
+
       expect(result).toEqual({
         isValid: false,
         issues: ['sql_injection'],
-        riskLevel: 'high'
+        riskLevel: 'high',
       });
     });
 
     it('should detect command injection attempts', () => {
       const input = 'test; rm -rf /';
       const result = SecurityMonitor.validateInput(input);
-      
+
       expect(result).toEqual({
         isValid: false,
         issues: ['command_injection'],
-        riskLevel: 'high'
+        riskLevel: 'high',
       });
     });
 
     it('should detect multiple security issues', () => {
       const input = '<script>alert(1)</script>; DROP TABLE test;';
       const result = SecurityMonitor.validateInput(input);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.issues).toContain('potential_xss');
       expect(result.issues).toContain('sql_injection');
@@ -74,36 +74,34 @@ describe('SecurityMonitor - Input Validation', () => {
 
     it('should handle empty input', () => {
       const result = SecurityMonitor.validateInput('');
-      
+
       expect(result).toEqual({
         isValid: true,
         issues: [],
-        riskLevel: 'low'
+        riskLevel: 'low',
       });
     });
 
     it('should handle null input', () => {
       const result = SecurityMonitor.validateInput(null);
-      
+
       expect(result).toEqual({
         isValid: true,
         issues: [],
-        riskLevel: 'low'
+        riskLevel: 'low',
       });
     });
 
     it('should handle undefined input', () => {
       const result = SecurityMonitor.validateInput(undefined);
-      
+
       expect(result).toEqual({
         isValid: true,
         issues: [],
-        riskLevel: 'low'
+        riskLevel: 'low',
       });
     });
   });
-
-
 
   describe('_detectXSSPatterns', () => {
     it('should detect script tags', () => {
@@ -134,12 +132,12 @@ describe('SecurityMonitor - Input Validation', () => {
     });
 
     it('should detect UNION SELECT', () => {
-      const patterns = SecurityMonitor._detectSQLInjection('\' UNION SELECT * FROM passwords --');
+      const patterns = SecurityMonitor._detectSQLInjection("' UNION SELECT * FROM passwords --");
       expect(patterns).toBe(true);
     });
 
     it('should detect SQL comments', () => {
-      const patterns = SecurityMonitor._detectSQLInjection('test\'; --');
+      const patterns = SecurityMonitor._detectSQLInjection("test'; --");
       expect(patterns).toBe(true);
     });
 
@@ -161,7 +159,9 @@ describe('SecurityMonitor - Input Validation', () => {
     });
 
     it('should not detect safe content', () => {
-      const patterns = SecurityMonitor._detectCommandInjection('This is normal text with some & symbols');
+      const patterns = SecurityMonitor._detectCommandInjection(
+        'This is normal text with some & symbols'
+      );
       expect(patterns).toBe(false);
     });
   });
@@ -173,11 +173,11 @@ describe('SecurityMonitor - Input Validation', () => {
       SecurityMonitor._detectXSSPatterns = jest.fn(() => {
         throw new Error('Test error');
       });
-      
+
       expect(() => {
         SecurityMonitor.validateInput('test input');
       }).toThrow('Test error');
-      
+
       // Restore original function
       SecurityMonitor._detectXSSPatterns = originalDetectXSS;
     });
@@ -186,19 +186,19 @@ describe('SecurityMonitor - Input Validation', () => {
       const message = {
         content: 'test',
         author: { id: 'user123' },
-        channel: { id: 'channel456' }
+        channel: { id: 'channel456' },
       };
-      
+
       // Mock a function to throw an error
       const originalAnalyzeThreatPatterns = SecurityMonitor._analyzeThreatPatterns;
       SecurityMonitor._analyzeThreatPatterns = jest.fn(() => {
         throw new Error('Analysis error');
       });
-      
+
       expect(() => {
         SecurityMonitor.analyzeSecurityThreats(message);
       }).toThrow('Analysis error');
-      
+
       // Restore original function
       SecurityMonitor._analyzeThreatPatterns = originalAnalyzeThreatPatterns;
     });

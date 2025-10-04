@@ -8,24 +8,24 @@ const PerformanceDashboard = require('../../../src/utils/performance-dashboard')
 // Mock dependencies
 jest.mock('../../../src/utils/discord-analytics', () => ({
   generateDailyReport: jest.fn(),
-  analyzeUsagePatterns: jest.fn()
+  analyzeUsagePatterns: jest.fn(),
 }));
 
 jest.mock('../../../src/utils/resource-optimizer', () => ({
   optimizeForServerCount: jest.fn(),
   monitorResources: jest.fn(),
-  generateOptimizationRecommendations: jest.fn()
+  generateOptimizationRecommendations: jest.fn(),
 }));
 
 jest.mock('../../../src/utils/performance-tracker', () => ({
   analyzePerformanceTrends: jest.fn(),
-  generatePerformanceReport: jest.fn()
+  generatePerformanceReport: jest.fn(),
 }));
 
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 const DiscordAnalytics = require('../../../src/utils/discord-analytics');
@@ -39,11 +39,16 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
     jest.clearAllMocks();
 
     mockActivityHistory = [
-      { serverId: 'server1', action: 'command_executed', timestamp: new Date().toISOString() }
+      { serverId: 'server1', action: 'command_executed', timestamp: new Date().toISOString() },
     ];
 
     mockPerformanceMetrics = [
-      { operation: 'api_call', responseTime: 200, success: true, timestamp: new Date().toISOString() }
+      {
+        operation: 'api_call',
+        responseTime: 200,
+        success: true,
+        timestamp: new Date().toISOString(),
+      },
     ];
 
     // Setup mock returns
@@ -52,45 +57,48 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
         totalServers: 5,
         totalUsers: 50,
         totalCommands: 100,
-        errorRate: 3
-      }
+        errorRate: 3,
+      },
     });
 
     DiscordAnalytics.analyzeUsagePatterns.mockReturnValue({
       commandPopularity: [{ command: 'help', count: 20 }],
       userEngagement: 'medium',
-      growthTrend: 'growing'
+      growthTrend: 'growing',
     });
 
     PerformanceTracker.analyzePerformanceTrends.mockReturnValue({
       averageResponseTime: 250,
       successRate: 97,
       slowOperations: 5,
-      totalOperations: 100
+      totalOperations: 100,
     });
 
     PerformanceTracker.generatePerformanceReport.mockReturnValue({
-      summary: 'Performance is good'
+      summary: 'Performance is good',
     });
 
     ResourceOptimizer.optimizeForServerCount.mockReturnValue({
       tier: 'small',
       memoryAllocation: 128,
-      cacheSize: 50
+      cacheSize: 50,
     });
 
     ResourceOptimizer.monitorResources.mockReturnValue({
       memory: { used: 150, status: 'normal' },
-      performance: { status: 'good' }
+      performance: { status: 'good' },
     });
 
     ResourceOptimizer.generateOptimizationRecommendations.mockReturnValue([
-      'Consider upgrading to medium tier for better performance'
+      'Consider upgrading to medium tier for better performance',
     ]);
   });
 
   it('should generate comprehensive dashboard report', () => {
-    const report = PerformanceDashboard.generateDashboardReport(mockActivityHistory, mockPerformanceMetrics);
+    const report = PerformanceDashboard.generateDashboardReport(
+      mockActivityHistory,
+      mockPerformanceMetrics
+    );
 
     expect(report).toHaveProperty('timestamp');
     expect(report).toHaveProperty('overview');
@@ -103,7 +111,10 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
   });
 
   it('should include correct overview information', () => {
-    const report = PerformanceDashboard.generateDashboardReport(mockActivityHistory, mockPerformanceMetrics);
+    const report = PerformanceDashboard.generateDashboardReport(
+      mockActivityHistory,
+      mockPerformanceMetrics
+    );
 
     expect(report.overview.serverCount).toBe(5);
     expect(report.overview.activeUsers).toBe(50);
@@ -114,7 +125,10 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
   });
 
   it('should include both responseTime and averageResponseTime fields for dashboard compatibility', () => {
-    const report = PerformanceDashboard.generateDashboardReport(mockActivityHistory, mockPerformanceMetrics);
+    const report = PerformanceDashboard.generateDashboardReport(
+      mockActivityHistory,
+      mockPerformanceMetrics
+    );
 
     // Dashboard command expects responseTime field
     expect(report.overview.responseTime).toBe('250ms');
@@ -129,8 +143,12 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
 
     expect(DiscordAnalytics.generateDailyReport).toHaveBeenCalledWith(mockActivityHistory);
     expect(DiscordAnalytics.analyzeUsagePatterns).toHaveBeenCalledWith(mockActivityHistory);
-    expect(PerformanceTracker.analyzePerformanceTrends).toHaveBeenCalledWith(mockPerformanceMetrics);
-    expect(PerformanceTracker.generatePerformanceReport).toHaveBeenCalledWith(mockPerformanceMetrics);
+    expect(PerformanceTracker.analyzePerformanceTrends).toHaveBeenCalledWith(
+      mockPerformanceMetrics
+    );
+    expect(PerformanceTracker.generatePerformanceReport).toHaveBeenCalledWith(
+      mockPerformanceMetrics
+    );
     expect(ResourceOptimizer.optimizeForServerCount).toHaveBeenCalled();
     expect(ResourceOptimizer.monitorResources).toHaveBeenCalled();
   });
@@ -186,7 +204,7 @@ describe('PerformanceDashboard - generateAlerts', () => {
     const metrics = { memoryUsage: 450, avgResponseTime: 2000, errorRate: 2 };
     const alerts = PerformanceDashboard.generateAlerts(metrics);
 
-    const memoryAlert = alerts.find(a => a.type === 'memory');
+    const memoryAlert = alerts.find((a) => a.type === 'memory');
     expect(memoryAlert).toBeDefined();
     expect(memoryAlert.severity).toBe('critical');
     expect(memoryAlert.message).toContain('Memory usage is critically high');
@@ -196,7 +214,7 @@ describe('PerformanceDashboard - generateAlerts', () => {
     const metrics = { memoryUsage: 100, avgResponseTime: 6000, errorRate: 2 };
     const alerts = PerformanceDashboard.generateAlerts(metrics);
 
-    const performanceAlert = alerts.find(a => a.type === 'performance');
+    const performanceAlert = alerts.find((a) => a.type === 'performance');
     expect(performanceAlert).toBeDefined();
     expect(performanceAlert.severity).toBe('critical');
     expect(performanceAlert.message).toContain('Response time is very slow');
@@ -206,7 +224,7 @@ describe('PerformanceDashboard - generateAlerts', () => {
     const metrics = { memoryUsage: 100, avgResponseTime: 2000, errorRate: 12 };
     const alerts = PerformanceDashboard.generateAlerts(metrics);
 
-    const reliabilityAlert = alerts.find(a => a.type === 'reliability');
+    const reliabilityAlert = alerts.find((a) => a.type === 'reliability');
     expect(reliabilityAlert).toBeDefined();
     expect(reliabilityAlert.severity).toBe('critical');
     expect(reliabilityAlert.message).toContain('Error rate is critically high');
@@ -224,7 +242,7 @@ describe('PerformanceDashboard - generateAlerts', () => {
     const alerts = PerformanceDashboard.generateAlerts(metrics);
 
     expect(alerts).toHaveLength(3);
-    alerts.forEach(alert => {
+    alerts.forEach((alert) => {
       expect(alert.severity).toBe('warning');
     });
   });
@@ -233,7 +251,7 @@ describe('PerformanceDashboard - generateAlerts', () => {
     const metrics = { memoryUsage: 450, avgResponseTime: 2000, errorRate: 2 };
     const alerts = PerformanceDashboard.generateAlerts(metrics);
 
-    alerts.forEach(alert => {
+    alerts.forEach((alert) => {
       expect(alert.timestamp).toBeDefined();
       expect(new Date(alert.timestamp)).toBeInstanceOf(Date);
     });
@@ -254,8 +272,8 @@ describe('PerformanceDashboard - exportDashboardData', () => {
         errorRate: '3%',
         averageResponseTime: '250ms',
         memoryUsage: '150MB',
-        optimizationTier: 'small'
-      }
+        optimizationTier: 'small',
+      },
     };
   });
 
@@ -277,7 +295,9 @@ describe('PerformanceDashboard - exportDashboardData', () => {
   it('should export as CSV format', () => {
     const exported = PerformanceDashboard.exportDashboardData(mockDashboardData, 'csv');
 
-    expect(exported).toContain('Status,Server Count,Active Users,Commands,Error Rate,Response Time,Memory Usage');
+    expect(exported).toContain(
+      'Status,Server Count,Active Users,Commands,Error Rate,Response Time,Memory Usage'
+    );
     expect(exported).toContain('healthy,5,50,100,3%,250ms,150MB');
   });
 
@@ -327,19 +347,19 @@ describe('PerformanceDashboard - Private Methods', () => {
 
   it('should generate insights from analytics patterns', () => {
     const analyticsReport = { summary: { totalCommands: 500 } };
-    const usagePatterns = { 
+    const usagePatterns = {
       growthTrend: 'growing',
       userEngagement: 'high',
       commandPopularity: [{ command: 'help', count: 100 }],
-      peakUsageHours: ['14', '15', '16']
+      peakUsageHours: ['14', '15', '16'],
     };
 
     const insights = PerformanceDashboard._generateInsights(analyticsReport, usagePatterns);
 
     expect(Array.isArray(insights)).toBe(true);
     expect(insights.length).toBeGreaterThan(0);
-    expect(insights.some(i => i.includes('growing'))).toBe(true);
-    expect(insights.some(i => i.includes('help'))).toBe(true);
+    expect(insights.some((i) => i.includes('growing'))).toBe(true);
+    expect(insights.some((i) => i.includes('help'))).toBe(true);
   });
 });
 
@@ -383,11 +403,11 @@ describe('PerformanceDashboard - Error Handling', () => {
 describe('PerformanceDashboard - Performance', () => {
   it('should generate dashboard quickly', () => {
     const startTime = Date.now();
-    
+
     for (let i = 0; i < 100; i++) {
       PerformanceDashboard.generateDashboardReport([], []);
     }
-    
+
     const endTime = Date.now();
     expect(endTime - startTime).toBeLessThan(2000); // Should complete in under 2 seconds
   });
@@ -396,15 +416,15 @@ describe('PerformanceDashboard - Performance', () => {
     const largeMetrics = {
       memoryUsage: 500,
       avgResponseTime: 6000,
-      errorRate: 15
+      errorRate: 15,
     };
 
     const startTime = Date.now();
-    
+
     for (let i = 0; i < 1000; i++) {
       PerformanceDashboard.generateAlerts(largeMetrics);
     }
-    
+
     const endTime = Date.now();
     expect(endTime - startTime).toBeLessThan(1000); // Should complete in under 1 second
   });

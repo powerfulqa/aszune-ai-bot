@@ -16,7 +16,7 @@ class LicenseServer {
     this.licenseDB = new Map();
     this.usageStats = new Map();
     this.violationReports = [];
-    
+
     this.setupMiddleware();
     this.setupRoutes();
     this.loadLicenseDatabase();
@@ -24,11 +24,14 @@ class LicenseServer {
 
   setupMiddleware() {
     this.app.use(express.json());
-    
+
     // CORS for browser access
     this.app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+      );
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       next();
     });
@@ -37,26 +40,25 @@ class LicenseServer {
     this.app.use('/api', (req, res, next) => {
       const apiKey = req.headers.authorization;
       const envApiKey = process.env.LICENSE_SERVER_API_KEY;
-      
+
       // Ensure both the provided API key and the expected API key are defined and non-empty strings
-      if (
-        typeof apiKey !== 'string' || !apiKey ||
-        typeof envApiKey !== 'string' || !envApiKey
-      ) {
+      if (typeof apiKey !== 'string' || !apiKey || typeof envApiKey !== 'string' || !envApiKey) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      
+
       const expectedKey = `Bearer ${envApiKey}`;
-      
+
       // Use timing-safe comparison to prevent timing attacks
       const apiKeyBuffer = Buffer.from(apiKey, 'utf8');
       const expectedKeyBuffer = Buffer.from(expectedKey, 'utf8');
-      
-      if (apiKeyBuffer.length !== expectedKeyBuffer.length || 
-          !crypto.timingSafeEqual(apiKeyBuffer, expectedKeyBuffer)) {
+
+      if (
+        apiKeyBuffer.length !== expectedKeyBuffer.length ||
+        !crypto.timingSafeEqual(apiKeyBuffer, expectedKeyBuffer)
+      ) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      
+
       next();
     });
   }
@@ -71,11 +73,11 @@ class LicenseServer {
 
   _setupHealthRoute() {
     this.app.get('/health', (req, res) => {
-      res.json({ 
-        status: 'healthy', 
+      res.json({
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         activeLicenses: this.licenseDB.size,
-        violations: this.violationReports.length
+        violations: this.violationReports.length,
       });
     });
   }
@@ -112,13 +114,13 @@ class LicenseServer {
         const violationReport = {
           ...req.body,
           reportedAt: new Date().toISOString(),
-          id: crypto.randomUUID()
+          id: crypto.randomUUID(),
         };
-        
+
         this.violationReports.push(violationReport);
         await this.saveViolationReport(violationReport);
         logger.error('🚨 VIOLATION REPORTED:', violationReport);
-        
+
         res.json({ success: true, reportId: violationReport.id });
       } catch (error) {
         logger.error('Violation reporting error:', error);
@@ -135,7 +137,7 @@ class LicenseServer {
         violations: this.violationReports.length,
         recentActivity: this.getRecentActivity(),
         licenseBreakdown: this.getLicenseBreakdown(),
-        topViolations: this.violationReports.slice(-10)
+        topViolations: this.violationReports.slice(-10),
       };
 
       const html = this.generateDashboardHTML(dashboardData);
@@ -146,57 +148,57 @@ class LicenseServer {
     this.app.get('/api/stats', (req, res) => {
       const stats = Array.from(this.usageStats.entries()).map(([instanceId, data]) => ({
         instanceId,
-        ...data
+        ...data,
       }));
-      
+
       res.json({
         totalInstances: stats.length,
         licenses: Array.from(this.licenseDB.values()),
         usage: stats,
-        violations: this.violationReports
+        violations: this.violationReports,
       });
     });
   }
 
   async validateLicense(licenseKey, instanceId, _systemInfo) {
     if (!licenseKey) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: 'No license key provided',
         gracePeriod: true,
-        graceDays: 7
+        graceDays: 7,
       };
     }
 
     const license = this.licenseDB.get(licenseKey);
-    
+
     if (!license) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: 'Invalid license key',
-        gracePeriod: false
+        gracePeriod: false,
       };
     }
 
     // Check license status
     if (license.status !== 'active') {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: `License is ${license.status}`,
-        gracePeriod: false
+        gracePeriod: false,
       };
     }
 
     // Update last seen
     license.lastSeen = new Date().toISOString();
     license.instanceId = instanceId;
-    
+
     return {
       valid: true,
       licenseType: license.type,
       allowedServers: license.allowedServers,
       expiresAt: license.expiresAt,
-      features: license.features
+      features: license.features,
     };
   }
 
@@ -204,11 +206,11 @@ class LicenseServer {
     const usageRecord = {
       instanceId,
       timestamp: new Date().toISOString(),
-      ...stats
+      ...stats,
     };
 
     this.usageStats.set(instanceId, usageRecord);
-    
+
     // Log for monitoring
     logger.info(`📊 Usage reported: ${instanceId} (${stats.licenseType})`);
   }
@@ -216,7 +218,7 @@ class LicenseServer {
   async saveViolationReport(report) {
     const filename = `violation-${report.id}-${Date.now()}.json`;
     const filepath = path.join(__dirname, '../../data/violations', filename);
-    
+
     try {
       await fs.mkdir(path.dirname(filepath), { recursive: true });
       await fs.writeFile(filepath, JSON.stringify(report, null, 2));
@@ -231,15 +233,15 @@ class LicenseServer {
       const licensePath = path.join(__dirname, '../../data/licenses.json');
       const data = await fs.readFile(licensePath, 'utf8');
       const licenses = JSON.parse(data);
-      
+
       for (const license of licenses) {
         this.licenseDB.set(license.key, license);
       }
-      
+
       logger.info(`📄 Loaded ${licenses.length} licenses from database`);
     } catch (error) {
       logger.info('📄 No existing license database found, starting fresh');
-      
+
       // Create sample licenses for testing
       this.createSampleLicenses();
     }
@@ -255,7 +257,7 @@ class LicenseServer {
         owner: 'test@example.com',
         createdAt: new Date().toISOString(),
         expiresAt: null,
-        features: ['basic_analytics', 'performance_dashboard']
+        features: ['basic_analytics', 'performance_dashboard'],
       },
       {
         key: 'ASZUNE-COMM-0001-TEST-KEY2',
@@ -265,8 +267,8 @@ class LicenseServer {
         owner: 'community@example.com',
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        features: ['basic_analytics', 'performance_dashboard', 'email_support']
-      }
+        features: ['basic_analytics', 'performance_dashboard', 'email_support'],
+      },
     ];
 
     for (const license of sampleLicenses) {
@@ -284,11 +286,11 @@ class LicenseServer {
 
   getLicenseBreakdown() {
     const breakdown = { personal: 0, community: 0, commercial: 0, enterprise: 0 };
-    
+
     for (const license of this.licenseDB.values()) {
       breakdown[license.type] = (breakdown[license.type] || 0) + 1;
     }
-    
+
     return breakdown;
   }
 
@@ -298,7 +300,7 @@ class LicenseServer {
     const stats = this._generateDashboardStats(data);
     const sections = this._generateDashboardSections(data);
     const footer = this._generateDashboardFooter();
-    
+
     return `<!DOCTYPE html><html>${head}<body>${header}${stats}${sections}${footer}</body></html>`;
   }
 
@@ -356,14 +358,18 @@ class LicenseServer {
 
     <div class="section">
         <h2>🚨 Recent Violations</h2>
-        ${data.topViolations.map(v => `
+        ${data.topViolations
+          .map(
+            (v) => `
             <div class="violation-item">
                 <strong>Instance:</strong> ${v.instanceId}<br>
                 <strong>Time:</strong> ${v.reportedAt}<br>
                 <strong>Type:</strong> ${v.violation}<br>
                 <strong>Host:</strong> ${v.hostname}
             </div>
-        `).join('')}
+        `
+          )
+          .join('')}
     </div>
 
     <div class="section">
@@ -383,13 +389,13 @@ class LicenseServer {
   start() {
     // Get config inside method to avoid circular dependencies
     const config = require('../config/config');
-    
+
     // Ensure FEATURES property exists (for backward compatibility and tests)
     if (!config.FEATURES) {
       logger.info('🔐 License server disabled (no FEATURES config)');
       return null;
     }
-    
+
     // Check if license server feature is enabled
     if (!config.FEATURES.LICENSE_SERVER && !config.FEATURES.DEVELOPMENT_MODE) {
       logger.info('🔐 License server disabled via feature flag');

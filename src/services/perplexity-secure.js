@@ -740,9 +740,8 @@ class PerplexityService {
     try {
       if (isText) {
         // Extract text content from the message array
-        const textToSummarize = Array.isArray(history) && history[0]?.content 
-          ? history[0].content 
-          : history;
+        const textToSummarize =
+          Array.isArray(history) && history[0]?.content ? history[0].content : history;
         return await this.generateTextSummary(textToSummarize);
       }
 

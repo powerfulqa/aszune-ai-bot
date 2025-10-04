@@ -44,7 +44,7 @@ Tests are organized into:
 
 ## Running Tests
 
-```bash
+````bash
 # Run all tests
 npm test
 
@@ -58,21 +58,27 @@ The message chunking functionality is tested through the comprehensive unit test
 
 ```bash
 npm test __tests__/unit/message-chunker-*.test.js
-```
+````
+
 npm run coverage
 
 # Run branch coverage tests
+
 npm run test:branch-coverage
 
 # Run a specific test file
+
 npx jest path/to/test-file.js
 
 # Run tests with verbose output
+
 npx jest --verbose
 
 # Run tests and watch for changes
+
 npx jest --watch
-```
+
+````
 
 ## Branch Coverage Testing
 
@@ -120,7 +126,7 @@ npx jest --config=logger-branch-coverage.jest.config.js __tests__/unit/logger.te
 
 # Run just the specialized branch coverage tests
 npx jest --config=logger-branch-coverage.jest.config.js __tests__/unit/logger-branch-coverage.test.js
-```
+````
 
 > Note: All tests in logger-branch-coverage.test.js now pass as of v1.3.0, and we're using both sets
 > of tests to achieve higher branch coverage (82.45%).

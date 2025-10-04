@@ -9,7 +9,7 @@ const ResourceOptimizer = require('../../../src/utils/resource-optimizer');
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Mock config module
@@ -20,8 +20,8 @@ jest.mock('../../../src/config/config', () => ({
     RESPONSE_TIME_WARNING: 3000,
     RESPONSE_TIME_CRITICAL: 5000,
     ERROR_RATE_WARNING: 5,
-    ERROR_RATE_CRITICAL: 10
-  }
+    ERROR_RATE_CRITICAL: 10,
+  },
 }));
 
 describe('ResourceOptimizer - optimizeForServerCount', () => {
@@ -87,7 +87,7 @@ describe('ResourceOptimizer - monitorResources', () => {
     mockMetrics = {
       avgResponseTime: 2000,
       errorRate: 3,
-      cpuUsage: 60
+      cpuUsage: 60,
     };
   });
 
@@ -106,7 +106,7 @@ describe('ResourceOptimizer - monitorResources', () => {
     const result = ResourceOptimizer.monitorResources(goodMetrics);
 
     expect(result.performance.status).toBe('good');
-    expect(['healthy', 'warning', 'degraded', 'critical']).toContain(result.overall.status);  // Depends on actual memory usage
+    expect(['healthy', 'warning', 'degraded', 'critical']).toContain(result.overall.status); // Depends on actual memory usage
   });
 
   it('should detect poor performance status', () => {
@@ -158,13 +158,25 @@ describe('ResourceOptimizer - monitorResources', () => {
   });
 
   it('should determine load correctly based on metrics', () => {
-    const lightLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 500, cpuUsage: 30, errorRate: 1 });
+    const lightLoad = ResourceOptimizer.monitorResources({
+      avgResponseTime: 500,
+      cpuUsage: 30,
+      errorRate: 1,
+    });
     expect(lightLoad.performance.load).toBe('light');
 
-    const moderateLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 1500, cpuUsage: 60, errorRate: 3 });
+    const moderateLoad = ResourceOptimizer.monitorResources({
+      avgResponseTime: 1500,
+      cpuUsage: 60,
+      errorRate: 3,
+    });
     expect(moderateLoad.performance.load).toBe('moderate');
 
-    const heavyLoad = ResourceOptimizer.monitorResources({ avgResponseTime: 3000, cpuUsage: 90, errorRate: 8 });
+    const heavyLoad = ResourceOptimizer.monitorResources({
+      avgResponseTime: 3000,
+      cpuUsage: 90,
+      errorRate: 8,
+    });
     expect(heavyLoad.performance.load).toBe('heavy');
   });
 });
@@ -178,7 +190,9 @@ describe('ResourceOptimizer - applyDynamicScaling', () => {
 
     expect(result.scaled).toBe(true);
     expect(result.adjustments).toBeDefined();
-    expect(result.newConfig.memoryAllocation).toBeGreaterThanOrEqual(currentConfig.memoryAllocation);
+    expect(result.newConfig.memoryAllocation).toBeGreaterThanOrEqual(
+      currentConfig.memoryAllocation
+    );
   });
 
   it('should not scale when performance is good', () => {
@@ -210,19 +224,22 @@ describe('ResourceOptimizer - generateOptimizationRecommendations', () => {
       summary: {
         totalServers: 30,
         totalUsers: 300,
-        errorRate: 5
-      }
+        errorRate: 5,
+      },
     };
 
     mockPerformance = {
       averageResponseTime: 2500,
       slowOperations: 15,
-      totalOperations: 100
+      totalOperations: 100,
     };
   });
 
   it('should generate recommendations based on analytics and performance', () => {
-    const result = ResourceOptimizer.generateOptimizationRecommendations(mockAnalytics, mockPerformance);
+    const result = ResourceOptimizer.generateOptimizationRecommendations(
+      mockAnalytics,
+      mockPerformance
+    );
 
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
@@ -230,25 +247,38 @@ describe('ResourceOptimizer - generateOptimizationRecommendations', () => {
 
   it('should recommend scaling for high server count', () => {
     mockAnalytics.summary.totalServers = 80;
-    const result = ResourceOptimizer.generateOptimizationRecommendations(mockAnalytics, mockPerformance);
+    const result = ResourceOptimizer.generateOptimizationRecommendations(
+      mockAnalytics,
+      mockPerformance
+    );
 
-    const scalingRecommendation = result.find(r => r.includes('scaling') || r.includes('server'));
+    const scalingRecommendation = result.find((r) => r.includes('scaling') || r.includes('server'));
     expect(scalingRecommendation).toBeDefined();
   });
 
   it('should recommend performance improvements for slow response times', () => {
     mockPerformance.averageResponseTime = 4500;
-    const result = ResourceOptimizer.generateOptimizationRecommendations(mockAnalytics, mockPerformance);
+    const result = ResourceOptimizer.generateOptimizationRecommendations(
+      mockAnalytics,
+      mockPerformance
+    );
 
-    const performanceRecommendation = result.find(r => r.includes('performance') || r.includes('response'));
+    const performanceRecommendation = result.find(
+      (r) => r.includes('performance') || r.includes('response')
+    );
     expect(performanceRecommendation).toBeDefined();
   });
 
   it('should recommend error investigation for high error rates', () => {
     mockAnalytics.summary.errorRate = 12;
-    const result = ResourceOptimizer.generateOptimizationRecommendations(mockAnalytics, mockPerformance);
+    const result = ResourceOptimizer.generateOptimizationRecommendations(
+      mockAnalytics,
+      mockPerformance
+    );
 
-    const errorRecommendation = result.find(r => r.includes('error') || r.includes('reliability'));
+    const errorRecommendation = result.find(
+      (r) => r.includes('error') || r.includes('reliability')
+    );
     expect(errorRecommendation).toBeDefined();
   });
 
@@ -283,7 +313,7 @@ describe('ResourceOptimizer - Pi Optimizations', () => {
     const result = ResourceOptimizer.monitorResources(metrics);
 
     expect(result.piOptimized).toBe(true);
-    expect(result.recommendations.some(r => r.includes('Pi'))).toBe(true);
+    expect(result.recommendations.some((r) => r.includes('Pi'))).toBe(true);
   });
 });
 
@@ -313,29 +343,29 @@ describe('ResourceOptimizer - Error Handling', () => {
 describe('ResourceOptimizer - Performance', () => {
   it('should optimize quickly for large datasets', () => {
     const startTime = Date.now();
-    
+
     for (let i = 0; i < 1000; i++) {
       ResourceOptimizer.optimizeForServerCount(i % 100, i * 10, {});
     }
-    
+
     const endTime = Date.now();
     expect(endTime - startTime).toBeLessThan(1000); // Should complete in under 1 second
   });
 
   it('should not consume excessive memory during optimization', () => {
     const memoryBefore = process.memoryUsage().heapUsed;
-    
+
     for (let i = 0; i < 1000; i++) {
       ResourceOptimizer.monitorResources({
         avgResponseTime: 1000 + (i % 500),
         errorRate: i % 10,
-        cpuUsage: 30 + (i % 40)
+        cpuUsage: 30 + (i % 40),
       });
     }
-    
+
     const memoryAfter = process.memoryUsage().heapUsed;
     const memoryIncrease = (memoryAfter - memoryBefore) / 1024 / 1024; // MB
-    
+
     expect(memoryIncrease).toBeLessThan(20); // Should not increase memory by more than 20MB
   });
 });

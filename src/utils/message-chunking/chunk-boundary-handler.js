@@ -221,9 +221,12 @@ function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
   const nextChunk = chunks[index + 1];
 
   // Check for Markdown link being split across chunks (but exclude citation-style references)
-  const hasIncompleteLink = /\[[^\]]*$/.test(currentChunk) || /\][^(]*$/.test(currentChunk) || /\([^)]*$/.test(currentChunk);
+  const hasIncompleteLink =
+    /\[[^\]]*$/.test(currentChunk) ||
+    /\][^(]*$/.test(currentChunk) ||
+    /\([^)]*$/.test(currentChunk);
   const isCitationReference = /\[\d+\]?$/.test(currentChunk); // Allow citation references like [1], [2], etc.
-  
+
   if (hasIncompleteLink && !isCitationReference) {
     const brokenMarkdownMatch =
       /^(.*)\[[^\]]*$/.exec(currentChunk) ||
@@ -256,9 +259,10 @@ function validateChunkBoundaries(chunks) {
       const chunk = chunks[i];
 
       // Check for incomplete markdown links (but exclude citation-style references like [1], [2], etc.)
-      const incompleteLink = /\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk);
+      const incompleteLink =
+        /\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk);
       const isCitationReference = /\[\d+\]$/.test(chunk); // Allow citation references like [1], [2], etc.
-      
+
       if (incompleteLink && !isCitationReference) {
         logger.debug(`Chunk ${i + 1} has incomplete markdown link`);
         return false;

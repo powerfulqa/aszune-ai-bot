@@ -162,7 +162,7 @@ class ErrorHandler {
 
     // Handle null/undefined errors safely
     const safeError = error || { message: 'Unknown error', stack: null };
-    
+
     // Safely access potentially problematic properties
     let stack = null;
     try {
@@ -171,7 +171,7 @@ class ErrorHandler {
       // Fallback value if stack getter throws
       stack = '[stack unavailable: error accessing stack property]';
     }
-    
+
     // Enhanced error logging with structured data
     const errorLog = {
       type: errorType,

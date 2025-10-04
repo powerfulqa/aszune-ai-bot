@@ -24,33 +24,33 @@ module.exports = {
     './src/index.js': {
       branches: 50, // Current: 50%
       functions: 80, // Current: 80%
-      lines: 75,    // Current: 75.98% 
+      lines: 75, // Current: 75.98%
       statements: 75, // Current: 75.98%
     },
     './src/config/config.js': {
       branches: 33, // Current: 33.33%
       functions: 100, // Already exceeds
-      lines: 90,    // Current: 90%
+      lines: 90, // Current: 90%
       statements: 90, // Current: 90%
     },
 
-    // 🎯 Tier 2: Service Layer Critical Files  
+    // 🎯 Tier 2: Service Layer Critical Files
     './src/commands/index.js': {
       branches: 80, // Current: 81.35%
       functions: 85, // Current: 88.23%
-      lines: 80,    // Current: 80.13%
+      lines: 80, // Current: 80.13%
       statements: 80, // Current: 80.13%
     },
     './src/services/perplexity-secure.js': {
       branches: 80, // Current: 85.92%
       functions: 70, // Current: 71.42%
-      lines: 71,    // Current: 71.93%
+      lines: 71, // Current: 71.93%
       statements: 71, // Current: 71.93%
     },
     './src/services/chat.js': {
       branches: 33, // Current: 33.33%
       functions: 85, // Current: 87.5%
-      lines: 77,    // Current: 77.51%
+      lines: 77, // Current: 77.51%
       statements: 77, // Current: 77.51%
     },
 
@@ -58,19 +58,19 @@ module.exports = {
     './src/utils/logger.js': {
       branches: 47, // Current: 47.05%
       functions: 90, // Current: 90.9%
-      lines: 72,    // Current: 76.32%
+      lines: 72, // Current: 76.32%
       statements: 72, // Current: 76.32%
     },
     './src/utils/error-handler.js': {
       branches: 50, // Current: 53.44%
       functions: 100, // Already exceeds
-      lines: 92,    // Current: 93.53%
+      lines: 92, // Current: 93.53%
       statements: 92, // Current: 93.53%
     },
     './src/utils/conversation.js': {
       branches: 61, // Current: 61.36%
       functions: 100, // Already exceeds
-      lines: 80,    // Current: 80.64%
+      lines: 80, // Current: 80.64%
       statements: 80, // Current: 80.64%
     },
   },

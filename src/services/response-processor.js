@@ -24,20 +24,22 @@ class ResponseProcessor {
       return content;
     }
 
-    return content
-      // Replace <br> and <br/> with line breaks
-      .replace(/<br\s*\/?>/gi, '\n')
-      // Replace other common HTML tags with appropriate text
-      .replace(/<p>/gi, '\n')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<div>/gi, '\n')
-      .replace(/<\/div>/gi, '\n')
-      // Remove any remaining HTML tags
-      .replace(/<[^>]*>/g, '')
-      // Clean up multiple consecutive line breaks
-      .replace(/\n{3,}/g, '\n\n')
-      // Trim whitespace
-      .trim();
+    return (
+      content
+        // Replace <br> and <br/> with line breaks
+        .replace(/<br\s*\/?>/gi, '\n')
+        // Replace other common HTML tags with appropriate text
+        .replace(/<p>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<div>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        // Remove any remaining HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up multiple consecutive line breaks
+        .replace(/\n{3,}/g, '\n\n')
+        // Trim whitespace
+        .trim()
+    );
   }
 
   /**

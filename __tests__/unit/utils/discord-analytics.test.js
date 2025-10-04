@@ -9,7 +9,7 @@ const DiscordAnalytics = require('../../../src/utils/discord-analytics');
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Shared test data
@@ -20,7 +20,7 @@ const mockActivityHistory = [
     userId: 'user1',
     action: 'command_executed',
     command: 'help',
-    metadata: { responseTime: 150, success: true }
+    metadata: { responseTime: 150, success: true },
   },
   {
     timestamp: new Date('2024-01-15T10:05:00Z').toISOString(),
@@ -28,7 +28,7 @@ const mockActivityHistory = [
     userId: 'user2',
     action: 'command_executed',
     command: 'stats',
-    metadata: { responseTime: 200, success: true }
+    metadata: { responseTime: 200, success: true },
   },
   {
     timestamp: new Date('2024-01-15T10:10:00Z').toISOString(),
@@ -36,14 +36,14 @@ const mockActivityHistory = [
     userId: 'user1',
     action: 'command_executed',
     command: 'help',
-    metadata: { responseTime: 500, success: false, error: 'API timeout' }
+    metadata: { responseTime: 500, success: false, error: 'API timeout' },
   },
   {
     timestamp: new Date('2024-01-15T14:00:00Z').toISOString(),
     serverId: 'server2',
     userId: 'user3',
     action: 'message_processed',
-    metadata: { responseTime: 300, success: true }
+    metadata: { responseTime: 300, success: true },
   },
   {
     timestamp: new Date('2024-01-15T20:00:00Z').toISOString(),
@@ -51,8 +51,8 @@ const mockActivityHistory = [
     userId: 'user2',
     action: 'command_executed',
     command: 'stats',
-    metadata: { responseTime: 180, success: true }
-  }
+    metadata: { responseTime: 180, success: true },
+  },
 ];
 
 describe('DiscordAnalytics - trackServerActivity', () => {
@@ -65,7 +65,7 @@ describe('DiscordAnalytics - trackServerActivity', () => {
       serverId: 'test-server',
       userId: 'test-user',
       action: 'command_executed',
-      command: 'test'
+      command: 'test',
     };
 
     const result = DiscordAnalytics.trackServerActivity(activity);
@@ -80,7 +80,7 @@ describe('DiscordAnalytics - trackServerActivity', () => {
     const activity = {
       userId: 'test-user',
       action: 'command_executed',
-      command: 'test'
+      command: 'test',
     };
 
     const result = DiscordAnalytics.trackServerActivity(activity);
@@ -93,7 +93,7 @@ describe('DiscordAnalytics - trackServerActivity', () => {
     const activity = {
       serverId: 'test-server',
       userId: 'test-user',
-      command: 'test'
+      command: 'test',
     };
 
     const result = DiscordAnalytics.trackServerActivity(activity);
@@ -108,7 +108,7 @@ describe('DiscordAnalytics - trackServerActivity', () => {
       userId: 'test-user',
       action: 'command_executed',
       command: 'test',
-      metadata: { custom: 'data' }
+      metadata: { custom: 'data' },
     };
 
     const result = DiscordAnalytics.trackServerActivity(activity);
@@ -182,14 +182,14 @@ describe('DiscordAnalytics - generateDailyReport', () => {
   it('should include successRate and avgResponseTime fields for analytics command compatibility', () => {
     const report = DiscordAnalytics.generateDailyReport(mockActivityHistory);
 
-    // Analytics command expects successRate field  
+    // Analytics command expects successRate field
     expect(report.summary.successRate).toBeDefined();
     expect(typeof report.summary.successRate).toBe('number');
-    
+
     // Analytics command expects avgResponseTime field
     expect(report.summary.avgResponseTime).toBeDefined();
     expect(typeof report.summary.avgResponseTime).toBe('number');
-    
+
     // Verify calculations are correct
     expect(report.summary.successRate).toBe(100 - report.summary.errorRate);
     expect(report.summary.avgResponseTime).toBe(report.performanceMetrics.averageResponseTime);

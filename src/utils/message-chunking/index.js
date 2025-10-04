@@ -40,7 +40,9 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
 
     // Validate the final chunks
     if (!validateChunkBoundaries(fixedChunks)) {
-      logger.debug('Chunk boundary validation detected potential issues, but continuing with fixed chunks');
+      logger.debug(
+        'Chunk boundary validation detected potential issues, but continuing with fixed chunks'
+      );
     }
 
     return fixedChunks;

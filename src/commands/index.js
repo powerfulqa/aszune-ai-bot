@@ -221,43 +221,44 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        
+
         // Generate daily analytics report
         const serverId = interaction.guild?.id;
         const guild = interaction.guild;
-        
+
         // Get real server statistics instead of empty analytics
         let onlineCount = 0;
         let botCount = 0;
         let totalMembers = guild.memberCount || 0;
-        
+
         try {
           // Try to fetch members with timeout (5 seconds max)
           const fetchPromise = guild.members.fetch({ limit: 1000 }); // Limit to avoid huge fetches
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Fetch timeout')), 5000)
           );
-          
+
           await Promise.race([fetchPromise, timeoutPromise]);
-          
+
           // Count online users and bots from fetched data
-          onlineCount = guild.members.cache.filter(member => 
-            member.presence?.status === 'online' || 
-            member.presence?.status === 'idle' || 
-            member.presence?.status === 'dnd'
+          onlineCount = guild.members.cache.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
           ).size;
-          botCount = guild.members.cache.filter(member => member.user.bot).size;
-          
+          botCount = guild.members.cache.filter((member) => member.user.bot).size;
         } catch (error) {
           // Fall back to cached data and estimates
           const cachedMembers = guild.members.cache;
-          onlineCount = cachedMembers.filter(member => 
-            member.presence?.status === 'online' || 
-            member.presence?.status === 'idle' || 
-            member.presence?.status === 'dnd'
+          onlineCount = cachedMembers.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
           ).size;
-          botCount = cachedMembers.filter(member => member.user.bot).size;
-          
+          botCount = cachedMembers.filter((member) => member.user.bot).size;
+
           // If no cached data, use rough estimates
           if (onlineCount === 0 && totalMembers > 0) {
             onlineCount = Math.floor(totalMembers * 0.2); // Estimate 20% online
@@ -266,9 +267,9 @@ const commands = {
             botCount = Math.floor(totalMembers * 0.05); // Estimate 5% bots
           }
         }
-        
+
         const humanMembers = totalMembers - botCount;
-        
+
         // Create mock analytics data with real server stats
         const analyticsData = {
           summary: {
@@ -277,11 +278,11 @@ const commands = {
             totalCommands: 0, // TODO: Track actual command usage
             successRate: 100,
             errorRate: 0,
-            avgResponseTime: 0
+            avgResponseTime: 0,
           },
-          commandStats: []
+          commandStats: [],
         };
-        
+
         const serverInsights = {
           serverId,
           uniqueUsers: onlineCount,
@@ -290,38 +291,40 @@ const commands = {
           totalActivities: 0,
           averageResponseTime: 0,
           mostActiveUser: null,
-          popularCommands: []
+          popularCommands: [],
         };
-        
+
         const embed = {
-          color: 0x5865F2,
+          color: 0x5865f2,
           title: '📊 Discord Analytics Dashboard',
           fields: [
             {
               name: '🏢 Server Overview',
               value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
-              inline: true
+              inline: true,
             },
             {
               name: '📈 Performance',
               value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
-              inline: true
+              inline: true,
             },
             {
               name: '🎯 Top Commands',
-              value: analyticsData?.commandStats?.slice(0, 3).map((cmd, i) => 
-                `${i + 1}. ${cmd.command} (${cmd.count})`
-              ).join('\n') || 'No data yet',
-              inline: true
+              value:
+                analyticsData?.commandStats
+                  ?.slice(0, 3)
+                  .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
+                  .join('\n') || 'No data yet',
+              inline: true,
             },
             {
               name: '💡 Server Insights',
               value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
-              inline: false
-            }
+              inline: false,
+            },
           ],
           footer: { text: 'Aszai Bot Analytics' },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         return interaction.editReply({ embeds: [embed] });
@@ -342,39 +345,40 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        
+
         // Generate comprehensive dashboard with real server data
         const guild = interaction.guild;
         let onlineCount = 0;
         let botCount = 0;
         let totalMembers = guild.memberCount || 0;
-        
+
         try {
           // Try to fetch members with timeout (5 seconds max) - same as analytics
           const fetchPromise = guild.members.fetch({ limit: 1000 });
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Fetch timeout')), 5000)
           );
-          
+
           await Promise.race([fetchPromise, timeoutPromise]);
-          
-          onlineCount = guild.members.cache.filter(member => 
-            member.presence?.status === 'online' || 
-            member.presence?.status === 'idle' || 
-            member.presence?.status === 'dnd'
+
+          onlineCount = guild.members.cache.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
           ).size;
-          botCount = guild.members.cache.filter(member => member.user.bot).size;
-          
+          botCount = guild.members.cache.filter((member) => member.user.bot).size;
         } catch (error) {
           // Fall back to cached data and estimates
           const cachedMembers = guild.members.cache;
-          onlineCount = cachedMembers.filter(member => 
-            member.presence?.status === 'online' || 
-            member.presence?.status === 'idle' || 
-            member.presence?.status === 'dnd'
+          onlineCount = cachedMembers.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
           ).size;
-          botCount = cachedMembers.filter(member => member.user.bot).size;
-          
+          botCount = cachedMembers.filter((member) => member.user.bot).size;
+
           if (onlineCount === 0 && totalMembers > 0) {
             onlineCount = Math.floor(totalMembers * 0.2); // Estimate 20% online
           }
@@ -382,42 +386,51 @@ const commands = {
             botCount = Math.floor(totalMembers * 0.05); // Estimate 5% bots
           }
         }
-        
+
         const humanMembers = totalMembers - botCount;
         const dashboardData = await PerformanceDashboard.generateDashboardReport();
         const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
-        
+
         const embed = {
-          color: dashboardData.overview.status === 'healthy' ? 0x00FF00 : 
-            dashboardData.overview.status === 'warning' ? 0xFFA500 : 0xFF0000,
+          color:
+            dashboardData.overview.status === 'healthy'
+              ? 0x00ff00
+              : dashboardData.overview.status === 'warning'
+                ? 0xffa500
+                : 0xff0000,
           title: '🖥️ Performance Dashboard',
           fields: [
             {
               name: '🚦 System Status',
               value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
-              inline: true
+              inline: true,
             },
             {
               name: '⚡ Performance',
               value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
-              inline: true
+              inline: true,
             },
             {
               name: '📊 Activity',
               value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
-              inline: true
+              inline: true,
             },
             {
               name: '🚨 Active Alerts',
-              value: (dashboardData.alerts && dashboardData.alerts.length > 0) ?
-                dashboardData.alerts.slice(0, 3).map(alert => 
-                  `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
-                ).join('\n') : '✅ No active alerts',
-              inline: false
-            }
+              value:
+                dashboardData.alerts && dashboardData.alerts.length > 0
+                  ? dashboardData.alerts
+                      .slice(0, 3)
+                      .map(
+                        (alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
+                      )
+                      .join('\n')
+                  : '✅ No active alerts',
+              inline: false,
+            },
           ],
           footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         return interaction.editReply({ embeds: [embed] });
@@ -438,43 +451,47 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        
+
         // Get resource optimization data
         const resourceStatus = await ResourceOptimizer.monitorResources();
         const analyticsData = await DiscordAnalytics.generateDailyReport();
         const recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
-          analyticsData, 
+          analyticsData,
           { averageResponseTime: resourceStatus.performance.responseTime }
         );
-        
+
         const embed = {
-          color: resourceStatus.memory.status === 'good' ? 0x00FF00 : 
-            resourceStatus.memory.status === 'warning' ? 0xFFA500 : 0xFF0000,
+          color:
+            resourceStatus.memory.status === 'good'
+              ? 0x00ff00
+              : resourceStatus.memory.status === 'warning'
+                ? 0xffa500
+                : 0xff0000,
           title: '🔧 Resource Optimization',
           fields: [
             {
               name: '💾 Memory Status',
               value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
-              inline: true
+              inline: true,
             },
             {
               name: '⚙️ Performance',
               value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
-              inline: true
+              inline: true,
             },
             {
               name: '📈 Optimization Tier',
               value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${analyticsData.summary.totalServers}\nRecommended: Auto-scaling active`,
-              inline: true
+              inline: true,
             },
             {
               name: '💡 Recommendations',
               value: recommendations.slice(0, 3).join('\n') || '✅ All systems optimized!',
-              inline: false
-            }
+              inline: false,
+            },
           ],
           footer: { text: 'Aszai Bot Resource Monitor' },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         return interaction.editReply({ embeds: [embed] });

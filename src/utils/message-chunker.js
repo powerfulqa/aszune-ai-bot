@@ -410,11 +410,12 @@ function parseTableRow(line) {
   if (!line.includes('|')) {
     return null;
   }
-  
-  const cells = line.split('|')
-    .map(cell => cell.trim())
-    .filter(cell => cell !== ''); // Allow empty cells but filter out empty strings from split edges
-    
+
+  const cells = line
+    .split('|')
+    .map((cell) => cell.trim())
+    .filter((cell) => cell !== ''); // Allow empty cells but filter out empty strings from split edges
+
   // Valid table row needs at least one cell between pipes
   return cells.length >= 1 ? cells : null;
 }
@@ -442,37 +443,37 @@ function formatTableDataRow(headers, cells) {
 function processTableLine(line, state) {
   const { formattedContent, inTable, headers } = state;
   const trimmed = line.trim();
-  
+
   // Skip separator lines
   if (isTableSeparator(trimmed)) {
     return state;
   }
-  
+
   const cells = parseTableRow(trimmed);
-  
+
   if (cells) {
     if (!inTable) {
       // First table row - headers
       return {
         formattedContent: formattedContent + `**${cells.join(' | ')}:**\n`,
         inTable: true,
-        headers: cells
+        headers: cells,
       };
     } else if (cells.length === headers.length) {
       // Valid data row
       return {
         ...state,
-        formattedContent: formattedContent + formatTableDataRow(headers, cells)
+        formattedContent: formattedContent + formatTableDataRow(headers, cells),
       };
     }
   }
-  
+
   // Not a valid table row or mismatched columns
   const endTableMarker = inTable ? '\n' : '';
   return {
     formattedContent: formattedContent + endTableMarker + line + '\n',
     inTable: false,
-    headers: []
+    headers: [],
   };
 }
 
@@ -484,24 +485,24 @@ function processTableLine(line, state) {
 function formatTablesForDiscord(content) {
   // Handle null/undefined input
   if (!content) return content;
-  
+
   // Detect table patterns (basic detection for | separated content)
   const tableRegex = /^\s*\|.*\|\s*$/gm;
   const hasTables = tableRegex.test(content);
-  
+
   if (!hasTables) return content;
-  
+
   const lines = content.split('\n');
   let state = {
     formattedContent: '',
     inTable: false,
-    headers: []
+    headers: [],
   };
-  
+
   for (const line of lines) {
     state = processTableLine(line, state);
   }
-  
+
   return state.formattedContent.trim();
 }
 

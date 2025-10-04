@@ -364,22 +364,22 @@ class EnhancedCache {
     ) {
       // Perform eviction based on strategy
       switch (this.evictionStrategy) {
-      case EVICTION_STRATEGIES.LRU:
-        this.evictLRU();
-        break;
-      case EVICTION_STRATEGIES.LFU:
-        this.evictLFU();
-        break;
-      case EVICTION_STRATEGIES.TTL:
-        this.evictExpired();
-        break;
-      case EVICTION_STRATEGIES.SIZE_BASED:
-        this.evictBySize();
-        break;
-      case EVICTION_STRATEGIES.HYBRID:
-      default:
-        this.evictHybrid();
-        break;
+        case EVICTION_STRATEGIES.LRU:
+          this.evictLRU();
+          break;
+        case EVICTION_STRATEGIES.LFU:
+          this.evictLFU();
+          break;
+        case EVICTION_STRATEGIES.TTL:
+          this.evictExpired();
+          break;
+        case EVICTION_STRATEGIES.SIZE_BASED:
+          this.evictBySize();
+          break;
+        case EVICTION_STRATEGIES.HYBRID:
+        default:
+          this.evictHybrid();
+          break;
       }
     }
   }
@@ -404,9 +404,7 @@ class EnhancedCache {
    */
   evictLFU() {
     const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort(
-      (a, b) => a[1] - b[1]
-    );
+    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort((a, b) => a[1] - b[1]);
 
     for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {
       const key = sortedByFrequency[i][0];

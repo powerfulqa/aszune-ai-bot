@@ -156,7 +156,8 @@ Summaries requested: 7
 - `!analytics`
 - `/analytics`
 
-**Description:** Displays comprehensive Discord server analytics including user engagement statistics, command usage patterns, and system performance metrics.
+**Description:** Displays comprehensive Discord server analytics including user engagement
+statistics, command usage patterns, and system performance metrics.
 
 **Example:**
 
@@ -164,8 +165,8 @@ Summaries requested: 7
 /analytics
 ```
 
-**Output:**
-Shows real-time Discord server analytics with:
+**Output:** Shows real-time Discord server analytics with:
+
 - **Active Users**: Live count of online/idle/dnd members (e.g., "Active Users: 102")
 - **Server Statistics**: Total members, bot count, human member ratio
 - **Activity Summary**: Member engagement patterns and presence distribution
@@ -173,6 +174,7 @@ Shows real-time Discord server analytics with:
 - **Data Source**: Real Discord server data with 5-second timeout protection
 
 **Technical Details:**
+
 - Uses Discord API `guild.members.fetch()` for live member data
 - Filters members by presence (online, idle, dnd vs offline)
 - Includes timeout protection with fallback estimates for large servers
@@ -187,7 +189,8 @@ Shows real-time Discord server analytics with:
 - `!dashboard`
 - `/dashboard`
 
-**Description:** Displays a comprehensive performance dashboard with real-time system status, resource utilization, and operational health metrics.
+**Description:** Displays a comprehensive performance dashboard with real-time system status,
+resource utilization, and operational health metrics.
 
 **Example:**
 
@@ -195,8 +198,8 @@ Shows real-time Discord server analytics with:
 /dashboard
 ```
 
-**Output:**
-Shows synchronized performance dashboard with:
+**Output:** Shows synchronized performance dashboard with:
+
 - **Activity Section**: Same real Discord data as `/analytics` command
 - **System Status**: CPU, memory, and network utilization
 - **Performance Metrics**: Response times and system health indicators
@@ -204,6 +207,7 @@ Shows synchronized performance dashboard with:
 - **Optimization Tips**: AI-powered performance recommendations
 
 **Technical Details:**
+
 - Synchronized with `/analytics` command for consistent member counts
 - Uses same Discord API integration with timeout protection
 - Combines real server data with system performance metrics
@@ -217,7 +221,8 @@ Shows synchronized performance dashboard with:
 - `!resources`
 - `/resources`
 
-**Description:** Displays resource optimization status and recommendations for system performance improvements.
+**Description:** Displays resource optimization status and recommendations for system performance
+improvements.
 
 **Example:**
 
@@ -225,8 +230,8 @@ Shows synchronized performance dashboard with:
 /resources
 ```
 
-**Output:**
-Shows resource monitoring with:
+**Output:** Shows resource monitoring with:
+
 - Memory usage analysis
 - Performance status
 - Optimization recommendations
@@ -272,6 +277,7 @@ The bot automatically detects and formats tables in AI responses for better Disc
 - **Seamless Integration**: Works automatically without user intervention
 
 **Example:**
+
 ```
 AI Response with table:
 | Command | Description |
@@ -303,21 +309,27 @@ responding further.
 
 ### v1.6.0 - Analytics Integration (Current)
 
-- **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`) provide comprehensive system monitoring directly in Discord
-- **Real-time Performance Monitoring**: Live system status, resource utilization, and performance metrics
+- **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
+  provide comprehensive system monitoring directly in Discord
+- **Real-time Performance Monitoring**: Live system status, resource utilization, and performance
+  metrics
 - **Server Insights**: Discord server analytics with user engagement and command usage patterns
 - **Resource Optimization**: Automated recommendations for system performance improvements
 - **Integrated Reporting**: All analytics features accessible without leaving Discord
-- **Discord Table Formatting**: Automatic conversion of markdown tables to Discord-friendly bullet points
+- **Discord Table Formatting**: Automatic conversion of markdown tables to Discord-friendly bullet
+  points
 - **Complete Test Coverage**: All 1000 tests passing with full analytics integration coverage
 
 ### v1.5.0 - qlty Code Quality Integration
 
 - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
-- **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration for comprehensive security
-- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md
+- **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration for comprehensive
+  security
+- **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md,
+  CHANGELOG.md
 - **Quality Automation**: 7 new npm scripts for streamlined quality workflow
-- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero secrets
+- **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
+  secrets
 
 ### v1.4.1 - Code Quality Excellence & Architecture Refinement
 
@@ -328,9 +340,11 @@ responding further.
 
 ### v1.4.0 - Comprehensive Testing & Coverage Enhancement
 
-- **Unified Command Handler**: All commands now use a single, centralized handler (`commands/index.js`)
+- **Unified Command Handler**: All commands now use a single, centralized handler
+  (`commands/index.js`)
 - **Comprehensive Input Validation**: All user inputs are validated and sanitized before processing
 - **Enhanced Error Handling**: Robust error handling with user-friendly error messages
 - **Comprehensive Testing**: 380+ tests with 82%+ coverage ensuring reliability
-- **Class-based Architecture**: ConversationManager and other core components use modern class-based architecture
+- **Class-based Architecture**: ConversationManager and other core components use modern class-based
+  architecture
 - **Memory Management**: Advanced memory monitoring and optimization

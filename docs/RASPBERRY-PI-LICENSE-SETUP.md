@@ -3,6 +3,7 @@
 ## 🍓 Setting Up License Server on Raspberry Pi 3
 
 ### Prerequisites
+
 - Raspberry Pi 3 with Raspbian OS
 - Internet connection
 - Static IP address (recommended)
@@ -11,12 +12,14 @@
 ## 🔧 Step 1: System Preparation
 
 ### Update Your Pi
+
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install git curl build-essential -y
 ```
 
 ### Install Node.js (if not already installed)
+
 ```bash
 # Install Node.js 20.x (recommended)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -30,6 +33,7 @@ npm --version
 ## 🖥️ Step 2: License Server Setup
 
 ### Create License Server Directory
+
 ```bash
 # Create dedicated directory for license server
 mkdir -p ~/license-server
@@ -45,6 +49,7 @@ npm install express undici
 ```
 
 ### Configure Environment
+
 ```bash
 # Create environment configuration
 cat > .env << EOF
@@ -60,13 +65,14 @@ mkdir -p data/backups
 ```
 
 ### Create License Database
+
 ```bash
 # Create initial license database
 cat > data/licenses.json << 'EOF'
 [
   {
     "key": "ASZUNE-PERS-20251001-SAMPLE01",
-    "type": "personal", 
+    "type": "personal",
     "status": "active",
     "allowedServers": 1,
     "owner": "test@example.com",
@@ -81,12 +87,14 @@ EOF
 ## 🚀 Step 3: Running the License Server
 
 ### Manual Start (for testing)
+
 ```bash
 cd ~/license-server
 node license-server.js
 ```
 
 ### Production Setup with PM2
+
 ```bash
 # Install PM2 globally
 sudo npm install -g pm2
@@ -128,6 +136,7 @@ pm2 save
 ## 🔒 Step 4: Network Configuration
 
 ### Open Firewall Port
+
 ```bash
 # Allow license server port
 sudo ufw allow 3001/tcp
@@ -135,15 +144,17 @@ sudo ufw enable
 ```
 
 ### Router Port Forwarding (if needed)
+
 ```
 Router Settings:
 - External Port: 3001
-- Internal Port: 3001  
+- Internal Port: 3001
 - Internal IP: [Your Pi's IP]
 - Protocol: TCP
 ```
 
 ### Dynamic DNS Setup (recommended)
+
 ```bash
 # Install ddclient for dynamic DNS
 sudo apt install ddclient -y
@@ -155,6 +166,7 @@ sudo apt install ddclient -y
 ## 📊 Step 5: Monitoring Setup
 
 ### Access Dashboard
+
 ```bash
 # Local access
 curl http://localhost:3001/health
@@ -167,6 +179,7 @@ curl http://192.168.1.100:3001/health
 ```
 
 ### Create Monitoring Script
+
 ```bash
 cat > monitor-license-server.sh << 'EOF'
 #!/bin/bash
@@ -182,7 +195,7 @@ if curl -sf http://localhost:3001/health > /dev/null; then
 else
     echo "$(date): LICENSE SERVER DOWN - Restarting..." >> $LOG_FILE
     pm2 restart aszune-license-server
-    
+
     # Optional: Send alert
     if [ ! -z "$WEBHOOK_URL" ]; then
         curl -X POST -H 'Content-type: application/json' \
@@ -216,6 +229,7 @@ chmod +x monitor-license-server.sh
 ## 🤖 Step 6: Configure Your Bot
 
 ### Update Bot Configuration
+
 ```bash
 # On the Pi where your bot runs
 cd ~/aszune-ai-bot
@@ -231,6 +245,7 @@ EOF
 ```
 
 ### Test License Validation
+
 ```bash
 # Start your bot and check logs
 cd ~/aszune-ai-bot
@@ -244,6 +259,7 @@ npm start
 ## 📈 Step 7: Daily Operations
 
 ### Check Status
+
 ```bash
 # Check PM2 status
 pm2 status
@@ -259,6 +275,7 @@ pm2 monit
 ```
 
 ### Backup License Data
+
 ```bash
 # Create backup script
 cat > backup-licenses.sh << 'EOF'
@@ -284,6 +301,7 @@ chmod +x backup-licenses.sh
 ## 🔍 Step 8: Issue Management
 
 ### Create New Personal License
+
 ```bash
 # Generate new license key
 NEW_KEY="ASZUNE-PERS-$(date +%Y%m%d)-$(openssl rand -hex 4 | tr '[:lower:]' '[:upper:]')"
@@ -294,6 +312,7 @@ nano data/licenses.json
 ```
 
 ### Handle Violations
+
 ```bash
 # Check violation reports
 ls -la data/violations/
@@ -306,6 +325,7 @@ tail -f logs/error.log | grep "VIOLATION"
 ## ⚠️ Pi 3 Specific Considerations
 
 ### Memory Optimization
+
 ```bash
 # Reduce memory usage
 export NODE_OPTIONS="--max-old-space-size=256"  # Limit to 256MB
@@ -315,18 +335,20 @@ watch -n 5 'free -h && echo "---" && ps aux --sort=-%mem | head -10'
 ```
 
 ### Performance Tuning
+
 ```javascript
 // Add to license-server.js for Pi 3 optimization
 if (os.platform() === 'linux' && os.arch() === 'arm') {
   // Raspberry Pi detected - use conservative settings
-  process.env.UV_THREADPOOL_SIZE = '2';  // Reduce thread pool
+  process.env.UV_THREADPOOL_SIZE = '2'; // Reduce thread pool
   setInterval(() => {
-    if (global.gc) global.gc();  // Force garbage collection
+    if (global.gc) global.gc(); // Force garbage collection
   }, 30000);
 }
 ```
 
 ### Storage Management
+
 ```bash
 # Setup log rotation
 sudo apt install logrotate -y
@@ -350,15 +372,15 @@ EOF
 ## 🎯 Summary - Your Pi 3 Setup
 
 After setup, your Pi 3 will:
+
 - ✅ Run license server on port 3001
-- ✅ Monitor all bot instances automatically  
+- ✅ Monitor all bot instances automatically
 - ✅ Detect violations and phone home
 - ✅ Provide web dashboard for monitoring
 - ✅ Auto-restart on failures
 - ✅ Handle backups and maintenance
 
-**Dashboard Access**: http://your-pi-ip:3001/dashboard
-**API Endpoint**: http://your-pi-ip:3001/api/*
-**Monitoring**: PM2 + cron jobs + log rotation
+**Dashboard Access**: http://your-pi-ip:3001/dashboard **API Endpoint**:
+http://your-pi-ip:3001/api/\* **Monitoring**: PM2 + cron jobs + log rotation
 
 Your Pi becomes the central control point for licensing! 🎯

@@ -7,20 +7,61 @@ notes, see the [docs/](./docs/) directory.
 
 ## Version History
 
+### v1.6.5 - Cache Command Fix & Test Coverage Enhancement ✅ COMPLETED (October 2025)
+
+#### 🎯 **CRITICAL ISSUE RESOLUTION**: Cache Command Undefined Values Fixed
+
+**Problem Identified**:
+- `/cache` command displaying "Memory Usage: undefined / undefined" 
+- Cache configuration showing "Strategy: undefined, Uptime: undefined"
+- Missing method implementations in CacheManager service
+
+**Solution Implemented**:
+- **Enhanced CacheManager**: Added complete `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods
+- **PerplexityService Integration**: Fixed property references from `this.cache` to `this.cacheManager` 
+- **Field Compatibility**: Established complete field coverage for Discord command requirements
+- **Error Resilience**: Comprehensive fallback mechanisms with proper default values
+
+**Test Coverage Achievement**:
+- **Cache Command Tests**: Created comprehensive 6-test suite covering all edge cases
+- **Slash Command Coverage**: All 4 Discord commands (`/analytics`, `/dashboard`, `/resources`, `/cache`) now fully tested
+- **Regression Prevention**: Tests specifically validate no "undefined" values in Discord embeds
+- **Total Test Status**: 15/15 slash command tests passing
+
+**Architecture Improvements**:
+- **Service Delegation**: Enforced proper service layer architecture patterns
+- **Method Contracts**: Established consistent API contracts across cache services  
+- **Property Consistency**: Standardized descriptive service naming conventions
+- **Documentation**: Updated copilot instructions with v1.6.5 architectural patterns
+
+**Quality Metrics**:
+```
+Cache Command Status:   Broken → ✅ Working
+Test Coverage:         Missing → 15/15 Passing  
+Field Validation:      Undefined → All Fields Valid
+Service Integration:   Bypassed → Proper Delegation
+```
+
+- Full technical details in [RELEASE-NOTES-v1.6.5.md](./docs/RELEASE-NOTES-v1.6.5.md)
+- Cache service architecture in [docs/CACHE-SERVICE-ARCHITECTURE.md](./docs/CACHE-SERVICE-ARCHITECTURE.md)
+
 ### v1.5.0 - qlty Code Quality Integration & Professional Standards ✅ COMPLETED (December 2024)
 
 #### 🎯 **MAJOR ACHIEVEMENT**: 99.76% Quality Issue Reduction (21,492 → 51 total issues)
 
 **Quality Transformation Completed**:
+
 - **Line Ending Crisis Resolved**: 21,441 CRLF/LF conflicts eliminated (100% fixed)
 - **Test Success Rate**: 100% (853 of 853 tests passing)
-- **Code Coverage**: 81.51% comprehensive coverage achieved 
+- **Code Coverage**: 81.51% comprehensive coverage achieved
 - **Repository Organization**: 69% reduction in root directory clutter
 - **CI/CD Pipeline**: Stable npm-based quality automation implemented
 
 **Infrastructure Achievements**:
+
 - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
-- **Working npm Scripts**: Reliable quality automation (`npm run quality:check`, `quality:fix`, `lint:fix`)
+- **Working npm Scripts**: Reliable quality automation (`npm run quality:check`, `quality:fix`,
+  `lint:fix`)
 - **Multi-layered Security**: Comprehensive scanning with Gitleaks, Trivy, and Semgrep + npm audit
 - **Professional Documentation**: Standard files plus comprehensive integration guides
 - **Quality Automation**: 7 working npm scripts for streamlined quality workflow
@@ -31,6 +72,7 @@ notes, see the [docs/](./docs/) directory.
 - **Centralized Configuration**: Unified quality settings in `.qlty/qlty.toml`
 
 **Measurable Success Metrics**:
+
 ```
 Total Issues:     21,492 → 51    (99.76% reduction)
 Line Endings:     21,441 → 0     (100% resolved)
@@ -40,7 +82,8 @@ Build Stability:  Failing → ✅   (Reliable CI)
 ```
 
 - Full implementation details in [RELEASE-NOTES-v1.5.0.md](./RELEASE-NOTES-v1.5.0.md)
-- Complete transformation summary in [docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md](./docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md)
+- Complete transformation summary in
+  [docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md](./docs/V1.5.0-QUALITY-TRANSFORMATION-SUMMARY.md)
 
 ### v1.4.1 - Code Quality Excellence & Architecture Refinement
 

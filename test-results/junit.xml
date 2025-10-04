@@ -1,173 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="79" failures="0" errors="0" time="2.686">
-  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:55" time="1.172" tests="3">
-    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.01">
+<testsuites name="jest tests" tests="15" failures="0" errors="0" time="2.03">
+  <testsuite name="Cache Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T21:00:38" time="0.851" tests="6">
+    <testcase classname="Cache Command should handle cache command successfully with proper field values" name="Cache Command should handle cache command successfully with proper field values" time="0.007">
     </testcase>
-    <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.001">
+    <testcase classname="Cache Command should never display &quot;undefined&quot; values in cache statistics" name="Cache Command should never display &quot;undefined&quot; values in cache statistics" time="0.002">
     </testcase>
-    <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.001">
+    <testcase classname="Cache Command should handle missing cache stats with proper fallback values" name="Cache Command should handle missing cache stats with proper fallback values" time="0.002">
     </testcase>
-  </testsuite>
-  <testsuite name="ResourceOptimizer - optimizeForServerCount" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:57" time="0.18" tests="30">
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should optimize for small server count" name="ResourceOptimizer - optimizeForServerCount should optimize for small server count" time="0.002">
+    <testcase classname="Cache Command should handle cache service throwing error gracefully" name="Cache Command should handle cache service throwing error gracefully" time="0.002">
     </testcase>
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should optimize for medium server count" name="ResourceOptimizer - optimizeForServerCount should optimize for medium server count" time="0.001">
+    <testcase classname="Cache Command should handle invalid user ID gracefully" name="Cache Command should handle invalid user ID gracefully" time="0.003">
     </testcase>
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should optimize for large server count" name="ResourceOptimizer - optimizeForServerCount should optimize for large server count" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should optimize for enterprise server count" name="ResourceOptimizer - optimizeForServerCount should optimize for enterprise server count" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should apply performance adjustments" name="ResourceOptimizer - optimizeForServerCount should apply performance adjustments" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - optimizeForServerCount should handle zero servers gracefully" name="ResourceOptimizer - optimizeForServerCount should handle zero servers gracefully" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should monitor resource status correctly" name="ResourceOptimizer - monitorResources should monitor resource status correctly" time="0.003">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should detect good performance status" name="ResourceOptimizer - monitorResources should detect good performance status" time="0.007">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should detect poor performance status" name="ResourceOptimizer - monitorResources should detect poor performance status" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should calculate memory usage correctly" name="ResourceOptimizer - monitorResources should calculate memory usage correctly" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should provide appropriate recommendations" name="ResourceOptimizer - monitorResources should provide appropriate recommendations" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should include free memory field in monitoring results" name="ResourceOptimizer - monitorResources should include free memory field in monitoring results" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should include load field in performance monitoring" name="ResourceOptimizer - monitorResources should include load field in performance monitoring" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should include optimizationTier field" name="ResourceOptimizer - monitorResources should include optimizationTier field" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - monitorResources should determine load correctly based on metrics" name="ResourceOptimizer - monitorResources should determine load correctly based on metrics" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - applyDynamicScaling should apply scaling for increasing load" name="ResourceOptimizer - applyDynamicScaling should apply scaling for increasing load" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - applyDynamicScaling should not scale when performance is good" name="ResourceOptimizer - applyDynamicScaling should not scale when performance is good" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - applyDynamicScaling should handle missing metrics gracefully" name="ResourceOptimizer - applyDynamicScaling should handle missing metrics gracefully" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - generateOptimizationRecommendations should generate recommendations based on analytics and performance" name="ResourceOptimizer - generateOptimizationRecommendations should generate recommendations based on analytics and performance" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - generateOptimizationRecommendations should recommend scaling for high server count" name="ResourceOptimizer - generateOptimizationRecommendations should recommend scaling for high server count" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - generateOptimizationRecommendations should recommend performance improvements for slow response times" name="ResourceOptimizer - generateOptimizationRecommendations should recommend performance improvements for slow response times" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - generateOptimizationRecommendations should recommend error investigation for high error rates" name="ResourceOptimizer - generateOptimizationRecommendations should recommend error investigation for high error rates" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - generateOptimizationRecommendations should handle empty or null inputs gracefully" name="ResourceOptimizer - generateOptimizationRecommendations should handle empty or null inputs gracefully" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Pi Optimizations should apply Pi-specific optimizations when enabled" name="ResourceOptimizer - Pi Optimizations should apply Pi-specific optimizations when enabled" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Pi Optimizations should monitor resources with Pi constraints" name="ResourceOptimizer - Pi Optimizations should monitor resources with Pi constraints" time="0.002">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Error Handling should handle invalid server counts gracefully" name="ResourceOptimizer - Error Handling should handle invalid server counts gracefully" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Error Handling should handle invalid metrics gracefully" name="ResourceOptimizer - Error Handling should handle invalid metrics gracefully" time="0.004">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Error Handling should provide fallback values for missing data" name="ResourceOptimizer - Error Handling should provide fallback values for missing data" time="0.001">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Performance should optimize quickly for large datasets" name="ResourceOptimizer - Performance should optimize quickly for large datasets" time="0.006">
-    </testcase>
-    <testcase classname="ResourceOptimizer - Performance should not consume excessive memory during optimization" name="ResourceOptimizer - Performance should not consume excessive memory during optimization" time="0.007">
+    <testcase classname="Cache Command should display all required cache fields for v1.6.5 compatibility" name="Cache Command should display all required cache fields for v1.6.5 compatibility" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="DiscordAnalytics - trackServerActivity" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:57" time="0.14" tests="11">
-    <testcase classname="DiscordAnalytics - trackServerActivity should track server activity correctly" name="DiscordAnalytics - trackServerActivity should track server activity correctly" time="0.002">
+  <testsuite name="Analytics Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T21:00:39" time="0.398" tests="3">
+    <testcase classname="Analytics Command should handle analytics command successfully" name="Analytics Command should handle analytics command successfully" time="0.005">
     </testcase>
-    <testcase classname="DiscordAnalytics - trackServerActivity should handle missing serverId" name="DiscordAnalytics - trackServerActivity should handle missing serverId" time="0.002">
+    <testcase classname="Analytics Command should handle analytics command error" name="Analytics Command should handle analytics command error" time="0.003">
     </testcase>
-    <testcase classname="DiscordAnalytics - trackServerActivity should handle missing action" name="DiscordAnalytics - trackServerActivity should handle missing action" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - trackServerActivity should include metadata when provided" name="DiscordAnalytics - trackServerActivity should include metadata when provided" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - analyzeUsagePatterns should analyze usage patterns correctly" name="DiscordAnalytics - analyzeUsagePatterns should analyze usage patterns correctly" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - analyzeUsagePatterns should identify command popularity correctly" name="DiscordAnalytics - analyzeUsagePatterns should identify command popularity correctly" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - analyzeUsagePatterns should handle empty activity history" name="DiscordAnalytics - analyzeUsagePatterns should handle empty activity history" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - generateDailyReport should generate comprehensive daily report" name="DiscordAnalytics - generateDailyReport should generate comprehensive daily report" time="0.008">
-    </testcase>
-    <testcase classname="DiscordAnalytics - generateDailyReport should calculate summary statistics correctly" name="DiscordAnalytics - generateDailyReport should calculate summary statistics correctly" time="0.002">
-    </testcase>
-    <testcase classname="DiscordAnalytics - generateDailyReport should handle empty activity history gracefully" name="DiscordAnalytics - generateDailyReport should handle empty activity history gracefully" time="0.001">
-    </testcase>
-    <testcase classname="DiscordAnalytics - generateDailyReport should include successRate and avgResponseTime fields for analytics command compatibility" name="DiscordAnalytics - generateDailyReport should include successRate and avgResponseTime fields for analytics command compatibility" time="0.001">
+    <testcase classname="Analytics Command should handle analytics with empty data" name="Analytics Command should handle analytics with empty data" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:57" time="0.406" tests="3">
+  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T21:00:39" time="0.302" tests="3">
+    <testcase classname="Resources Command should handle resources command successfully" name="Resources Command should handle resources command successfully" time="0.002">
+    </testcase>
+    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.002">
+    </testcase>
+    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T21:00:40" time="0.321" tests="3">
     <testcase classname="Dashboard Command should handle dashboard command successfully" name="Dashboard Command should handle dashboard command successfully" time="0.003">
     </testcase>
     <testcase classname="Dashboard Command should handle dashboard command error" name="Dashboard Command should handle dashboard command error" time="0.002">
     </testcase>
-    <testcase classname="Dashboard Command should handle dashboard with degraded performance" name="Dashboard Command should handle dashboard with degraded performance" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="Resources Command" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:57" time="0.405" tests="3">
-    <testcase classname="Resources Command should handle resources command successfully" name="Resources Command should handle resources command successfully" time="0.003">
-    </testcase>
-    <testcase classname="Resources Command should handle resources command error" name="Resources Command should handle resources command error" time="0.002">
-    </testcase>
-    <testcase classname="Resources Command should handle resources with warning status" name="Resources Command should handle resources with warning status" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="PerformanceDashboard - generateDashboardReport" errors="0" failures="0" skipped="0" timestamp="2025-10-04T18:47:58" time="0.182" tests="29">
-    <testcase classname="PerformanceDashboard - generateDashboardReport should generate comprehensive dashboard report" name="PerformanceDashboard - generateDashboardReport should generate comprehensive dashboard report" time="0.003">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateDashboardReport should include correct overview information" name="PerformanceDashboard - generateDashboardReport should include correct overview information" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateDashboardReport should include both responseTime and averageResponseTime fields for dashboard compatibility" name="PerformanceDashboard - generateDashboardReport should include both responseTime and averageResponseTime fields for dashboard compatibility" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateDashboardReport should call all required service methods" name="PerformanceDashboard - generateDashboardReport should call all required service methods" time="0.002">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateDashboardReport should handle empty input gracefully" name="PerformanceDashboard - generateDashboardReport should handle empty input gracefully" time="0.002">
-    </testcase>
-    <testcase classname="PerformanceDashboard - getRealTimeStatus should return real-time status information" name="PerformanceDashboard - getRealTimeStatus should return real-time status information" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - getRealTimeStatus should include uptime in seconds and formatted" name="PerformanceDashboard - getRealTimeStatus should include uptime in seconds and formatted" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - getRealTimeStatus should include memory usage information" name="PerformanceDashboard - getRealTimeStatus should include memory usage information" time="0.005">
-    </testcase>
-    <testcase classname="PerformanceDashboard - getRealTimeStatus should have online status" name="PerformanceDashboard - getRealTimeStatus should have online status" time="0">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should generate memory alerts for high usage" name="PerformanceDashboard - generateAlerts should generate memory alerts for high usage" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should generate performance alerts for slow response times" name="PerformanceDashboard - generateAlerts should generate performance alerts for slow response times" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should generate reliability alerts for high error rates" name="PerformanceDashboard - generateAlerts should generate reliability alerts for high error rates" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should not generate alerts for good metrics" name="PerformanceDashboard - generateAlerts should not generate alerts for good metrics" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should generate warning alerts for elevated metrics" name="PerformanceDashboard - generateAlerts should generate warning alerts for elevated metrics" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - generateAlerts should include timestamp in alerts" name="PerformanceDashboard - generateAlerts should include timestamp in alerts" time="0">
-    </testcase>
-    <testcase classname="PerformanceDashboard - exportDashboardData should export as JSON by default" name="PerformanceDashboard - exportDashboardData should export as JSON by default" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - exportDashboardData should export as JSON when explicitly specified" name="PerformanceDashboard - exportDashboardData should export as JSON when explicitly specified" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - exportDashboardData should export as CSV format" name="PerformanceDashboard - exportDashboardData should export as CSV format" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - exportDashboardData should export as text format" name="PerformanceDashboard - exportDashboardData should export as text format" time="0.002">
-    </testcase>
-    <testcase classname="PerformanceDashboard - exportDashboardData should fallback to JSON for unknown formats" name="PerformanceDashboard - exportDashboardData should fallback to JSON for unknown formats" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Private Methods should calculate overall status correctly for healthy system" name="PerformanceDashboard - Private Methods should calculate overall status correctly for healthy system" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Private Methods should calculate overall status correctly for critical system" name="PerformanceDashboard - Private Methods should calculate overall status correctly for critical system" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Private Methods should format uptime correctly" name="PerformanceDashboard - Private Methods should format uptime correctly" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Private Methods should generate insights from analytics patterns" name="PerformanceDashboard - Private Methods should generate insights from analytics patterns" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Error Handling should handle missing dependencies gracefully" name="PerformanceDashboard - Error Handling should handle missing dependencies gracefully" time="0.003">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Error Handling should handle null inputs gracefully" name="PerformanceDashboard - Error Handling should handle null inputs gracefully" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Error Handling should provide fallback values when services fail" name="PerformanceDashboard - Error Handling should provide fallback values when services fail" time="0.001">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Performance should generate dashboard quickly" name="PerformanceDashboard - Performance should generate dashboard quickly" time="0.003">
-    </testcase>
-    <testcase classname="PerformanceDashboard - Performance should handle large alert datasets efficiently" name="PerformanceDashboard - Performance should handle large alert datasets efficiently" time="0.003">
+    <testcase classname="Dashboard Command should handle dashboard with degraded performance" name="Dashboard Command should handle dashboard with degraded performance" time="0.005">
     </testcase>
   </testsuite>
 </testsuites>

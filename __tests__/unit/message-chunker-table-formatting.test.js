@@ -19,7 +19,7 @@ describe('Message Chunker - Table Formatting', () => {
 | No "Ordnance" Slot | No separate weapon slot named "Ordnance" | Explosive weapons are under heavy or other standard slots |`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('**Weapon Slot | Description | Notes:**');
       expect(result).toContain('• **Weapon Slot**: Torgue Heavy Slot');
       expect(result).toContain('*Description*: Rocket and grenade launchers');
@@ -33,7 +33,7 @@ describe('Message Chunker - Table Formatting', () => {
 | Data 1   | Data 2   |`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('**Column 1 | Column 2:**');
       expect(result).toContain('• **Column 1**: Data 1');
       expect(result).toContain('*Column 2*: Data 2');
@@ -49,7 +49,7 @@ describe('Message Chunker - Table Formatting', () => {
 And some text after the table.`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('Here is some text before the table.');
       expect(result).toContain('**Name | Value:**');
       expect(result).toContain('• **Name**: Test');
@@ -65,7 +65,7 @@ And some text after the table.`;
 | More | Data | Than | Headers |`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('**Header 1 | Header 2:**');
       expect(result).toContain('• **Header 1**: Data 1');
       // Incomplete row should be treated as regular text
@@ -87,7 +87,7 @@ And some text after the table.`;
 | Unicode 🚀 | 💯 Perfect |`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('**Feature | Status:**');
       expect(result).toContain('• **Feature**: Support é & ñ');
       expect(result).toContain('*Status*: ✅ Working');
@@ -102,7 +102,7 @@ And some text after the table.`;
 | Row 2 |`;
 
       const result = formatTablesForDiscord(content);
-      
+
       expect(result).toContain('**Single Column:**');
       expect(result).toContain('• **Single Column**: Row 1');
       expect(result).toContain('• **Single Column**: Row 2');
@@ -113,7 +113,7 @@ And some text after the table.`;
 And this line too | has pipes | but no proper table format.`;
 
       const result = formatTablesForDiscord(content);
-      
+
       // Should return unchanged since these aren't proper table rows
       expect(result).toBe(content);
     });

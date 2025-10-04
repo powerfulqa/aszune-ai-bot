@@ -6,7 +6,9 @@
 
 ## 🏗️ Architecture Overview
 
-The Aszune AI Bot uses a multi-layered cache architecture designed for performance, reliability, and maintainability. This document outlines the critical patterns and requirements learned from the v1.6.5 cache command fixes.
+The Aszune AI Bot uses a multi-layered cache architecture designed for performance, reliability, and
+maintainability. This document outlines the critical patterns and requirements learned from the
+v1.6.5 cache command fixes.
 
 ## 📋 Service Layer Hierarchy
 
@@ -62,7 +64,7 @@ class CacheManager {
     this.cache = new EnhancedCache({
       maxSize: config.CACHE.DEFAULT_MAX_ENTRIES,
       maxMemory: config.CACHE.MAX_MEMORY_MB * 1024 * 1024,
-      evictionStrategy: EVICTION_STRATEGIES.HYBRID
+      evictionStrategy: EVICTION_STRATEGIES.HYBRID,
     });
   }
 
@@ -73,11 +75,22 @@ class CacheManager {
     } catch (error) {
       // ✅ CRITICAL: Return complete object with all expected fields
       return {
-        hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0,
-        hitRate: 0, entryCount: 0, memoryUsage: 0,
-        memoryUsageFormatted: '0 B', maxMemory: 0, maxMemoryFormatted: '0 B',
-        maxSize: 0, uptime: 0, uptimeFormatted: '0s',
-        evictionStrategy: 'hybrid', error: errorResponse.message
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        evictions: 0,
+        hitRate: 0,
+        entryCount: 0,
+        memoryUsage: 0,
+        memoryUsageFormatted: '0 B',
+        maxMemory: 0,
+        maxMemoryFormatted: '0 B',
+        maxSize: 0,
+        uptime: 0,
+        uptimeFormatted: '0s',
+        evictionStrategy: 'hybrid',
+        error: errorResponse.message,
       };
     }
   }
@@ -89,7 +102,7 @@ class CacheManager {
       return {
         error: errorResponse.message,
         stats: this.getStats(),
-        entries: []
+        entries: [],
       };
     }
   }
@@ -112,9 +125,10 @@ class CacheManager {
 ```javascript
 class EnhancedCache {
   getStats() {
-    const hitRate = this.metrics.hits + this.metrics.misses > 0
-      ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100
-      : 0;
+    const hitRate =
+      this.metrics.hits + this.metrics.misses > 0
+        ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100
+        : 0;
 
     return {
       ...this.metrics, // hits, misses, sets, deletes, evictions
@@ -127,7 +141,7 @@ class EnhancedCache {
       maxSize: this.maxSize,
       maxMemory: this.maxMemory,
       maxMemoryFormatted: this.formatBytes(this.maxMemory),
-      evictionStrategy: this.evictionStrategy
+      evictionStrategy: this.evictionStrategy,
     };
   }
 }
@@ -137,26 +151,28 @@ class EnhancedCache {
 
 ### Discord Command Field Compatibility
 
-All cache statistics **MUST** include these exact fields to prevent "undefined" values in Discord embeds:
+All cache statistics **MUST** include these exact fields to prevent "undefined" values in Discord
+embeds:
 
-| Field | Type | Description | Required |
-|-------|------|-------------|----------|
-| `hits` | number | Cache hit count | ✅ |
-| `misses` | number | Cache miss count | ✅ |
-| `hitRate` | number | Hit rate percentage | ✅ |
-| `sets` | number | Set operations count | ✅ |
-| `deletes` | number | Delete operations count | ✅ |
-| `evictions` | number | Eviction count | ✅ |
-| `memoryUsageFormatted` | string | Formatted memory usage | ✅ |
-| `maxMemoryFormatted` | string | Formatted max memory | ✅ |
-| `entryCount` | number | Current entry count | ✅ |
-| `maxSize` | number | Maximum entries allowed | ✅ |
-| `evictionStrategy` | string | Eviction strategy name | ✅ |
-| `uptimeFormatted` | string | Formatted uptime | ✅ |
+| Field                  | Type   | Description             | Required |
+| ---------------------- | ------ | ----------------------- | -------- |
+| `hits`                 | number | Cache hit count         | ✅       |
+| `misses`               | number | Cache miss count        | ✅       |
+| `hitRate`              | number | Hit rate percentage     | ✅       |
+| `sets`                 | number | Set operations count    | ✅       |
+| `deletes`              | number | Delete operations count | ✅       |
+| `evictions`            | number | Eviction count          | ✅       |
+| `memoryUsageFormatted` | string | Formatted memory usage  | ✅       |
+| `maxMemoryFormatted`   | string | Formatted max memory    | ✅       |
+| `entryCount`           | number | Current entry count     | ✅       |
+| `maxSize`              | number | Maximum entries allowed | ✅       |
+| `evictionStrategy`     | string | Eviction strategy name  | ✅       |
+| `uptimeFormatted`      | string | Formatted uptime        | ✅       |
 
 ### Service Delegation Patterns
 
 #### ✅ Correct Implementation
+
 ```javascript
 // Service -> CacheManager -> EnhancedCache
 class PerplexityService {
@@ -167,6 +183,7 @@ class PerplexityService {
 ```
 
 #### ❌ Common Mistakes
+
 ```javascript
 // Direct cache access (BREAKS)
 getCacheStats() {
@@ -182,12 +199,13 @@ getCacheStats() {
 ## 🧪 Testing Patterns
 
 ### Service Integration Tests
+
 ```javascript
 describe('Cache Service Integration', () => {
   test('should return complete stats object', () => {
     const service = new PerplexityService();
     const stats = service.getCacheStats();
-    
+
     // ✅ CRITICAL: Test all required fields
     expect(stats).toMatchObject({
       hits: expect.any(Number),
@@ -201,22 +219,23 @@ describe('Cache Service Integration', () => {
       entryCount: expect.any(Number),
       maxSize: expect.any(Number),
       evictionStrategy: expect.any(String),
-      uptimeFormatted: expect.any(String)
+      uptimeFormatted: expect.any(String),
     });
   });
 });
 ```
 
 ### Error Scenario Testing
+
 ```javascript
 test('should handle cache errors gracefully', () => {
   // Mock cache to throw error
   service.cacheManager.cache.getStats = jest.fn().mockImplementation(() => {
     throw new Error('Cache error');
   });
-  
+
   const stats = service.getCacheStats();
-  
+
   // ✅ Should return fallback with all fields
   expect(stats.error).toBeDefined();
   expect(stats.hits).toBe(0);
@@ -227,6 +246,7 @@ test('should handle cache errors gracefully', () => {
 ## 🚨 Common Pitfalls & Solutions
 
 ### 1. Property Name Inconsistency
+
 ```javascript
 // ❌ Problem: Inconsistent property naming
 this.cache = new CacheManager();
@@ -238,6 +258,7 @@ this.cacheManager = new CacheManager(); // Always use this pattern
 ```
 
 ### 2. Incomplete Error Handling
+
 ```javascript
 // ❌ Problem: Partial error response
 catch (error) {
@@ -254,6 +275,7 @@ catch (error) {
 ```
 
 ### 3. Missing Method Implementation
+
 ```javascript
 // ❌ Problem: Service doesn't implement expected methods
 class CacheManager {
@@ -262,25 +284,34 @@ class CacheManager {
 
 // ✅ Solution: Implement all required methods
 class CacheManager {
-  getStats() { /* implementation */ }
-  getDetailedInfo() { /* implementation */ }
-  invalidateByTag(tag) { /* implementation */ }
+  getStats() {
+    /* implementation */
+  }
+  getDetailedInfo() {
+    /* implementation */
+  }
+  invalidateByTag(tag) {
+    /* implementation */
+  }
 }
 ```
 
 ## 📈 Performance Considerations
 
 ### Memory Usage Optimization
+
 - Cache statistics are calculated on-demand to minimize memory overhead
 - Formatted strings are generated during retrieval, not stored
 - Eviction strategies prevent unbounded memory growth
 
 ### Response Time Targets
+
 - `getStats()`: < 1ms (synchronous calculation)
 - `getDetailedInfo()`: < 5ms (includes entry enumeration)
 - `invalidateByTag()`: < 10ms (depends on tag distribution)
 
 ### Error Handling Performance
+
 - Fallback objects are pre-defined to minimize creation overhead
 - Error logging is async to prevent blocking cache operations
 - Circuit breaker patterns prevent cascade failures
@@ -297,6 +328,7 @@ If you have custom cache implementations, ensure they follow the new patterns:
 4. **Service delegation**: Never bypass the service layer
 
 ### Breaking Changes
+
 - None - all changes are additive and maintain backward compatibility
 
 ## 📚 References
@@ -309,4 +341,5 @@ If you have custom cache implementations, ensure they follow the new patterns:
 
 ---
 
-**Next Steps**: Consider implementing cache metrics dashboard and automated performance monitoring based on these architectural patterns.
+**Next Steps**: Consider implementing cache metrics dashboard and automated performance monitoring
+based on these architectural patterns.

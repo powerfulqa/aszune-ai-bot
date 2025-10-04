@@ -10,7 +10,7 @@ jest.mock('../../../src/config/config', () => require('../../../__mocks__/config
 jest.mock('../../../src/utils/logger');
 jest.mock('../../../src/utils/performance-dashboard', () => ({
   generateDashboardReport: jest.fn(),
-  getRealTimeStatus: jest.fn()
+  getRealTimeStatus: jest.fn(),
 }));
 jest.mock('../../../src/utils/error-handler');
 
@@ -38,7 +38,7 @@ describe('Dashboard Command', () => {
     editReply: jest.fn(),
     user: {
       id: 'test-user-123',
-      username: 'testuser'
+      username: 'testuser',
     },
     guild: {
       id: 'test-guild-123',
@@ -51,19 +51,19 @@ describe('Dashboard Command', () => {
               { user: { bot: false }, presence: { status: 'online' } },
               { user: { bot: false }, presence: { status: 'idle' } },
               { user: { bot: false }, presence: { status: 'offline' } },
-              { user: { bot: true }, presence: { status: 'online' } }
+              { user: { bot: true }, presence: { status: 'online' } },
             ];
             return { size: members.filter(callback).length };
           }),
-          size: 4
-        }
-      }
-    }
+          size: 4,
+        },
+      },
+    },
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup default successful mocks
     PerformanceDashboard.generateDashboardReport.mockResolvedValue({
       overview: {
@@ -74,58 +74,58 @@ describe('Dashboard Command', () => {
         optimizationTier: 'Standard',
         serverCount: 5,
         activeUsers: 150,
-        totalCommands: 1250
+        totalCommands: 1250,
       },
-      alerts: []
+      alerts: [],
     });
 
     PerformanceDashboard.getRealTimeStatus.mockReturnValue({
       uptime: {
-        formatted: '5d 12h 30m'
-      }
+        formatted: '5d 12h 30m',
+      },
     });
 
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
-      type: 'GENERAL_ERROR'
+      type: 'GENERAL_ERROR',
     });
   });
 
   test('should handle dashboard command successfully', async () => {
     await handleSlashCommand(mockInteraction);
-    
+
     expect(mockInteraction.deferReply).toHaveBeenCalled();
-    
+
     // Use flexible matching to avoid emoji encoding issues
     expect(mockInteraction.editReply).toHaveBeenCalledWith(
       expect.objectContaining({
         embeds: expect.arrayContaining([
           expect.objectContaining({
-            color: 0x00FF00,
+            color: 0x00ff00,
             title: expect.stringContaining('Performance Dashboard'),
             fields: expect.arrayContaining([
               expect.objectContaining({
                 name: expect.stringContaining('System Status'),
                 value: expect.stringContaining('HEALTHY'),
-                inline: true
+                inline: true,
               }),
               expect.objectContaining({
                 name: expect.stringContaining('Performance'),
                 value: expect.stringContaining('1.2s'),
-                inline: true
+                inline: true,
               }),
               expect.objectContaining({
                 name: expect.stringContaining('Activity'),
                 value: expect.stringContaining('Servers: 1'),
-                inline: true
-              })
+                inline: true,
+              }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard')
+              text: expect.stringContaining('Aszai Bot Dashboard'),
             }),
-            timestamp: expect.any(String)
-          })
-        ])
+            timestamp: expect.any(String),
+          }),
+        ]),
       })
     );
   });
@@ -139,7 +139,7 @@ describe('Dashboard Command', () => {
     expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'dashboard_command');
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.'
+      content: 'An unexpected error occurred. Please try again later.',
     });
   });
 
@@ -153,18 +153,18 @@ describe('Dashboard Command', () => {
         optimizationTier: 'High',
         serverCount: 12,
         activeUsers: 450,
-        totalCommands: 2500
+        totalCommands: 2500,
       },
       alerts: [
         { severity: 'critical', message: 'High memory usage detected' },
-        { severity: 'warning', message: 'Response time degraded' }
-      ]
+        { severity: 'warning', message: 'Response time degraded' },
+      ],
     });
 
     PerformanceDashboard.getRealTimeStatus.mockReturnValue({
       uptime: {
-        formatted: '1d 2h 15m'
-      }
+        formatted: '1d 2h 15m',
+      },
     });
 
     await handleSlashCommand(mockInteraction);
@@ -173,36 +173,36 @@ describe('Dashboard Command', () => {
       expect.objectContaining({
         embeds: expect.arrayContaining([
           expect.objectContaining({
-            color: 0xFFA500,
+            color: 0xffa500,
             title: expect.stringContaining('Performance Dashboard'),
             fields: expect.arrayContaining([
               expect.objectContaining({
                 name: expect.stringContaining('System Status'),
                 value: expect.stringContaining('WARNING'),
-                inline: true
+                inline: true,
               }),
               expect.objectContaining({
                 name: expect.stringContaining('Performance'),
                 value: expect.stringContaining('5.7s'),
-                inline: true
+                inline: true,
               }),
               expect.objectContaining({
                 name: expect.stringContaining('Activity'),
                 value: expect.stringContaining('Servers: 1'),
-                inline: true
+                inline: true,
               }),
               expect.objectContaining({
                 name: expect.stringContaining('Active Alerts'),
                 value: expect.stringContaining('High memory usage detected'),
-                inline: false
-              })
+                inline: false,
+              }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard')
+              text: expect.stringContaining('Aszai Bot Dashboard'),
             }),
-            timestamp: expect.any(String)
-          })
-        ])
+            timestamp: expect.any(String),
+          }),
+        ]),
       })
     );
   });

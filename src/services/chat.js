@@ -158,7 +158,9 @@ async function generateBotResponse(userId) {
   const emojiLimit = config.PI_OPTIMIZATIONS.ENABLED
     ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
     : 10;
-  const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, { maxEmojis: emojiLimit });
+  const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
+    maxEmojis: emojiLimit,
+  });
 
   // Format response for Pi if optimizations enabled
   return messageFormatter.formatResponse(enhancedReply);
