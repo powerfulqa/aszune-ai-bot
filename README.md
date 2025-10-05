@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.6.5)
+# Aszune AI Bot (v1.7.0)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -153,6 +153,12 @@ quality with 991+ automated tests and built-in license protection system.
   and commercial use
 - 🍓 **Raspberry Pi Optimized:** Specialized license server setup for Pi 3+ with automated
   monitoring
+- 💾 **Persistent Data Storage:** SQLite database integration for conversation history and user analytics
+  - 📊 **User Statistics:** Tracks message counts and last activity timestamps per user
+  - 💬 **Conversation History:** Persistent storage of user messages and bot responses
+  - 🔄 **Seamless Integration:** Automatic database initialization and graceful fallback handling
+  - 📈 **Analytics Foundation:** Powers advanced user engagement tracking and trend analysis
+  - 🛡️ **Data Integrity:** Automatic table management with built-in constraints and triggers
 
 ---
 
@@ -187,7 +193,21 @@ quality with 991+ automated tests and built-in license protection system.
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
    ```
 
-4. **Optional: License System (Feature Flagged)**
+4. **Database Setup (Automatic)**
+
+   The bot automatically creates and manages a SQLite database for persistent data storage:
+   - **Auto-created**: Database file is created automatically on first run
+   - **Location**: `./data/bot.db` (configurable via `DB_PATH` environment variable)
+   - **Tables**: User statistics and conversation history tables are created automatically
+   - **No manual setup required**: The bot handles all database initialization
+
+   Optional database configuration:
+   ```env
+   # Optional: Custom database path (defaults to ./data/bot.db)
+   DB_PATH=./custom/path/bot.db
+   ```
+
+5. **Optional: License System (Feature Flagged)**
 
    The license validation system is currently **disabled by default** and behind feature flags for
    safe deployment. You can:
@@ -372,6 +392,7 @@ aszune-ai-bot/
 │   │   └── config.js              # Global configuration
 │   ├── services/                   # API and core services
 │   │   ├── chat.js                # Chat message handler
+│   │   ├── database.js            # SQLite database service
 │   │   ├── perplexity-secure.js   # Perplexity API service
 │   │   └── storage.js             # Data storage service
 │   └── utils/                      # Utility functions and helpers
@@ -389,6 +410,7 @@ aszune-ai-bot/
 │       ├── pi-detector.js          # Raspberry Pi detection
 │       └── [other utilities]       # Additional utility modules
 ├── data/                           # Persistent data storage
+│   ├── bot.db                     # SQLite database (auto-created)
 │   ├── question_cache.json        # Response cache
 │   └── user_stats.json            # User statistics
 ├── docs/                          # Version-specific documentation
@@ -470,7 +492,7 @@ For detailed information, see [docs/QLTY_INTEGRATION.md](docs/QLTY_INTEGRATION.m
 ## Testing & Coverage
 
 The project includes comprehensive testing with Jest covering both standard functionality and branch
-coverage. To run tests:
+coverage, including full database integration testing. To run tests:
 
 ```bash
 # Run all tests
@@ -488,11 +510,13 @@ npm run test:branch-coverage
 
 The test suite includes:
 
-- Unit tests for all service modules
+- Unit tests for all service modules (including database service)
 - Integration tests for bot functionality
+- Database integration tests (SQLite operations, table creation, data persistence)
 - Edge case handling tests
 - Mocks for external dependencies
 - Branch coverage tests for critical components
+- Comprehensive conversation flow testing with database persistence
 
 ### Branch Coverage Testing
 

@@ -79,6 +79,8 @@ src/
   and reporting (feature-flagged)
 - **License Server**: Express.js-based licensing management system with web dashboard and violation
   tracking (feature-flagged)
+- **Database Service**: SQLite integration for persistent conversation history and user analytics
+  (`src/services/database.js`) with automatic table creation and graceful fallback
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -155,6 +157,39 @@ or Discord will show "undefined":
 - Operations: `sets`, `deletes`, `evictions`
 - Memory: `memoryUsageFormatted`, `maxMemoryFormatted`, `entryCount`, `maxSize`
 - Configuration: `evictionStrategy`, `uptimeFormatted`
+
+**Database Service Architecture (CRITICAL - v1.7.0 Integration):**
+
+- **Graceful Fallback**: DatabaseService MUST provide mock implementations when SQLite unavailable
+- **Error Handling**: Database errors should be logged and NOT cause conversation flow to fail
+- **Method Contracts**: All database methods return expected data structures or defaults
+- **Resource Management**: Single database connection per service instance with proper cleanup
+
+```javascript
+// ✅ CORRECT - Proper database service integration
+try {
+  databaseService.addUserMessage(userId, messageContent);
+  databaseService.updateUserStats(userId, { message_count: 1, last_active: new Date().toISOString() });
+} catch (dbError) {
+  logger.warn('Database operation failed:', dbError.message);
+  // CRITICAL: Continue processing even if database fails
+}
+
+// ✅ CORRECT - Database service mock for tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
+
+// ❌ WRONG - Breaking conversation flow on database errors
+try {
+  databaseService.addUserMessage(userId, messageContent);
+} catch (dbError) {
+  throw dbError; // This breaks the entire conversation!
+}
+```
 
 **Module Export Contracts:**
 
@@ -271,6 +306,44 @@ await expect(service.method()).rejects.toThrow('Expected error message');
 // ❌ WRONG - Test for returned error strings
 const result = await service.method();
 expect(result).toContain('error message');
+```
+
+### Database Service Testing (v1.7.0)
+
+```javascript
+// ✅ CORRECT - Database service testing with actual SQLite
+const { DatabaseService } = require('../../../src/services/database');
+
+describe('DatabaseService', () => {
+  let dbService;
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Clean up any existing test database
+    if (fs.existsSync(testDbPath)) {
+      fs.unlinkSync(testDbPath);
+    }
+    dbService = new DatabaseService();
+  });
+
+  afterEach(() => {
+    if (dbService.db && !dbService.isDisabled) {
+      try {
+        dbService.close();
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }
+  });
+});
+
+// ✅ CORRECT - Database mock for chat service tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
 ```
 
 ## 🛡️ Security & Quality Requirements (qlty Standards)
@@ -496,6 +569,46 @@ afterEach(() => {
 });
 ```
 
+### 4b. Test Fixing Patterns (v1.7.0 Lessons)
+
+**Mock Completeness Issues**: When tests fail with "method not called", check for missing mocks:
+
+```javascript
+// ❌ COMMON MISTAKE - Incomplete service mocks
+const mockEmojiManager = {
+  addEmojis: jest.fn(), // Only partial implementation
+};
+
+// ✅ CORRECT - Complete service mocks matching actual usage
+const mockEmojiManager = {
+  addEmojis: jest.fn(),
+  addEmojisToResponse: jest.fn().mockImplementation((text) => text),
+  addReactionsToMessage: jest.fn().mockResolvedValue(),
+};
+```
+
+**Service Method Alignment**: Ensure mocks match actual service calls:
+
+```javascript
+// ❌ WRONG - Mock doesn't match actual service usage
+mockMessageFormatter.createCompactEmbed.mockReturnValue({});
+
+// ✅ CORRECT - Mock includes all methods actually called
+mockMessageFormatter.formatResponse.mockImplementation((text) => text);
+```
+
+**Database Mock Strategy**: Always mock database service for non-database tests:
+
+```javascript
+// ✅ REQUIRED - Database service mock for chat tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(), 
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
+```
+
 ### 5. Service Component Architecture (DO NOT MODIFY)
 
 **PerplexityService uses component-based architecture:**
@@ -660,6 +773,36 @@ DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online', // Never worked
 - Monitor Perplexity documentation for model changes
 - Always provide fallback error handling for API model issues
 
+### 9. Database Service Integration (CRITICAL - v1.7.0)
+
+**DANGER**: Database errors must NEVER break conversation flow!
+
+```javascript
+// ✅ CORRECT - Database errors don't break conversations
+try {
+  databaseService.addUserMessage(userId, messageContent);
+  databaseService.updateUserStats(userId, { message_count: 1, last_active: new Date().toISOString() });
+} catch (dbError) {
+  logger.warn('Database operation failed:', dbError.message);
+  // CRITICAL: Continue processing even if database fails
+}
+
+// ❌ DEADLY MISTAKE - Breaking conversation flow on database errors
+try {
+  databaseService.addUserMessage(userId, messageContent);
+} catch (dbError) {
+  throw dbError; // This breaks the entire conversation!
+}
+```
+
+**Database Service Requirements:**
+
+- **Graceful Fallback**: Must provide mock implementations when SQLite unavailable
+- **Error Isolation**: Database errors logged but don't propagate to conversation flow
+- **Single Connection**: One database connection per service instance
+- **Proper Cleanup**: Always close connections in afterEach for tests
+- **Mock All Methods**: Non-database tests must mock all DatabaseService methods
+
 ## 📋 Pre-Commit Checklist
 
 Before committing changes, ensure:
@@ -760,6 +903,9 @@ A successful implementation should achieve:
 - ✅ Feature flag system implemented (license features safely disabled by default)
 - ✅ Safe config access patterns followed (no module-level feature flag access)
 - ✅ Graceful feature flag fallbacks (handles missing FEATURES property)
+- ✅ Database integration complete with SQLite support (v1.7.0)
+- ✅ Database service graceful fallbacks implemented (continues without database)
+- ✅ Database error handling isolated (doesn't break conversation flow)
 
 ## 📚 Additional Resources
 
@@ -795,6 +941,8 @@ failures:**
    ThrottlingService
 7. **Discord API Timeout Protection**: Always use Promise.race() with 5-second timeouts (v1.6.1)
 8. **Analytics Fallbacks**: Provide realistic estimates when Discord API unavailable
+9. **Database Error Isolation**: Database errors must NEVER break conversation flow (v1.7.0)
+10. **Database Service Mocking**: Always mock DatabaseService for non-database tests
 
 ### Common Breaking Changes to AVOID:
 
@@ -807,6 +955,8 @@ failures:**
 - Direct Discord API calls without timeout protection (v1.6.1)
 - Analytics without fallback estimates for Discord API failures
 - Using deprecated Perplexity model names (v1.6.3)
+- Database errors propagating to conversation flow (v1.7.0)
+- Missing DatabaseService mocks in non-database tests
 
 **WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives
 failed. Follow them exactly or expect test failures and runtime errors.
@@ -818,6 +968,10 @@ fallbacks. These patterns are now mandatory for any Discord API interactions.
 **v1.6.3 Perplexity API Lessons**: Perplexity frequently changes model names without warning,
 requiring proactive monitoring and quick fixes. The summarise command (`!summerise`, `!summarise`)
 is particularly sensitive to these changes.
+
+**v1.7.0 Database Integration Lessons**: Database integration must be completely isolated from conversation
+flow - any database errors that propagate will break the entire chat system. Mock completeness is critical
+for test stability.
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
 follow existing patterns exactly.

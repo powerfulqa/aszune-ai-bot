@@ -49,6 +49,20 @@ Follow these steps to set up the Aszune AI Bot:
 
    Replace the placeholder values with your actual tokens and keys.
 
+4. **Database Setup (Automatic)**
+
+   The bot automatically handles database setup:
+   - **SQLite database** is created automatically on first run
+   - **Default location**: `./data/bot.db` (directory created if needed)
+   - **No manual setup required** - everything is handled automatically
+   - **Conversation history** and **user statistics** are stored persistently
+
+   Optional database configuration:
+   ```env
+   # Optional: Custom database path (defaults to ./data/bot.db)
+   DB_PATH=./custom/path/bot.db
+   ```
+
 4. **Configure Discord Bot Intents** (Required for Analytics)
    - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
    - Select your application

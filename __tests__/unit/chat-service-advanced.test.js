@@ -23,7 +23,14 @@ const commandHandler = require('../../src/commands');
 jest.mock('../../src/services/perplexity-secure', () => ({
   generateChatResponse: jest.fn(),
 }));
-jest.mock('../../src/utils/conversation');
+jest.mock('../../src/utils/conversation', () => {
+  return jest.fn().mockImplementation(() => ({
+    isRateLimited: jest.fn().mockReturnValue(false),
+    getHistory: jest.fn().mockReturnValue([{ role: 'user', content: 'hello' }]),
+    addMessage: jest.fn(),
+    updateTimestamp: jest.fn(),
+  }));
+});
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
 jest.mock('../../src/utils/input-validator', () => ({
@@ -40,6 +47,12 @@ jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: jest.fn().mockReturnValue(['Mocked response']),
   formatTablesForDiscord: jest.fn().mockImplementation((content) => content),
 }));
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
 
 describe('Chat Service - Advanced', () => {
   // Create a mock message
@@ -51,24 +64,19 @@ describe('Chat Service - Advanced', () => {
     channel: { sendTyping: jest.fn() },
   });
 
-  let conversationManager;
   beforeEach(() => {
     jest.clearAllMocks();
-    conversationManager = new ConversationManager();
-    jest.spyOn(conversationManager, 'isRateLimited').mockReturnValue(false);
-    jest
-      .spyOn(conversationManager, 'getHistory')
-      .mockReturnValue([{ role: 'user', content: 'hello' }]);
-    jest.spyOn(conversationManager, 'addMessage').mockImplementation(() => {});
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
     commandHandler.handleTextCommand.mockResolvedValue();
   });
 
   it('should handle AI response generation errors', async () => {
-    perplexityService.generateChatResponse.mockRejectedValue(new Error('API Error'));
-    const message = createMessage('Hello');
+    const error = new Error('API Error');
+    error.statusCode = 500;
+    perplexityService.generateChatResponse.mockRejectedValue(error);
 
+    const message = createMessage('Hello');
     await handleChatMessage(message);
 
     expect(message.reply).toHaveBeenCalled();
@@ -76,7 +84,7 @@ describe('Chat Service - Advanced', () => {
       embeds: [
         {
           color: '#5865F2',
-          description: 'The service is temporarily unavailable. Please try again later.',
+          description: 'Network connection issue. Please check your connection and try again.',
           footer: { text: 'Aszai Bot' },
         },
       ],
@@ -134,7 +142,13 @@ describe('Chat Service - Advanced', () => {
   });
 
   it('should handle empty conversation history', async () => {
-    jest.spyOn(conversationManager, 'getHistory').mockReturnValue([]);
+    // Mock empty history - the constructor returns instances with mocked methods
+    ConversationManager.mockImplementation(() => ({
+      isRateLimited: jest.fn().mockReturnValue(false),
+      getHistory: jest.fn().mockReturnValue([]),
+      addMessage: jest.fn(),
+      updateTimestamp: jest.fn(),
+    }));
     const message = createMessage('Hello');
 
     await handleChatMessage(message);
@@ -148,7 +162,12 @@ describe('Chat Service - Advanced', () => {
       { role: 'assistant', content: 'Hi there!' },
       { role: 'user', content: 'How are you?' },
     ];
-    jest.spyOn(conversationManager, 'getHistory').mockReturnValue(history);
+    ConversationManager.mockImplementation(() => ({
+      isRateLimited: jest.fn().mockReturnValue(false),
+      getHistory: jest.fn().mockReturnValue(history),
+      addMessage: jest.fn(),
+      updateTimestamp: jest.fn(),
+    }));
     const message = createMessage('What is your name?');
 
     await handleChatMessage(message);
@@ -174,7 +193,9 @@ describe('Chat Service - Advanced', () => {
   });
 
   it('should handle rate limit errors from API', async () => {
-    perplexityService.generateChatResponse.mockRejectedValue(new Error('Rate limit exceeded'));
+    const rateLimitError = new Error('Rate limit exceeded');
+    rateLimitError.statusCode = 429;
+    perplexityService.generateChatResponse.mockRejectedValue(rateLimitError);
     const message = createMessage('Hello');
 
     await handleChatMessage(message);

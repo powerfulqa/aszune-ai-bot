@@ -11,6 +11,7 @@ const { ApplicationCommandOptionType } = require('discord.js');
 const DiscordAnalytics = require('../utils/discord-analytics');
 const ResourceOptimizer = require('../utils/resource-optimizer');
 const PerformanceDashboard = require('../utils/performance-dashboard');
+const databaseService = require('../services/database');
 
 const conversationManager = new ConversationManager();
 
@@ -46,7 +47,9 @@ const commands = {
     async execute(interaction) {
       const userId = interaction.user.id;
       conversationManager.clearHistory(userId);
-      return interaction.reply('Conversation history cleared!');
+      databaseService.clearUserData(userId);
+
+      await interaction.reply('Conversation history cleared!');
     },
     textCommand: '!clearhistory',
   },
@@ -178,15 +181,10 @@ const commands = {
       };
 
       // Add recent entries if available
-      if (detailedInfo.entries && detailedInfo.entries.length > 0) {
-        const recentEntries = detailedInfo.entries.slice(0, 5);
-        const entriesText = recentEntries
-          .map((entry) => `**${entry.key.substring(0, 20)}...** (${entry.accessCount} accesses)`)
-          .join('\n');
-
+      if (detailedInfo && detailedInfo.entries && detailedInfo.entries.length > 0) {
         embed.fields.push({
           name: 'Recent Entries',
-          value: entriesText || 'No entries',
+          value: detailedInfo.entries.slice(0, 3).map(entry => `• ${entry.key}`).join('\n') || 'None',
           inline: false,
         });
       }

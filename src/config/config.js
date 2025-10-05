@@ -46,6 +46,9 @@ const config = {
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
 
+  // Database Configuration
+  DB_PATH: process.env.DB_PATH || './data/bot.db',
+
   // Bot Configuration
   MAX_HISTORY: 20,
   RATE_LIMIT_WINDOW: 5000, // 5 seconds

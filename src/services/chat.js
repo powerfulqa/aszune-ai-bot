@@ -6,12 +6,12 @@ const perplexityService = require('../services/perplexity-secure');
 const ConversationManager = require('../utils/conversation');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
-const config = require('../config/config');
 const commandHandler = require('../commands');
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage, formatTablesForDiscord } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
+const databaseService = require('../services/database');
 
 const conversationManager = new ConversationManager();
 
@@ -22,9 +22,12 @@ const conversationManager = new ConversationManager();
  * @returns {Promise<void>}
  */
 async function sendResponse(message, responseText) {
+  // Access config inside function to prevent circular dependencies
+  const config = require('../config/config');
+  
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
   // Further reduced to prevent truncation issues with source links and URL formatting
-  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH ?? 1900;
+  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS?.EMBED_MAX_LENGTH ?? 1900;
 
   logger.debug(`Preparing to send response of length: ${responseText.length}`);
 
@@ -61,7 +64,7 @@ async function sendResponse(message, responseText) {
       await message.reply({ embeds: [embed] });
     } else {
       // Small delay between messages for better readability
-      await new Promise((resolve) => setTimeout(resolve, config.MESSAGE_LIMITS.CHUNK_DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, config.MESSAGE_LIMITS?.CHUNK_DELAY_MS || 1000));
       await message.channel.send({ embeds: [embed] });
     }
   }
@@ -148,6 +151,9 @@ async function handleCommandCheck(message, sanitizedContent) {
  * @returns {Promise<string>} The formatted response
  */
 async function generateBotResponse(userId) {
+  // Access config inside function to prevent circular dependencies
+  const config = require('../config/config');
+  
   const history = conversationManager.getHistory(userId);
   const reply = await perplexityService.generateChatResponse(history);
 
@@ -155,7 +161,7 @@ async function generateBotResponse(userId) {
   const tableFormattedReply = formatTablesForDiscord(reply);
 
   // Add emojis based on reply content (limit number of emojis on Pi)
-  const emojiLimit = config.PI_OPTIMIZATIONS.ENABLED
+  const emojiLimit = config.PI_OPTIMIZATIONS?.ENABLED
     ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
     : 10;
   const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
@@ -180,17 +186,69 @@ async function handleChatMessage(message) {
   message.channel.sendTyping();
 
   try {
+    const userId = processedData.userId;
+    const messageContent = processedData.sanitizedContent;
+
+    // Store user message and update stats in database
+    if (userId && messageContent) {
+      try {
+        databaseService.addUserMessage(userId, messageContent);
+        databaseService.updateUserStats(userId, {
+          message_count: 1,
+          last_active: new Date().toISOString()
+        });
+      } catch (dbError) {
+        logger.warn('Database operation failed:', dbError.message);
+        // Continue processing even if database fails
+      }
+    }
+
+    // Get conversation history - use existing conversation manager history
+    const conversationHistory = conversationManager.getHistory(processedData.userId);
+    
+    // Supplement with recent database messages if conversation is new
+    if (conversationHistory.length <= 1 && userId) {
+      try {
+        const recentMessages = databaseService.getUserMessages(userId, 5);
+        if (recentMessages && recentMessages.length > 0) {
+          const dbHistory = recentMessages.reverse().map(msg => ({
+            role: 'user',
+            content: msg
+          }));
+          
+          // Add database history to conversation manager for context
+          dbHistory.forEach(msg => {
+            conversationManager.addMessage(userId, msg.role, msg.content);
+          });
+        }
+      } catch (dbError) {
+        logger.warn('Failed to load conversation history from database:', dbError.message);
+        // Continue with in-memory history only
+      }
+    }
+
     // Generate and format the response
     const formattedReply = await generateBotResponse(processedData.userId);
 
     // Add bot's reply to the conversation history
     conversationManager.addMessage(processedData.userId, 'assistant', formattedReply);
 
+    // Store bot response in database
+    if (userId) {
+      try {
+        databaseService.addBotResponse(userId, formattedReply);
+      } catch (dbError) {
+        logger.warn('Failed to store bot response in database:', dbError.message);
+        // Continue even if database storage fails
+      }
+    }
+
     // Send the response (handles chunking if needed)
     await sendResponse(message, formattedReply);
 
     // Skip reactions in low CPU mode
-    if (!config.PI_OPTIMIZATIONS.LOW_CPU_MODE) {
+    const config = require('../config/config');
+    if (!config.PI_OPTIMIZATIONS?.LOW_CPU_MODE) {
       await emojiManager.addReactionsToMessage(message);
     }
   } catch (error) {
@@ -201,14 +259,18 @@ async function handleChatMessage(message) {
     });
 
     // Send user-friendly error message as embed
+    const config = require('../config/config');
     const embed = messageFormatter.createCompactEmbed({
       color: config.COLORS.PRIMARY,
       description: errorResponse.message,
       footer: { text: 'Aszai Bot' },
     });
 
-    message.reply({ embeds: [embed] });
+    await message.reply({ embeds: [embed] });
   }
 }
 
+// CRITICAL: Maintain all export patterns for backward compatibility
 module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;

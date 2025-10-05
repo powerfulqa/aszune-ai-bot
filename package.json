@@ -1,6 +1,6 @@
 {
   "name": "aszuneai",
-  "version": "1.6.5",
+  "version": "1.7.0",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -38,18 +38,19 @@
     "nodejs",
     "raspberry-pi"
   ],
-  "author": "Chris Haycock <chrishaycock@users.noreply.github.com>",
+  "author": "Chris Haycock <powerfulqa@users.noreply.github.com>",
   "license": "UNLICENSED",
   "description": "A Discord bot specialized in gaming lore, game logic, guides, and advice using the Perplexity API",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chrishaycock/aszune-ai-bot.git"
+    "url": "https://github.com/powerfulqa/aszune-ai-bot.git"
   },
   "bugs": {
-    "url": "https://github.com/chrishaycock/aszune-ai-bot/issues"
+    "url": "https://github.com/powerfulqa/aszune-ai-bot/issues"
   },
-  "homepage": "https://github.com/chrishaycock/aszune-ai-bot#readme",
+  "homepage": "https://github.com/powerfulqa/aszune-ai-bot#readme",
   "dependencies": {
+    "better-sqlite3": "^12.4.1",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
     "undici": "^7.12.0"

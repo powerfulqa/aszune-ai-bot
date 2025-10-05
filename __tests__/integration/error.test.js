@@ -24,6 +24,12 @@ jest.mock('undici', () => ({
 }));
 jest.mock('../../src/utils/conversation');
 jest.mock('../../src/utils/logger');
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
 
 describe('Error handling', () => {
   let conversationManager;
@@ -62,7 +68,7 @@ describe('Error handling', () => {
     expect(fakeMessage.reply).toHaveBeenCalledWith({
       embeds: [
         expect.objectContaining({
-          description: 'The service is temporarily unavailable. Please try again later.',
+          description: 'An unexpected error occurred. Please try again later.',
           color: expect.any(Number),
           footer: { text: 'Aszai Bot' },
         }),

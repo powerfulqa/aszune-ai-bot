@@ -7,6 +7,49 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-10-05
+
+### Major Features
+
+- **🗄️ Database Integration**: Full SQLite database implementation for persistent data storage
+  - **Conversation History**: User messages and bot responses stored persistently
+  - **User Analytics**: Message counts and last activity timestamps tracked per user
+  - **Automatic Setup**: Database and tables created automatically on first run
+  - **Graceful Fallback**: Seamless operation even when database is unavailable
+  - **Data Management**: Built-in user data clearing and bulk operations
+
+### Database Service Features
+
+- **SQLite Integration**: High-performance local database with better-sqlite3 driver
+- **Smart Initialization**: Automatic database path resolution and table creation
+- **User Statistics**: Tracks message counts, last activity, and engagement metrics
+- **Message History**: Persistent storage with automatic cleanup (10 message limit per user)
+- **Data Integrity**: Foreign key constraints and automatic cleanup triggers
+- **Test Coverage**: Comprehensive test suite with 17 database-specific tests
+
+### Technical Improvements
+
+- **Service Architecture**: Clean separation between database operations and business logic
+- **Error Handling**: Robust error handling with fallback mechanisms for database failures
+- **Configuration**: Flexible database path configuration via environment variables
+- **Memory Efficiency**: Automatic cleanup of old messages to maintain performance
+- **Cross-Platform**: Works consistently across Windows, Linux, and Raspberry Pi
+
+### Testing & Quality
+
+- **Database Tests**: 17 comprehensive tests covering all database operations
+- **Integration Tests**: Full conversation flow testing with persistent storage
+- **Mocking Strategy**: Proper database service mocking for other test suites
+- **Error Scenarios**: Testing of database failures and recovery mechanisms
+- **Performance**: Load testing with message limits and cleanup operations
+
+### Bug Fixes
+
+- **Chat Validation**: Fixed 3 previously failing chat validation branch tests
+- **Mock Completeness**: Enhanced mock implementations for comprehensive test coverage
+- **Service Dependencies**: Resolved circular dependency issues with database integration
+- **Error Messages**: Improved error categorization and user-friendly messaging
+
 ## [1.6.5] - 2025-10-04
 
 ### Critical Bug Fixes
