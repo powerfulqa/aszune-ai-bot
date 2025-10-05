@@ -36,10 +36,16 @@ CREATE TABLE conversation_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL,
     message TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
     timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
 );
 ```
+
+**Enhanced Features (v1.7.0):**
+- **Role Separation**: Distinguishes between 'user' and 'assistant' messages
+- **Foreign Key Constraints**: Ensures data integrity with cascading deletes
+- **Performance Indexes**: Optimized for conversation retrieval by user and timestamp
 
 #### Automatic Cleanup Trigger
 
@@ -53,9 +59,11 @@ CREATE TABLE conversation_history (
 
 - **User Messages**: All user messages are stored with timestamps
 - **Bot Responses**: Bot replies are stored with `[BOT]` prefix for identification
-- **History Loading**: Recent conversation history is loaded when conversation manager history is
-  sparse
+- **Role-Based Storage**: Enhanced conversation_history table separates user/assistant messages
+- **History Reconstruction**: `getConversationHistory()` retrieves chronologically ordered conversations
+- **History Loading**: Recent conversation history is loaded when conversation manager history is sparse
 - **Seamless Integration**: Works transparently with existing conversation management
+- **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
 
 ### 2. User Analytics
 
@@ -102,8 +110,10 @@ DB_PATH=./custom/path/bot.db
 #### Message History
 
 - `getUserMessages(userId, limit = 10)`: Gets user messages (most recent first)
-- `addUserMessage(userId, message)`: Adds user message to history
-- `addBotResponse(userId, response)`: Adds bot response with `[BOT]` prefix
+- `addUserMessage(userId, message)`: Adds user message to history and conversation_history table
+- `addBotResponse(userId, response)`: Adds bot response with `[BOT]` prefix to both tables
+- `getConversationHistory(userId, limit = 20)`: Gets complete conversation with role separation
+- `ensureUserExists(userId)`: Ensures user exists in user_stats (handles foreign keys)
 
 #### Data Management
 

@@ -781,6 +781,11 @@ DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online', // Never worked
 **DANGER**: Database errors must NEVER break conversation flow!
 
 ```javascript
+**Database Service Integration (CRITICAL - v1.7.0)**
+
+**DANGER**: Database errors must NEVER break conversation flow!
+
+```javascript
 // ✅ CORRECT - Database errors don't break conversations
 try {
   databaseService.addUserMessage(userId, messageContent);
@@ -799,6 +804,36 @@ try {
 } catch (dbError) {
   throw dbError; // This breaks the entire conversation!
 }
+```
+
+**Database Service Requirements:**
+
+- **Graceful Fallback**: Must provide mock implementations when SQLite unavailable
+- **Error Isolation**: Database errors logged but don't propagate to conversation flow
+- **Single Connection**: One database connection per service instance
+- **Proper Cleanup**: Always close connections in afterEach for tests
+- **Mock All Methods**: Non-database tests must mock all DatabaseService methods
+- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint violations
+- **Role-Based Storage**: conversation_history table requires proper role separation (user/assistant)
+- **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
+
+**Database Schema Design (Production Ready - v1.7.0):**
+
+```javascript
+// ✅ CORRECT - Proper conversation history usage
+const history = databaseService.getConversationHistory(userId, 10);
+// Returns: [{role: 'user', message: '...', timestamp: '...'}, {role: 'assistant', ...}]
+
+// ✅ CORRECT - Automatic user management
+databaseService.addUserMessage(userId, message); // Calls ensureUserExists() internally
+databaseService.addBotResponse(userId, response); // Handles foreign keys automatically
+
+// ✅ CORRECT - Dual storage for backward compatibility
+// Both user_messages (legacy) and conversation_history (enhanced) tables are populated
+
+// ❌ WRONG - Direct conversation_history inserts without user existence check
+db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on foreign key constraint
+```
 ```
 
 **Database Service Requirements:**
