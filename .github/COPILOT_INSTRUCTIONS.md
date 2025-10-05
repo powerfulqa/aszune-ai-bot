@@ -197,7 +197,8 @@ A successful implementation should achieve:
 ## 🎯 Success Metrics
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
-follow existing patterns exactly. Database service must be integrated without circular dependencies or breaking contracts. Database operations must throw errors on failure.
+follow existing patterns exactly. Database service must be integrated without circular dependencies
+or breaking contracts. Database operations must throw errors on failure.
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -608,7 +609,8 @@ function someFunction() {
 }
 ```
 
-**Database Service Pattern:** For services with singletons, move config access to lazy initialization methods (e.g., getDb()) to avoid module-level access while ensuring test mocks work.
+**Database Service Pattern:** For services with singletons, move config access to lazy
+initialization methods (e.g., getDb()) to avoid module-level access while ensuring test mocks work.
 
 ### 4. Memory Management
 
@@ -911,7 +913,8 @@ failures:**
 
 1. **Error Handling Contract**: Services THROW errors, tests expect .rejects.toThrow()
 2. **Module Exports**: Must maintain all three export patterns for backward compatibility
-3. **Config Access**: NEVER at module level - always inside functions (exception: database service uses lazy access in getDb() for testability)
+3. **Config Access**: NEVER at module level - always inside functions (exception: database service
+   uses lazy access in getDb() for testability)
 4. **Embed Responses**: All user errors as embeds with exact ErrorHandler messages
 5. **Test Assertions**: Use exact values, never expect.objectContaining() or
    expect.stringContaining()
@@ -919,7 +922,8 @@ failures:**
    ThrottlingService
 7. **Discord API Timeout Protection**: Always use Promise.race() with 5-second timeouts (v1.6.1)
 8. **Analytics Fallbacks**: Provide realistic estimates when Discord API unavailable
-9. **Database Error Handling**: Database service throws errors on SQLite failures, never returns error strings
+9. **Database Error Handling**: Database service throws errors on SQLite failures, never returns
+   error strings
 
 ### Common Breaking Changes to AVOID:
 

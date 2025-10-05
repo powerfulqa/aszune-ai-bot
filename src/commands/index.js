@@ -184,7 +184,11 @@ const commands = {
       if (detailedInfo && detailedInfo.entries && detailedInfo.entries.length > 0) {
         embed.fields.push({
           name: 'Recent Entries',
-          value: detailedInfo.entries.slice(0, 3).map(entry => `• ${entry.key}`).join('\n') || 'None',
+          value:
+            detailedInfo.entries
+              .slice(0, 3)
+              .map((entry) => `• ${entry.key}`)
+              .join('\n') || 'None',
           inline: false,
         });
       }

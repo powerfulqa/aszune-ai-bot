@@ -11,7 +11,8 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Development Documentation
 
-- **[Database Integration](./DATABASE-INTEGRATION.md)** - Comprehensive SQLite database integration guide
+- **[Database Integration](./DATABASE-INTEGRATION.md)** - Comprehensive SQLite database integration
+  guide
 - **[Critical Coverage CI Integration](./CRITICAL-COVERAGE-CI-INTEGRATION.md)** - CI integration for
   critical test coverage
 - **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of

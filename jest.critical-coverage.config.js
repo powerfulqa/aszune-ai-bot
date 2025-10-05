@@ -73,6 +73,14 @@ module.exports = {
       lines: 80, // Current: 80.64%
       statements: 80, // Current: 80.64%
     },
+
+    // 🎯 Database Integration (v1.7.0) - New Critical File
+    './src/services/database.js': {
+      branches: 35, // Current: ~41.7% (with graceful fallbacks)
+      functions: 70, // Current: ~78.6% (core methods tested)
+      lines: 79, // Current: ~79.2% (well tested)
+      statements: 79, // Current: ~79.2% (comprehensive coverage)
+    },
   },
 
   // Enhanced reporting for critical coverage failures

@@ -247,7 +247,8 @@ improvements.
 - `!cache`
 - `/cache`
 
-**Description:** Displays comprehensive cache statistics and performance metrics for the bot's caching system, including memory usage, hit rates, and operational statistics.
+**Description:** Displays comprehensive cache statistics and performance metrics for the bot's
+caching system, including memory usage, hit rates, and operational statistics.
 
 **Example:**
 
@@ -272,12 +273,14 @@ improvements.
 - **Integration**: Works with enhanced-cache system and PerplexityService
 
 **Before v1.6.5 (Broken):**
+
 ```
 Memory Usage: undefined / undefined
 Configuration: Strategy: undefined, Uptime: undefined
 ```
 
 **After v1.6.5 (Fixed):**
+
 ```
 Memory Usage: 0 B / 50 MB
 Configuration: Strategy: hybrid, Uptime: 28s

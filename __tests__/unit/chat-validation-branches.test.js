@@ -151,7 +151,7 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
       mockMessage.author.bot = false;
       mockMessage.content = 'Hello bot!';
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       // Ensure all validation passes
       mockConversationManager.isRateLimited.mockReturnValue(false);
       mockCommandHandler.handleTextCommand.mockResolvedValue();
@@ -214,7 +214,7 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
       mockMessage.content = 'Valid message';
       mockMessage.author.bot = false;
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       // Ensure all validation passes
       mockConversationManager.isRateLimited.mockReturnValue(false);
       mockCommandHandler.handleTextCommand.mockResolvedValue();
@@ -248,7 +248,7 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
       mockMessage.author.bot = false;
       mockConversationManager.isRateLimited.mockReturnValue(false);
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       // Ensure all validation passes
       mockCommandHandler.handleTextCommand.mockResolvedValue();
       mockInputValidator.validateUserId.mockReturnValue({ valid: true });

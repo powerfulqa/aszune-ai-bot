@@ -14,12 +14,18 @@ describe('DatabaseService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
+    // Ensure test data directory exists
+    const testDataDir = path.dirname(testDbPath);
+    if (!fs.existsSync(testDataDir)) {
+      fs.mkdirSync(testDataDir, { recursive: true });
+    }
+
     // Clean up any existing test database
     if (fs.existsSync(testDbPath)) {
       fs.unlinkSync(testDbPath);
     }
-    
+
     dbService = new DatabaseService();
   });
 
@@ -31,14 +37,27 @@ describe('DatabaseService', () => {
         // Ignore errors during cleanup
       }
     }
-    
-    // Clean up test database file
+
+    // Clean up test database file and directory
     if (fs.existsSync(testDbPath)) {
       try {
         fs.unlinkSync(testDbPath);
       } catch (error) {
         // Ignore errors during cleanup
       }
+    }
+
+    // Clean up test directory if empty
+    const testDataDir = path.dirname(testDbPath);
+    try {
+      if (fs.existsSync(testDataDir)) {
+        const files = fs.readdirSync(testDataDir);
+        if (files.length === 0) {
+          fs.rmdirSync(testDataDir);
+        }
+      }
+    } catch (error) {
+      // Ignore errors during cleanup
     }
   });
 
@@ -73,7 +92,7 @@ describe('DatabaseService', () => {
   describe('initTables', () => {
     it('should create tables when called', () => {
       dbService.getDb(); // This triggers initTables
-      
+
       // Verify tables exist by running a simple query
       const db = dbService.getDb();
       expect(() => {
@@ -95,9 +114,9 @@ describe('DatabaseService', () => {
 
     it('should return actual stats after user activity', () => {
       // First, update user stats
-      dbService.updateUserStats('456', { 
+      dbService.updateUserStats('456', {
         message_count: 5,
-        last_active: '2023-01-01T00:00:00.000Z'
+        last_active: '2023-01-01T00:00:00.000Z',
       });
 
       const result = dbService.getUserStats('456');
@@ -110,9 +129,9 @@ describe('DatabaseService', () => {
   describe('updateUserStats', () => {
     it('should update user stats correctly', () => {
       const testDate = '2023-01-02T00:00:00.000Z';
-      dbService.updateUserStats('123', { 
-        message_count: 1, 
-        last_active: testDate 
+      dbService.updateUserStats('123', {
+        message_count: 1,
+        last_active: testDate,
       });
 
       const result = dbService.getUserStats('123');
@@ -134,10 +153,10 @@ describe('DatabaseService', () => {
 
     it('should return user messages after adding them', async () => {
       dbService.addUserMessage('123', 'Hello world');
-      
+
       // Add a delay to ensure different timestamps for proper ordering
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       dbService.addUserMessage('123', 'Second message');
 
       const result = dbService.getUserMessages('123');
@@ -160,7 +179,7 @@ describe('DatabaseService', () => {
       // Test query limit
       const result = dbService.getUserMessages('123', 5);
       expect(result.length).toBe(5);
-      
+
       // The first message should be the most recent (highest number)
       // Note: actual message depends on what the trigger kept
       expect(result[0]).toContain('Message');
@@ -170,7 +189,7 @@ describe('DatabaseService', () => {
   describe('addUserMessage', () => {
     it('should add message to database', () => {
       dbService.addUserMessage('123', 'Hello world');
-      
+
       const messages = dbService.getUserMessages('123');
       expect(messages).toContain('Hello world');
     });
@@ -179,7 +198,7 @@ describe('DatabaseService', () => {
   describe('addBotResponse', () => {
     it('should add bot response with prefix', () => {
       dbService.addBotResponse('123', 'Bot response');
-      
+
       const messages = dbService.getUserMessages('123');
       expect(messages).toContain('[BOT] Bot response');
     });
@@ -197,7 +216,7 @@ describe('DatabaseService', () => {
       // Verify it's gone
       const stats = dbService.getUserStats('123');
       const messages = dbService.getUserMessages('123');
-      
+
       expect(stats.message_count).toBe(0);
       expect(messages).toEqual([]);
     });

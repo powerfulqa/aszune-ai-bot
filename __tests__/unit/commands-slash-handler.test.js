@@ -8,6 +8,13 @@ jest.useFakeTimers();
 // Mock dependencies
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/perplexity-secure');
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+  clearUserData: jest.fn(),
+}));
 
 // Mock the conversation module
 jest.mock('../../src/utils/conversation', () => {

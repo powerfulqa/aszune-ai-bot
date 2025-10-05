@@ -169,7 +169,10 @@ or Discord will show "undefined":
 // ✅ CORRECT - Proper database service integration
 try {
   databaseService.addUserMessage(userId, messageContent);
-  databaseService.updateUserStats(userId, { message_count: 1, last_active: new Date().toISOString() });
+  databaseService.updateUserStats(userId, {
+    message_count: 1,
+    last_active: new Date().toISOString(),
+  });
 } catch (dbError) {
   logger.warn('Database operation failed:', dbError.message);
   // CRITICAL: Continue processing even if database fails
@@ -316,7 +319,7 @@ const { DatabaseService } = require('../../../src/services/database');
 
 describe('DatabaseService', () => {
   let dbService;
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Clean up any existing test database
@@ -603,7 +606,7 @@ mockMessageFormatter.formatResponse.mockImplementation((text) => text);
 // ✅ REQUIRED - Database service mock for chat tests
 jest.mock('../../src/services/database', () => ({
   addUserMessage: jest.fn(),
-  updateUserStats: jest.fn(), 
+  updateUserStats: jest.fn(),
   getUserMessages: jest.fn().mockReturnValue([]),
   addBotResponse: jest.fn(),
 }));
@@ -781,7 +784,10 @@ DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online', // Never worked
 // ✅ CORRECT - Database errors don't break conversations
 try {
   databaseService.addUserMessage(userId, messageContent);
-  databaseService.updateUserStats(userId, { message_count: 1, last_active: new Date().toISOString() });
+  databaseService.updateUserStats(userId, {
+    message_count: 1,
+    last_active: new Date().toISOString(),
+  });
 } catch (dbError) {
   logger.warn('Database operation failed:', dbError.message);
   // CRITICAL: Continue processing even if database fails
@@ -969,9 +975,9 @@ fallbacks. These patterns are now mandatory for any Discord API interactions.
 requiring proactive monitoring and quick fixes. The summarise command (`!summerise`, `!summarise`)
 is particularly sensitive to these changes.
 
-**v1.7.0 Database Integration Lessons**: Database integration must be completely isolated from conversation
-flow - any database errors that propagate will break the entire chat system. Mock completeness is critical
-for test stability.
+**v1.7.0 Database Integration Lessons**: Database integration must be completely isolated from
+conversation flow - any database errors that propagate will break the entire chat system. Mock
+completeness is critical for test stability.
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
 follow existing patterns exactly.

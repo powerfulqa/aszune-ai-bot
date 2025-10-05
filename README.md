@@ -153,7 +153,8 @@ quality with 991+ automated tests and built-in license protection system.
   and commercial use
 - 🍓 **Raspberry Pi Optimized:** Specialized license server setup for Pi 3+ with automated
   monitoring
-- 💾 **Persistent Data Storage:** SQLite database integration for conversation history and user analytics
+- 💾 **Persistent Data Storage:** SQLite database integration for conversation history and user
+  analytics
   - 📊 **User Statistics:** Tracks message counts and last activity timestamps per user
   - 💬 **Conversation History:** Persistent storage of user messages and bot responses
   - 🔄 **Seamless Integration:** Automatic database initialization and graceful fallback handling
@@ -202,6 +203,7 @@ quality with 991+ automated tests and built-in license protection system.
    - **No manual setup required**: The bot handles all database initialization
 
    Optional database configuration:
+
    ```env
    # Optional: Custom database path (defaults to ./data/bot.db)
    DB_PATH=./custom/path/bot.db

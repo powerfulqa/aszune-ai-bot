@@ -24,7 +24,7 @@ const conversationManager = new ConversationManager();
 async function sendResponse(message, responseText) {
   // Access config inside function to prevent circular dependencies
   const config = require('../config/config');
-  
+
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
   // Further reduced to prevent truncation issues with source links and URL formatting
   const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS?.EMBED_MAX_LENGTH ?? 1900;
@@ -64,7 +64,9 @@ async function sendResponse(message, responseText) {
       await message.reply({ embeds: [embed] });
     } else {
       // Small delay between messages for better readability
-      await new Promise((resolve) => setTimeout(resolve, config.MESSAGE_LIMITS?.CHUNK_DELAY_MS || 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.MESSAGE_LIMITS?.CHUNK_DELAY_MS || 1000)
+      );
       await message.channel.send({ embeds: [embed] });
     }
   }
@@ -153,7 +155,7 @@ async function handleCommandCheck(message, sanitizedContent) {
 async function generateBotResponse(userId) {
   // Access config inside function to prevent circular dependencies
   const config = require('../config/config');
-  
+
   const history = conversationManager.getHistory(userId);
   const reply = await perplexityService.generateChatResponse(history);
 
@@ -195,7 +197,7 @@ async function handleChatMessage(message) {
         databaseService.addUserMessage(userId, messageContent);
         databaseService.updateUserStats(userId, {
           message_count: 1,
-          last_active: new Date().toISOString()
+          last_active: new Date().toISOString(),
         });
       } catch (dbError) {
         logger.warn('Database operation failed:', dbError.message);
@@ -205,19 +207,19 @@ async function handleChatMessage(message) {
 
     // Get conversation history - use existing conversation manager history
     const conversationHistory = conversationManager.getHistory(processedData.userId);
-    
+
     // Supplement with recent database messages if conversation is new
     if (conversationHistory.length <= 1 && userId) {
       try {
         const recentMessages = databaseService.getUserMessages(userId, 5);
         if (recentMessages && recentMessages.length > 0) {
-          const dbHistory = recentMessages.reverse().map(msg => ({
+          const dbHistory = recentMessages.reverse().map((msg) => ({
             role: 'user',
-            content: msg
+            content: msg,
           }));
-          
+
           // Add database history to conversation manager for context
-          dbHistory.forEach(msg => {
+          dbHistory.forEach((msg) => {
             conversationManager.addMessage(userId, msg.role, msg.content);
           });
         }

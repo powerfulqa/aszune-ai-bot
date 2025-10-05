@@ -21,10 +21,10 @@ class DatabaseService {
         prepare: () => ({
           get: () => null,
           all: () => [],
-          run: () => ({})
+          run: () => ({}),
         }),
         exec: () => ({}),
-        close: () => ({})
+        close: () => ({}),
       };
     }
 
@@ -46,7 +46,7 @@ class DatabaseService {
 
   initTables() {
     if (this.isDisabled) return;
-    
+
     const db = this.getDb();
     try {
       // User stats table
@@ -95,16 +95,16 @@ class DatabaseService {
   updateUserStats(userId, updates) {
     try {
       if (this.isDisabled) return;
-      
+
       const db = this.getDb();
-      
+
       // Get existing stats
       const existing = this.getUserStats(userId);
-      
+
       // Calculate new values
       const newMessageCount = existing.message_count + (updates.message_count || 0);
       const newLastActive = updates.last_active || new Date().toISOString();
-      
+
       // Insert or update
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO user_stats (user_id, message_count, last_active)
@@ -121,8 +121,10 @@ class DatabaseService {
   getUserMessages(userId, limit = 10) {
     try {
       const db = this.getDb();
-      const stmt = db.prepare('SELECT message FROM user_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?');
-      return stmt.all(userId, limit).map(row => row.message);
+      const stmt = db.prepare(
+        'SELECT message FROM user_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      );
+      return stmt.all(userId, limit).map((row) => row.message);
     } catch (error) {
       if (this.isDisabled) return [];
       throw new Error(`Failed to get user messages for ${userId}: ${error.message}`);
@@ -132,9 +134,11 @@ class DatabaseService {
   addUserMessage(userId, message) {
     try {
       if (this.isDisabled) return;
-      
+
       const db = this.getDb();
-      const stmt = db.prepare('INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)');
+      const stmt = db.prepare(
+        'INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)'
+      );
       stmt.run(userId, message, new Date().toISOString());
     } catch (error) {
       if (this.isDisabled) return;
@@ -145,10 +149,12 @@ class DatabaseService {
   addBotResponse(userId, response) {
     try {
       if (this.isDisabled) return;
-      
+
       const db = this.getDb();
       // Store bot responses in a separate table or with a role indicator
-      const stmt = db.prepare('INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)');
+      const stmt = db.prepare(
+        'INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)'
+      );
       stmt.run(userId, `[BOT] ${response}`, new Date().toISOString());
     } catch (error) {
       if (this.isDisabled) return;
@@ -159,7 +165,7 @@ class DatabaseService {
   clearUserData(userId) {
     try {
       if (this.isDisabled) return;
-      
+
       const db = this.getDb();
       db.prepare('DELETE FROM user_stats WHERE user_id = ?').run(userId);
       db.prepare('DELETE FROM user_messages WHERE user_id = ?').run(userId);
@@ -173,7 +179,7 @@ class DatabaseService {
   clearAllData() {
     try {
       if (this.isDisabled) return;
-      
+
       const db = this.getDb();
       db.prepare('DELETE FROM user_stats').run();
       db.prepare('DELETE FROM user_messages').run();

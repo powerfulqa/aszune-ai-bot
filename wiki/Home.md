@@ -6,10 +6,10 @@ usage, and development of the Aszune AI Bot.
 ## What is Aszune AI Bot?
 
 Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
-the Perplexity API with the **sonar** model. It maintains persistent conversation history for each user
-through SQLite database integration and adds fun emoji reactions based on keywords found in messages. 
-The bot supports both traditional `!` commands and modern Discord slash commands, with comprehensive
-analytics and user engagement tracking capabilities.
+the Perplexity API with the **sonar** model. It maintains persistent conversation history for each
+user through SQLite database integration and adds fun emoji reactions based on keywords found in
+messages. The bot supports both traditional `!` commands and modern Discord slash commands, with
+comprehensive analytics and user engagement tracking capabilities.
 
 ## Navigation
 
@@ -39,12 +39,14 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 ## Version Information
 
 - **v1.7.0** - Database Integration & Persistence (2025-10-05)
-  - **SQLite Database Integration**: Full persistent data storage for conversation history and user analytics
+  - **SQLite Database Integration**: Full persistent data storage for conversation history and user
+    analytics
   - **Conversation Persistence**: User messages and bot responses stored across bot restarts
   - **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
   - **Automatic Setup**: Database and tables created automatically with zero configuration required
   - **Graceful Fallback**: Seamless operation even when database is unavailable
-  - **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal performance
+  - **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
+    performance
   - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
   - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
 
