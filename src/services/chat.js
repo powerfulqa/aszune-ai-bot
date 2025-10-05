@@ -205,23 +205,26 @@ async function handleChatMessage(message) {
       }
     }
 
-    // Get conversation history - use existing conversation manager history
-    const conversationHistory = conversationManager.getHistory(processedData.userId);
+    // Get conversation history - use enhanced database conversation history
+    let conversationHistory = conversationManager.getHistory(processedData.userId);
 
-    // Supplement with recent database messages if conversation is new
+    // Supplement with database conversation history if conversation is new or short
     if (conversationHistory.length <= 1 && userId) {
       try {
-        const recentMessages = databaseService.getUserMessages(userId, 5);
-        if (recentMessages && recentMessages.length > 0) {
-          const dbHistory = recentMessages.reverse().map((msg) => ({
-            role: 'user',
-            content: msg,
-          }));
-
+        const dbConversationHistory = databaseService.getConversationHistory(userId, 10);
+        if (dbConversationHistory && dbConversationHistory.length > 0) {
           // Add database history to conversation manager for context
-          dbHistory.forEach((msg) => {
-            conversationManager.addMessage(userId, msg.role, msg.content);
+          // Filter out the current message to avoid duplication
+          const historicalMessages = dbConversationHistory.filter(
+            (msg) => msg.message !== messageContent
+          );
+
+          historicalMessages.forEach((msg) => {
+            conversationManager.addMessage(userId, msg.role, msg.message);
           });
+
+          // Update conversation history after adding database history
+          conversationHistory = conversationManager.getHistory(processedData.userId);
         }
       } catch (dbError) {
         logger.warn('Failed to load conversation history from database:', dbError.message);

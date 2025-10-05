@@ -413,8 +413,7 @@ aszune-ai-bot/
 │       └── [other utilities]       # Additional utility modules
 ├── data/                           # Persistent data storage
 │   ├── bot.db                     # SQLite database (auto-created)
-│   ├── question_cache.json        # Response cache
-│   └── user_stats.json            # User statistics
+│   └── question_cache.json        # Response cache
 ├── docs/                          # Version-specific documentation
 ├── wiki/                          # Comprehensive documentation
 ├── __tests__/                     # Test suites

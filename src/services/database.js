@@ -57,13 +57,27 @@ class DatabaseService {
           last_active DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      // User messages table (with limit via trigger)
+
+      // Conversation history table (with foreign key and proper indexing)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS conversation_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          message TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
+        )
+      `);
+
+      // User messages table (with proper indexing and constraints)
       db.exec(`
         CREATE TABLE IF NOT EXISTS user_messages (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           user_id TEXT NOT NULL,
           message TEXT NOT NULL,
-          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
         );
         CREATE TRIGGER IF NOT EXISTS limit_user_messages
         AFTER INSERT ON user_messages
@@ -72,6 +86,12 @@ class DatabaseService {
             SELECT id FROM user_messages WHERE user_id = NEW.user_id ORDER BY timestamp DESC LIMIT 10
           );
         END;
+      `);
+
+      // Create indexes for performance optimization
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp ON user_messages (user_id, timestamp);
+        CREATE INDEX IF NOT EXISTS idx_conversation_history_user_id ON conversation_history (user_id);
       `);
     } catch (error) {
       throw new Error(`Failed to initialize database tables: ${error.message}`);
@@ -131,11 +151,48 @@ class DatabaseService {
     }
   }
 
+  ensureUserExists(userId) {
+    if (this.isDisabled) return;
+
+    try {
+      const db = this.getDb();
+
+      // Check if user exists, if not create them
+      const checkStmt = db.prepare('SELECT user_id FROM user_stats WHERE user_id = ?');
+      const existingUser = checkStmt.get(userId);
+
+      if (!existingUser) {
+        const insertStmt = db.prepare(`
+          INSERT OR IGNORE INTO user_stats 
+          (user_id, message_count, last_active) 
+          VALUES (?, 0, ?)
+        `);
+        const now = new Date().toISOString();
+        insertStmt.run(userId, now);
+      }
+    } catch (error) {
+      if (this.isDisabled) return;
+      // Don't throw error, just log warning as this is a helper method
+      console.warn(`Failed to ensure user exists for ${userId}: ${error.message}`);
+    }
+  }
+
   addUserMessage(userId, message) {
     try {
       if (this.isDisabled) return;
 
       const db = this.getDb();
+
+      // Ensure user exists first for foreign key constraint
+      this.ensureUserExists(userId);
+
+      // Add to conversation history with proper role
+      const conversationStmt = db.prepare(
+        'INSERT INTO conversation_history (user_id, message, role, timestamp) VALUES (?, ?, ?, ?)'
+      );
+      conversationStmt.run(userId, message, 'user', new Date().toISOString());
+
+      // Also add to user_messages for backward compatibility
       const stmt = db.prepare(
         'INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)'
       );
@@ -151,7 +208,17 @@ class DatabaseService {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-      // Store bot responses in a separate table or with a role indicator
+
+      // Ensure user exists first for foreign key constraint
+      this.ensureUserExists(userId);
+
+      // Add to conversation history with proper role
+      const conversationStmt = db.prepare(
+        'INSERT INTO conversation_history (user_id, message, role, timestamp) VALUES (?, ?, ?, ?)'
+      );
+      conversationStmt.run(userId, response, 'assistant', new Date().toISOString());
+
+      // Store bot responses with role prefix for backward compatibility
       const stmt = db.prepare(
         'INSERT INTO user_messages (user_id, message, timestamp) VALUES (?, ?, ?)'
       );
@@ -162,6 +229,21 @@ class DatabaseService {
     }
   }
 
+  getConversationHistory(userId, limit = 20) {
+    try {
+      if (this.isDisabled) return [];
+
+      const db = this.getDb();
+      const stmt = db.prepare(
+        'SELECT message, role, timestamp FROM conversation_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      );
+      return stmt.all(userId, limit).reverse(); // Return in chronological order
+    } catch (error) {
+      if (this.isDisabled) return [];
+      throw new Error(`Failed to get conversation history for ${userId}: ${error.message}`);
+    }
+  }
+
   clearUserData(userId) {
     try {
       if (this.isDisabled) return;
@@ -169,6 +251,7 @@ class DatabaseService {
       const db = this.getDb();
       db.prepare('DELETE FROM user_stats WHERE user_id = ?').run(userId);
       db.prepare('DELETE FROM user_messages WHERE user_id = ?').run(userId);
+      db.prepare('DELETE FROM conversation_history WHERE user_id = ?').run(userId);
     } catch (error) {
       if (this.isDisabled) return;
       throw new Error(`Failed to clear user data for ${userId}: ${error.message}`);
@@ -183,6 +266,7 @@ class DatabaseService {
       const db = this.getDb();
       db.prepare('DELETE FROM user_stats').run();
       db.prepare('DELETE FROM user_messages').run();
+      db.prepare('DELETE FROM conversation_history').run();
     } catch (error) {
       if (this.isDisabled) return;
       throw new Error(`Failed to clear all data: ${error.message}`);
