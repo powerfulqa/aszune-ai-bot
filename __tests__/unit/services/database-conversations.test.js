@@ -70,28 +70,28 @@ describe('DatabaseService - Conversations', () => {
         message: 'Hello',
         timestamp: expect.any(String),
         message_length: 5,
-        response_time_ms: 0
+        response_time_ms: 0,
       });
       expect(history[1]).toEqual({
         role: 'assistant',
         message: 'Hi there!',
         timestamp: expect.any(String),
         message_length: 9,
-        response_time_ms: 0
+        response_time_ms: 0,
       });
       expect(history[2]).toEqual({
         role: 'user',
         message: 'How are you?',
         timestamp: expect.any(String),
         message_length: 12,
-        response_time_ms: 0
+        response_time_ms: 0,
       });
       expect(history[3]).toEqual({
         role: 'assistant',
         message: 'I am doing well, thank you!',
         timestamp: expect.any(String),
         message_length: 27,
-        response_time_ms: 0
+        response_time_ms: 0,
       });
     });
 
