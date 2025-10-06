@@ -51,6 +51,7 @@
   "homepage": "https://github.com/powerfulqa/aszune-ai-bot#readme",
   "dependencies": {
     "better-sqlite3": "^12.4.1",
+    "chrono-node": "^2.9.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
     "undici": "^7.12.0"

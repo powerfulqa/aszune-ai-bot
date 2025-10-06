@@ -81,6 +81,8 @@ src/
   tracking (feature-flagged)
 - **Database Service**: SQLite integration for persistent conversation history and user analytics
   (`src/services/database.js`) with automatic table creation and graceful fallback
+- **Reminder System**: AI-powered reminder scheduling with natural language processing
+  (`!remind`, `!reminders`, `!cancelreminder`) and conversational reminder detection
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -844,6 +846,116 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 - **Proper Cleanup**: Always close connections in afterEach for tests
 - **Mock All Methods**: Non-database tests must mock all DatabaseService methods
 
+**Reminder System Architecture (CRITICAL - v1.7.0 Integration):**
+
+- **Dual Interface**: Supports both explicit commands (`!remind`) and natural language detection
+- **AI-Powered Research**: Uses Perplexity API for event information lookup and date extraction
+- **Time Parsing**: Advanced chrono-node integration for flexible natural language time expressions
+- **Persistent Storage**: SQLite-based reminder storage with automatic table creation
+- **User Isolation**: Reminders are user-specific and private
+- **Timezone Awareness**: Automatic timezone handling for accurate scheduling
+- **Graceful Degradation**: Continues functioning even if database is unavailable
+
+```javascript
+// ✅ CORRECT - Reminder service integration patterns
+const reminderService = require('../services/reminder-service');
+const timeParser = require('../utils/time-parser');
+
+// Create reminder with natural language time
+const parsedTime = timeParser.parseTimeExpression('in 5 minutes');
+const reminder = await reminderService.createReminder(userId, parsedTime, 'Check the oven');
+
+// List user reminders
+const reminders = await reminderService.getActiveReminders(userId);
+
+// Cancel reminder
+await reminderService.cancelReminder(userId, reminderId);
+```
+
+**Reminder Service Method Contracts:**
+
+- **createReminder(userId, scheduledTime, message)**: Creates and schedules a reminder
+  - Takes userId (string), scheduledTime (Date), message (string)
+  - Returns reminder object with id, scheduledTime, message, status
+  - Throws errors for invalid times or database issues
+- **getActiveReminders(userId)**: Returns all active reminders for a user
+  - Takes userId (string)
+  - Returns array of reminder objects sorted by time
+  - Never throws - returns empty array if database unavailable
+- **cancelReminder(userId, reminderId)**: Cancels a specific reminder
+  - Takes userId (string), reminderId (number)
+  - Returns true if cancelled, false if not found
+  - Throws errors only for database connectivity issues
+- **executeReminder(reminder)**: Internal method for executing due reminders
+  - Called by scheduler, sends Discord notification
+  - Handles delivery failures gracefully
+
+**Natural Language Reminder Processing:**
+
+```javascript
+// ✅ CORRECT - Natural language reminder detection
+const naturalLanguageProcessor = require('../utils/natural-language-reminder');
+
+// Check if message contains reminder request
+if (naturalLanguageProcessor.isReminderRequest(message.content)) {
+  const event = naturalLanguageProcessor.extractEvent(message.content);
+  const dates = await naturalLanguageProcessor.lookupAndSetReminder(message.author.id, event);
+  // Process found dates and set reminders
+}
+```
+
+**Reminder Database Schema (v1.7.0):**
+
+```sql
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  scheduled_time TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT DEFAULT 'active',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  timezone TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_reminders_user_status ON reminders(user_id, status);
+CREATE INDEX idx_reminders_scheduled ON reminders(scheduled_time) WHERE status = 'active';
+```
+
+**Reminder Command Patterns:**
+
+```javascript
+// ✅ CORRECT - Command handler structure
+async function handleReminderCommand(message, args) {
+  try {
+    const subcommand = args[0]?.toLowerCase();
+    switch (subcommand) {
+    case 'set':
+    case 'create':
+      return await handleSetReminder(message, args.slice(1));
+    case 'list':
+    case 'show':
+      return await handleListReminders(message);
+    case 'cancel':
+    case 'delete':
+      return await handleCancelReminder(message, args.slice(1));
+    default:
+      return await handleReminderHelp(message);
+    }
+  } catch (error) {
+    const errorResponse = ErrorHandler.handleError(error, 'reminder_command');
+    return message.reply({
+      embeds: [{
+        color: 0xFF0000,
+        title: 'Reminder Error',
+        description: errorResponse.message,
+        footer: { text: 'Aszai Bot' }
+      }]
+    });
+  }
+}
+```
+
 ## 📋 Pre-Commit Checklist
 
 Before committing changes, ensure:
@@ -871,6 +983,10 @@ Before committing changes, ensure:
 - `src/config/config.js` - Configuration management
 - `src/utils/license-validator.js` - License validation with enforcement
 - `src/utils/license-server.js` - License management server
+- `src/services/reminder-service.js` - Reminder scheduling and management
+- `src/utils/time-parser.js` - Natural language time parsing
+- `src/utils/natural-language-reminder.js` - AI-powered reminder detection
+- `src/commands/reminder.js` - Reminder command handlers
 
 ### Important Test Files
 
@@ -947,6 +1063,9 @@ A successful implementation should achieve:
 - ✅ Database integration complete with SQLite support (v1.7.0)
 - ✅ Database service graceful fallbacks implemented (continues without database)
 - ✅ Database error handling isolated (doesn't break conversation flow)
+- ✅ Reminder system functional (`!remind`, `!reminders`, `!cancelreminder`)
+- ✅ Natural language reminder detection working (conversational reminders)
+- ✅ AI-powered event research and date extraction functional
 
 ## 📚 Additional Resources
 
@@ -984,6 +1103,9 @@ failures:**
 8. **Analytics Fallbacks**: Provide realistic estimates when Discord API unavailable
 9. **Database Error Isolation**: Database errors must NEVER break conversation flow (v1.7.0)
 10. **Database Service Mocking**: Always mock DatabaseService for non-database tests
+11. **Reminder Service Contracts**: Reminder methods must follow exact contracts (createReminder,
+    getActiveReminders, cancelReminder)
+12. **Natural Language Processing**: Reminder detection must not interfere with regular chat
 
 ### Common Breaking Changes to AVOID:
 
@@ -998,6 +1120,8 @@ failures:**
 - Using deprecated Perplexity model names (v1.6.3)
 - Database errors propagating to conversation flow (v1.7.0)
 - Missing DatabaseService mocks in non-database tests
+- Reminder service methods not following exact contracts
+- Natural language reminder detection blocking regular AI responses
 
 **WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives
 failed. Follow them exactly or expect test failures and runtime errors.
@@ -1013,6 +1137,8 @@ is particularly sensitive to these changes.
 **v1.7.0 Database Integration Lessons**: Database integration must be completely isolated from
 conversation flow - any database errors that propagate will break the entire chat system. Mock
 completeness is critical for test stability.
+
+**v1.7.0 Reminder System Lessons**: Natural language processing for reminders must be carefully integrated into chat flow without blocking regular AI responses. Reminder service methods must follow exact contracts, and AI-powered event research requires robust error handling for cases where dates cannot be found. Timezone handling and user isolation are critical for reminder accuracy.
 
 **Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
 follow existing patterns exactly.

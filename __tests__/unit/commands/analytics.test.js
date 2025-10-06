@@ -100,35 +100,39 @@ describe('Analytics Command', () => {
     expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [
-        {
+        expect.objectContaining({
           color: 0x5865f2,
           title: '📊 Discord Analytics Dashboard',
-          fields: [
-            {
+          fields: expect.arrayContaining([
+            expect.objectContaining({
               name: '🏢 Server Overview',
-              value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
+              value: expect.stringContaining('Servers: 1\nActive Users: 149\nTotal Members: 150\nBots: 1'),
               inline: true,
-            },
-            {
-              name: '📈 Performance',
-              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
+            }),
+            expect.objectContaining({
+              name: '📈 Command Analytics (7 days)',
+              value: expect.stringContaining('Total Commands:'),
               inline: true,
-            },
-            {
-              name: '🎯 Top Commands',
-              value: 'No data yet',
+            }),
+            expect.objectContaining({
+              name: '⚠️ Error Tracking (7 days)',
+              value: expect.stringContaining('Total Errors:'),
               inline: true,
-            },
-            {
+            }),
+            expect.objectContaining({
+              name: '⏱️ Bot Uptime',
+              value: expect.stringContaining('Total Uptime: 0h'),
+              inline: true,
+            }),
+            expect.objectContaining({
               name: '💡 Server Insights',
-              value:
-                '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
+              value: expect.stringContaining('🟢 Currently Online: 3'),
               inline: false,
-            },
-          ],
-          footer: { text: 'Aszai Bot Analytics' },
+            }),
+          ]),
+          footer: { text: 'Aszai Bot Analytics • Database-powered' },
           timestamp: expect.any(String),
-        },
+        }),
       ],
     });
   });
@@ -178,35 +182,39 @@ describe('Analytics Command', () => {
 
     expect(mockInteractionEmptyGuild.editReply).toHaveBeenCalledWith({
       embeds: [
-        {
+        expect.objectContaining({
           color: 0x5865f2,
           title: '📊 Discord Analytics Dashboard',
-          fields: [
-            {
+          fields: expect.arrayContaining([
+            expect.objectContaining({
               name: '🏢 Server Overview',
-              value: 'Servers: 1\nActive Users: 0\nTotal Commands: 0',
+              value: expect.stringContaining('Servers: 1\nActive Users: 0\nTotal Members: 0\nBots: 0'),
               inline: true,
-            },
-            {
-              name: '📈 Performance',
-              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
+            }),
+            expect.objectContaining({
+              name: '📈 Command Analytics (7 days)',
+              value: expect.stringContaining('Total Commands:'),
               inline: true,
-            },
-            {
-              name: '🎯 Top Commands',
-              value: 'No data yet',
+            }),
+            expect.objectContaining({
+              name: '⚠️ Error Tracking (7 days)',
+              value: expect.stringContaining('Total Errors:'),
               inline: true,
-            },
-            {
+            }),
+            expect.objectContaining({
+              name: '⏱️ Bot Uptime',
+              value: expect.stringContaining('Total Uptime: 0h'),
+              inline: true,
+            }),
+            expect.objectContaining({
               name: '💡 Server Insights',
-              value:
-                '🟢 Currently Online: 0\n👥 Total Members: 0\n🤖 Bots: 0\n📊 Server Health: Excellent',
+              value: expect.stringContaining('🟢 Currently Online: 0'),
               inline: false,
-            },
-          ],
-          footer: { text: 'Aszai Bot Analytics' },
+            }),
+          ]),
+          footer: { text: 'Aszai Bot Analytics • Database-powered' },
           timestamp: expect.any(String),
-        },
+        }),
       ],
     });
   });

@@ -14,6 +14,9 @@ jest.mock('../../src/services/database', () => ({
   getUserMessages: jest.fn().mockReturnValue([]),
   addBotResponse: jest.fn(),
   clearUserData: jest.fn(),
+  clearUserConversationData: jest.fn(),
+  trackCommandUsage: jest.fn(),
+  logError: jest.fn(),
 }));
 
 // Mock the conversation module
@@ -61,7 +64,7 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(conversationManager.clearHistory).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith('Conversation history cleared!');
+      expect(interaction.reply).toHaveBeenCalledWith('Conversation history cleared! Your stats have been preserved.');
     });
 
     it('should handle /summary command with history', async () => {

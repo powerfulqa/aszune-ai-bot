@@ -52,6 +52,8 @@ jest.mock('../../src/services/database', () => ({
   updateUserStats: jest.fn(),
   getUserMessages: jest.fn().mockReturnValue([]),
   addBotResponse: jest.fn(),
+  getConversationHistory: jest.fn().mockReturnValue([]),
+  logPerformanceMetric: jest.fn(),
 }));
 
 describe('Chat Service - Advanced', () => {

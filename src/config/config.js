@@ -54,6 +54,9 @@ const config = {
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
   CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
 
+  // Database Configuration - should match runtime limits
+  DATABASE_CONVERSATION_LIMIT: 20, // Match MAX_HISTORY for backup consistency
+
   // Message and UI Limits
   MESSAGE_LIMITS: {
     DISCORD_MAX_LENGTH: 2000,
