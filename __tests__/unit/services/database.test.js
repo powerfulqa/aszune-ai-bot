@@ -435,6 +435,291 @@ describe('DatabaseService', () => {
     });
   });
 
+  describe('reminder methods', () => {
+    describe('createReminder', () => {
+      it('should create a reminder successfully', () => {
+        const userId = 'reminder_user';
+        const message = 'Test reminder';
+        const scheduledTime = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
+
+        const reminderId = dbService.createReminder(userId, message, scheduledTime);
+
+        expect(reminderId).toBeDefined();
+        expect(typeof reminderId).toBe('number');
+      });
+
+      it('should handle database errors gracefully', () => {
+        // Create a new service instance that hasn't been initialized
+        const newService = new DatabaseService();
+        // Force database to be disabled by setting isDisabled
+        newService.isDisabled = true;
+
+        const result = newService.createReminder('user', 'message', new Date().toISOString());
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('getActiveReminders', () => {
+      it('should return empty array for user with no reminders', () => {
+        const reminders = dbService.getActiveReminders('no_reminders_user');
+        expect(reminders).toEqual([]);
+      });
+
+      it('should return active reminders for a user', () => {
+        const userId = 'active_reminders_user';
+        const futureTime = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
+
+        // Create a reminder
+        dbService.createReminder(userId, 'Future reminder', futureTime);
+
+        const reminders = dbService.getActiveReminders(userId);
+        expect(reminders.length).toBe(1);
+        expect(reminders[0].message).toBe('Future reminder');
+        expect(reminders[0].status).toBe('active');
+      });
+
+      it('should return all active reminders when no user specified', () => {
+        const user1 = 'user1_reminders';
+        const user2 = 'user2_reminders';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        dbService.createReminder(user1, 'User1 reminder', futureTime);
+        dbService.createReminder(user2, 'User2 reminder', futureTime);
+
+        const allReminders = dbService.getActiveReminders();
+        expect(allReminders.length).toBeGreaterThanOrEqual(2);
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const reminders = newService.getActiveReminders('user');
+        expect(reminders).toEqual([]);
+      });
+    });
+
+    describe('getDueReminders', () => {
+      it('should return empty array when no due reminders', () => {
+        const dueReminders = dbService.getDueReminders();
+        expect(dueReminders).toEqual([]);
+      });
+
+      it('should return due reminders', () => {
+        const userId = 'due_reminder_user';
+        // Make sure it's definitely in the past by subtracting more time
+        const pastTime = new Date(Date.now() - 7200000).toISOString(); // 2 hours ago
+
+        dbService.createReminder(userId, 'Due reminder', pastTime);
+
+        const dueReminders = dbService.getDueReminders();
+        expect(dueReminders.length).toBe(1);
+        expect(dueReminders[0].message).toBe('Due reminder');
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const dueReminders = newService.getDueReminders();
+        expect(dueReminders).toEqual([]);
+      });
+    });
+
+    describe('completeReminder', () => {
+      it('should complete a reminder successfully', () => {
+        const userId = 'complete_reminder_user';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        const reminderId = dbService.createReminder(userId, 'Complete me', futureTime);
+        const completed = dbService.completeReminder(reminderId);
+
+        expect(completed).toBe(true);
+      });
+
+      it('should return false for non-existent reminder', () => {
+        const completed = dbService.completeReminder(99999);
+        expect(completed).toBe(false);
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const completed = newService.completeReminder(1);
+        expect(completed).toBe(false);
+      });
+    });
+
+    describe('cancelReminder', () => {
+      it('should cancel a reminder successfully', () => {
+        const userId = 'cancel_reminder_user';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        const reminderId = dbService.createReminder(userId, 'Cancel me', futureTime);
+        const cancelled = dbService.cancelReminder(reminderId, userId);
+
+        expect(cancelled).toBe(true);
+      });
+
+      it('should return false for non-existent reminder', () => {
+        const cancelled = dbService.cancelReminder(99999, 'user');
+        expect(cancelled).toBe(false);
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const cancelled = newService.cancelReminder(1, 'user');
+        expect(cancelled).toBe(false);
+      });
+    });
+
+    describe('getUserReminders', () => {
+      it('should return empty array for user with no reminders', () => {
+        const reminders = dbService.getUserReminders('no_reminders_user');
+        expect(reminders).toEqual([]);
+      });
+
+      it('should return user reminders', () => {
+        const userId = 'user_reminders_test';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        dbService.createReminder(userId, 'User reminder', futureTime);
+
+        const reminders = dbService.getUserReminders(userId);
+        expect(reminders.length).toBe(1);
+        expect(reminders[0].message).toBe('User reminder');
+      });
+
+      it('should include completed reminders when requested', () => {
+        const userId = 'completed_reminders_user';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        const reminderId = dbService.createReminder(userId, 'Will be completed', futureTime);
+        dbService.completeReminder(reminderId);
+
+        const activeOnly = dbService.getUserReminders(userId, false);
+        const includeCompleted = dbService.getUserReminders(userId, true);
+
+        expect(activeOnly.length).toBe(0);
+        expect(includeCompleted.length).toBe(1);
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const reminders = newService.getUserReminders('user');
+        expect(reminders).toEqual([]);
+      });
+    });
+
+    describe('deleteReminder', () => {
+      it('should delete a reminder successfully', () => {
+        const userId = 'delete_reminder_user';
+        const futureTime = new Date(Date.now() + 3600000).toISOString();
+
+        const reminderId = dbService.createReminder(userId, 'Delete me', futureTime);
+        const deleted = dbService.deleteReminder(reminderId, userId);
+
+        expect(deleted).toBe(true);
+
+        // Verify it's gone
+        const reminders = dbService.getUserReminders(userId);
+        expect(reminders.length).toBe(0);
+      });
+
+      it('should return false for non-existent reminder', () => {
+        const deleted = dbService.deleteReminder(99999, 'user');
+        expect(deleted).toBe(false);
+      });
+
+      it('should handle database errors gracefully', () => {
+        const newService = new DatabaseService();
+        newService.isDisabled = true;
+
+        const deleted = newService.deleteReminder(1, 'user');
+        expect(deleted).toBe(false);
+      });
+    });
+  });
+
+  describe('getServerAnalytics', () => {
+    it('should return empty array for server with no analytics', () => {
+      const analytics = dbService.getServerAnalytics('server123');
+      expect(analytics).toEqual([]);
+    });
+
+    it('should return server analytics data', () => {
+      const serverId = 'analytics_server';
+      const metricType = 'member_count';
+
+      // Track some server metrics
+      dbService.trackServerMetric(serverId, metricType, 100);
+      dbService.trackServerMetric(serverId, 'online_count', 50);
+
+      const analytics = dbService.getServerAnalytics(serverId);
+      expect(analytics.length).toBe(2);
+      expect(analytics.some(a => a.server_id === serverId)).toBe(true);
+      expect(analytics.some(a => a.metric_type === metricType)).toBe(true);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const analytics = newService.getServerAnalytics('server');
+      expect(analytics).toEqual([]);
+    });
+  });
+
+  describe('logBotEvent', () => {
+    it('should log bot events successfully', () => {
+      dbService.logBotEvent('start', 3600, 'Test startup');
+
+      // Verify by checking uptime stats (which uses bot_uptime table)
+      const uptimeStats = dbService.getUptimeStats();
+      expect(uptimeStats.restartCount).toBe(0); // No restarts logged yet
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      expect(() => newService.logBotEvent('start')).not.toThrow();
+    });
+  });
+
+  describe('exportUserData', () => {
+    it('should export user data successfully', () => {
+      const userId = 'export_test_user';
+
+      // Add some data for the user
+      dbService.updateUserStats(userId, { total_summaries: 1 });
+      dbService.addUserMessage(userId, 'Test message');
+      dbService.trackCommandUsage(userId, 'help', 'server123', true, 500);
+
+      const exportData = dbService.exportUserData(userId);
+
+      expect(exportData).toBeDefined();
+      expect(exportData.userId).toBe(userId);
+      expect(exportData.userStats.user_id).toBe(userId);
+      expect(exportData.userStats.message_count).toBe(1); // addUserMessage increments this
+      expect(exportData.conversationHistory.length).toBe(1);
+      expect(exportData.commandUsage.length).toBe(1);
+    });
+
+    it('should return null for database errors', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const exportData = newService.exportUserData('user');
+      expect(exportData).toBeNull();
+    });
+  });
+
   describe('close', () => {
     it('should close database connection', () => {
       dbService.getDb();

@@ -57,11 +57,12 @@ jest.mock('../../src/services/perplexity-secure', () => ({
 const loggerMock = require('../../src/utils/logger');
 
 // Setup client mock early
+let mockClientReadyHandler;
 const mockClient = {
   on: jest.fn().mockReturnThis(),
   once: jest.fn().mockImplementation((event, handler) => {
     if (event === 'ready') {
-      handler();
+      mockClientReadyHandler = handler; // Store handler for manual triggering
     }
     return mockClient;
   }),
@@ -241,6 +242,286 @@ describe('Bot Main Entry Point (index.js)', () => {
     it('should register handler for unhandled promise rejections', () => {
       // Verify the event handler is registered
       expect(process.on).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
+    });
+  });
+
+  describe('Boot Optimizations', () => {
+    let originalEnv;
+
+    beforeEach(() => {
+      originalEnv = { ...process.env };
+      jest.clearAllMocks();
+      mockClientReadyHandler = undefined; // Reset handler
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should initialize license validation when enabled', async () => {
+      // Mock license validator constructor
+      const MockLicenseValidator = jest.fn().mockImplementation(() => ({
+        enforceLicense: jest.fn().mockResolvedValue(true),
+      }));
+
+      jest.doMock('../../src/utils/license-validator', () => MockLicenseValidator);
+
+      // Mock config with license validation enabled
+      const mockConfig = {
+        FEATURES: {
+          LICENSE_VALIDATION: true,
+          LICENSE_SERVER: false,
+          DEVELOPMENT_MODE: false,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: false },
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(loggerMock.info).toHaveBeenCalledWith('Validating software license...');
+      expect(loggerMock.info).toHaveBeenCalledWith('License validation successful - starting bot...');
+    });
+
+    it('should skip license validation when disabled', async () => {
+      // Mock config with license validation disabled
+      const mockConfig = {
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          DEVELOPMENT_MODE: false,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: false },
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(loggerMock.info).toHaveBeenCalledWith('License validation disabled via feature flags - starting bot...');
+    });
+
+    it('should initialize license server when enabled', async () => {
+      // Mock license server constructor
+      const MockLicenseServer = jest.fn().mockImplementation(() => ({
+        start: jest.fn(),
+      }));
+
+      jest.doMock('../../src/utils/license-server', () => MockLicenseServer);
+
+      // Mock config with license server enabled
+      const mockConfig = {
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: true,
+          DEVELOPMENT_MODE: false,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: false },
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(MockLicenseServer).toHaveBeenCalled();
+    });
+
+    it('should handle Pi optimizations initialization', async () => {
+      // Mock config with Pi optimizations enabled
+      const mockConfig = {
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          DEVELOPMENT_MODE: false,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: true },
+        initializePiOptimizations: jest.fn().mockResolvedValue(),
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(loggerMock.info).toHaveBeenCalledWith('Initializing Raspberry Pi optimizations...');
+      expect(mockConfig.initializePiOptimizations).toHaveBeenCalled();
+      expect(loggerMock.info).toHaveBeenCalledWith('Pi optimizations initialized successfully');
+    });
+
+    it('should handle Pi optimizations initialization failure gracefully', async () => {
+      // Mock config with Pi optimizations enabled but failing
+      const mockConfig = {
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          DEVELOPMENT_MODE: false,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: true },
+        initializePiOptimizations: jest.fn().mockRejectedValue(new Error('Pi init failed')),
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(loggerMock.error).toHaveBeenCalledWith('Failed to initialize Pi optimizations:', expect.any(Error));
+    });
+  });
+
+  describe('Reminder Service Initialization', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockClientReadyHandler = undefined; // Reset handler
+    });
+
+    it('should initialize reminder service on ready event', async () => {
+      // Mock reminder service
+      const mockReminderService = {
+        initialize: jest.fn().mockResolvedValue(),
+        on: jest.fn(),
+        shutdown: jest.fn(),
+      };
+
+      jest.doMock('../../src/services/reminder-service', () => mockReminderService);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(mockReminderService.initialize).toHaveBeenCalled();
+      expect(loggerMock.info).toHaveBeenCalledWith('Reminder service initialized');
+    });
+
+    it('should handle reminder service initialization failure', async () => {
+      // Mock reminder service that fails
+      const mockReminderService = {
+        initialize: jest.fn().mockRejectedValue(new Error('Reminder init failed')),
+        on: jest.fn(),
+        shutdown: jest.fn(),
+      };
+
+      jest.doMock('../../src/services/reminder-service', () => mockReminderService);
+
+      // Re-import to get updated mocks
+      jest.resetModules();
+      require('../../src/index');
+
+      // Manually trigger the ready event
+      if (mockClientReadyHandler) {
+        await mockClientReadyHandler();
+      }
+
+      expect(loggerMock.error).toHaveBeenCalledWith('Failed to initialize reminder service:', expect.any(Error));
+    });
+  });
+
+  describe('Pi Optimizations in Production', () => {
+    let originalEnv;
+
+    beforeEach(() => {
+      originalEnv = { ...process.env };
+      jest.clearAllMocks();
+      mockClientReadyHandler = undefined; // Reset handler
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should initialize Pi optimizations in production mode', () => {
+      // Set production environment
+      process.env.NODE_ENV = 'production';
+
+      // Mock config with Pi optimizations enabled
+      const mockConfig = {
+        PI_OPTIMIZATIONS: { ENABLED: true },
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Mock lazy loader and monitors
+      const mockLazyLoad = jest.fn().mockImplementation((loader) => {
+        const mockMonitor = {
+          initialize: jest.fn(),
+        };
+        loader(); // Call the loader function
+        return mockMonitor;
+      });
+
+      jest.doMock('../../src/utils/lazy-loader', () => ({
+        lazyLoad: mockLazyLoad,
+      }));
+
+      // Re-require index to trigger production initialization
+      jest.resetModules();
+      require('../../src/index');
+
+      expect(loggerMock.info).toHaveBeenCalledWith('Initializing Pi optimizations');
+    });
+
+    it('should handle Pi optimizations initialization failure in production', () => {
+      // Set production environment
+      process.env.NODE_ENV = 'production';
+
+      // Mock config with Pi optimizations enabled
+      const mockConfig = {
+        PI_OPTIMIZATIONS: { ENABLED: true },
+      };
+
+      jest.doMock('../../src/config/config', () => mockConfig);
+
+      // Mock lazy loader to throw error
+      jest.doMock('../../src/utils/lazy-loader', () => ({
+        lazyLoad: jest.fn().mockImplementation(() => {
+          throw new Error('Lazy load failed');
+        }),
+      }));
+
+      // Re-require index to trigger production initialization
+      jest.resetModules();
+      require('../../src/index');
+
+      expect(loggerMock.warn).toHaveBeenCalledWith('Failed to initialize Pi optimizations:', expect.any(Error));
     });
   });
 });

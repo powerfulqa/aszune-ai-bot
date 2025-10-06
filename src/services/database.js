@@ -459,7 +459,7 @@ class DatabaseService {
       const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
       const stmt = db.prepare(`
-        SELECT metric_type, value, timestamp
+        SELECT server_id, metric_type, value, timestamp
         FROM server_analytics
         WHERE server_id = ? AND timestamp >= ?
         ORDER BY timestamp DESC
@@ -860,14 +860,14 @@ class DatabaseService {
       if (userId) {
         stmt = db.prepare(`
           SELECT * FROM reminders
-          WHERE user_id = ? AND status = 'active' AND scheduled_time > datetime('now')
+          WHERE user_id = ? AND status = 'active' AND datetime(scheduled_time) > datetime('now')
           ORDER BY scheduled_time ASC
         `);
         return stmt.all(userId);
       } else {
         stmt = db.prepare(`
           SELECT * FROM reminders
-          WHERE status = 'active' AND scheduled_time > datetime('now')
+          WHERE status = 'active' AND datetime(scheduled_time) > datetime('now')
           ORDER BY scheduled_time ASC
         `);
         return stmt.all();
@@ -886,7 +886,7 @@ class DatabaseService {
       const db = this.getDb();
       const stmt = db.prepare(`
         SELECT * FROM reminders
-        WHERE status = 'active' AND scheduled_time <= datetime('now')
+        WHERE status = 'active' AND datetime(scheduled_time) <= datetime('now')
         ORDER BY scheduled_time ASC
       `);
       return stmt.all();
@@ -950,7 +950,7 @@ class DatabaseService {
         stmt = db.prepare(`
           SELECT * FROM reminders
           WHERE user_id = ? AND status = 'active'
-          ORDER BY scheduled_time ASC
+          ORDER BY datetime(scheduled_time) ASC
         `);
       }
 
