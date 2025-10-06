@@ -48,7 +48,7 @@ class NaturalLanguageReminderProcessor {
    * @returns {boolean} - Whether this looks like a reminder request
    */
   isReminderRequest(message) {
-    return this.reminderPatterns.some(pattern => pattern.test(message));
+    return this.reminderPatterns.some((pattern) => pattern.test(message));
   }
 
   /**
@@ -92,7 +92,7 @@ class NaturalLanguageReminderProcessor {
    * @returns {boolean} - Whether user wants an explicit reminder
    */
   wantsExplicitReminder(message) {
-    return this.explicitReminderPatterns.some(pattern => pattern.test(message));
+    return this.explicitReminderPatterns.some((pattern) => pattern.test(message));
   }
 
   /**
@@ -127,7 +127,7 @@ class NaturalLanguageReminderProcessor {
           text: dateText,
           context: context,
           index: match.index,
-          type: this.classifyDateType(dateText)
+          type: this.classifyDateType(dateText),
         });
       }
     }
@@ -155,7 +155,12 @@ class NaturalLanguageReminderProcessor {
    */
   classifyDateType(dateText) {
     if (/\d{4}-\d{2}-\d{2}/.test(dateText)) return 'iso';
-    if (/(?:January|February|March|April|May|June|July|August|September|October|November|December)/i.test(dateText)) return 'full';
+    if (
+      /(?:January|February|March|April|May|June|July|August|September|October|November|December)/i.test(
+        dateText
+      )
+    )
+      return 'full';
     if (/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(dateText)) return 'abbreviated';
     if (/Q[1-4]/i.test(dateText) || /quarter/i.test(dateText)) return 'quarter';
     if (/^\d{4}$/.test(dateText)) return 'year';
@@ -213,7 +218,8 @@ class NaturalLanguageReminderProcessor {
         return {
           success: false,
           reason: 'Could not extract event from message',
-          response: 'I couldn\'t understand what event you want to be reminded about. Please try rephrasing your request.'
+          response:
+            "I couldn't understand what event you want to be reminded about. Please try rephrasing your request.",
         };
       }
 
@@ -232,15 +238,15 @@ class NaturalLanguageReminderProcessor {
         message: message,
         userId: userId,
         channelId: channelId,
-        serverId: serverId
+        serverId: serverId,
       };
-
     } catch (error) {
       logger.error('Error processing reminder request:', error);
       return {
         success: false,
         reason: 'Processing error',
-        response: 'Sorry, I encountered an error while processing your reminder request. Please try again.'
+        response:
+          'Sorry, I encountered an error while processing your reminder request. Please try again.',
       };
     }
   }
@@ -263,13 +269,12 @@ class NaturalLanguageReminderProcessor {
       }
 
       return await this.createReminderForDate(event, bestDate, userId, channelId, serverId);
-
     } catch (error) {
       logger.error(`Error looking up and setting reminder for ${event}:`, error);
       return {
         success: false,
         reason: 'Lookup error',
-        response: `Sorry, I encountered an error while looking up information about "${event}". Please try again later.`
+        response: `Sorry, I encountered an error while looking up information about "${event}". Please try again later.`,
       };
     }
   }
@@ -324,7 +329,7 @@ class NaturalLanguageReminderProcessor {
     return {
       success: false,
       reason: 'No valid future dates',
-      response: `I found some date information for "${event}", but couldn't identify a valid future release date. Here's what I found:\n\n${aiResponse.substring(0, 500)}${aiResponse.length > 500 ? '...' : ''}`
+      response: `I found some date information for "${event}", but couldn't identify a valid future release date. Here's what I found:\n\n${aiResponse.substring(0, 500)}${aiResponse.length > 500 ? '...' : ''}`,
     };
   }
 
@@ -357,7 +362,7 @@ class NaturalLanguageReminderProcessor {
       reminderId: reminderId,
       event: event,
       date: date,
-      response: `✅ **Reminder Set!**\n\nI'll remind you when **${event}** is released.\n\n**Release Date:** ${formattedTime}\n**Time Until Release:** ${relativeTime}\n\n*Based on the latest available information.*`
+      response: `✅ **Reminder Set!**\n\nI'll remind you when **${event}** is released.\n\n**Release Date:** ${formattedTime}\n**Time Until Release:** ${relativeTime}\n\n*Based on the latest available information.*`,
     };
   }
 }

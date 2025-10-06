@@ -63,7 +63,7 @@ class DatabaseService {
       this._createUserMessagesTable(db);
       this._createRemindersTable(db);
       this._createIndexes(db);
-      this._ensureTriggers(db);  // Ensure triggers are created after all tables
+      this._ensureTriggers(db); // Ensure triggers are created after all tables
     } catch (error) {
       throw new Error(`Failed to initialize database tables: ${error.message}`);
     }
@@ -247,25 +247,27 @@ class DatabaseService {
     try {
       const db = this.getDb();
       const stmt = db.prepare('SELECT * FROM user_stats WHERE user_id = ?');
-      return stmt.get(userId) || { 
-        user_id: userId, 
-        message_count: 0, 
-        last_active: null,
-        first_seen: null,
-        total_summaries: 0,
-        total_commands: 0,
-        preferences: '{}'
-      };
-    } catch (error) {
-      if (this.isDisabled) {
-        return { 
-          user_id: userId, 
-          message_count: 0, 
+      return (
+        stmt.get(userId) || {
+          user_id: userId,
+          message_count: 0,
           last_active: null,
           first_seen: null,
           total_summaries: 0,
           total_commands: 0,
-          preferences: '{}'
+          preferences: '{}',
+        }
+      );
+    } catch (error) {
+      if (this.isDisabled) {
+        return {
+          user_id: userId,
+          message_count: 0,
+          last_active: null,
+          first_seen: null,
+          total_summaries: 0,
+          total_commands: 0,
+          preferences: '{}',
         };
       }
       throw new Error(`Failed to get user stats for ${userId}: ${error.message}`);
@@ -326,12 +328,13 @@ class DatabaseService {
         FROM command_usage WHERE timestamp >= ?
       `);
       const successData = successStmt.get(cutoffDate);
-      const successRate = successData.total > 0 ? (successData.successful / successData.total) * 100 : 100;
+      const successRate =
+        successData.total > 0 ? (successData.successful / successData.total) * 100 : 100;
 
       return {
         totalCommands: total,
         commandBreakdown: breakdown,
-        successRate: Math.round(successRate * 100) / 100
+        successRate: Math.round(successRate * 100) / 100,
       };
     } catch (error) {
       if (this.isDisabled) return { totalCommands: 0, commandBreakdown: [], successRate: 100 };
@@ -361,15 +364,13 @@ class DatabaseService {
       if (this.isDisabled) return [];
 
       const db = this.getDb();
-      const cutoffDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-
       const stmt = db.prepare(`
         SELECT value, timestamp, metadata
         FROM performance_metrics
-        WHERE metric_type = ? AND timestamp >= ?
+        WHERE metric_type = ? AND timestamp >= datetime('now', '-${hours} hours')
         ORDER BY timestamp DESC
       `);
-      return stmt.all(metricType, cutoffDate);
+      return stmt.all(metricType);
     } catch (error) {
       if (this.isDisabled) return [];
       logger.warn(`Failed to get performance metrics: ${error.message}`);
@@ -426,7 +427,7 @@ class DatabaseService {
       return {
         totalErrors: total,
         errorBreakdown: breakdown,
-        resolvedCount: resolved
+        resolvedCount: resolved,
       };
     } catch (error) {
       if (this.isDisabled) return { totalErrors: 0, errorBreakdown: [], resolvedCount: 0 };
@@ -527,7 +528,7 @@ class DatabaseService {
       return {
         totalUptime: uptime,
         totalDowntime: Math.max(0, downtime),
-        restartCount: restarts
+        restartCount: restarts,
       };
     } catch (error) {
       if (this.isDisabled) return { totalUptime: 0, totalDowntime: 0, restartCount: 0 };
@@ -605,7 +606,7 @@ class DatabaseService {
         LIMIT ?
       `);
       const rows = stmt.all(userId, limit);
-      return rows.map(row => row.message);
+      return rows.map((row) => row.message);
     } catch (error) {
       if (this.isDisabled) return [];
       logger.warn(`Failed to get user messages for ${userId}: ${error.message}`);
@@ -685,12 +686,12 @@ class DatabaseService {
         LIMIT ?
       `);
       const rows = stmt.all(userId, defaultLimit);
-      return rows.map(row => ({
+      return rows.map((row) => ({
         message: row.message,
         role: row.role,
         timestamp: row.timestamp,
         message_length: row.message_length,
-        response_time_ms: row.response_time_ms
+        response_time_ms: row.response_time_ms,
       }));
     } catch (error) {
       if (this.isDisabled) return [];
@@ -727,7 +728,7 @@ class DatabaseService {
         userStats: this.getUserStats(userId),
         conversationHistory: this.getConversationHistory(userId, 1000), // Last 1000 messages
         commandUsage: this._getUserCommandHistory(userId),
-        errorLogs: this._getUserErrorHistory(userId)
+        errorLogs: this._getUserErrorHistory(userId),
       };
 
       return exportData;
@@ -830,7 +831,14 @@ class DatabaseService {
   }
 
   // Reminder management methods
-  createReminder(userId, message, scheduledTime, timezone = 'UTC', channelId = null, serverId = null) {
+  createReminder(
+    userId,
+    message,
+    scheduledTime,
+    timezone = 'UTC',
+    channelId = null,
+    serverId = null
+  ) {
     try {
       if (this.isDisabled) return null;
 
@@ -841,9 +849,27 @@ class DatabaseService {
         INSERT INTO reminders (user_id, message, scheduled_time, timezone, channel_id, server_id)
         VALUES (?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(userId, message, scheduledTime, timezone, channelId, serverId);
+      const result = stmt.run(
+        userId,
+        message,
+        scheduledTime.toISOString(),
+        timezone,
+        channelId,
+        serverId
+      );
 
-      return result.lastInsertRowid;
+      // Return the complete reminder object
+      return {
+        id: result.lastInsertRowid,
+        user_id: userId,
+        message: message,
+        scheduled_time: scheduledTime.toISOString(),
+        timezone: timezone,
+        status: 'active',
+        channel_id: channelId,
+        server_id: serverId,
+        created_at: new Date().toISOString(),
+      };
     } catch (error) {
       if (this.isDisabled) return null;
       throw new Error(`Failed to create reminder for ${userId}: ${error.message}`);

@@ -94,7 +94,14 @@ class ReminderService {
     }
   }
 
-  async createReminder(userId, message, scheduledTime, timezone = 'UTC', channelId = null, serverId = null) {
+  async createReminder(
+    userId,
+    message,
+    scheduledTime,
+    timezone = 'UTC',
+    channelId = null,
+    serverId = null
+  ) {
     try {
       // Validate scheduled time
       const scheduledDate = new Date(scheduledTime);
@@ -129,7 +136,7 @@ class ReminderService {
         timezone,
         channel_id: channelId,
         server_id: serverId,
-        status: 'active'
+        status: 'active',
       };
 
       // Schedule the reminder
@@ -198,7 +205,7 @@ class ReminderService {
 
   emit(event, ...args) {
     if (this.eventListeners && this.eventListeners.has(event)) {
-      this.eventListeners.get(event).forEach(listener => {
+      this.eventListeners.get(event).forEach((listener) => {
         try {
           listener(...args);
         } catch (error) {

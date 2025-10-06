@@ -15,17 +15,17 @@ jest.mock('../../../src/services/database', () => ({
   getCommandUsageStats: jest.fn().mockReturnValue({
     totalCommands: 25,
     successRate: 96,
-    commandBreakdown: [{ command: 'chat', count: 15 }]
+    commandBreakdown: [{ command: 'chat', count: 15 }],
   }),
   getErrorStats: jest.fn().mockReturnValue({
     totalErrors: 2,
     resolvedCount: 1,
-    errorBreakdown: [{ error_type: 'network', count: 1 }]
+    errorBreakdown: [{ error_type: 'network', count: 1 }],
   }),
   getUptimeStats: jest.fn().mockReturnValue({
     totalUptime: 3600,
     totalDowntime: 60,
-    restartCount: 1
+    restartCount: 1,
   }),
   trackServerMetric: jest.fn(),
   trackCommandUsage: jest.fn(),
@@ -226,7 +226,9 @@ describe('Analytics Command', () => {
               name: '🏢 Server Overview',
               // Should show fallback calculations: onlineCount = Math.floor(100 * 0.2) = 20
               // botCount = Math.floor(100 * 0.05) = 5, so humanMembers = 100 - 5 = 95
-              value: expect.stringContaining('Servers: 1\nActive Users: 95\nTotal Members: 100\nBots: 5'),
+              value: expect.stringContaining(
+                'Servers: 1\nActive Users: 95\nTotal Members: 100\nBots: 5'
+              ),
               inline: true,
             }),
             expect.objectContaining({
@@ -256,9 +258,7 @@ describe('Stats Command', () => {
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.reply).toHaveBeenCalledWith(
-      '**Your Aszai Bot Stats:**\n' +
-        'Messages sent: 10\n' +
-        'Summaries requested: 2'
+      '**Your Aszai Bot Stats:**\n' + 'Messages sent: 10\n' + 'Summaries requested: 2'
     );
   });
 });
@@ -320,9 +320,7 @@ describe('Summary Command', () => {
   test('should handle summary command successfully', async () => {
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.reply).toHaveBeenCalledWith(
-      'No conversation history to summarize.'
-    );
+    expect(mockInteraction.reply).toHaveBeenCalledWith('No conversation history to summarize.');
   });
 });
 

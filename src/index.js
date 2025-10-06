@@ -95,10 +95,12 @@ reminderService.on('reminderDue', async (reminder) => {
     const channel = await client.channels.fetch(reminder.channel_id);
     if (channel) {
       const embed = {
-        color: 0x00FF00,
+        color: 0x00ff00,
         title: '⏰ Reminder!',
         description: reminder.message,
-        footer: { text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot` },
+        footer: {
+          text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot`,
+        },
         timestamp: new Date().toISOString(),
       };
 

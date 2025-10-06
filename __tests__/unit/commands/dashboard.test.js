@@ -121,7 +121,9 @@ describe('Dashboard Command', () => {
               }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard • Database-powered • Real-time data'),
+              text: expect.stringContaining(
+                'Aszai Bot Dashboard • Database-powered • Real-time data'
+              ),
             }),
             timestamp: expect.any(String),
           }),
@@ -198,7 +200,9 @@ describe('Dashboard Command', () => {
               }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard • Database-powered • Real-time data'),
+              text: expect.stringContaining(
+                'Aszai Bot Dashboard • Database-powered • Real-time data'
+              ),
             }),
             timestamp: expect.any(String),
           }),

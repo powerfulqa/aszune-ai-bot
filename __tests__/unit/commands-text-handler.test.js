@@ -54,7 +54,9 @@ describe('Commands - Text Command Handler', () => {
       await handleTextCommand(message);
 
       expect(conversationManager.clearHistory).toHaveBeenCalledWith(message.author.id);
-      expect(message.reply).toHaveBeenCalledWith('Conversation history cleared! Your stats have been preserved.');
+      expect(message.reply).toHaveBeenCalledWith(
+        'Conversation history cleared! Your stats have been preserved.'
+      );
     });
 
     it('should handle !summary command with history', async () => {

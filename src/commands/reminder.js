@@ -8,29 +8,33 @@ async function handleReminderCommand(message, args) {
     const subcommand = args[0]?.toLowerCase();
 
     switch (subcommand) {
-    case 'set':
-    case 'create':
-      return await handleSetReminder(message, args.slice(1));
-    case 'list':
-    case 'show':
-      return await handleListReminders(message);
-    case 'cancel':
-    case 'delete':
-      return await handleCancelReminder(message, args.slice(1));
-    case 'help':
-    default:
-      return await handleReminderHelp(message);
+      case 'set':
+      case 'create':
+        return await handleSetReminder(message, args.slice(1));
+      case 'list':
+      case 'show':
+        return await handleListReminders(message);
+      case 'cancel':
+      case 'delete':
+        return await handleCancelReminder(message, args.slice(1));
+      case 'help':
+      default:
+        return await handleReminderHelp(message);
     }
   } catch (error) {
     logger.error('Error in reminder command:', error);
-    const errorResponse = ErrorHandler.handleError(error, 'reminder_command', { userId: message.author.id });
+    const errorResponse = ErrorHandler.handleError(error, 'reminder_command', {
+      userId: message.author.id,
+    });
     return message.reply({
-      embeds: [{
-        color: 0xFF0000,
-        title: 'Reminder Error',
-        description: errorResponse.message,
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0xff0000,
+          title: 'Reminder Error',
+          description: errorResponse.message,
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   }
 }
@@ -38,12 +42,15 @@ async function handleReminderCommand(message, args) {
 async function handleSetReminder(message, args) {
   if (args.length < 2) {
     return message.reply({
-      embeds: [{
-        color: 0xFFA500,
-        title: 'Invalid Reminder Format',
-        description: 'Usage: `!reminder set <time> <message>`\nExample: `!reminder set "in 5 minutes" Check the oven!`',
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0xffa500,
+          title: 'Invalid Reminder Format',
+          description:
+            'Usage: `!reminder set <time> <message>`\nExample: `!reminder set "in 5 minutes" Check the oven!`',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   }
 
@@ -69,22 +76,25 @@ async function handleSetReminder(message, args) {
     const formattedTime = timeParser.formatTime(parsedTime.scheduledTime, parsedTime.timezone);
 
     return message.reply({
-      embeds: [{
-        color: 0x00FF00,
-        title: '✅ Reminder Set!',
-        description: `**Message:** ${reminderMessage}\n**When:** ${relativeTime}\n**Exact Time:** ${formattedTime}`,
-        footer: { text: `Reminder ID: ${reminderId} | Aszai Bot` }
-      }]
+      embeds: [
+        {
+          color: 0x00ff00,
+          title: '✅ Reminder Set!',
+          description: `**Message:** ${reminderMessage}\n**When:** ${relativeTime}\n**Exact Time:** ${formattedTime}`,
+          footer: { text: `Reminder ID: ${reminderId} | Aszai Bot` },
+        },
+      ],
     });
-
   } catch (error) {
     return message.reply({
-      embeds: [{
-        color: 0xFF0000,
-        title: 'Failed to Set Reminder',
-        description: error.message,
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0xff0000,
+          title: 'Failed to Set Reminder',
+          description: error.message,
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   }
 }
@@ -95,40 +105,48 @@ async function handleListReminders(message) {
 
     if (reminders.length === 0) {
       return message.reply({
-        embeds: [{
-          color: 0x0099FF,
-          title: 'Your Reminders',
-          description: 'You have no active reminders.',
-          footer: { text: 'Aszai Bot' }
-        }]
+        embeds: [
+          {
+            color: 0x0099ff,
+            title: 'Your Reminders',
+            description: 'You have no active reminders.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
       });
     }
 
-    const reminderList = reminders.map(reminder => {
-      const scheduledTime = new Date(reminder.scheduled_time);
-      const relativeTime = timeParser.getRelativeTime(scheduledTime);
-      const formattedTime = timeParser.formatTime(scheduledTime, reminder.timezone);
+    const reminderList = reminders
+      .map((reminder) => {
+        const scheduledTime = new Date(reminder.scheduled_time);
+        const relativeTime = timeParser.getRelativeTime(scheduledTime);
+        const formattedTime = timeParser.formatTime(scheduledTime, reminder.timezone);
 
-      return `**ID:** ${reminder.id}\n**Message:** ${reminder.message}\n**When:** ${relativeTime}\n**Time:** ${formattedTime}\n`;
-    }).join('\n---\n');
+        return `**ID:** ${reminder.id}\n**Message:** ${reminder.message}\n**When:** ${relativeTime}\n**Time:** ${formattedTime}\n`;
+      })
+      .join('\n---\n');
 
     return message.reply({
-      embeds: [{
-        color: 0x0099FF,
-        title: `Your Reminders (${reminders.length})`,
-        description: reminderList.length > 4000 ? reminderList.substring(0, 4000) + '...' : reminderList,
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0x0099ff,
+          title: `Your Reminders (${reminders.length})`,
+          description:
+            reminderList.length > 4000 ? reminderList.substring(0, 4000) + '...' : reminderList,
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
-
   } catch (error) {
     return message.reply({
-      embeds: [{
-        color: 0xFF0000,
-        title: 'Failed to List Reminders',
-        description: 'An error occurred while retrieving your reminders.',
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0xff0000,
+          title: 'Failed to List Reminders',
+          description: 'An error occurred while retrieving your reminders.',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   }
 }
@@ -154,13 +172,16 @@ function validateCancelArgs(args) {
     return {
       valid: false,
       errorEmbed: {
-        embeds: [{
-          color: 0xFFA500,
-          title: 'Invalid Cancel Format',
-          description: 'Usage: `!reminder cancel <reminder_id>`\nUse `!reminder list` to see your reminder IDs.',
-          footer: { text: 'Aszai Bot' }
-        }]
-      }
+        embeds: [
+          {
+            color: 0xffa500,
+            title: 'Invalid Cancel Format',
+            description:
+              'Usage: `!reminder cancel <reminder_id>`\nUse `!reminder list` to see your reminder IDs.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
+      },
     };
   }
 
@@ -169,13 +190,15 @@ function validateCancelArgs(args) {
     return {
       valid: false,
       errorEmbed: {
-        embeds: [{
-          color: 0xFF0000,
-          title: 'Invalid Reminder ID',
-          description: 'Reminder ID must be a number.',
-          footer: { text: 'Aszai Bot' }
-        }]
-      }
+        embeds: [
+          {
+            color: 0xff0000,
+            title: 'Invalid Reminder ID',
+            description: 'Reminder ID must be a number.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
+      },
     };
   }
 
@@ -185,33 +208,39 @@ function validateCancelArgs(args) {
 function handleCancelResult(message, reminderId, cancelled) {
   if (cancelled) {
     return message.reply({
-      embeds: [{
-        color: 0x00FF00,
-        title: '✅ Reminder Cancelled',
-        description: `Reminder #${reminderId} has been cancelled.`,
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0x00ff00,
+          title: '✅ Reminder Cancelled',
+          description: `Reminder #${reminderId} has been cancelled.`,
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   } else {
     return message.reply({
-      embeds: [{
-        color: 0xFFA500,
-        title: 'Reminder Not Found',
-        description: `Could not find active reminder #${reminderId} or it's not yours.`,
-        footer: { text: 'Aszai Bot' }
-      }]
+      embeds: [
+        {
+          color: 0xffa500,
+          title: 'Reminder Not Found',
+          description: `Could not find active reminder #${reminderId} or it's not yours.`,
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
     });
   }
 }
 
 function handleCancelError(message, _error) {
   return message.reply({
-    embeds: [{
-      color: 0xFF0000,
-      title: 'Failed to Cancel Reminder',
-      description: 'An error occurred while cancelling the reminder.',
-      footer: { text: 'Aszai Bot' }
-    }]
+    embeds: [
+      {
+        color: 0xff0000,
+        title: 'Failed to Cancel Reminder',
+        description: 'An error occurred while cancelling the reminder.',
+        footer: { text: 'Aszai Bot' },
+      },
+    ],
   });
 }
 
@@ -244,12 +273,14 @@ UTC, EST, EDT, CST, CDT, MST, MDT, PST, PDT, GMT, BST, CET, CEST, JST, KST, IST,
 `;
 
   return message.reply({
-    embeds: [{
-      color: 0x0099FF,
-      title: '⏰ Reminder System Help',
-      description: helpText,
-      footer: { text: 'Aszai Bot' }
-    }]
+    embeds: [
+      {
+        color: 0x0099ff,
+        title: '⏰ Reminder System Help',
+        description: helpText,
+        footer: { text: 'Aszai Bot' },
+      },
+    ],
   });
 }
 
@@ -266,7 +297,6 @@ async function handleReminderDue(reminder) {
 
     // The actual Discord message sending will be handled by integrating this with the main bot client
     // This function signature allows the main bot to register a callback
-
   } catch (error) {
     logger.error(`Failed to handle reminder due for ${reminder.id}:`, error);
   }
@@ -274,5 +304,5 @@ async function handleReminderDue(reminder) {
 
 module.exports = {
   handleReminderCommand,
-  handleReminderDue
+  handleReminderDue,
 };

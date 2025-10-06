@@ -179,7 +179,8 @@ async function checkForReminderRequest(sanitizedContent, userId, channelId, serv
     }
 
     // Look up the event and set the reminder
-    const reminderResult = await naturalLanguageReminderProcessor.lookupAndSetReminder(reminderData);
+    const reminderResult =
+      await naturalLanguageReminderProcessor.lookupAndSetReminder(reminderData);
 
     if (reminderResult.success) {
       logger.info(`Successfully set reminder for user ${userId} about "${reminderData.event}"`);
@@ -188,7 +189,6 @@ async function checkForReminderRequest(sanitizedContent, userId, channelId, serv
     }
 
     return reminderResult;
-
   } catch (error) {
     logger.error('Error checking for reminder request:', error);
     return null;
@@ -374,8 +374,15 @@ async function handleChatMessage(message) {
     }
 
     // Track performance metrics
-    await trackPerformanceMetrics(startTime, initialMemoryUsage, userId, messageContent, formattedReply, conversationHistory, responseTime);
-
+    await trackPerformanceMetrics(
+      startTime,
+      initialMemoryUsage,
+      userId,
+      messageContent,
+      formattedReply,
+      conversationHistory,
+      responseTime
+    );
   } catch (error) {
     await handleChatError(error, startTime, processedData, message);
   }
@@ -407,7 +414,15 @@ async function sendReminderResponse(message, reminderResult) {
  * @param {Array} conversationHistory - Conversation history
  * @param {number} responseTime - Response generation time
  */
-async function trackPerformanceMetrics(startTime, initialMemoryUsage, userId, messageContent, formattedReply, conversationHistory, responseTime) {
+async function trackPerformanceMetrics(
+  startTime,
+  initialMemoryUsage,
+  userId,
+  messageContent,
+  formattedReply,
+  conversationHistory,
+  responseTime
+) {
   const totalTime = Date.now() - startTime;
   const finalMemoryUsage = process.memoryUsage().heapUsed;
   const memoryDelta = finalMemoryUsage - initialMemoryUsage;

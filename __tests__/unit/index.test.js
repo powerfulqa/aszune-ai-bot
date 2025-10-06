@@ -288,7 +288,9 @@ describe('Bot Main Entry Point (index.js)', () => {
       }
 
       expect(loggerMock.info).toHaveBeenCalledWith('Validating software license...');
-      expect(loggerMock.info).toHaveBeenCalledWith('License validation successful - starting bot...');
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'License validation successful - starting bot...'
+      );
     });
 
     it('should skip license validation when disabled', async () => {
@@ -313,7 +315,9 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.info).toHaveBeenCalledWith('License validation disabled via feature flags - starting bot...');
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'License validation disabled via feature flags - starting bot...'
+      );
     });
 
     it('should initialize license server when enabled', async () => {
@@ -399,7 +403,10 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.error).toHaveBeenCalledWith('Failed to initialize Pi optimizations:', expect.any(Error));
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        'Failed to initialize Pi optimizations:',
+        expect.any(Error)
+      );
     });
   });
 
@@ -451,7 +458,10 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.error).toHaveBeenCalledWith('Failed to initialize reminder service:', expect.any(Error));
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        'Failed to initialize reminder service:',
+        expect.any(Error)
+      );
     });
   });
 
@@ -521,7 +531,10 @@ describe('Bot Main Entry Point (index.js)', () => {
       jest.resetModules();
       require('../../src/index');
 
-      expect(loggerMock.warn).toHaveBeenCalledWith('Failed to initialize Pi optimizations:', expect.any(Error));
+      expect(loggerMock.warn).toHaveBeenCalledWith(
+        'Failed to initialize Pi optimizations:',
+        expect.any(Error)
+      );
     });
   });
 });

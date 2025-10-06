@@ -43,6 +43,7 @@ CREATE TABLE conversation_history (
 ```
 
 **Enhanced Features (v1.7.0):**
+
 - **Role Separation**: Distinguishes between 'user' and 'assistant' messages
 - **Foreign Key Constraints**: Ensures data integrity with cascading deletes
 - **Performance Indexes**: Optimized for conversation retrieval by user and timestamp
@@ -60,8 +61,10 @@ CREATE TABLE conversation_history (
 - **User Messages**: All user messages are stored with timestamps
 - **Bot Responses**: Bot replies are stored with `[BOT]` prefix for identification
 - **Role-Based Storage**: Enhanced conversation_history table separates user/assistant messages
-- **History Reconstruction**: `getConversationHistory()` retrieves chronologically ordered conversations
-- **History Loading**: Recent conversation history is loaded when conversation manager history is sparse
+- **History Reconstruction**: `getConversationHistory()` retrieves chronologically ordered
+  conversations
+- **History Loading**: Recent conversation history is loaded when conversation manager history is
+  sparse
 - **Seamless Integration**: Works transparently with existing conversation management
 - **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
 
@@ -153,27 +156,46 @@ try {
 
 ### Test Coverage
 
-- **17 comprehensive tests** covering all database operations
+- **122 comprehensive tests** covering all database operations across 6 modular test files
 - **Integration tests** with actual SQLite database
 - **Error scenario testing** for graceful failure handling
 - **Mock implementations** for other test suites
+- **Modular test architecture** with separate files for different concerns
 
 ### Key Test Areas
 
 - Database initialization and table creation
 - User statistics operations (CRUD)
 - Message history management with limits
+- Conversation history with role separation
+- Reminder system integration
+- Analytics and performance metrics
 - Data cleanup and bulk operations
 - Connection management and error handling
+
+### Test File Structure
+
+```
+__tests__/unit/services/
+├── database.test.js           # Legacy comprehensive tests (53 tests)
+├── database-basic.test.js     # Basic operations (4 tests)
+├── database-users.test.js     # User management (7 tests)
+├── database-conversations.test.js # Conversation operations (6 tests)
+├── database-reminders.test.js # Reminder functionality (8 tests)
+└── database-analytics.test.js # Analytics operations (18 tests)
+```
 
 ### Running Database Tests
 
 ```bash
-# Run only database tests
-npx jest __tests__/unit/services/database.test.js
+# Run all database tests
+npm test -- --testPathPattern="database"
 
-# Run all tests including database integration
-npm test
+# Run specific database test suite
+npx jest __tests__/unit/services/database-analytics.test.js
+
+# Run with coverage
+npm test -- --testPathPattern="database" --coverage
 ```
 
 ## Performance Considerations

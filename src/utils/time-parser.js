@@ -3,24 +3,24 @@ const chrono = require('chrono-node');
 class TimeParser {
   constructor() {
     this.timezoneOffsets = {
-      'UTC': 0,
-      'EST': -5,
-      'EDT': -4,
-      'CST': -6,
-      'CDT': -5,
-      'MST': -7,
-      'MDT': -6,
-      'PST': -8,
-      'PDT': -7,
-      'GMT': 0,
-      'BST': 1,
-      'CET': 1,
-      'CEST': 2,
-      'JST': 9,
-      'KST': 9,
-      'IST': 5.5,
-      'AEDT': 11,
-      'AEST': 10
+      UTC: 0,
+      EST: -5,
+      EDT: -4,
+      CST: -6,
+      CDT: -5,
+      MST: -7,
+      MDT: -6,
+      PST: -8,
+      PDT: -7,
+      GMT: 0,
+      BST: 1,
+      CET: 1,
+      CEST: 2,
+      JST: 9,
+      KST: 9,
+      IST: 5.5,
+      AEDT: 11,
+      AEST: 10,
     };
   }
 
@@ -36,7 +36,9 @@ class TimeParser {
       const results = chrono.parse(timeExpression, new Date(), { forwardDate: true });
 
       if (results.length === 0) {
-        throw new Error('Unable to parse time expression. Try formats like "in 5 minutes", "tomorrow at 3pm", "next Monday 2:30 PM"');
+        throw new Error(
+          'Unable to parse time expression. Try formats like "in 5 minutes", "tomorrow at 3pm", "next Monday 2:30 PM"'
+        );
       }
 
       // Use the first (most likely) result
@@ -47,7 +49,9 @@ class TimeParser {
       let timezone = userTimezone;
 
       // Check if timezone was specified in the expression
-      const timezoneMatch = timeExpression.match(/\b(UTC|EST|EDT|CST|CDT|MST|MDT|PST|PDT|GMT|BST|CET|CEST|JST|KST|IST|AEDT|AEST)\b/i);
+      const timezoneMatch = timeExpression.match(
+        /\b(UTC|EST|EDT|CST|CDT|MST|MDT|PST|PDT|GMT|BST|CET|CEST|JST|KST|IST|AEDT|AEST)\b/i
+      );
       if (timezoneMatch) {
         timezone = timezoneMatch[1].toUpperCase();
       }
@@ -61,7 +65,7 @@ class TimeParser {
         scheduledTime,
         timezone,
         originalExpression: timeExpression,
-        parsedText: result.text
+        parsedText: result.text,
       };
     } catch (error) {
       throw new Error(`Time parsing failed: ${error.message}`);
@@ -76,7 +80,7 @@ class TimeParser {
    */
   convertToUTC(localTime, timezone) {
     const offset = this.timezoneOffsets[timezone.toUpperCase()] || 0;
-    const utcTime = new Date(localTime.getTime() - (offset * 60 * 60 * 1000));
+    const utcTime = new Date(localTime.getTime() - offset * 60 * 60 * 1000);
     return utcTime;
   }
 
@@ -88,7 +92,7 @@ class TimeParser {
    */
   convertFromUTC(utcTime, timezone) {
     const offset = this.timezoneOffsets[timezone.toUpperCase()] || 0;
-    const localTime = new Date(utcTime.getTime() + (offset * 60 * 60 * 1000));
+    const localTime = new Date(utcTime.getTime() + offset * 60 * 60 * 1000);
     return localTime;
   }
 
@@ -109,7 +113,7 @@ class TimeParser {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      timeZone: this.getTimezoneName(timezone)
+      timeZone: this.getTimezoneName(timezone),
     };
 
     return localTime.toLocaleString('en-US', options);
@@ -122,24 +126,24 @@ class TimeParser {
    */
   getTimezoneName(timezone) {
     const timezoneMap = {
-      'UTC': 'UTC',
-      'EST': 'America/New_York',
-      'EDT': 'America/New_York',
-      'CST': 'America/Chicago',
-      'CDT': 'America/Chicago',
-      'MST': 'America/Denver',
-      'MDT': 'America/Denver',
-      'PST': 'America/Los_Angeles',
-      'PDT': 'America/Los_Angeles',
-      'GMT': 'Europe/London',
-      'BST': 'Europe/London',
-      'CET': 'Europe/Paris',
-      'CEST': 'Europe/Paris',
-      'JST': 'Asia/Tokyo',
-      'KST': 'Asia/Seoul',
-      'IST': 'Asia/Kolkata',
-      'AEDT': 'Australia/Sydney',
-      'AEST': 'Australia/Sydney'
+      UTC: 'UTC',
+      EST: 'America/New_York',
+      EDT: 'America/New_York',
+      CST: 'America/Chicago',
+      CDT: 'America/Chicago',
+      MST: 'America/Denver',
+      MDT: 'America/Denver',
+      PST: 'America/Los_Angeles',
+      PDT: 'America/Los_Angeles',
+      GMT: 'Europe/London',
+      BST: 'Europe/London',
+      CET: 'Europe/Paris',
+      CEST: 'Europe/Paris',
+      JST: 'Asia/Tokyo',
+      KST: 'Asia/Seoul',
+      IST: 'Asia/Kolkata',
+      AEDT: 'Australia/Sydney',
+      AEST: 'Australia/Sydney',
     };
 
     return timezoneMap[timezone.toUpperCase()] || 'UTC';
@@ -171,7 +175,7 @@ class TimeParser {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     }
   }

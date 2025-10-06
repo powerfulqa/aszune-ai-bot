@@ -34,23 +34,41 @@ describe('Natural Language Reminder Processor', () => {
 
   describe('isReminderRequest', () => {
     test('should detect explicit reminder requests', () => {
-      expect(naturalLanguageReminderProcessor.isReminderRequest('remind me when the new iPhone comes out')).toBe(true);
-      expect(naturalLanguageReminderProcessor.isReminderRequest('can you remind me about the concert')).toBe(true);
-      expect(naturalLanguageReminderProcessor.isReminderRequest('set a reminder for the game')).toBe(true);
+      expect(
+        naturalLanguageReminderProcessor.isReminderRequest(
+          'remind me when the new iPhone comes out'
+        )
+      ).toBe(true);
+      expect(
+        naturalLanguageReminderProcessor.isReminderRequest('can you remind me about the concert')
+      ).toBe(true);
+      expect(
+        naturalLanguageReminderProcessor.isReminderRequest('set a reminder for the game')
+      ).toBe(true);
     });
 
     test('should not detect non-reminder messages', () => {
       expect(naturalLanguageReminderProcessor.isReminderRequest('hello world')).toBe(false);
-      expect(naturalLanguageReminderProcessor.isReminderRequest('what is the weather like')).toBe(false);
+      expect(naturalLanguageReminderProcessor.isReminderRequest('what is the weather like')).toBe(
+        false
+      );
       expect(naturalLanguageReminderProcessor.isReminderRequest('tell me a joke')).toBe(false);
     });
   });
 
   describe('extractEvent', () => {
     test('should extract event from reminder requests', () => {
-      expect(naturalLanguageReminderProcessor.extractEvent('remind me when the new iPhone comes out')).toBe('new iPhone');
-      expect(naturalLanguageReminderProcessor.extractEvent('can you remind me about the concert next week')).toBe('concert');
-      expect(naturalLanguageReminderProcessor.extractEvent('set a reminder for the game tomorrow')).toBe('game');
+      expect(
+        naturalLanguageReminderProcessor.extractEvent('remind me when the new iPhone comes out')
+      ).toBe('new iPhone');
+      expect(
+        naturalLanguageReminderProcessor.extractEvent(
+          'can you remind me about the concert next week'
+        )
+      ).toBe('concert');
+      expect(
+        naturalLanguageReminderProcessor.extractEvent('set a reminder for the game tomorrow')
+      ).toBe('game');
     });
 
     test('should return null for messages without clear events', () => {
@@ -90,7 +108,8 @@ describe('Natural Language Reminder Processor', () => {
 
   describe('extractDatesFromResponse', () => {
     test('should extract dates from AI responses', () => {
-      const response = 'The new iPhone 15 is expected to be released on September 15, 2024. The official announcement will be on September 12, 2024.';
+      const response =
+        'The new iPhone 15 is expected to be released on September 15, 2024. The official announcement will be on September 12, 2024.';
 
       const dates = naturalLanguageReminderProcessor.extractDatesFromResponse(response);
 
@@ -100,7 +119,7 @@ describe('Natural Language Reminder Processor', () => {
     });
 
     test('should handle responses without dates', () => {
-      const response = 'I don\'t have information about release dates for that product.';
+      const response = "I don't have information about release dates for that product.";
 
       const dates = naturalLanguageReminderProcessor.extractDatesFromResponse(response);
 
@@ -112,15 +131,15 @@ describe('Natural Language Reminder Processor', () => {
     test('should successfully set reminder when date is found', async () => {
       // Mock AI response with a date
       const mockPerplexityService = require('../../src/services/perplexity-secure');
-      mockPerplexityService.generateChatResponse = jest.fn().mockResolvedValue(
-        'The new iPhone 15 will be released on September 15, 2026.'
-      );
+      mockPerplexityService.generateChatResponse = jest
+        .fn()
+        .mockResolvedValue('The new iPhone 15 will be released on September 15, 2026.');
 
       const requestData = {
         event: 'new iPhone',
         userId: 'user123',
         channelId: 'channel456',
-        serverId: 'server789'
+        serverId: 'server789',
       };
 
       const result = await naturalLanguageReminderProcessor.lookupAndSetReminder(requestData);
@@ -133,15 +152,17 @@ describe('Natural Language Reminder Processor', () => {
     test('should handle cases where no date is found', async () => {
       // Mock AI response without a clear date
       const mockPerplexityService = require('../../src/services/perplexity-secure');
-      mockPerplexityService.generateChatResponse = jest.fn().mockResolvedValue(
-        'I don\'t have specific information about the release date for this unknown product.'
-      );
+      mockPerplexityService.generateChatResponse = jest
+        .fn()
+        .mockResolvedValue(
+          "I don't have specific information about the release date for this unknown product."
+        );
 
       const requestData = {
         event: 'unknown product',
         userId: 'user123',
         channelId: 'channel456',
-        serverId: 'server789'
+        serverId: 'server789',
       };
 
       const result = await naturalLanguageReminderProcessor.lookupAndSetReminder(requestData);

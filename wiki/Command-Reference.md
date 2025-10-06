@@ -302,7 +302,8 @@ when the reminder time arrives.
 
 **Parameters:**
 
-- `<time>`: Natural language time expression (e.g., "in 5 minutes", "tomorrow at 3pm", "next friday")
+- `<time>`: Natural language time expression (e.g., "in 5 minutes", "tomorrow at 3pm", "next
+  friday")
 - `<message>`: The reminder message (optional, defaults to "Reminder!")
 
 **Examples:**
@@ -499,7 +500,8 @@ responding further.
 
 ### v1.7.0 - Reminder System & Natural Language Processing
 
-- **Reminder Commands**: Complete reminder system with `!remind`, `!reminders`, and `!cancelreminder`
+- **Reminder Commands**: Complete reminder system with `!remind`, `!reminders`, and
+  `!cancelreminder`
 - **Natural Language Reminders**: AI-powered reminder detection in conversations
 - **Time Parsing**: Advanced chrono-node integration for natural language time expressions
 - **Database Integration**: SQLite-based reminder persistence with automatic table creation

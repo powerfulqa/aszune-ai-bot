@@ -361,9 +361,12 @@ const commands = {
       const performanceMetrics = databaseService.getPerformanceMetrics('response_time', 1);
 
       // Calculate performance data
-      const avgResponseTime = performanceMetrics.length > 0
-        ? Math.round(performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length)
-        : 0;
+      const avgResponseTime =
+        performanceMetrics.length > 0
+          ? Math.round(
+              performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
+            )
+          : 0;
 
       const dashboardData = await PerformanceDashboard.generateDashboardReport();
       const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
@@ -402,10 +405,14 @@ const commands = {
 
     _getStatusColor(status) {
       switch (status?.toLowerCase()) {
-      case 'healthy': return 0x00ff00;
-      case 'warning': return 0xffa500;
-      case 'critical': return 0xff0000;
-      default: return 0x5865f2;
+        case 'healthy':
+          return 0x00ff00;
+        case 'warning':
+          return 0xffa500;
+        case 'critical':
+          return 0xff0000;
+        default:
+          return 0x5865f2;
       }
     },
 
@@ -496,12 +503,19 @@ const commands = {
 
       // Get database performance metrics
       const performanceMetrics = databaseService.getPerformanceMetrics('memory_usage', 1);
-      const avgMemoryUsage = performanceMetrics.length > 0
-        ? Math.round(performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length)
-        : 0;
+      const avgMemoryUsage =
+        performanceMetrics.length > 0
+          ? Math.round(
+              performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
+            )
+          : 0;
 
-      const statusColor = resourceStatus.memory?.status === 'good' ? 0x00ff00
-        : resourceStatus.memory?.status === 'warning' ? 0xffa500 : 0xff0000;
+      const statusColor =
+        resourceStatus.memory?.status === 'good'
+          ? 0x00ff00
+          : resourceStatus.memory?.status === 'warning'
+            ? 0xffa500
+            : 0xff0000;
 
       return {
         color: statusColor,

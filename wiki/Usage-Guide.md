@@ -57,11 +57,11 @@ Aszune AI Bot can be interacted with in two ways:
 
 ### Reminder Commands (NEW)
 
-| Command                              | Description                                                     |
-| ------------------------------------ | --------------------------------------------------------------- |
-| `!remind <time> <message>`           | Set a reminder for a specific time with custom message          |
-| `!reminders` / `/reminders`          | List all your active reminders                                  |
-| `!cancelreminder <index>`            | Cancel a specific reminder by index number                      |
+| Command                     | Description                                            |
+| --------------------------- | ------------------------------------------------------ |
+| `!remind <time> <message>`  | Set a reminder for a specific time with custom message |
+| `!reminders` / `/reminders` | List all your active reminders                         |
+| `!cancelreminder <index>`   | Cancel a specific reminder by index number             |
 
 ## Asking Questions
 

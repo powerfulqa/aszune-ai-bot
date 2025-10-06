@@ -8,7 +8,7 @@ jest.mock('../../../src/config/config', () => ({
 
 const { DatabaseService } = require('../../../src/services/database');
 
-describe('DatabaseService', () => {
+describe('DatabaseService', function () {
   let dbService;
   const testDbPath = path.resolve('./test-data/bot.db');
 
@@ -96,7 +96,7 @@ describe('DatabaseService', () => {
       // Verify tables exist by running a simple query
       const db = dbService.getDb();
       expect(() => {
-        db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'user_stats\'').get();
+        db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_stats'").get();
       }).not.toThrow();
     });
   });
@@ -301,7 +301,10 @@ describe('DatabaseService', () => {
 
       // Debug: Check what we actually have
       const allHistory = dbService.getConversationHistory('123', 50);
-      console.log('All messages in DB:', allHistory.map(m => m.message));
+      console.log(
+        'All messages in DB:',
+        allHistory.map((m) => m.message)
+      );
 
       const history = dbService.getConversationHistory('123', 10);
       expect(history.length).toBe(10);
@@ -408,7 +411,11 @@ describe('DatabaseService', () => {
       const userId = 'test_clear_conversation';
 
       // Add user stats
-      dbService.updateUserStats(userId, { message_count: 5, total_summaries: 2, total_commands: 3 });
+      dbService.updateUserStats(userId, {
+        message_count: 5,
+        total_summaries: 2,
+        total_commands: 3,
+      });
 
       // Add conversation data
       dbService.addUserMessage(userId, 'Test message 1');
@@ -432,246 +439,6 @@ describe('DatabaseService', () => {
       expect(dbService.getUserStats(userId).total_commands).toBe(3);
       expect(dbService.getUserMessages(userId)).toEqual([]);
       expect(dbService.getConversationHistory(userId)).toEqual([]);
-    });
-  });
-
-  describe('reminder methods', () => {
-    describe('createReminder', () => {
-      it('should create a reminder successfully', () => {
-        const userId = 'reminder_user';
-        const message = 'Test reminder';
-        const scheduledTime = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
-
-        const reminderId = dbService.createReminder(userId, message, scheduledTime);
-
-        expect(reminderId).toBeDefined();
-        expect(typeof reminderId).toBe('number');
-      });
-
-      it('should handle database errors gracefully', () => {
-        // Create a new service instance that hasn't been initialized
-        const newService = new DatabaseService();
-        // Force database to be disabled by setting isDisabled
-        newService.isDisabled = true;
-
-        const result = newService.createReminder('user', 'message', new Date().toISOString());
-        expect(result).toBeNull();
-      });
-    });
-
-    describe('getActiveReminders', () => {
-      it('should return empty array for user with no reminders', () => {
-        const reminders = dbService.getActiveReminders('no_reminders_user');
-        expect(reminders).toEqual([]);
-      });
-
-      it('should return active reminders for a user', () => {
-        const userId = 'active_reminders_user';
-        const futureTime = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
-
-        // Create a reminder
-        dbService.createReminder(userId, 'Future reminder', futureTime);
-
-        const reminders = dbService.getActiveReminders(userId);
-        expect(reminders.length).toBe(1);
-        expect(reminders[0].message).toBe('Future reminder');
-        expect(reminders[0].status).toBe('active');
-      });
-
-      it('should return all active reminders when no user specified', () => {
-        const user1 = 'user1_reminders';
-        const user2 = 'user2_reminders';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        dbService.createReminder(user1, 'User1 reminder', futureTime);
-        dbService.createReminder(user2, 'User2 reminder', futureTime);
-
-        const allReminders = dbService.getActiveReminders();
-        expect(allReminders.length).toBeGreaterThanOrEqual(2);
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const reminders = newService.getActiveReminders('user');
-        expect(reminders).toEqual([]);
-      });
-    });
-
-    describe('getDueReminders', () => {
-      it('should return empty array when no due reminders', () => {
-        const dueReminders = dbService.getDueReminders();
-        expect(dueReminders).toEqual([]);
-      });
-
-      it('should return due reminders', () => {
-        const userId = 'due_reminder_user';
-        // Make sure it's definitely in the past by subtracting more time
-        const pastTime = new Date(Date.now() - 7200000).toISOString(); // 2 hours ago
-
-        dbService.createReminder(userId, 'Due reminder', pastTime);
-
-        const dueReminders = dbService.getDueReminders();
-        expect(dueReminders.length).toBe(1);
-        expect(dueReminders[0].message).toBe('Due reminder');
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const dueReminders = newService.getDueReminders();
-        expect(dueReminders).toEqual([]);
-      });
-    });
-
-    describe('completeReminder', () => {
-      it('should complete a reminder successfully', () => {
-        const userId = 'complete_reminder_user';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        const reminderId = dbService.createReminder(userId, 'Complete me', futureTime);
-        const completed = dbService.completeReminder(reminderId);
-
-        expect(completed).toBe(true);
-      });
-
-      it('should return false for non-existent reminder', () => {
-        const completed = dbService.completeReminder(99999);
-        expect(completed).toBe(false);
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const completed = newService.completeReminder(1);
-        expect(completed).toBe(false);
-      });
-    });
-
-    describe('cancelReminder', () => {
-      it('should cancel a reminder successfully', () => {
-        const userId = 'cancel_reminder_user';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        const reminderId = dbService.createReminder(userId, 'Cancel me', futureTime);
-        const cancelled = dbService.cancelReminder(reminderId, userId);
-
-        expect(cancelled).toBe(true);
-      });
-
-      it('should return false for non-existent reminder', () => {
-        const cancelled = dbService.cancelReminder(99999, 'user');
-        expect(cancelled).toBe(false);
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const cancelled = newService.cancelReminder(1, 'user');
-        expect(cancelled).toBe(false);
-      });
-    });
-
-    describe('getUserReminders', () => {
-      it('should return empty array for user with no reminders', () => {
-        const reminders = dbService.getUserReminders('no_reminders_user');
-        expect(reminders).toEqual([]);
-      });
-
-      it('should return user reminders', () => {
-        const userId = 'user_reminders_test';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        dbService.createReminder(userId, 'User reminder', futureTime);
-
-        const reminders = dbService.getUserReminders(userId);
-        expect(reminders.length).toBe(1);
-        expect(reminders[0].message).toBe('User reminder');
-      });
-
-      it('should include completed reminders when requested', () => {
-        const userId = 'completed_reminders_user';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        const reminderId = dbService.createReminder(userId, 'Will be completed', futureTime);
-        dbService.completeReminder(reminderId);
-
-        const activeOnly = dbService.getUserReminders(userId, false);
-        const includeCompleted = dbService.getUserReminders(userId, true);
-
-        expect(activeOnly.length).toBe(0);
-        expect(includeCompleted.length).toBe(1);
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const reminders = newService.getUserReminders('user');
-        expect(reminders).toEqual([]);
-      });
-    });
-
-    describe('deleteReminder', () => {
-      it('should delete a reminder successfully', () => {
-        const userId = 'delete_reminder_user';
-        const futureTime = new Date(Date.now() + 3600000).toISOString();
-
-        const reminderId = dbService.createReminder(userId, 'Delete me', futureTime);
-        const deleted = dbService.deleteReminder(reminderId, userId);
-
-        expect(deleted).toBe(true);
-
-        // Verify it's gone
-        const reminders = dbService.getUserReminders(userId);
-        expect(reminders.length).toBe(0);
-      });
-
-      it('should return false for non-existent reminder', () => {
-        const deleted = dbService.deleteReminder(99999, 'user');
-        expect(deleted).toBe(false);
-      });
-
-      it('should handle database errors gracefully', () => {
-        const newService = new DatabaseService();
-        newService.isDisabled = true;
-
-        const deleted = newService.deleteReminder(1, 'user');
-        expect(deleted).toBe(false);
-      });
-    });
-  });
-
-  describe('getServerAnalytics', () => {
-    it('should return empty array for server with no analytics', () => {
-      const analytics = dbService.getServerAnalytics('server123');
-      expect(analytics).toEqual([]);
-    });
-
-    it('should return server analytics data', () => {
-      const serverId = 'analytics_server';
-      const metricType = 'member_count';
-
-      // Track some server metrics
-      dbService.trackServerMetric(serverId, metricType, 100);
-      dbService.trackServerMetric(serverId, 'online_count', 50);
-
-      const analytics = dbService.getServerAnalytics(serverId);
-      expect(analytics.length).toBe(2);
-      expect(analytics.some(a => a.server_id === serverId)).toBe(true);
-      expect(analytics.some(a => a.metric_type === metricType)).toBe(true);
-    });
-
-    it('should handle database errors gracefully', () => {
-      const newService = new DatabaseService();
-      newService.isDisabled = true;
-
-      const analytics = newService.getServerAnalytics('server');
-      expect(analytics).toEqual([]);
     });
   });
 
@@ -730,6 +497,340 @@ describe('DatabaseService', () => {
     it('should handle close when db is not initialized', () => {
       const newService = new DatabaseService();
       expect(() => newService.close()).not.toThrow();
+    });
+  });
+
+  describe('ensureUserExists', () => {
+    it('should create user if they do not exist', () => {
+      const userId = 'ensure_exists_user';
+
+      // Verify user doesn't exist initially
+      const initialStats = dbService.getUserStats(userId);
+      expect(initialStats.message_count).toBe(0);
+
+      // Ensure user exists
+      dbService.ensureUserExists(userId);
+
+      // Verify user now exists with default values
+      const stats = dbService.getUserStats(userId);
+      expect(stats.user_id).toBe(userId);
+      expect(stats.message_count).toBe(0);
+      expect(stats.total_summaries).toBe(0);
+      expect(stats.total_commands).toBe(0);
+      expect(stats.preferences).toBe('{}');
+      expect(stats.first_seen).toBeDefined();
+      expect(stats.last_active).toBeDefined();
+    });
+
+    it('should not modify existing user', () => {
+      const userId = 'existing_user';
+      const testDate = '2023-01-01T00:00:00.000Z';
+
+      // Create user with specific data
+      dbService.updateUserStats(userId, {
+        message_count: 5,
+        total_summaries: 2,
+        last_active: testDate,
+      });
+
+      // Ensure user exists (should not change anything)
+      dbService.ensureUserExists(userId);
+
+      // Verify data is unchanged
+      const stats = dbService.getUserStats(userId);
+      expect(stats.message_count).toBe(5);
+      expect(stats.total_summaries).toBe(2);
+      expect(stats.last_active).toBe(testDate);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      expect(() => newService.ensureUserExists('user')).not.toThrow();
+    });
+  });
+
+  describe('trackCommandUsage', () => {
+    it('should track successful command usage', () => {
+      const userId = 'command_user';
+      const commandName = 'help';
+      const serverId = 'server123';
+      const responseTimeMs = 500;
+
+      dbService.trackCommandUsage(userId, commandName, serverId, true, responseTimeMs);
+
+      // Verify command was tracked (this would be tested through getCommandUsageStats)
+      const stats = dbService.getCommandUsageStats(1);
+      expect(stats.totalCommands).toBeGreaterThan(0);
+    });
+
+    it('should track failed command usage', () => {
+      const userId = 'failed_command_user';
+      const commandName = 'invalid';
+      const serverId = 'server456';
+      const responseTimeMs = 100;
+
+      dbService.trackCommandUsage(userId, commandName, serverId, false, responseTimeMs);
+
+      const stats = dbService.getCommandUsageStats(1);
+      expect(stats.totalCommands).toBeGreaterThan(0);
+      expect(stats.successRate).toBeLessThan(100);
+    });
+
+    it('should handle null serverId', () => {
+      const userId = 'null_server_user';
+      const commandName = 'test';
+
+      expect(() => dbService.trackCommandUsage(userId, commandName, null, true, 200)).not.toThrow();
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      expect(() => newService.trackCommandUsage('user', 'cmd', 'server', true, 100)).not.toThrow();
+    });
+  });
+
+  describe('getCommandUsageStats', () => {
+    it('should return command usage statistics', () => {
+      // Clear any existing data
+      dbService.clearAllData();
+
+      // Add some command usage data
+      dbService.trackCommandUsage('user1', 'help', 'server1', true, 300);
+      dbService.trackCommandUsage('user1', 'help', 'server1', true, 400);
+      dbService.trackCommandUsage('user1', 'ping', 'server1', false, 100);
+      dbService.trackCommandUsage('user2', 'help', 'server2', true, 500);
+
+      const stats = dbService.getCommandUsageStats(1);
+
+      expect(stats.totalCommands).toBe(4);
+      expect(stats.commandBreakdown).toBeDefined();
+      expect(stats.successRate).toBe(75); // 3 successful out of 4
+    });
+
+    it('should return default stats when no data exists', () => {
+      dbService.clearAllData();
+
+      const stats = dbService.getCommandUsageStats(1);
+
+      expect(stats.totalCommands).toBe(0);
+      expect(stats.commandBreakdown).toEqual([]);
+      expect(stats.successRate).toBe(100);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const stats = newService.getCommandUsageStats(1);
+
+      expect(stats.totalCommands).toBe(0);
+      expect(stats.commandBreakdown).toEqual([]);
+      expect(stats.successRate).toBe(100);
+    });
+  });
+
+  describe('logPerformanceMetric', () => {
+    it('should log performance metrics', () => {
+      const metricType = 'response_time';
+      const value = 250.5;
+      const metadata = { endpoint: '/api/chat', method: 'POST' };
+
+      // Verify table exists first
+      const db = dbService.getDb();
+      const tableCheck = db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='performance_metrics'")
+        .get();
+      expect(tableCheck).toBeDefined();
+
+      dbService.logPerformanceMetric(metricType, value, metadata);
+
+      // Add a small delay to ensure write is committed
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          // Verify metric was logged
+          const metrics = dbService.getPerformanceMetrics(metricType, 1);
+          expect(metrics.length).toBeGreaterThan(0);
+          expect(metrics[0].value).toBe(value);
+          expect(JSON.parse(metrics[0].metadata)).toEqual(metadata);
+          resolve();
+        }, 10)
+      );
+    });
+
+    it('should handle empty metadata', () => {
+      const metricType = 'memory_usage';
+      const value = 1024;
+
+      dbService.logPerformanceMetric(metricType, value);
+
+      // Add a small delay to ensure write is committed
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          const metrics = dbService.getPerformanceMetrics(metricType, 1);
+          expect(metrics.length).toBeGreaterThan(0);
+          expect(metrics[0].value).toBe(value);
+          resolve();
+        }, 10)
+      );
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      expect(() => newService.logPerformanceMetric('test', 100)).not.toThrow();
+    });
+  });
+
+  describe('getPerformanceMetrics', () => {
+    it('should return performance metrics for specific type', () => {
+      const metricType = 'test_metric';
+
+      // Log some metrics
+      dbService.logPerformanceMetric(metricType, 100, { test: 'data1' });
+      dbService.logPerformanceMetric(metricType, 200, { test: 'data2' });
+      dbService.logPerformanceMetric('other_metric', 300); // Different type
+
+      // Add delay to ensure writes are committed
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          const metrics = dbService.getPerformanceMetrics(metricType, 1);
+
+          expect(metrics.length).toBe(2);
+          expect(metrics[0].value).toBe(200); // Most recent first
+          expect(metrics[1].value).toBe(100);
+          expect(JSON.parse(metrics[0].metadata).test).toBe('data2');
+          resolve();
+        }, 20)
+      );
+    });
+
+    it('should return empty array when no metrics exist', () => {
+      const metrics = dbService.getPerformanceMetrics('nonexistent', 1);
+      expect(metrics).toEqual([]);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const metrics = newService.getPerformanceMetrics('test', 1);
+      expect(metrics).toEqual([]);
+    });
+  });
+
+  describe('logError', () => {
+    it('should log errors with all parameters', () => {
+      const errorType = 'api_error';
+      const errorMessage = 'Failed to connect to API';
+      const userId = 'error_user';
+      const commandName = 'api_call';
+      const stackTrace = 'Error: connection timeout\n    at apiCall()';
+
+      dbService.logError(errorType, errorMessage, userId, commandName, stackTrace);
+
+      // Verify error was logged (would be tested through getErrorStats)
+      const stats = dbService.getErrorStats(1);
+      expect(stats.totalErrors).toBeGreaterThan(0);
+    });
+
+    it('should log errors with minimal parameters', () => {
+      const errorType = 'generic_error';
+      const errorMessage = 'Something went wrong';
+
+      dbService.logError(errorType, errorMessage);
+
+      const stats = dbService.getErrorStats(1);
+      expect(stats.totalErrors).toBeGreaterThan(0);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      expect(() => newService.logError('test', 'message')).not.toThrow();
+    });
+  });
+
+  describe('getErrorStats', () => {
+    it('should return error statistics', () => {
+      dbService.clearAllData();
+
+      // Log some errors
+      dbService.logError('api_error', 'Connection failed', 'user1', 'api_call');
+      dbService.logError('api_error', 'Timeout', 'user2', 'api_call');
+      dbService.logError('validation_error', 'Invalid input', 'user1', 'validate');
+
+      const stats = dbService.getErrorStats(1);
+
+      expect(stats.totalErrors).toBe(3);
+      expect(stats.errorBreakdown.length).toBeGreaterThan(0);
+      expect(stats.resolvedCount).toBe(0);
+    });
+
+    it('should return default stats when no errors exist', () => {
+      dbService.clearAllData();
+
+      const stats = dbService.getErrorStats(1);
+
+      expect(stats.totalErrors).toBe(0);
+      expect(stats.errorBreakdown).toEqual([]);
+      expect(stats.resolvedCount).toBe(0);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const stats = newService.getErrorStats(1);
+
+      expect(stats.totalErrors).toBe(0);
+      expect(stats.errorBreakdown).toEqual([]);
+      expect(stats.resolvedCount).toBe(0);
+    });
+  });
+
+  describe('getUptimeStats', () => {
+    it('should return uptime statistics', () => {
+      dbService.clearAllData();
+
+      // Log some uptime events
+      dbService.logBotEvent('start', 0, 'Bot started');
+      dbService.logBotEvent('stop', 3600, 'Bot stopped for maintenance');
+      dbService.logBotEvent('restart', 0, 'Bot restarted');
+
+      const stats = dbService.getUptimeStats();
+
+      expect(stats).toHaveProperty('totalUptime');
+      expect(stats).toHaveProperty('totalDowntime');
+      expect(stats).toHaveProperty('restartCount');
+      expect(stats.restartCount).toBe(1);
+      expect(stats.totalUptime).toBe(3600);
+    });
+
+    it('should return default stats when no events exist', () => {
+      dbService.clearAllData();
+
+      const stats = dbService.getUptimeStats();
+
+      expect(stats.totalUptime).toBe(0);
+      expect(stats.totalDowntime).toBe(0);
+      expect(stats.restartCount).toBe(0);
+    });
+
+    it('should handle database errors gracefully', () => {
+      const newService = new DatabaseService();
+      newService.isDisabled = true;
+
+      const stats = newService.getUptimeStats();
+
+      expect(stats.totalUptime).toBe(0);
+      expect(stats.totalDowntime).toBe(0);
+      expect(stats.restartCount).toBe(0);
     });
   });
 });

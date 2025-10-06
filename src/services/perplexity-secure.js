@@ -579,7 +579,14 @@ class PerplexityService {
    * @param {boolean} cacheEnabled - Whether caching was enabled
    * @param {number} contentLength - Length of response content
    */
-  async _trackApiCallPerformance(totalTime, memoryDelta, finalMemoryUsage, historyLength, cacheEnabled, contentLength) {
+  async _trackApiCallPerformance(
+    totalTime,
+    memoryDelta,
+    finalMemoryUsage,
+    historyLength,
+    cacheEnabled,
+    contentLength
+  ) {
     await this._trackApiPerformance('api_response_time', totalTime, {
       historyLength,
       cacheEnabled,
