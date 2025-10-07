@@ -61,7 +61,7 @@ let mockClientReadyHandler;
 const mockClient = {
   on: jest.fn().mockReturnThis(),
   once: jest.fn().mockImplementation((event, handler) => {
-    if (event === 'ready') {
+    if (event === 'clientReady') {
       mockClientReadyHandler = handler; // Store handler for manual triggering
     }
     return mockClient;

@@ -252,7 +252,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -287,7 +287,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();
@@ -296,7 +296,7 @@ describe('index.js - Core Branch Coverage', () => {
       expect(mockInitializePiOptimizations).toHaveBeenCalled();
     } else {
       // If no ready handler found, verify that the client was set up to handle ready events
-      expect(mockClient.once).toHaveBeenCalledWith('ready', expect.any(Function));
+      expect(mockClient.once).toHaveBeenCalledWith('clientReady', expect.any(Function));
     }
   });
 
@@ -319,7 +319,7 @@ describe('index.js - Core Branch Coverage', () => {
     require('../../src/index');
 
     // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'ready');
+    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady');
     if (readyCall) {
       const readyHandler = readyCall[1];
       await readyHandler();

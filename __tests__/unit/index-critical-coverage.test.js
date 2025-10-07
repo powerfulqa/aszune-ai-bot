@@ -172,8 +172,8 @@ describe('index.js - Critical Coverage Enhancement', () => {
     });
 
     it('should handle ready event and register slash commands', async () => {
-      // Simulate ready event
-      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+      // Simulate clientReady event
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady')[1];
 
       await readyHandler();
 
@@ -188,7 +188,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
       // Mock REST to throw error
       mockRest.put.mockRejectedValueOnce(new Error('Registration failed'));
 
-      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady')[1];
 
       await readyHandler();
 
@@ -202,7 +202,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
       // Mock client without user but provide a fallback for tag access
       mockClient.user = null;
 
-      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'ready')[1];
+      const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady')[1];
 
       // Should throw error when trying to access user.tag
       await expect(readyHandler()).rejects.toThrow();
