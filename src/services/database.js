@@ -688,12 +688,49 @@ class DatabaseService {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-      const stmt = db.prepare(`
-        INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences)
-        VALUES (?, 0, ?, ?, 0, 0, '{}')
-      `);
+      
+      // Try different schema versions, starting with newest and falling back
+      const schemaAttempts = [
+        // Latest schema (v1.7.0)
+        {
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
+          params: (now) => [userId, now, now]
+        },
+        // Previous schema (missing first_seen)
+        {
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
+          params: (now) => [userId, now]
+        },
+        // Basic schema (only core columns)
+        {
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active) VALUES (?, 0, ?)',
+          params: (now) => [userId, now]
+        },
+        // Minimal schema (just user_id)
+        {
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id) VALUES (?)',
+          params: () => [userId]
+        }
+      ];
+      
       const now = new Date().toISOString();
-      stmt.run(userId, now, now);
+      let success = false;
+      
+      for (const attempt of schemaAttempts) {
+        try {
+          const stmt = db.prepare(attempt.sql);
+          stmt.run(...attempt.params(now));
+          success = true;
+          break;
+        } catch (columnError) {
+          // Continue to next schema attempt
+          continue;
+        }
+      }
+      
+      if (!success) {
+        logger.warn(`All schema attempts failed for user ${userId}`);
+      }
     } catch (error) {
       if (this.isDisabled) return;
       logger.warn(`Failed to ensure user exists ${userId}: ${error.message}`);

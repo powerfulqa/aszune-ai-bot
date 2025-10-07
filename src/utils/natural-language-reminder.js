@@ -219,7 +219,7 @@ class NaturalLanguageReminderProcessor {
           success: false,
           reason: 'Could not extract event from message',
           response:
-            "I couldn't understand what event you want to be reminded about. Please try rephrasing your request.",
+            'I couldn\'t understand what event you want to be reminded about. Please try rephrasing your request.',
         };
       }
 
@@ -343,7 +343,12 @@ class NaturalLanguageReminderProcessor {
    * @returns {Promise<Object>} - Result object
    */
   async createReminderForDate(event, date, userId, channelId, serverId) {
-    const reminderId = await reminderService.createReminder(
+    // Ensure reminder service is initialized
+    if (!reminderService.isInitialized) {
+      await reminderService.initialize();
+    }
+
+    const reminder = await reminderService.createReminder(
       userId,
       `Release of ${event}`,
       date.toISOString(),
@@ -352,14 +357,14 @@ class NaturalLanguageReminderProcessor {
       serverId
     );
 
-    logger.info(`Set reminder for ${event} on ${date.toISOString()} (ID: ${reminderId})`);
+    logger.info(`Set reminder for ${event} on ${date.toISOString()} (ID: ${reminder.id})`);
 
     const relativeTime = timeParser.getRelativeTime(date);
     const formattedTime = timeParser.formatTime(date, 'UTC');
 
     return {
       success: true,
-      reminderId: reminderId,
+      reminderId: reminder.id,
       event: event,
       date: date,
       response: `✅ **Reminder Set!**\n\nI'll remind you when **${event}** is released.\n\n**Release Date:** ${formattedTime}\n**Time Until Release:** ${relativeTime}\n\n*Based on the latest available information.*`,

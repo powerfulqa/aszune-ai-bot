@@ -1,8 +1,10 @@
 const databaseService = require('./database');
 const logger = require('../utils/logger');
+const EventEmitter = require('events');
 
-class ReminderService {
+class ReminderService extends EventEmitter {
   constructor() {
+    super();
     this.activeTimers = new Map();
     this.isInitialized = false;
   }
@@ -138,7 +140,7 @@ class ReminderService {
       }
 
       // Create reminder in database
-      const reminderId = databaseService.createReminder(
+      const reminder = databaseService.createReminder(
         userId,
         message,
         scheduledTime,
@@ -147,21 +149,14 @@ class ReminderService {
         serverId
       );
 
-      if (!reminderId) {
-        throw new Error('Failed to create reminder in database');
-      }
-
-      // Get the created reminder object from database
-      const reminder = databaseService.getReminder(reminderId);
-
       if (!reminder) {
-        throw new Error('Failed to retrieve created reminder from database');
+        throw new Error('Failed to create reminder in database');
       }
 
       // Schedule the reminder
       await this.scheduleReminder(reminder);
 
-      logger.info(`Created reminder ${reminderId} for user ${userId}`);
+      logger.info(`Created reminder ${reminder.id} for user ${userId}`);
       return reminder;
     } catch (error) {
       logger.error(`Failed to create reminder for user ${userId}:`, error);
