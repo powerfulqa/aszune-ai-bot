@@ -1110,8 +1110,8 @@ class DatabaseService {
       const statusResults = statusStmt.all();
       
       const stats = {
-        totalReminders: totalResult ? totalResult.count : 0,
         ...this._getDefaultReminderStats(),
+        totalReminders: totalResult ? totalResult.count : 0,
       };
       
       // Map status counts
