@@ -550,10 +550,10 @@ class DatabaseService {
           user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
-          message_count = excluded.message_count + (updates.message_count || 0),
-          last_active = excluded.last_active,
-          total_summaries = excluded.total_summaries + (updates.total_summaries || 0),
-          total_commands = excluded.total_commands + (updates.total_commands || 0)
+          message_count = COALESCE(user_stats.message_count, 0) + ?,
+          last_active = ?,
+          total_summaries = COALESCE(user_stats.total_summaries, 0) + ?,
+          total_commands = COALESCE(user_stats.total_commands, 0) + ?
       `);
       
       upsertStmt.run(
@@ -563,7 +563,12 @@ class DatabaseService {
         new Date().toISOString(),
         updates.total_summaries || 0,
         updates.total_commands || 0,
-        '{}'
+        '{}',
+        // UPDATE parameters
+        updates.message_count || 0,
+        updates.last_active || new Date().toISOString(),
+        updates.total_summaries || 0,
+        updates.total_commands || 0
       );
     } catch (error) {
       if (this.isDisabled) return;
@@ -836,8 +841,9 @@ class DatabaseService {
         serverId
       );
 
-      // Return only the reminder ID as expected by upstream code
-      return result.lastInsertRowid;
+      // Return the complete reminder object for test compatibility
+      const selectStmt = db.prepare('SELECT * FROM reminders WHERE id = ?');
+      return selectStmt.get(result.lastInsertRowid);
     } catch (error) {
       if (this.isDisabled) return null;
       throw new Error(`Failed to create reminder for ${userId}: ${error.message}`);
