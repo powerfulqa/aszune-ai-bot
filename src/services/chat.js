@@ -17,6 +17,57 @@ const naturalLanguageReminderProcessor = require('../utils/natural-language-remi
 const conversationManager = new ConversationManager();
 
 /**
+ * Check if a message should be ignored by the bot
+ * @param {Object} message - Discord.js message object
+ * @returns {boolean} - True if the message should be ignored
+ */
+function shouldIgnoreMessage(message) {
+  const content = message.content.trim();
+  
+  // Ignore empty messages
+  if (!content) return true;
+  
+  // Ignore Discord system commands and mentions
+  const systemCommands = [
+    '@everyone',
+    '@here',
+    '@channel',
+  ];
+  
+  // Check if message is just a system command
+  if (systemCommands.includes(content.toLowerCase())) {
+    logger.debug(`Ignoring Discord system command: ${content}`);
+    return true;
+  }
+  
+  // Ignore messages that are only mentions of other users (not the bot)
+  const mentionRegex = /^<@!?(\d+)>$/;
+  const mentionMatch = content.match(mentionRegex);
+  if (mentionMatch) {
+    const mentionedUserId = mentionMatch[1];
+    const botId = message.client.user?.id;
+    
+    // If it's just a mention of someone else (not the bot), ignore it
+    if (botId && mentionedUserId !== botId) {
+      logger.debug(`Ignoring mention of other user: ${mentionedUserId}`);
+      return true;
+    }
+  }
+  
+  // Ignore messages that start with common bot prefixes for other bots
+  const commonBotPrefixes = ['!', '/', '$', '%', '&', '?', '.', '-', '+', '='];
+  if (commonBotPrefixes.some(prefix => content.startsWith(prefix))) {
+    // But allow our own commands through
+    if (!content.startsWith('!remind') && !content.startsWith('!summ') && !content.startsWith('!help')) {
+      logger.debug(`Ignoring message with bot prefix: ${content.charAt(0)}`);
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Sends a response message, handling long messages by chunking if needed
  * @param {Object} message - Discord.js message object
  * @param {string} responseText - The formatted response to send
@@ -81,6 +132,9 @@ async function sendResponse(message, responseText) {
 async function processUserMessage(message) {
   // Early validation checks
   if (message.author.bot || !message.content) return null;
+
+  // Ignore Discord system commands and mentions not directed at the bot
+  if (shouldIgnoreMessage(message)) return null;
 
   const userId = message.author.id;
 
@@ -204,22 +258,35 @@ async function generateBotResponse(userId) {
   // Access config inside function to prevent circular dependencies
   const config = require('../config/config');
 
-  const history = conversationManager.getHistory(userId);
-  const reply = await perplexityService.generateChatResponse(history);
+  try {
+    const history = conversationManager.getHistory(userId);
+    const reply = await perplexityService.generateChatResponse(history);
 
-  // Format tables for Discord embeds before other processing
-  const tableFormattedReply = formatTablesForDiscord(reply);
+    // Format tables for Discord embeds before other processing
+    const tableFormattedReply = formatTablesForDiscord(reply);
 
-  // Add emojis based on reply content (limit number of emojis on Pi)
-  const emojiLimit = config.PI_OPTIMIZATIONS?.ENABLED
-    ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
-    : 10;
-  const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
-    maxEmojis: emojiLimit,
-  });
+    // Add emojis based on reply content (limit number of emojis on Pi)
+    const emojiLimit = config.PI_OPTIMIZATIONS?.ENABLED
+      ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
+      : 10;
+    const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
+      maxEmojis: emojiLimit,
+    });
 
-  // Format response for Pi if optimizations enabled
-  return messageFormatter.formatResponse(enhancedReply);
+    // Format response for Pi if optimizations enabled
+    return messageFormatter.formatResponse(enhancedReply);
+  } catch (apiError) {
+    // Handle specific API errors
+    if (apiError.message && apiError.message.includes('should alternate with assistant message')) {
+      logger.warn(`API 400 error for user ${userId}: Invalid message format - ${apiError.message}`);
+      // Clear conversation history to fix the alternating message issue
+      conversationManager.clearConversation(userId);
+      throw new Error('I encountered an issue with our conversation. Let\'s start fresh - please try your message again.');
+    }
+    
+    // Re-throw other errors to be handled by the main error handler
+    throw apiError;
+  }
 }
 
 /**
