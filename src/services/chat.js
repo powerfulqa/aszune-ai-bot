@@ -8,7 +8,7 @@ const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
 const commandHandler = require('../commands');
 const messageFormatter = require('../utils/message-formatter');
-const { chunkMessage, formatTablesForDiscord } = require('../utils/message-chunking');
+const { chunkMessage } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 const databaseService = require('../services/database');
@@ -73,57 +73,6 @@ function shouldIgnoreMessage(message) {
  * @param {string} responseText - The formatted response to send
  * @returns {Promise<void>}
  */
-async function sendResponse(message, responseText) {
-  // Access config inside function to prevent circular dependencies
-  const config = require('../config/config');
-
-  // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
-  // Further reduced to prevent truncation issues with source links and URL formatting
-  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS?.EMBED_MAX_LENGTH ?? 1900;
-
-  logger.debug(`Preparing to send response of length: ${responseText.length}`);
-
-  // Split the message into chunks with our smaller max length
-  const messageChunks = chunkMessage(responseText, MAX_EMBED_LENGTH);
-
-  logger.debug(`Response split into ${messageChunks.length} chunks`);
-
-  // If there's only one chunk, send it as normal
-  if (messageChunks.length === 1) {
-    // Create an embed for the reply (use compact embed on Pi)
-    const embed = messageFormatter.createCompactEmbed({
-      color: config.COLORS.PRIMARY,
-      description: responseText,
-      footer: { text: 'Aszai Bot' },
-    });
-
-    await message.reply({ embeds: [embed] });
-    return;
-  }
-
-  // Send multiple chunks sequentially
-  for (const [index, chunk] of messageChunks.entries()) {
-    logger.debug(`Sending chunk ${index + 1}/${messageChunks.length}, length: ${chunk.length}`);
-
-    const embed = messageFormatter.createCompactEmbed({
-      color: config.COLORS.PRIMARY,
-      description: chunk,
-      footer: { text: `Aszai Bot (Part ${index + 1}/${messageChunks.length})` },
-    });
-
-    // Reply to the original message for the first chunk, then send as follow-ups
-    if (index === 0) {
-      await message.reply({ embeds: [embed] });
-    } else {
-      // Small delay between messages for better readability
-      await new Promise((resolve) =>
-        setTimeout(resolve, config.MESSAGE_LIMITS?.CHUNK_DELAY_MS || 1000)
-      );
-      await message.channel.send({ embeds: [embed] });
-    }
-  }
-}
-
 /**
  * Processes user message and prepares for response
  * @param {Object} message - Discord.js message object
@@ -203,6 +152,76 @@ async function handleCommandCheck(message, sanitizedContent) {
 }
 
 /**
+ * Check for simple time-based reminder requests (e.g. "remind me in 5 minutes")
+ */
+async function checkForSimpleReminderRequest(messageContent, userId, channelId, serverId) {
+  try {
+    const match = findSimpleReminderMatch(messageContent);
+    if (!match) return null;
+
+    logger.info(`Detected simple reminder request from user ${userId}: "${messageContent}"`);
+    return await createSimpleReminder(match, userId, channelId, serverId);
+  } catch (error) {
+    logger.error('Error checking for simple reminder request:', error);
+    return null;
+  }
+}
+
+function findSimpleReminderMatch(messageContent) {
+  const simpleReminderPatterns = [
+    /(?:can you |please )?remind me (?:to |about )?(.+?) in (\d+) (minute|minutes|hour|hours|day|days)/i,
+    /(?:can you |please )?remind me in (\d+) (minute|minutes|hour|hours|day|days)(?: to | about | that | )(.+)?/i,
+    /set (?:a )?reminder (?:for |to )?(.+?) (?:in |for )(\d+) (minute|minutes|hour|hours|day|days)/i,
+    /remind me in (\d+) (minute|minutes|hour|hours|day|days)/i
+  ];
+
+  for (const pattern of simpleReminderPatterns) {
+    const match = messageContent.match(pattern);
+    if (match) return match;
+  }
+  return null;
+}
+
+async function createSimpleReminder(match, userId, channelId, serverId) {
+  const { handleReminderCommand } = require('../commands/reminder');
+  
+  // Extract time and message components
+  let timeAmount, timeUnit, reminderMessage;
+  
+  if (match[2] && match[3]) {
+    reminderMessage = match[1] || 'Reminder';
+    timeAmount = match[2];
+    timeUnit = match[3];
+  } else if (match[1] && match[2]) {
+    timeAmount = match[1];
+    timeUnit = match[2];
+    reminderMessage = match[3] || 'Reminder';
+  }
+
+  const mockMessage = {
+    author: { id: userId },
+    channel: { id: channelId },
+    guild: serverId !== 'DM' ? { id: serverId } : null,
+    content: `!remind "${timeAmount} ${timeUnit}" ${reminderMessage}`,
+    reply: () => Promise.resolve()
+  };
+
+  try {
+    await handleReminderCommand(mockMessage, [`"in ${timeAmount} ${timeUnit}"`, ...reminderMessage.split(' ')]);
+    return {
+      success: true,
+      message: `I'll remind you ${reminderMessage ? `about "${reminderMessage}" ` : ''}in ${timeAmount} ${timeUnit}.`
+    };
+  } catch (error) {
+    logger.error('Error creating simple reminder:', error);
+    return {
+      success: false,
+      message: 'Sorry, I couldn\'t set that reminder. Please try using the format: !remind "in 5 minutes" your message'
+    };
+  }
+}
+
+/**
  * Check if message contains a natural language reminder request
  * @param {string} sanitizedContent - Sanitized message content
  * @param {string} userId - User ID
@@ -249,56 +268,7 @@ async function checkForReminderRequest(sanitizedContent, userId, channelId, serv
   }
 }
 
-/**
- * Generates and formats bot response
- * @param {string} userId - User ID to get history for
- * @returns {Promise<string>} The formatted response
- */
-async function generateBotResponse(userId) {
-  // Access config inside function to prevent circular dependencies
-  const config = require('../config/config');
 
-  try {
-    const history = conversationManager.getHistory(userId);
-    const reply = await perplexityService.generateChatResponse(history);
-
-    // Format tables for Discord embeds before other processing
-    const tableFormattedReply = formatTablesForDiscord(reply);
-
-    // Add emojis based on reply content (limit number of emojis on Pi)
-    const emojiLimit = config.PI_OPTIMIZATIONS?.ENABLED
-      ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
-      : 10;
-    const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
-      maxEmojis: emojiLimit,
-    });
-
-    // Format response for Pi if optimizations enabled
-    return messageFormatter.formatResponse(enhancedReply);
-  } catch (apiError) {
-    // Handle specific API compatibility errors
-    if (apiError.needsConversationReset) {
-      logger.warn(`API compatibility error for user ${userId}: ${apiError.message}`);
-      // Clear conversation history to fix the formatting issue
-      conversationManager.clearHistory(userId);
-      
-      // Use the user-friendly message if provided
-      if (apiError.userMessage) {
-        throw new Error(apiError.userMessage);
-      } else {
-        throw new Error('I encountered an issue with our conversation format. Let\'s start fresh - please try your message again.');
-      }
-    }
-    
-    // Handle other 400 errors with user-friendly messages
-    if (apiError.statusCode === 400 && apiError.userMessage) {
-      throw new Error(apiError.userMessage);
-    }
-    
-    // Re-throw other errors to be handled by the main error handler
-    throw apiError;
-  }
-}
 
 /**
  * Track performance metrics for chat operations
@@ -375,22 +345,7 @@ async function loadConversationHistory(userId, messageContent) {
   return conversationHistory;
 }
 
-/**
- * Store bot response in database
- * @param {string} userId - User ID
- * @param {string} response - Bot response
- * @param {number} responseTime - Time taken to generate response
- */
-async function storeBotResponse(userId, response, responseTime) {
-  if (!userId) return;
 
-  try {
-    databaseService.addBotResponse(userId, response, responseTime);
-  } catch (dbError) {
-    logger.warn('Failed to store bot response in database:', dbError.message);
-    // Continue even if database storage fails
-  }
-}
 
 /**
  * Handle an incoming chat message
@@ -399,7 +354,7 @@ async function storeBotResponse(userId, response, responseTime) {
  */
 async function handleChatMessage(message) {
   const startTime = Date.now();
-  const initialMemoryUsage = process.memoryUsage().heapUsed;
+
 
   // Process the incoming message
   const processedData = await processUserMessage(message);
@@ -416,35 +371,14 @@ async function handleChatMessage(message) {
     await processUserMessageStorage(userId, messageContent);
 
     // Load conversation history
-    const conversationHistory = await loadConversationHistory(userId, messageContent);
+    await loadConversationHistory(userId, messageContent);
 
-    // Check for natural language reminder requests
-    const reminderResult = await checkForReminderRequest(
-      messageContent,
-      userId,
-      message.channel.id,
-      message.guild?.id || 'DM'
-    );
+    // Check for reminder requests
+    const reminderHandled = await handleReminderRequests(message, messageContent, userId);
+    if (reminderHandled) return;
 
-    // If a reminder was processed, respond with the reminder result
-    if (reminderResult) {
-      await sendReminderResponse(message, reminderResult);
-      return;
-    }
-
-    // Generate and format the response
-    const responseStartTime = Date.now();
-    const formattedReply = await generateBotResponse(processedData.userId);
-    const responseTime = Date.now() - responseStartTime;
-
-    // Add bot's reply to the conversation history
-    conversationManager.addMessage(processedData.userId, 'assistant', formattedReply);
-
-    // Store bot response in database
-    await storeBotResponse(userId, formattedReply, responseTime);
-
-    // Send the response (handles chunking if needed)
-    await sendResponse(message, formattedReply);
+    // Generate and process AI response
+    await processAIResponse(message, processedData, userId);
 
     // Skip reactions in low CPU mode
     const config = require('../config/config');
@@ -452,16 +386,12 @@ async function handleChatMessage(message) {
       await emojiManager.addReactionsToMessage(message);
     }
 
-    // Track performance metrics
-    await trackPerformanceMetrics(
-      startTime,
-      initialMemoryUsage,
+    // Track performance metrics (simplified for refactored version)
+    const totalTime = Date.now() - startTime;
+    await trackChatPerformance('chat_response_time', totalTime, {
       userId,
-      messageContent,
-      formattedReply,
-      conversationHistory,
-      responseTime
-    );
+      messageLength: processedData?.messageContent?.length || 0,
+    });
   } catch (error) {
     await handleChatError(error, startTime, processedData, message);
   }
@@ -483,51 +413,7 @@ async function sendReminderResponse(message, reminderResult) {
   await message.reply({ embeds: [embed] });
 }
 
-/**
- * Track performance metrics for chat operations
- * @param {number} startTime - Start time of operation
- * @param {number} initialMemoryUsage - Initial memory usage
- * @param {string} userId - User ID
- * @param {string} messageContent - Message content
- * @param {string} formattedReply - Bot response
- * @param {Array} conversationHistory - Conversation history
- * @param {number} responseTime - Response generation time
- */
-async function trackPerformanceMetrics(
-  startTime,
-  initialMemoryUsage,
-  userId,
-  messageContent,
-  formattedReply,
-  conversationHistory,
-  responseTime
-) {
-  const totalTime = Date.now() - startTime;
-  const finalMemoryUsage = process.memoryUsage().heapUsed;
-  const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
-  await trackChatPerformance('chat_response_time', responseTime, {
-    userId,
-    messageLength: messageContent.length,
-    responseLength: formattedReply.length,
-    conversationHistoryLength: conversationHistory.length,
-  });
-
-  await trackChatPerformance('chat_total_time', totalTime, {
-    userId,
-    messageLength: messageContent.length,
-  });
-
-  await trackChatPerformance('memory_usage_delta', memoryDelta, {
-    userId,
-    operation: 'chat_message',
-  });
-
-  await trackChatPerformance('memory_usage_current', finalMemoryUsage, {
-    userId,
-    operation: 'chat_message_end',
-  });
-}
 
 /**
  * Handle chat processing errors
@@ -562,7 +448,78 @@ async function handleChatError(error, startTime, processedData, message) {
   await message.reply({ embeds: [embed] });
 }
 
+async function handleReminderRequests(message, messageContent, userId) {
+  // Check for simple time-based reminder requests first
+  const simpleReminderResult = await checkForSimpleReminderRequest(
+    messageContent,
+    userId,
+    message.channel.id,
+    message.guild?.id || 'DM'
+  );
+
+  if (simpleReminderResult) {
+    await sendReminderResponse(message, simpleReminderResult);
+    return true;
+  }
+
+  // Check for natural language reminder requests (for events/releases)
+  const reminderResult = await checkForReminderRequest(
+    messageContent,
+    userId,
+    message.channel.id,
+    message.guild?.id || 'DM'
+  );
+
+  if (reminderResult) {
+    await sendReminderResponse(message, reminderResult);
+    return true;
+  }
+
+  return false;
+}
+
+async function processAIResponse(message, processedData, userId) {
+  try {
+    // Generate and format the response
+
+    const response = await perplexityService.generateChatResponse(
+      conversationManager.getHistory(processedData.userId)
+    );
+
+
+    const formattedReply = messageFormatter.formatResponse(response);
+
+    // Add emojis to response
+    const finalResponse = emojiManager.addEmojisToResponse(formattedReply);
+
+    // Add bot's reply to the conversation history
+    conversationManager.addMessage(processedData.userId, 'assistant', finalResponse);
+
+    // Store bot response in database
+    try {
+      databaseService.addBotResponse(userId, finalResponse);
+    } catch (dbError) {
+      logger.warn('Failed to store bot response:', dbError.message);
+    }
+
+    // Send the response (handles chunking if needed)
+    const chunks = chunkMessage(finalResponse);
+    for (const chunk of chunks) {
+      await message.reply(chunk);
+    }
+
+    // Add emoji reactions to the message
+    await emojiManager.addReactionsToMessage(message);
+
+    return finalResponse;
+  } catch (error) {
+    logger.error('Error in processAIResponse:', error);
+    throw error;
+  }
+}
+
 // CRITICAL: Maintain all export patterns for backward compatibility
 module.exports = handleChatMessage;
 module.exports.handleChatMessage = handleChatMessage;
+module.exports.checkForSimpleReminderRequest = checkForSimpleReminderRequest;
 module.exports.default = handleChatMessage;
