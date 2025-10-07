@@ -8,6 +8,9 @@ jest.useFakeTimers();
 // Mock dependencies
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/perplexity-secure');
+jest.mock('../../src/services/reminder-service');
+jest.mock('../../src/utils/time-parser');
+jest.mock('../../src/services/database');
 
 // Mock the conversation module
 jest.mock('../../src/utils/conversation', () => {
@@ -21,6 +24,31 @@ jest.mock('../../src/utils/conversation', () => {
 
   return jest.fn().mockImplementation(() => mockInstance);
 });
+
+// Mock reminder service
+jest.mock('../../src/services/reminder-service', () => ({
+  createReminder: jest.fn().mockResolvedValue({ id: 'test-reminder-123' }),
+  getUserReminders: jest.fn().mockReturnValue([]),
+  cancelReminder: jest.fn().mockResolvedValue(true),
+  initialize: jest.fn().mockResolvedValue(),
+}));
+
+// Mock time parser
+jest.mock('../../src/utils/time-parser', () => ({
+  parseTimeExpression: jest.fn().mockReturnValue({
+    scheduledTime: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
+    timezone: 'UTC',
+  }),
+  getRelativeTime: jest.fn().mockReturnValue('in 5 minutes'),
+  formatTime: jest.fn().mockReturnValue('12:00 PM UTC'),
+}));
+
+// Mock database service
+jest.mock('../../src/services/database', () => ({
+  trackCommandUsage: jest.fn(),
+  logError: jest.fn(),
+  clearUserConversationData: jest.fn(),
+}));
 
 const { handleTextCommand } = require('../../src/commands');
 const ConversationManager = require('../../src/utils/conversation');
@@ -204,6 +232,69 @@ describe('Commands - Text Command Handler', () => {
       const result = await handleTextCommand(message);
 
       expect(result).toBeNull();
+    });
+
+    describe('Reminder Commands', () => {
+      it('should handle !reminder help command', async () => {
+        const message = createMockMessage({ content: '!reminder help' });
+        await handleTextCommand(message);
+
+        expect(message.reply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            embeds: expect.arrayContaining([
+              expect.objectContaining({
+                title: expect.stringContaining('Reminder System Help'),
+                description: expect.stringContaining('Reminder Commands Help'),
+              }),
+            ]),
+          })
+        );
+      });
+
+      it('should handle !remind command alias', async () => {
+        const message = createMockMessage({ content: '!remind help' });
+        await handleTextCommand(message);
+
+        expect(message.reply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            embeds: expect.arrayContaining([
+              expect.objectContaining({
+                title: expect.stringContaining('Reminder'),
+              }),
+            ]),
+          })
+        );
+      });
+
+      it('should handle !reminders command alias', async () => {
+        const message = createMockMessage({ content: '!reminders' });
+        await handleTextCommand(message);
+
+        expect(message.reply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            embeds: expect.arrayContaining([
+              expect.objectContaining({
+                title: expect.stringContaining('Reminder'),
+              }),
+            ]),
+          })
+        );
+      });
+
+      it('should handle !cancelreminder command alias', async () => {
+        const message = createMockMessage({ content: '!cancelreminder' });
+        await handleTextCommand(message);
+
+        expect(message.reply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            embeds: expect.arrayContaining([
+              expect.objectContaining({
+                title: expect.stringContaining('Missing Reminder ID'),
+              }),
+            ]),
+          })
+        );
+      });
     });
   });
 });
