@@ -185,6 +185,7 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
         messages: 0,
         summaries: 0,
         lastActive: null,
+        reminders: 0,
       });
     });
 

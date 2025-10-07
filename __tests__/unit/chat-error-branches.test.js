@@ -122,7 +122,7 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
 
       const result = await chatService(mockMessage);
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
 

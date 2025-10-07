@@ -187,6 +187,7 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
         messages: 0,
         summaries: 0,
         lastActive: null,
+        reminders: 0,
       });
     });
 
