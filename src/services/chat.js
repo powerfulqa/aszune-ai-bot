@@ -6,7 +6,7 @@ const perplexityService = require('../services/perplexity-secure');
 const ConversationManager = require('../utils/conversation');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
-const commandHandler = require('../commands');
+// Command handler removed - all commands are now slash commands
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
@@ -55,13 +55,11 @@ function shouldIgnoreMessage(message) {
   }
   
   // Ignore messages that start with common bot prefixes for other bots
+  // This includes "!" which we use to prevent bot pickup of conversations
   const commonBotPrefixes = ['!', '/', '$', '%', '&', '?', '.', '-', '+', '='];
   if (commonBotPrefixes.some(prefix => content.startsWith(prefix))) {
-    // But allow our own commands through
-    if (!content.startsWith('!remind') && !content.startsWith('!summ') && !content.startsWith('!help')) {
-      logger.debug(`Ignoring message with bot prefix: ${content.charAt(0)}`);
-      return true;
-    }
+    logger.debug(`Ignoring message with bot prefix: ${content.charAt(0)}`);
+    return true;
   }
   
   return false;
@@ -142,12 +140,9 @@ async function handleRateLimiting(message, userId) {
   return { success: true };
 }
 
-async function handleCommandCheck(message, sanitizedContent) {
-  // Check for commands
-  if (sanitizedContent.startsWith('!')) {
-    await commandHandler.handleTextCommand(message);
-    return { success: false };
-  }
+async function handleCommandCheck(_message, _sanitizedContent) {
+  // Commands are now handled via slash commands only
+  // Messages starting with "!" are ignored by shouldIgnoreMessage()
   return { success: true };
 }
 

@@ -289,14 +289,18 @@ describe('Help Command', () => {
 
     expect(mockInteraction.reply).toHaveBeenCalledWith(
       '**Aszai Bot Commands:**\n' +
-        '`/help` or `!help` - Show this help message\n' +
-        '`/clearhistory` or `!clearhistory` - Clear your conversation history (keeps your stats)\n' +
-        '`/summary` or `!summary` - Summarise your current conversation\n' +
-        '`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n' +
-        '`/stats` or `!stats` - Show your usage stats\n' +
-        '`/analytics` or `!analytics` - Show Discord server analytics\n' +
-        '`/dashboard` or `!dashboard` - Show performance dashboard\n' +
-        '`/resources` or `!resources` - Show resource optimization status\n' +
+        '`/help` - Show this help message\n' +
+        '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+        '`/summary` - Summarise your current conversation\n' +
+        '`/summarise <text>` - Summarise provided text\n' +
+        '`/stats` - Show your usage stats\n' +
+        '`/analytics` - Show Discord server analytics\n' +
+        '`/dashboard` - Show performance dashboard\n' +
+        '`/resources` - Show resource optimization status\n' +
+        '`/remind <time> <message>` - Set a reminder\n' +
+        '`/reminders` - List your active reminders\n' +
+        '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+        '\n**Note:** Use "!" at the start of any message to prevent the bot from responding.\n' +
         'Simply chat as normal to talk to the bot!'
     );
   });

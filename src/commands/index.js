@@ -26,18 +26,21 @@ const commands = {
     async execute(interaction) {
       return interaction.reply(
         '**Aszai Bot Commands:**\n' +
-          '`/help` or `!help` - Show this help message\n' +
-          '`/clearhistory` or `!clearhistory` - Clear your conversation history (keeps your stats)\n' +
-          '`/summary` or `!summary` - Summarise your current conversation\n' +
-          '`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n' +
-          '`/stats` or `!stats` - Show your usage stats\n' +
-          '`/analytics` or `!analytics` - Show Discord server analytics\n' +
-          '`/dashboard` or `!dashboard` - Show performance dashboard\n' +
-          '`/resources` or `!resources` - Show resource optimization status\n' +
+          '`/help` - Show this help message\n' +
+          '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+          '`/summary` - Summarise your current conversation\n' +
+          '`/summarise <text>` - Summarise provided text\n' +
+          '`/stats` - Show your usage stats\n' +
+          '`/analytics` - Show Discord server analytics\n' +
+          '`/dashboard` - Show performance dashboard\n' +
+          '`/resources` - Show resource optimization status\n' +
+          '`/remind <time> <message>` - Set a reminder\n' +
+          '`/reminders` - List your active reminders\n' +
+          '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+          '\n**Note:** Use "!" at the start of any message to prevent the bot from responding.\n' +
           'Simply chat as normal to talk to the bot!'
       );
     },
-    textCommand: '!help',
   },
 
   clearhistory: {
@@ -52,7 +55,6 @@ const commands = {
 
       await interaction.reply('Conversation history cleared! Your stats have been preserved.');
     },
-    textCommand: '!clearhistory',
   },
 
   summary: {
@@ -117,7 +119,6 @@ const commands = {
         return interaction.editReply(errorResponse.message);
       }
     },
-    textCommand: '!summary',
   },
   cache: {
     data: {
@@ -197,7 +198,7 @@ const commands = {
       return embed;
     },
 
-    textCommand: '!cache',
+
   },
   stats: {
     data: {
@@ -214,7 +215,7 @@ const commands = {
           `Active reminders: ${stats.reminders || 0}`
       );
     },
-    textCommand: '!stats',
+
   },
 
   analytics: {
@@ -338,7 +339,7 @@ const commands = {
       };
     },
 
-    textCommand: '!analytics',
+
   },
 
   dashboard: {
@@ -479,7 +480,7 @@ const commands = {
       };
     },
 
-    textCommand: '!dashboard',
+
   },
 
   resources: {
@@ -554,7 +555,7 @@ const commands = {
       };
     },
 
-    textCommand: '!resources',
+
   },
 
   summarise: {
@@ -677,198 +678,100 @@ const commands = {
         return interaction.editReply(errorResponse.message);
       }
     },
-    // Support both spellings as text commands
-    textCommand: '!summarise',
-    // Add alias commands that will be recognized
-    aliases: ['!summerise'],
+
   },
 
-  reminder: {
+  remind: {
     data: {
-      name: 'reminder',
-      description: 'Set, list, or cancel reminders',
+      name: 'remind',
+      description: 'Set a reminder for a specific time',
       options: [
         {
-          name: 'action',
-          description: 'What to do with reminders',
+          name: 'time',
+          description: 'Time expression (e.g., "in 5 minutes", "tomorrow at 3pm")',
           type: ApplicationCommandOptionType.String,
           required: true,
-          choices: [
-            { name: 'set', value: 'set' },
-            { name: 'list', value: 'list' },
-            { name: 'cancel', value: 'cancel' },
-            { name: 'help', value: 'help' },
-          ],
-        },
-        {
-          name: 'time',
-          description: 'Time expression for the reminder (e.g., "in 5 minutes", "tomorrow at 3pm")',
-          type: ApplicationCommandOptionType.String,
-          required: false,
         },
         {
           name: 'message',
           description: 'Reminder message',
           type: ApplicationCommandOptionType.String,
-          required: false,
-        },
-        {
-          name: 'id',
-          description: 'Reminder ID to cancel',
-          type: ApplicationCommandOptionType.Integer,
-          required: false,
+          required: true,
         },
       ],
     },
     async execute(interaction) {
-      // Check if this is a text command (has content) or slash command (has options)
-      if (interaction.content) {
-        // Text command - parse from content
-        const mockMessage = {
-          author: interaction.user,
-          channel: interaction.channel,
-          guild: interaction.guild,
-          content: interaction.content,
-          reply: (content) => interaction.reply(content),
-        };
+      const time = interaction.options.getString('time');
+      const message = interaction.options.getString('message');
 
-        // Parse arguments from the text command
-        const args = interaction.content.split(/\s+/).slice(1); // Remove '!reminder'
-        return await handleReminderCommand(mockMessage, args);
-      } else {
-        // Slash command - use options
-        const action = interaction.options.getString('action');
-        const time = interaction.options.getString('time');
-        const message = interaction.options.getString('message');
-        const id = interaction.options.getInteger('id');
+      // Create a mock message object for the reminder handler
+      const mockMessage = {
+        author: interaction.user,
+        channel: interaction.channel,
+        guild: interaction.guild,
+        content: `!reminder set "${time}" ${message}`,
+        reply: (content) => interaction.reply(content),
+      };
 
-        // Create a mock message object for the reminder handler
-        const mockMessage = {
-          author: interaction.user,
-          channel: interaction.channel,
-          guild: interaction.guild,
-          content: `!reminder ${action}${time ? ` "${time}"` : ''}${message ? ` ${message}` : ''}${id ? ` ${id}` : ''}`,
-          reply: (content) => interaction.reply(content),
-        };
-
-        const args = [action];
-        if (time) args.push(time);
-        if (message) args.push(message);
-        if (id) args.push(id.toString());
-
-        return await handleReminderCommand(mockMessage, args);
-      }
+      return await handleReminderCommand(mockMessage, ['set', time, message]);
     },
-    textCommand: '!reminder',
-    // Add alias commands for other reminder variations
-    aliases: ['!remind', '!reminders', '!cancelreminder'],
+  },
+
+  reminders: {
+    data: {
+      name: 'reminders',
+      description: 'List all your active reminders',
+    },
+    async execute(interaction) {
+      // Create a mock message object for the reminder handler
+      const mockMessage = {
+        author: interaction.user,
+        channel: interaction.channel,
+        guild: interaction.guild,
+        content: '!reminder list',
+        reply: (content) => interaction.reply(content),
+      };
+
+      return await handleReminderCommand(mockMessage, ['list']);
+    },
+  },
+
+  cancelreminder: {
+    data: {
+      name: 'cancelreminder',
+      description: 'Cancel a specific reminder',
+      options: [
+        {
+          name: 'id',
+          description: 'Reminder ID to cancel (use /reminders to see IDs)',
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+        },
+      ],
+    },
+    async execute(interaction) {
+      const id = interaction.options.getInteger('id');
+
+      // Create a mock message object for the reminder handler
+      const mockMessage = {
+        author: interaction.user,
+        channel: interaction.channel,
+        guild: interaction.guild,
+        content: `!reminder cancel ${id}`,
+        reply: (content) => interaction.reply(content),
+      };
+
+      return await handleReminderCommand(mockMessage, ['cancel', id.toString()]);
+    },
   },
 };
 
-/**
- * Handle successful text command execution
- * @param {Object} message - Discord message
- * @param {string} commandName - Name of the command
- * @param {number} startTime - Command start time
- */
-async function handleTextCommandSuccess(message, commandName, startTime) {
-  const responseTime = Date.now() - startTime;
-  try {
-    databaseService.trackCommandUsage(
-      message.author.id,
-      commandName,
-      message.guild?.id,
-      true,
-      responseTime
-    );
-  } catch (dbError) {
-    logger.error(`Failed to log command usage for ${commandName}: ${dbError.message}`);
-  }
-}
+
 
 /**
- * Handle text command execution error
- * @param {Object} message - Discord message
- * @param {string} commandName - Name of the command
- * @param {Error} error - The error that occurred
- * @param {number} startTime - Command start time
+ * TEXT COMMANDS REMOVED - Use slash commands instead
+ * Messages starting with "!" are ignored to prevent bot pickup
  */
-async function handleTextCommandError(message, commandName, error, startTime) {
-  const responseTime = Date.now() - startTime;
-
-  // Track failed text command execution
-  databaseService.trackCommandUsage(
-    message.author.id,
-    commandName,
-    message.guild?.id,
-    false,
-    responseTime
-  );
-
-  // Log error to database
-  databaseService.logError(
-    'text_command_error',
-    error.message,
-    message.author.id,
-    commandName,
-    error.stack
-  );
-
-  const errorResponse = ErrorHandler.handleError(error, `text command ${commandName}`, {
-    userId: message.author.id,
-    command: commandName,
-    content: message.content,
-  });
-  logger.error(`Error executing text command ${commandName}: ${errorResponse.message}`);
-  try {
-    return await message.reply(errorResponse.message);
-  } catch (replyError) {
-    logger.error(
-      `Failed to send error reply for text command ${commandName}: ${replyError.message}`
-    );
-  }
-}
-
-/**
- * Handle text commands from messages
- * @param {Object} message - Discord.js message object
- * @returns {Promise<Object|null>} - Command result or null if no command matched
- */
-async function handleTextCommand(message) {
-  const commandText = message.content.trim();
-
-  for (const [name, command] of Object.entries(commands)) {
-    // Check if the command text starts with the main command or any aliases
-    const commandPrefix = commandText.split(/\s+/)[0].toLowerCase(); // Get just the command part
-    const isMainCommand = commandPrefix === command.textCommand;
-    const hasAliases = command.aliases && Array.isArray(command.aliases);
-    const isAliasCommand = hasAliases && command.aliases.includes(commandPrefix);
-
-    if (isMainCommand || isAliasCommand) {
-      const startTime = Date.now();
-
-      try {
-        // Create a mock interaction object for text commands
-        const mockInteraction = {
-          user: message.author,
-          channel: message.channel,
-          content: message.content, // Pass the content for text command parsing
-          reply: (content) => message.reply(content),
-          deferReply: async () => message.channel.sendTyping(),
-          editReply: (content) => message.reply(content),
-        };
-
-        const result = await command.execute(mockInteraction);
-        await handleTextCommandSuccess(message, name, startTime);
-        return result;
-      } catch (error) {
-        return await handleTextCommandError(message, name, error, startTime);
-      }
-    }
-  }
-
-  return null;
-}
 
 /**
  * Handle successful command execution
@@ -983,7 +886,6 @@ function getSlashCommandsData() {
 }
 
 module.exports = {
-  handleTextCommand,
   handleSlashCommand,
   getSlashCommandsData,
 };
