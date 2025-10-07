@@ -64,16 +64,12 @@ describe('Perplexity Service - Basic', () => {
     });
 
     it('handles empty messages array', async () => {
-      const mockResponse = {
-        choices: [{ message: { content: 'Mock response' } }],
-      };
-
-      request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
-
       const messages = [];
-      const response = await perplexityService.sendChatRequest(messages);
-
-      expect(response).toEqual(mockResponse);
+      
+      // Our new message validation should reject empty arrays
+      await expect(perplexityService.sendChatRequest(messages)).rejects.toThrow(
+        'Invalid message format: Messages array cannot be empty'
+      );
     });
 
     it('handles single message', async () => {
