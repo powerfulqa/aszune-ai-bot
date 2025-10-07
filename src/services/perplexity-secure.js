@@ -635,7 +635,7 @@ class PerplexityService {
     // Try to get from cache first if enabled
     if (shouldUseCache) {
       const cachedContent = await this.cacheManager.tryGetFromCache(history);
-      if (cachedContent) return cachedContent;
+      if (cachedContent) return { content: cachedContent, fromCache: true };
     }
 
     // Try to generate new response with retry for rate limits
@@ -649,7 +649,7 @@ class PerplexityService {
       await this.cacheManager.trySaveToCache(history, content, cacheConfig.maxEntries);
     }
 
-    return content;
+    return { content, fromCache: false };
   }
 
   async generateChatResponse(history, options = {}) {
@@ -667,12 +667,15 @@ class PerplexityService {
       const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
 
       // Process the chat response
-      const content = await this._processChatResponse(history, opts, cacheConfig, shouldUseCache);
+      const { content, fromCache } = await this._processChatResponse(
+        history,
+        opts,
+        cacheConfig,
+        shouldUseCache
+      );
 
-      // Check if this was a cache hit by comparing start time with current time
-      const isCacheHit = Date.now() - startTime < 10; // Very fast response indicates cache hit
-
-      if (isCacheHit) {
+      // Use explicit cache hit flag from _processChatResponse instead
+      if (fromCache) {
         // Track cache hit performance
         const cacheResponseTime = Date.now() - startTime;
         const finalMemoryUsage = process.memoryUsage().heapUsed;
@@ -720,7 +723,7 @@ class PerplexityService {
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
 
-      // Re-throw the error to maintain error handling contract
+      // CRITICAL: Re-throw normalized error after tracking instead of returning error message
       throw error;
     }
   }

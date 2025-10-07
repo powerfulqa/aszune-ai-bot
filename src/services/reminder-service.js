@@ -55,7 +55,7 @@ class ReminderService {
       // Schedule the reminder with maximum timeout protection
       // Use periodic check for very long delays (> 24 hours) to prevent memory leaks
       const MAX_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-      
+
       if (delay > MAX_TIMEOUT) {
         // For long delays, schedule a periodic check instead
         const checkInterval = setInterval(async () => {
@@ -66,13 +66,13 @@ class ReminderService {
             await this.executeReminder(reminder);
           }
         }, 60000); // Check every minute
-        
+
         this.activeTimers.set(reminder.id, { type: 'interval', timer: checkInterval });
       } else {
         const timer = setTimeout(async () => {
           await this.executeReminder(reminder);
         }, delay);
-        
+
         this.activeTimers.set(reminder.id, { type: 'timeout', timer });
       }
       logger.debug(`Scheduled reminder ${reminder.id} for ${scheduledTime.toISOString()}`);
@@ -151,23 +151,18 @@ class ReminderService {
         throw new Error('Failed to create reminder in database');
       }
 
-      // Get the created reminder
-      const reminder = {
-        id: reminderId,
-        user_id: userId,
-        message,
-        scheduled_time: scheduledTime,
-        timezone,
-        channel_id: channelId,
-        server_id: serverId,
-        status: 'active',
-      };
+      // Get the created reminder object from database
+      const reminder = databaseService.getReminder(reminderId);
+
+      if (!reminder) {
+        throw new Error('Failed to retrieve created reminder from database');
+      }
 
       // Schedule the reminder
       await this.scheduleReminder(reminder);
 
       logger.info(`Created reminder ${reminderId} for user ${userId}`);
-      return reminderId;
+      return reminder;
     } catch (error) {
       logger.error(`Failed to create reminder for user ${userId}:`, error);
       throw error;
@@ -241,9 +236,13 @@ class ReminderService {
 
   // Cleanup method
   shutdown() {
-    // Clear all active timers
+    // Clear all active timers with proper type checking
     for (const timer of this.activeTimers.values()) {
-      clearTimeout(timer);
+      if (timer.type === 'interval') {
+        clearInterval(timer.timer);
+      } else {
+        clearTimeout(timer.timer);
+      }
     }
     this.activeTimers.clear();
     this.isInitialized = false;

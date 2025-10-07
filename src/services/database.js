@@ -543,7 +543,7 @@ class DatabaseService {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-      
+
       // Atomic upsert to avoid race conditions
       const upsertStmt = db.prepare(`
         INSERT INTO user_stats (
@@ -555,7 +555,7 @@ class DatabaseService {
           total_summaries = COALESCE(user_stats.total_summaries, 0) + ?,
           total_commands = COALESCE(user_stats.total_commands, 0) + ?
       `);
-      
+
       upsertStmt.run(
         userId,
         updates.message_count || 0,
@@ -835,7 +835,7 @@ class DatabaseService {
       const result = stmt.run(
         userId,
         message,
-        scheduledTime.toISOString(),
+        scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
         timezone,
         channelId,
         serverId
@@ -847,6 +847,20 @@ class DatabaseService {
     } catch (error) {
       if (this.isDisabled) return null;
       throw new Error(`Failed to create reminder for ${userId}: ${error.message}`);
+    }
+  }
+
+  getReminder(reminderId) {
+    try {
+      if (this.isDisabled) return null;
+
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM reminders WHERE id = ?');
+      return stmt.get(reminderId);
+    } catch (error) {
+      if (this.isDisabled) return null;
+      logger.warn(`Failed to get reminder ${reminderId}: ${error.message}`);
+      return null;
     }
   }
 

@@ -747,13 +747,17 @@ const commands = {
  */
 async function handleTextCommandSuccess(message, commandName, startTime) {
   const responseTime = Date.now() - startTime;
-  databaseService.trackCommandUsage(
-    message.author.id,
-    commandName,
-    message.guild?.id,
-    true,
-    responseTime
-  );
+  try {
+    databaseService.trackCommandUsage(
+      message.author.id,
+      commandName,
+      message.guild?.id,
+      true,
+      responseTime
+    );
+  } catch (dbError) {
+    logger.error(`Failed to log command usage for ${commandName}: ${dbError.message}`);
+  }
 }
 
 /**

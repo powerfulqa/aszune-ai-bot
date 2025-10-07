@@ -360,7 +360,9 @@ describe('Bot Main Entry Point (index.js)', () => {
     it.skip('should handle Pi optimizations initialization failure gracefully', async () => {
       // Set up mock config with Pi optimizations enabled but failing
       mockConfigData.PI_OPTIMIZATIONS = { ENABLED: true };
-      mockConfigData.initializePiOptimizations = jest.fn().mockRejectedValue(new Error('Pi init failed'));
+      mockConfigData.initializePiOptimizations = jest
+        .fn()
+        .mockRejectedValue(new Error('Pi init failed'));
 
       // Re-import to get updated mocks
       jest.resetModules();
@@ -449,7 +451,7 @@ describe('Bot Main Entry Point (index.js)', () => {
     it.skip('should initialize Pi optimizations in production mode', () => {
       // Set production environment
       process.env.NODE_ENV = 'production';
-      
+
       // Mock config with Pi optimizations enabled
       const testConfig = {
         CACHE: { CLEANUP_INTERVAL_MS: 300000 },
@@ -474,7 +476,7 @@ describe('Bot Main Entry Point (index.js)', () => {
 
       // Re-require index to trigger production initialization
       jest.resetModules();
-      
+
       require('../../src/index');
 
       // In production mode with Pi optimizations enabled, the log should be called during module load
