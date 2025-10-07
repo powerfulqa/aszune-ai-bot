@@ -112,4 +112,116 @@ describe('Chat Service - Basic', () => {
     );
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
+
+  // Test the new simple reminder detection function for coverage
+  describe('Simple Reminder Detection', () => {
+    const { checkForSimpleReminderRequest } = require('../../src/services/chat');
+    
+    // Mock the reminder command handler
+    const mockHandleReminderCommand = jest.fn();
+    jest.doMock('../../src/commands/reminder', () => ({
+      handleReminderCommand: mockHandleReminderCommand,
+    }));
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockHandleReminderCommand.mockResolvedValue();
+    });
+
+    it('should detect simple reminder patterns', async () => {
+      const result = await checkForSimpleReminderRequest(
+        'remind me in 5 minutes',
+        'user123',
+        'channel456',
+        'server789'
+      );
+
+      expect(result).toBeTruthy();
+      expect(result.message).toContain('I\'ll remind you');
+    });
+
+    it('should return null for non-reminder messages', async () => {
+      const result = await checkForSimpleReminderRequest(
+        'hello world',
+        'user123',
+        'channel456',
+        'server789'
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle errors gracefully', async () => {
+      mockHandleReminderCommand.mockRejectedValue(new Error('Test error'));
+
+      const result = await checkForSimpleReminderRequest(
+        'remind me in 5 minutes',
+        'user123',
+        'channel456',
+        'server789'
+      );
+
+      // Should return error response object instead of null when there's an error
+      expect(result).toBeTruthy();
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Sorry, I couldn\'t set that reminder');
+    });
+
+    it('should handle different reminder pattern variations', async () => {
+      const patterns = [
+        'remind me to check email in 10 minutes',
+        'please remind me about meeting in 1 hour',
+        'can you remind me to call in 30 minutes',
+        'set a reminder to take pills in 2 hours',
+        'remind me in 15 minutes'
+      ];
+
+      for (const pattern of patterns) {
+        mockHandleReminderCommand.mockReturnValue({
+          success: true,
+          message: 'I\'ll remind you',
+        });
+        
+        const result = await checkForSimpleReminderRequest(
+          pattern,
+          'user123',
+          'channel456', 
+          'server789'
+        );
+        
+        expect(result).toBeTruthy();
+        expect(result.message).toContain('I\'ll remind you');
+        mockHandleReminderCommand.mockClear();
+      }
+    });
+
+    it('should handle DM server context', async () => {
+      const result = await checkForSimpleReminderRequest(
+        'remind me in 15 minutes',
+        'user123',
+        'channel456',
+        'DM'
+      );
+
+      expect(result).toBeTruthy();
+      expect(result.message).toContain('I\'ll remind you');
+    });
+
+    it('should test reply function in simple reminder', async () => {
+      // Test a case that triggers the createSimpleReminder function properly
+      mockHandleReminderCommand.mockResolvedValue(); // Mock successful completion
+
+      const result = await checkForSimpleReminderRequest(
+        'remind me in 5 minutes',
+        'user123',
+        'channel456',
+        'server789'
+      );
+
+      expect(result).toBeTruthy();
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('I\'ll remind you');
+      expect(result.message).toContain('in 5 minute');
+    });
+  });
 });
