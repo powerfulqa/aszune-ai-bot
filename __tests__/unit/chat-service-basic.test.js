@@ -16,7 +16,6 @@ const handleChatMessage = chatService.handleChatMessage || chatService.default |
 const perplexityService = require('../../src/services/perplexity-secure');
 const ConversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
-const commandHandler = require('../../src/commands');
 
 // Mock dependencies
 jest.mock('../../src/services/perplexity-secure', () => ({
@@ -60,7 +59,7 @@ describe('Chat Service - Basic', () => {
 
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
-    commandHandler.handleTextCommand.mockResolvedValue();
+    // handleTextCommand removed - now using slash commands only
   });
 
   it('should ignore bot messages', async () => {
@@ -97,7 +96,7 @@ describe('Chat Service - Basic', () => {
     const result = await handleChatMessage(commandMessage);
 
     // Messages starting with "!" should be ignored (no processing)
-    expect(result).toBeUndefined();
+    expect(result).toBeNull();
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
     expect(commandMessage.reply).not.toHaveBeenCalled();
   });
