@@ -497,10 +497,18 @@ async function processAIResponse(message, processedData, userId) {
       logger.warn('Failed to store bot response:', dbError.message);
     }
 
-    // Send the response (handles chunking if needed)
+    // Send the response as embed (handles chunking if needed)
     const chunks = chunkMessage(finalResponse);
-    for (const chunk of chunks) {
-      await message.reply(chunk);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const config = require('../config/config');
+      const embed = messageFormatter.createCompactEmbed({
+        color: config.COLORS.PRIMARY,
+        description: chunk,
+        footer: { text: 'Aszai Bot' },
+      });
+      
+      await message.reply({ embeds: [embed] });
     }
 
     // Add emoji reactions to the message
