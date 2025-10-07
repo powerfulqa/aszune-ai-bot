@@ -543,50 +543,28 @@ class DatabaseService {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-
-      // Get existing stats
-      const existing = this.getUserStats(userId);
-
-      // Calculate new values
-      const newMessageCount = existing.message_count + (updates.message_count || 0);
-      const newLastActive = updates.last_active || new Date().toISOString();
-      const newTotalSummaries = existing.total_summaries + (updates.total_summaries || 0);
-      const newTotalCommands = existing.total_commands + (updates.total_commands || 0);
-
-      // Use UPDATE instead of INSERT OR REPLACE to avoid cascade issues
-      const updateStmt = db.prepare(`
-        UPDATE user_stats SET
-          message_count = ?,
-          last_active = ?,
-          total_summaries = ?,
-          total_commands = ?
-        WHERE user_id = ?
+      
+      // Atomic upsert to avoid race conditions
+      const upsertStmt = db.prepare(`
+        INSERT INTO user_stats (
+          user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+          message_count = excluded.message_count + (updates.message_count || 0),
+          last_active = excluded.last_active,
+          total_summaries = excluded.total_summaries + (updates.total_summaries || 0),
+          total_commands = excluded.total_commands + (updates.total_commands || 0)
       `);
-      const updateResult = updateStmt.run(
-        newMessageCount,
-        newLastActive,
-        newTotalSummaries,
-        newTotalCommands,
-        userId
+      
+      upsertStmt.run(
+        userId,
+        updates.message_count || 0,
+        updates.last_active || new Date().toISOString(),
+        new Date().toISOString(),
+        updates.total_summaries || 0,
+        updates.total_commands || 0,
+        '{}'
       );
-
-      // If no rows were updated, the user doesn't exist, so insert
-      if (updateResult.changes === 0) {
-        const insertStmt = db.prepare(`
-          INSERT INTO user_stats
-          (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `);
-        insertStmt.run(
-          userId,
-          newMessageCount,
-          newLastActive,
-          existing.first_seen || new Date().toISOString(),
-          newTotalSummaries,
-          newTotalCommands,
-          existing.preferences || '{}'
-        );
-      }
     } catch (error) {
       if (this.isDisabled) return;
       throw new Error(`Failed to update user stats for ${userId}: ${error.message}`);
@@ -858,18 +836,8 @@ class DatabaseService {
         serverId
       );
 
-      // Return the complete reminder object
-      return {
-        id: result.lastInsertRowid,
-        user_id: userId,
-        message: message,
-        scheduled_time: scheduledTime.toISOString(),
-        timezone: timezone,
-        status: 'active',
-        channel_id: channelId,
-        server_id: serverId,
-        created_at: new Date().toISOString(),
-      };
+      // Return only the reminder ID as expected by upstream code
+      return result.lastInsertRowid;
     } catch (error) {
       if (this.isDisabled) return null;
       throw new Error(`Failed to create reminder for ${userId}: ${error.message}`);

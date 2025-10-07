@@ -52,12 +52,29 @@ class ReminderService {
       // Clear any existing timer for this reminder
       this.clearReminderTimer(reminder.id);
 
-      // Schedule the reminder
-      const timer = setTimeout(async () => {
-        await this.executeReminder(reminder);
-      }, delay);
-
-      this.activeTimers.set(reminder.id, timer);
+      // Schedule the reminder with maximum timeout protection
+      // Use periodic check for very long delays (> 24 hours) to prevent memory leaks
+      const MAX_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      
+      if (delay > MAX_TIMEOUT) {
+        // For long delays, schedule a periodic check instead
+        const checkInterval = setInterval(async () => {
+          const now = new Date();
+          if (now >= scheduledTime) {
+            clearInterval(checkInterval);
+            this.activeTimers.delete(reminder.id);
+            await this.executeReminder(reminder);
+          }
+        }, 60000); // Check every minute
+        
+        this.activeTimers.set(reminder.id, { type: 'interval', timer: checkInterval });
+      } else {
+        const timer = setTimeout(async () => {
+          await this.executeReminder(reminder);
+        }, delay);
+        
+        this.activeTimers.set(reminder.id, { type: 'timeout', timer });
+      }
       logger.debug(`Scheduled reminder ${reminder.id} for ${scheduledTime.toISOString()}`);
     } catch (error) {
       logger.error(`Failed to schedule reminder ${reminder.id}:`, error);
@@ -89,7 +106,14 @@ class ReminderService {
   clearReminderTimer(reminderId) {
     const existingTimer = this.activeTimers.get(reminderId);
     if (existingTimer) {
-      clearTimeout(existingTimer);
+      if (existingTimer.type === 'interval') {
+        clearInterval(existingTimer.timer);
+      } else if (existingTimer.type === 'timeout') {
+        clearTimeout(existingTimer.timer);
+      } else {
+        // Legacy support for direct timer objects
+        clearTimeout(existingTimer);
+      }
       this.activeTimers.delete(reminderId);
     }
   }

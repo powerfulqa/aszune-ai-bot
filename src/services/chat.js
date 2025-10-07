@@ -275,9 +275,10 @@ async function loadConversationHistory(userId, messageContent) {
       const dbConversationHistory = databaseService.getConversationHistory(userId, dbLimit);
       if (dbConversationHistory && dbConversationHistory.length > 0) {
         // Add database history to conversation manager for context
-        // Filter out the current message to avoid duplication
+        // Filter out recent identical messages using timestamps to prevent duplication
+        const cutoffTime = new Date(Date.now() - 30000).toISOString(); // 30 seconds ago
         const historicalMessages = dbConversationHistory.filter(
-          (msg) => msg.message !== messageContent
+          (msg) => msg.message !== messageContent || msg.timestamp < cutoffTime
         );
 
         historicalMessages.forEach((msg) => {
