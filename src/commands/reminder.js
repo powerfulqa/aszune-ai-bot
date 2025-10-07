@@ -3,24 +3,67 @@ const timeParser = require('../utils/time-parser');
 const ErrorHandler = require('../utils/error-handler');
 const logger = require('../utils/logger');
 
+async function handleCommandAliases(message, args, originalCommand) {
+  if (originalCommand === '!remind') {
+    // !remind should directly set a reminder
+    if (args.length < 2) {
+      return await handleReminderHelp(message);
+    }
+    return await handleSetReminder(message, args);
+  } else if (originalCommand === '!reminders') {
+    // !reminders should list reminders
+    return await handleListReminders(message);
+  } else if (originalCommand === '!cancelreminder') {
+    // !cancelreminder should cancel a reminder
+    if (args.length === 0) {
+      return message.reply({
+        embeds: [
+          {
+            color: 0xffa500,
+            title: 'Missing Reminder ID',
+            description: 'Usage: `!cancelreminder <id>`\nUse `!reminders` to see your active reminders.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
+      });
+    }
+    return await handleCancelReminder(message, args);
+  }
+  return null; // No alias match, continue to subcommands
+}
+
+async function handleReminderSubcommands(message, args) {
+  const subcommand = args[0]?.toLowerCase();
+  
+  switch (subcommand) {
+  case 'set':
+  case 'create':
+    return await handleSetReminder(message, args.slice(1));
+  case 'list':
+  case 'show':
+    return await handleListReminders(message);
+  case 'cancel':
+  case 'delete':
+    return await handleCancelReminder(message, args.slice(1));
+  case 'help':
+  default:
+    return await handleReminderHelp(message);
+  }
+}
+
 async function handleReminderCommand(message, args) {
   try {
-    const subcommand = args[0]?.toLowerCase();
-
-    switch (subcommand) {
-      case 'set':
-      case 'create':
-        return await handleSetReminder(message, args.slice(1));
-      case 'list':
-      case 'show':
-        return await handleListReminders(message);
-      case 'cancel':
-      case 'delete':
-        return await handleCancelReminder(message, args.slice(1));
-      case 'help':
-      default:
-        return await handleReminderHelp(message);
+    // Get the original command to determine behavior
+    const originalCommand = message.content.trim().split(/\s+/)[0].toLowerCase();
+    
+    // Handle different command aliases
+    const aliasResult = await handleCommandAliases(message, args, originalCommand);
+    if (aliasResult) {
+      return aliasResult;
     }
+
+    // Handle !reminder subcommands
+    return await handleReminderSubcommands(message, args);
   } catch (error) {
     logger.error('Error in reminder command:', error);
     const errorResponse = ErrorHandler.handleError(error, 'reminder_command', {
@@ -41,62 +84,73 @@ async function handleReminderCommand(message, args) {
 
 async function handleSetReminder(message, args) {
   if (args.length < 2) {
-    return message.reply({
-      embeds: [
-        {
-          color: 0xffa500,
-          title: 'Invalid Reminder Format',
-          description:
-            'Usage: `!reminder set <time> <message>`\nExample: `!reminder set "in 5 minutes" Check the oven!`',
-          footer: { text: 'Aszai Bot' },
-        },
-      ],
-    });
+    return createInvalidFormatReply(message);
   }
 
   const timeExpression = args[0];
   const reminderMessage = args.slice(1).join(' ');
 
   try {
-    // Parse the time expression
     const parsedTime = timeParser.parseTimeExpression(timeExpression);
-
-    // Create the reminder
-    const reminderId = await reminderService.createReminder(
-      message.author.id,
-      reminderMessage,
-      parsedTime.scheduledTime.toISOString(),
-      parsedTime.timezone,
-      message.channel.id,
-      message.guild?.id
-    );
-
-    // Format the confirmation message
-    const relativeTime = timeParser.getRelativeTime(parsedTime.scheduledTime);
-    const formattedTime = timeParser.formatTime(parsedTime.scheduledTime, parsedTime.timezone);
-
-    return message.reply({
-      embeds: [
-        {
-          color: 0x00ff00,
-          title: '✅ Reminder Set!',
-          description: `**Message:** ${reminderMessage}\n**When:** ${relativeTime}\n**Exact Time:** ${formattedTime}`,
-          footer: { text: `Reminder ID: ${reminderId} | Aszai Bot` },
-        },
-      ],
-    });
+    const reminderId = await createReminderInDatabase(message, reminderMessage, parsedTime);
+    return createSuccessReply(message, reminderMessage, parsedTime, reminderId);
   } catch (error) {
-    return message.reply({
-      embeds: [
-        {
-          color: 0xff0000,
-          title: 'Failed to Set Reminder',
-          description: error.message,
-          footer: { text: 'Aszai Bot' },
-        },
-      ],
-    });
+    return createErrorReply(message, error);
   }
+}
+
+function createInvalidFormatReply(message) {
+  return message.reply({
+    embeds: [
+      {
+        color: 0xffa500,
+        title: 'Invalid Reminder Format',
+        description:
+          'Usage: `!reminder set <time> <message>`\nExample: `!reminder set "in 5 minutes" Check the oven!`',
+        footer: { text: 'Aszai Bot' },
+      },
+    ],
+  });
+}
+
+async function createReminderInDatabase(message, reminderMessage, parsedTime) {
+  return await reminderService.createReminder(
+    message.author.id,
+    reminderMessage,
+    parsedTime.scheduledTime.toISOString(),
+    parsedTime.timezone,
+    message.channel.id,
+    message.guild?.id
+  );
+}
+
+function createSuccessReply(message, reminderMessage, parsedTime, reminderId) {
+  const relativeTime = timeParser.getRelativeTime(parsedTime.scheduledTime);
+  const formattedTime = timeParser.formatTime(parsedTime.scheduledTime, parsedTime.timezone);
+
+  return message.reply({
+    embeds: [
+      {
+        color: 0x00ff00,
+        title: '✅ Reminder Set!',
+        description: `**Message:** ${reminderMessage}\n**When:** ${relativeTime}\n**Exact Time:** ${formattedTime}`,
+        footer: { text: `Reminder ID: ${reminderId} | Aszai Bot` },
+      },
+    ],
+  });
+}
+
+function createErrorReply(message, error) {
+  return message.reply({
+    embeds: [
+      {
+        color: 0xff0000,
+        title: 'Failed to Set Reminder',
+        description: error.message,
+        footer: { text: 'Aszai Bot' },
+      },
+    ],
+  });
 }
 
 async function handleListReminders(message) {

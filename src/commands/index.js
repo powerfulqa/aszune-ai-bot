@@ -760,6 +760,8 @@ const commands = {
       }
     },
     textCommand: '!reminder',
+    // Add alias commands for other reminder variations
+    aliases: ['!remind', '!reminders', '!cancelreminder'],
   },
 };
 
