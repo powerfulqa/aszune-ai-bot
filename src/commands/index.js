@@ -721,26 +721,43 @@ const commands = {
       ],
     },
     async execute(interaction) {
-      const action = interaction.options.getString('action');
-      const time = interaction.options.getString('time');
-      const message = interaction.options.getString('message');
-      const id = interaction.options.getInteger('id');
+      // Check if this is a text command (has content) or slash command (has options)
+      if (interaction.content) {
+        // Text command - parse from content
+        const mockMessage = {
+          author: interaction.user,
+          channel: interaction.channel,
+          guild: interaction.guild,
+          content: interaction.content,
+          reply: (content) => interaction.reply(content),
+        };
 
-      // Create a mock message object for the reminder handler
-      const mockMessage = {
-        author: interaction.user,
-        channel: interaction.channel,
-        guild: interaction.guild,
-        content: `!reminder ${action}${time ? ` "${time}"` : ''}${message ? ` ${message}` : ''}${id ? ` ${id}` : ''}`,
-        reply: (content) => interaction.reply(content),
-      };
+        // Parse arguments from the text command
+        const args = interaction.content.split(/\s+/).slice(1); // Remove '!reminder'
+        return await handleReminderCommand(mockMessage, args);
+      } else {
+        // Slash command - use options
+        const action = interaction.options.getString('action');
+        const time = interaction.options.getString('time');
+        const message = interaction.options.getString('message');
+        const id = interaction.options.getInteger('id');
 
-      const args = [action];
-      if (time) args.push(time);
-      if (message) args.push(message);
-      if (id) args.push(id.toString());
+        // Create a mock message object for the reminder handler
+        const mockMessage = {
+          author: interaction.user,
+          channel: interaction.channel,
+          guild: interaction.guild,
+          content: `!reminder ${action}${time ? ` "${time}"` : ''}${message ? ` ${message}` : ''}${id ? ` ${id}` : ''}`,
+          reply: (content) => interaction.reply(content),
+        };
 
-      return await handleReminderCommand(mockMessage, args);
+        const args = [action];
+        if (time) args.push(time);
+        if (message) args.push(message);
+        if (id) args.push(id.toString());
+
+        return await handleReminderCommand(mockMessage, args);
+      }
     },
     textCommand: '!reminder',
   },
