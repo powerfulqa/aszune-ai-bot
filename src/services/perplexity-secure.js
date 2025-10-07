@@ -424,6 +424,12 @@ class PerplexityService {
       }
     }
 
+    // Handle specific API 400 errors with better formatting
+    if (statusCode === 400) {
+      const { createAPICompatibilityError } = require('../utils/message-formatter-api');
+      throw createAPICompatibilityError(responseText, statusCode);
+    }
+
     // Create a descriptive error message with status code and response content
     const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
     const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
@@ -476,8 +482,23 @@ class PerplexityService {
    * @returns {Promise<Object>} API response
    */
   async sendChatRequest(messages, options = {}) {
+    const { formatMessagesForAPI, validateMessageFormat } = require('../utils/message-formatter-api');
+    
+    // Format messages for API compatibility
+    const formattedMessages = formatMessagesForAPI(messages);
+    
+    // Validate formatted messages
+    const validation = validateMessageFormat(formattedMessages);
+    if (!validation.valid) {
+      logger.warn(`Message validation failed: ${validation.error} (${validation.code})`);
+      throw ErrorHandler.createError(
+        `Invalid message format: ${validation.error}`,
+        ERROR_TYPES.API_ERROR
+      );
+    }
+    
     const endpoint = config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
-    const requestPayload = this.apiClient.buildRequestPayload(messages, options);
+    const requestPayload = this.apiClient.buildRequestPayload(formattedMessages, options);
 
     // Define API request function
     const makeApiRequest = async () => {

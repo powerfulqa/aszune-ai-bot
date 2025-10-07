@@ -276,12 +276,23 @@ async function generateBotResponse(userId) {
     // Format response for Pi if optimizations enabled
     return messageFormatter.formatResponse(enhancedReply);
   } catch (apiError) {
-    // Handle specific API errors
-    if (apiError.message && apiError.message.includes('should alternate with assistant message')) {
-      logger.warn(`API 400 error for user ${userId}: Invalid message format - ${apiError.message}`);
-      // Clear conversation history to fix the alternating message issue
-      conversationManager.clearConversation(userId);
-      throw new Error('I encountered an issue with our conversation. Let\'s start fresh - please try your message again.');
+    // Handle specific API compatibility errors
+    if (apiError.needsConversationReset) {
+      logger.warn(`API compatibility error for user ${userId}: ${apiError.message}`);
+      // Clear conversation history to fix the formatting issue
+      conversationManager.clearHistory(userId);
+      
+      // Use the user-friendly message if provided
+      if (apiError.userMessage) {
+        throw new Error(apiError.userMessage);
+      } else {
+        throw new Error('I encountered an issue with our conversation format. Let\'s start fresh - please try your message again.');
+      }
+    }
+    
+    // Handle other 400 errors with user-friendly messages
+    if (apiError.statusCode === 400 && apiError.userMessage) {
+      throw new Error(apiError.userMessage);
     }
     
     // Re-throw other errors to be handled by the main error handler
