@@ -5,9 +5,8 @@
 // Mock the config module
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
-// Mock the commands module first
+// Mock the commands module (handleTextCommand removed)
 jest.mock('../../src/commands', () => ({
-  handleTextCommand: jest.fn(),
   handleSlashCommand: jest.fn(),
   getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test' }]),
 }));
@@ -92,13 +91,15 @@ describe('Chat Service - Basic', () => {
     expect(message.reply).toHaveBeenCalled();
   });
 
-  it('should handle command messages', async () => {
+  it('should ignore messages starting with "!" (text commands removed)', async () => {
     const commandMessage = createMessage('!help');
 
-    await handleChatMessage(commandMessage);
+    const result = await handleChatMessage(commandMessage);
 
-    expect(commandHandler.handleTextCommand).toHaveBeenCalledWith(commandMessage);
+    // Messages starting with "!" should be ignored (no processing)
+    expect(result).toBeUndefined();
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
+    expect(commandMessage.reply).not.toHaveBeenCalled();
   });
 
   it('should handle rate limited users', async () => {

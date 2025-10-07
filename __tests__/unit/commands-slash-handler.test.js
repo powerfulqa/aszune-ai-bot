@@ -247,5 +247,78 @@ describe('Commands - Slash Command Handler', () => {
 
       expect(interaction.reply).not.toHaveBeenCalled();
     });
+
+    it('should handle remind command execution', async () => {
+      const interaction = createMockInteraction({ commandName: 'remind' });
+      interaction.options = {
+        getString: jest.fn()
+          .mockReturnValueOnce('in 5 minutes') // time
+          .mockReturnValueOnce('Test reminder'), // message
+      };
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.reply).toHaveBeenCalled();
+    });
+
+    it('should handle reminders command execution', async () => {
+      const interaction = createMockInteraction({ commandName: 'reminders' });
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.reply).toHaveBeenCalled();
+    });
+
+    it('should handle cancelreminder command execution', async () => {
+      const interaction = createMockInteraction({ commandName: 'cancelreminder' });
+      interaction.options = {
+        getInteger: jest.fn().mockReturnValue(1), // reminder ID
+      };
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.reply).toHaveBeenCalled();
+    });
+
+    it('should handle cache command with detailed info having entries', async () => {
+      const interaction = createMockInteraction({ commandName: 'cache' });
+      
+      // Mock cache service to return detailed info with entries
+      perplexityService.getCacheStats.mockReturnValue({
+        hitRate: 85,
+        hits: 170,
+        misses: 30,
+        sets: 100,
+        deletes: 20,
+        evictions: 10,
+        memoryUsageFormatted: '75MB',
+        maxMemoryFormatted: '100MB',
+        entryCount: 50,
+        maxSize: 100,
+        evictionStrategy: 'LRU',
+        uptimeFormatted: '3h 45m',
+      });
+      
+      perplexityService.getDetailedCacheInfo.mockReturnValue({
+        entries: [
+          { key: 'entry1' },
+          { key: 'entry2' },
+          { key: 'entry3' },
+        ],
+      });
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        embeds: [expect.objectContaining({
+          fields: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'Recent Entries',
+              value: expect.stringContaining('entry1'),
+            }),
+          ]),
+        })],
+      });
+    });
   });
 });
