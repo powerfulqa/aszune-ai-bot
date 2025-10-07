@@ -45,19 +45,29 @@ jest.mock('../../src/utils/error-handler', () => ({
 
 const mockEmojiManager = {
   addEmojis: jest.fn(),
+  addEmojisToResponse: jest.fn().mockImplementation((text) => text),
+  addReactionsToMessage: jest.fn().mockResolvedValue(),
 };
 jest.mock('../../src/utils/emoji', () => mockEmojiManager);
 
 const mockMessageFormatter = {
   createCompactEmbed: jest.fn(),
   formatMessage: jest.fn(),
-  formatResponse: jest.fn(),
+  formatResponse: jest.fn().mockImplementation((text) => text),
 };
 jest.mock('../../src/utils/message-formatter', () => mockMessageFormatter);
 
 const mockChunkMessage = jest.fn();
 jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: mockChunkMessage,
+  formatTablesForDiscord: jest.fn().mockImplementation((text) => text),
+}));
+
+jest.mock('../../src/utils/logger', () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 }));
 
 const mockConfig = {
@@ -73,29 +83,42 @@ const mockConfig = {
   },
 };
 jest.mock('../../src/config/config', () => mockConfig);
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
 
 describe('Chat Service - Message Validation Branch Coverage', () => {
   let chatService;
+  let handleChatMessage;
   let mockMessage;
 
   beforeEach(() => {
     jest.clearAllMocks();
     chatService = require('../../src/services/chat');
+    handleChatMessage = chatService.handleChatMessage || chatService.default || chatService;
 
     mockMessage = {
       author: {
-        id: '123456789',
+        id: '123456789012345678',
         bot: false,
       },
       content: 'Hello bot!',
       reply: jest.fn().mockResolvedValue(),
       channel: {
         sendTyping: jest.fn().mockResolvedValue(),
+        send: jest.fn().mockResolvedValue(),
       },
     };
 
     // Setup defaults
     mockConversationManager.isRateLimited.mockReturnValue(false);
+    mockConversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
+    mockConversationManager.addMessage.mockImplementation(() => {});
+    mockConversationManager.updateTimestamp.mockImplementation(() => {});
+    mockCommandHandler.handleTextCommand.mockResolvedValue();
     mockCommandHandler.isTextCommand.mockReturnValue(false);
     mockChunkMessage.mockReturnValue(['Response']);
     mockMessageFormatter.createCompactEmbed.mockReturnValue({
@@ -118,7 +141,7 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
     it('should ignore messages from bots', async () => {
       mockMessage.author.bot = true;
 
-      await chatService(mockMessage);
+      await handleChatMessage(mockMessage);
 
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
       expect(mockMessage.reply).not.toHaveBeenCalled();
@@ -126,9 +149,20 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
 
     it('should process messages from real users', async () => {
       mockMessage.author.bot = false;
+      mockMessage.content = 'Hello bot!';
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
 
-      await chatService(mockMessage);
+      // Ensure all validation passes
+      mockConversationManager.isRateLimited.mockReturnValue(false);
+      mockCommandHandler.handleTextCommand.mockResolvedValue();
+      mockInputValidator.validateUserId.mockReturnValue({ valid: true });
+      mockInputValidator.validateAndSanitize.mockReturnValue({
+        valid: true,
+        sanitized: 'Hello bot!',
+        warnings: [],
+      });
+
+      await handleChatMessage(mockMessage);
 
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
     });
@@ -178,9 +212,20 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
 
     it('should process valid non-empty messages', async () => {
       mockMessage.content = 'Valid message';
+      mockMessage.author.bot = false;
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
 
-      await chatService(mockMessage);
+      // Ensure all validation passes
+      mockConversationManager.isRateLimited.mockReturnValue(false);
+      mockCommandHandler.handleTextCommand.mockResolvedValue();
+      mockInputValidator.validateUserId.mockReturnValue({ valid: true });
+      mockInputValidator.validateAndSanitize.mockReturnValue({
+        valid: true,
+        sanitized: 'Valid message',
+        warnings: [],
+      });
+
+      await handleChatMessage(mockMessage);
 
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
     });
@@ -199,10 +244,21 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
     });
 
     it('should proceed normally when user is not rate limited', async () => {
+      mockMessage.content = 'Hello bot!';
+      mockMessage.author.bot = false;
       mockConversationManager.isRateLimited.mockReturnValue(false);
       mockPerplexityService.generateChatResponse.mockResolvedValue('AI response');
 
-      await chatService(mockMessage);
+      // Ensure all validation passes
+      mockCommandHandler.handleTextCommand.mockResolvedValue();
+      mockInputValidator.validateUserId.mockReturnValue({ valid: true });
+      mockInputValidator.validateAndSanitize.mockReturnValue({
+        valid: true,
+        sanitized: 'Hello bot!',
+        warnings: [],
+      });
+
+      await handleChatMessage(mockMessage);
 
       expect(mockPerplexityService.generateChatResponse).toHaveBeenCalled();
       expect(mockMessage.reply).toHaveBeenCalled();

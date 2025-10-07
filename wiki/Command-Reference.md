@@ -247,7 +247,8 @@ improvements.
 - `!cache`
 - `/cache`
 
-**Description:** Displays comprehensive cache statistics and performance metrics for the bot's caching system, including memory usage, hit rates, and operational statistics.
+**Description:** Displays comprehensive cache statistics and performance metrics for the bot's
+caching system, including memory usage, hit rates, and operational statistics.
 
 **Example:**
 
@@ -272,16 +273,161 @@ improvements.
 - **Integration**: Works with enhanced-cache system and PerplexityService
 
 **Before v1.6.5 (Broken):**
+
 ```
 Memory Usage: undefined / undefined
 Configuration: Strategy: undefined, Uptime: undefined
 ```
 
 **After v1.6.5 (Fixed):**
+
 ```
 Memory Usage: 0 B / 50 MB
 Configuration: Strategy: hybrid, Uptime: 28s
 ```
+
+---
+
+## Reminder Commands
+
+### Set Reminder Command
+
+**Usage:**
+
+- `!remind <time> <message>`
+- `/remind <time> <message>`
+
+**Description:** Sets a reminder for a specific time with a custom message. The bot will ping you
+when the reminder time arrives.
+
+**Parameters:**
+
+- `<time>`: Natural language time expression (e.g., "in 5 minutes", "tomorrow at 3pm", "next
+  friday")
+- `<message>`: The reminder message (optional, defaults to "Reminder!")
+
+**Examples:**
+
+```
+!remind in 5 minutes Check the oven
+/remind tomorrow at 3pm Team meeting
+!remind next friday Release day!
+```
+
+**Output:**
+
+```
+✅ Reminder set for [parsed time] - [message]
+```
+
+**Notes:**
+
+- Supports natural language time parsing (e.g., "in 2 hours", "tomorrow", "next week")
+- Timezone-aware (uses your local timezone)
+- Maximum reminder time: 1 year in the future
+- Minimum reminder time: 1 minute from now
+- Reminders persist across bot restarts
+
+---
+
+### List Reminders Command
+
+**Usage:**
+
+- `!reminders`
+- `/reminders`
+
+**Description:** Lists all your active reminders with their scheduled times and messages.
+
+**Example:**
+
+```
+!reminders
+```
+
+**Output:**
+
+```
+Your active reminders:
+• Tomorrow at 15:00 - Team meeting
+• Friday at 18:00 - Release day!
+• In 2 hours - Check the oven
+```
+
+**Notes:**
+
+- Shows reminders in chronological order
+- Displays relative time (e.g., "In 2 hours") and absolute time
+- Only shows your own reminders
+
+---
+
+### Cancel Reminder Command
+
+**Usage:**
+
+- `!cancelreminder <index>`
+- `/cancelreminder <index>`
+
+**Description:** Cancels a specific reminder by its index number from the reminders list.
+
+**Parameters:**
+
+- `<index>`: The number of the reminder to cancel (from `!reminders` list)
+
+**Example:**
+
+```
+!reminders
+Your active reminders:
+• 1. Tomorrow at 15:00 - Team meeting
+• 2. Friday at 18:00 - Release day!
+
+!cancelreminder 1
+```
+
+**Output:**
+
+```
+✅ Reminder cancelled: Team meeting
+```
+
+**Notes:**
+
+- Use `!reminders` first to see the index numbers
+- Only you can cancel your own reminders
+- Cancelled reminders are permanently removed
+
+---
+
+## Natural Language Reminders
+
+The bot can also detect and set reminders from natural conversation. Simply mention wanting to be
+reminded about something, and the bot will automatically research the information and set
+appropriate reminders.
+
+**Examples:**
+
+```
+"Remind me when Grim Dawn 2 comes out"
+"Set a reminder for when Cyberpunk 2077's Phantom Liberty releases"
+"Can you remind me about the next Elder Scrolls game?"
+```
+
+**How it works:**
+
+1. **Detection**: Bot recognizes reminder requests in natural language
+2. **Research**: Uses AI to look up event information and find relevant dates
+3. **Extraction**: Parses dates from the research results
+4. **Setting**: Automatically creates reminders for found dates
+5. **Confirmation**: Confirms the reminder was set with the event details
+
+**Notes:**
+
+- Works with game releases, events, and other time-sensitive topics
+- Automatically handles multiple dates if found
+- Falls back to regular chat if no reminder intent is detected
+- All the same time limits and persistence as explicit reminder commands
 
 ## Chatting with the Bot
 
@@ -351,6 +497,19 @@ from the same user. If you send messages too quickly, the bot will remind you to
 responding further.
 
 ## Version Updates
+
+### v1.7.0 - Reminder System & Natural Language Processing
+
+- **Reminder Commands**: Complete reminder system with `!remind`, `!reminders`, and
+  `!cancelreminder`
+- **Natural Language Reminders**: AI-powered reminder detection in conversations
+- **Time Parsing**: Advanced chrono-node integration for natural language time expressions
+- **Database Integration**: SQLite-based reminder persistence with automatic table creation
+- **Timezone Support**: User-aware timezone handling for accurate scheduling
+- **Smart Research**: Automatic information lookup for event-based reminders
+- **Date Extraction**: Intelligent parsing of dates from AI research responses
+- **Reminder Notifications**: Discord ping notifications when reminders trigger
+- **Comprehensive Testing**: Full test coverage for reminder functionality
 
 ### v1.6.0 - Analytics Integration (Current)
 

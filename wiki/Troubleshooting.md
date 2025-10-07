@@ -283,25 +283,30 @@ pm2 list  # Verify version shows 1.6.3
 - Cache statistics displaying "undefined" instead of actual values
 - Discord embed fields showing blank or undefined values
 
-**Cause:** Missing method implementations in CacheManager service and incorrect property references in PerplexityService
+**Cause:** Missing method implementations in CacheManager service and incorrect property references
+in PerplexityService
 
 **Resolution History:**
 
-- **Pre-v1.6.5**: CacheManager lacked proper `getStats()`, `getDetailedInfo()`, `invalidateByTag()` methods
+- **Pre-v1.6.5**: CacheManager lacked proper `getStats()`, `getDetailedInfo()`, `invalidateByTag()`
+  methods
 - **Property Issue**: PerplexityService used `this.cache` instead of `this.cacheManager`
 - ✅ **v1.6.5**: Complete architectural fix with proper method delegation
 
-**Current Status:** ✅ **Fixed in v1.6.5**: Cache command displays proper values with comprehensive fallback handling
+**Current Status:** ✅ **Fixed in v1.6.5**: Cache command displays proper values with comprehensive
+fallback handling
 
 **Before Fix (Broken):**
+
 ```
 Memory Usage: undefined / undefined
 Configuration: Strategy: undefined, Uptime: undefined
 ```
 
 **After Fix (Working):**
+
 ```
-Memory Usage: 0 B / 50 MB  
+Memory Usage: 0 B / 50 MB
 Configuration: Strategy: hybrid, Uptime: 28s
 Hit Rate: 85% | Hits: 142 | Misses: 26
 ```
@@ -324,7 +329,8 @@ pm2 list  # Verify version shows 1.6.5
 ```
 
 **Technical Details:**
+
 - **Service Architecture**: Enhanced CacheManager with complete method implementation
-- **Error Handling**: Comprehensive fallback mechanisms with proper default values  
+- **Error Handling**: Comprehensive fallback mechanisms with proper default values
 - **Test Coverage**: All cache scenarios covered with 6-test suite preventing future regressions
 - **Field Validation**: All Discord embed fields guaranteed to display proper values

@@ -19,6 +19,12 @@
 - [Performance Monitoring](Usage-Guide#using-analytics-features)
 - [v1.6.0 Release Notes](../docs/RELEASE-NOTES-v1.6.0.md)
 
+### Reminder Features (NEW)
+
+- [Reminder Commands Guide](Command-Reference#reminder-commands)
+- [Natural Language Reminders](Usage-Guide#using-reminder-features)
+- [Reminder Management](Usage-Guide#managing-reminders)
+
 ### Code Quality
 
 - [qlty Integration Guide](../docs/QLTY_INTEGRATION.md)

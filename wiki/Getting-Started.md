@@ -49,7 +49,22 @@ Follow these steps to set up the Aszune AI Bot:
 
    Replace the placeholder values with your actual tokens and keys.
 
-4. **Configure Discord Bot Intents** (Required for Analytics)
+4. **Database Setup (Automatic)**
+
+   The bot automatically handles database setup:
+   - **SQLite database** is created automatically on first run
+   - **Default location**: `./data/bot.db` (directory created if needed)
+   - **No manual setup required** - everything is handled automatically
+   - **Conversation history** and **user statistics** are stored persistently
+
+   Optional database configuration:
+
+   ```env
+   # Optional: Custom database path (defaults to ./data/bot.db)
+   DB_PATH=./custom/path/bot.db
+   ```
+
+5. **Configure Discord Bot Intents** (Required for Analytics)
    - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
    - Select your application
    - Go to "Bot" section
@@ -58,7 +73,7 @@ Follow these steps to set up the Aszune AI Bot:
      - **Presence Intent** (required for accurate online status detection)
    - Save changes
 
-5. **Invite the bot to your server**
+6. **Invite the bot to your server**
    - In the same Discord Developer Portal application
    - Go to OAuth2 > URL Generator
    - Select the following scopes:
@@ -73,7 +88,7 @@ Follow these steps to set up the Aszune AI Bot:
      - **View Server Members** (required for `/analytics` and `/dashboard` real member counts)
    - Use the generated URL to invite the bot to your server
 
-6. **Run the bot**
+7. **Run the bot**
 
    You can run the bot using one of the following methods:
 

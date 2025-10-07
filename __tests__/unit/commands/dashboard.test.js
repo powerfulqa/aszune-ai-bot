@@ -110,8 +110,8 @@ describe('Dashboard Command', () => {
                 inline: true,
               }),
               expect.objectContaining({
-                name: expect.stringContaining('Performance'),
-                value: expect.stringContaining('1.2s'),
+                name: expect.stringContaining('Performance (24h)'),
+                value: expect.stringContaining('Response Time:'),
                 inline: true,
               }),
               expect.objectContaining({
@@ -121,7 +121,9 @@ describe('Dashboard Command', () => {
               }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard'),
+              text: expect.stringContaining(
+                'Aszai Bot Dashboard • Database-powered • Real-time data'
+              ),
             }),
             timestamp: expect.any(String),
           }),
@@ -182,8 +184,8 @@ describe('Dashboard Command', () => {
                 inline: true,
               }),
               expect.objectContaining({
-                name: expect.stringContaining('Performance'),
-                value: expect.stringContaining('5.7s'),
+                name: expect.stringContaining('Performance (24h)'),
+                value: expect.stringContaining('Response Time: 0ms'),
                 inline: true,
               }),
               expect.objectContaining({
@@ -198,7 +200,9 @@ describe('Dashboard Command', () => {
               }),
             ]),
             footer: expect.objectContaining({
-              text: expect.stringContaining('Aszai Bot Dashboard'),
+              text: expect.stringContaining(
+                'Aszai Bot Dashboard • Database-powered • Real-time data'
+              ),
             }),
             timestamp: expect.any(String),
           }),

@@ -35,50 +35,13 @@ src/
   (`/analytics`, `/dashboard`, `/resources`)
 - **Performance Monitoring**: Real-time system metrics and optimization recommendations
 - **License Validation System**: Built-in proprietary license validation with automated enforcement
-  and reporting (feature-flagged for safe deployment)
-- **License Server**: Express.js-based licensing management system with web dashboard and violation
-  tracking (feature-flagged for safe deployment)
-- **Feature Flag System**: Safe deployment pattern for license functionality and gradual rolloutor
-  Aszune AI Bot
-
-## 🎯 Project Overview
-
-This is the Aszune AI Bot codebase - a Discord bot with AI capabilities and comprehensive analytics
-integration that follows strict quality standards using qlty tooling. The project includes analytics
-features (internally referenced as Phase B+C) accessible through Discord commands (`/analytics`,
-`/dashboard`, `/resources`). When working on this codebase, please follow these comprehensive
-guidelines for architecture patterns, testing approaches, and best practices.
-
-## 📁 Architecture & Structure
-
-### Core Structure
-
-```
-src/
-├── commands/          # Command handlers (slash + text commands)
-├── config/           # Configuration management
-├── services/         # External API clients and services
-└── utils/            # Utility functions and helpers
-    ├── message-chunking/  # Advanced message splitting
-    └── [various utilities]
-```
-
-### Key Components
-
-- **Discord Interface**: Handles Discord API interactions
-- **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
-- **Perplexity API Client**: Manages AI API communication with secure caching
-- **Conversation Manager**: Class-based conversation tracking
-- **Error Handler**: Comprehensive error handling system
-- **Message Chunker**: Intelligent message splitting with boundary detection
-- **Input Validator**: Content sanitization and validation
-- **Analytics System**: Discord analytics, performance dashboard, and resource monitoring
-  (`/analytics`, `/dashboard`, `/resources`)
-- **Performance Monitoring**: Real-time system metrics and optimization recommendations
-- **License Validation System**: Built-in proprietary license validation with automated enforcement
   and reporting (feature-flagged)
 - **License Server**: Express.js-based licensing management system with web dashboard and violation
   tracking (feature-flagged)
+- **Database Service**: SQLite integration for persistent conversation history and user analytics
+  (`src/services/database.js`) with automatic table creation and graceful fallback
+- **Reminder System**: AI-powered reminder scheduling with natural language processing (`!remind`,
+  `!reminders`, `!cancelreminder`) and conversational reminder detection
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -155,6 +118,42 @@ or Discord will show "undefined":
 - Operations: `sets`, `deletes`, `evictions`
 - Memory: `memoryUsageFormatted`, `maxMemoryFormatted`, `entryCount`, `maxSize`
 - Configuration: `evictionStrategy`, `uptimeFormatted`
+
+**Database Service Architecture (CRITICAL - v1.7.0 Integration):**
+
+- **Graceful Fallback**: DatabaseService MUST provide mock implementations when SQLite unavailable
+- **Error Handling**: Database errors should be logged and NOT cause conversation flow to fail
+- **Method Contracts**: All database methods return expected data structures or defaults
+- **Resource Management**: Single database connection per service instance with proper cleanup
+
+```javascript
+// ✅ CORRECT - Proper database service integration
+try {
+  databaseService.addUserMessage(userId, messageContent);
+  databaseService.updateUserStats(userId, {
+    message_count: 1,
+    last_active: new Date().toISOString(),
+  });
+} catch (dbError) {
+  logger.warn('Database operation failed:', dbError.message);
+  // CRITICAL: Continue processing even if database fails
+}
+
+// ✅ CORRECT - Database service mock for tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
+
+// ❌ WRONG - Breaking conversation flow on database errors
+try {
+  databaseService.addUserMessage(userId, messageContent);
+} catch (dbError) {
+  throw dbError; // This breaks the entire conversation!
+}
+```
 
 **Module Export Contracts:**
 
@@ -271,6 +270,44 @@ await expect(service.method()).rejects.toThrow('Expected error message');
 // ❌ WRONG - Test for returned error strings
 const result = await service.method();
 expect(result).toContain('error message');
+```
+
+### Database Service Testing (v1.7.0)
+
+```javascript
+// ✅ CORRECT - Database service testing with actual SQLite
+const { DatabaseService } = require('../../../src/services/database');
+
+describe('DatabaseService', () => {
+  let dbService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Clean up any existing test database
+    if (fs.existsSync(testDbPath)) {
+      fs.unlinkSync(testDbPath);
+    }
+    dbService = new DatabaseService();
+  });
+
+  afterEach(() => {
+    if (dbService.db && !dbService.isDisabled) {
+      try {
+        dbService.close();
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }
+  });
+});
+
+// ✅ CORRECT - Database mock for chat service tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
 ```
 
 ## 🛡️ Security & Quality Requirements (qlty Standards)
@@ -496,6 +533,46 @@ afterEach(() => {
 });
 ```
 
+### 4b. Test Fixing Patterns (v1.7.0 Lessons)
+
+**Mock Completeness Issues**: When tests fail with "method not called", check for missing mocks:
+
+```javascript
+// ❌ COMMON MISTAKE - Incomplete service mocks
+const mockEmojiManager = {
+  addEmojis: jest.fn(), // Only partial implementation
+};
+
+// ✅ CORRECT - Complete service mocks matching actual usage
+const mockEmojiManager = {
+  addEmojis: jest.fn(),
+  addEmojisToResponse: jest.fn().mockImplementation((text) => text),
+  addReactionsToMessage: jest.fn().mockResolvedValue(),
+};
+```
+
+**Service Method Alignment**: Ensure mocks match actual service calls:
+
+```javascript
+// ❌ WRONG - Mock doesn't match actual service usage
+mockMessageFormatter.createCompactEmbed.mockReturnValue({});
+
+// ✅ CORRECT - Mock includes all methods actually called
+mockMessageFormatter.formatResponse.mockImplementation((text) => text);
+```
+
+**Database Mock Strategy**: Always mock database service for non-database tests:
+
+```javascript
+// ✅ REQUIRED - Database service mock for chat tests
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  getUserMessages: jest.fn().mockReturnValue([]),
+  addBotResponse: jest.fn(),
+}));
+```
+
 ### 5. Service Component Architecture (DO NOT MODIFY)
 
 **PerplexityService uses component-based architecture:**
@@ -660,164 +737,60 @@ DEFAULT_MODEL: 'llama-3.1-sonar-large-128k-online', // Never worked
 - Monitor Perplexity documentation for model changes
 - Always provide fallback error handling for API model issues
 
-## 📋 Pre-Commit Checklist
+### 9. Database Service Integration (CRITICAL - v1.7.0)
 
-Before committing changes, ensure:
-
-- [ ] All tests pass (`npm test`)
-- [ ] qlty quality checks pass (`npm run quality:check`)
-- [ ] No security issues (`npm run security:all`)
-- [ ] Code complexity within limits (file ≤15, function ≤10)
-- [ ] No code duplication introduced
-- [ ] Error handling follows contracts (throw, don't return)
-- [ ] Module exports maintain backward compatibility
-- [ ] Error messages sent as embeds, not plain text
-- [ ] No circular dependencies
-- [ ] Proper test cleanup implemented
-- [ ] No secrets committed (gitleaks verified)
-
-## 🎯 Key Files to Understand
-
-### Critical Files
-
-- `src/services/perplexity-secure.js` - Main AI service
-- `src/services/chat.js` - Chat message handling
-- `src/commands/index.js` - Command processing with analytics integration
-- `src/utils/error-handler.js` - Error handling system
-- `src/config/config.js` - Configuration management
-- `src/utils/license-validator.js` - License validation with enforcement
-- `src/utils/license-server.js` - License management server
-
-### Important Test Files
-
-- `__tests__/unit/services/perplexity-secure-*.test.js` - Service tests
-- `__tests__/unit/chat-service-advanced.test.js` - Chat service tests
-- `__tests__/integration/error.test.js` - Error handling tests
-
-## 🔥 DANGER ZONES - READ BEFORE CODING
-
-### Test Environment Gotchas
-
-1. **process.exit() Mocking**: Tests mock process.exit - don't assume it works normally
-2. **Lazy Loading**: Services use lazy loading patterns - don't break them
-3. **File Permissions**: Uses specific file permissions (0o644 files, 0o755 dirs) - don't remove
-4. **Pi Optimizations**: Code has Raspberry Pi detection - don't break config.PI_OPTIMIZATIONS
-
-### Service Integration Points
+**DANGER**: Database errors must NEVER break conversation flow!
 
 ```javascript
-// CRITICAL: Services are integrated, don't create standalone calls
-const response = await perplexityService.generateChatResponse(history); // ✅
-const response = await directApiCall(history); // ❌ Bypasses caching/throttling
+// ✅ CORRECT - Database errors don't break conversations
+try {
+  databaseService.addUserMessage(userId, messageContent);
+  databaseService.updateUserStats(userId, {
+    message_count: 1,
+    last_active: new Date().toISOString(),
+  });
+} catch (dbError) {
+  logger.warn('Database operation failed:', dbError.message);
+  // CRITICAL: Continue processing even if database fails
+}
+
+// ❌ DEADLY MISTAKE - Breaking conversation flow on database errors
+try {
+  databaseService.addUserMessage(userId, messageContent);
+} catch (dbError) {
+  throw dbError; // This breaks the entire conversation!
+}
 ```
 
-### Discord API Critical Warnings (v1.6.1 Lessons)
+**Database Service Requirements:**
 
-1. **Member Fetching Can Hang**: Always use Promise.race() with timeouts
-2. **Large Server Performance**: guild.members.fetch() without limits will timeout
-3. **Permission Dependencies**: Analytics requires "Server Members Intent" enabled
-4. **Fallback Requirements**: Always provide realistic estimates when Discord API fails
-5. **Member Cache Behavior**: Don't assume member cache is populated immediately
+- **Graceful Fallback**: Must provide mock implementations when SQLite unavailable
+- **Error Isolation**: Database errors logged but don't propagate to conversation flow
+- **Single Connection**: One database connection per service instance
+- **Proper Cleanup**: Always close connections in afterEach for tests
+- **Mock All Methods**: Non-database tests must mock all DatabaseService methods
+- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint
+  violations
+- **Role-Based Storage**: conversation_history table requires proper role separation
+  (user/assistant)
+- **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
 
-## ⚡ Development Commands
+**Database Schema Design (Production Ready - v1.7.0):**
 
-### Testing
+```javascript
+// ✅ CORRECT - Proper conversation history usage
+const history = databaseService.getConversationHistory(userId, 10);
+// Returns: [{role: 'user', message: '...', timestamp: '...'}, {role: 'assistant', ...}]
 
-```bash
-npm test                                    # Run all 536+ tests
-npm run test:coverage                      # Must maintain 82%+ coverage
-npm test __tests__/unit/specific-test.test.js # Run specific test
+// ✅ CORRECT - Automatic user management
+databaseService.addUserMessage(userId, message); // Calls ensureUserExists() internally
+databaseService.addBotResponse(userId, response); // Handles foreign keys automatically
+
+// ✅ CORRECT - Dual storage for backward compatibility
+// Both user_messages (legacy) and conversation_history (enhanced) tables are populated
+
+// ❌ WRONG - Direct conversation_history inserts without user existence check
+db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on foreign key constraint
 ```
 
-### Quality & Security
-
-```bash
-npm run quality:check      # Quality sample analysis
-npm run quality:fix        # Auto-fix issues
-npm run security:all       # Complete security audit
-npm run lint              # ESLint check
-npm run format            # Prettier format
-```
-
-## 🎯 Success Metrics
-
-A successful implementation should achieve:
-
-- ✅ All 991+ tests passing (current standard)
-- ✅ 82%+ code coverage maintained
-- ✅ qlty quality checks passing
-- ✅ No security vulnerabilities
-- ✅ Code complexity within limits
-- ✅ No code duplication
-- ✅ No secrets in code
-- ✅ No circular dependencies
-- ✅ Proper error handling contracts
-- ✅ Backward compatibility maintained
-- ✅ Analytics commands functional (`/analytics`, `/dashboard`, `/resources`)
-- ✅ Analytics integration complete with real Discord API data (v1.6.1)
-- ✅ Discord API timeout protection implemented (Promise.race patterns)
-- ✅ Member presence filtering working (online/idle/dnd detection)
-- ✅ Feature flag system implemented (license features safely disabled by default)
-- ✅ Safe config access patterns followed (no module-level feature flag access)
-- ✅ Graceful feature flag fallbacks (handles missing FEATURES property)
-
-## 📚 Additional Resources
-
-### Quality Documentation
-
-- `docs/QLTY_INTEGRATION.md` - qlty usage guide
-- `docs/QLTY_IMPLEMENTATION_SUMMARY.md` - Implementation overview
-- `SECURITY.md` - Security policy
-- `CONTRIBUTING.md` - Contribution guidelines
-- `CODE_OF_CONDUCT.md` - Community guidelines
-
-### Configuration Files
-
-- `.qlty/qlty.toml` - Main qlty configuration
-- `.qlty/configs/` - Tool-specific configurations
-
----
-
-## 🎯 CRITICAL SUCCESS FACTORS
-
-**This codebase has 991+ tests and strict contracts. Breaking any of these will cause cascading
-failures:**
-
-### Absolutely Required:
-
-1. **Error Handling Contract**: Services THROW errors, tests expect .rejects.toThrow()
-2. **Module Exports**: Must maintain all three export patterns for backward compatibility
-3. **Config Access**: NEVER at module level - always inside functions
-4. **Embed Responses**: All user errors as embeds with exact ErrorHandler messages
-5. **Test Assertions**: Use exact values, never expect.objectContaining() or
-   expect.stringContaining()
-6. **Service Architecture**: Don't bypass ApiClient, CacheManager, ResponseProcessor,
-   ThrottlingService
-7. **Discord API Timeout Protection**: Always use Promise.race() with 5-second timeouts (v1.6.1)
-8. **Analytics Fallbacks**: Provide realistic estimates when Discord API unavailable
-
-### Common Breaking Changes to AVOID:
-
-- Returning error strings instead of throwing
-- Module-level config access
-- Plain text error responses
-- Using test matchers instead of exact values
-- Modifying service component architecture
-- Breaking module export patterns
-- Direct Discord API calls without timeout protection (v1.6.1)
-- Analytics without fallback estimates for Discord API failures
-- Using deprecated Perplexity model names (v1.6.3)
-
-**WARNING**: This codebase has been debugged extensively. These patterns exist because alternatives
-failed. Follow them exactly or expect test failures and runtime errors.
-
-**v1.6.1 Discord API Lessons**: The analytics integration revealed critical Discord API behaviors -
-member fetching can hang in large servers, requiring Promise.race() timeout patterns and intelligent
-fallbacks. These patterns are now mandatory for any Discord API interactions.
-
-**v1.6.3 Perplexity API Lessons**: Perplexity frequently changes model names without warning,
-requiring proactive monitoring and quick fixes. The summarise command (`!summerise`, `!summarise`)
-is particularly sensitive to these changes.
-
-**Remember**: 991+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
-follow existing patterns exactly.
+**Remember**: 1000+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,

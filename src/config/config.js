@@ -46,10 +46,16 @@ const config = {
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
 
+  // Database Configuration
+  DB_PATH: process.env.DB_PATH || './data/bot.db',
+
   // Bot Configuration
   MAX_HISTORY: 20,
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
   CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
+
+  // Database Configuration - should match runtime limits
+  DATABASE_CONVERSATION_LIMIT: 20, // Match MAX_HISTORY for backup consistency
 
   // Message and UI Limits
   MESSAGE_LIMITS: {

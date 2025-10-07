@@ -85,6 +85,35 @@ const ConversationManager = require('./utils/conversation');
 const conversationManager = new ConversationManager();
 conversationManager.initializeIntervals();
 
+// Initialize reminder service
+const reminderService = require('./services/reminder-service');
+
+// Set up reminder due handler
+reminderService.on('reminderDue', async (reminder) => {
+  try {
+    // Send the reminder message to the channel
+    const channel = await client.channels.fetch(reminder.channel_id);
+    if (channel) {
+      const embed = {
+        color: 0x00ff00,
+        title: '⏰ Reminder!',
+        description: reminder.message,
+        footer: {
+          text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot`,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      await channel.send({ embeds: [embed] });
+      logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
+    } else {
+      logger.error(`Could not find channel ${reminder.channel_id} for reminder ${reminder.id}`);
+    }
+  } catch (error) {
+    logger.error(`Failed to handle reminder due for ${reminder.id}:`, error);
+  }
+});
+
 // Conditionally load optimizations - don't load in test environment for easier testing
 const isProd = process.env.NODE_ENV === 'production';
 const enablePiOptimizations = config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED;
@@ -143,6 +172,18 @@ async function registerSlashCommands() {
 client.once('ready', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
 
+  // Log bot startup event
+  const databaseService = require('./services/database');
+  databaseService.logBotEvent('start', 0, 'Bot started successfully');
+
+  // Initialize reminder service
+  try {
+    await reminderService.initialize();
+    logger.info('Reminder service initialized');
+  } catch (error) {
+    logger.error('Failed to initialize reminder service:', error);
+  }
+
   // Initialize Pi optimizations after connection is established
   await bootWithOptimizations();
   await registerSlashCommands();
@@ -181,6 +222,11 @@ const shutdown = async (signal) => {
   isShuttingDown = true;
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
+  // Log bot shutdown event
+  const databaseService = require('./services/database');
+  const uptimeSeconds = Math.floor(process.uptime());
+  databaseService.logBotEvent('stop', uptimeSeconds, `Shutdown initiated by ${signal}`);
+
   // Perform shutdown steps and collect errors
   const errors = await performShutdownSteps();
 
@@ -191,15 +237,31 @@ const shutdown = async (signal) => {
 async function performShutdownSteps() {
   const errors = [];
 
-  // Step 1: Shutdown conversation manager
+  // Step 1: Shutdown reminder service
+  const reminderError = await shutdownReminderService();
+  if (reminderError) errors.push(reminderError);
+
+  // Step 2: Shutdown conversation manager
   const convError = await shutdownConversationManager();
   if (convError) errors.push(convError);
 
-  // Step 2: Shutdown Discord client (always attempt, even if previous steps failed)
+  // Step 3: Shutdown Discord client (always attempt, even if previous steps failed)
   const clientError = await shutdownDiscordClient();
   if (clientError) errors.push(clientError);
 
   return errors;
+}
+
+async function shutdownReminderService() {
+  try {
+    logger.debug('Shutting down reminder service...');
+    reminderService.shutdown();
+    logger.debug('Reminder service shutdown successful');
+    return null;
+  } catch (reminderError) {
+    logger.error('Error shutting down reminder service:', reminderError);
+    return reminderError;
+  }
 }
 
 async function shutdownConversationManager() {

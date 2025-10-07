@@ -55,6 +55,14 @@ Aszune AI Bot can be interacted with in two ways:
 | `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
 | `!resources` / `/resources` | View resource optimization status and recommendations           |
 
+### Reminder Commands (NEW)
+
+| Command                     | Description                                            |
+| --------------------------- | ------------------------------------------------------ |
+| `!remind <time> <message>`  | Set a reminder for a specific time with custom message |
+| `!reminders` / `/reminders` | List all your active reminders                         |
+| `!cancelreminder <index>`   | Cancel a specific reminder by index number             |
+
 ## Asking Questions
 
 To ask the bot a question about gaming lore, game logic, guides, or advice:
@@ -211,6 +219,66 @@ This provides:
 - Performance status
 - Optimization recommendations
 - System health warnings
+
+## Using Reminder Features
+
+### Setting Reminders
+
+You can set reminders in two ways:
+
+#### Explicit Commands
+
+Use the `!remind` command with natural language time expressions:
+
+```text
+!remind in 5 minutes Check the oven
+!remind tomorrow at 3pm Team meeting
+!remind next friday Release day!
+```
+
+#### Natural Language
+
+Simply chat with the bot about wanting to be reminded about something:
+
+```text
+"Remind me when Grim Dawn 2 comes out"
+"Can you remind me about the next Elder Scrolls game?"
+"Set a reminder for when Cyberpunk 2077's Phantom Liberty releases"
+```
+
+The bot will automatically research the information, find relevant dates, and set reminders for you.
+
+### Managing Reminders
+
+#### Viewing Your Reminders
+
+```text
+!reminders
+```
+
+This shows all your active reminders in chronological order.
+
+#### Cancelling Reminders
+
+```text
+!reminders  # First see the list with index numbers
+!cancelreminder 1  # Cancel the first reminder
+```
+
+### Reminder Features
+
+- **Natural Language Time**: Supports expressions like "in 2 hours", "tomorrow", "next week"
+- **Timezone Aware**: Uses your local timezone for scheduling
+- **Persistent**: Reminders survive bot restarts
+- **Smart Research**: Bot looks up event information automatically
+- **Multiple Dates**: Can set reminders for multiple dates found in research
+- **User Notifications**: Bot will ping you when reminders trigger
+
+### Time Limits
+
+- **Minimum**: 1 minute from now
+- **Maximum**: 1 year in the future
+- **Precision**: Supports minutes, hours, days, weeks, months, years
 
 ## Emoji Reactions
 

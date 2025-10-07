@@ -110,8 +110,8 @@ describe('Resources Command', () => {
               inline: true,
             },
             {
-              name: '📈 Optimization Tier',
-              value: 'Current: Standard\nServer Count: 5\nRecommended: Auto-scaling active',
+              name: '📈 Database Metrics (24h)',
+              value: 'Avg Memory: 0MB\nPerformance Ops: 0\nOptimization: Active',
               inline: true,
             },
             {
@@ -120,7 +120,7 @@ describe('Resources Command', () => {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: { text: 'Aszai Bot Resource Monitor • Database-powered' },
           timestamp: expect.any(String),
         },
       ],
@@ -181,8 +181,8 @@ describe('Resources Command', () => {
               inline: true,
             },
             {
-              name: '📈 Optimization Tier',
-              value: 'Current: High\nServer Count: 5\nRecommended: Auto-scaling active',
+              name: '📈 Database Metrics (24h)',
+              value: 'Avg Memory: 0MB\nPerformance Ops: 0\nOptimization: Active',
               inline: true,
             },
             {
@@ -192,7 +192,7 @@ describe('Resources Command', () => {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: { text: 'Aszai Bot Resource Monitor • Database-powered' },
           timestamp: expect.any(String),
         },
       ],

@@ -536,7 +536,126 @@ class PerplexityService {
     return errorResponse.message;
   }
 
+  /**
+   * Track performance metrics for API operations
+   * @param {string} metricName - Name of the metric
+   * @param {number} value - Metric value
+   * @param {Object} metadata - Additional metadata
+   */
+  async _trackApiPerformance(metricName, value, metadata = {}) {
+    try {
+      const databaseService = require('../services/database');
+      await databaseService.logPerformanceMetric(metricName, value, metadata);
+    } catch (metricError) {
+      logger.warn(`Failed to log API metric ${metricName}: ${metricError.message}`);
+    }
+  }
+
+  /**
+   * Track cache hit performance
+   * @param {number} responseTime - Time taken for cache hit
+   * @param {number} memoryDelta - Memory usage change
+   * @param {number} historyLength - Length of conversation history
+   * @param {boolean} cacheEnabled - Whether caching was enabled
+   */
+  async _trackCacheHitPerformance(responseTime, memoryDelta, historyLength, cacheEnabled) {
+    await this._trackApiPerformance('api_cache_hit_time', responseTime, {
+      historyLength,
+      cacheEnabled,
+      operation: 'cache_hit',
+    });
+
+    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
+      operation: 'cache_hit',
+    });
+  }
+
+  /**
+   * Track API call performance
+   * @param {number} totalTime - Total time for API call
+   * @param {number} memoryDelta - Memory usage change
+   * @param {number} finalMemoryUsage - Final memory usage
+   * @param {number} historyLength - Length of conversation history
+   * @param {boolean} cacheEnabled - Whether caching was enabled
+   * @param {number} contentLength - Length of response content
+   */
+  async _trackApiCallPerformance(
+    totalTime,
+    memoryDelta,
+    finalMemoryUsage,
+    historyLength,
+    cacheEnabled,
+    contentLength
+  ) {
+    await this._trackApiPerformance('api_response_time', totalTime, {
+      historyLength,
+      cacheEnabled,
+      cacheHit: false,
+      contentLength,
+      operation: 'api_call',
+    });
+
+    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
+      operation: 'api_call',
+    });
+
+    await this._trackApiPerformance('memory_usage_current', finalMemoryUsage, {
+      operation: 'api_call_end',
+    });
+  }
+
+  /**
+   * Track API error performance
+   * @param {number} errorTime - Time taken before error
+   * @param {number} memoryDelta - Memory usage change
+   * @param {number} historyLength - Length of conversation history
+   * @param {string} errorMessage - Error message
+   */
+  async _trackApiErrorPerformance(errorTime, memoryDelta, historyLength, errorMessage) {
+    await this._trackApiPerformance('api_error_time', errorTime, {
+      historyLength,
+      error: errorMessage,
+      operation: 'api_error',
+    });
+
+    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
+      operation: 'api_error',
+    });
+  }
+
+  /**
+   * Process chat response generation with caching and API calls
+   * @param {Array} history - Conversation history
+   * @param {Object} opts - Standardized options
+   * @param {Object} cacheConfig - Cache configuration
+   * @param {boolean} shouldUseCache - Whether to use cache
+   * @returns {Promise<string>} Generated response content
+   */
+  async _processChatResponse(history, opts, cacheConfig, shouldUseCache) {
+    // Try to get from cache first if enabled
+    if (shouldUseCache) {
+      const cachedContent = await this.cacheManager.tryGetFromCache(history);
+      if (cachedContent) return { content: cachedContent, fromCache: true };
+    }
+
+    // Try to generate new response with retry for rate limits
+    const requestFn = () => this.sendChatRequest(history);
+    const response = await this.responseProcessor.generateResponseWithRetry(requestFn, opts);
+
+    const content = this.responseProcessor.extractResponseContent(response);
+
+    // Save to cache if enabled
+    if (shouldUseCache) {
+      await this.cacheManager.trySaveToCache(history, content, cacheConfig.maxEntries);
+    }
+
+    return { content, fromCache: false };
+  }
+
   async generateChatResponse(history, options = {}) {
+    const startTime = Date.now();
+    const initialMemoryUsage = process.memoryUsage().heapUsed;
+
     // Standardize options
     const opts = this.responseProcessor.standardizeOptions(options);
 
@@ -547,32 +666,64 @@ class PerplexityService {
       // Determine if caching should be used
       const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
 
-      // Try to get from cache first if enabled
-      if (shouldUseCache) {
-        const cachedContent = await this.cacheManager.tryGetFromCache(history);
-        if (cachedContent) return cachedContent;
-      }
+      // Process the chat response
+      const { content, fromCache } = await this._processChatResponse(
+        history,
+        opts,
+        cacheConfig,
+        shouldUseCache
+      );
 
-      // Try to generate new response with retry for rate limits
-      const requestFn = () => this.sendChatRequest(history);
-      const response = await this.responseProcessor.generateResponseWithRetry(requestFn, opts);
+      // Use explicit cache hit flag from _processChatResponse instead
+      if (fromCache) {
+        // Track cache hit performance
+        const cacheResponseTime = Date.now() - startTime;
+        const finalMemoryUsage = process.memoryUsage().heapUsed;
+        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
-      const content = this.responseProcessor.extractResponseContent(response);
+        await this._trackCacheHitPerformance(
+          cacheResponseTime,
+          memoryDelta,
+          history?.length || 0,
+          shouldUseCache
+        );
+      } else {
+        // Track API call performance
+        const totalTime = Date.now() - startTime;
+        const finalMemoryUsage = process.memoryUsage().heapUsed;
+        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
-      // Save to cache if enabled
-      if (shouldUseCache) {
-        await this.cacheManager.trySaveToCache(history, content, cacheConfig.maxEntries);
+        await this._trackApiCallPerformance(
+          totalTime,
+          memoryDelta,
+          finalMemoryUsage,
+          history?.length || 0,
+          shouldUseCache,
+          content?.length || 0
+        );
       }
 
       return content;
     } catch (error) {
+      // Track error performance
+      const errorTime = Date.now() - startTime;
+      const finalMemoryUsage = process.memoryUsage().heapUsed;
+      const memoryDelta = finalMemoryUsage - initialMemoryUsage;
+
+      await this._trackApiErrorPerformance(
+        errorTime,
+        memoryDelta,
+        history?.length || 0,
+        error.message
+      );
+
       const errorResponse = ErrorHandler.handleError(error, 'generate chat response', {
         historyLength: history?.length || 0,
         shouldUseCache: opts.caching !== false,
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
 
-      // Re-throw the error to maintain error handling contract
+      // CRITICAL: Re-throw normalized error after tracking instead of returning error message
       throw error;
     }
   }

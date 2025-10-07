@@ -6,12 +6,13 @@ const perplexityService = require('../services/perplexity-secure');
 const ConversationManager = require('../utils/conversation');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
-const config = require('../config/config');
 const commandHandler = require('../commands');
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage, formatTablesForDiscord } = require('../utils/message-chunking');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
+const databaseService = require('../services/database');
+const naturalLanguageReminderProcessor = require('../utils/natural-language-reminder');
 
 const conversationManager = new ConversationManager();
 
@@ -22,9 +23,12 @@ const conversationManager = new ConversationManager();
  * @returns {Promise<void>}
  */
 async function sendResponse(message, responseText) {
+  // Access config inside function to prevent circular dependencies
+  const config = require('../config/config');
+
   // Maximum length for Discord embeds (reduced to ensure we don't hit limits)
   // Further reduced to prevent truncation issues with source links and URL formatting
-  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS.EMBED_MAX_LENGTH ?? 1900;
+  const MAX_EMBED_LENGTH = config.MESSAGE_LIMITS?.EMBED_MAX_LENGTH ?? 1900;
 
   logger.debug(`Preparing to send response of length: ${responseText.length}`);
 
@@ -61,7 +65,9 @@ async function sendResponse(message, responseText) {
       await message.reply({ embeds: [embed] });
     } else {
       // Small delay between messages for better readability
-      await new Promise((resolve) => setTimeout(resolve, config.MESSAGE_LIMITS.CHUNK_DELAY_MS));
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.MESSAGE_LIMITS?.CHUNK_DELAY_MS || 1000)
+      );
       await message.channel.send({ embeds: [embed] });
     }
   }
@@ -143,11 +149,61 @@ async function handleCommandCheck(message, sanitizedContent) {
 }
 
 /**
+ * Check if message contains a natural language reminder request
+ * @param {string} sanitizedContent - Sanitized message content
+ * @param {string} userId - User ID
+ * @param {string} channelId - Channel ID
+ * @param {string} serverId - Server ID
+ * @returns {Promise<Object|null>} Reminder result or null
+ */
+async function checkForReminderRequest(sanitizedContent, userId, channelId, serverId) {
+  try {
+    // Check if this looks like a reminder request
+    if (!naturalLanguageReminderProcessor.isReminderRequest(sanitizedContent)) {
+      return null;
+    }
+
+    logger.info(`Detected potential reminder request from user ${userId}: "${sanitizedContent}"`);
+
+    // Process the reminder request
+    const reminderData = await naturalLanguageReminderProcessor.processReminderRequest(
+      sanitizedContent,
+      userId,
+      channelId,
+      serverId
+    );
+
+    if (!reminderData.success) {
+      logger.warn(`Failed to process reminder request: ${reminderData.reason}`);
+      return null;
+    }
+
+    // Look up the event and set the reminder
+    const reminderResult =
+      await naturalLanguageReminderProcessor.lookupAndSetReminder(reminderData);
+
+    if (reminderResult.success) {
+      logger.info(`Successfully set reminder for user ${userId} about "${reminderData.event}"`);
+    } else {
+      logger.info(`Could not set reminder for user ${userId}: ${reminderResult.reason}`);
+    }
+
+    return reminderResult;
+  } catch (error) {
+    logger.error('Error checking for reminder request:', error);
+    return null;
+  }
+}
+
+/**
  * Generates and formats bot response
  * @param {string} userId - User ID to get history for
  * @returns {Promise<string>} The formatted response
  */
 async function generateBotResponse(userId) {
+  // Access config inside function to prevent circular dependencies
+  const config = require('../config/config');
+
   const history = conversationManager.getHistory(userId);
   const reply = await perplexityService.generateChatResponse(history);
 
@@ -155,7 +211,7 @@ async function generateBotResponse(userId) {
   const tableFormattedReply = formatTablesForDiscord(reply);
 
   // Add emojis based on reply content (limit number of emojis on Pi)
-  const emojiLimit = config.PI_OPTIMIZATIONS.ENABLED
+  const emojiLimit = config.PI_OPTIMIZATIONS?.ENABLED
     ? config.PI_OPTIMIZATIONS.EMBEDDED_REACTION_LIMIT
     : 10;
   const enhancedReply = emojiManager.addEmojisToResponse(tableFormattedReply, {
@@ -167,11 +223,106 @@ async function generateBotResponse(userId) {
 }
 
 /**
+ * Track performance metrics for chat operations
+ * @param {string} metricName - Name of the metric
+ * @param {number} value - Metric value
+ * @param {Object} metadata - Additional metadata
+ */
+async function trackChatPerformance(metricName, value, metadata = {}) {
+  try {
+    databaseService.logPerformanceMetric(metricName, value, metadata);
+  } catch (metricError) {
+    logger.warn(`Failed to log performance metric ${metricName}:`, metricError.message);
+  }
+}
+
+/**
+ * Process and store user message in database
+ * @param {string} userId - User ID
+ * @param {string} messageContent - Message content
+ */
+async function processUserMessageStorage(userId, messageContent) {
+  if (!userId || !messageContent) return;
+
+  try {
+    databaseService.addUserMessage(userId, messageContent);
+    databaseService.updateUserStats(userId, {
+      message_count: 1,
+      last_active: new Date().toISOString(),
+    });
+  } catch (dbError) {
+    logger.warn('Database operation failed:', dbError.message);
+    // Continue processing even if database fails
+  }
+}
+
+/**
+ * Load conversation history from database if needed
+ * @param {string} userId - User ID
+ * @param {string} messageContent - Current message content
+ * @returns {Array} Conversation history
+ */
+async function loadConversationHistory(userId, messageContent) {
+  let conversationHistory = conversationManager.getHistory(userId);
+
+  // Supplement with database conversation history if conversation is new or short
+  if (conversationHistory.length <= 1 && userId) {
+    try {
+      // Access config inside function to prevent circular dependencies
+      const config = require('../config/config');
+      const dbLimit = config.DATABASE_CONVERSATION_LIMIT || 20;
+
+      const dbConversationHistory = databaseService.getConversationHistory(userId, dbLimit);
+      if (dbConversationHistory && dbConversationHistory.length > 0) {
+        // Add database history to conversation manager for context
+        // Filter out recent identical messages using timestamps to prevent duplication
+        const cutoffTime = new Date(Date.now() - 30000).toISOString(); // 30 seconds ago
+        const historicalMessages = dbConversationHistory.filter(
+          (msg) => msg.message !== messageContent || msg.timestamp < cutoffTime
+        );
+
+        historicalMessages.forEach((msg) => {
+          conversationManager.addMessage(userId, msg.role, msg.message);
+        });
+
+        // Update conversation history after adding database history
+        conversationHistory = conversationManager.getHistory(userId);
+      }
+    } catch (dbError) {
+      logger.warn('Failed to load conversation history from database:', dbError.message);
+      // Continue with in-memory history only
+    }
+  }
+
+  return conversationHistory;
+}
+
+/**
+ * Store bot response in database
+ * @param {string} userId - User ID
+ * @param {string} response - Bot response
+ * @param {number} responseTime - Time taken to generate response
+ */
+async function storeBotResponse(userId, response, responseTime) {
+  if (!userId) return;
+
+  try {
+    databaseService.addBotResponse(userId, response, responseTime);
+  } catch (dbError) {
+    logger.warn('Failed to store bot response in database:', dbError.message);
+    // Continue even if database storage fails
+  }
+}
+
+/**
  * Handle an incoming chat message
  * @param {Object} message - Discord.js message object
  * @returns {Promise<void>}
  */
 async function handleChatMessage(message) {
+  const startTime = Date.now();
+  const initialMemoryUsage = process.memoryUsage().heapUsed;
+
   // Process the incoming message
   const processedData = await processUserMessage(message);
   if (!processedData) return;
@@ -180,35 +331,160 @@ async function handleChatMessage(message) {
   message.channel.sendTyping();
 
   try {
+    const userId = processedData.userId;
+    const messageContent = processedData.sanitizedContent;
+
+    // Store user message and update stats in database
+    await processUserMessageStorage(userId, messageContent);
+
+    // Load conversation history
+    const conversationHistory = await loadConversationHistory(userId, messageContent);
+
+    // Check for natural language reminder requests
+    const reminderResult = await checkForReminderRequest(
+      messageContent,
+      userId,
+      message.channel.id,
+      message.guild?.id || 'DM'
+    );
+
+    // If a reminder was processed, respond with the reminder result
+    if (reminderResult) {
+      await sendReminderResponse(message, reminderResult);
+      return;
+    }
+
     // Generate and format the response
+    const responseStartTime = Date.now();
     const formattedReply = await generateBotResponse(processedData.userId);
+    const responseTime = Date.now() - responseStartTime;
 
     // Add bot's reply to the conversation history
     conversationManager.addMessage(processedData.userId, 'assistant', formattedReply);
+
+    // Store bot response in database
+    await storeBotResponse(userId, formattedReply, responseTime);
 
     // Send the response (handles chunking if needed)
     await sendResponse(message, formattedReply);
 
     // Skip reactions in low CPU mode
-    if (!config.PI_OPTIMIZATIONS.LOW_CPU_MODE) {
+    const config = require('../config/config');
+    if (!config.PI_OPTIMIZATIONS?.LOW_CPU_MODE) {
       await emojiManager.addReactionsToMessage(message);
     }
+
+    // Track performance metrics
+    await trackPerformanceMetrics(
+      startTime,
+      initialMemoryUsage,
+      userId,
+      messageContent,
+      formattedReply,
+      conversationHistory,
+      responseTime
+    );
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'chat generation', {
-      userId: processedData?.userId || 'unknown',
-      messageLength: message.content?.length || 0,
-      sanitizedContent: processedData?.sanitizedContent?.length || 0,
-    });
-
-    // Send user-friendly error message as embed
-    const embed = messageFormatter.createCompactEmbed({
-      color: config.COLORS.PRIMARY,
-      description: errorResponse.message,
-      footer: { text: 'Aszai Bot' },
-    });
-
-    message.reply({ embeds: [embed] });
+    await handleChatError(error, startTime, processedData, message);
   }
 }
 
+/**
+ * Send reminder response to user
+ * @param {Object} message - Discord message object
+ * @param {Object} reminderResult - Result from reminder processing
+ */
+async function sendReminderResponse(message, reminderResult) {
+  const config = require('../config/config');
+  const embed = messageFormatter.createCompactEmbed({
+    color: reminderResult.success ? config.COLORS.SUCCESS : config.COLORS.WARNING,
+    description: reminderResult.response,
+    footer: { text: 'Aszai Bot' },
+  });
+
+  await message.reply({ embeds: [embed] });
+}
+
+/**
+ * Track performance metrics for chat operations
+ * @param {number} startTime - Start time of operation
+ * @param {number} initialMemoryUsage - Initial memory usage
+ * @param {string} userId - User ID
+ * @param {string} messageContent - Message content
+ * @param {string} formattedReply - Bot response
+ * @param {Array} conversationHistory - Conversation history
+ * @param {number} responseTime - Response generation time
+ */
+async function trackPerformanceMetrics(
+  startTime,
+  initialMemoryUsage,
+  userId,
+  messageContent,
+  formattedReply,
+  conversationHistory,
+  responseTime
+) {
+  const totalTime = Date.now() - startTime;
+  const finalMemoryUsage = process.memoryUsage().heapUsed;
+  const memoryDelta = finalMemoryUsage - initialMemoryUsage;
+
+  await trackChatPerformance('chat_response_time', responseTime, {
+    userId,
+    messageLength: messageContent.length,
+    responseLength: formattedReply.length,
+    conversationHistoryLength: conversationHistory.length,
+  });
+
+  await trackChatPerformance('chat_total_time', totalTime, {
+    userId,
+    messageLength: messageContent.length,
+  });
+
+  await trackChatPerformance('memory_usage_delta', memoryDelta, {
+    userId,
+    operation: 'chat_message',
+  });
+
+  await trackChatPerformance('memory_usage_current', finalMemoryUsage, {
+    userId,
+    operation: 'chat_message_end',
+  });
+}
+
+/**
+ * Handle chat processing errors
+ * @param {Error} error - The error that occurred
+ * @param {number} startTime - Start time of operation
+ * @param {Object} processedData - Processed message data
+ * @param {Object} message - Discord message object
+ */
+async function handleChatError(error, startTime, processedData, message) {
+  const totalTime = Date.now() - startTime;
+
+  // Log error performance metrics
+  await trackChatPerformance('chat_error_time', totalTime, {
+    userId: processedData?.userId || 'unknown',
+    error: error.message,
+  });
+
+  const errorResponse = ErrorHandler.handleError(error, 'chat generation', {
+    userId: processedData?.userId || 'unknown',
+    messageLength: message.content?.length || 0,
+    sanitizedContent: processedData?.sanitizedContent?.length || 0,
+  });
+
+  // Send user-friendly error message as embed
+  const config = require('../config/config');
+  const embed = messageFormatter.createCompactEmbed({
+    color: config.COLORS.PRIMARY,
+    description: errorResponse.message,
+    footer: { text: 'Aszai Bot' },
+  });
+
+  await message.reply({ embeds: [embed] });
+}
+
+// CRITICAL: Maintain all export patterns for backward compatibility
 module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;
