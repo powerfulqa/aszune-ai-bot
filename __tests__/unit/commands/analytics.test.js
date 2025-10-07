@@ -35,6 +35,13 @@ jest.mock('../../../src/services/database', () => ({
     { value: 1200, timestamp: new Date().toISOString() },
     { value: 1100, timestamp: new Date().toISOString() },
   ]),
+  getUserReminderCount: jest.fn().mockReturnValue(0),
+  getReminderStats: jest.fn().mockReturnValue({
+    totalReminders: 5,
+    activeReminders: 3,
+    completedReminders: 2,
+    cancelledReminders: 0,
+  }),
 }));
 jest.mock('../../../src/utils/performance-dashboard', () => ({
   generateDashboardReport: jest.fn().mockResolvedValue({
@@ -59,7 +66,7 @@ jest.mock('../../../src/utils/conversation', () => {
   const mockInstance = {
     clearHistory: jest.fn(),
     getHistory: jest.fn().mockReturnValue([]),
-    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
+    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2, reminders: 0 }),
     updateUserStats: jest.fn(),
     addMessage: jest.fn(),
   };
@@ -161,6 +168,11 @@ describe('Analytics Command', () => {
               inline: true,
             },
             {
+              name: '⏰ Reminder System',
+              value: 'Total Reminders: 5\nActive: 3\nCompleted: 2',
+              inline: true,
+            },
+            {
               name: '💡 Server Insights',
               value: '🟢 Currently Online: 3\n📊 Server Health: Excellent\n🤖 Bot Activity: Active',
               inline: false,
@@ -258,7 +270,7 @@ describe('Stats Command', () => {
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.reply).toHaveBeenCalledWith(
-      '**Your Aszai Bot Stats:**\n' + 'Messages sent: 10\n' + 'Summaries requested: 2'
+      '**Your Aszai Bot Stats:**\n' + 'Messages sent: 10\n' + 'Summaries requested: 2\n' + 'Active reminders: 0'
     );
   });
 });

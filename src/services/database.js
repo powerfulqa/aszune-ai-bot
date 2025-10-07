@@ -1030,6 +1030,101 @@ class DatabaseService {
     }
   }
 
+  /**
+   * Get reminder count for a specific user
+   * @param {string} userId - User ID
+   * @returns {number} Number of active reminders for the user
+   */
+  getUserReminderCount(userId) {
+    try {
+      if (this.isDisabled) return 0;
+
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM reminders 
+        WHERE user_id = ? AND status = 'active'
+      `);
+      const result = stmt.get(userId);
+      return result ? result.count : 0;
+    } catch (error) {
+      if (this.isDisabled) return 0;
+      logger.warn(`Failed to get reminder count for user ${userId}: ${error.message}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Get default reminder stats object
+   * @returns {Object} Default stats object
+   */
+  _getDefaultReminderStats() {
+    return {
+      totalReminders: 0,
+      activeReminders: 0,
+      completedReminders: 0,
+      cancelledReminders: 0,
+    };
+  }
+
+  /**
+   * Map status results to stats object
+   * @param {Array} statusResults - Results from status query
+   * @param {Object} stats - Stats object to update
+   */
+  _mapStatusCounts(statusResults, stats) {
+    const statusMap = {
+      active: 'activeReminders',
+      completed: 'completedReminders',
+      cancelled: 'cancelledReminders',
+    };
+
+    statusResults.forEach(row => {
+      const statKey = statusMap[row.status];
+      if (statKey) {
+        stats[statKey] = row.count;
+      }
+    });
+  }
+
+  /**
+   * Get total reminder statistics for analytics
+   * @returns {Object} Reminder statistics object
+   */
+  getReminderStats() {
+    try {
+      if (this.isDisabled) return this._getDefaultReminderStats();
+
+      const db = this.getDb();
+      
+      // Get total count
+      const totalStmt = db.prepare('SELECT COUNT(*) as count FROM reminders');
+      const totalResult = totalStmt.get();
+      
+      // Get counts by status
+      const statusStmt = db.prepare(`
+        SELECT status, COUNT(*) as count 
+        FROM reminders 
+        GROUP BY status
+      `);
+      const statusResults = statusStmt.all();
+      
+      const stats = {
+        totalReminders: totalResult ? totalResult.count : 0,
+        ...this._getDefaultReminderStats(),
+      };
+      
+      // Map status counts
+      this._mapStatusCounts(statusResults, stats);
+      
+      return stats;
+    } catch (error) {
+      if (this.isDisabled) return this._getDefaultReminderStats();
+      logger.warn(`Failed to get reminder stats: ${error.message}`);
+      return this._getDefaultReminderStats();
+    }
+  }
+
   close() {
     if (this.db && !this.isDisabled) {
       try {

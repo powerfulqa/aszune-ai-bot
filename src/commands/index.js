@@ -210,7 +210,8 @@ const commands = {
       return interaction.reply(
         '**Your Aszai Bot Stats:**\n' +
           `Messages sent: ${stats.messages}\n` +
-          `Summaries requested: ${stats.summaries}`
+          `Summaries requested: ${stats.summaries}\n` +
+          `Active reminders: ${stats.reminders || 0}`
       );
     },
     textCommand: '!stats',
@@ -244,6 +245,7 @@ const commands = {
       const commandStats = databaseService.getCommandUsageStats(7);
       const errorStats = databaseService.getErrorStats(7);
       const uptimeStats = databaseService.getUptimeStats();
+      const reminderStats = databaseService.getReminderStats();
 
       // Track server metrics
       databaseService.trackServerMetric(serverId, 'member_count', serverStats.totalMembers);
@@ -272,6 +274,11 @@ const commands = {
           {
             name: '⏱️ Bot Uptime',
             value: `Total Uptime: ${Math.floor(uptimeStats.totalUptime / 3600)}h\nDowntime: ${Math.floor(uptimeStats.totalDowntime / 3600)}h\nRestarts: ${uptimeStats.restartCount}`,
+            inline: true,
+          },
+          {
+            name: '⏰ Reminder System',
+            value: `Total Reminders: ${reminderStats.totalReminders}\nActive: ${reminderStats.activeReminders}\nCompleted: ${reminderStats.completedReminders}`,
             inline: true,
           },
           {

@@ -6,6 +6,7 @@ const dataStorage = require('../services/storage');
 const logger = require('./logger');
 const { ErrorHandler } = require('./error-handler');
 const { InputValidator } = require('./input-validator');
+const databaseService = require('../services/database');
 
 class ConversationManager {
   constructor() {
@@ -224,7 +225,17 @@ class ConversationManager {
       this.userStats.set(userId, { messages: 0, summaries: 0, lastActive: null });
     }
 
-    return this.userStats.get(userId);
+    const stats = this.userStats.get(userId);
+    
+    // Add reminder count from database
+    try {
+      stats.reminders = databaseService.getUserReminderCount(userId);
+    } catch (error) {
+      logger.warn(`Failed to get reminder count for user stats: ${error.message}`);
+      stats.reminders = 0;
+    }
+
+    return stats;
   }
 
   /**
