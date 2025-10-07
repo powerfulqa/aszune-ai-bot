@@ -238,6 +238,11 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
       expect(mockEmojiManager.addReactionsToMessage).toHaveBeenCalledWith(mockMessage);
     });
 
+    afterEach(() => {
+      // Reset config to default state
+      mockConfig.PI_OPTIMIZATIONS.LOW_CPU_MODE = false;
+    });
+
     it('should handle emoji processing errors gracefully', async () => {
       mockConfig.PI_OPTIMIZATIONS.LOW_CPU_MODE = false;
       mockPerplexityService.generateChatResponse.mockResolvedValue('Response');

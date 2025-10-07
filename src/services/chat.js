@@ -511,8 +511,11 @@ async function processAIResponse(message, processedData, userId) {
       await message.reply({ embeds: [embed] });
     }
 
-    // Add emoji reactions to the message
-    await emojiManager.addReactionsToMessage(message);
+    // Add emoji reactions to the message (skip in low CPU mode)
+    const config = require('../config/config');
+    if (!config.PI_OPTIMIZATIONS?.LOW_CPU_MODE) {
+      await emojiManager.addReactionsToMessage(message);
+    }
 
     return finalResponse;
   } catch (error) {
