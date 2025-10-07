@@ -1,4 +1,10 @@
-const chrono = require('chrono-node');
+let chrono;
+try {
+  chrono = require('chrono-node');
+} catch (error) {
+  // Graceful fallback when chrono-node is not available
+  chrono = null;
+}
 
 class TimeParser {
   constructor() {
@@ -31,6 +37,11 @@ class TimeParser {
    * @returns {Object} - { scheduledTime: Date, timezone: string, originalExpression: string }
    */
   parseTimeExpression(timeExpression, userTimezone = 'UTC') {
+    // Check if chrono-node is available, use fallback if not
+    if (!chrono) {
+      return this.parseBasicTimeExpression(timeExpression, userTimezone);
+    }
+
     try {
       // Parse the time expression using chrono
       const results = chrono.parse(timeExpression, new Date(), { forwardDate: true });
@@ -195,6 +206,51 @@ class TimeParser {
    */
   getSupportedTimezones() {
     return Object.keys(this.timezoneOffsets);
+  }
+
+  /**
+   * Fallback parser for basic time expressions when chrono-node is unavailable
+   * @param {string} timeExpression - Simple time expression
+   * @param {string} userTimezone - User's timezone
+   * @returns {Object} - Parsed time result
+   */
+  parseBasicTimeExpression(timeExpression, userTimezone = 'UTC') {
+    const now = new Date();
+    let scheduledTime = null;
+
+    // Try to parse ISO format (YYYY-MM-DD HH:MM:SS)
+    const isoMatch = timeExpression.match(/(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2}(?::\d{2})?)/);
+    if (isoMatch) {
+      scheduledTime = new Date(`${isoMatch[1]}T${isoMatch[2]}`);
+    }
+
+    // Try to parse relative time (e.g., "in 30 minutes", "in 2 hours")
+    const relativeMatch = timeExpression.match(/in\s+(\d+)\s+(minute|hour|day)s?/i);
+    if (relativeMatch && !scheduledTime) {
+      const amount = parseInt(relativeMatch[1]);
+      const unit = relativeMatch[2].toLowerCase();
+      
+      scheduledTime = new Date(now);
+      if (unit === 'minute') {
+        scheduledTime.setMinutes(scheduledTime.getMinutes() + amount);
+      } else if (unit === 'hour') {
+        scheduledTime.setHours(scheduledTime.getHours() + amount);
+      } else if (unit === 'day') {
+        scheduledTime.setDate(scheduledTime.getDate() + amount);
+      }
+    }
+
+    if (!scheduledTime || scheduledTime <= now) {
+      throw new Error('Unable to parse time expression. Try "YYYY-MM-DD HH:MM:SS" or "in X minutes/hours/days"');
+    }
+
+    return {
+      scheduledTime,
+      timezone: userTimezone,
+      originalExpression: timeExpression,
+      parsedText: timeExpression,
+      fallbackUsed: true
+    };
   }
 }
 
