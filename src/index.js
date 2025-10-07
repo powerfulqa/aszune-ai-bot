@@ -169,7 +169,7 @@ async function registerSlashCommands() {
 }
 
 // Handle ready event
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
 
   // Log bot startup event
