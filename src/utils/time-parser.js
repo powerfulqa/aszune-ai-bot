@@ -161,6 +161,52 @@ class TimeParser {
   }
 
   /**
+   * Get relative time description for weeks
+   * @param {number} diffDays - Difference in days
+   * @returns {string} - Weeks description
+   */
+  _formatWeeks(diffDays) {
+    const weeks = Math.floor(diffDays / 7);
+    const remainingDays = diffDays % 7;
+    
+    if (weeks === 1 && remainingDays === 0) return 'in 1 week';
+    if (weeks === 1) return `in 1 week and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+    if (remainingDays === 0) return `in ${weeks} weeks`;
+    return `in ${weeks} weeks and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+  }
+
+  /**
+   * Get relative time description for months
+   * @param {number} diffDays - Difference in days
+   * @returns {string} - Months description
+   */
+  _formatMonths(diffDays) {
+    const months = Math.floor(diffDays / 30);
+    const remainingDays = diffDays % 30;
+    
+    if (months === 1 && remainingDays === 0) return 'in 1 month';
+    if (months === 1) return `in 1 month and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+    if (remainingDays === 0) return `in ${months} months`;
+    return `in ${months} months and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+  }
+
+  /**
+   * Get relative time description for years
+   * @param {number} diffDays - Difference in days
+   * @returns {string} - Years description
+   */
+  _formatYears(diffDays) {
+    const years = Math.floor(diffDays / 365);
+    const remainingDays = diffDays % 365;
+    const months = Math.floor(remainingDays / 30);
+    
+    if (years === 1 && months === 0) return 'in 1 year';
+    if (years === 1) return `in 1 year and ${months} ${months === 1 ? 'month' : 'months'}`;
+    if (months === 0) return `in ${years} years`;
+    return `in ${years} years and ${months} ${months === 1 ? 'month' : 'months'}`;
+  }
+
+  /**
    * Get relative time description
    * @param {Date} targetTime - Target time
    * @param {Date} referenceTime - Reference time (default: now)
@@ -181,13 +227,12 @@ class TimeParser {
       return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
     } else if (diffDays < 7) {
       return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
+    } else if (diffDays < 30) {
+      return this._formatWeeks(diffDays);
+    } else if (diffDays < 365) {
+      return this._formatMonths(diffDays);
     } else {
-      return targetTime.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      return this._formatYears(diffDays);
     }
   }
 

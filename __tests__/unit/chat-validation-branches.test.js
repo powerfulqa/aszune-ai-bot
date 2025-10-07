@@ -180,18 +180,14 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
     it('should ignore whitespace-only messages', async () => {
       mockMessage.content = '   \n  \t  ';
 
-      // Mock validation to return invalid for whitespace-only content
-      mockInputValidator.validateAndSanitize.mockReturnValue({
-        valid: false,
-        error: 'Message contains only whitespace',
-        sanitized: '',
-        warnings: [],
-      });
+      // With the new shouldIgnoreMessage function, whitespace-only messages
+      // are filtered out early and never reach validation or reply stages
+      const result = await chatService(mockMessage);
 
-      await chatService(mockMessage);
-
+      expect(result).toBeNull();
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
-      expect(mockMessage.reply).toHaveBeenCalledWith('❌ Message contains only whitespace');
+      expect(mockMessage.reply).not.toHaveBeenCalled();
+      expect(mockInputValidator.validateAndSanitize).not.toHaveBeenCalled();
     });
 
     it('should ignore null content', async () => {

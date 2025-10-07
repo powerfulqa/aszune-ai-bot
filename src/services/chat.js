@@ -392,7 +392,7 @@ async function handleChatMessage(message) {
 
   // Process the incoming message
   const processedData = await processUserMessage(message);
-  if (!processedData) return;
+  if (!processedData) return null;
 
   // Show typing indicator
   message.channel.sendTyping();
