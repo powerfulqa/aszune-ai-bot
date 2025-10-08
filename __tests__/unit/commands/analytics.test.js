@@ -162,7 +162,7 @@ describe('Analytics Command', () => {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Analytics • Database-powered' },
+          footer: { text: 'Aszai Bot Analytics' },
           timestamp: expect.any(String),
         },
       ],
@@ -239,7 +239,7 @@ describe('Analytics Command', () => {
               inline: false,
             }),
           ]),
-          footer: { text: 'Aszai Bot Analytics • Database-powered' },
+          footer: { text: 'Aszai Bot Analytics' },
           timestamp: expect.any(String),
         }),
       ],
@@ -284,14 +284,17 @@ describe('Help Command', () => {
       '**Aszai Bot Commands:**\n' +
         '`/help` - Show this help message\n' +
         '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+        '`/newconversation` - Start fresh on a new topic\n' +
         '`/summary` - Summarise your current conversation\n' +
         '`/summarise <text>` - Summarise provided text\n' +
         '`/stats` - Show your usage stats\n' +
         '`/analytics` - Show Discord server analytics\n' +
         '`/dashboard` - Show performance dashboard\n' +
         '`/resources` - Show resource optimization status\n' +
-        'Simply chat as normal to talk to the bot!\n' +
-        'Use "!" at start of message to prevent bot response'
+        '`/remind <time> <message>` - Set a reminder\n' +
+        '`/reminders` - List your active reminders\n' +
+        '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+        'Simply chat as normal to talk to the bot!'
     );
   });
 });
@@ -308,15 +311,7 @@ describe('Clear History Command', () => {
   test('should handle clearhistory command successfully', async () => {
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.reply).toHaveBeenCalledWith({
-      embeds: [
-        {
-          color: '#5865F2',
-          description: 'Your conversation history and stats have been cleared.',
-          footer: { text: 'Aszai Bot' },
-        },
-      ],
-    });
+    expect(mockInteraction.reply).toHaveBeenCalledWith('Conversation history cleared! Your stats have been preserved.');
   });
 });
 
@@ -384,7 +379,7 @@ describe('Dashboard Command', () => {
               inline: true,
             }),
           ]),
-          footer: { text: 'Aszai Bot Dashboard • Database-powered • Real-time data' },
+          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
           timestamp: expect.any(String),
         }),
       ],
@@ -434,7 +429,7 @@ describe('Resources Command', () => {
               inline: false,
             }),
           ]),
-          footer: { text: 'Aszai Bot Resources • Database-powered • Real-time monitoring' },
+          footer: { text: 'Aszai Bot Resource Monitor' },
           timestamp: expect.any(String),
         }),
       ],

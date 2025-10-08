@@ -89,10 +89,10 @@ describe('Commands - Analytics Commands', () => {
           expect.objectContaining({
             title: '📊 Discord Analytics Dashboard',
             fields: expect.arrayContaining([
-              expect.objectContaining({ name: '�� Server Overview' }),
-              expect.objectContaining({ name: '�� Performance' }),
-              expect.objectContaining({ name: '�� Top Commands' }),
-              expect.objectContaining({ name: '�� Server Insights' }),
+              expect.objectContaining({ name: '🏢 Server Overview' }),
+              expect.objectContaining({ name: '📈 Performance' }),
+              expect.objectContaining({ name: '🎯 Top Commands' }),
+              expect.objectContaining({ name: '💡 Server Insights' }),
             ]),
           }),
         ],
@@ -203,10 +203,10 @@ describe('Commands - Analytics Commands', () => {
           expect.objectContaining({
             title: '🔧 Resource Optimization',
             fields: expect.arrayContaining([
-              expect.objectContaining({ name: '�� Memory Status' }),
+              expect.objectContaining({ name: '💾 Memory Status' }),
               expect.objectContaining({ name: '⚙️ Performance' }),
-              expect.objectContaining({ name: '�� Optimization Tier' }),
-              expect.objectContaining({ name: '�� Recommendations' }),
+              expect.objectContaining({ name: '📈 Optimization Tier' }),
+              expect.objectContaining({ name: '💡 Recommendations' }),
             ]),
           }),
         ],

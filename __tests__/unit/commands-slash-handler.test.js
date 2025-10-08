@@ -66,15 +66,7 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(conversationManager.clearHistory).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith({
-        embeds: [
-          {
-            color: '#5865F2',
-            description: 'Your conversation history and stats have been cleared.',
-            footer: { text: 'Aszai Bot' },
-          },
-        ],
-      });
+      expect(interaction.reply).toHaveBeenCalledWith('Conversation history cleared! Your stats have been preserved.');
     });
 
     it('should handle /summary command', async () => {
