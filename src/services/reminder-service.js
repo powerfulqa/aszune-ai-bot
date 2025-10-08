@@ -187,6 +187,37 @@ class ReminderService extends EventEmitter {
     return databaseService.getUserReminders(userId, includeCompleted);
   }
 
+  async setReminder(userId, timeString, message) {
+    try {
+      // Parse the time string to get a scheduled time
+      // For now, create a simple implementation that adds the time to current time
+      const now = new Date();
+      let scheduledTime;
+
+      // Simple time parsing - this should be improved with proper time parsing
+      if (timeString.startsWith('in ')) {
+        const timePart = timeString.substring(3);
+        if (timePart.includes('minute')) {
+          const minutes = parseInt(timePart);
+          scheduledTime = new Date(now.getTime() + minutes * 60 * 1000);
+        } else if (timePart.includes('hour')) {
+          const hours = parseInt(timePart);
+          scheduledTime = new Date(now.getTime() + hours * 60 * 60 * 1000);
+        } else {
+          throw new Error('Unsupported time format');
+        }
+      } else {
+        throw new Error('Unsupported time format');
+      }
+
+      const reminder = await this.createReminder(userId, message, scheduledTime.toISOString());
+      return reminder;
+    } catch (error) {
+      logger.error(`Failed to set reminder for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
   async deleteReminder(reminderId, userId) {
     try {
       // Clear timer first
