@@ -11,16 +11,13 @@ jest.mock('../../../src/services/database', () => ({
 }));
 jest.mock('../../../src/utils/error-handler', () => ({
   ErrorHandler: {
-    handleError: jest.fn().mockReturnValue({
-      message: 'An unexpected error occurred. Please try again later.',
-      type: 'error',
-    }),
+    handleError: jest.fn(),
   },
 }));
 jest.mock('../../../src/utils/input-validator', () => ({
   InputValidator: {
-    validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateReminderMessage: jest.fn().mockReturnValue({ valid: true }),
+    validateUserId: jest.fn(),
+    validateReminderMessage: jest.fn(),
   },
 }));
 
@@ -33,6 +30,25 @@ const { InputValidator } = require('../../../src/utils/input-validator');
 describe('Reminder Commands', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set up mock implementations
+    reminderService.setReminder.mockResolvedValue({
+      id: '123',
+      time: 'in 5 minutes',
+      message: 'Test reminder',
+      createdAt: new Date(),
+      dueDate: 'Wed Oct 09 2025',
+    });
+    reminderService.getUserReminders.mockResolvedValue([]);
+    reminderService.cancelReminder.mockResolvedValue(true);
+
+    ErrorHandler.handleError.mockReturnValue({
+      message: 'An unexpected error occurred. Please try again later.',
+      type: 'error',
+    });
+
+    InputValidator.validateUserId.mockReturnValue({ valid: true });
+    InputValidator.validateReminderMessage.mockReturnValue({ valid: true });
   });
 
   describe('/remind command', () => {
@@ -160,11 +176,12 @@ describe('Reminder Commands', () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
-          expect.objectContaining({
-            title: '📋 Your Active Reminders',
+          {
+            color: 0xffa500,
+            title: '📝 Your Reminders',
             description: 'You have no active reminders.',
             footer: { text: 'Aszai Bot' },
-          }),
+          },
         ],
       });
     });
