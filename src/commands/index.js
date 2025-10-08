@@ -28,6 +28,7 @@ const commands = {
         '**Aszai Bot Commands:**\n' +
           '`/help` - Show this help message\n' +
           '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+          '`/newconversation` - Start fresh on a new topic\n' +
           '`/summary` - Summarise your current conversation\n' +
           '`/summarise <text>` - Summarise provided text\n' +
           '`/stats` - Show your usage stats\n' +
@@ -37,8 +38,11 @@ const commands = {
           '`/remind <time> <message>` - Set a reminder\n' +
           '`/reminders` - List your active reminders\n' +
           '`/cancelreminder <id>` - Cancel a specific reminder\n' +
-          '\n**Note:** Use "!" at the start of any message to prevent the bot from responding.\n' +
-          'Simply chat as normal to talk to the bot!'
+          '\n**Tips:**\n' +
+          '• Bot remembers last 12 messages for context\n' +
+          '• Use `/newconversation` when changing topics\n' +
+          '• Conversations auto-clear after 15 min inactivity\n' +
+          '• Use "!" at start of message to prevent bot response'
       );
     },
   },
@@ -54,6 +58,35 @@ const commands = {
       databaseService.clearUserConversationData(userId);
 
       await interaction.reply('Conversation history cleared! Your stats have been preserved.');
+    },
+  },
+
+  newconversation: {
+    data: {
+      name: 'newconversation',
+      description: 'Start a new conversation (clears history but keeps your stats)',
+    },
+    async execute(interaction) {
+      const userId = interaction.user.id;
+
+      // Validate user ID
+      const userIdValidation = InputValidator.validateUserId(userId);
+      if (!userIdValidation.valid) {
+        return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
+      }
+
+      conversationManager.clearHistory(userId);
+      databaseService.clearUserConversationData(userId);
+
+      await interaction.reply({
+        embeds: [{
+          color: config.COLORS.SUCCESS || 0x00ff00,
+          title: '🔄 New Conversation Started',
+          description: 'Your conversation history has been cleared. You can now start fresh on a new topic!\n\n' +
+            'Your usage stats have been preserved.',
+          footer: { text: 'Aszai Bot' }
+        }]
+      });
     },
   },
 
@@ -100,7 +133,8 @@ const commands = {
 
       try {
         const summary = await perplexityService.generateSummary(cleanHistory);
-        conversationManager.updateUserStats(userId, 'summaries');
+        // Update summaries counter in database
+        databaseService.updateUserStats(userId, { total_summaries: 1 });
         return interaction.editReply({
           embeds: [
             {
@@ -207,12 +241,16 @@ const commands = {
     },
     async execute(interaction) {
       const userId = interaction.user.id;
-      const stats = conversationManager.getUserStats(userId);
+      
+      // Get stats from database (single source of truth)
+      const dbUserStats = databaseService.getUserStats(userId);
+      const reminderCount = databaseService.getUserReminderCount(userId);
+      
       return interaction.reply(
         '**Your Aszai Bot Stats:**\n' +
-          `Messages sent: ${stats.messages}\n` +
-          `Summaries requested: ${stats.summaries}\n` +
-          `Active reminders: ${stats.reminders || 0}`
+          `Messages sent: ${dbUserStats.message_count || 0}\n` +
+          `Summaries requested: ${dbUserStats.total_summaries || 0}\n` +
+          `Active reminders: ${reminderCount || 0}`
       );
     },
 

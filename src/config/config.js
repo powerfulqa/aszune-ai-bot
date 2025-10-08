@@ -50,12 +50,16 @@ const config = {
   DB_PATH: process.env.DB_PATH || './data/bot.db',
 
   // Bot Configuration
-  MAX_HISTORY: 20,
+  MAX_HISTORY: 12, // Reduced from 20 for better context management
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
   CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
 
   // Database Configuration - should match runtime limits
-  DATABASE_CONVERSATION_LIMIT: 20, // Match MAX_HISTORY for backup consistency
+  DATABASE_CONVERSATION_LIMIT: 12, // Match MAX_HISTORY for consistency
+
+  // Conversation Context Management
+  CONVERSATION_INACTIVITY_TIMEOUT_MS: 15 * 60 * 1000, // 15 minutes - auto-clear context
+  CONVERSATION_CONTEXT_WARNING_THRESHOLD: 10, // Warn user approaching limit
 
   // Message and UI Limits
   MESSAGE_LIMITS: {

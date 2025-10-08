@@ -17,6 +17,11 @@ jest.mock('../../src/services/database', () => ({
   clearUserConversationData: jest.fn(),
   trackCommandUsage: jest.fn(),
   logError: jest.fn(),
+  getUserStats: jest.fn().mockReturnValue({
+    message_count: 10,
+    total_summaries: 2,
+  }),
+  getUserReminderCount: jest.fn().mockReturnValue(3),
 }));
 
 // Mock the conversation module
@@ -114,10 +119,15 @@ describe('Commands - Slash Command Handler', () => {
 
     it('should handle /stats command', async () => {
       const interaction = createMockInteraction({ commandName: 'stats' });
+      const mockDatabaseService = require('../../src/services/database');
+      
       await handleSlashCommand(interaction);
 
-      expect(conversationManager.getUserStats).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent'));
+      expect(mockDatabaseService.getUserStats).toHaveBeenCalledWith(interaction.user.id);
+      expect(mockDatabaseService.getUserReminderCount).toHaveBeenCalledWith(interaction.user.id);
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent: 10'));
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Summaries requested: 2'));
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Active reminders: 3'));
     });
 
     it('should handle /summarise command with text', async () => {

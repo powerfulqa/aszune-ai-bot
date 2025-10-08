@@ -119,7 +119,27 @@ class ConversationManager {
       return [];
     }
 
+    // Check for inactivity timeout and auto-clear if needed
+    this.checkAndClearInactiveConversation(userId);
+
     return this.conversations.get(userId) || [];
+  }
+
+  /**
+   * Check if conversation should be auto-cleared due to inactivity
+   * @param {string} userId - The user's ID
+   */
+  checkAndClearInactiveConversation(userId) {
+    const lastTimestamp = this.lastMessageTimestamps.get(userId);
+    if (!lastTimestamp) return;
+
+    const inactivityPeriod = Date.now() - lastTimestamp;
+    const timeoutMs = config.CONVERSATION_INACTIVITY_TIMEOUT_MS || (15 * 60 * 1000);
+
+    if (inactivityPeriod > timeoutMs) {
+      logger.info(`Auto-clearing conversation for user ${userId} after ${Math.floor(inactivityPeriod / 1000 / 60)} minutes of inactivity`);
+      this.clearHistory(userId);
+    }
   }
 
   /**
@@ -216,46 +236,47 @@ class ConversationManager {
   }
 
   /**
-   * Get user stats
+   * Get user stats (reads from database as source of truth)
    * @param {string} userId - The user's ID
-   * @returns {Object} - The user stats
+   * @returns {Object} - The user stats from database
    */
   getUserStats(userId) {
-    if (!this.userStats.has(userId)) {
-      this.userStats.set(userId, { messages: 0, summaries: 0, lastActive: null });
-    }
-
-    const stats = this.userStats.get(userId);
-    
-    // Add reminder count from database
     try {
-      stats.reminders = databaseService.getUserReminderCount(userId);
+      const dbStats = databaseService.getUserStats(userId);
+      const reminderCount = databaseService.getUserReminderCount(userId);
+      
+      return {
+        messages: dbStats.message_count || 0,
+        summaries: dbStats.total_summaries || 0,
+        reminders: reminderCount || 0,
+        lastActive: dbStats.last_active || null
+      };
     } catch (error) {
-      logger.warn(`Failed to get reminder count for user stats: ${error.message}`);
-      stats.reminders = 0;
+      logger.warn(`Failed to get user stats from database for ${userId}: ${error.message}`);
+      return { messages: 0, summaries: 0, reminders: 0, lastActive: null };
     }
-
-    return stats;
   }
 
   /**
-   * Update user stats
+   * Update user stats (deprecated - use databaseService.updateUserStats directly)
    * @param {string} userId - The user's ID
    * @param {string} statType - The type of stat to increment
+   * @deprecated Use databaseService.updateUserStats() instead for consistency
    */
   updateUserStats(userId, statType) {
-    const stats = this.getUserStats(userId);
-
-    if (statType === 'messages') {
-      stats.messages += 1;
-    } else if (statType === 'summaries') {
-      stats.summaries += 1;
+    // This method is deprecated but kept for backward compatibility
+    // Stats are now tracked directly in database by chat service
+    logger.debug(`updateUserStats called for ${userId} with ${statType} - this is deprecated, use database service directly`);
+    
+    try {
+      if (statType === 'messages') {
+        databaseService.updateUserStats(userId, { message_count: 1 });
+      } else if (statType === 'summaries') {
+        databaseService.updateUserStats(userId, { total_summaries: 1 });
+      }
+    } catch (error) {
+      logger.warn(`Failed to update user stats in database: ${error.message}`);
     }
-
-    // Update last active timestamp
-    stats.lastActive = Date.now();
-
-    this.userStats.set(userId, stats);
   }
 
   /**
