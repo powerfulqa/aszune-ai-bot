@@ -333,67 +333,63 @@ class PerplexityService {
    * @private
    */
   async _handleApiResponse(response) {
+    this._validateResponseObject(response);
+
+    const statusCode = response.statusCode || 500;
+    const body = response.body || null;
+
+    if (statusCode < 200 || statusCode >= 300) {
+      return this._handleErrorResponse(statusCode, body);
+    }
+
+    this._validateResponseBody(body);
+    const responseData = await this._parseResponseJson(body);
+    this._validateResponseStructure(responseData);
+
+    return responseData;
+  }
+
+  /**
+   * Validate that response object exists and is valid
+   * @param {Object} response - The API response
+   * @private
+   */
+  _validateResponseObject(response) {
     if (!response) {
       throw ErrorHandler.createError(
         'Invalid response: response is null or undefined',
         ERROR_TYPES.API_ERROR
       );
     }
+  }
 
-    // Safely extract properties with defaults
-    const statusCode = response.statusCode || 500;
-    const body = response.body || null;
-
-    // For non-2xx status codes, handle as error
-    if (statusCode < 200 || statusCode >= 300) {
-      return this._handleErrorResponse(statusCode, body);
-    }
-
-    // Make sure body exists and has json method
+  /**
+   * Validate that response body exists and has required methods
+   * @param {Object} body - Response body
+   * @private
+   */
+  _validateResponseBody(body) {
     if (!body || typeof body.json !== 'function') {
       throw ErrorHandler.createError(
         'Invalid response: body is missing or does not have json method',
         ERROR_TYPES.API_ERROR
       );
     }
+  }
 
-    // Parse response as JSON
+  /**
+   * Parse response body as JSON
+   * @param {Object} body - Response body
+   * @returns {Promise<Object>} - Parsed JSON data
+   * @private
+   */
+  async _parseResponseJson(body) {
     try {
       const responseData = await body.json();
 
-      // Validate response structure for malformed responses
       if (!responseData || typeof responseData !== 'object') {
         throw ErrorHandler.createError(
           'Invalid response: response is not a valid object',
-          ERROR_TYPES.API_ERROR
-        );
-      }
-
-      // Check for required choices array
-      if (
-        !responseData.choices ||
-        !Array.isArray(responseData.choices) ||
-        responseData.choices.length === 0
-      ) {
-        throw ErrorHandler.createError(
-          'Invalid response: missing or empty choices array',
-          ERROR_TYPES.API_ERROR
-        );
-      }
-
-      // Check for valid choice structure
-      const firstChoice = responseData.choices[0];
-      if (!firstChoice || typeof firstChoice !== 'object') {
-        throw ErrorHandler.createError(
-          'Invalid response: invalid choice structure',
-          ERROR_TYPES.API_ERROR
-        );
-      }
-
-      // Check for required message field in choice
-      if (!firstChoice.message || typeof firstChoice.message !== 'object') {
-        throw ErrorHandler.createError(
-          'Invalid response: choice missing required message field',
           ERROR_TYPES.API_ERROR
         );
       }
@@ -402,6 +398,42 @@ class PerplexityService {
     } catch (error) {
       throw ErrorHandler.createError(
         `Failed to parse response as JSON: ${error.message}`,
+        ERROR_TYPES.API_ERROR
+      );
+    }
+  }
+
+  /**
+   * Validate response structure and required fields
+   * @param {Object} responseData - Parsed response data
+   * @private
+   */
+  _validateResponseStructure(responseData) {
+    // Check for required choices array
+    if (
+      !responseData.choices ||
+      !Array.isArray(responseData.choices) ||
+      responseData.choices.length === 0
+    ) {
+      throw ErrorHandler.createError(
+        'Invalid response: missing or empty choices array',
+        ERROR_TYPES.API_ERROR
+      );
+    }
+
+    // Check for valid choice structure
+    const firstChoice = responseData.choices[0];
+    if (!firstChoice || typeof firstChoice !== 'object') {
+      throw ErrorHandler.createError(
+        'Invalid response: invalid choice structure',
+        ERROR_TYPES.API_ERROR
+      );
+    }
+
+    // Check for required message field in choice
+    if (!firstChoice.message || typeof firstChoice.message !== 'object') {
+      throw ErrorHandler.createError(
+        'Invalid response: choice missing required message field',
         ERROR_TYPES.API_ERROR
       );
     }
@@ -482,11 +514,14 @@ class PerplexityService {
    * @returns {Promise<Object>} API response
    */
   async sendChatRequest(messages, options = {}) {
-    const { formatMessagesForAPI, validateMessageFormat } = require('../utils/message-formatter-api');
-    
+    const {
+      formatMessagesForAPI,
+      validateMessageFormat,
+    } = require('../utils/message-formatter-api');
+
     // Format messages for API compatibility
     const formattedMessages = formatMessagesForAPI(messages);
-    
+
     // Validate formatted messages
     const validation = validateMessageFormat(formattedMessages);
     if (!validation.valid) {
@@ -496,7 +531,7 @@ class PerplexityService {
         ERROR_TYPES.API_ERROR
       );
     }
-    
+
     const endpoint = config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
     const requestPayload = this.apiClient.buildRequestPayload(formattedMessages, options);
 
@@ -681,10 +716,8 @@ class PerplexityService {
     const opts = this.responseProcessor.standardizeOptions(options);
 
     try {
-      // Get cache configuration
+      // Get cache configuration and determine caching
       const cacheConfig = this.cacheManager.getCacheConfiguration();
-
-      // Determine if caching should be used
       const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
 
       // Process the chat response
@@ -695,48 +728,20 @@ class PerplexityService {
         shouldUseCache
       );
 
-      // Use explicit cache hit flag from _processChatResponse instead
-      if (fromCache) {
-        // Track cache hit performance
-        const cacheResponseTime = Date.now() - startTime;
-        const finalMemoryUsage = process.memoryUsage().heapUsed;
-        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
-
-        await this._trackCacheHitPerformance(
-          cacheResponseTime,
-          memoryDelta,
-          history?.length || 0,
-          shouldUseCache
-        );
-      } else {
-        // Track API call performance
-        const totalTime = Date.now() - startTime;
-        const finalMemoryUsage = process.memoryUsage().heapUsed;
-        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
-
-        await this._trackApiCallPerformance(
-          totalTime,
-          memoryDelta,
-          finalMemoryUsage,
-          history?.length || 0,
-          shouldUseCache,
-          content?.length || 0
-        );
-      }
+      // Track performance based on cache hit or API call
+      await this._trackResponsePerformance(
+        fromCache,
+        startTime,
+        initialMemoryUsage,
+        history?.length || 0,
+        shouldUseCache,
+        content?.length || 0
+      );
 
       return content;
     } catch (error) {
-      // Track error performance
-      const errorTime = Date.now() - startTime;
-      const finalMemoryUsage = process.memoryUsage().heapUsed;
-      const memoryDelta = finalMemoryUsage - initialMemoryUsage;
-
-      await this._trackApiErrorPerformance(
-        errorTime,
-        memoryDelta,
-        history?.length || 0,
-        error.message
-      );
+      // Track error performance and re-throw
+      await this._trackErrorPerformance(startTime, initialMemoryUsage, history?.length || 0, error);
 
       const errorResponse = ErrorHandler.handleError(error, 'generate chat response', {
         historyLength: history?.length || 0,
@@ -744,9 +749,53 @@ class PerplexityService {
       });
       logger.error(`Failed to generate chat response: ${errorResponse.message}`);
 
-      // CRITICAL: Re-throw normalized error after tracking instead of returning error message
       throw error;
     }
+  }
+
+  /**
+   * Track performance for successful responses
+   * @param {boolean} fromCache - Whether response came from cache
+   * @param {number} startTime - Request start time
+   * @param {number} initialMemoryUsage - Initial memory usage
+   * @param {number} historyLength - Length of conversation history
+   * @param {boolean} shouldUseCache - Whether caching was enabled
+   * @param {number} contentLength - Length of response content
+   * @private
+   */
+  async _trackResponsePerformance(fromCache, startTime, initialMemoryUsage, historyLength, shouldUseCache, contentLength) {
+    const responseTime = Date.now() - startTime;
+    const finalMemoryUsage = process.memoryUsage().heapUsed;
+    const memoryDelta = finalMemoryUsage - initialMemoryUsage;
+
+    if (fromCache) {
+      await this._trackCacheHitPerformance(responseTime, memoryDelta, historyLength, shouldUseCache);
+    } else {
+      await this._trackApiCallPerformance(
+        responseTime,
+        memoryDelta,
+        finalMemoryUsage,
+        historyLength,
+        shouldUseCache,
+        contentLength
+      );
+    }
+  }
+
+  /**
+   * Track performance for error cases
+   * @param {number} startTime - Request start time
+   * @param {number} initialMemoryUsage - Initial memory usage
+   * @param {number} historyLength - Length of conversation history
+   * @param {Error} error - The error that occurred
+   * @private
+   */
+  async _trackErrorPerformance(startTime, initialMemoryUsage, historyLength, error) {
+    const errorTime = Date.now() - startTime;
+    const finalMemoryUsage = process.memoryUsage().heapUsed;
+    const memoryDelta = finalMemoryUsage - initialMemoryUsage;
+
+    await this._trackApiErrorPerformance(errorTime, memoryDelta, historyLength, error.message);
   }
 
   /**

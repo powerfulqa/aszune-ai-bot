@@ -6,7 +6,7 @@ const { request } = require('undici');
 const fs = require('fs').promises;
 
 const PerplexityService = require('../../../src/services/perplexity-secure');
-const { mockSuccessResponse, mockErrorResponse } = require('../../utils/undici-mock-helpers');
+const { mockSuccessResponse } = require('../../utils/undici-mock-helpers');
 
 jest.mock('undici', () => ({
   request: jest.fn(),

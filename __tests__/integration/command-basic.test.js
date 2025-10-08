@@ -72,7 +72,8 @@ describe('Command Handling - Basic', () => {
 
   test('!stats command replies with stats message', async () => {
     const msg = createMockMessage('!stats');
-    const statsText = '**Your Aszai Bot Stats:**\nMessages sent: 5\nSummaries requested: 2\nActive reminders: 0';
+    const statsText =
+      '**Your Aszai Bot Stats:**\nMessages sent: 5\nSummaries requested: 2\nActive reminders: 0';
 
     await msg.reply(statsText);
 

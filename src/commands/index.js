@@ -13,6 +13,7 @@ const ResourceOptimizer = require('../utils/resource-optimizer');
 const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
 const { handleReminderCommand } = require('./reminder');
+const { chunkMessage } = require('../utils/message-chunking');
 
 const conversationManager = new ConversationManager();
 
@@ -79,13 +80,16 @@ const commands = {
       databaseService.clearUserConversationData(userId);
 
       await interaction.reply({
-        embeds: [{
-          color: config.COLORS.SUCCESS || 0x00ff00,
-          title: '🔄 New Conversation Started',
-          description: 'Your conversation history has been cleared. You can now start fresh on a new topic!\n\n' +
-            'Your usage stats have been preserved.',
-          footer: { text: 'Aszai Bot' }
-        }]
+        embeds: [
+          {
+            color: config.COLORS.SUCCESS || 0x00ff00,
+            title: '🔄 New Conversation Started',
+            description:
+              'Your conversation history has been cleared. You can now start fresh on a new topic!\n\n' +
+              'Your usage stats have been preserved.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
       });
     },
   },
@@ -231,8 +235,6 @@ const commands = {
 
       return embed;
     },
-
-
   },
   stats: {
     data: {
@@ -241,11 +243,11 @@ const commands = {
     },
     async execute(interaction) {
       const userId = interaction.user.id;
-      
+
       // Get stats from database (single source of truth)
       const dbUserStats = databaseService.getUserStats(userId);
       const reminderCount = databaseService.getUserReminderCount(userId);
-      
+
       return interaction.reply(
         '**Your Aszai Bot Stats:**\n' +
           `Messages sent: ${dbUserStats.message_count || 0}\n` +
@@ -253,7 +255,6 @@ const commands = {
           `Active reminders: ${reminderCount || 0}`
       );
     },
-
   },
 
   analytics: {
@@ -376,8 +377,6 @@ const commands = {
         humanMembers: totalMembers - botCount,
       };
     },
-
-
   },
 
   dashboard: {
@@ -410,8 +409,8 @@ const commands = {
       const avgResponseTime =
         performanceMetrics.length > 0
           ? Math.round(
-              performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
-            )
+            performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
+          )
           : 0;
 
       const dashboardData = await PerformanceDashboard.generateDashboardReport();
@@ -451,14 +450,14 @@ const commands = {
 
     _getStatusColor(status) {
       switch (status?.toLowerCase()) {
-        case 'healthy':
-          return 0x00ff00;
-        case 'warning':
-          return 0xffa500;
-        case 'critical':
-          return 0xff0000;
-        default:
-          return 0x5865f2;
+      case 'healthy':
+        return 0x00ff00;
+      case 'warning':
+        return 0xffa500;
+      case 'critical':
+        return 0xff0000;
+      default:
+        return 0x5865f2;
       }
     },
 
@@ -517,8 +516,6 @@ const commands = {
         humanMembers: totalMembers - botCount,
       };
     },
-
-
   },
 
   resources: {
@@ -552,8 +549,8 @@ const commands = {
       const avgMemoryUsage =
         performanceMetrics.length > 0
           ? Math.round(
-              performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
-            )
+            performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
+          )
           : 0;
 
       const statusColor =
@@ -592,8 +589,6 @@ const commands = {
         timestamp: new Date().toISOString(),
       };
     },
-
-
   },
 
   summarise: {
@@ -697,16 +692,34 @@ const commands = {
 
         const summary = await perplexityService.generateSummary(messages, true); // isText = true
         conversationManager.updateUserStats(userId, 'summaries');
-        return interaction.editReply({
+
+        // Chunk the summary if it's too long to prevent truncation
+        const chunks = chunkMessage(summary);
+
+        // Send the first chunk as editReply
+        await interaction.editReply({
           embeds: [
             {
               color: config.COLORS.PRIMARY,
               title: 'Text Summary',
-              description: summary,
+              description: chunks[0],
               footer: { text: 'Aszai Bot' },
             },
           ],
         });
+
+        // Send additional chunks as followUp messages if needed
+        for (let i = 1; i < chunks.length; i++) {
+          await interaction.followUp({
+            embeds: [
+              {
+                color: config.COLORS.PRIMARY,
+                description: chunks[i],
+                footer: { text: 'Aszai Bot' },
+              },
+            ],
+          });
+        }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
           userId: userId,
@@ -716,7 +729,6 @@ const commands = {
         return interaction.editReply(errorResponse.message);
       }
     },
-
   },
 
   remind: {
@@ -803,8 +815,6 @@ const commands = {
     },
   },
 };
-
-
 
 /**
  * TEXT COMMANDS REMOVED - Use slash commands instead

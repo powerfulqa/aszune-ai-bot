@@ -39,7 +39,6 @@ jest.mock('discord.js', () => ({
 
 describe('index.js - Function Branch Coverage', () => {
   describe('bootWithOptimizations function', () => {
-    let index;
     let mockConfig;
     let mockLogger;
 
@@ -76,44 +75,98 @@ describe('index.js - Function Branch Coverage', () => {
           DEFAULT_MAX_ENTRIES: 100,
           MAX_MEMORY_MB: 50,
           DEFAULT_TTL_MS: 300000,
+          CLEANUP_INTERVAL_MS: 300000,
+          CLEANUP_INTERVAL_DAYS: 1,
+          MAX_AGE_DAYS: 7,
+        },
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
         },
         initializePiOptimizations: jest.fn(),
       };
       jest.mock('../../src/config/config', () => mockConfig);
 
       // Import the index module
-      index = require('../../src/index');
+      // index = require('../../src/index');
     });
 
     it('should handle errors in Pi optimization initialization', async () => {
-      // Setup
-      mockConfig.initializePiOptimizations.mockRejectedValue(new Error('Test optimization error'));
+      // Set production environment to trigger Pi optimization initialization
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-      // Call the bootWithOptimizations function directly
-      await index.bootWithOptimizations();
+      // Mock lazy loader to throw error
+      const mockLazyLoad = jest.fn().mockImplementation(() => {
+        throw new Error('Pi optimization error');
+      });
+      jest.doMock('../../src/utils/lazy-loader', () => ({
+        lazyLoad: mockLazyLoad,
+      }));
 
-      // Verify error handling
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      // Re-import to trigger module load time initialization
+      jest.resetModules();
+      require('../../src/index');
+
+      // Verify error was logged during module initialization
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to initialize Pi optimizations:',
         expect.any(Error)
       );
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
     });
 
     it('should not call initialization when PI_OPTIMIZATIONS is disabled', async () => {
-      // Setup
-      mockConfig.PI_OPTIMIZATIONS.ENABLED = false;
+      // Set production environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-      // Call the bootWithOptimizations function directly
-      await index.bootWithOptimizations();
+      // Mock config with PI optimizations disabled but complete config
+      jest.doMock('../../src/config/config', () => ({
+        DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-key',
+        PI_OPTIMIZATIONS: { ENABLED: false },
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api.perplexity.ai',
+            ENDPOINTS: {
+              CHAT_COMPLETIONS: '/chat/completions',
+            },
+          },
+        },
+        FILE_PERMISSIONS: {
+          FILE: 0o644,
+          DIRECTORY: 0o755,
+        },
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+        },
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
+        },
+      }));
 
-      // Verify initialization was not called
-      expect(mockConfig.initializePiOptimizations).not.toHaveBeenCalled();
+      // Re-import to trigger module load time initialization
+      jest.resetModules();
+      require('../../src/index');
+
+      // Verify Pi optimizations were not initialized (no logger calls)
+      expect(mockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
     });
   });
 
   describe('registerSlashCommands function', () => {
     let index;
-    let mockClient;
     let mockRest;
     let mockLogger;
 
@@ -129,11 +182,38 @@ describe('index.js - Function Branch Coverage', () => {
       };
       jest.mock('../../src/utils/logger', () => mockLogger);
 
+      // Mock config
+      jest.mock('../../src/config/config', () => ({
+        DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-key',
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api.perplexity.ai',
+            ENDPOINTS: {
+              CHAT_COMPLETIONS: '/chat/completions',
+            },
+          },
+        },
+        FILE_PERMISSIONS: {
+          FILE: 0o644,
+          DIRECTORY: 0o755,
+        },
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+        },
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
+        },
+      }));
+
       // Mock client
-      mockClient = {
-        user: { id: '123456789' },
-        readyAt: new Date(),
-      };
+      // mockClient = {
+      //   user: { id: '123456789' },
+      //   readyAt: new Date(),
+      // };
 
       // Mock REST
       mockRest = {
@@ -246,6 +326,33 @@ describe('index.js - Function Branch Coverage', () => {
 
     beforeEach(() => {
       jest.resetModules();
+
+      // Mock config
+      jest.mock('../../src/config/config', () => ({
+        DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-key',
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api.perplexity.ai',
+            ENDPOINTS: {
+              CHAT_COMPLETIONS: '/chat/completions',
+            },
+          },
+        },
+        FILE_PERMISSIONS: {
+          FILE: 0o644,
+          DIRECTORY: 0o755,
+        },
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+        },
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
+        },
+      }));
 
       // Mock client
       mockClient = {

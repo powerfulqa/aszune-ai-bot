@@ -66,16 +66,7 @@ async function bootWithOptimizations() {
     const server = new LicenseServer();
     server.start();
   }
-  try {
-    if (config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED) {
-      logger.info('Initializing Raspberry Pi optimizations...');
-      await config.initializePiOptimizations();
-      logger.info('Pi optimizations initialized successfully');
-    }
-  } catch (error) {
-    logger.error('Failed to initialize Pi optimizations:', error);
-    // Continue with default settings
-  }
+  // Pi optimizations are now initialized at module load time in production mode
 }
 
 // Core dependencies
@@ -104,7 +95,11 @@ reminderService.on('reminderDue', async (reminder) => {
         timestamp: new Date().toISOString(),
       };
 
-      await channel.send({ embeds: [embed] });
+      // Send with user mention to trigger notification
+      await channel.send({
+        content: `<@${reminder.user_id}>`,
+        embeds: [embed],
+      });
       logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
     } else {
       logger.error(`Could not find channel ${reminder.channel_id} for reminder ${reminder.id}`);

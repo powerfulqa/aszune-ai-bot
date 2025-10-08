@@ -688,34 +688,34 @@ class DatabaseService {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-      
+
       // Try different schema versions, starting with newest and falling back
       const schemaAttempts = [
         // Latest schema (v1.7.0)
         {
           sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
-          params: (now) => [userId, now, now]
+          params: (now) => [userId, now, now],
         },
         // Previous schema (missing first_seen)
         {
           sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
-          params: (now) => [userId, now]
+          params: (now) => [userId, now],
         },
         // Basic schema (only core columns)
         {
           sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active) VALUES (?, 0, ?)',
-          params: (now) => [userId, now]
+          params: (now) => [userId, now],
         },
         // Minimal schema (just user_id)
         {
           sql: 'INSERT OR IGNORE INTO user_stats (user_id) VALUES (?)',
-          params: () => [userId]
-        }
+          params: () => [userId],
+        },
       ];
-      
+
       const now = new Date().toISOString();
       let success = false;
-      
+
       for (const attempt of schemaAttempts) {
         try {
           const stmt = db.prepare(attempt.sql);
@@ -727,7 +727,7 @@ class DatabaseService {
           continue;
         }
       }
-      
+
       if (!success) {
         logger.warn(`All schema attempts failed for user ${userId}`);
       }
@@ -1079,7 +1079,7 @@ class DatabaseService {
       cancelled: 'cancelledReminders',
     };
 
-    statusResults.forEach(row => {
+    statusResults.forEach((row) => {
       const statKey = statusMap[row.status];
       if (statKey) {
         stats[statKey] = row.count;
@@ -1096,11 +1096,11 @@ class DatabaseService {
       if (this.isDisabled) return this._getDefaultReminderStats();
 
       const db = this.getDb();
-      
+
       // Get total count
       const totalStmt = db.prepare('SELECT COUNT(*) as count FROM reminders');
       const totalResult = totalStmt.get();
-      
+
       // Get counts by status
       const statusStmt = db.prepare(`
         SELECT status, COUNT(*) as count 
@@ -1108,15 +1108,15 @@ class DatabaseService {
         GROUP BY status
       `);
       const statusResults = statusStmt.all();
-      
+
       const stats = {
         ...this._getDefaultReminderStats(),
         totalReminders: totalResult ? totalResult.count : 0,
       };
-      
+
       // Map status counts
       this._mapStatusCounts(statusResults, stats);
-      
+
       return stats;
     } catch (error) {
       if (this.isDisabled) return this._getDefaultReminderStats();

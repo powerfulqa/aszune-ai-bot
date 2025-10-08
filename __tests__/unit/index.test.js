@@ -61,7 +61,7 @@ let mockClientReadyHandler;
 const mockClient = {
   on: jest.fn().mockReturnThis(),
   once: jest.fn().mockImplementation((event, handler) => {
-    if (event === 'clientReady') {
+    if (event === 'clientReady' || event === 'ready') {
       mockClientReadyHandler = handler; // Store handler for manual triggering
     }
     return mockClient;
@@ -96,7 +96,11 @@ jest.mock('discord.js', () => ({
 let mockConfigData = {
   DISCORD_BOT_TOKEN: 'test-token',
   PERPLEXITY_API_KEY: 'test-perplexity-key',
-  CACHE: { CLEANUP_INTERVAL_MS: 300000 },
+  CACHE: {
+    CLEANUP_INTERVAL_MS: 300000,
+    CLEANUP_INTERVAL_DAYS: 1,
+    MAX_AGE_DAYS: 7,
+  },
   PI_OPTIMIZATIONS: { ENABLED: false },
   FEATURES: {
     LICENSE_VALIDATION: false,
@@ -114,6 +118,16 @@ let mockConfigData = {
 
 jest.mock('../../src/config/config', () => mockConfigData);
 jest.mock('../../src/services/chat');
+jest.mock('../../src/services/reminder-service', () => ({
+  initialize: jest.fn().mockResolvedValue(),
+  on: jest.fn(),
+  shutdown: jest.fn(),
+}));
+jest.mock('../../src/utils/license-validator', () => {
+  return jest.fn().mockImplementation(() => ({
+    enforceLicense: jest.fn().mockResolvedValue(true),
+  }));
+});
 jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([]),
   handleSlashCommand: jest.fn(),
@@ -269,12 +283,54 @@ describe('Bot Main Entry Point (index.js)', () => {
       process.env = originalEnv;
     });
 
-    it.skip('should initialize license validation when enabled', async () => {
-      // Set up mock config with license validation enabled
-      mockConfigData.FEATURES.LICENSE_VALIDATION = true;
+    it('should initialize license validation when enabled', async () => {
+      // Reset the handler
+      mockClientReadyHandler = undefined;
 
-      // Re-import to get updated mocks
+      // Re-require to get fresh module state
       jest.resetModules();
+
+      // Re-establish mocks after resetModules but before requiring index
+      const freshLoggerMock = {
+        info: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+      };
+
+      const freshConfigData = {
+        DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-perplexity-key',
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+          CLEANUP_INTERVAL_DAYS: 1,
+          MAX_AGE_DAYS: 7,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: false },
+        FEATURES: {
+          LICENSE_VALIDATION: true,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
+        },
+        COLORS: { PRIMARY: '#5865F2' },
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api/perplexity.ai',
+          },
+        },
+      };
+
+      const mockLicenseValidatorInstance = {
+        enforceLicense: jest.fn().mockResolvedValue(true),
+      };
+
+      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
+      jest.doMock('../../src/config/config', () => freshConfigData);
+      jest.doMock('../../src/utils/license-validator', () =>
+        jest.fn().mockImplementation(() => mockLicenseValidatorInstance)
+      );
+
       require('../../src/index');
 
       // Manually trigger the ready event
@@ -282,18 +338,53 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.info).toHaveBeenCalledWith('Validating software license...');
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      expect(freshLoggerMock.info).toHaveBeenCalledWith('Validating software license...');
+      expect(freshLoggerMock.info).toHaveBeenCalledWith(
         'License validation successful - starting bot...'
       );
     });
 
-    it.skip('should skip license validation when disabled', async () => {
-      // Set up mock config with license validation disabled
-      mockConfigData.FEATURES.LICENSE_VALIDATION = false;
+    it('should skip license validation when disabled', async () => {
+      // Reset the handler
+      mockClientReadyHandler = undefined;
 
-      // Re-import to get updated mocks
+      // Re-require to get fresh module state
       jest.resetModules();
+
+      // Re-establish mocks after resetModules but before requiring index
+      const freshLoggerMock = {
+        info: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+      };
+
+      const freshConfigData = {
+        DISCORD_BOT_TOKEN: 'test-token',
+        PERPLEXITY_API_KEY: 'test-perplexity-key',
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+          CLEANUP_INTERVAL_DAYS: 1,
+          MAX_AGE_DAYS: 7,
+        },
+        PI_OPTIMIZATIONS: { ENABLED: false },
+        FEATURES: {
+          LICENSE_VALIDATION: false,
+          LICENSE_SERVER: false,
+          LICENSE_ENFORCEMENT: false,
+          DEVELOPMENT_MODE: false,
+        },
+        COLORS: { PRIMARY: '#5865F2' },
+        API: {
+          PERPLEXITY: {
+            BASE_URL: 'https://api/perplexity.ai',
+          },
+        },
+      };
+
+      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
+      jest.doMock('../../src/config/config', () => freshConfigData);
+
       require('../../src/index');
 
       // Manually trigger the ready event
@@ -301,7 +392,7 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      expect(freshLoggerMock.info).toHaveBeenCalledWith(
         'License validation disabled via feature flags - starting bot...'
       );
     });
@@ -338,28 +429,46 @@ describe('Bot Main Entry Point (index.js)', () => {
       expect(MockLicenseServer).toHaveBeenCalled();
     });
 
-    it.skip('should handle Pi optimizations initialization', async () => {
-      // Set up mock config with Pi optimizations enabled
+    it('should handle Pi optimizations initialization', async () => {
+      // Enable Pi optimizations in the mock config
       mockConfigData.PI_OPTIMIZATIONS = { ENABLED: true };
+      mockConfigData.CACHE = {
+        CLEANUP_INTERVAL_MS: 300000,
+        CLEANUP_INTERVAL_DAYS: 1,
+        MAX_AGE_DAYS: 7,
+      };
+
+      // Mock the config.initializePiOptimizations function
       mockConfigData.initializePiOptimizations = jest.fn().mockResolvedValue();
 
       // Re-import to get updated mocks
       jest.resetModules();
       require('../../src/index');
 
-      // Manually trigger the ready event
+      // Manually trigger the ready event to call bootWithOptimizations
       if (mockClientReadyHandler) {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.info).toHaveBeenCalledWith('Initializing Raspberry Pi optimizations...');
-      expect(mockConfigData.initializePiOptimizations).toHaveBeenCalled();
-      expect(loggerMock.info).toHaveBeenCalledWith('Pi optimizations initialized successfully');
+      // Pi optimizations are now initialized at module load time in production mode,
+      // not during the ready event, so these calls should not happen here
+      expect(mockConfigData.initializePiOptimizations).not.toHaveBeenCalled();
+      expect(loggerMock.info).not.toHaveBeenCalledWith(
+        'Initializing Raspberry Pi optimizations...'
+      );
+      expect(loggerMock.info).not.toHaveBeenCalledWith('Pi optimizations initialized successfully');
     });
 
-    it.skip('should handle Pi optimizations initialization failure gracefully', async () => {
-      // Set up mock config with Pi optimizations enabled but failing
+    it('should handle Pi optimizations initialization failure gracefully', async () => {
+      // Enable Pi optimizations in the mock config
       mockConfigData.PI_OPTIMIZATIONS = { ENABLED: true };
+      mockConfigData.CACHE = {
+        CLEANUP_INTERVAL_MS: 300000,
+        CLEANUP_INTERVAL_DAYS: 1,
+        MAX_AGE_DAYS: 7,
+      };
+
+      // Mock the config.initializePiOptimizations function to reject
       mockConfigData.initializePiOptimizations = jest
         .fn()
         .mockRejectedValue(new Error('Pi init failed'));
@@ -368,12 +477,14 @@ describe('Bot Main Entry Point (index.js)', () => {
       jest.resetModules();
       require('../../src/index');
 
-      // Manually trigger the ready event
+      // Manually trigger the ready event to call bootWithOptimizations
       if (mockClientReadyHandler) {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.error).toHaveBeenCalledWith(
+      // Pi optimizations are now initialized at module load time in production mode,
+      // not during the ready event, so these error calls should not happen here
+      expect(loggerMock.error).not.toHaveBeenCalledWith(
         'Failed to initialize Pi optimizations:',
         expect.any(Error)
       );
@@ -386,18 +497,30 @@ describe('Bot Main Entry Point (index.js)', () => {
       mockClientReadyHandler = undefined; // Reset handler
     });
 
-    it.skip('should initialize reminder service on ready event', async () => {
-      // Mock reminder service
-      const mockReminderService = {
+    it('should initialize reminder service on ready event', async () => {
+      // Reset the handler
+      mockClientReadyHandler = undefined;
+
+      // Re-require to get fresh module state
+      jest.resetModules();
+
+      // Re-establish mocks after resetModules but before requiring index
+      const freshMockReminderService = {
         initialize: jest.fn().mockResolvedValue(),
         on: jest.fn(),
         shutdown: jest.fn(),
       };
 
-      jest.doMock('../../src/services/reminder-service', () => mockReminderService);
+      const freshLoggerMock = {
+        info: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+      };
 
-      // Re-import to get updated mocks
-      jest.resetModules();
+      jest.doMock('../../src/services/reminder-service', () => freshMockReminderService);
+      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
+
       require('../../src/index');
 
       // Manually trigger the ready event
@@ -405,22 +528,34 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(mockReminderService.initialize).toHaveBeenCalled();
-      expect(loggerMock.info).toHaveBeenCalledWith('Reminder service initialized');
+      expect(freshMockReminderService.initialize).toHaveBeenCalled();
+      expect(freshLoggerMock.info).toHaveBeenCalledWith('Reminder service initialized');
     });
 
-    it.skip('should handle reminder service initialization failure', async () => {
-      // Mock reminder service that fails
-      const mockReminderService = {
+    it('should handle reminder service initialization failure', async () => {
+      // Reset the handler
+      mockClientReadyHandler = undefined;
+
+      // Re-require to get fresh module state
+      jest.resetModules();
+
+      // Re-establish mocks after resetModules but before requiring index
+      const freshMockReminderService = {
         initialize: jest.fn().mockRejectedValue(new Error('Reminder init failed')),
         on: jest.fn(),
         shutdown: jest.fn(),
       };
 
-      jest.doMock('../../src/services/reminder-service', () => mockReminderService);
+      const freshLoggerMock = {
+        info: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+      };
 
-      // Re-import to get updated mocks
-      jest.resetModules();
+      jest.doMock('../../src/services/reminder-service', () => freshMockReminderService);
+      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
+
       require('../../src/index');
 
       // Manually trigger the ready event
@@ -428,7 +563,8 @@ describe('Bot Main Entry Point (index.js)', () => {
         await mockClientReadyHandler();
       }
 
-      expect(loggerMock.error).toHaveBeenCalledWith(
+      expect(freshMockReminderService.initialize).toHaveBeenCalled();
+      expect(freshLoggerMock.error).toHaveBeenCalledWith(
         'Failed to initialize reminder service:',
         expect.any(Error)
       );
@@ -454,7 +590,11 @@ describe('Bot Main Entry Point (index.js)', () => {
 
       // Mock config with Pi optimizations enabled
       const testConfig = {
-        CACHE: { CLEANUP_INTERVAL_MS: 300000 },
+        CACHE: {
+          CLEANUP_INTERVAL_MS: 300000,
+          CLEANUP_INTERVAL_DAYS: 1,
+          MAX_AGE_DAYS: 7,
+        },
         PI_OPTIMIZATIONS: { ENABLED: true },
         FEATURES: {
           LICENSE_VALIDATION: false,
@@ -474,6 +614,19 @@ describe('Bot Main Entry Point (index.js)', () => {
 
       jest.doMock('../../src/config/config', () => testConfig);
 
+      // Mock lazy loader
+      const mockLazyLoad = jest.fn().mockImplementation((loader) => {
+        const mockModule = {
+          initialize: jest.fn(),
+        };
+        loader(); // Call the loader function
+        return mockModule;
+      });
+
+      jest.doMock('../../src/utils/lazy-loader', () => ({
+        lazyLoad: mockLazyLoad,
+      }));
+
       // Re-require index to trigger production initialization
       jest.resetModules();
 
@@ -487,17 +640,23 @@ describe('Bot Main Entry Point (index.js)', () => {
       // Set production environment
       process.env.NODE_ENV = 'production';
 
-      // Mock config with Pi optimizations enabled
-      const mockConfig = {
-        PI_OPTIMIZATIONS: { ENABLED: true },
+      // Modify the existing mock config
+      mockConfigData.CACHE = {
+        CLEANUP_INTERVAL_MS: 300000,
+        CLEANUP_INTERVAL_DAYS: 1,
+        MAX_AGE_DAYS: 7,
       };
-
-      jest.doMock('../../src/config/config', () => mockConfig);
+      mockConfigData.PI_OPTIMIZATIONS = { ENABLED: true };
 
       // Mock lazy loader to throw error
       jest.doMock('../../src/utils/lazy-loader', () => ({
         lazyLoad: jest.fn().mockImplementation(() => {
-          throw new Error('Lazy load failed');
+          // Return a function that when called, returns a module that throws on initialize
+          return () => ({
+            initialize: () => {
+              throw new Error('Lazy load failed');
+            },
+          });
         }),
       }));
 

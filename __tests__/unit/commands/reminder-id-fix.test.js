@@ -61,7 +61,13 @@ describe('Reminder Command - ID Display Fix', () => {
   it('should display numeric reminder ID instead of [object Object]', async () => {
     mockMessage.content = '!remind "in 3 hours" Test reminder message';
 
-    await handleReminderCommand(mockMessage, ['set', '"in 3 hours"', 'Test', 'reminder', 'message']);
+    await handleReminderCommand(mockMessage, [
+      'set',
+      '"in 3 hours"',
+      'Test',
+      'reminder',
+      'message',
+    ]);
 
     // Verify reply was called
     expect(mockMessage.reply).toHaveBeenCalled();

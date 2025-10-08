@@ -1,7 +1,6 @@
 const performanceMonitor = require('../../src/utils/performance-monitor');
 const logger = require('../../src/utils/logger');
 const os = require('os');
-const config = require('../../src/config/config');
 
 // Mock dependencies
 jest.mock('../../src/utils/logger');
@@ -23,7 +22,6 @@ describe('Performance Monitor - Functions', () => {
   let originalSetInterval;
   let mockSetInterval;
   let mockClearInterval;
-  let intervalCallback;
   let intervalId = 123;
 
   beforeEach(() => {
@@ -33,8 +31,7 @@ describe('Performance Monitor - Functions', () => {
 
     // Mock setInterval and clearInterval
     originalSetInterval = global.setInterval;
-    mockSetInterval = jest.fn((callback, interval) => {
-      intervalCallback = callback;
+    mockSetInterval = jest.fn((_callback, _interval) => {
       return intervalId;
     });
     mockClearInterval = jest.fn();

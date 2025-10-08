@@ -2,7 +2,6 @@
  * Tests for emoji utility
  */
 const emojiManager = require('../../src/utils/emoji');
-const _config = require('../../src/config/config');
 
 describe('EmojiManager', () => {
   it('adds emojis to response based on keywords', () => {

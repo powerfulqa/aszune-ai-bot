@@ -2,7 +2,8 @@
 
 ## 🐛 Issue
 
-When users set a reminder using either `/remind` (slash command) or `!remind` (text command), the confirmation embed showed:
+When users set a reminder using either `/remind` (slash command) or `!remind` (text command), the
+confirmation embed showed:
 
 ```
 Reminder ID: [object Object] | Aszai Bot
@@ -21,17 +22,20 @@ Reminder ID: 42 | Aszai Bot
 1. **User executes command**: `/remind "in 3 hours" test`
 
 2. **handleSetReminder() called** (`src/commands/reminder.js` line 85):
+
    ```javascript
    const reminderId = await createReminderInDatabase(message, reminderMessage, parsedTime);
    return createSuccessReply(message, reminderMessage, parsedTime, reminderId);
    ```
 
 3. **createReminderInDatabase() returns** (`src/commands/reminder.js` line 116):
+
    ```javascript
    return await reminderService.createReminder(...);
    ```
 
 4. **reminderService.createReminder() returns** (`src/services/reminder-service.js` line 143):
+
    ```javascript
    const reminder = databaseService.createReminder(...);
    return reminder; // Returns FULL reminder object
@@ -45,7 +49,8 @@ Reminder ID: 42 | Aszai Bot
 
 ### The Problem:
 
-The `reminderId` variable in `handleSetReminder()` was actually receiving the **entire reminder object**:
+The `reminderId` variable in `handleSetReminder()` was actually receiving the **entire reminder
+object**:
 
 ```javascript
 {
@@ -62,7 +67,9 @@ The `reminderId` variable in `handleSetReminder()` was actually receiving the **
 But when passed to `createSuccessReply()` and used in the template:
 
 ```javascript
-footer: { text: `Reminder ID: ${reminderId} | Aszai Bot` }
+footer: {
+  text: `Reminder ID: ${reminderId} | Aszai Bot`;
+}
 ```
 
 JavaScript tried to convert the object to a string, resulting in `[object Object]`.
@@ -72,6 +79,7 @@ JavaScript tried to convert the object to a string, resulting in `[object Object
 Changed `handleSetReminder()` to extract the `id` property from the returned reminder object:
 
 ### Before (Broken):
+
 ```javascript
 async function handleSetReminder(message, args) {
   // ...
@@ -79,13 +87,14 @@ async function handleSetReminder(message, args) {
     const parsedTime = timeParser.parseTimeExpression(timeExpression);
     const reminderId = await createReminderInDatabase(message, reminderMessage, parsedTime);
     return createSuccessReply(message, reminderMessage, parsedTime, reminderId);
-    //                                                                 ^^^^^^^^^ 
+    //                                                                 ^^^^^^^^^
     //                                                                 This is the full object!
   }
 }
 ```
 
 ### After (Fixed):
+
 ```javascript
 async function handleSetReminder(message, args) {
   // ...
@@ -105,7 +114,7 @@ async function handleSetReminder(message, args) {
    - Line 95: Changed variable name from `reminderId` to `reminder` (clarity)
    - Line 96: Extract `id` property: `reminder.id`
 
-2. **__tests__/unit/commands/reminder-id-fix.test.js** (NEW)
+2. ****tests**/unit/commands/reminder-id-fix.test.js** (NEW)
    - Comprehensive test suite with 3 tests
    - Verifies numeric ID display
    - Confirms `[object Object]` no longer appears
@@ -124,6 +133,7 @@ async function handleSetReminder(message, args) {
 ### Test Verification:
 
 Each test verifies:
+
 1. ✅ Embed footer contains `"Reminder ID: 42"` (or numeric value)
 2. ✅ Does NOT contain `"[object Object]"`
 3. ✅ Matches regex pattern `/Reminder ID: \d+/`
@@ -132,12 +142,14 @@ Each test verifies:
 ## 🎯 Impact Analysis
 
 ### User-Facing Changes:
+
 - ✅ **Reminder confirmation now shows correct ID**
 - ✅ **Works for both slash commands (`/remind`) and text commands (`!remind`)**
 - ✅ **No breaking changes to existing functionality**
 - ✅ **Reminder cancellation with `/cancelreminder <id>` now has clear ID reference**
 
 ### Technical Impact:
+
 - ✨ **Single line change** - minimal risk
 - ✨ **Zero breaking changes** - only fixes display bug
 - ✨ **No database changes** required
@@ -145,11 +157,13 @@ Each test verifies:
 - ✨ **Backward compatible** - all existing reminders unaffected
 
 ### Affected Commands:
+
 1. `/remind` (slash command) - ✅ FIXED
 2. `!remind` (text command) - ✅ FIXED
 3. `!reminder set` (text command) - ✅ FIXED
 
 ### Not Affected (working correctly):
+
 - `/reminders` - Lists reminders with correct IDs
 - `/cancelreminder` - Cancels by ID (was already working)
 - `!reminder list` - Lists reminders with correct IDs
@@ -160,6 +174,7 @@ Each test verifies:
 To verify the fix works:
 
 1. **Set a reminder**:
+
    ```
    /remind time:"in 5 minutes" message:"test"
    ```
@@ -169,15 +184,18 @@ To verify the fix works:
    - ❌ Should NOT show: `Reminder ID: [object Object] | Aszai Bot`
 
 3. **List reminders**:
+
    ```
    /reminders
    ```
+
    - Verify ID matches the one shown in confirmation
 
 4. **Cancel reminder**:
    ```
    /cancelreminder id:123
    ```
+
    - Should work with the ID shown in confirmation
 
 ## 📊 Code Quality
@@ -204,7 +222,9 @@ To verify the fix works:
 
 ## 🎉 Summary
 
-A simple one-line fix that resolves a confusing UX issue where reminder IDs were displaying as `[object Object]`. The fix properly extracts the numeric ID from the reminder object before displaying it to users, making it clear and usable for reminder management operations.
+A simple one-line fix that resolves a confusing UX issue where reminder IDs were displaying as
+`[object Object]`. The fix properly extracts the numeric ID from the reminder object before
+displaying it to users, making it clear and usable for reminder management operations.
 
-**Before**: `Reminder ID: [object Object] | Aszai Bot` ❌
-**After**: `Reminder ID: 42 | Aszai Bot` ✅
+**Before**: `Reminder ID: [object Object] | Aszai Bot` ❌ **After**: `Reminder ID: 42 | Aszai Bot`
+✅

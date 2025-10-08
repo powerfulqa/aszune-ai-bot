@@ -3,6 +3,7 @@
 ## 🚨 Critical Issues Detected
 
 ### Error Analysis:
+
 ```
 Error: Cannot find module 'chrono-node'
 Module resolution failures in:
@@ -14,6 +15,7 @@ Module resolution failures in:
 ## ⚡ Emergency Fix Steps
 
 ### 1. Reinstall Dependencies (CRITICAL)
+
 ```bash
 # Navigate to production directory
 cd /root/discord-bot/aszuneai
@@ -31,6 +33,7 @@ npm ls discord.js
 ```
 
 ### 2. Check Node.js Version
+
 ```bash
 # Ensure Node.js >= 20.18.1
 node --version
@@ -42,6 +45,7 @@ sudo apt-get install -y nodejs
 ```
 
 ### 3. Environment Variables
+
 ```bash
 # Ensure .env file exists with required variables
 cat > .env << EOF
@@ -54,6 +58,7 @@ EOF
 ```
 
 ### 4. Directory Permissions
+
 ```bash
 # Fix directory permissions
 sudo chown -R $USER:$USER /root/discord-bot/aszuneai
@@ -63,6 +68,7 @@ mkdir -p /root/discord-bot/aszuneai/logs
 ```
 
 ### 5. Production Start Script
+
 ```bash
 # Use production-safe start command
 NODE_ENV=production node src/index.js
@@ -71,12 +77,14 @@ NODE_ENV=production node src/index.js
 ## 🛠️ Raspberry Pi Specific Fixes
 
 ### Memory Optimization (Pi 3)
+
 ```bash
 # If running on Raspberry Pi 3, use optimized start:
 NODE_OPTIONS="--max-old-space-size=200" node src/index.js
 ```
 
 ### SQLite3 Build Issues
+
 ```bash
 # If better-sqlite3 fails on Pi, rebuild:
 npm rebuild better-sqlite3
@@ -87,6 +95,7 @@ npm install better-sqlite3 --build-from-source
 ## 🔍 Troubleshooting Commands
 
 ### Check Module Loading
+
 ```bash
 # Test if modules can be required
 node -e "console.log(require('./src/utils/time-parser.js'))"
@@ -94,6 +103,7 @@ node -e "console.log(require('chrono-node'))"
 ```
 
 ### Database Test
+
 ```bash
 # Test database initialization
 node -e "
@@ -103,6 +113,7 @@ console.log('Database service loaded successfully');
 ```
 
 ### Memory Check
+
 ```bash
 # Check available memory (important for Pi)
 free -m
@@ -122,6 +133,7 @@ free -m
 ## 🚀 Alternative Deployment Methods
 
 ### Method 1: Docker (Recommended)
+
 ```dockerfile
 FROM node:20-alpine
 WORKDIR /app
@@ -132,6 +144,7 @@ CMD ["node", "src/index.js"]
 ```
 
 ### Method 2: PM2 Process Manager
+
 ```bash
 npm install -g pm2
 pm2 start ecosystem.config.js
@@ -140,6 +153,7 @@ pm2 startup
 ```
 
 ### Method 3: Systemd Service
+
 ```ini
 [Unit]
 Description=Aszune AI Bot
@@ -160,6 +174,7 @@ WantedBy=multi-user.target
 ## 📞 Emergency Rollback
 
 If issues persist, rollback to previous version:
+
 ```bash
 git checkout v1.6.5
 npm install

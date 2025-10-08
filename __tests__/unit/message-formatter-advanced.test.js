@@ -3,7 +3,6 @@
  */
 jest.mock('../../src/utils/logger');
 const messageFormatter = require('../../src/utils/message-formatter');
-const config = require('../../src/config/config');
 
 // Mock config for testing
 jest.mock('../../src/config/config', () => ({

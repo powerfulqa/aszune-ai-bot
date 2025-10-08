@@ -15,10 +15,17 @@ guidelines for architecture patterns, testing approaches, and best practices.
 ```
 src/
 ├── commands/          # Command handlers (slash + text commands)
+│   ├── index.js       # Unified command handler
+│   └── reminder.js    # Reminder command handler (v1.7.0)
 ├── config/           # Configuration management
 ├── services/         # External API clients and services
+│   ├── database.js   # SQLite database service (v1.7.0)
+│   ├── reminder-service.js # Reminder scheduling service (v1.7.0)
+│   └── [other services]
 └── utils/            # Utility functions and helpers
     ├── message-chunking/  # Advanced message splitting
+    ├── time-parser.js     # Advanced time parsing for reminders (v1.7.0)
+    ├── natural-language-reminder.js # AI-powered reminder detection (v1.7.0)
     └── [various utilities]
 ```
 
@@ -28,6 +35,10 @@ src/
 - **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
 - **Perplexity API Client**: Manages AI API communication with secure caching
 - **Conversation Manager**: Class-based conversation tracking
+- **Database Service**: SQLite integration for persistent conversation history and user analytics
+  (`src/services/database.js`) with automatic table creation and graceful fallback (v1.7.0)
+- **Reminder Service**: AI-powered reminder scheduling with natural language processing (`!remind`,
+  `!reminders`, `!cancelreminder`) and conversational reminder detection (v1.7.0)
 - **Error Handler**: Comprehensive error handling system
 - **Message Chunker**: Intelligent message splitting with boundary detection
 - **Input Validator**: Content sanitization and validation
@@ -38,10 +49,6 @@ src/
   and reporting (feature-flagged)
 - **License Server**: Express.js-based licensing management system with web dashboard and violation
   tracking (feature-flagged)
-- **Database Service**: SQLite integration for persistent conversation history and user analytics
-  (`src/services/database.js`) with automatic table creation and graceful fallback
-- **Reminder System**: AI-powered reminder scheduling with natural language processing (`!remind`,
-  `!reminders`, `!cancelreminder`) and conversational reminder detection
 
 ## 🚨 Critical Error Handling Requirements
 
@@ -153,6 +160,31 @@ try {
 } catch (dbError) {
   throw dbError; // This breaks the entire conversation!
 }
+```
+
+**Reminder Service Architecture (CRITICAL - v1.7.0 Integration):**
+
+- **Event-Driven Design**: ReminderService extends EventEmitter for Discord integration
+- **Persistent Storage**: SQLite-backed reminder storage with automatic recovery on restart
+- **Memory Management**: Efficient timer management with automatic cleanup
+- **Error Isolation**: Reminder failures don't affect main bot functionality
+- **Timezone Support**: Multi-timezone reminder scheduling with user-aware time handling
+
+```javascript
+// ✅ CORRECT - Reminder service integration
+const reminderService = require('./services/reminder-service');
+
+// Initialize on bot startup
+await reminderService.initialize();
+
+// Register Discord event handler
+reminderService.on('reminderDue', async (reminder) => {
+  // Send Discord notification
+  await sendReminderNotification(reminder);
+});
+
+// ❌ WRONG - Direct timer management
+setTimeout(() => sendReminder(), delay); // No persistence, memory leaks
 ```
 
 **Module Export Contracts:**
@@ -794,3 +826,64 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 ```
 
 **Remember**: 1000+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
+
+## �📋 RECENT WORK SUMMARY & NEXT AGENT HEADS UP
+
+### Repository Cleanup Completed (2025-10-08)
+
+**Files Reorganized:**
+- **Moved to `/docs`**: 6 technical documentation files (CONVERSATION-CONTEXT-FIX.md, DEPLOYMENT-v1.7.0-COMPLETE.md, FIXES-SUMMARY.md, production-fix.md, REMINDER-FIX-SUMMARY.md, REMINDER-ID-FIX.md)
+- **Moved to `/scripts`**: 6 utility scripts (fix-production.bat, run-tests.bat, start-test.bat, fix-line-endings.ps1, format-code.ps1, check-triggers.js)
+- **Deleted**: 4 obsolete files (junit.xml duplicate, 3 old .tar.gz deployment archives)
+
+**Documentation Updates Applied:**
+- **README.md**: Updated with v1.7.0 features, database integration, reminder system, and corrected project structure
+- **wiki/Home.md**: Added v1.7.0 version information and database/reminder features
+- **wiki/Command-Reference.md**: Added complete reminder command documentation
+- **Copilot Instructions**: Updated with database and reminder system architecture details
+
+### 🎯 NEXT AGENT PRIORITIES
+
+**Immediate Tasks:**
+1. **Test Database Integration**: Run full test suite to ensure database mocking works correctly
+2. **Verify Reminder System**: Test reminder scheduling and Discord notifications
+3. **Update Package Dependencies**: Check for any missing dependencies in package.json
+4. **Validate Documentation Links**: Ensure all internal links in updated documentation work
+
+**Medium-term Goals:**
+1. **Performance Testing**: Benchmark database operations and reminder system performance
+2. **Cross-platform Testing**: Verify SQLite works on Windows, Linux, and Raspberry Pi
+3. **Backup Strategy**: Implement database backup and recovery procedures
+4. **Monitoring Integration**: Add database health checks to analytics system
+
+**Long-term Enhancements:**
+1. **Database Migration System**: Implement schema versioning and migration scripts
+2. **Advanced Reminder Features**: Recurring reminders, reminder templates, bulk operations
+3. **Analytics Expansion**: Database-driven analytics with historical data and trends
+4. **Multi-server Support**: Enhanced database schema for multi-server deployments
+
+### ⚠️ CRITICAL NEXT AGENT WARNINGS
+
+**Database Integration Risks:**
+- **SQLite Dependencies**: Ensure `better-sqlite3` is properly installed and compatible
+- **File Permissions**: Database file (`./data/bot.db`) needs write permissions
+- **Migration Safety**: Any schema changes must be backward compatible
+- **Memory Usage**: SQLite can consume significant memory on large datasets
+
+**Reminder System Considerations:**
+- **Timer Management**: Long-running reminders (>24h) use interval checks to prevent memory leaks
+- **Timezone Handling**: All reminders use UTC storage with user-timezone display
+- **Event Integration**: ReminderService emits 'reminderDue' events that must be handled by main bot
+- **Persistence**: Reminder timers are recreated on bot restart from database
+
+**Testing Requirements:**
+- **Database Mocks**: All non-database tests must mock DatabaseService methods
+- **Timer Mocks**: Reminder service tests need proper timer mocking
+- **Async Operations**: Database operations are synchronous but reminder events are asynchronous
+- **Cleanup**: Database connections must be properly closed in test teardown
+
+**Documentation Maintenance:**
+- **Version Updates**: Keep version numbers consistent across README, wiki, and package.json
+- **Feature Flags**: Document any new feature flags and their purposes
+- **Command Updates**: Update command references when new commands are added
+- **Architecture Changes**: Document significant architectural changes in technical docs

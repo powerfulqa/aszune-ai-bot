@@ -266,15 +266,31 @@ describe('index.js - Core Branch Coverage', () => {
   });
 
   it('handles PI optimizations', async () => {
-    // Clear the module cache first
-    jest.resetModules();
+    // Set production environment to trigger Pi optimization initialization
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    // Mock lazy loader to track calls
+    const mockLazyLoad = jest.fn().mockImplementation((loader) => {
+      const mockModule = { initialize: jest.fn() };
+      loader(); // Call the loader function
+      // Return a function that returns the mock module (matching lazyLoad behavior)
+      return () => mockModule;
+    });
+
+    jest.doMock('../../src/utils/lazy-loader', () => ({
+      lazyLoad: mockLazyLoad,
+    }));
 
     // Mock config with PI optimizations enabled
-    const mockInitializePiOptimizations = jest.fn().mockResolvedValue();
     jest.doMock('../../src/config/config', () => ({
       DISCORD_BOT_TOKEN: 'test-token',
       PI_OPTIMIZATIONS: { ENABLED: true },
-      initializePiOptimizations: mockInitializePiOptimizations,
+      CACHE: {
+        CLEANUP_INTERVAL_MS: 300000,
+        CLEANUP_INTERVAL_DAYS: 1,
+        MAX_AGE_DAYS: 7,
+      },
     }));
 
     // Mock commands module
@@ -284,28 +300,39 @@ describe('index.js - Core Branch Coverage', () => {
       handleTextCommand: jest.fn(),
     }));
 
+    // Re-import to trigger module load time initialization
+    jest.resetModules();
     require('../../src/index');
 
-    // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady');
-    if (readyCall) {
-      const readyHandler = readyCall[1];
-      await readyHandler();
+    // Verify Pi optimizations were initialized during module load
+    expect(mockLogger.info).toHaveBeenCalledWith('Initializing Pi optimizations');
+    expect(mockLazyLoad).toHaveBeenCalledTimes(2); // memory-monitor and performance-monitor
 
-      // Verify PI optimizations were initialized
-      expect(mockInitializePiOptimizations).toHaveBeenCalled();
-    } else {
-      // If no ready handler found, verify that the client was set up to handle ready events
-      expect(mockClient.once).toHaveBeenCalledWith('clientReady', expect.any(Function));
-    }
+    // Restore environment
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('handles PI optimization failures', async () => {
-    // Mock config with PI optimizations that fail
+    // Set production environment to trigger Pi optimization initialization
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    // Mock lazy loader to throw error
+    jest.doMock('../../src/utils/lazy-loader', () => ({
+      lazyLoad: jest.fn().mockImplementation(() => {
+        throw new Error('Pi optimization error');
+      }),
+    }));
+
+    // Mock config with PI optimizations enabled
     jest.doMock('../../src/config/config', () => ({
       DISCORD_BOT_TOKEN: 'test-token',
       PI_OPTIMIZATIONS: { ENABLED: true },
-      initializePiOptimizations: jest.fn().mockRejectedValue(new Error('PI init failed')),
+      CACHE: {
+        CLEANUP_INTERVAL_MS: 300000,
+        CLEANUP_INTERVAL_DAYS: 1,
+        MAX_AGE_DAYS: 7,
+      },
     }));
 
     // Mock commands module
@@ -315,21 +342,18 @@ describe('index.js - Core Branch Coverage', () => {
       handleTextCommand: jest.fn(),
     }));
 
-    // Require the module
+    // Re-import to trigger module load time initialization
+    jest.resetModules();
     require('../../src/index');
 
-    // Simulate ready event
-    const readyCall = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady');
-    if (readyCall) {
-      const readyHandler = readyCall[1];
-      await readyHandler();
-    }
-
-    // Verify error was logged
-    expect(mockLogger.error).toHaveBeenCalledWith(
+    // Verify error was logged during module initialization
+    expect(mockLogger.warn).toHaveBeenCalledWith(
       'Failed to initialize Pi optimizations:',
       expect.any(Error)
     );
+
+    // Restore environment
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('handles login failures in production mode', async () => {

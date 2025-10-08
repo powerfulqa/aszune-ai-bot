@@ -1,10 +1,6 @@
 const { debounce } = require('../../src/utils/debouncer');
 
 describe('Debouncer', () => {
-  // Save and mock timers
-  let _originalSetTimeout;
-  let _originalClearTimeout;
-
   beforeEach(() => {
     jest.useFakeTimers();
   });

@@ -2,6 +2,20 @@
  * ConversationManager Critical Coverage Tests - Memory and Performance
  */
 
+// Mock database service for stats tracking
+const mockDatabaseService = {
+  getUserStats: jest.fn(),
+  getUserReminderCount: jest.fn(),
+  updateUserStats: jest.fn(),
+  addUserMessage: jest.fn(),
+  addBotResponse: jest.fn(),
+};
+
+// Track database state for testing
+const mockDatabaseState = new Map();
+
+jest.mock('../../src/services/database', () => mockDatabaseService);
+
 const ConversationManager = require('../../src/utils/conversation');
 const dataStorage = require('../../src/services/storage');
 const { ErrorHandler } = require('../../src/utils/error-handler');
@@ -17,6 +31,7 @@ jest.mock('../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+  debug: jest.fn(),
 }));
 
 jest.mock('../../src/utils/error-handler', () => ({
@@ -49,8 +64,44 @@ describe('ConversationManager - Memory and Performance', () => {
   let originalEnv;
 
   const setupMocks = () => {
+    // Clear database state
+    mockDatabaseState.clear();
+
     dataStorage.loadUserStats.mockResolvedValue({});
     dataStorage.saveUserStats.mockResolvedValue();
+
+    // Configure database mocks with state tracking
+    mockDatabaseService.getUserStats.mockImplementation((userId) => {
+      const stats = mockDatabaseState.get(userId) || {
+        message_count: 0,
+        total_summaries: 0,
+        last_active: null,
+      };
+      return stats;
+    });
+
+    mockDatabaseService.getUserReminderCount.mockReturnValue(0);
+
+    mockDatabaseService.updateUserStats.mockImplementation((userId, updates) => {
+      const currentStats = mockDatabaseState.get(userId) || {
+        message_count: 0,
+        total_summaries: 0,
+        last_active: null,
+      };
+
+      const newStats = { ...currentStats };
+      if (updates.message_count !== undefined) {
+        newStats.message_count = (newStats.message_count || 0) + updates.message_count;
+      }
+      if (updates.total_summaries !== undefined) {
+        newStats.total_summaries = (newStats.total_summaries || 0) + updates.total_summaries;
+      }
+      if (updates.last_active !== undefined) {
+        newStats.last_active = updates.last_active;
+      }
+
+      mockDatabaseState.set(userId, newStats);
+    });
 
     InputValidator.validateUserId.mockReturnValue({ valid: true });
     InputValidator.validateAndSanitize.mockReturnValue({

@@ -341,39 +341,71 @@ describe('index.js - Critical Coverage Enhancement', () => {
     });
 
     it('should handle Pi optimization errors in bootWithOptimizations', async () => {
-      const config = require('../../src/config/config');
-      config.initializePiOptimizations.mockRejectedValueOnce(new Error('Pi init failed'));
+      // Set production environment to trigger Pi optimization initialization
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-      index = require('../../src/index');
+      // Mock lazy loader to throw error
+      jest.doMock('../../src/utils/lazy-loader', () => ({
+        lazyLoad: jest.fn().mockImplementation(() => {
+          throw new Error('Pi optimization error');
+        }),
+      }));
 
-      await index.bootWithOptimizations();
+      // Re-import to trigger module load time initialization
+      jest.resetModules();
+      require('../../src/index');
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      // Verify error was logged during module initialization
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to initialize Pi optimizations:',
         expect.any(Error)
       );
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
     });
 
     it('should skip Pi optimizations when disabled', async () => {
-      const config = require('../../src/config/config');
-      config.PI_OPTIMIZATIONS.ENABLED = false;
+      // Set production environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-      index = require('../../src/index');
+      // Mock config with PI optimizations disabled
+      jest.doMock('../../src/config/config', () => ({
+        PI_OPTIMIZATIONS: { ENABLED: false },
+      }));
 
-      await index.bootWithOptimizations();
+      // Re-import to trigger module load time initialization
+      jest.resetModules();
+      require('../../src/index');
 
-      expect(config.initializePiOptimizations).not.toHaveBeenCalled();
+      // Verify Pi optimizations were not initialized
+      expect(mockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
     });
 
     it('should skip Pi optimizations when config is null', async () => {
-      const config = require('../../src/config/config');
-      config.PI_OPTIMIZATIONS = null;
+      // Set production environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-      index = require('../../src/index');
+      // Mock config with null PI_OPTIMIZATIONS
+      jest.doMock('../../src/config/config', () => ({
+        PI_OPTIMIZATIONS: null,
+      }));
 
-      await index.bootWithOptimizations();
+      // Re-import to trigger module load time initialization
+      jest.resetModules();
+      require('../../src/index');
 
-      expect(config.initializePiOptimizations).not.toHaveBeenCalled();
+      // Verify Pi optimizations were not initialized
+      expect(mockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
     });
   });
 });

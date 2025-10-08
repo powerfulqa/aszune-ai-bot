@@ -8,7 +8,8 @@ jest.useFakeTimers();
 // Mock dependencies
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/perplexity-secure');
-jest.mock('../../src/services/database', () => ({
+// Create a mock database service instance
+const mockDatabaseService = {
   addUserMessage: jest.fn(),
   updateUserStats: jest.fn(),
   getUserMessages: jest.fn().mockReturnValue([]),
@@ -22,7 +23,9 @@ jest.mock('../../src/services/database', () => ({
     total_summaries: 2,
   }),
   getUserReminderCount: jest.fn().mockReturnValue(3),
-}));
+};
+
+jest.mock('../../src/services/database', () => mockDatabaseService);
 
 // Mock the conversation module
 jest.mock('../../src/utils/conversation', () => {
@@ -119,15 +122,18 @@ describe('Commands - Slash Command Handler', () => {
 
     it('should handle /stats command', async () => {
       const interaction = createMockInteraction({ commandName: 'stats' });
-      const mockDatabaseService = require('../../src/services/database');
-      
+
       await handleSlashCommand(interaction);
 
       expect(mockDatabaseService.getUserStats).toHaveBeenCalledWith(interaction.user.id);
       expect(mockDatabaseService.getUserReminderCount).toHaveBeenCalledWith(interaction.user.id);
       expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent: 10'));
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Summaries requested: 2'));
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Active reminders: 3'));
+      expect(interaction.reply).toHaveBeenCalledWith(
+        expect.stringContaining('Summaries requested: 2')
+      );
+      expect(interaction.reply).toHaveBeenCalledWith(
+        expect.stringContaining('Active reminders: 3')
+      );
     });
 
     it('should handle /summarise command with text', async () => {
@@ -261,7 +267,8 @@ describe('Commands - Slash Command Handler', () => {
     it('should handle remind command execution', async () => {
       const interaction = createMockInteraction({ commandName: 'remind' });
       interaction.options = {
-        getString: jest.fn()
+        getString: jest
+          .fn()
           .mockReturnValueOnce('in 5 minutes') // time
           .mockReturnValueOnce('Test reminder'), // message
       };
@@ -292,7 +299,7 @@ describe('Commands - Slash Command Handler', () => {
 
     it('should handle cache command with detailed info having entries', async () => {
       const interaction = createMockInteraction({ commandName: 'cache' });
-      
+
       // Mock cache service to return detailed info with entries
       perplexityService.getCacheStats.mockReturnValue({
         hitRate: 85,
@@ -308,26 +315,24 @@ describe('Commands - Slash Command Handler', () => {
         evictionStrategy: 'LRU',
         uptimeFormatted: '3h 45m',
       });
-      
+
       perplexityService.getDetailedCacheInfo.mockReturnValue({
-        entries: [
-          { key: 'entry1' },
-          { key: 'entry2' },
-          { key: 'entry3' },
-        ],
+        entries: [{ key: 'entry1' }, { key: 'entry2' }, { key: 'entry3' }],
       });
 
       await handleSlashCommand(interaction);
 
       expect(interaction.editReply).toHaveBeenCalledWith({
-        embeds: [expect.objectContaining({
-          fields: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Recent Entries',
-              value: expect.stringContaining('entry1'),
-            }),
-          ]),
-        })],
+        embeds: [
+          expect.objectContaining({
+            fields: expect.arrayContaining([
+              expect.objectContaining({
+                name: 'Recent Entries',
+                value: expect.stringContaining('entry1'),
+              }),
+            ]),
+          }),
+        ],
       });
     });
   });

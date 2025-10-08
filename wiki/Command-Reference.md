@@ -4,7 +4,13 @@ This page provides detailed documentation for all commands available in the Aszu
 
 ## Command Types
 
-Aszune AI Bot supports two types of commands:
+Aszune AI Bot supp### Reminder Commands (NEW in v1.7.0)
+
+| Command                                   | Description                                                 |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `!remind <time> <message>` / `/remind`    | Set a reminder with natural language time parsing           |
+| `!reminders` / `/reminders`               | List all your active reminders                              |
+| `!cancelreminder <id>` / `/cancelreminder`| Cancel a specific reminder by ID                             |rts two types of commands:
 
 - **Traditional commands** starting with `!`
 - **Slash commands** starting with `/`

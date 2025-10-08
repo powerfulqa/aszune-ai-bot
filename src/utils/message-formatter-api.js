@@ -44,7 +44,7 @@ function formatMessagesForAPI(messages) {
     // Add message to formatted array
     formatted.push({
       role: role,
-      content: content.trim()
+      content: content.trim(),
     });
 
     lastRole = role;
@@ -70,11 +70,35 @@ function formatMessagesForAPI(messages) {
  * @returns {Object} - Validation result
  */
 function validateMessageFormat(messages) {
+  // Basic array validation
+  const arrayValidation = validateMessagesArray(messages);
+  if (!arrayValidation.valid) return arrayValidation;
+
+  // Individual message validation
+  const messageValidation = validateIndividualMessages(messages);
+  if (!messageValidation.valid) return messageValidation;
+
+  // Conversation structure validation
+  const structureValidation = validateConversationStructure(messages);
+  if (!structureValidation.valid) return structureValidation;
+
+  return {
+    valid: true,
+    messageCount: messages.length,
+  };
+}
+
+/**
+ * Validate that messages is a proper array
+ * @param {Array} messages - Messages to validate
+ * @returns {Object} - Validation result
+ */
+function validateMessagesArray(messages) {
   if (!Array.isArray(messages)) {
     return {
       valid: false,
       error: 'Messages must be an array',
-      code: 'INVALID_FORMAT'
+      code: 'INVALID_FORMAT',
     };
   }
 
@@ -82,20 +106,27 @@ function validateMessageFormat(messages) {
     return {
       valid: false,
       error: 'Messages array cannot be empty',
-      code: 'EMPTY_MESSAGES'
+      code: 'EMPTY_MESSAGES',
     };
   }
 
-  // Check for proper alternation
-  let lastRole = null;
+  return { valid: true };
+}
+
+/**
+ * Validate individual message objects
+ * @param {Array} messages - Messages to validate
+ * @returns {Object} - Validation result
+ */
+function validateIndividualMessages(messages) {
   for (let i = 0; i < messages.length; i++) {
     const message = messages[i];
-    
+
     if (!message || typeof message !== 'object') {
       return {
         valid: false,
         error: `Message at index ${i} is not a valid object`,
-        code: 'INVALID_MESSAGE_OBJECT'
+        code: 'INVALID_MESSAGE_OBJECT',
       };
     }
 
@@ -105,7 +136,7 @@ function validateMessageFormat(messages) {
       return {
         valid: false,
         error: `Invalid role "${role}" at index ${i}`,
-        code: 'INVALID_ROLE'
+        code: 'INVALID_ROLE',
       };
     }
 
@@ -113,16 +144,30 @@ function validateMessageFormat(messages) {
       return {
         valid: false,
         error: `Empty or invalid content at index ${i}`,
-        code: 'INVALID_CONTENT'
+        code: 'INVALID_CONTENT',
       };
     }
+  }
 
-    // Check for consecutive messages from same role
+  return { valid: true };
+}
+
+/**
+ * Validate conversation structure and alternation
+ * @param {Array} messages - Messages to validate
+ * @returns {Object} - Validation result
+ */
+function validateConversationStructure(messages) {
+  // Check for proper alternation
+  let lastRole = null;
+  for (let i = 0; i < messages.length; i++) {
+    const role = messages[i].role;
+
     if (lastRole === role) {
       return {
         valid: false,
         error: `Consecutive ${role} messages at index ${i}`,
-        code: 'ALTERNATION_ERROR'
+        code: 'ALTERNATION_ERROR',
       };
     }
 
@@ -134,14 +179,11 @@ function validateMessageFormat(messages) {
     return {
       valid: false,
       error: 'Conversation must start with a user message',
-      code: 'MUST_START_WITH_USER'
+      code: 'MUST_START_WITH_USER',
     };
   }
 
-  return {
-    valid: true,
-    messageCount: messages.length
-  };
+  return { valid: true };
 }
 
 /**
@@ -159,23 +201,27 @@ function fixConversationFormat(messages) {
 
     if (!validation.valid) {
       logger.warn('Message validation failed after formatting:', validation.error);
-      
+
       // If still invalid, return a minimal valid conversation
-      return [{
-        role: 'user',
-        content: 'Hello'
-      }];
+      return [
+        {
+          role: 'user',
+          content: 'Hello',
+        },
+      ];
     }
 
     return formatted;
   } catch (error) {
     logger.error('Error fixing conversation format:', error.message);
-    
+
     // Return minimal valid conversation as fallback
-    return [{
-      role: 'user',
-      content: 'Hello'
-    }];
+    return [
+      {
+        role: 'user',
+        content: 'Hello',
+      },
+    ];
   }
 }
 
@@ -193,7 +239,8 @@ function createAPICompatibilityError(errorMessage, statusCode = 400) {
     );
     error.statusCode = statusCode;
     error.needsConversationReset = true;
-    error.userMessage = 'I need to reset our conversation to fix a formatting issue. Please try your message again.';
+    error.userMessage =
+      'I need to reset our conversation to fix a formatting issue. Please try your message again.';
     return error;
   }
 
@@ -220,5 +267,5 @@ module.exports = {
   formatMessagesForAPI,
   validateMessageFormat,
   fixConversationFormat,
-  createAPICompatibilityError
+  createAPICompatibilityError,
 };

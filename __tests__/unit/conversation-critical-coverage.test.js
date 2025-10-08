@@ -3,6 +3,20 @@
  * Focus on uncovered branches and functions
  */
 
+// Mock database service for stats tracking
+const mockDatabaseService = {
+  getUserStats: jest.fn(),
+  getUserReminderCount: jest.fn(),
+  updateUserStats: jest.fn(),
+  addUserMessage: jest.fn(),
+  addBotResponse: jest.fn(),
+};
+
+// Track database state for testing
+const mockDatabaseState = new Map();
+
+jest.mock('../../src/services/database', () => mockDatabaseService);
+
 const ConversationManager = require('../../src/utils/conversation');
 const dataStorage = require('../../src/services/storage');
 const logger = require('../../src/utils/logger');
@@ -19,6 +33,7 @@ jest.mock('../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+  debug: jest.fn(),
 }));
 
 jest.mock('../../src/utils/error-handler', () => ({
@@ -57,9 +72,45 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
   };
 
   const setupMocks = () => {
+    // Clear database state
+    mockDatabaseState.clear();
+
     // Setup default mocks
     dataStorage.loadUserStats.mockResolvedValue({});
     dataStorage.saveUserStats.mockResolvedValue();
+
+    // Configure database mocks with state tracking
+    mockDatabaseService.getUserStats.mockImplementation((userId) => {
+      const stats = mockDatabaseState.get(userId) || {
+        message_count: 0,
+        total_summaries: 0,
+        last_active: null,
+      };
+      return stats;
+    });
+
+    mockDatabaseService.getUserReminderCount.mockReturnValue(0);
+
+    mockDatabaseService.updateUserStats.mockImplementation((userId, updates) => {
+      const currentStats = mockDatabaseState.get(userId) || {
+        message_count: 0,
+        total_summaries: 0,
+        last_active: null,
+      };
+
+      const newStats = { ...currentStats };
+      if (updates.message_count !== undefined) {
+        newStats.message_count = (newStats.message_count || 0) + updates.message_count;
+      }
+      if (updates.total_summaries !== undefined) {
+        newStats.total_summaries = (newStats.total_summaries || 0) + updates.total_summaries;
+      }
+      if (updates.last_active !== undefined) {
+        newStats.last_active = updates.last_active;
+      }
+
+      mockDatabaseState.set(userId, newStats);
+    });
 
     InputValidator.validateUserId.mockReturnValue({ valid: true });
     InputValidator.validateAndSanitize.mockReturnValue({
@@ -74,6 +125,7 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
     jest.clearAllMocks();
     setupTestEnvironment();
     setupMocks();
+
     conversationManager = new ConversationManager();
   });
 
@@ -197,9 +249,14 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'messages');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(2);
-      expect(stats.lastActive).toBeTruthy();
+      // Verify database service was called twice with correct parameters
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledTimes(2);
+      expect(mockDatabaseService.updateUserStats).toHaveBeenNthCalledWith(1, userId, {
+        message_count: 1,
+      });
+      expect(mockDatabaseService.updateUserStats).toHaveBeenNthCalledWith(2, userId, {
+        message_count: 1,
+      });
     });
 
     it('should update summary count correctly', () => {
@@ -207,9 +264,10 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
 
       conversationManager.updateUserStats(userId, 'summaries');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.summaries).toBe(1);
-      expect(stats.lastActive).toBeTruthy();
+      // Verify database service was called with correct parameters
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledWith(userId, {
+        total_summaries: 1,
+      });
     });
 
     it('should handle invalid stat types gracefully', () => {
@@ -217,10 +275,8 @@ describe('ConversationManager - Critical Coverage Enhancement', () => {
 
       conversationManager.updateUserStats(userId, 'invalid-type');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(0);
-      expect(stats.summaries).toBe(0);
-      expect(stats.lastActive).toBeTruthy();
+      // Invalid stat types should not call database service
+      expect(mockDatabaseService.updateUserStats).not.toHaveBeenCalled();
     });
   });
 

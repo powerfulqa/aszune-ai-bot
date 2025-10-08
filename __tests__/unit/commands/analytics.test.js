@@ -42,6 +42,21 @@ jest.mock('../../../src/services/database', () => ({
     completedReminders: 2,
     cancelledReminders: 0,
   }),
+  // Add stateful mock for user stats
+  getUserStats: jest.fn().mockImplementation((userId) => {
+    if (userId === 'test-user-123') {
+      return {
+        message_count: 10,
+        total_summaries: 2,
+        last_active: new Date().toISOString(),
+      };
+    }
+    return {
+      message_count: 0,
+      total_summaries: 0,
+      last_active: null,
+    };
+  }),
 }));
 jest.mock('../../../src/utils/performance-dashboard', () => ({
   generateDashboardReport: jest.fn().mockResolvedValue({
@@ -270,7 +285,10 @@ describe('Stats Command', () => {
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.reply).toHaveBeenCalledWith(
-      '**Your Aszai Bot Stats:**\n' + 'Messages sent: 10\n' + 'Summaries requested: 2\n' + 'Active reminders: 0'
+      '**Your Aszai Bot Stats:**\n' +
+        'Messages sent: 10\n' +
+        'Summaries requested: 2\n' +
+        'Active reminders: 0'
     );
   });
 });
@@ -291,6 +309,7 @@ describe('Help Command', () => {
       '**Aszai Bot Commands:**\n' +
         '`/help` - Show this help message\n' +
         '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+        '`/newconversation` - Start fresh on a new topic\n' +
         '`/summary` - Summarise your current conversation\n' +
         '`/summarise <text>` - Summarise provided text\n' +
         '`/stats` - Show your usage stats\n' +
@@ -300,8 +319,11 @@ describe('Help Command', () => {
         '`/remind <time> <message>` - Set a reminder\n' +
         '`/reminders` - List your active reminders\n' +
         '`/cancelreminder <id>` - Cancel a specific reminder\n' +
-        '\n**Note:** Use "!" at the start of any message to prevent the bot from responding.\n' +
-        'Simply chat as normal to talk to the bot!'
+        '\n**Tips:**\n' +
+        '• Bot remembers last 12 messages for context\n' +
+        '• Use `/newconversation` when changing topics\n' +
+        '• Conversations auto-clear after 15 min inactivity\n' +
+        '• Use "!" at start of message to prevent bot response'
     );
   });
 });

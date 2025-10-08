@@ -1,8 +1,6 @@
 const fs = require('fs').promises;
-const _path = require('path');
 const cachePruner = require('../../src/utils/cache-pruner');
 const logger = require('../../src/utils/logger');
-const _config = require('../../src/config/config');
 
 // Mock dependencies
 jest.mock('fs', () => ({
@@ -31,7 +29,6 @@ describe('Cache Pruner', () => {
   // Mock setInterval
   const originalSetInterval = global.setInterval;
   let mockSetInterval;
-  let _intervalCallback;
 
   beforeEach(() => {
     // Reset mocks
@@ -41,8 +38,7 @@ describe('Cache Pruner', () => {
     Date.now = jest.fn().mockReturnValue(mockNow);
 
     // Mock setInterval
-    mockSetInterval = jest.fn((callback, _interval) => {
-      _intervalCallback = callback;
+    mockSetInterval = jest.fn((_callback, _interval) => {
       return 123; // interval ID
     });
     global.setInterval = mockSetInterval;

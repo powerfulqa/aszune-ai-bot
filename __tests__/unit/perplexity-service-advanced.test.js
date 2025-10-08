@@ -3,7 +3,6 @@
  */
 const { request } = require('undici');
 const PerplexityService = require('../../src/services/perplexity-secure');
-const config = require('../../src/config/config');
 const { mockSuccessResponse, mockErrorResponse } = require('../utils/undici-mock-helpers');
 
 jest.mock('undici', () => ({

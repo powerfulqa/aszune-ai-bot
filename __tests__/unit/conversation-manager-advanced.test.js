@@ -12,6 +12,17 @@ jest.mock('../../src/services/storage', () => ({
   saveUserStats: jest.fn().mockResolvedValue(),
 }));
 
+// Mock database service for stats tracking
+const mockDatabaseService = {
+  getUserStats: jest.fn(),
+  getUserReminderCount: jest.fn(),
+  updateUserStats: jest.fn(),
+  addUserMessage: jest.fn(),
+  addBotResponse: jest.fn(),
+};
+
+jest.mock('../../src/services/database', () => mockDatabaseService);
+
 const ConversationManager = require('../../src/utils/conversation');
 const config = require('../../src/config/config');
 let conversationManager;
@@ -20,6 +31,14 @@ describe('Conversation Manager - Advanced Features', () => {
   beforeEach(() => {
     conversationManager = new ConversationManager();
     jest.clearAllMocks();
+
+    // Configure database mocks with default returns
+    mockDatabaseService.getUserStats.mockReturnValue({
+      message_count: 0,
+      total_summaries: 0,
+      last_active: null,
+    });
+    mockDatabaseService.getUserReminderCount.mockReturnValue(0);
 
     // Clear all conversation data
     conversationManager.conversations.clear();
@@ -78,15 +97,22 @@ describe('Conversation Manager - Advanced Features', () => {
 
     it('returns existing stats for users with history', () => {
       const userId = '123456789012345678';
-      const mockStats = {
-        messages: 5,
-        summaries: 2,
-        lastActive: Date.now(),
+      const mockDbStats = {
+        message_count: 5,
+        total_summaries: 2,
+        last_active: '2024-01-01T00:00:00.000Z',
       };
 
-      conversationManager.userStats.set(userId, mockStats);
+      mockDatabaseService.getUserStats.mockReturnValueOnce(mockDbStats);
+      mockDatabaseService.getUserReminderCount.mockReturnValueOnce(3);
+
       const stats = conversationManager.getUserStats(userId);
-      expect(stats).toEqual(mockStats);
+      expect(stats).toEqual({
+        messages: 5,
+        summaries: 2,
+        reminders: 3,
+        lastActive: '2024-01-01T00:00:00.000Z',
+      });
     });
   });
 
@@ -95,16 +121,22 @@ describe('Conversation Manager - Advanced Features', () => {
       const userId = '123456789012345678';
       conversationManager.updateUserStats(userId, 'messages');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(1);
+      // Verify database service was called with correct parameters
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({ message_count: 1 })
+      );
     });
 
     it('updates summary count', () => {
       const userId = '123456789012345678';
       conversationManager.updateUserStats(userId, 'summaries');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.summaries).toBe(1);
+      // Verify database service was called with correct parameters
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({ total_summaries: 1 })
+      );
     });
 
     it('increments existing counts', () => {
@@ -113,20 +145,30 @@ describe('Conversation Manager - Advanced Features', () => {
       conversationManager.updateUserStats(userId, 'messages');
       conversationManager.updateUserStats(userId, 'summaries');
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(2);
-      expect(stats.summaries).toBe(1);
+      // Verify database service was called three times
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledTimes(3);
+      expect(mockDatabaseService.updateUserStats).toHaveBeenNthCalledWith(
+        1,
+        userId,
+        expect.objectContaining({ message_count: 1 })
+      );
+      expect(mockDatabaseService.updateUserStats).toHaveBeenNthCalledWith(
+        3,
+        userId,
+        expect.objectContaining({ total_summaries: 1 })
+      );
     });
 
     it('updates last active timestamp', () => {
       const userId = '123456789012345678';
-      const beforeUpdate = Date.now();
       conversationManager.updateUserStats(userId, 'messages');
-      const afterUpdate = Date.now();
 
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.lastActive).toBeGreaterThanOrEqual(beforeUpdate);
-      expect(stats.lastActive).toBeLessThanOrEqual(afterUpdate);
+      // Verify database service was called
+      // Note: updateUserStats only updates the count, not timestamp
+      // Timestamps are updated by the chat service when messages are added
+      expect(mockDatabaseService.updateUserStats).toHaveBeenCalledWith(userId, {
+        message_count: 1,
+      });
     });
   });
 
@@ -151,7 +193,6 @@ describe('Conversation Manager - Advanced Features', () => {
       conversationManager.addMessage(userId, 'user', 'hello');
 
       expect(conversationManager.getHistory(userId)).toHaveLength(1);
-      expect(conversationManager.getUserStats(userId).messages).toBe(1);
 
       conversationManager.destroy();
 

@@ -116,7 +116,7 @@ describe('Chat Service - Basic', () => {
   // Test the new simple reminder detection function for coverage
   describe('Simple Reminder Detection', () => {
     const { checkForSimpleReminderRequest } = require('../../src/services/chat');
-    
+
     // Mock the reminder command handler
     const mockHandleReminderCommand = jest.fn();
     jest.doMock('../../src/commands/reminder', () => ({
@@ -173,7 +173,7 @@ describe('Chat Service - Basic', () => {
         'please remind me about meeting in 1 hour',
         'can you remind me to call in 30 minutes',
         'set a reminder to take pills in 2 hours',
-        'remind me in 15 minutes'
+        'remind me in 15 minutes',
       ];
 
       for (const pattern of patterns) {
@@ -181,14 +181,14 @@ describe('Chat Service - Basic', () => {
           success: true,
           message: 'I\'ll remind you',
         });
-        
+
         const result = await checkForSimpleReminderRequest(
           pattern,
           'user123',
-          'channel456', 
+          'channel456',
           'server789'
         );
-        
+
         expect(result).toBeTruthy();
         expect(result.message).toContain('I\'ll remind you');
         mockHandleReminderCommand.mockClear();
@@ -227,7 +227,7 @@ describe('Chat Service - Basic', () => {
     it('should call sendReminderResponse for successful reminders', async () => {
       // Mock successful reminder creation
       mockHandleReminderCommand.mockResolvedValue();
-      
+
       // Test through checkForSimpleReminderRequest to exercise reminder logic
       const reminderResult = await checkForSimpleReminderRequest(
         'remind me in 10 minutes',
@@ -260,13 +260,13 @@ describe('Chat Service - Basic', () => {
     it('should test uncovered error handling paths', async () => {
       // Create a message that will go through input validation
       const mockMessage = createMessage('test message that will fail somewhere');
-      
+
       // Mock perplexityService to return a response
       perplexityService.generateChatResponse.mockResolvedValue('AI response');
-      
+
       // This should exercise more of the error handling code paths
       const result = await handleChatMessage(mockMessage);
-      
+
       // The result can be null or undefined depending on the code path
       expect([null, undefined]).toContain(result);
     });
@@ -275,7 +275,7 @@ describe('Chat Service - Basic', () => {
       // Test with a pattern that might match but has edge cases
       const result = await checkForSimpleReminderRequest(
         'remind me in',
-        'user123', 
+        'user123',
         'channel456',
         'server789'
       );

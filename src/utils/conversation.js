@@ -134,10 +134,12 @@ class ConversationManager {
     if (!lastTimestamp) return;
 
     const inactivityPeriod = Date.now() - lastTimestamp;
-    const timeoutMs = config.CONVERSATION_INACTIVITY_TIMEOUT_MS || (15 * 60 * 1000);
+    const timeoutMs = config.CONVERSATION_INACTIVITY_TIMEOUT_MS || 15 * 60 * 1000;
 
     if (inactivityPeriod > timeoutMs) {
-      logger.info(`Auto-clearing conversation for user ${userId} after ${Math.floor(inactivityPeriod / 1000 / 60)} minutes of inactivity`);
+      logger.info(
+        `Auto-clearing conversation for user ${userId} after ${Math.floor(inactivityPeriod / 1000 / 60)} minutes of inactivity`
+      );
       this.clearHistory(userId);
     }
   }
@@ -244,12 +246,12 @@ class ConversationManager {
     try {
       const dbStats = databaseService.getUserStats(userId);
       const reminderCount = databaseService.getUserReminderCount(userId);
-      
+
       return {
         messages: dbStats.message_count || 0,
         summaries: dbStats.total_summaries || 0,
         reminders: reminderCount || 0,
-        lastActive: dbStats.last_active || null
+        lastActive: dbStats.last_active || null,
       };
     } catch (error) {
       logger.warn(`Failed to get user stats from database for ${userId}: ${error.message}`);
@@ -266,8 +268,10 @@ class ConversationManager {
   updateUserStats(userId, statType) {
     // This method is deprecated but kept for backward compatibility
     // Stats are now tracked directly in database by chat service
-    logger.debug(`updateUserStats called for ${userId} with ${statType} - this is deprecated, use database service directly`);
-    
+    logger.debug(
+      `updateUserStats called for ${userId} with ${statType} - this is deprecated, use database service directly`
+    );
+
     try {
       if (statType === 'messages') {
         databaseService.updateUserStats(userId, { message_count: 1 });

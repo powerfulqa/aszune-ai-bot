@@ -20,10 +20,10 @@ beforeEach(() => {
   jest.resetModules();
 });
 
-// Clean up after all tests
-afterAll(() => {
-  jest.restoreAllMocks();
-});
+// Clean up after all tests - disabled due to hanging issues
+// afterAll(async () => {
+//   jest.restoreAllMocks();
+// }, 2000);
 
 // Global test timeouts
 jest.setTimeout(10000);

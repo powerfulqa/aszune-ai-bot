@@ -21,7 +21,8 @@ async function handleCommandAliases(message, args, originalCommand) {
           {
             color: 0xffa500,
             title: 'Missing Reminder ID',
-            description: 'Usage: `!cancelreminder <id>`\nUse `!reminders` to see your active reminders.',
+            description:
+              'Usage: `!cancelreminder <id>`\nUse `!reminders` to see your active reminders.',
             footer: { text: 'Aszai Bot' },
           },
         ],
@@ -34,7 +35,7 @@ async function handleCommandAliases(message, args, originalCommand) {
 
 async function handleReminderSubcommands(message, args) {
   const subcommand = args[0]?.toLowerCase();
-  
+
   switch (subcommand) {
   case 'set':
   case 'create':
@@ -55,7 +56,7 @@ async function handleReminderCommand(message, args) {
   try {
     // Get the original command to determine behavior
     const originalCommand = message.content.trim().split(/\s+/)[0].toLowerCase();
-    
+
     // Handle different command aliases
     const aliasResult = await handleCommandAliases(message, args, originalCommand);
     if (aliasResult) {

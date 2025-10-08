@@ -5,7 +5,7 @@ module.exports = {
   // Add timeout and force exit settings to prevent hanging
   testTimeout: 10000,
   forceExit: true,
-  detectOpenHandles: true,
+  // detectOpenHandles: true, // Disabled since intervals are properly guarded with test env checks
   maxWorkers: 1,
   collectCoverageFrom: [
     'src/**/*.js',

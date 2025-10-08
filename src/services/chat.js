@@ -23,45 +23,41 @@ const conversationManager = new ConversationManager();
  */
 function shouldIgnoreMessage(message) {
   const content = message.content.trim();
-  
+
   // Ignore empty messages
   if (!content) return true;
-  
+
   // Ignore Discord system commands and mentions
-  const systemCommands = [
-    '@everyone',
-    '@here',
-    '@channel',
-  ];
-  
+  const systemCommands = ['@everyone', '@here', '@channel'];
+
   // Check if message is just a system command
   if (systemCommands.includes(content.toLowerCase())) {
     logger.debug(`Ignoring Discord system command: ${content}`);
     return true;
   }
-  
+
   // Ignore messages that are only mentions of other users (not the bot)
   const mentionRegex = /^<@!?(\d+)>$/;
   const mentionMatch = content.match(mentionRegex);
   if (mentionMatch) {
     const mentionedUserId = mentionMatch[1];
     const botId = message.client.user?.id;
-    
+
     // If it's just a mention of someone else (not the bot), ignore it
     if (botId && mentionedUserId !== botId) {
       logger.debug(`Ignoring mention of other user: ${mentionedUserId}`);
       return true;
     }
   }
-  
+
   // Ignore messages that start with common bot prefixes for other bots
   // This includes "!" which we use to prevent bot pickup of conversations
   const commonBotPrefixes = ['!', '/', '$', '%', '&', '?', '.', '-', '+', '='];
-  if (commonBotPrefixes.some(prefix => content.startsWith(prefix))) {
+  if (commonBotPrefixes.some((prefix) => content.startsWith(prefix))) {
     logger.debug(`Ignoring message with bot prefix: ${content.charAt(0)}`);
     return true;
   }
-  
+
   return false;
 }
 
@@ -167,7 +163,7 @@ function findSimpleReminderMatch(messageContent) {
     /(?:can you |please )?remind me (?:to |about )?(.+?) in (\d+) (minute|minutes|hour|hours|day|days)/i,
     /(?:can you |please )?remind me in (\d+) (minute|minutes|hour|hours|day|days)(?: to | about | that | )(.+)?/i,
     /set (?:a )?reminder (?:for |to )?(.+?) (?:in |for )(\d+) (minute|minutes|hour|hours|day|days)/i,
-    /remind me in (\d+) (minute|minutes|hour|hours|day|days)/i
+    /remind me in (\d+) (minute|minutes|hour|hours|day|days)/i,
   ];
 
   for (const pattern of simpleReminderPatterns) {
@@ -179,10 +175,10 @@ function findSimpleReminderMatch(messageContent) {
 
 async function createSimpleReminder(match, userId, channelId, serverId) {
   const { handleReminderCommand } = require('../commands/reminder');
-  
+
   // Extract time and message components
   let timeAmount, timeUnit, reminderMessage;
-  
+
   if (match[2] && match[3]) {
     reminderMessage = match[1] || 'Reminder';
     timeAmount = match[2];
@@ -198,20 +194,24 @@ async function createSimpleReminder(match, userId, channelId, serverId) {
     channel: { id: channelId },
     guild: serverId !== 'DM' ? { id: serverId } : null,
     content: `!remind "${timeAmount} ${timeUnit}" ${reminderMessage}`,
-    reply: () => Promise.resolve()
+    reply: () => Promise.resolve(),
   };
 
   try {
-    await handleReminderCommand(mockMessage, [`"in ${timeAmount} ${timeUnit}"`, ...reminderMessage.split(' ')]);
+    await handleReminderCommand(mockMessage, [
+      `"in ${timeAmount} ${timeUnit}"`,
+      ...reminderMessage.split(' '),
+    ]);
     return {
       success: true,
-      message: `I'll remind you ${reminderMessage ? `about "${reminderMessage}" ` : ''}in ${timeAmount} ${timeUnit}.`
+      message: `I'll remind you ${reminderMessage ? `about "${reminderMessage}" ` : ''}in ${timeAmount} ${timeUnit}.`,
     };
   } catch (error) {
     logger.error('Error creating simple reminder:', error);
     return {
       success: false,
-      message: 'Sorry, I couldn\'t set that reminder. Please try using the format: !remind "in 5 minutes" your message'
+      message:
+        'Sorry, I couldn\'t set that reminder. Please try using the format: !remind "in 5 minutes" your message',
     };
   }
 }
@@ -262,8 +262,6 @@ async function checkForReminderRequest(sanitizedContent, userId, channelId, serv
     return null;
   }
 }
-
-
 
 /**
  * Track performance metrics for chat operations
@@ -340,8 +338,6 @@ async function loadConversationHistory(userId, messageContent) {
   return conversationHistory;
 }
 
-
-
 /**
  * Handle an incoming chat message
  * @param {Object} message - Discord.js message object
@@ -349,7 +345,6 @@ async function loadConversationHistory(userId, messageContent) {
  */
 async function handleChatMessage(message) {
   const startTime = Date.now();
-
 
   // Process the incoming message
   const processedData = await processUserMessage(message);
@@ -407,8 +402,6 @@ async function sendReminderResponse(message, reminderResult) {
 
   await message.reply({ embeds: [embed] });
 }
-
-
 
 /**
  * Handle chat processing errors
@@ -481,7 +474,6 @@ async function processAIResponse(message, processedData, userId) {
       conversationManager.getHistory(processedData.userId)
     );
 
-
     const formattedReply = messageFormatter.formatResponse(response);
 
     // Add emojis to response
@@ -507,7 +499,7 @@ async function processAIResponse(message, processedData, userId) {
         description: chunk,
         footer: { text: 'Aszai Bot' },
       });
-      
+
       await message.reply({ embeds: [embed] });
     }
 

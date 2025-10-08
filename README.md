@@ -161,6 +161,15 @@ quality with 1000+ automated tests and built-in license protection system.
   - 📈 **Analytics Foundation:** Powers advanced user engagement tracking and trend analysis
   - 🛡️ **Data Integrity:** Automatic table management with built-in constraints and triggers
 
+- ⏰ **AI-Powered Reminder System:** Natural language reminder scheduling with intelligent time parsing
+  - 🧠 **Natural Language Processing:** Conversational reminder detection and automatic scheduling
+  - 📅 **Advanced Time Parsing:** Supports relative, absolute, and natural language time expressions
+  - 🌍 **Timezone Support:** Multi-timezone reminder scheduling with user-aware time handling
+  - 🔄 **Persistent Reminders:** SQLite-backed reminder storage with automatic recovery on restart
+  - 📱 **Discord Integration:** Direct Discord ping notifications when reminders trigger
+  - 🎯 **Smart Research:** AI-powered information lookup for event-based reminders (game releases, etc.)
+  - 📋 **Reminder Management:** Full CRUD operations with list, cancel, and update capabilities
+
 ---
 
 ## Installation
@@ -310,6 +319,14 @@ script for Pi deployments.
 | `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
 | `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
 
+### Reminder Commands (NEW in v1.7.0)
+
+| Command                                   | Description                                                 |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `!remind <time> <message>` / `/remind`    | Set a reminder with natural language time parsing           |
+| `!reminders` / `/reminders`               | List all your active reminders                              |
+| `!cancelreminder <id>` / `/cancelreminder`| Cancel a specific reminder by ID                             |
+
 ### Analytics Commands (NEW in v1.6.0)
 
 | Command                     | Description                                                     |
@@ -388,33 +405,52 @@ Built-in license validation and monitoring:
 aszune-ai-bot/
 ├── src/
 │   ├── index.js                    # Main entry point
-│   ├── commands/                   # Command handlers
-│   │   └── index.js               # Unified command handler
+│   ├── commands/                   # Command handlers (slash + text commands)
+│   │   ├── index.js               # Unified command handler
+│   │   └── reminder.js             # Reminder command handler
 │   ├── config/                     # Configuration settings
 │   │   └── config.js              # Global configuration
 │   ├── services/                   # API and core services
-│   │   ├── chat.js                # Chat message handler
-│   │   ├── database.js            # SQLite database service
-│   │   ├── perplexity-secure.js   # Perplexity API service
-│   │   └── storage.js             # Data storage service
+│   │   ├── api-client.js           # HTTP requests and API communication
+│   │   ├── cache-manager.js        # Response caching and cleanup management
+│   │   ├── chat.js                 # Chat message handler
+│   │   ├── database.js             # SQLite database service with reminder support
+│   │   ├── perplexity-secure.js    # Perplexity API service
+│   │   ├── reminder-service.js     # Reminder scheduling and management
+│   │   ├── response-processor.js   # API response processing and formatting
+│   │   ├── storage.js              # Data storage service
+│   │   └── throttling-service.js   # Rate limiting and connection throttling
 │   └── utils/                      # Utility functions and helpers
 │       ├── conversation.js         # Conversation management
 │       ├── error-handler.js        # Error handling utilities
-│       ├── input-validator.js      # Input validation
+│       ├── input-validator.js      # Input validation and sanitization
 │       ├── logger.js               # Logging utilities
-│       ├── memory-monitor.js       # Memory monitoring
+│       ├── memory-monitor.js       # Memory monitoring and GC
 │       ├── message-chunker.js      # Message chunking
 │       ├── message-chunking/       # Enhanced chunking system
 │       │   ├── index.js           # Main chunking coordinator
 │       │   ├── chunk-boundary-handler.js
 │       │   ├── source-reference-processor.js
 │       │   └── url-formatter.js
+│       ├── natural-language-reminder.js # AI-powered reminder detection
 │       ├── pi-detector.js          # Raspberry Pi detection
+│       ├── performance-monitor.js  # Performance tracking
+│       ├── time-parser.js          # Advanced time parsing for reminders
 │       └── [other utilities]       # Additional utility modules
 ├── data/                           # Persistent data storage
 │   ├── bot.db                     # SQLite database (auto-created)
 │   └── question_cache.json        # Response cache
 ├── docs/                          # Version-specific documentation
+├── scripts/                       # Development and utility scripts
+│   ├── check-triggers.js          # Database trigger validation
+│   ├── fix-line-endings.ps1       # Line ending normalization
+│   ├── fix-production.bat         # Production fix utilities
+│   ├── format-code.ps1            # Code formatting scripts
+│   ├── generate-license.*         # License generation tools
+│   ├── pi-license-setup.sh        # Raspberry Pi license setup
+│   ├── run-tests.bat              # Test execution scripts
+│   ├── start-test.bat             # Test environment setup
+│   └── README.md                  # Scripts documentation
 ├── wiki/                          # Comprehensive documentation
 ├── __tests__/                     # Test suites
 │   ├── integration/               # Integration tests
@@ -681,9 +717,51 @@ NODE_ENV=development npm start
 
 ## Changelog
 
-### 1.6.0 (2025-01-21) - Analytics & Professional Licensing
+### 1.7.0 (2025-10-08) - Database Integration & Reminder System
 
-**🔄 License Change**: Migrated from MIT to Proprietary License with Free Personal Use
+**💾 Complete Database Integration**: Full SQLite database implementation for persistent data storage
+
+**🎯 Major Features**:
+
+- **SQLite Database Service**: Complete database integration with automatic table creation and management
+  - **Conversation History**: Persistent storage of user messages and bot responses across restarts
+  - **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
+  - **Reminder Persistence**: SQLite-backed reminder system with automatic recovery on bot restart
+  - **Graceful Fallback**: Seamless operation even when database is unavailable for testing
+  - **Data Integrity**: Foreign key constraints and automatic cleanup with proper indexing
+
+- **AI-Powered Reminder System**: Natural language reminder scheduling with intelligent time parsing
+  - **Natural Language Processing**: Conversational reminder detection and automatic scheduling
+  - **Advanced Time Parsing**: Supports relative, absolute, and natural language time expressions
+  - **Timezone Support**: Multi-timezone reminder scheduling with user-aware time handling
+  - **Discord Integration**: Direct Discord ping notifications when reminders trigger
+  - **Smart Research**: AI-powered information lookup for event-based reminders (game releases, etc.)
+  - **Reminder Management**: Full CRUD operations with list, cancel, and update capabilities
+
+**🛠️ Technical Improvements**:
+
+- **Database Architecture**: Robust SQLite implementation with proper error handling and recovery
+- **Service Integration**: Seamless database integration across all bot services
+- **Reminder Scheduling**: Event-driven reminder system with persistent storage and recovery
+- **Time Zone Handling**: Advanced chrono-node integration for accurate time parsing
+- **Memory Management**: Efficient reminder storage with automatic cleanup and optimization
+- **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
+
+**📚 Documentation**:
+
+- **Updated Project Structure**: Complete documentation of new database and reminder components
+- **Command Reference**: Full documentation of reminder commands and usage patterns
+- **Technical Documentation**: Database schema, service architecture, and integration details
+- **Wiki Updates**: Comprehensive wiki documentation for reminder system and database features
+
+**🚀 Deployment Strategy**:
+
+- **v1.7.0 Ready**: All database and reminder features fully functional
+- **Backward Compatible**: Existing installations continue working normally
+- **Database Migration**: Automatic database creation and table setup on first run
+- **Zero Configuration**: Database initializes automatically with no manual setup required
+
+### 1.6.0 (2025-01-21) - Analytics & Professional Licensing
 
 **🎯 Major Features**:
 

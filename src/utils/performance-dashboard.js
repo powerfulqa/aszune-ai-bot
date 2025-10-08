@@ -175,58 +175,119 @@ class PerformanceDashboard {
 
     return {
       timestamp,
-      overview: {
-        status: this._calculateOverallStatus(
-          analyticsReport,
-          performanceAnalysis,
-          resourceMonitoring
-        ),
-        serverCount:
-          analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalServers : 0,
-        activeUsers:
-          analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalUsers : 0,
-        totalCommands:
-          analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalCommands : 0,
-        errorRate:
-          analyticsReport && analyticsReport.summary
-            ? `${analyticsReport.summary.errorRate}%`
-            : '0%',
-        responseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
-        averageResponseTime: performanceAnalysis
-          ? `${performanceAnalysis.averageResponseTime}ms`
-          : '0ms',
-        memoryUsage:
-          resourceMonitoring && resourceMonitoring.memory
-            ? `${resourceMonitoring.memory.used}MB`
-            : '0MB',
-        optimizationTier: optimizedConfig ? optimizedConfig.tier : 'unknown',
-      },
-      analytics: {
-        daily: analyticsReport,
-        patterns: usagePatterns,
-        insights: this._generateInsights(analyticsReport, usagePatterns),
-      },
-      performance: {
-        trends: performanceAnalysis,
-        report: performanceReport,
-        alerts: this._checkPerformanceAlerts(performanceAnalysis),
-      },
-      resources: {
-        current: resourceMonitoring,
-        optimized: optimizedConfig,
-        recommendations: optimizationRecommendations,
-      },
-      security: {
-        summary: this._getSecuritySummary([]), // Will pass activityHistory in real implementation
-        recommendations: this._getSecurityRecommendations([]),
-      },
-      actionItems: this._generateActionItems(
-        analyticsReport,
-        performanceAnalysis,
-        resourceMonitoring
-      ),
-      nextSteps: this._generateNextSteps(analyticsReport, performanceAnalysis, optimizedConfig),
+      overview: this._buildOverviewSection(analyticsReport, performanceAnalysis, resourceMonitoring, optimizedConfig),
+      analytics: this._buildAnalyticsSection(analyticsReport, usagePatterns),
+      performance: this._buildPerformanceSection(performanceAnalysis, performanceReport),
+      resources: this._buildResourcesSection(resourceMonitoring, optimizedConfig, optimizationRecommendations),
+      security: this._buildSecuritySection(),
+      actionItems: this._buildActionItemsSection(analyticsReport, performanceAnalysis, resourceMonitoring),
+      nextSteps: this._buildNextStepsSection(analyticsReport, performanceAnalysis, optimizedConfig),
     };
+  }
+
+  /**
+   * Builds the overview section of the dashboard
+   * @param {Object} analyticsReport - Analytics report
+   * @param {Object} performanceAnalysis - Performance analysis
+   * @param {Object} resourceMonitoring - Resource monitoring data
+   * @param {Object} optimizedConfig - Optimized configuration
+   * @returns {Object} - Overview section
+   * @private
+   */
+  static _buildOverviewSection(analyticsReport, performanceAnalysis, resourceMonitoring, optimizedConfig) {
+    return {
+      status: this._calculateOverallStatus(analyticsReport, performanceAnalysis, resourceMonitoring),
+      serverCount: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalServers : 0,
+      activeUsers: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalUsers : 0,
+      totalCommands: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalCommands : 0,
+      errorRate: analyticsReport && analyticsReport.summary ? `${analyticsReport.summary.errorRate}%` : '0%',
+      responseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
+      averageResponseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
+      memoryUsage: resourceMonitoring && resourceMonitoring.memory ? `${resourceMonitoring.memory.used}MB` : '0MB',
+      optimizationTier: optimizedConfig ? optimizedConfig.tier : 'unknown',
+    };
+  }
+
+  /**
+   * Builds the analytics section of the dashboard
+   * @param {Object} analyticsReport - Analytics report
+   * @param {Object} usagePatterns - Usage patterns
+   * @returns {Object} - Analytics section
+   * @private
+   */
+  static _buildAnalyticsSection(analyticsReport, usagePatterns) {
+    return {
+      daily: analyticsReport,
+      patterns: usagePatterns,
+      insights: this._generateInsights(analyticsReport, usagePatterns),
+    };
+  }
+
+  /**
+   * Builds the performance section of the dashboard
+   * @param {Object} performanceAnalysis - Performance analysis
+   * @param {Object} performanceReport - Performance report
+   * @returns {Object} - Performance section
+   * @private
+   */
+  static _buildPerformanceSection(performanceAnalysis, performanceReport) {
+    return {
+      trends: performanceAnalysis,
+      report: performanceReport,
+      alerts: this._checkPerformanceAlerts(performanceAnalysis),
+    };
+  }
+
+  /**
+   * Builds the resources section of the dashboard
+   * @param {Object} resourceMonitoring - Resource monitoring data
+   * @param {Object} optimizedConfig - Optimized configuration
+   * @param {Array} optimizationRecommendations - Optimization recommendations
+   * @returns {Object} - Resources section
+   * @private
+   */
+  static _buildResourcesSection(resourceMonitoring, optimizedConfig, optimizationRecommendations) {
+    return {
+      current: resourceMonitoring,
+      optimized: optimizedConfig,
+      recommendations: optimizationRecommendations,
+    };
+  }
+
+  /**
+   * Builds the security section of the dashboard
+   * @returns {Object} - Security section
+   * @private
+   */
+  static _buildSecuritySection() {
+    return {
+      summary: this._getSecuritySummary([]), // Will pass activityHistory in real implementation
+      recommendations: this._getSecurityRecommendations([]),
+    };
+  }
+
+  /**
+   * Builds the action items section of the dashboard
+   * @param {Object} analyticsReport - Analytics report
+   * @param {Object} performanceAnalysis - Performance analysis
+   * @param {Object} resourceMonitoring - Resource monitoring data
+   * @returns {Array} - Action items
+   * @private
+   */
+  static _buildActionItemsSection(analyticsReport, performanceAnalysis, resourceMonitoring) {
+    return this._generateActionItems(analyticsReport, performanceAnalysis, resourceMonitoring);
+  }
+
+  /**
+   * Builds the next steps section of the dashboard
+   * @param {Object} analyticsReport - Analytics report
+   * @param {Object} performanceAnalysis - Performance analysis
+   * @param {Object} optimizedConfig - Optimized configuration
+   * @returns {Array} - Next steps
+   * @private
+   */
+  static _buildNextStepsSection(analyticsReport, performanceAnalysis, optimizedConfig) {
+    return this._generateNextSteps(analyticsReport, performanceAnalysis, optimizedConfig);
   }
 
   /**
@@ -389,17 +450,17 @@ class PerformanceDashboard {
    */
   static exportDashboardData(dashboardData, format = 'json') {
     switch (format.toLowerCase()) {
-      case 'json':
-        return JSON.stringify(dashboardData, null, 2);
+    case 'json':
+      return JSON.stringify(dashboardData, null, 2);
 
-      case 'csv':
-        return this._exportToCSV(dashboardData);
+    case 'csv':
+      return this._exportToCSV(dashboardData);
 
-      case 'text':
-        return this._exportToText(dashboardData);
+    case 'text':
+      return this._exportToText(dashboardData);
 
-      default:
-        return JSON.stringify(dashboardData, null, 2);
+    default:
+      return JSON.stringify(dashboardData, null, 2);
     }
   }
 

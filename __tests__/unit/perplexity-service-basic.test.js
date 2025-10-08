@@ -65,7 +65,7 @@ describe('Perplexity Service - Basic', () => {
 
     it('handles empty messages array', async () => {
       const messages = [];
-      
+
       // Our new message validation should reject empty arrays
       await expect(perplexityService.sendChatRequest(messages)).rejects.toThrow(
         'Invalid message format: Messages array cannot be empty'

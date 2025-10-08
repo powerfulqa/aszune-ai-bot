@@ -168,9 +168,10 @@ class TimeParser {
   _formatWeeks(diffDays) {
     const weeks = Math.floor(diffDays / 7);
     const remainingDays = diffDays % 7;
-    
+
     if (weeks === 1 && remainingDays === 0) return 'in 1 week';
-    if (weeks === 1) return `in 1 week and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+    if (weeks === 1)
+      return `in 1 week and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
     if (remainingDays === 0) return `in ${weeks} weeks`;
     return `in ${weeks} weeks and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
   }
@@ -183,9 +184,10 @@ class TimeParser {
   _formatMonths(diffDays) {
     const months = Math.floor(diffDays / 30);
     const remainingDays = diffDays % 30;
-    
+
     if (months === 1 && remainingDays === 0) return 'in 1 month';
-    if (months === 1) return `in 1 month and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+    if (months === 1)
+      return `in 1 month and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
     if (remainingDays === 0) return `in ${months} months`;
     return `in ${months} months and ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
   }
@@ -199,7 +201,7 @@ class TimeParser {
     const years = Math.floor(diffDays / 365);
     const remainingDays = diffDays % 365;
     const months = Math.floor(remainingDays / 30);
-    
+
     if (years === 1 && months === 0) return 'in 1 year';
     if (years === 1) return `in 1 year and ${months} ${months === 1 ? 'month' : 'months'}`;
     if (months === 0) return `in ${years} years`;
@@ -274,7 +276,7 @@ class TimeParser {
     if (relativeMatch && !scheduledTime) {
       const amount = parseInt(relativeMatch[1]);
       const unit = relativeMatch[2].toLowerCase();
-      
+
       scheduledTime = new Date(now);
       if (unit === 'minute') {
         scheduledTime.setMinutes(scheduledTime.getMinutes() + amount);
@@ -286,7 +288,9 @@ class TimeParser {
     }
 
     if (!scheduledTime || scheduledTime <= now) {
-      throw new Error('Unable to parse time expression. Try "YYYY-MM-DD HH:MM:SS" or "in X minutes/hours/days"');
+      throw new Error(
+        'Unable to parse time expression. Try "YYYY-MM-DD HH:MM:SS" or "in X minutes/hours/days"'
+      );
     }
 
     return {
@@ -294,7 +298,7 @@ class TimeParser {
       timezone: userTimezone,
       originalExpression: timeExpression,
       parsedText: timeExpression,
-      fallbackUsed: true
+      fallbackUsed: true,
     };
   }
 }
