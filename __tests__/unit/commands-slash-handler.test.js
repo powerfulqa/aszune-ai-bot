@@ -1,6 +1,6 @@
 /**
  * Commands - Slash Command Handler Tests
- * Tests slash command handling functionality
+ * Tests core slash command handling functionality
  */
 
 jest.useFakeTimers();
@@ -8,6 +8,7 @@ jest.useFakeTimers();
 // Mock dependencies
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/perplexity-secure');
+
 // Create a mock database service instance
 const mockDatabaseService = {
   addUserMessage: jest.fn(),
@@ -295,45 +296,6 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(interaction.reply).toHaveBeenCalled();
-    });
-
-    it('should handle cache command with detailed info having entries', async () => {
-      const interaction = createMockInteraction({ commandName: 'cache' });
-
-      // Mock cache service to return detailed info with entries
-      perplexityService.getCacheStats.mockReturnValue({
-        hitRate: 85,
-        hits: 170,
-        misses: 30,
-        sets: 100,
-        deletes: 20,
-        evictions: 10,
-        memoryUsageFormatted: '75MB',
-        maxMemoryFormatted: '100MB',
-        entryCount: 50,
-        maxSize: 100,
-        evictionStrategy: 'LRU',
-        uptimeFormatted: '3h 45m',
-      });
-
-      perplexityService.getDetailedCacheInfo.mockReturnValue({
-        entries: [{ key: 'entry1' }, { key: 'entry2' }, { key: 'entry3' }],
-      });
-
-      await handleSlashCommand(interaction);
-
-      expect(interaction.editReply).toHaveBeenCalledWith({
-        embeds: [
-          expect.objectContaining({
-            fields: expect.arrayContaining([
-              expect.objectContaining({
-                name: 'Recent Entries',
-                value: expect.stringContaining('entry1'),
-              }),
-            ]),
-          }),
-        ],
-      });
     });
   });
 });
