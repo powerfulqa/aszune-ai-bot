@@ -221,15 +221,12 @@ class InputValidator {
 
     // Sanitization and safety checks
     const sanitizationResult = this.sanitizeContent(content);
-    if (sanitizationResult.warnings.length > 0) {
-      return {
-        valid: false,
-        error: 'Message contains potentially dangerous content',
-        warnings: sanitizationResult.warnings,
-      };
-    }
+    // For messages, we sanitize the content but don't reject on warnings
+    // The sanitized content is safe to use, and overly strict rejection
+    // can block legitimate user messages (e.g., game names, normal text)
+    // Warnings are still logged for monitoring purposes
 
-    return { valid: true, sanitized: sanitizationResult.content };
+    return { valid: true, sanitized: sanitizationResult.content, warnings: sanitizationResult.warnings };
   }
 
   /**
