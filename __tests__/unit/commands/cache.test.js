@@ -68,9 +68,9 @@ describe('Cache Command', () => {
     });
 
     perplexityService.getDetailedCacheInfo.mockReturnValue({
-      entries: [
-        { key: 'test-key-1', accessCount: 5 },
-        { key: 'test-key-2', accessCount: 3 },
+      recentEntries: [
+        { key: 'test-key-1', value: 'test-value-1', ttl: 300 },
+        { key: 'test-key-2', value: 'test-value-2', ttl: 600 },
       ],
       totalEntries: 21,
     });
@@ -158,7 +158,7 @@ describe('Cache Command', () => {
         uptimeFormatted: '0s',
         evictionStrategy: 'hybrid',
       },
-      entries: [], // Empty entries
+      recentEntries: [], // Empty entries
     });
 
     await handleSlashCommand(mockInteraction);

@@ -106,7 +106,11 @@ describe('Commands - Cache Command', () => {
       });
 
       perplexityService.getDetailedCacheInfo = jest.fn().mockReturnValue({
-        entries: [{ key: 'entry1' }, { key: 'entry2' }, { key: 'entry3' }],
+        recentEntries: [
+          { key: 'entry1', value: 'value1', ttl: 300 },
+          { key: 'entry2', value: 'value2', ttl: 600 },
+          { key: 'entry3', value: 'value3', ttl: 900 },
+        ],
       });
 
       await handleSlashCommand(interaction);

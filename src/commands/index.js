@@ -27,14 +27,17 @@ const commands = {
         '**Aszai Bot Commands:**\n' +
           '`/help` - Show this help message\n' +
           '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+          '`/newconversation` - Start fresh on a new topic\n' +
           '`/summary` - Summarise your current conversation\n' +
           '`/summarise <text>` - Summarise provided text\n' +
           '`/stats` - Show your usage stats\n' +
           '`/analytics` - Show Discord server analytics\n' +
           '`/dashboard` - Show performance dashboard\n' +
           '`/resources` - Show resource optimization status\n' +
-          'Simply chat as normal to talk to the bot!\n' +
-          'Use "!" at start of message to prevent bot response'
+          '`/remind <time> <message>` - Set a reminder\n' +
+          '`/reminders` - List your active reminders\n' +
+          '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+          'Simply chat as normal to talk to the bot!'
       );
     },
     textCommand: '!help',
@@ -50,15 +53,7 @@ const commands = {
       databaseService.clearUserData(userId);
       conversationManager.clearHistory(userId);
 
-      await interaction.reply({
-        embeds: [
-          {
-            color: '#5865F2',
-            description: 'Your conversation history and stats have been cleared.',
-            footer: { text: 'Aszai Bot' },
-          },
-        ],
-      });
+      return interaction.reply('Conversation history cleared! Your stats have been preserved.');
     },
     textCommand: '!clearhistory',
   },
@@ -340,7 +335,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Analytics • Database-powered' },
+          footer: { text: 'Aszai Bot Analytics' },
           timestamp: new Date().toISOString(),
         };
 
@@ -446,7 +441,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Dashboard • Database-powered • Real-time data' },
+          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
           timestamp: new Date().toISOString(),
         };
 
@@ -507,7 +502,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Resources • Database-powered • Real-time monitoring' },
+          footer: { text: 'Aszai Bot Resource Monitor' },
           timestamp: new Date().toISOString(),
         };
 
@@ -651,6 +646,166 @@ const commands = {
     textCommand: '!summarise',
     // Add alias commands that will be recognized
     aliases: ['!summerise'],
+  },
+
+  remind: {
+    data: {
+      name: 'remind',
+      description: 'Set a reminder',
+      options: [
+        {
+          name: 'time',
+          description: 'When to remind you (e.g., "in 5 minutes", "tomorrow at 3pm")',
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+        {
+          name: 'message',
+          description: 'The reminder message',
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+    },
+    async execute(interaction) {
+      const userId = interaction.user.id;
+      const time = interaction.options.getString('time');
+      const message = interaction.options.getString('message');
+
+      // Validate inputs
+      const timeValidation = InputValidator.validateTimeString(time);
+      if (!timeValidation.valid) {
+        return interaction.reply(`❌ Invalid time format: ${timeValidation.error}`);
+      }
+
+      const messageValidation = InputValidator.validateReminderMessage(message);
+      if (!messageValidation.valid) {
+        return interaction.reply(`❌ Invalid reminder message: ${messageValidation.error}`);
+      }
+
+      try {
+        const reminderService = require('../services/reminder-service');
+        const reminder = await reminderService.setReminder(userId, time, message);
+        
+        return interaction.reply({
+          embeds: [
+            {
+              color: 0x00ff00,
+              title: '⏰ Reminder Set',
+              description: `I'll remind you: **${message}**\n⏰ ${reminder.dueDate}`,
+              footer: { text: 'Aszai Bot' },
+            },
+          ],
+        });
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'reminder creation', {
+          userId,
+          time,
+          messageLength: message.length,
+        });
+        return interaction.reply(errorResponse.message);
+      }
+    },
+  },
+
+  reminders: {
+    data: {
+      name: 'reminders',
+      description: 'List your active reminders',
+    },
+    async execute(interaction) {
+      const userId = interaction.user.id;
+
+      try {
+        const reminderService = require('../services/reminder-service');
+        const reminders = await reminderService.getUserReminders(userId);
+
+        if (!reminders || reminders.length === 0) {
+          return interaction.reply({
+            embeds: [
+              {
+                color: 0xffa500,
+                title: '📝 Your Reminders',
+                description: 'You have no active reminders.',
+                footer: { text: 'Aszai Bot' },
+              },
+            ],
+          });
+        }
+
+        const reminderList = reminders
+          .map((r) => `**${r.id}**: ${r.message}\n⏰ ${r.dueDate}`)
+          .join('\n\n');
+
+        return interaction.reply({
+          embeds: [
+            {
+              color: 0x0099ff,
+              title: '📝 Your Active Reminders',
+              description: reminderList,
+              footer: { text: 'Aszai Bot' },
+            },
+          ],
+        });
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'reminder listing', { userId });
+        return interaction.reply(errorResponse.message);
+      }
+    },
+  },
+
+  cancelreminder: {
+    data: {
+      name: 'cancelreminder',
+      description: 'Cancel a specific reminder',
+      options: [
+        {
+          name: 'id',
+          description: 'The reminder ID to cancel',
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+    },
+    async execute(interaction) {
+      const userId = interaction.user.id;
+      const reminderId = interaction.options.getString('id');
+
+      try {
+        const reminderService = require('../services/reminder-service');
+        const success = await reminderService.cancelReminder(userId, reminderId);
+
+        if (success) {
+          return interaction.reply({
+            embeds: [
+              {
+                color: 0x00ff00,
+                title: '✅ Reminder Cancelled',
+                description: `Reminder ${reminderId} has been cancelled.`,
+                footer: { text: 'Aszai Bot' },
+              },
+            ],
+          });
+        } else {
+          return interaction.reply({
+            embeds: [
+              {
+                color: 0xff0000,
+                title: '❌ Reminder Not Found',
+                description: `Could not find reminder ${reminderId}. Use \`/reminders\` to see your active reminders.`,
+                footer: { text: 'Aszai Bot' },
+              },
+            ],
+          });
+        }
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'reminder cancellation', {
+          userId,
+          reminderId,
+        });
+        return interaction.reply(errorResponse.message);
+      }
+    },
   },
 };
 
