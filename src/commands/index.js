@@ -12,8 +12,6 @@ const DiscordAnalytics = require('../utils/discord-analytics');
 const ResourceOptimizer = require('../utils/resource-optimizer');
 const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
-const { handleReminderCommand } = require('./reminder');
-const { chunkMessage } = require('../utils/message-chunking');
 
 const conversationManager = new ConversationManager();
 
@@ -27,25 +25,18 @@ const commands = {
     async execute(interaction) {
       return interaction.reply(
         '**Aszai Bot Commands:**\n' +
-          '`/help` - Show this help message\n' +
-          '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
-          '`/newconversation` - Start fresh on a new topic\n' +
-          '`/summary` - Summarise your current conversation\n' +
-          '`/summarise <text>` - Summarise provided text\n' +
-          '`/stats` - Show your usage stats\n' +
-          '`/analytics` - Show Discord server analytics\n' +
-          '`/dashboard` - Show performance dashboard\n' +
-          '`/resources` - Show resource optimization status\n' +
-          '`/remind <time> <message>` - Set a reminder\n' +
-          '`/reminders` - List your active reminders\n' +
-          '`/cancelreminder <id>` - Cancel a specific reminder\n' +
-          '\n**Tips:**\n' +
-          '• Bot remembers last 12 messages for context\n' +
-          '• Use `/newconversation` when changing topics\n' +
-          '• Conversations auto-clear after 15 min inactivity\n' +
-          '• Use "!" at start of message to prevent bot response'
+          '`/help` or `!help` - Show this help message\n' +
+          '`/clearhistory` or `!clearhistory` - Clear your conversation history\n' +
+          '`/summary` or `!summary` - Summarise your current conversation\n' +
+          '`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n' +
+          '`/stats` or `!stats` - Show your usage stats\n' +
+          '`/analytics` or `!analytics` - Show Discord server analytics\n' +
+          '`/dashboard` or `!dashboard` - Show performance dashboard\n' +
+          '`/resources` or `!resources` - Show resource optimization status\n' +
+          'Simply chat as normal to talk to the bot!'
       );
     },
+    textCommand: '!help',
   },
 
   clearhistory: {
@@ -55,43 +46,20 @@ const commands = {
     },
     async execute(interaction) {
       const userId = interaction.user.id;
+      databaseService.clearUserData(userId);
       conversationManager.clearHistory(userId);
-      databaseService.clearUserConversationData(userId);
-
-      await interaction.reply('Conversation history cleared! Your stats have been preserved.');
-    },
-  },
-
-  newconversation: {
-    data: {
-      name: 'newconversation',
-      description: 'Start a new conversation (clears history but keeps your stats)',
-    },
-    async execute(interaction) {
-      const userId = interaction.user.id;
-
-      // Validate user ID
-      const userIdValidation = InputValidator.validateUserId(userId);
-      if (!userIdValidation.valid) {
-        return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
-      }
-
-      conversationManager.clearHistory(userId);
-      databaseService.clearUserConversationData(userId);
 
       await interaction.reply({
         embeds: [
           {
-            color: config.COLORS.SUCCESS || 0x00ff00,
-            title: '🔄 New Conversation Started',
-            description:
-              'Your conversation history has been cleared. You can now start fresh on a new topic!\n\n' +
-              'Your usage stats have been preserved.',
+            color: '#5865F2',
+            description: 'Your conversation history and stats have been cleared.',
             footer: { text: 'Aszai Bot' },
           },
         ],
       });
     },
+    textCommand: '!clearhistory',
   },
 
   summary: {
@@ -137,8 +105,7 @@ const commands = {
 
       try {
         const summary = await perplexityService.generateSummary(cleanHistory);
-        // Update summaries counter in database
-        databaseService.updateUserStats(userId, { total_summaries: 1 });
+        conversationManager.updateUserStats(userId, 'summaries');
         return interaction.editReply({
           embeds: [
             {
@@ -157,6 +124,7 @@ const commands = {
         return interaction.editReply(errorResponse.message);
       }
     },
+    textCommand: '!summary',
   },
   cache: {
     data: {
@@ -221,20 +189,25 @@ const commands = {
       };
 
       // Add recent entries if available
-      if (detailedInfo && detailedInfo.entries && detailedInfo.entries.length > 0) {
-        embed.fields.push({
+      if (detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0) {
+        const recentEntriesField = {
           name: 'Recent Entries',
-          value:
-            detailedInfo.entries
-              .slice(0, 3)
-              .map((entry) => `• ${entry.key}`)
-              .join('\n') || 'None',
+          value: detailedInfo.recentEntries
+            .map(
+              (entry) =>
+                `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`
+            )
+            .join('\n'),
           inline: false,
-        });
+        };
+
+        embed.fields.push(recentEntriesField);
       }
 
       return embed;
     },
+
+    textCommand: '!cache',
   },
   stats: {
     data: {
@@ -243,18 +216,14 @@ const commands = {
     },
     async execute(interaction) {
       const userId = interaction.user.id;
-
-      // Get stats from database (single source of truth)
-      const dbUserStats = databaseService.getUserStats(userId);
-      const reminderCount = databaseService.getUserReminderCount(userId);
-
+      const stats = conversationManager.getUserStats(userId);
       return interaction.reply(
         '**Your Aszai Bot Stats:**\n' +
-          `Messages sent: ${dbUserStats.message_count || 0}\n` +
-          `Summaries requested: ${dbUserStats.total_summaries || 0}\n` +
-          `Active reminders: ${reminderCount || 0}`
+          `Messages sent: ${stats.messages}\n` +
+          `Summaries requested: ${stats.summaries}`
       );
     },
+    textCommand: '!stats',
   },
 
   analytics: {
@@ -265,7 +234,112 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const embed = await this._generateAnalyticsEmbed(interaction);
+
+        // Generate daily analytics report
+        const serverId = interaction.guild?.id;
+        const guild = interaction.guild;
+
+        // Get real server statistics instead of empty analytics
+        let onlineCount = 0;
+        let botCount = 0;
+        let totalMembers = guild.memberCount || 0;
+
+        try {
+          // Try to fetch members with timeout (5 seconds max)
+          const fetchPromise = guild.members.fetch({ limit: 1000 }); // Limit to avoid huge fetches
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Fetch timeout')), 5000)
+          );
+
+          await Promise.race([fetchPromise, timeoutPromise]);
+
+          // Count online users and bots from fetched data
+          onlineCount = guild.members.cache.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
+          ).size;
+          botCount = guild.members.cache.filter((member) => member.user.bot).size;
+        } catch (error) {
+          // Fall back to cached data and estimates
+          const cachedMembers = guild.members.cache;
+          onlineCount = cachedMembers.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
+          ).size;
+          botCount = cachedMembers.filter((member) => member.user.bot).size;
+
+          // If no cached data, use rough estimates
+          if (onlineCount === 0 && totalMembers > 0) {
+            onlineCount = Math.floor(totalMembers * 0.2); // Estimate 20% online
+          }
+          if (botCount === 0 && totalMembers > 10) {
+            botCount = Math.floor(totalMembers * 0.05); // Estimate 5% bots
+          }
+        }
+
+        const humanMembers = totalMembers - botCount;
+
+        // Create mock analytics data with real server stats
+        const analyticsData = {
+          summary: {
+            totalServers: 1,
+            totalUsers: humanMembers,
+            totalCommands: 0, // TODO: Track actual command usage
+            successRate: 100,
+            errorRate: 0,
+            avgResponseTime: 0,
+          },
+          commandStats: [],
+        };
+
+        const serverInsights = {
+          serverId,
+          uniqueUsers: onlineCount,
+          commandsExecuted: 0,
+          errorRate: 0,
+          totalActivities: 0,
+          averageResponseTime: 0,
+          mostActiveUser: null,
+          popularCommands: [],
+        };
+
+        const embed = {
+          color: 0x5865f2,
+          title: '📊 Discord Analytics Dashboard',
+          fields: [
+            {
+              name: '🏢 Server Overview',
+              value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
+              inline: true,
+            },
+            {
+              name: '📈 Performance',
+              value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
+              inline: true,
+            },
+            {
+              name: '🎯 Top Commands',
+              value:
+                analyticsData?.commandStats
+                  ?.slice(0, 3)
+                  .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
+                  .join('\n') || 'No data yet',
+              inline: true,
+            },
+            {
+              name: '💡 Server Insights',
+              value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
+              inline: false,
+            },
+          ],
+          footer: { text: 'Aszai Bot Analytics' },
+          timestamp: new Date().toISOString(),
+        };
+
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching analytics:', error);
@@ -273,110 +347,7 @@ const commands = {
         return interaction.editReply({ content: errorResponse.message });
       }
     },
-
-    async _generateAnalyticsEmbed(interaction) {
-      const serverId = interaction.guild?.id;
-      const guild = interaction.guild;
-
-      // Get server statistics
-      const serverStats = await this._getServerStats(guild);
-
-      // Get database analytics
-      const commandStats = databaseService.getCommandUsageStats(7);
-      const errorStats = databaseService.getErrorStats(7);
-      const uptimeStats = databaseService.getUptimeStats();
-      const reminderStats = databaseService.getReminderStats();
-
-      // Track server metrics
-      databaseService.trackServerMetric(serverId, 'member_count', serverStats.totalMembers);
-      databaseService.trackServerMetric(serverId, 'online_count', serverStats.onlineCount);
-      databaseService.trackServerMetric(serverId, 'bot_count', serverStats.botCount);
-
-      return {
-        color: 0x5865f2,
-        title: '📊 Discord Analytics Dashboard',
-        fields: [
-          {
-            name: '🏢 Server Overview',
-            value: `Servers: 1\nActive Users: ${serverStats.humanMembers}\nTotal Members: ${serverStats.totalMembers}\nBots: ${serverStats.botCount}`,
-            inline: true,
-          },
-          {
-            name: '📈 Command Analytics (7 days)',
-            value: `Total Commands: ${commandStats.totalCommands}\nSuccess Rate: ${commandStats.successRate}%\nTop Command: ${commandStats.commandBreakdown[0]?.command || 'None'} (${commandStats.commandBreakdown[0]?.count || 0})`,
-            inline: true,
-          },
-          {
-            name: '⚠️ Error Tracking (7 days)',
-            value: `Total Errors: ${errorStats.totalErrors}\nResolved: ${errorStats.resolvedCount}\nTop Error: ${errorStats.errorBreakdown[0]?.error_type || 'None'} (${errorStats.errorBreakdown[0]?.count || 0})`,
-            inline: true,
-          },
-          {
-            name: '⏱️ Bot Uptime',
-            value: `Total Uptime: ${Math.floor(uptimeStats.totalUptime / 3600)}h\nDowntime: ${Math.floor(uptimeStats.totalDowntime / 3600)}h\nRestarts: ${uptimeStats.restartCount}`,
-            inline: true,
-          },
-          {
-            name: '⏰ Reminder System',
-            value: `Total Reminders: ${reminderStats.totalReminders}\nActive: ${reminderStats.activeReminders}\nCompleted: ${reminderStats.completedReminders}`,
-            inline: true,
-          },
-          {
-            name: '💡 Server Insights',
-            value: `🟢 Currently Online: ${serverStats.onlineCount}\n📊 Server Health: Excellent\n🤖 Bot Activity: Active`,
-            inline: false,
-          },
-        ],
-        footer: { text: 'Aszai Bot Analytics • Database-powered' },
-        timestamp: new Date().toISOString(),
-      };
-    },
-
-    async _getServerStats(guild) {
-      let onlineCount = 0;
-      let botCount = 0;
-      const totalMembers = guild.memberCount || 0;
-
-      try {
-        const fetchPromise = guild.members.fetch({ limit: 1000 });
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Fetch timeout')), 5000)
-        );
-
-        await Promise.race([fetchPromise, timeoutPromise]);
-
-        onlineCount = guild.members.cache.filter(
-          (member) =>
-            member.presence?.status === 'online' ||
-            member.presence?.status === 'idle' ||
-            member.presence?.status === 'dnd'
-        ).size;
-        botCount = guild.members.cache.filter((member) => member.user.bot).size;
-      } catch (error) {
-        const cachedMembers = guild.members.cache;
-        onlineCount = cachedMembers.filter(
-          (member) =>
-            member.presence?.status === 'online' ||
-            member.presence?.status === 'idle' ||
-            member.presence?.status === 'dnd'
-        ).size;
-        botCount = cachedMembers.filter((member) => member.user.bot).size;
-
-        if (onlineCount === 0 && totalMembers > 0) {
-          onlineCount = Math.floor(totalMembers * 0.2);
-        }
-        if (botCount === 0 && totalMembers > 10) {
-          botCount = Math.floor(totalMembers * 0.05);
-        }
-      }
-
-      return {
-        totalMembers,
-        onlineCount,
-        botCount,
-        humanMembers: totalMembers - botCount,
-      };
-    },
+    textCommand: '!analytics',
   },
 
   dashboard: {
@@ -387,7 +358,94 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const embed = await this._generateDashboardEmbed(interaction);
+
+        // Generate comprehensive dashboard with real server data
+        const guild = interaction.guild;
+        let onlineCount = 0;
+        let botCount = 0;
+        let totalMembers = guild.memberCount || 0;
+
+        try {
+          // Try to fetch members with timeout (5 seconds max) - same as analytics
+          const fetchPromise = guild.members.fetch({ limit: 1000 });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Fetch timeout')), 5000)
+          );
+
+          await Promise.race([fetchPromise, timeoutPromise]);
+
+          onlineCount = guild.members.cache.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
+          ).size;
+          botCount = guild.members.cache.filter((member) => member.user.bot).size;
+        } catch (error) {
+          // Fall back to cached data and estimates
+          const cachedMembers = guild.members.cache;
+          onlineCount = cachedMembers.filter(
+            (member) =>
+              member.presence?.status === 'online' ||
+              member.presence?.status === 'idle' ||
+              member.presence?.status === 'dnd'
+          ).size;
+          botCount = cachedMembers.filter((member) => member.user.bot).size;
+
+          if (onlineCount === 0 && totalMembers > 0) {
+            onlineCount = Math.floor(totalMembers * 0.2); // Estimate 20% online
+          }
+          if (botCount === 0 && totalMembers > 10) {
+            botCount = Math.floor(totalMembers * 0.05); // Estimate 5% bots
+          }
+        }
+
+        const humanMembers = totalMembers - botCount;
+        const dashboardData = await PerformanceDashboard.generateDashboardReport();
+        const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
+
+        const embed = {
+          color:
+            dashboardData.overview.status === 'healthy'
+              ? 0x00ff00
+              : dashboardData.overview.status === 'warning'
+                ? 0xffa500
+                : 0xff0000,
+          title: '🖥️ Performance Dashboard',
+          fields: [
+            {
+              name: '🚦 System Status',
+              value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
+              inline: true,
+            },
+            {
+              name: '⚡ Performance',
+              value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
+              inline: true,
+            },
+            {
+              name: '📊 Activity',
+              value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
+              inline: true,
+            },
+            {
+              name: '🚨 Active Alerts',
+              value:
+                dashboardData.alerts && dashboardData.alerts.length > 0
+                  ? dashboardData.alerts
+                      .slice(0, 3)
+                      .map(
+                        (alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
+                      )
+                      .join('\n')
+                  : '✅ No active alerts',
+              inline: false,
+            },
+          ],
+          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
+          timestamp: new Date().toISOString(),
+        };
+
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching dashboard:', error);
@@ -395,127 +453,7 @@ const commands = {
         return interaction.editReply({ content: errorResponse.message });
       }
     },
-
-    async _generateDashboardEmbed(interaction) {
-      const guild = interaction.guild;
-      const serverStats = await this._getServerStats(guild);
-
-      // Get database analytics
-      const commandStats = databaseService.getCommandUsageStats(1); // Last 24 hours
-      const errorStats = databaseService.getErrorStats(1); // Last 24 hours
-      const performanceMetrics = databaseService.getPerformanceMetrics('response_time', 1);
-
-      // Calculate performance data
-      const avgResponseTime =
-        performanceMetrics.length > 0
-          ? Math.round(
-            performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
-          )
-          : 0;
-
-      const dashboardData = await PerformanceDashboard.generateDashboardReport();
-      const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
-
-      const statusColor = this._getStatusColor(dashboardData.overview?.status);
-
-      return {
-        color: statusColor,
-        title: '🖥️ Performance Dashboard',
-        fields: [
-          {
-            name: '🚦 System Status',
-            value: `Status: ${dashboardData.overview?.status?.toUpperCase() || 'UNKNOWN'}\nUptime: ${realTimeStatus.uptime?.formatted || '0m'}\nMemory: ${dashboardData.overview?.memoryUsage || '0MB'}`,
-            inline: true,
-          },
-          {
-            name: '⚡ Performance (24h)',
-            value: `Response Time: ${avgResponseTime}ms\nCommands: ${commandStats.totalCommands}\nErrors: ${errorStats.totalErrors}`,
-            inline: true,
-          },
-          {
-            name: '📊 Activity',
-            value: `Servers: 1\nActive Users: ${serverStats.humanMembers}\nSuccess Rate: ${commandStats.successRate}%`,
-            inline: true,
-          },
-          {
-            name: '🚨 Active Alerts',
-            value: this._formatAlerts(dashboardData.alerts),
-            inline: false,
-          },
-        ],
-        footer: { text: 'Aszai Bot Dashboard • Database-powered • Real-time data' },
-        timestamp: new Date().toISOString(),
-      };
-    },
-
-    _getStatusColor(status) {
-      switch (status?.toLowerCase()) {
-      case 'healthy':
-        return 0x00ff00;
-      case 'warning':
-        return 0xffa500;
-      case 'critical':
-        return 0xff0000;
-      default:
-        return 0x5865f2;
-      }
-    },
-
-    _formatAlerts(alerts) {
-      if (!alerts || alerts.length === 0) {
-        return '✅ No active alerts';
-      }
-      return alerts
-        .slice(0, 3)
-        .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
-        .join('\n');
-    },
-
-    async _getServerStats(guild) {
-      let onlineCount = 0;
-      let botCount = 0;
-      const totalMembers = guild.memberCount || 0;
-
-      try {
-        const fetchPromise = guild.members.fetch({ limit: 1000 });
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Fetch timeout')), 5000)
-        );
-
-        await Promise.race([fetchPromise, timeoutPromise]);
-
-        onlineCount = guild.members.cache.filter(
-          (member) =>
-            member.presence?.status === 'online' ||
-            member.presence?.status === 'idle' ||
-            member.presence?.status === 'dnd'
-        ).size;
-        botCount = guild.members.cache.filter((member) => member.user.bot).size;
-      } catch (error) {
-        const cachedMembers = guild.members.cache;
-        onlineCount = cachedMembers.filter(
-          (member) =>
-            member.presence?.status === 'online' ||
-            member.presence?.status === 'idle' ||
-            member.presence?.status === 'dnd'
-        ).size;
-        botCount = cachedMembers.filter((member) => member.user.bot).size;
-
-        if (onlineCount === 0 && totalMembers > 0) {
-          onlineCount = Math.floor(totalMembers * 0.2);
-        }
-        if (botCount === 0 && totalMembers > 10) {
-          botCount = Math.floor(totalMembers * 0.05);
-        }
-      }
-
-      return {
-        totalMembers,
-        onlineCount,
-        botCount,
-        humanMembers: totalMembers - botCount,
-      };
-    },
+    textCommand: '!dashboard',
   },
 
   resources: {
@@ -526,7 +464,49 @@ const commands = {
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const embed = await this._generateResourcesEmbed(interaction);
+
+        // Get resource optimization data
+        const resourceStatus = await ResourceOptimizer.monitorResources();
+        const analyticsData = await DiscordAnalytics.generateDailyReport();
+        const recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
+          analyticsData,
+          { averageResponseTime: resourceStatus.performance.responseTime }
+        );
+
+        const embed = {
+          color:
+            resourceStatus.memory.status === 'good'
+              ? 0x00ff00
+              : resourceStatus.memory.status === 'warning'
+                ? 0xffa500
+                : 0xff0000,
+          title: '🔧 Resource Optimization',
+          fields: [
+            {
+              name: '💾 Memory Status',
+              value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
+              inline: true,
+            },
+            {
+              name: '⚙️ Performance',
+              value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
+              inline: true,
+            },
+            {
+              name: '📈 Optimization Tier',
+              value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${analyticsData.summary.totalServers}\nRecommended: Auto-scaling active`,
+              inline: true,
+            },
+            {
+              name: '💡 Recommendations',
+              value: recommendations.slice(0, 3).join('\n') || '✅ All systems optimized!',
+              inline: false,
+            },
+          ],
+          footer: { text: 'Aszai Bot Resource Monitor' },
+          timestamp: new Date().toISOString(),
+        };
+
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching resource data:', error);
@@ -534,61 +514,7 @@ const commands = {
         return interaction.editReply({ content: errorResponse.message });
       }
     },
-
-    async _generateResourcesEmbed(_interaction) {
-      // Get resource optimization data
-      const resourceStatus = await ResourceOptimizer.monitorResources();
-      const analyticsData = await DiscordAnalytics.generateDailyReport();
-      const recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
-        analyticsData,
-        { averageResponseTime: resourceStatus.performance?.responseTime || 0 }
-      );
-
-      // Get database performance metrics
-      const performanceMetrics = databaseService.getPerformanceMetrics('memory_usage', 1);
-      const avgMemoryUsage =
-        performanceMetrics.length > 0
-          ? Math.round(
-            performanceMetrics.reduce((sum, m) => sum + m.value, 0) / performanceMetrics.length
-          )
-          : 0;
-
-      const statusColor =
-        resourceStatus.memory?.status === 'good'
-          ? 0x00ff00
-          : resourceStatus.memory?.status === 'warning'
-            ? 0xffa500
-            : 0xff0000;
-
-      return {
-        color: statusColor,
-        title: '🔧 Resource Optimization',
-        fields: [
-          {
-            name: '💾 Memory Status',
-            value: `Status: ${resourceStatus.memory?.status?.toUpperCase() || 'UNKNOWN'}\nUsed: ${resourceStatus.memory?.used || 0}MB\nFree: ${resourceStatus.memory?.free || 0}MB\nUsage: ${Math.round(resourceStatus.memory?.percentage || 0)}%`,
-            inline: true,
-          },
-          {
-            name: '⚙️ Performance',
-            value: `Status: ${resourceStatus.performance?.status?.toUpperCase() || 'UNKNOWN'}\nResponse Time: ${resourceStatus.performance?.responseTime || 0}ms\nLoad: ${resourceStatus.performance?.load || 'N/A'}`,
-            inline: true,
-          },
-          {
-            name: '📈 Database Metrics (24h)',
-            value: `Avg Memory: ${avgMemoryUsage}MB\nPerformance Ops: ${performanceMetrics.length}\nOptimization: Active`,
-            inline: true,
-          },
-          {
-            name: '💡 Recommendations',
-            value: recommendations?.slice(0, 3)?.join('\n') || '✅ All systems optimized!',
-            inline: false,
-          },
-        ],
-        footer: { text: 'Aszai Bot Resource Monitor • Database-powered' },
-        timestamp: new Date().toISOString(),
-      };
-    },
+    textCommand: '!resources',
   },
 
   summarise: {
@@ -627,6 +553,11 @@ const commands = {
 
       if (!textValidation.valid) {
         return interaction.reply(`❌ Invalid text input: ${textValidation.error}`);
+      }
+
+      // Reject input that becomes empty after sanitization (indicates dangerous content was removed)
+      if (!textValidation.sanitized || textValidation.sanitized.trim().length === 0) {
+        return interaction.reply('❌ Invalid text input: Content contains unsafe elements that were removed.');
       }
 
       // Generate summary
@@ -692,34 +623,17 @@ const commands = {
 
         const summary = await perplexityService.generateSummary(messages, true); // isText = true
         conversationManager.updateUserStats(userId, 'summaries');
-
-        // Chunk the summary if it's too long to prevent truncation
-        const chunks = chunkMessage(summary);
-
-        // Send the first chunk as editReply
-        await interaction.editReply({
-          embeds: [
-            {
-              color: config.COLORS.PRIMARY,
-              title: 'Text Summary',
-              description: chunks[0],
-              footer: { text: 'Aszai Bot' },
-            },
-          ],
-        });
-
-        // Send additional chunks as followUp messages if needed
-        for (let i = 1; i < chunks.length; i++) {
-          await interaction.followUp({
-            embeds: [
+        return interaction.editReply({
+          embeds:
+            [
               {
                 color: config.COLORS.PRIMARY,
-                description: chunks[i],
+                title: 'Text Summary',
+                description: summary,
                 footer: { text: 'Aszai Bot' },
               },
             ],
-          });
-        }
+        });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
           userId: userId,
@@ -729,171 +643,60 @@ const commands = {
         return interaction.editReply(errorResponse.message);
       }
     },
-  },
-
-  remind: {
-    data: {
-      name: 'remind',
-      description: 'Set a reminder for a specific time',
-      options: [
-        {
-          name: 'time',
-          description: 'Time expression (e.g., "in 5 minutes", "tomorrow at 3pm")',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-        {
-          name: 'message',
-          description: 'Reminder message',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-    },
-    async execute(interaction) {
-      const time = interaction.options.getString('time');
-      const message = interaction.options.getString('message');
-
-      // Create a mock message object for the reminder handler
-      const mockMessage = {
-        author: interaction.user,
-        channel: interaction.channel,
-        guild: interaction.guild,
-        content: `!reminder set "${time}" ${message}`,
-        reply: (content) => interaction.reply(content),
-      };
-
-      return await handleReminderCommand(mockMessage, ['set', time, message]);
-    },
-  },
-
-  reminders: {
-    data: {
-      name: 'reminders',
-      description: 'List all your active reminders',
-    },
-    async execute(interaction) {
-      // Create a mock message object for the reminder handler
-      const mockMessage = {
-        author: interaction.user,
-        channel: interaction.channel,
-        guild: interaction.guild,
-        content: '!reminder list',
-        reply: (content) => interaction.reply(content),
-      };
-
-      return await handleReminderCommand(mockMessage, ['list']);
-    },
-  },
-
-  cancelreminder: {
-    data: {
-      name: 'cancelreminder',
-      description: 'Cancel a specific reminder',
-      options: [
-        {
-          name: 'id',
-          description: 'Reminder ID to cancel (use /reminders to see IDs)',
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-      ],
-    },
-    async execute(interaction) {
-      const id = interaction.options.getInteger('id');
-
-      // Create a mock message object for the reminder handler
-      const mockMessage = {
-        author: interaction.user,
-        channel: interaction.channel,
-        guild: interaction.guild,
-        content: `!reminder cancel ${id}`,
-        reply: (content) => interaction.reply(content),
-      };
-
-      return await handleReminderCommand(mockMessage, ['cancel', id.toString()]);
-    },
+    // Support both spellings as text commands
+    textCommand: '!summarise',
+    // Add alias commands that will be recognized
+    aliases: ['!summerise'],
   },
 };
 
 /**
- * TEXT COMMANDS REMOVED - Use slash commands instead
- * Messages starting with "!" are ignored to prevent bot pickup
+ * Handle text commands from messages
+ * @param {Object} message - Discord.js message object
+ * @returns {Promise<Object|null>} - Command result or null if no command matched
  */
+async function handleTextCommand(message) {
+  const commandText = message.content.trim();
 
-/**
- * Handle successful command execution
- * @param {Object} interaction - Discord interaction
- * @param {number} startTime - Command start time
- */
-async function handleCommandSuccess(interaction, startTime) {
-  const responseTime = Date.now() - startTime;
-  databaseService.trackCommandUsage(
-    interaction.user.id,
-    interaction.commandName,
-    interaction.guild?.id,
-    true,
-    responseTime
-  );
-}
+  for (const [name, command] of Object.entries(commands)) {
+    // Check if the command text starts with the main command or any aliases
+    const commandPrefix = commandText.split(/\s+/)[0].toLowerCase(); // Get just the command part
+    const isMainCommand = commandPrefix === command.textCommand;
+    const hasAliases = command.aliases && Array.isArray(command.aliases);
+    const isAliasCommand = hasAliases && command.aliases.includes(commandPrefix);
 
-/**
- * Handle command execution error
- * @param {Object} interaction - Discord interaction
- * @param {Error} error - The error that occurred
- * @param {number} startTime - Command start time
- */
-async function handleCommandError(interaction, error, startTime) {
-  const responseTime = Date.now() - startTime;
+    if (isMainCommand || isAliasCommand) {
+      try {
+        // Create a mock interaction object for text commands
+        const mockInteraction = {
+          user: message.author,
+          channel: message.channel,
+          content: message.content, // Pass the content for text command parsing
+          reply: (content) => message.reply(content),
+          deferReply: async () => message.channel.sendTyping(),
+          editReply: (content) => message.reply(content),
+        };
 
-  // Track failed command execution
-  databaseService.trackCommandUsage(
-    interaction.user.id,
-    interaction.commandName,
-    interaction.guild?.id,
-    false,
-    responseTime
-  );
-
-  // Log error to database
-  databaseService.logError(
-    'command_error',
-    error.message,
-    interaction.user.id,
-    interaction.commandName,
-    error.stack
-  );
-
-  const errorResponse = ErrorHandler.handleError(
-    error,
-    `slash command ${interaction.commandName}`,
-    {
-      userId: interaction.user.id,
-      command: interaction.commandName,
-      guildId: interaction.guild?.id,
+        return await command.execute(mockInteraction);
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, `text command ${name}`, {
+          userId: message.author.id,
+          command: name,
+          content: message.content,
+        });
+        logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
+        try {
+          return await message.reply(errorResponse.message);
+        } catch (replyError) {
+          logger.error(
+            `Failed to send error reply for text command ${name}: ${replyError.message}`
+          );
+        }
+      }
     }
-  );
-
-  logger.error(
-    `Error executing slash command ${interaction.commandName}: ${errorResponse.message}`
-  );
-
-  const reply = {
-    content: errorResponse.message,
-    ephemeral: true,
-  };
-
-  try {
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply(reply);
-    } else {
-      await interaction.reply(reply);
-    }
-  } catch (replyError) {
-    logger.error(
-      `Failed to send error reply for slash command ${interaction.commandName}: ${replyError.message}`
-    );
   }
+
+  return null;
 }
 
 /**
@@ -915,13 +718,39 @@ async function handleSlashCommand(interaction) {
     return;
   }
 
-  const startTime = Date.now();
-
   try {
     await command.execute(interaction);
-    await handleCommandSuccess(interaction, startTime);
   } catch (error) {
-    await handleCommandError(interaction, error, startTime);
+    const errorResponse = ErrorHandler.handleError(
+      error,
+      `slash command ${interaction.commandName}`,
+      {
+        userId: interaction.user.id,
+        command: interaction.commandName,
+        guildId: interaction.guild?.id,
+      }
+    );
+
+    logger.error(
+      `Error executing slash command ${interaction.commandName}: ${errorResponse.message}`
+    );
+
+    const reply = {
+      content: errorResponse.message,
+      ephemeral: true,
+    };
+
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(reply);
+      } else {
+        await interaction.reply(reply);
+      }
+    } catch (replyError) {
+      logger.error(
+        `Failed to send error reply for slash command ${interaction.commandName}: ${replyError.message}`
+      );
+    }
   }
 }
 
@@ -934,6 +763,7 @@ function getSlashCommandsData() {
 }
 
 module.exports = {
+  handleTextCommand,
   handleSlashCommand,
   getSlashCommandsData,
 };

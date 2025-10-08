@@ -1,6 +1,6 @@
 /**
  * Commands - Slash Command Handler Tests
- * Tests core slash command handling functionality
+ * Tests slash command handling functionality
  */
 
 jest.useFakeTimers();
@@ -9,8 +9,8 @@ jest.useFakeTimers();
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/perplexity-secure');
 
-// Create a mock database service instance
-const mockDatabaseService = {
+// Mock database service
+jest.mock('../../src/services/database', () => ({
   addUserMessage: jest.fn(),
   updateUserStats: jest.fn(),
   getUserMessages: jest.fn().mockReturnValue([]),
@@ -19,14 +19,7 @@ const mockDatabaseService = {
   clearUserConversationData: jest.fn(),
   trackCommandUsage: jest.fn(),
   logError: jest.fn(),
-  getUserStats: jest.fn().mockReturnValue({
-    message_count: 10,
-    total_summaries: 2,
-  }),
-  getUserReminderCount: jest.fn().mockReturnValue(3),
-};
-
-jest.mock('../../src/services/database', () => mockDatabaseService);
+}));
 
 // Mock the conversation module
 jest.mock('../../src/utils/conversation', () => {
@@ -73,12 +66,18 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(conversationManager.clearHistory).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith(
-        'Conversation history cleared! Your stats have been preserved.'
-      );
+      expect(interaction.reply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: '#5865F2',
+            description: 'Your conversation history and stats have been cleared.',
+            footer: { text: 'Aszai Bot' },
+          },
+        ],
+      });
     });
 
-    it('should handle /summary command with history', async () => {
+    it('should handle /summary command', async () => {
       const interaction = createMockInteraction({ commandName: 'summary' });
       conversationManager.getHistory.mockReturnValue([
         { role: 'user', content: 'Hello' },
@@ -123,18 +122,10 @@ describe('Commands - Slash Command Handler', () => {
 
     it('should handle /stats command', async () => {
       const interaction = createMockInteraction({ commandName: 'stats' });
-
       await handleSlashCommand(interaction);
 
-      expect(mockDatabaseService.getUserStats).toHaveBeenCalledWith(interaction.user.id);
-      expect(mockDatabaseService.getUserReminderCount).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent: 10'));
-      expect(interaction.reply).toHaveBeenCalledWith(
-        expect.stringContaining('Summaries requested: 2')
-      );
-      expect(interaction.reply).toHaveBeenCalledWith(
-        expect.stringContaining('Active reminders: 3')
-      );
+      expect(conversationManager.getUserStats).toHaveBeenCalledWith(interaction.user.id);
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent'));
     });
 
     it('should handle /summarise command with text', async () => {
@@ -263,39 +254,6 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(interaction.reply).not.toHaveBeenCalled();
-    });
-
-    it('should handle remind command execution', async () => {
-      const interaction = createMockInteraction({ commandName: 'remind' });
-      interaction.options = {
-        getString: jest
-          .fn()
-          .mockReturnValueOnce('in 5 minutes') // time
-          .mockReturnValueOnce('Test reminder'), // message
-      };
-
-      await handleSlashCommand(interaction);
-
-      expect(interaction.reply).toHaveBeenCalled();
-    });
-
-    it('should handle reminders command execution', async () => {
-      const interaction = createMockInteraction({ commandName: 'reminders' });
-
-      await handleSlashCommand(interaction);
-
-      expect(interaction.reply).toHaveBeenCalled();
-    });
-
-    it('should handle cancelreminder command execution', async () => {
-      const interaction = createMockInteraction({ commandName: 'cancelreminder' });
-      interaction.options = {
-        getInteger: jest.fn().mockReturnValue(1), // reminder ID
-      };
-
-      await handleSlashCommand(interaction);
-
-      expect(interaction.reply).toHaveBeenCalled();
     });
   });
 });
