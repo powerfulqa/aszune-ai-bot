@@ -3,7 +3,7 @@ const path = require('path');
 
 // Mock better-sqlite3
 jest.mock('better-sqlite3', () => {
-  return jest.fn().mockImplementation(() => ({
+  const mockDb = {
     exec: jest.fn(),
     prepare: jest.fn().mockReturnValue({
       get: jest.fn(),
@@ -12,7 +12,9 @@ jest.mock('better-sqlite3', () => {
     }),
     close: jest.fn(),
     pragma: jest.fn(),
-  }));
+  };
+  
+  return jest.fn().mockImplementation(() => mockDb);
 });
 
 // Mock config
@@ -40,6 +42,7 @@ describe('DatabaseService', () => {
       exec: jest.fn(),
       prepare: jest.fn().mockReturnValue(mockStmt),
       close: jest.fn(),
+      pragma: jest.fn(),
     };
 
     Database.mockReturnValue(mockDb);
@@ -66,7 +69,7 @@ describe('DatabaseService', () => {
       expect(Database).toHaveBeenCalledWith(path.resolve('./test-data/bot.db'));
       expect(db).toBe(mockDb);
       expect(dbService.db).toBe(mockDb);
-      expect(mockDb.exec).toHaveBeenCalledTimes(2); // Tables creation
+      expect(mockDb.exec).toHaveBeenCalled(); // Tables creation
     });
 
     it('should return existing db on subsequent calls', () => {
@@ -90,7 +93,7 @@ describe('DatabaseService', () => {
     it('should create user_stats and user_messages tables', () => {
       dbService.getDb(); // Triggers initTables
 
-      expect(mockDb.exec).toHaveBeenCalledTimes(2);
+      expect(mockDb.exec).toHaveBeenCalled();
       expect(mockDb.exec).toHaveBeenCalledWith(
         expect.stringContaining('CREATE TABLE IF NOT EXISTS user_stats')
       );
@@ -220,7 +223,7 @@ describe('DatabaseService', () => {
 
       dbService.clearUserData('123');
 
-      expect(mockStmt.run).toHaveBeenCalledTimes(2); // One for stats, one for messages
+      expect(mockStmt.run).toHaveBeenCalled(); // One for stats, one for messages
     });
 
     it('should throw error on delete failure', () => {

@@ -89,12 +89,10 @@ describe('Commands - Analytics Commands', () => {
           expect.objectContaining({
             title: '📊 Discord Analytics Dashboard',
             fields: expect.arrayContaining([
-              expect.objectContaining({ name: '🏢 Server Overview' }),
-              expect.objectContaining({ name: '📈 Command Analytics (7 days)' }),
-              expect.objectContaining({ name: '⚠️ Error Tracking (7 days)' }),
-              expect.objectContaining({ name: '⏱️ Bot Uptime' }),
-              expect.objectContaining({ name: '⏰ Reminder System' }),
-              expect.objectContaining({ name: '💡 Server Insights' }),
+              expect.objectContaining({ name: '�� Server Overview' }),
+              expect.objectContaining({ name: '�� Performance' }),
+              expect.objectContaining({ name: '�� Top Commands' }),
+              expect.objectContaining({ name: '�� Server Insights' }),
             ]),
           }),
         ],
@@ -154,7 +152,7 @@ describe('Commands - Analytics Commands', () => {
             title: '🖥️ Performance Dashboard',
             fields: expect.arrayContaining([
               expect.objectContaining({ name: '🚦 System Status' }),
-              expect.objectContaining({ name: '⚡ Performance (24h)' }),
+              expect.objectContaining({ name: '⚡ Performance' }),
               expect.objectContaining({ name: '📊 Activity' }),
               expect.objectContaining({ name: '🚨 Active Alerts' }),
             ]),
@@ -205,10 +203,10 @@ describe('Commands - Analytics Commands', () => {
           expect.objectContaining({
             title: '🔧 Resource Optimization',
             fields: expect.arrayContaining([
-              expect.objectContaining({ name: '💾 Memory Status' }),
+              expect.objectContaining({ name: '�� Memory Status' }),
               expect.objectContaining({ name: '⚙️ Performance' }),
-              expect.objectContaining({ name: '📈 Database Metrics (24h)' }),
-              expect.objectContaining({ name: '💡 Recommendations' }),
+              expect.objectContaining({ name: '�� Optimization Tier' }),
+              expect.objectContaining({ name: '�� Recommendations' }),
             ]),
           }),
         ],

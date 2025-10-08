@@ -25,15 +25,16 @@ const commands = {
     async execute(interaction) {
       return interaction.reply(
         '**Aszai Bot Commands:**\n' +
-          '`/help` or `!help` - Show this help message\n' +
-          '`/clearhistory` or `!clearhistory` - Clear your conversation history\n' +
-          '`/summary` or `!summary` - Summarise your current conversation\n' +
-          '`/summarise` or `!summarise <text>` or `!summerise <text>` - Summarise provided text\n' +
-          '`/stats` or `!stats` - Show your usage stats\n' +
-          '`/analytics` or `!analytics` - Show Discord server analytics\n' +
-          '`/dashboard` or `!dashboard` - Show performance dashboard\n' +
-          '`/resources` or `!resources` - Show resource optimization status\n' +
-          'Simply chat as normal to talk to the bot!'
+          '`/help` - Show this help message\n' +
+          '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
+          '`/summary` - Summarise your current conversation\n' +
+          '`/summarise <text>` - Summarise provided text\n' +
+          '`/stats` - Show your usage stats\n' +
+          '`/analytics` - Show Discord server analytics\n' +
+          '`/dashboard` - Show performance dashboard\n' +
+          '`/resources` - Show resource optimization status\n' +
+          'Simply chat as normal to talk to the bot!\n' +
+          'Use "!" at start of message to prevent bot response'
       );
     },
     textCommand: '!help',
@@ -189,20 +190,22 @@ const commands = {
       };
 
       // Add recent entries if available
-      if (detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0) {
-        const recentEntriesField = {
-          name: 'Recent Entries',
-          value: detailedInfo.recentEntries
+      const recentEntriesValue = (detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0)
+        ? detailedInfo.recentEntries
             .map(
               (entry) =>
                 `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`
             )
-            .join('\n'),
-          inline: false,
-        };
+            .join('\n')
+        : 'No recent entries';
 
-        embed.fields.push(recentEntriesField);
-      }
+      const recentEntriesField = {
+        name: 'Recent Entries',
+        value: recentEntriesValue,
+        inline: false,
+      };
+
+      embed.fields.push(recentEntriesField);
 
       return embed;
     },
@@ -220,7 +223,8 @@ const commands = {
       return interaction.reply(
         '**Your Aszai Bot Stats:**\n' +
           `Messages sent: ${stats.messages}\n` +
-          `Summaries requested: ${stats.summaries}`
+          `Summaries requested: ${stats.summaries}\n` +
+          `Active reminders: ${stats.reminders || 0}`
       );
     },
     textCommand: '!stats',
@@ -336,7 +340,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Analytics' },
+          footer: { text: 'Aszai Bot Analytics • Database-powered' },
           timestamp: new Date().toISOString(),
         };
 
@@ -442,7 +446,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
+          footer: { text: 'Aszai Bot Dashboard • Database-powered • Real-time data' },
           timestamp: new Date().toISOString(),
         };
 
@@ -503,7 +507,7 @@ const commands = {
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: { text: 'Aszai Bot Resources • Database-powered • Real-time monitoring' },
           timestamp: new Date().toISOString(),
         };
 

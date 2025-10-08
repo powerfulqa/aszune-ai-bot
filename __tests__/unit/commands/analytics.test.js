@@ -31,32 +31,11 @@ jest.mock('../../../src/services/database', () => ({
   trackCommandUsage: jest.fn(),
   logError: jest.fn(),
   clearUserConversationData: jest.fn(),
+  clearUserData: jest.fn(),
   getPerformanceMetrics: jest.fn().mockReturnValue([
     { value: 1200, timestamp: new Date().toISOString() },
     { value: 1100, timestamp: new Date().toISOString() },
   ]),
-  getUserReminderCount: jest.fn().mockReturnValue(0),
-  getReminderStats: jest.fn().mockReturnValue({
-    totalReminders: 5,
-    activeReminders: 3,
-    completedReminders: 2,
-    cancelledReminders: 0,
-  }),
-  // Add stateful mock for user stats
-  getUserStats: jest.fn().mockImplementation((userId) => {
-    if (userId === 'test-user-123') {
-      return {
-        message_count: 10,
-        total_summaries: 2,
-        last_active: new Date().toISOString(),
-      };
-    }
-    return {
-      message_count: 0,
-      total_summaries: 0,
-      last_active: null,
-    };
-  }),
 }));
 jest.mock('../../../src/utils/performance-dashboard', () => ({
   generateDashboardReport: jest.fn().mockResolvedValue({
@@ -81,7 +60,7 @@ jest.mock('../../../src/utils/conversation', () => {
   const mockInstance = {
     clearHistory: jest.fn(),
     getHistory: jest.fn().mockReturnValue([]),
-    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2, reminders: 0 }),
+    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
     updateUserStats: jest.fn(),
     addMessage: jest.fn(),
   };
@@ -164,32 +143,22 @@ describe('Analytics Command', () => {
           fields: [
             {
               name: '🏢 Server Overview',
-              value: 'Servers: 1\nActive Users: 149\nTotal Members: 150\nBots: 1',
+              value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
               inline: true,
             },
             {
-              name: '📈 Command Analytics (7 days)',
-              value: 'Total Commands: 25\nSuccess Rate: 96%\nTop Command: chat (15)',
+              name: '📈 Performance',
+              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
               inline: true,
             },
             {
-              name: '⚠️ Error Tracking (7 days)',
-              value: 'Total Errors: 2\nResolved: 1\nTop Error: network (1)',
-              inline: true,
-            },
-            {
-              name: '⏱️ Bot Uptime',
-              value: 'Total Uptime: 1h\nDowntime: 0h\nRestarts: 1',
-              inline: true,
-            },
-            {
-              name: '⏰ Reminder System',
-              value: 'Total Reminders: 5\nActive: 3\nCompleted: 2',
+              name: '🎯 Top Commands',
+              value: 'No data yet',
               inline: true,
             },
             {
               name: '💡 Server Insights',
-              value: '🟢 Currently Online: 3\n📊 Server Health: Excellent\n🤖 Bot Activity: Active',
+              value: '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
               inline: false,
             },
           ],
@@ -251,16 +220,22 @@ describe('Analytics Command', () => {
           fields: expect.arrayContaining([
             expect.objectContaining({
               name: '🏢 Server Overview',
-              // Should show fallback calculations: onlineCount = Math.floor(100 * 0.2) = 20
-              // botCount = Math.floor(100 * 0.05) = 5, so humanMembers = 100 - 5 = 95
-              value: expect.stringContaining(
-                'Servers: 1\nActive Users: 95\nTotal Members: 100\nBots: 5'
-              ),
+              value: expect.stringContaining('Servers: 1\nActive Users: 95\nTotal Commands: 0'),
+              inline: true,
+            }),
+            expect.objectContaining({
+              name: '📈 Performance',
+              value: expect.stringContaining('Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms'),
+              inline: true,
+            }),
+            expect.objectContaining({
+              name: '🎯 Top Commands',
+              value: expect.stringContaining('No data yet'),
               inline: true,
             }),
             expect.objectContaining({
               name: '💡 Server Insights',
-              value: expect.stringContaining('🟢 Currently Online: 20'), // Fallback online count
+              value: expect.stringContaining('🟢 Currently Online: 20\n👥 Total Members: 95\n🤖 Bots: 5\n📊 Server Health: Excellent'),
               inline: false,
             }),
           ]),
@@ -277,7 +252,7 @@ describe('Stats Command', () => {
     commandName: 'stats',
     reply: jest.fn(),
     user: {
-      id: 'test-user-123',
+      id: '123456789012345678', // Valid Discord snowflake format (18 digits)
     },
   };
 
@@ -309,21 +284,14 @@ describe('Help Command', () => {
       '**Aszai Bot Commands:**\n' +
         '`/help` - Show this help message\n' +
         '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
-        '`/newconversation` - Start fresh on a new topic\n' +
         '`/summary` - Summarise your current conversation\n' +
         '`/summarise <text>` - Summarise provided text\n' +
         '`/stats` - Show your usage stats\n' +
         '`/analytics` - Show Discord server analytics\n' +
         '`/dashboard` - Show performance dashboard\n' +
         '`/resources` - Show resource optimization status\n' +
-        '`/remind <time> <message>` - Set a reminder\n' +
-        '`/reminders` - List your active reminders\n' +
-        '`/cancelreminder <id>` - Cancel a specific reminder\n' +
-        '\n**Tips:**\n' +
-        '• Bot remembers last 12 messages for context\n' +
-        '• Use `/newconversation` when changing topics\n' +
-        '• Conversations auto-clear after 15 min inactivity\n' +
-        '• Use "!" at start of message to prevent bot response'
+        'Simply chat as normal to talk to the bot!\n' +
+        'Use "!" at start of message to prevent bot response'
     );
   });
 });
@@ -340,9 +308,15 @@ describe('Clear History Command', () => {
   test('should handle clearhistory command successfully', async () => {
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.reply).toHaveBeenCalledWith(
-      'Conversation history cleared! Your stats have been preserved.'
-    );
+    expect(mockInteraction.reply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: '#5865F2',
+          description: 'Your conversation history and stats have been cleared.',
+          footer: { text: 'Aszai Bot' },
+        },
+      ],
+    });
   });
 });
 
@@ -400,7 +374,7 @@ describe('Dashboard Command', () => {
               inline: true,
             }),
             expect.objectContaining({
-              name: '⚡ Performance (24h)',
+              name: '⚡ Performance',
               value: expect.stringContaining('Response Time:'),
               inline: true,
             }),
@@ -450,12 +424,17 @@ describe('Resources Command', () => {
               inline: true,
             }),
             expect.objectContaining({
-              name: '📈 Database Metrics (24h)',
-              value: expect.stringContaining('Avg Memory:'),
+              name: '📈 Optimization Tier',
+              value: expect.stringContaining('Current:'),
               inline: true,
             }),
+            expect.objectContaining({
+              name: '💡 Recommendations',
+              value: expect.stringContaining('System performance is good'),
+              inline: false,
+            }),
           ]),
-          footer: { text: 'Aszai Bot Resource Monitor • Database-powered' },
+          footer: { text: 'Aszai Bot Resources • Database-powered • Real-time monitoring' },
           timestamp: expect.any(String),
         }),
       ],
