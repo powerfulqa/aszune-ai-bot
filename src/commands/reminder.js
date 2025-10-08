@@ -92,8 +92,8 @@ async function handleSetReminder(message, args) {
 
   try {
     const parsedTime = timeParser.parseTimeExpression(timeExpression);
-    const reminderId = await createReminderInDatabase(message, reminderMessage, parsedTime);
-    return createSuccessReply(message, reminderMessage, parsedTime, reminderId);
+    const reminder = await createReminderInDatabase(message, reminderMessage, parsedTime);
+    return createSuccessReply(message, reminderMessage, parsedTime, reminder.id);
   } catch (error) {
     return createErrorReply(message, error);
   }
