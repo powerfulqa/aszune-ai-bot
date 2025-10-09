@@ -61,6 +61,9 @@ class PerplexityService {
     this.cacheManager = new CacheManager();
     this.responseProcessor = new ResponseProcessor();
     this.throttlingService = new ThrottlingService();
+
+    // Initialize active intervals set for cleanup
+    this.activeIntervals = new Set();
   }
 
   /**

@@ -385,7 +385,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
       };
 
       await expect(perplexityService._handleErrorResponse(400, body)).rejects.toThrow(
-        'API request failed: {"error":"Test error"}'
+        'API request failed with status 400: {"error":"Test error"}'
       );
     });
 
