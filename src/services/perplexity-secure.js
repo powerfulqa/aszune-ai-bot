@@ -61,9 +61,6 @@ class PerplexityService {
     this.cacheManager = new CacheManager();
     this.responseProcessor = new ResponseProcessor();
     this.throttlingService = new ThrottlingService();
-
-    // Initialize active intervals set for cleanup
-    this.activeIntervals = new Set();
   }
 
   /**
@@ -627,6 +624,92 @@ class PerplexityService {
   }
 
   /**
+   * Format messages for API to ensure proper alternation and system message
+   * @param {Array} history - Raw conversation history
+   * @returns {Array} Formatted messages for API
+   * @private
+   */
+  _formatMessagesForAPI(history) {
+    if (!Array.isArray(history) || history.length === 0) {
+      return [
+        { role: 'system', content: config.SYSTEM_MESSAGES.CHAT },
+        { role: 'user', content: 'Hello' }
+      ];
+    }
+
+    const messages = [{ role: 'system', content: config.SYSTEM_MESSAGES.CHAT }];
+    
+    // Clean and ensure alternation
+    return this._ensureMessageAlternation(messages, history);
+  }
+
+  /**
+   * Ensure messages alternate between user and assistant roles
+   * @param {Array} messages - Initial messages array (with system message)
+   * @param {Array} history - Conversation history to process
+   * @returns {Array} Messages with proper alternation
+   * @private
+   */
+  _ensureMessageAlternation(messages, history) {
+    let lastRole = 'system';
+
+    for (const msg of history) {
+      if (msg.role === 'system') continue; // Skip additional system messages
+
+      const processedMsg = this._processMessageForAlternation(msg, lastRole, messages);
+      if (processedMsg.added) {
+        lastRole = processedMsg.newRole;
+      }
+    }
+
+    // Ensure we end with a user message
+    if (messages[messages.length - 1].role === 'assistant') {
+      messages.push({ role: 'user', content: 'Please continue.' });
+    }
+
+    return messages;
+  }
+
+  /**
+   * Process a single message for proper alternation
+   * @param {Object} msg - Message to process
+   * @param {string} lastRole - Last message role
+   * @param {Array} messages - Messages array to update
+   * @returns {Object} Result of processing
+   * @private
+   */
+  _processMessageForAlternation(msg, lastRole, messages) {
+    // Handle user message after assistant or system
+    if (msg.role === 'user' && (lastRole === 'assistant' || lastRole === 'system')) {
+      messages.push({ role: 'user', content: msg.content });
+      return { added: true, newRole: 'user' };
+    }
+
+    // Handle assistant message after user
+    if (msg.role === 'assistant' && lastRole === 'user') {
+      messages.push({ role: 'assistant', content: msg.content });
+      return { added: true, newRole: 'assistant' };
+    }
+
+    // Handle assistant right after system (insert placeholder user message)
+    if (msg.role === 'assistant' && lastRole === 'system') {
+      messages.push({ role: 'user', content: 'Continue our conversation.' });
+      messages.push({ role: 'assistant', content: msg.content });
+      return { added: true, newRole: 'assistant' };
+    }
+
+    // Handle consecutive same roles - combine content
+    if (msg.role === lastRole && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === msg.role) {
+        lastMsg.content += '\n' + msg.content;
+      }
+    }
+
+    return { added: false, newRole: lastRole };
+  }
+
+  /**
    * Process chat response generation with caching and API calls
    * @param {Array} history - Conversation history
    * @param {Object} opts - Standardized options
@@ -655,89 +738,54 @@ class PerplexityService {
     return content;
   }
 
+  /**
+   * Track response performance metrics
+   * @param {number} startTime - Request start time
+   * @param {number} initialMemoryUsage - Initial memory usage
+   * @param {number} historyLength - Length of conversation history
+   * @param {boolean} shouldUseCache - Whether caching was enabled
+   * @param {string} content - Response content
+   * @private
+   */
+  async _trackResponsePerformance(startTime, initialMemoryUsage, historyLength, shouldUseCache, content) {
+    const isCacheHit = Date.now() - startTime < 10;
+    const responseTime = Date.now() - startTime;
+    const finalMemoryUsage = process.memoryUsage().heapUsed;
+    const memoryDelta = finalMemoryUsage - initialMemoryUsage;
+
+    if (isCacheHit) {
+      await this._trackCacheHitPerformance(responseTime, memoryDelta, historyLength, shouldUseCache);
+    } else {
+      await this._trackApiCallPerformance(
+        responseTime,
+        memoryDelta,
+        finalMemoryUsage,
+        historyLength,
+        shouldUseCache,
+        content?.length || 0
+      );
+    }
+  }
+
   async generateChatResponse(history, options = {}) {
     const startTime = Date.now();
     const initialMemoryUsage = process.memoryUsage().heapUsed;
-
-    // Validate history parameter
-    if (!Array.isArray(history)) {
-      const errorMsg = `Invalid history parameter - expected array, got ${typeof history}`;
-      logger.error(errorMsg);
-      throw ErrorHandler.createError(errorMsg, ERROR_TYPES.VALIDATION_ERROR);
-    }
-
-    if (history.length === 0) {
-      const errorMsg = 'Cannot generate response with empty conversation history';
-      logger.error(errorMsg);
-      throw ErrorHandler.createError(errorMsg, ERROR_TYPES.VALIDATION_ERROR);
-    }
-
-    // Validate message format in history
-    const invalidMessages = history.filter(msg => !msg || !msg.role || !msg.content);
-    if (invalidMessages.length > 0) {
-      logger.error('Invalid messages in history:', JSON.stringify(invalidMessages));
-      throw ErrorHandler.createError('All messages must have role and content fields', ERROR_TYPES.VALIDATION_ERROR);
-    }
-
-    logger.info(`Generating chat response for ${history.length} messages in history`);
-
-    // Standardize options
     const opts = this.responseProcessor.standardizeOptions(options);
 
     try {
-      // Get cache configuration
+      const formattedHistory = this._formatMessagesForAPI(history);
       const cacheConfig = this.cacheManager.getCacheConfiguration();
-
-      // Determine if caching should be used
       const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
+      const content = await this._processChatResponse(formattedHistory, opts, cacheConfig, shouldUseCache);
 
-      // Process the chat response
-      const content = await this._processChatResponse(history, opts, cacheConfig, shouldUseCache);
-
-      // Check if this was a cache hit by comparing start time with current time
-      const isCacheHit = Date.now() - startTime < 10; // Very fast response indicates cache hit
-
-      if (isCacheHit) {
-        // Track cache hit performance
-        const cacheResponseTime = Date.now() - startTime;
-        const finalMemoryUsage = process.memoryUsage().heapUsed;
-        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
-
-        await this._trackCacheHitPerformance(
-          cacheResponseTime,
-          memoryDelta,
-          history?.length || 0,
-          shouldUseCache
-        );
-      } else {
-        // Track API call performance
-        const totalTime = Date.now() - startTime;
-        const finalMemoryUsage = process.memoryUsage().heapUsed;
-        const memoryDelta = finalMemoryUsage - initialMemoryUsage;
-
-        await this._trackApiCallPerformance(
-          totalTime,
-          memoryDelta,
-          finalMemoryUsage,
-          history?.length || 0,
-          shouldUseCache,
-          content?.length || 0
-        );
-      }
-
+      await this._trackResponsePerformance(startTime, initialMemoryUsage, history?.length || 0, shouldUseCache, content);
       return content;
     } catch (error) {
-      // Track error performance
       const errorTime = Date.now() - startTime;
       const finalMemoryUsage = process.memoryUsage().heapUsed;
       const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
-      await this._trackApiErrorPerformance(
-        errorTime,
-        memoryDelta,
-        history?.length || 0,
-        error.message
-      );
+      await this._trackApiErrorPerformance(errorTime, memoryDelta, history?.length || 0, error.message);
 
       const errorResponse = ErrorHandler.handleError(error, 'generate chat response', {
         historyLength: history?.length || 0,
