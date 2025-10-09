@@ -59,8 +59,11 @@ class ApiClient {
       temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
     };
 
-    // Log payload for debugging (only in production errors)
-    logger.debug(`API Request Payload: model=${payload.model}, messages=${messages.length}, max_tokens=${payload.max_tokens}`);
+    // Log full payload for debugging production issues
+    logger.info(`API Request: model="${payload.model}", messages=${messages.length}, first_message_role="${messages[0]?.role}"`);
+    if (process.env.DEBUG === 'true') {
+      logger.debug('Full payload:', JSON.stringify(payload, null, 2));
+    }
 
     // Enable streaming if requested and not in low CPU mode
     if (options.stream && !this.isLowCpuMode()) {
@@ -91,6 +94,10 @@ class ApiClient {
   async makeRequest(endpoint, payload) {
     const fullUrl = this.baseUrl + endpoint;
 
+    // Log request details for debugging
+    logger.info(`Making API request to: ${endpoint}`);
+    logger.info(`Request payload summary: model=${payload.model}, messages=${payload.messages?.length || 0}, temperature=${payload.temperature}`);
+
     try {
       const response = await request(fullUrl, {
         method: 'POST',
@@ -100,6 +107,8 @@ class ApiClient {
 
       return await this.handleResponse(response);
     } catch (error) {
+      // Log the error with request context
+      logger.error(`API request failed for endpoint ${endpoint}:`, error.message);
       throw this.handleRequestError(error);
     }
   }
