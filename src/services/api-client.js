@@ -61,9 +61,8 @@ class ApiClient {
 
     // Log full payload for debugging production issues
     logger.info(`API Request: model="${payload.model}", messages=${messages.length}, first_message_role="${messages[0]?.role}"`);
-    if (process.env.DEBUG === 'true') {
-      logger.debug('Full payload:', JSON.stringify(payload, null, 2));
-    }
+    // Temporarily log full payload to diagnose 400 errors
+    logger.info('Full request payload:', JSON.stringify(payload, null, 2));
 
     // Enable streaming if requested and not in low CPU mode
     if (options.stream && !this.isLowCpuMode()) {
