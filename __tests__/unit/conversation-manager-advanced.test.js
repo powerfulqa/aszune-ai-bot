@@ -12,14 +12,33 @@ jest.mock('../../src/services/storage', () => ({
   saveUserStats: jest.fn().mockResolvedValue(),
 }));
 
+// Mock database service for stats tracking
+const mockDatabaseService = {
+  getUserStats: jest.fn(),
+  getUserReminderCount: jest.fn(),
+  updateUserStats: jest.fn(),
+  addUserMessage: jest.fn(),
+  addBotResponse: jest.fn(),
+};
+
+jest.mock('../../src/services/database', () => mockDatabaseService);
+
 const ConversationManager = require('../../src/utils/conversation');
-const config = require('../../src/config/config');
 let conversationManager;
 
 describe('Conversation Manager - Advanced Features', () => {
   beforeEach(() => {
     conversationManager = new ConversationManager();
     jest.clearAllMocks();
+
+    // Configure database mocks with default returns
+    mockDatabaseService.getUserStats.mockReturnValue({
+      user_id: '123456789012345678',
+      message_count: 0,
+      total_summaries: 0,
+      last_active: null,
+    });
+    mockDatabaseService.getUserReminderCount.mockReturnValue(0);
 
     // Clear all conversation data
     conversationManager.conversations.clear();
@@ -55,6 +74,15 @@ describe('Conversation Manager - Advanced Features', () => {
 
     it('clears all conversation data', () => {
       const userId = '123456789012345678';
+      
+      // Mock getUserStats to return 1 message after addMessage
+      mockDatabaseService.getUserStats.mockReturnValueOnce({
+        user_id: userId,
+        message_count: 1,
+        total_summaries: 0,
+        last_active: new Date().toISOString(),
+      });
+      
       conversationManager.addMessage(userId, 'user', 'hello');
 
       expect(conversationManager.getHistory(userId)).toHaveLength(1);
