@@ -68,7 +68,7 @@ describe('Perplexity Service - Basic', () => {
 
       // Our new message validation should reject empty arrays
       await expect(perplexityService.sendChatRequest(messages)).rejects.toThrow(
-        'Request failed: Empty response received from the service.'
+        'Messages array cannot be empty'
       );
     });
 
