@@ -186,14 +186,12 @@ const commands = {
       };
 
       // Add recent entries if available
-      const recentEntriesValue = (detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0)
-        ? detailedInfo.recentEntries
-            .map(
-              (entry) =>
-                `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`
-            )
-            .join('\n')
-        : 'No recent entries';
+      const recentEntriesValue =
+        detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0
+          ? detailedInfo.recentEntries
+              .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
+              .join('\n')
+          : 'No recent entries';
 
       const recentEntriesField = {
         name: 'Recent Entries',
@@ -557,7 +555,9 @@ const commands = {
 
       // Reject input that becomes empty after sanitization (indicates dangerous content was removed)
       if (!textValidation.sanitized || textValidation.sanitized.trim().length === 0) {
-        return interaction.reply('❌ Invalid text input: Content contains unsafe elements that were removed.');
+        return interaction.reply(
+          '❌ Invalid text input: Content contains unsafe elements that were removed.'
+        );
       }
 
       // Generate summary
@@ -624,15 +624,14 @@ const commands = {
         const summary = await perplexityService.generateSummary(messages, true); // isText = true
         conversationManager.updateUserStats(userId, 'summaries');
         return interaction.editReply({
-          embeds:
-            [
-              {
-                color: config.COLORS.PRIMARY,
-                title: 'Text Summary',
-                description: summary,
-                footer: { text: 'Aszai Bot' },
-              },
-            ],
+          embeds: [
+            {
+              color: config.COLORS.PRIMARY,
+              title: 'Text Summary',
+              description: summary,
+              footer: { text: 'Aszai Bot' },
+            },
+          ],
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'text summary generation', {
@@ -686,7 +685,7 @@ const commands = {
 
       try {
         const reminder = await reminderService.setReminder(userId, time, message);
-        
+
         return interaction.reply({
           embeds: [
             {

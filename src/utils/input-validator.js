@@ -226,7 +226,11 @@ class InputValidator {
     // can block legitimate user messages (e.g., game names, normal text)
     // Warnings are still logged for monitoring purposes
 
-    return { valid: true, sanitized: sanitizationResult.content, warnings: sanitizationResult.warnings };
+    return {
+      valid: true,
+      sanitized: sanitizationResult.content,
+      warnings: sanitizationResult.warnings,
+    };
   }
 
   /**

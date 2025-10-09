@@ -12,7 +12,7 @@ describe('Text Commands Removal', () => {
     it('should confirm all text commands have been migrated to slash commands', () => {
       const commands = require('../../src/commands');
       const slashCommands = commands.getSlashCommandsData();
-      const commandNames = slashCommands.map(cmd => cmd.name);
+      const commandNames = slashCommands.map((cmd) => cmd.name);
 
       // Verify reminder commands exist as slash commands
       expect(commandNames).toContain('remind');
@@ -28,9 +28,9 @@ describe('Text Commands Removal', () => {
       const slashCommands = commands.getSlashCommandsData();
 
       // Find reminder commands
-      const remindCommand = slashCommands.find(cmd => cmd.name === 'remind');
-      const remindersCommand = slashCommands.find(cmd => cmd.name === 'reminders');
-      const cancelCommand = slashCommands.find(cmd => cmd.name === 'cancelreminder');
+      const remindCommand = slashCommands.find((cmd) => cmd.name === 'remind');
+      const remindersCommand = slashCommands.find((cmd) => cmd.name === 'reminders');
+      const cancelCommand = slashCommands.find((cmd) => cmd.name === 'cancelreminder');
 
       // Verify they exist and have proper structure
       expect(remindCommand).toBeDefined();
@@ -45,7 +45,7 @@ describe('Text Commands Removal', () => {
     it('should verify help command shows updated syntax without text commands', () => {
       const commands = require('../../src/commands');
       const slashCommands = commands.getSlashCommandsData();
-      const helpCommand = slashCommands.find(cmd => cmd.name === 'help');
+      const helpCommand = slashCommands.find((cmd) => cmd.name === 'help');
 
       // Verify help command exists as slash command
       expect(helpCommand).toBeDefined();

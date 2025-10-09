@@ -766,13 +766,25 @@ class PerplexityService {
    * @param {number} contentLength - Length of response content
    * @private
    */
-  async _trackResponsePerformance(fromCache, startTime, initialMemoryUsage, historyLength, shouldUseCache, contentLength) {
+  async _trackResponsePerformance(
+    fromCache,
+    startTime,
+    initialMemoryUsage,
+    historyLength,
+    shouldUseCache,
+    contentLength
+  ) {
     const responseTime = Date.now() - startTime;
     const finalMemoryUsage = process.memoryUsage().heapUsed;
     const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
     if (fromCache) {
-      await this._trackCacheHitPerformance(responseTime, memoryDelta, historyLength, shouldUseCache);
+      await this._trackCacheHitPerformance(
+        responseTime,
+        memoryDelta,
+        historyLength,
+        shouldUseCache
+      );
     } else {
       await this._trackApiCallPerformance(
         responseTime,

@@ -74,7 +74,7 @@ describe('DatabaseService - Performance', function () {
 
       const metrics = dbService.getPerformanceMetrics('response_time', 24);
       expect(metrics.length).toBe(3);
-      const values = metrics.map(m => m.value).sort((a, b) => a - b);
+      const values = metrics.map((m) => m.value).sort((a, b) => a - b);
       expect(values).toEqual([100, 150, 200]);
     });
 

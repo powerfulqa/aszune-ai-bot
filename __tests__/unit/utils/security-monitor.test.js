@@ -41,7 +41,7 @@ describe('SecurityMonitor - Input Validation', () => {
     });
 
     it('should detect SQL injection attempts', () => {
-      const input = '\'; DROP TABLE users; --';
+      const input = "'; DROP TABLE users; --";
       const result = SecurityMonitor.validateInput(input);
 
       expect(result).toEqual({
@@ -132,12 +132,12 @@ describe('SecurityMonitor - Input Validation', () => {
     });
 
     it('should detect UNION SELECT', () => {
-      const patterns = SecurityMonitor._detectSQLInjection('\' UNION SELECT * FROM passwords --');
+      const patterns = SecurityMonitor._detectSQLInjection("' UNION SELECT * FROM passwords --");
       expect(patterns).toBe(true);
     });
 
     it('should detect SQL comments', () => {
-      const patterns = SecurityMonitor._detectSQLInjection('test\'; --');
+      const patterns = SecurityMonitor._detectSQLInjection("test'; --");
       expect(patterns).toBe(true);
     });
 

@@ -693,12 +693,12 @@ class DatabaseService {
       const schemaAttempts = [
         // Latest schema (v1.7.0)
         {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
+          sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, '{}')",
           params: (now) => [userId, now, now],
         },
         // Previous schema (missing first_seen)
         {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
+          sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, '{}')",
           params: (now) => [userId, now],
         },
         // Basic schema (only core columns)

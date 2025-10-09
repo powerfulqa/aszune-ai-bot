@@ -155,9 +155,7 @@ describe('Commands - Cache Command', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid user ID')
-      );
+      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid user ID'));
     });
   });
 });

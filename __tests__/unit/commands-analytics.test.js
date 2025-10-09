@@ -45,11 +45,9 @@ const mockDatabaseService = {
     completedReminders: 15,
   }),
   trackServerMetric: jest.fn(),
-  getPerformanceMetrics: jest.fn().mockReturnValue([
-    { value: 150 },
-    { value: 200 },
-    { value: 175 },
-  ]),
+  getPerformanceMetrics: jest
+    .fn()
+    .mockReturnValue([{ value: 150 }, { value: 200 }, { value: 175 }]),
 };
 
 jest.mock('../../src/services/database', () => mockDatabaseService);

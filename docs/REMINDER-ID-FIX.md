@@ -114,7 +114,7 @@ async function handleSetReminder(message, args) {
    - Line 95: Changed variable name from `reminderId` to `reminder` (clarity)
    - Line 96: Extract `id` property: `reminder.id`
 
-2. ****tests**/unit/commands/reminder-id-fix.test.js** (NEW)
+2. \***\*tests**/unit/commands/reminder-id-fix.test.js\*\* (NEW)
    - Comprehensive test suite with 3 tests
    - Verifies numeric ID display
    - Confirms `[object Object]` no longer appears
@@ -192,6 +192,7 @@ To verify the fix works:
    - Verify ID matches the one shown in confirmation
 
 4. **Cancel reminder**:
+
    ```
    /cancelreminder id:123
    ```

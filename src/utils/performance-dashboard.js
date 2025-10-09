@@ -175,12 +175,25 @@ class PerformanceDashboard {
 
     return {
       timestamp,
-      overview: this._buildOverviewSection(analyticsReport, performanceAnalysis, resourceMonitoring, optimizedConfig),
+      overview: this._buildOverviewSection(
+        analyticsReport,
+        performanceAnalysis,
+        resourceMonitoring,
+        optimizedConfig
+      ),
       analytics: this._buildAnalyticsSection(analyticsReport, usagePatterns),
       performance: this._buildPerformanceSection(performanceAnalysis, performanceReport),
-      resources: this._buildResourcesSection(resourceMonitoring, optimizedConfig, optimizationRecommendations),
+      resources: this._buildResourcesSection(
+        resourceMonitoring,
+        optimizedConfig,
+        optimizationRecommendations
+      ),
       security: this._buildSecuritySection(),
-      actionItems: this._buildActionItemsSection(analyticsReport, performanceAnalysis, resourceMonitoring),
+      actionItems: this._buildActionItemsSection(
+        analyticsReport,
+        performanceAnalysis,
+        resourceMonitoring
+      ),
       nextSteps: this._buildNextStepsSection(analyticsReport, performanceAnalysis, optimizedConfig),
     };
   }
@@ -194,16 +207,34 @@ class PerformanceDashboard {
    * @returns {Object} - Overview section
    * @private
    */
-  static _buildOverviewSection(analyticsReport, performanceAnalysis, resourceMonitoring, optimizedConfig) {
+  static _buildOverviewSection(
+    analyticsReport,
+    performanceAnalysis,
+    resourceMonitoring,
+    optimizedConfig
+  ) {
     return {
-      status: this._calculateOverallStatus(analyticsReport, performanceAnalysis, resourceMonitoring),
-      serverCount: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalServers : 0,
-      activeUsers: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalUsers : 0,
-      totalCommands: analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalCommands : 0,
-      errorRate: analyticsReport && analyticsReport.summary ? `${analyticsReport.summary.errorRate}%` : '0%',
+      status: this._calculateOverallStatus(
+        analyticsReport,
+        performanceAnalysis,
+        resourceMonitoring
+      ),
+      serverCount:
+        analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalServers : 0,
+      activeUsers:
+        analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalUsers : 0,
+      totalCommands:
+        analyticsReport && analyticsReport.summary ? analyticsReport.summary.totalCommands : 0,
+      errorRate:
+        analyticsReport && analyticsReport.summary ? `${analyticsReport.summary.errorRate}%` : '0%',
       responseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
-      averageResponseTime: performanceAnalysis ? `${performanceAnalysis.averageResponseTime}ms` : '0ms',
-      memoryUsage: resourceMonitoring && resourceMonitoring.memory ? `${resourceMonitoring.memory.used}MB` : '0MB',
+      averageResponseTime: performanceAnalysis
+        ? `${performanceAnalysis.averageResponseTime}ms`
+        : '0ms',
+      memoryUsage:
+        resourceMonitoring && resourceMonitoring.memory
+          ? `${resourceMonitoring.memory.used}MB`
+          : '0MB',
       optimizationTier: optimizedConfig ? optimizedConfig.tier : 'unknown',
     };
   }
@@ -450,17 +481,17 @@ class PerformanceDashboard {
    */
   static exportDashboardData(dashboardData, format = 'json') {
     switch (format.toLowerCase()) {
-    case 'json':
-      return JSON.stringify(dashboardData, null, 2);
+      case 'json':
+        return JSON.stringify(dashboardData, null, 2);
 
-    case 'csv':
-      return this._exportToCSV(dashboardData);
+      case 'csv':
+        return this._exportToCSV(dashboardData);
 
-    case 'text':
-      return this._exportToText(dashboardData);
+      case 'text':
+        return this._exportToText(dashboardData);
 
-    default:
-      return JSON.stringify(dashboardData, null, 2);
+      default:
+        return JSON.stringify(dashboardData, null, 2);
     }
   }
 

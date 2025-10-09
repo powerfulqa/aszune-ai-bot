@@ -12,7 +12,7 @@ jest.mock('better-sqlite3', () => {
     close: jest.fn(),
     pragma: jest.fn(),
   };
-  
+
   return jest.fn().mockImplementation(() => mockDb);
 });
 
@@ -86,7 +86,9 @@ describe('DatabaseService', () => {
         throw new Error('Database connection failed');
       });
 
-      expect(() => dbService.getDb()).toThrow('Failed to initialize database: Database connection failed');
+      expect(() => dbService.getDb()).toThrow(
+        'Failed to initialize database: Database connection failed'
+      );
     });
   });
 
@@ -108,7 +110,9 @@ describe('DatabaseService', () => {
         throw new Error('Table creation failed');
       });
 
-      expect(() => dbService.getDb()).toThrow('Failed to initialize database tables: Table creation failed');
+      expect(() => dbService.getDb()).toThrow(
+        'Failed to initialize database tables: Table creation failed'
+      );
     });
   });
 
@@ -144,7 +148,9 @@ describe('DatabaseService', () => {
         throw new Error('Query failed');
       });
 
-      expect(() => dbService.getUserStats('123')).toThrow('Failed to get user stats for 123: Query failed');
+      expect(() => dbService.getUserStats('123')).toThrow(
+        'Failed to get user stats for 123: Query failed'
+      );
     });
   });
 
@@ -154,13 +160,37 @@ describe('DatabaseService', () => {
 
       dbService.updateUserStats('123', { message_count: 1, last_active: '2023-01-02' });
 
-      expect(mockStmt.run).toHaveBeenCalledWith('123', 1, '2023-01-02', expect.any(String), 0, 0, '{}', 1, '2023-01-02', 0, 0);
+      expect(mockStmt.run).toHaveBeenCalledWith(
+        '123',
+        1,
+        '2023-01-02',
+        expect.any(String),
+        0,
+        0,
+        '{}',
+        1,
+        '2023-01-02',
+        0,
+        0
+      );
     });
 
     it('should handle missing updates gracefully', () => {
       dbService.updateUserStats('123', {});
 
-      expect(mockStmt.run).toHaveBeenCalledWith('123', 0, expect.any(String), expect.any(String), 0, 0, '{}', 0, expect.any(String), 0, 0);
+      expect(mockStmt.run).toHaveBeenCalledWith(
+        '123',
+        0,
+        expect.any(String),
+        expect.any(String),
+        0,
+        0,
+        '{}',
+        0,
+        expect.any(String),
+        0,
+        0
+      );
     });
 
     it('should throw error on update failure', () => {
@@ -168,18 +198,16 @@ describe('DatabaseService', () => {
         throw new Error('Update failed');
       });
 
-      expect(() => dbService.updateUserStats('123', { message_count: 1 })).toThrow('Failed to update user stats for 123: Update failed');
+      expect(() => dbService.updateUserStats('123', { message_count: 1 })).toThrow(
+        'Failed to update user stats for 123: Update failed'
+      );
     });
   });
 
   describe('getUserMessages', () => {
     it('should return last 10 messages for user', () => {
       const mockMessages = ['msg1', 'msg2', 'msg3'];
-      mockStmt.all.mockReturnValue([
-        { message: 'msg1' },
-        { message: 'msg2' },
-        { message: 'msg3' },
-      ]);
+      mockStmt.all.mockReturnValue([{ message: 'msg1' }, { message: 'msg2' }, { message: 'msg3' }]);
 
       const result = dbService.getUserMessages('123');
 
@@ -219,7 +247,9 @@ describe('DatabaseService', () => {
         throw new Error('Insert failed');
       });
 
-      expect(() => dbService.addUserMessage('123', 'Hello world')).toThrow('Failed to add user message for 123: Insert failed');
+      expect(() => dbService.addUserMessage('123', 'Hello world')).toThrow(
+        'Failed to add user message for 123: Insert failed'
+      );
     });
   });
 
@@ -237,7 +267,9 @@ describe('DatabaseService', () => {
         throw new Error('Delete failed');
       });
 
-      expect(() => dbService.clearUserData('123')).toThrow('Failed to clear user data for 123: Delete failed');
+      expect(() => dbService.clearUserData('123')).toThrow(
+        'Failed to clear user data for 123: Delete failed'
+      );
     });
   });
 

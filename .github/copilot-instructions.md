@@ -2,9 +2,12 @@
 
 ## 🎯 Project Overview
 
-**Aszune AI Bot** (v1.7.0) is a production Discord bot combining Perplexity AI with comprehensive analytics, reminder scheduling, and performance monitoring. Built for Raspberry Pi deployment with 853+ tests (82% coverage) and strict qlty quality standards.
+**Aszune AI Bot** (v1.7.0) is a production Discord bot combining Perplexity AI with comprehensive
+analytics, reminder scheduling, and performance monitoring. Built for Raspberry Pi deployment with
+853+ tests (82% coverage) and strict qlty quality standards.
 
 **Key Capabilities:**
+
 - AI chat powered by Perplexity API with conversation history
 - Natural language reminder system with SQLite persistence
 - Discord analytics dashboard (`/analytics`, `/dashboard`, `/resources`)
@@ -29,22 +32,24 @@ services/perplexity-secure.js (AI API)
     └── ThrottlingService (rate limiting)
 ```
 
-**NEVER bypass service layers** - always delegate through proper channels. Direct component access breaks error handling and testing.
+**NEVER bypass service layers** - always delegate through proper channels. Direct component access
+breaks error handling and testing.
 
 ### Component-Based Services
 
 **PerplexityService** uses composition pattern:
+
 ```javascript
 class PerplexityService {
   constructor() {
     this.apiClient = new ApiClient();
-    this.cacheManager = new CacheManager();  // NOT this.cache!
+    this.cacheManager = new CacheManager(); // NOT this.cache!
     this.responseProcessor = new ResponseProcessor();
     this.throttlingService = new ThrottlingService();
   }
-  
+
   getCacheStats() {
-    return this.cacheManager.getStats();  // Always delegate
+    return this.cacheManager.getStats(); // Always delegate
   }
 }
 ```
@@ -52,6 +57,7 @@ class PerplexityService {
 ### Database Integration (v1.7.0)
 
 **SQLite-backed persistence** with graceful degradation:
+
 - **DatabaseService** provides mock implementations when SQLite unavailable
 - Database errors **MUST NOT** break conversation flow
 - Foreign key constraints enforced (use `ensureUserExists()` before inserts)
@@ -113,11 +119,15 @@ jest.mock('discord.js', () => {
     }),
     login: jest.fn().mockResolvedValue('Logged in'),
   };
-  
+
   return {
     Client: jest.fn(() => mockClient),
-    GatewayIntentBits: { /* ... */ },
-    REST: jest.fn(() => ({ /* ... */ })),
+    GatewayIntentBits: {
+      /* ... */
+    },
+    REST: jest.fn(() => ({
+      /* ... */
+    })),
   };
 });
 
@@ -135,16 +145,22 @@ jest.mock('../../src/services/database', () => ({
 ```javascript
 // ✅ CORRECT - Test with exact values
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [{
-    color: '#5865F2',  // Exact hex - no expect.any()
-    description: 'An unexpected error occurred. Please try again later.',  // Exact ErrorHandler message
-    footer: { text: 'Aszai Bot' }
-  }]
+  embeds: [
+    {
+      color: '#5865F2', // Exact hex - no expect.any()
+      description: 'An unexpected error occurred. Please try again later.', // Exact ErrorHandler message
+      footer: { text: 'Aszai Bot' },
+    },
+  ],
 });
 
 // ❌ WRONG - Matchers will fail
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [expect.objectContaining({ /* ... */ })]  // DON'T USE
+  embeds: [
+    expect.objectContaining({
+      /* ... */
+    }),
+  ], // DON'T USE
 });
 ```
 
@@ -163,7 +179,7 @@ expect(result).toContain('error');
 
 ### Config Access (PREVENTS CIRCULAR DEPENDENCIES)
 
-```javascript
+````javascript
 ## 🚨 CRITICAL WARNINGS
 
 ### 1. Config Access (BREAKS APP)
@@ -181,7 +197,7 @@ function someFunction() {
   }
   return config.FEATURES.LICENSE_VALIDATION;
 }
-```
+````
 
 ### 2. Test Error Contracts (BREAKS 536+ TESTS)
 
@@ -206,7 +222,7 @@ async function getDiscordData(guild) {
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('Timeout')), 5000)
   );
-  
+
   try {
     return await Promise.race([fetchPromise, timeoutPromise]);
   } catch (error) {
@@ -241,7 +257,8 @@ try {
   // Continue - database is enhancement only
 }
 ```
-```
+
+````
 
 ### Module Exports (BACKWARD COMPATIBILITY)
 
@@ -253,7 +270,7 @@ module.exports.default = handleChatMessage;
 
 // ❌ WRONG - Breaking change
 module.exports = { handleChatMessage };
-```
+````
 
 ### Cache Service Properties (v1.6.5 Critical Fix)
 
@@ -261,11 +278,11 @@ module.exports = { handleChatMessage };
 // ✅ CORRECT - Descriptive property names
 class PerplexityService {
   constructor() {
-    this.cacheManager = new CacheManager();  // NOT this.cache
+    this.cacheManager = new CacheManager(); // NOT this.cache
   }
-  
+
   getCacheStats() {
-    return this.cacheManager.getStats();  // Always delegate
+    return this.cacheManager.getStats(); // Always delegate
   }
 }
 ```
@@ -288,14 +305,18 @@ try {
 // ✅ CORRECT - EventEmitter pattern
 class ReminderService extends EventEmitter {
   constructor() {
-    super();  // MUST call super()
+    super(); // MUST call super()
     this.activeTimers = new Map();
   }
 }
 
 // Bot integration
 reminderService.on('reminderDue', async (reminder) => {
-  await channel.send({ embeds: [/* ... */] });
+  await channel.send({
+    embeds: [
+      /* ... */
+    ],
+  });
 });
 ```
 
@@ -788,12 +809,18 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 ### Repository Cleanup Completed (2025-10-08)
 
 **Files Reorganized:**
-- **Moved to `/docs`**: 6 technical documentation files (CONVERSATION-CONTEXT-FIX.md, DEPLOYMENT-v1.7.0-COMPLETE.md, FIXES-SUMMARY.md, production-fix.md, REMINDER-FIX-SUMMARY.md, REMINDER-ID-FIX.md)
-- **Moved to `/scripts`**: 6 utility scripts (fix-production.bat, run-tests.bat, start-test.bat, fix-line-endings.ps1, format-code.ps1, check-triggers.js)
+
+- **Moved to `/docs`**: 6 technical documentation files (CONVERSATION-CONTEXT-FIX.md,
+  DEPLOYMENT-v1.7.0-COMPLETE.md, FIXES-SUMMARY.md, production-fix.md, REMINDER-FIX-SUMMARY.md,
+  REMINDER-ID-FIX.md)
+- **Moved to `/scripts`**: 6 utility scripts (fix-production.bat, run-tests.bat, start-test.bat,
+  fix-line-endings.ps1, format-code.ps1, check-triggers.js)
 - **Deleted**: 4 obsolete files (junit.xml duplicate, 3 old .tar.gz deployment archives)
 
 **Documentation Updates Applied:**
-- **README.md**: Updated with v1.7.0 features, database integration, reminder system, and corrected project structure
+
+- **README.md**: Updated with v1.7.0 features, database integration, reminder system, and corrected
+  project structure
 - **wiki/Home.md**: Added v1.7.0 version information and database/reminder features
 - **wiki/Command-Reference.md**: Added complete reminder command documentation
 - **Copilot Instructions**: Updated with database and reminder system architecture details
@@ -801,18 +828,21 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 ### 🎯 NEXT AGENT PRIORITIES
 
 **Immediate Tasks:**
+
 1. **Test Database Integration**: Run full test suite to ensure database mocking works correctly
 2. **Verify Reminder System**: Test reminder scheduling and Discord notifications
 3. **Update Package Dependencies**: Check for any missing dependencies in package.json
 4. **Validate Documentation Links**: Ensure all internal links in updated documentation work
 
 **Medium-term Goals:**
+
 1. **Performance Testing**: Benchmark database operations and reminder system performance
 2. **Cross-platform Testing**: Verify SQLite works on Windows, Linux, and Raspberry Pi
 3. **Backup Strategy**: Implement database backup and recovery procedures
 4. **Monitoring Integration**: Add database health checks to analytics system
 
 **Long-term Enhancements:**
+
 1. **Database Migration System**: Implement schema versioning and migration scripts
 2. **Advanced Reminder Features**: Recurring reminders, reminder templates, bulk operations
 3. **Analytics Expansion**: Database-driven analytics with historical data and trends
@@ -821,24 +851,28 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 ### ⚠️ CRITICAL NEXT AGENT WARNINGS
 
 **Database Integration Risks:**
+
 - **SQLite Dependencies**: Ensure `better-sqlite3` is properly installed and compatible
 - **File Permissions**: Database file (`./data/bot.db`) needs write permissions
 - **Migration Safety**: Any schema changes must be backward compatible
 - **Memory Usage**: SQLite can consume significant memory on large datasets
 
 **Reminder System Considerations:**
+
 - **Timer Management**: Long-running reminders (>24h) use interval checks to prevent memory leaks
 - **Timezone Handling**: All reminders use UTC storage with user-timezone display
 - **Event Integration**: ReminderService emits 'reminderDue' events that must be handled by main bot
 - **Persistence**: Reminder timers are recreated on bot restart from database
 
 **Testing Requirements:**
+
 - **Database Mocks**: All non-database tests must mock DatabaseService methods
 - **Timer Mocks**: Reminder service tests need proper timer mocking
 - **Async Operations**: Database operations are synchronous but reminder events are asynchronous
 - **Cleanup**: Database connections must be properly closed in test teardown
 
 **Documentation Maintenance:**
+
 - **Version Updates**: Keep version numbers consistent across README, wiki, and package.json
 - **Feature Flags**: Document any new feature flags and their purposes
 - **Command Updates**: Update command references when new commands are added
@@ -885,4 +919,5 @@ npm start                    # Production mode
 
 ---
 
-**Remember**: This codebase has 853+ tests and 82% coverage. Breaking patterns WILL fail tests. When in doubt, check existing tests for expected behavior.
+**Remember**: This codebase has 853+ tests and 82% coverage. Breaking patterns WILL fail tests. When
+in doubt, check existing tests for expected behavior.

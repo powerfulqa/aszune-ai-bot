@@ -71,7 +71,8 @@ describe('Reminder Commands', () => {
         commandName: 'remind',
         user: { id: 'user123' },
         options: {
-          getString: jest.fn()
+          getString: jest
+            .fn()
             .mockReturnValueOnce('in 5 minutes') // time
             .mockReturnValueOnce('Test reminder'), // message
         },
@@ -80,7 +81,11 @@ describe('Reminder Commands', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(reminderService.setReminder).toHaveBeenCalledWith('user123', 'in 5 minutes', 'Test reminder');
+      expect(reminderService.setReminder).toHaveBeenCalledWith(
+        'user123',
+        'in 5 minutes',
+        'Test reminder'
+      );
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
           {
@@ -103,7 +108,8 @@ describe('Reminder Commands', () => {
         commandName: 'remind',
         user: { id: 'user123' },
         options: {
-          getString: jest.fn()
+          getString: jest
+            .fn()
             .mockReturnValueOnce('in 5 minutes')
             .mockReturnValueOnce('Invalid message'),
         },
@@ -112,7 +118,9 @@ describe('Reminder Commands', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith('❌ Invalid reminder message: Message too long');
+      expect(interaction.reply).toHaveBeenCalledWith(
+        '❌ Invalid reminder message: Message too long'
+      );
     });
 
     it('should handle /remind command API error', async () => {
@@ -122,7 +130,8 @@ describe('Reminder Commands', () => {
         commandName: 'remind',
         user: { id: 'user123' },
         options: {
-          getString: jest.fn()
+          getString: jest
+            .fn()
             .mockReturnValueOnce('in 5 minutes')
             .mockReturnValueOnce('Test reminder'),
         },
@@ -132,15 +141,29 @@ describe('Reminder Commands', () => {
       await handleSlashCommand(interaction);
 
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith('An unexpected error occurred. Please try again later.');
+      expect(interaction.reply).toHaveBeenCalledWith(
+        'An unexpected error occurred. Please try again later.'
+      );
     });
   });
 
   describe('/reminders command', () => {
     it('should handle /reminders command successfully with reminders', async () => {
       const mockReminders = [
-        { id: '123', time: 'in 5 minutes', message: 'Test reminder 1', createdAt: new Date(), dueDate: 'Wed Oct 09 2025' },
-        { id: '124', time: 'tomorrow', message: 'Test reminder 2', createdAt: new Date(), dueDate: 'Wed Oct 09 2025' },
+        {
+          id: '123',
+          time: 'in 5 minutes',
+          message: 'Test reminder 1',
+          createdAt: new Date(),
+          dueDate: 'Wed Oct 09 2025',
+        },
+        {
+          id: '124',
+          time: 'tomorrow',
+          message: 'Test reminder 2',
+          createdAt: new Date(),
+          dueDate: 'Wed Oct 09 2025',
+        },
       ];
 
       reminderService.getUserReminders.mockResolvedValue(mockReminders);
@@ -159,7 +182,8 @@ describe('Reminder Commands', () => {
           {
             color: 0x0099ff,
             title: '📝 Your Active Reminders',
-            description: '**123**: Test reminder 1\n⏰ Wed Oct 09 2025\n\n**124**: Test reminder 2\n⏰ Wed Oct 09 2025',
+            description:
+              '**123**: Test reminder 1\n⏰ Wed Oct 09 2025\n\n**124**: Test reminder 2\n⏰ Wed Oct 09 2025',
             footer: { text: 'Aszai Bot' },
           },
         ],
@@ -201,7 +225,9 @@ describe('Reminder Commands', () => {
       await handleSlashCommand(interaction);
 
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith('An unexpected error occurred. Please try again later.');
+      expect(interaction.reply).toHaveBeenCalledWith(
+        'An unexpected error occurred. Please try again later.'
+      );
     });
   });
 
@@ -252,7 +278,8 @@ describe('Reminder Commands', () => {
           {
             color: 0xff0000,
             title: '❌ Reminder Not Found',
-            description: 'Could not find reminder 999. Use `/reminders` to see your active reminders.',
+            description:
+              'Could not find reminder 999. Use `/reminders` to see your active reminders.',
             footer: { text: 'Aszai Bot' },
           },
         ],
@@ -274,7 +301,9 @@ describe('Reminder Commands', () => {
       await handleSlashCommand(interaction);
 
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith('An unexpected error occurred. Please try again later.');
+      expect(interaction.reply).toHaveBeenCalledWith(
+        'An unexpected error occurred. Please try again later.'
+      );
     });
   });
 });

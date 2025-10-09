@@ -161,13 +161,15 @@ quality with 1000+ automated tests and built-in license protection system.
   - 📈 **Analytics Foundation:** Powers advanced user engagement tracking and trend analysis
   - 🛡️ **Data Integrity:** Automatic table management with built-in constraints and triggers
 
-- ⏰ **AI-Powered Reminder System:** Natural language reminder scheduling with intelligent time parsing
+- ⏰ **AI-Powered Reminder System:** Natural language reminder scheduling with intelligent time
+  parsing
   - 🧠 **Natural Language Processing:** Conversational reminder detection and automatic scheduling
   - 📅 **Advanced Time Parsing:** Supports relative, absolute, and natural language time expressions
   - 🌍 **Timezone Support:** Multi-timezone reminder scheduling with user-aware time handling
   - 🔄 **Persistent Reminders:** SQLite-backed reminder storage with automatic recovery on restart
   - 📱 **Discord Integration:** Direct Discord ping notifications when reminders trigger
-  - 🎯 **Smart Research:** AI-powered information lookup for event-based reminders (game releases, etc.)
+  - 🎯 **Smart Research:** AI-powered information lookup for event-based reminders (game releases,
+    etc.)
   - 📋 **Reminder Management:** Full CRUD operations with list, cancel, and update capabilities
 
 ---
@@ -321,11 +323,11 @@ script for Pi deployments.
 
 ### Reminder Commands (NEW in v1.7.0)
 
-| Command                                   | Description                                                 |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `!remind <time> <message>` / `/remind`    | Set a reminder with natural language time parsing           |
-| `!reminders` / `/reminders`               | List all your active reminders                              |
-| `!cancelreminder <id>` / `/cancelreminder`| Cancel a specific reminder by ID                             |
+| Command                                    | Description                                       |
+| ------------------------------------------ | ------------------------------------------------- |
+| `!remind <time> <message>` / `/remind`     | Set a reminder with natural language time parsing |
+| `!reminders` / `/reminders`                | List all your active reminders                    |
+| `!cancelreminder <id>` / `/cancelreminder` | Cancel a specific reminder by ID                  |
 
 ### Analytics Commands (NEW in v1.6.0)
 
@@ -719,11 +721,13 @@ NODE_ENV=development npm start
 
 ### 1.7.0 (2025-10-08) - Database Integration & Reminder System
 
-**💾 Complete Database Integration**: Full SQLite database implementation for persistent data storage
+**💾 Complete Database Integration**: Full SQLite database implementation for persistent data
+storage
 
 **🎯 Major Features**:
 
-- **SQLite Database Service**: Complete database integration with automatic table creation and management
+- **SQLite Database Service**: Complete database integration with automatic table creation and
+  management
   - **Conversation History**: Persistent storage of user messages and bot responses across restarts
   - **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
   - **Reminder Persistence**: SQLite-backed reminder system with automatic recovery on bot restart
@@ -735,7 +739,8 @@ NODE_ENV=development npm start
   - **Advanced Time Parsing**: Supports relative, absolute, and natural language time expressions
   - **Timezone Support**: Multi-timezone reminder scheduling with user-aware time handling
   - **Discord Integration**: Direct Discord ping notifications when reminders trigger
-  - **Smart Research**: AI-powered information lookup for event-based reminders (game releases, etc.)
+  - **Smart Research**: AI-powered information lookup for event-based reminders (game releases,
+    etc.)
   - **Reminder Management**: Full CRUD operations with list, cancel, and update capabilities
 
 **🛠️ Technical Improvements**:

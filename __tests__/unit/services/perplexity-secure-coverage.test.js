@@ -103,7 +103,7 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     perplexityService = PerplexityService;
-    
+
     // Default mock implementations
     fs.readFile.mockRejectedValue(new Error('File not found'));
   });
@@ -128,10 +128,7 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
 
       perplexityService._setupCacheCleanup();
 
-      expect(setInterval).toHaveBeenCalledWith(
-        expect.any(Function),
-        expect.any(Number)
-      );
+      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), expect.any(Number));
       expect(perplexityService.activeIntervals.has(mockInterval)).toBe(true);
 
       // Cleanup
@@ -187,11 +184,9 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
       it('should log performance metric successfully', async () => {
         await perplexityService._trackApiPerformance('test_metric', 100, { key: 'value' });
 
-        expect(mockDatabaseService.logPerformanceMetric).toHaveBeenCalledWith(
-          'test_metric',
-          100,
-          { key: 'value' }
-        );
+        expect(mockDatabaseService.logPerformanceMetric).toHaveBeenCalledWith('test_metric', 100, {
+          key: 'value',
+        });
       });
 
       it('should handle database errors gracefully', async () => {
@@ -302,22 +297,26 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
     it('should fall back to manual cache cleanup when pruner is not available', async () => {
       // Temporarily mock cache-pruner to return undefined
       jest.doMock('../../../src/utils/cache-pruner', () => undefined);
-      
+
       // Force re-require of the service to pick up the new mock
       jest.resetModules();
       const FreshPerplexityService = require('../../../src/services/perplexity-secure');
 
       // Mock _loadCache to return cache with old entries
-      const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000); // Definitely older than any MAX_AGE_MS
+      const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000; // Definitely older than any MAX_AGE_MS
       const recentTime = Date.now() - 1000; // Recent
       const mockCache = {
-        'key1': { content: 'content1', timestamp: oneYearAgo }, // Old - should be removed
-        'key2': { content: 'content2', timestamp: recentTime }, // Recent - should be kept
+        key1: { content: 'content1', timestamp: oneYearAgo }, // Old - should be removed
+        key2: { content: 'content2', timestamp: recentTime }, // Recent - should be kept
       };
 
       // Mock the methods directly
-      const loadCacheMock = jest.spyOn(FreshPerplexityService, '_loadCache').mockResolvedValue(mockCache);
-      const saveCacheMock = jest.spyOn(FreshPerplexityService, '_saveCache').mockResolvedValue(undefined);
+      const loadCacheMock = jest
+        .spyOn(FreshPerplexityService, '_loadCache')
+        .mockResolvedValue(mockCache);
+      const saveCacheMock = jest
+        .spyOn(FreshPerplexityService, '_saveCache')
+        .mockResolvedValue(undefined);
 
       await FreshPerplexityService._cleanupCache();
 
@@ -326,7 +325,7 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
 
       // Verify _saveCache was called with the modified cache
       expect(saveCacheMock).toHaveBeenCalledWith({
-        'key2': { content: 'content2', timestamp: expect.any(Number) },
+        key2: { content: 'content2', timestamp: expect.any(Number) },
       });
     });
 
@@ -341,11 +340,12 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
     it('should handle empty cache gracefully', async () => {
       mockGetCachePruner.mockReturnValue(undefined);
       jest.spyOn(perplexityService, '_loadCache').mockResolvedValue(null);
+      const saveCacheSpy = jest.spyOn(perplexityService, '_saveCache').mockResolvedValue(undefined);
 
       await perplexityService._cleanupCache();
 
       // Should not call _saveCache for empty cache
-      expect(perplexityService._saveCache).not.toHaveBeenCalled();
+      expect(saveCacheSpy).not.toHaveBeenCalled();
     });
   });
 });

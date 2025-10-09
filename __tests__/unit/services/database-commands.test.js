@@ -89,7 +89,7 @@ describe('DatabaseService - Commands', function () {
 
       const stats = dbService.getCommandUsageStats(7);
       expect(stats.totalCommands).toBe(3);
-      expect(stats.commandBreakdown.find(cmd => cmd.command_name === '!help').count).toBe(3);
+      expect(stats.commandBreakdown.find((cmd) => cmd.command_name === '!help').count).toBe(3);
     });
 
     it('should handle database errors gracefully', () => {

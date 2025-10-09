@@ -64,7 +64,13 @@ describe('DatabaseService - Errors', function () {
   describe('logError', () => {
     it('should log errors without throwing', () => {
       expect(() => {
-        dbService.logError('test_context', 'Test error message', '123', 'test_command', 'stack trace');
+        dbService.logError(
+          'test_context',
+          'Test error message',
+          '123',
+          'test_command',
+          'stack trace'
+        );
       }).not.toThrow();
     });
 
@@ -76,7 +82,13 @@ describe('DatabaseService - Errors', function () {
 
       // Should not throw even with database error
       expect(() => {
-        dbService.logError('test_context', 'Test error message', '123', 'test_command', 'stack trace');
+        dbService.logError(
+          'test_context',
+          'Test error message',
+          '123',
+          'test_command',
+          'stack trace'
+        );
       }).not.toThrow();
     });
 

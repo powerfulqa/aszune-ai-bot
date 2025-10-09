@@ -158,7 +158,8 @@ describe('Analytics Command', () => {
             },
             {
               name: '💡 Server Insights',
-              value: '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
+              value:
+                '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
               inline: false,
             },
           ],
@@ -225,7 +226,9 @@ describe('Analytics Command', () => {
             }),
             expect.objectContaining({
               name: '📈 Performance',
-              value: expect.stringContaining('Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms'),
+              value: expect.stringContaining(
+                'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms'
+              ),
               inline: true,
             }),
             expect.objectContaining({
@@ -235,7 +238,9 @@ describe('Analytics Command', () => {
             }),
             expect.objectContaining({
               name: '💡 Server Insights',
-              value: expect.stringContaining('🟢 Currently Online: 20\n👥 Total Members: 95\n🤖 Bots: 5\n📊 Server Health: Excellent'),
+              value: expect.stringContaining(
+                '🟢 Currently Online: 20\n👥 Total Members: 95\n🤖 Bots: 5\n📊 Server Health: Excellent'
+              ),
               inline: false,
             }),
           ]),
@@ -311,7 +316,9 @@ describe('Clear History Command', () => {
   test('should handle clearhistory command successfully', async () => {
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.reply).toHaveBeenCalledWith('Conversation history cleared! Your stats have been preserved.');
+    expect(mockInteraction.reply).toHaveBeenCalledWith(
+      'Conversation history cleared! Your stats have been preserved.'
+    );
   });
 });
 
