@@ -2,209 +2,108 @@
 
 ## 🎯 Project Overview
 
-This is the Aszune AI Bot codebase - a Discord bot with AI capabilities and comprehensive analytics
-integration that follows strict quality standards using qlty tooling. The project includes analytics
-features (internally referenced as Phase B+C) accessible through Discord commands (`/analytics`,
-`/dashboard`, `/resources`). When working on this codebase, please follow these comprehensive
-guidelines for architecture patterns, testing approaches, and best practices.
+**Aszune AI Bot** (v1.7.0) is a production Discord bot combining Perplexity AI with comprehensive analytics, reminder scheduling, and performance monitoring. Built for Raspberry Pi deployment with 853+ tests (82% coverage) and strict qlty quality standards.
 
-## 📁 Architecture & Structure
+**Key Capabilities:**
+- AI chat powered by Perplexity API with conversation history
+- Natural language reminder system with SQLite persistence
+- Discord analytics dashboard (`/analytics`, `/dashboard`, `/resources`)
+- Multi-layered cache architecture for performance
+- Raspberry Pi optimizations for low-resource environments
 
-### Core Structure
+## 🏗️ Architecture Patterns
+
+### Service Layer Hierarchy (CRITICAL)
 
 ```
-src/
-├── commands/          # Command handlers (slash + text commands)
-│   ├── index.js       # Unified command handler
-│   └── reminder.js    # Reminder command handler (v1.7.0)
-├── config/           # Configuration management
-├── services/         # External API clients and services
-│   ├── database.js   # SQLite database service (v1.7.0)
-│   ├── reminder-service.js # Reminder scheduling service (v1.7.0)
-│   └── [other services]
-└── utils/            # Utility functions and helpers
-    ├── message-chunking/  # Advanced message splitting
-    ├── time-parser.js     # Advanced time parsing for reminders (v1.7.0)
-    ├── natural-language-reminder.js # AI-powered reminder detection (v1.7.0)
-    └── [various utilities]
+Discord Commands
+    ↓
+index.js (bot orchestration)
+    ↓
+services/chat.js (message handling)
+    ↓
+services/perplexity-secure.js (AI API)
+    ├── ApiClient (HTTP)
+    ├── CacheManager (caching)
+    ├── ResponseProcessor (formatting)
+    └── ThrottlingService (rate limiting)
 ```
 
-### Key Components
+**NEVER bypass service layers** - always delegate through proper channels. Direct component access breaks error handling and testing.
 
-- **Discord Interface**: Handles Discord API interactions
-- **Command Handler**: Processes both slash commands and text commands (includes analytics commands)
-- **Perplexity API Client**: Manages AI API communication with secure caching
-- **Conversation Manager**: Class-based conversation tracking
-- **Database Service**: SQLite integration for persistent conversation history and user analytics
-  (`src/services/database.js`) with automatic table creation and graceful fallback (v1.7.0)
-- **Reminder Service**: AI-powered reminder scheduling with natural language processing (`!remind`,
-  `!reminders`, `!cancelreminder`) and conversational reminder detection (v1.7.0)
-- **Error Handler**: Comprehensive error handling system
-- **Message Chunker**: Intelligent message splitting with boundary detection
-- **Input Validator**: Content sanitization and validation
-- **Analytics System**: Discord analytics, performance dashboard, and resource monitoring
-  (`/analytics`, `/dashboard`, `/resources`)
-- **Performance Monitoring**: Real-time system metrics and optimization recommendations
-- **License Validation System**: Built-in proprietary license validation with automated enforcement
-  and reporting (feature-flagged)
-- **License Server**: Express.js-based licensing management system with web dashboard and violation
-  tracking (feature-flagged)
+### Component-Based Services
 
-## 🚨 Critical Error Handling Requirements
+**PerplexityService** uses composition pattern:
+```javascript
+class PerplexityService {
+  constructor() {
+    this.apiClient = new ApiClient();
+    this.cacheManager = new CacheManager();  // NOT this.cache!
+    this.responseProcessor = new ResponseProcessor();
+    this.throttlingService = new ThrottlingService();
+  }
+  
+  getCacheStats() {
+    return this.cacheManager.getStats();  // Always delegate
+  }
+}
+```
 
-### MUST FOLLOW: Error Handling Contracts
+### Database Integration (v1.7.0)
 
-- Services should **THROW** errors, not return error strings
-- Tests expect **THROWN** exceptions, not returned error messages
-- Error messages to users should be sent as **Discord embeds**, not plain text
+**SQLite-backed persistence** with graceful degradation:
+- **DatabaseService** provides mock implementations when SQLite unavailable
+- Database errors **MUST NOT** break conversation flow
+- Foreign key constraints enforced (use `ensureUserExists()` before inserts)
+- Dual storage: `user_messages` (legacy) + `conversation_history` (enhanced)
 
-### ❌ Wrong Pattern
+## 🚨 Error Handling Contracts (NEVER VIOLATE)
+
+### Critical Rules - Breaking These Fails 536+ Tests
+
+1. **Services THROW errors**, never return error strings
+2. **Tests expect THROWN exceptions**, not return values
+3. **User errors sent as Discord embeds**, never plain text
+4. **Database errors logged and isolated**, never break conversation flow
 
 ```javascript
+// ❌ DEADLY MISTAKE - Will fail all error tests
 catch (error) {
-  return "Error occurred: " + error.message;
+  return "Error: " + error.message;  // Tests expect throws!
 }
-```
 
-### ✅ Correct Pattern
-
-```javascript
+// ✅ CORRECT - Service contract
 catch (error) {
-  throw error;
-}
-```
-
-### Error Handler Usage
-
-```javascript
-const errorResponse = ErrorHandler.handleError(error, 'context', additionalData);
-// errorResponse.message contains user-friendly message
-// errorResponse.type contains error category
-```
-
-## ⚠️ CRITICAL: Service Method Contracts
-
-### Key Service Behaviors - DO NOT BREAK
-
-**PerplexityService.generateChatResponse():**
-
-- MUST throw errors, never return error strings
-- Takes (history, options = {}) parameters
-- Tests expect: `await expect(service.generateChatResponse(messages)).rejects.toThrow('message')`
-- Returns string content on success
-
-**Chat Service Error Handling:**
-
-- All errors caught in handleChatMessage() are sent as Discord embeds
-- Error messages use ErrorHandler.handleError() for consistent user-friendly messages
-- No plain text error responses - always embed format
-
-**Cache Service Architecture (CRITICAL - v1.6.5 Lessons):**
-
-- **Property Consistency**: Use descriptive service names (`this.cacheManager` not `this.cache`)
-- **Method Delegation**: Services MUST delegate to their components, never bypass
-- **Complete Field Coverage**: All expected Discord command fields must be provided
-- **Fallback Completeness**: Error scenarios must return complete objects with all expected fields
-
-```javascript
-// ❌ DEADLY MISTAKE - Calling undefined property
-getCacheStats() {
-  return this.cache.getStats(); // this.cache doesn't exist!
+  throw error;  // Re-throw to maintain contract
 }
 
-// ✅ CORRECT - Proper service delegation
-getCacheStats() {
-  return this.cacheManager.getStats(); // Uses initialized service
-}
-```
-
-**Cache Command Field Requirements (v1.6.5):** All cache statistics must include these exact fields
-or Discord will show "undefined":
-
-- Performance: `hitRate`, `hits`, `misses`
-- Operations: `sets`, `deletes`, `evictions`
-- Memory: `memoryUsageFormatted`, `maxMemoryFormatted`, `entryCount`, `maxSize`
-- Configuration: `evictionStrategy`, `uptimeFormatted`
-
-**Database Service Architecture (CRITICAL - v1.7.0 Integration):**
-
-- **Graceful Fallback**: DatabaseService MUST provide mock implementations when SQLite unavailable
-- **Error Handling**: Database errors should be logged and NOT cause conversation flow to fail
-- **Method Contracts**: All database methods return expected data structures or defaults
-- **Resource Management**: Single database connection per service instance with proper cleanup
-
-```javascript
-// ✅ CORRECT - Proper database service integration
-try {
-  databaseService.addUserMessage(userId, messageContent);
-  databaseService.updateUserStats(userId, {
-    message_count: 1,
-    last_active: new Date().toISOString(),
+// ✅ CORRECT - User-facing error handling
+catch (error) {
+  const errorResponse = ErrorHandler.handleError(error, 'context');
+  await message.reply({
+    embeds: [{
+      color: '#5865F2',
+      description: errorResponse.message,
+      footer: { text: 'Aszai Bot' }
+    }]
   });
-} catch (dbError) {
-  logger.warn('Database operation failed:', dbError.message);
-  // CRITICAL: Continue processing even if database fails
 }
 
-// ✅ CORRECT - Database service mock for tests
-jest.mock('../../src/services/database', () => ({
-  addUserMessage: jest.fn(),
-  updateUserStats: jest.fn(),
-  getUserMessages: jest.fn().mockReturnValue([]),
-  addBotResponse: jest.fn(),
-}));
-
-// ❌ WRONG - Breaking conversation flow on database errors
+// ✅ CRITICAL - Database error isolation (v1.7.0)
 try {
-  databaseService.addUserMessage(userId, messageContent);
+  databaseService.addUserMessage(userId, content);
 } catch (dbError) {
-  throw dbError; // This breaks the entire conversation!
+  logger.warn('Database error:', dbError);
+  // NEVER re-throw - continue conversation flow!
 }
 ```
 
-**Reminder Service Architecture (CRITICAL - v1.7.0 Integration):**
+## 🧪 Testing Patterns (853+ Tests)
 
-- **Event-Driven Design**: ReminderService extends EventEmitter for Discord integration
-- **Persistent Storage**: SQLite-backed reminder storage with automatic recovery on restart
-- **Memory Management**: Efficient timer management with automatic cleanup
-- **Error Isolation**: Reminder failures don't affect main bot functionality
-- **Timezone Support**: Multi-timezone reminder scheduling with user-aware time handling
+### Mock Structure - MUST Follow Exactly
 
 ```javascript
-// ✅ CORRECT - Reminder service integration
-const reminderService = require('./services/reminder-service');
-
-// Initialize on bot startup
-await reminderService.initialize();
-
-// Register Discord event handler
-reminderService.on('reminderDue', async (reminder) => {
-  // Send Discord notification
-  await sendReminderNotification(reminder);
-});
-
-// ❌ WRONG - Direct timer management
-setTimeout(() => sendReminder(), delay); // No persistence, memory leaks
-```
-
-**Module Export Contracts:**
-
-```javascript
-// REQUIRED: All services must export in this exact pattern
-module.exports = handleChatMessage;
-module.exports.handleChatMessage = handleChatMessage;
-module.exports.default = handleChatMessage;
-```
-
-## 🧪 Testing Patterns
-
-### Mock Structure Requirements
-
-Always follow these exact mocking patterns:
-
-#### Discord.js Mocking
-
-```javascript
+// ✅ CORRECT - Discord.js mock (always first)
 jest.mock('discord.js', () => {
   const mockClient = {
     on: jest.fn().mockReturnThis(),
@@ -214,126 +113,15 @@ jest.mock('discord.js', () => {
     }),
     login: jest.fn().mockResolvedValue('Logged in'),
   };
-
+  
   return {
     Client: jest.fn(() => mockClient),
-    GatewayIntentBits: {
-      /* ... */
-    },
-    REST: jest.fn(() => ({
-      /* ... */
-    })),
+    GatewayIntentBits: { /* ... */ },
+    REST: jest.fn(() => ({ /* ... */ })),
   };
 });
-```
 
-#### Discord Guild & Member Mocking (Analytics Commands)
-
-```javascript
-// ✅ CORRECT - Mock guild structure for analytics tests
-const mockGuild = {
-  memberCount: 150,
-  members: {
-    cache: {
-      filter: jest.fn((filterFn) => {
-        // Mock member collection with realistic data
-        const mockMembers = new Map([
-          ['user1', { user: { bot: false }, presence: { status: 'online' } }],
-          ['user2', { user: { bot: false }, presence: { status: 'idle' } }],
-          ['bot1', { user: { bot: true }, presence: { status: 'online' } }],
-        ]);
-
-        const filtered = new Map();
-        mockMembers.forEach((member, id) => {
-          if (filterFn(member)) filtered.set(id, member);
-        });
-        return { size: filtered.size };
-      }),
-    },
-    fetch: jest.fn().mockResolvedValue(mockMemberCollection),
-  },
-};
-
-// Mock Discord Collection behavior for member filtering
-const mockMemberCollection = {
-  filter: jest.fn(() => ({ size: 102 })), // Realistic active user count
-  size: 150,
-};
-```
-
-### Test Assertions - Use Exact Values (CRITICAL)
-
-```javascript
-// ✅ CORRECT - Test embed structure with EXACT values
-expect(message.reply).toHaveBeenCalledWith({
-  embeds: [
-    {
-      color: '#5865F2', // Exact color hex - don't use expect.any()
-      description: 'An unexpected error occurred. Please try again later.', // Exact ErrorHandler message
-      footer: { text: 'Aszai Bot' }, // Exact footer text
-    },
-  ],
-});
-
-// ❌ WRONG - Using matchers (WILL FAIL)
-expect(message.reply).toHaveBeenCalledWith({
-  embeds: [
-    expect.objectContaining({
-      // DON'T USE expect.objectContaining
-      description: expect.stringContaining('error'), // DON'T USE expect.stringContaining
-    }),
-  ],
-});
-```
-
-**CRITICAL EMBED REQUIREMENTS:**
-
-- All user errors sent as embeds, never plain text
-- Use exact ErrorHandler messages: "An unexpected error occurred. Please try again later."
-- Color: "#5865F2" (config.COLORS.PRIMARY)
-- Footer: { text: 'Aszai Bot' }
-
-### Error Testing Pattern
-
-```javascript
-// ✅ CORRECT - Test for thrown errors
-await expect(service.method()).rejects.toThrow('Expected error message');
-
-// ❌ WRONG - Test for returned error strings
-const result = await service.method();
-expect(result).toContain('error message');
-```
-
-### Database Service Testing (v1.7.0)
-
-```javascript
-// ✅ CORRECT - Database service testing with actual SQLite
-const { DatabaseService } = require('../../../src/services/database');
-
-describe('DatabaseService', () => {
-  let dbService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Clean up any existing test database
-    if (fs.existsSync(testDbPath)) {
-      fs.unlinkSync(testDbPath);
-    }
-    dbService = new DatabaseService();
-  });
-
-  afterEach(() => {
-    if (dbService.db && !dbService.isDisabled) {
-      try {
-        dbService.close();
-      } catch (error) {
-        // Ignore errors during cleanup
-      }
-    }
-  });
-});
-
-// ✅ CORRECT - Database mock for chat service tests
+// ✅ CRITICAL - Database service mock for non-DB tests
 jest.mock('../../src/services/database', () => ({
   addUserMessage: jest.fn(),
   updateUserStats: jest.fn(),
@@ -342,28 +130,196 @@ jest.mock('../../src/services/database', () => ({
 }));
 ```
 
-## 🛡️ Security & Quality Requirements (qlty Standards)
+### Test Assertions - Use EXACT Values
 
-### Mandatory Security Practices
+```javascript
+// ✅ CORRECT - Test with exact values
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [{
+    color: '#5865F2',  // Exact hex - no expect.any()
+    description: 'An unexpected error occurred. Please try again later.',  // Exact ErrorHandler message
+    footer: { text: 'Aszai Bot' }
+  }]
+});
 
-- **Zero tolerance** for hardcoded secrets, tokens, or API keys
-- All sensitive data must use environment variables
-- Pre-commit verification: `npm run security:secrets`
-- Security audits: `npm run security:dependencies`
+// ❌ WRONG - Matchers will fail
+expect(message.reply).toHaveBeenCalledWith({
+  embeds: [expect.objectContaining({ /* ... */ })]  // DON'T USE
+});
+```
 
-### Code Quality Thresholds
+### Error Testing Pattern
 
-- **File Complexity**: Maximum 15 per file
-- **Function Complexity**: Maximum 10 per function
-- **Code Duplication**: Maximum 50 identical lines
-- **Test Coverage**: Maintain 82%+ overall coverage
+```javascript
+// ✅ CORRECT - Expect thrown errors
+await expect(service.method()).rejects.toThrow('Expected message');
 
-### Quality Commands
+// ❌ WRONG - Expect returned strings
+const result = await service.method();
+expect(result).toContain('error');
+```
+
+## 🔧 Critical Development Patterns
+
+### Config Access (PREVENTS CIRCULAR DEPENDENCIES)
+
+```javascript
+## 🚨 CRITICAL WARNINGS
+
+### 1. Config Access (BREAKS APP)
+
+```javascript
+// ❌ DEADLY - Module-level config access
+const config = require('../config/config');
+const value = config.FEATURES?.LICENSE_VALIDATION;  // CIRCULAR DEPENDENCY!
+
+// ✅ ALWAYS access inside functions
+function someFunction() {
+  const config = require('../config/config');
+  if (!config.FEATURES) {
+    config.FEATURES = { LICENSE_VALIDATION: false };
+  }
+  return config.FEATURES.LICENSE_VALIDATION;
+}
+```
+
+### 2. Test Error Contracts (BREAKS 536+ TESTS)
+
+```javascript
+// ❌ WRONG - Tests expect throws
+catch (error) {
+  return "Error: " + error.message;
+}
+
+// ✅ CORRECT - Re-throw
+catch (error) {
+  throw error;
+}
+```
+
+### 3. Discord API Timeouts (v1.6.1 Fix)
+
+```javascript
+// ✅ CORRECT - Always use timeout protection
+async function getDiscordData(guild) {
+  const fetchPromise = guild.members.fetch({ limit: 1000 });
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout')), 5000)
+  );
+  
+  try {
+    return await Promise.race([fetchPromise, timeoutPromise]);
+  } catch (error) {
+    // Provide fallback estimates
+    return { activeUsers: Math.floor(guild.memberCount * 0.2) };
+  }
+}
+```
+
+### 4. Perplexity Model Changes (v1.6.3)
+
+```javascript
+// ✅ CURRENT - Simplified model names
+API: {
+  PERPLEXITY: {
+    DEFAULT_MODEL: 'sonar',  // Current working model
+  }
+}
+
+// ❌ DEPRECATED - Old descriptive format
+DEFAULT_MODEL: 'llama-3.1-sonar-small-128k-chat'  // No longer works
+```
+
+### 5. Database Error Isolation (v1.7.0)
+
+```javascript
+// ✅ CRITICAL - Never break conversation flow
+try {
+  databaseService.addUserMessage(userId, content);
+} catch (dbError) {
+  logger.warn('Database error:', dbError);
+  // Continue - database is enhancement only
+}
+```
+```
+
+### Module Exports (BACKWARD COMPATIBILITY)
+
+```javascript
+// ✅ CORRECT - Maintains all export patterns
+module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;
+
+// ❌ WRONG - Breaking change
+module.exports = { handleChatMessage };
+```
+
+### Cache Service Properties (v1.6.5 Critical Fix)
+
+```javascript
+// ✅ CORRECT - Descriptive property names
+class PerplexityService {
+  constructor() {
+    this.cacheManager = new CacheManager();  // NOT this.cache
+  }
+  
+  getCacheStats() {
+    return this.cacheManager.getStats();  // Always delegate
+  }
+}
+```
+
+### Database Error Isolation (v1.7.0)
+
+```javascript
+// ✅ CORRECT - Database errors never break chat flow
+try {
+  databaseService.addUserMessage(userId, content);
+} catch (dbError) {
+  logger.warn('Database error:', dbError);
+  // Continue processing - database is enhancement, not requirement
+}
+```
+
+### Reminder Service Integration (v1.7.0)
+
+```javascript
+// ✅ CORRECT - EventEmitter pattern
+class ReminderService extends EventEmitter {
+  constructor() {
+    super();  // MUST call super()
+    this.activeTimers = new Map();
+  }
+}
+
+// Bot integration
+reminderService.on('reminderDue', async (reminder) => {
+  await channel.send({ embeds: [/* ... */] });
+});
+```
+
+## 🛡️ Security & Quality (qlty Standards)
+
+### Mandatory Practices
+
+- **Zero tolerance** for hardcoded secrets
+- Pre-commit: `npm run security:secrets`
+- Security audit: `npm run security:all`
+
+### Quality Thresholds
+
+- **File Complexity**: Max 15
+- **Function Complexity**: Max 10
+- **Code Duplication**: Max 50 lines
+- **Test Coverage**: 82%+
+
+### Commands
 
 ```bash
-npm run quality:check        # Sample quality analysis
-npm run quality:fix          # Auto-fix formatting issues
-npm run security:all         # Complete security audit
+npm run quality:check        # Quality check
+npm run quality:fix          # Auto-fix
+npm run security:all         # Security audit
 ```
 
 ## � Feature Flag System
@@ -887,3 +843,46 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 - **Feature Flags**: Document any new feature flags and their purposes
 - **Command Updates**: Update command references when new commands are added
 - **Architecture Changes**: Document significant architectural changes in technical docs
+
+## 📝 Quick Reference
+
+### Essential Commands
+
+```bash
+# Testing
+npm test                     # Run all tests
+npm run test:coverage        # Coverage report
+npm run test:critical        # Critical path tests
+
+# Quality & Security
+npm run quality:check        # Quality analysis
+npm run quality:fix          # Auto-fix issues
+npm run security:all         # Full security audit
+
+# Development
+npm run dev                  # Development mode
+npm start                    # Production mode
+```
+
+### Key Files
+
+- `src/index.js` - Bot orchestration, shutdown handling
+- `src/services/chat.js` - Message handling, reminder detection
+- `src/services/perplexity-secure.js` - AI API with caching
+- `src/services/database.js` - SQLite persistence (v1.7.0)
+- `src/services/reminder-service.js` - Reminder scheduling (v1.7.0)
+- `src/config/config.js` - Configuration (function-level access only!)
+- `src/utils/error-handler.js` - Centralized error handling
+
+### Success Metrics
+
+- ✅ All 853+ tests passing
+- ✅ 82%+ code coverage
+- ✅ No circular dependencies
+- ✅ Error contracts maintained
+- ✅ Quality thresholds met
+- ✅ Security scans clean
+
+---
+
+**Remember**: This codebase has 853+ tests and 82% coverage. Breaking patterns WILL fail tests. When in doubt, check existing tests for expected behavior.
