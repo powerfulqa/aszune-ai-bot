@@ -59,10 +59,13 @@ class ApiClient {
       temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
     };
 
-    // Log full payload for debugging production issues
-    logger.info(`API Request: model="${payload.model}", messages=${messages.length}, first_message_role="${messages[0]?.role}"`);
-    // Temporarily log full payload to diagnose 400 errors
-    logger.info('Full request payload:', JSON.stringify(payload, null, 2));
+    // Log request summary for debugging
+    logger.info(`API Request: model="${payload.model}", messages=${messages.length}, temperature=${payload.temperature}, max_tokens=${payload.max_tokens}`);
+    
+    // Log full payload in debug mode
+    if (process.env.DEBUG === 'true') {
+      logger.debug('Full request payload:', JSON.stringify(payload, null, 2));
+    }
 
     // Enable streaming if requested and not in low CPU mode
     if (options.stream && !this.isLowCpuMode()) {

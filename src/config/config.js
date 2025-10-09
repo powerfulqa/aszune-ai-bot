@@ -150,8 +150,8 @@ const config = {
       ENDPOINTS: {
         CHAT_COMPLETIONS: '/chat/completions',
       },
-      DEFAULT_MODEL: 'sonar-pro',
-      DEFAULT_TEMPERATURE: 0.7,
+      DEFAULT_MODEL: 'sonar',
+      DEFAULT_TEMPERATURE: 0.2,
       MAX_TOKENS: {
         CHAT: 1024,
         SUMMARY: 256,

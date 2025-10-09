@@ -1,0 +1,10 @@
+  console.log
+    [2025-10-09T19:46:51.630Z] [INFO] Final user stats saved before shutdown
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-10-09T19:46:51.662Z] [INFO] Final user stats saved before shutdown
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
