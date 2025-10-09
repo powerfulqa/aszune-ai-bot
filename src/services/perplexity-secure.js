@@ -659,6 +659,28 @@ class PerplexityService {
     const startTime = Date.now();
     const initialMemoryUsage = process.memoryUsage().heapUsed;
 
+    // Validate history parameter
+    if (!Array.isArray(history)) {
+      const errorMsg = `Invalid history parameter - expected array, got ${typeof history}`;
+      logger.error(errorMsg);
+      throw ErrorHandler.createError(errorMsg, ERROR_TYPES.VALIDATION_ERROR);
+    }
+
+    if (history.length === 0) {
+      const errorMsg = 'Cannot generate response with empty conversation history';
+      logger.error(errorMsg);
+      throw ErrorHandler.createError(errorMsg, ERROR_TYPES.VALIDATION_ERROR);
+    }
+
+    // Validate message format in history
+    const invalidMessages = history.filter(msg => !msg || !msg.role || !msg.content);
+    if (invalidMessages.length > 0) {
+      logger.error('Invalid messages in history:', JSON.stringify(invalidMessages));
+      throw ErrorHandler.createError('All messages must have role and content fields', ERROR_TYPES.VALIDATION_ERROR);
+    }
+
+    logger.info(`Generating chat response for ${history.length} messages in history`);
+
     // Standardize options
     const opts = this.responseProcessor.standardizeOptions(options);
 

@@ -34,12 +34,33 @@ class ApiClient {
    * @returns {Object} Request payload
    */
   buildRequestPayload(messages, options = {}) {
+    // Validate messages array
+    if (!Array.isArray(messages)) {
+      logger.error('Invalid messages parameter - not an array:', typeof messages);
+      throw ErrorHandler.createError('Messages must be an array', ERROR_TYPES.VALIDATION_ERROR);
+    }
+
+    if (messages.length === 0) {
+      logger.error('Empty messages array provided to buildRequestPayload');
+      throw ErrorHandler.createError('Messages array cannot be empty', ERROR_TYPES.VALIDATION_ERROR);
+    }
+
+    // Validate message format
+    const invalidMessages = messages.filter(msg => !msg.role || !msg.content);
+    if (invalidMessages.length > 0) {
+      logger.error('Invalid message format detected:', JSON.stringify(invalidMessages));
+      throw ErrorHandler.createError('All messages must have role and content fields', ERROR_TYPES.VALIDATION_ERROR);
+    }
+
     const payload = {
       model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
       messages: messages,
       max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
       temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
     };
+
+    // Log payload for debugging (only in production errors)
+    logger.debug(`API Request Payload: model=${payload.model}, messages=${messages.length}, max_tokens=${payload.max_tokens}`);
 
     // Enable streaming if requested and not in low CPU mode
     if (options.stream && !this.isLowCpuMode()) {
