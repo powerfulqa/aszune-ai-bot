@@ -150,7 +150,7 @@ const config = {
       ENDPOINTS: {
         CHAT_COMPLETIONS: '/chat/completions',
       },
-      DEFAULT_MODEL: 'llama-3.1-sonar-small-128k-online',
+      DEFAULT_MODEL: 'sonar-pro',
       DEFAULT_TEMPERATURE: 0.7,
       MAX_TOKENS: {
         CHAT: 1024,
