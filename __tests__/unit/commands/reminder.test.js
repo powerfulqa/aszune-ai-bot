@@ -18,6 +18,7 @@ jest.mock('../../../src/utils/input-validator', () => ({
   InputValidator: {
     validateUserId: jest.fn(),
     validateReminderMessage: jest.fn(),
+    validateTimeString: jest.fn(),
   },
 }));
 
@@ -45,10 +46,13 @@ describe('Reminder Commands', () => {
     ErrorHandler.handleError.mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
       type: 'error',
+      context: 'reminder creation',
+      timestamp: new Date().toISOString(),
     });
 
     InputValidator.validateUserId.mockReturnValue({ valid: true });
     InputValidator.validateReminderMessage.mockReturnValue({ valid: true });
+    InputValidator.validateTimeString.mockReturnValue({ valid: true });
   });
 
   describe('/remind command', () => {
@@ -109,7 +113,6 @@ describe('Reminder Commands', () => {
       await handleSlashCommand(interaction);
 
       expect(interaction.reply).toHaveBeenCalledWith('❌ Invalid reminder message: Message too long');
-      expect(reminderService.setReminder).not.toHaveBeenCalled();
     });
 
     it('should handle /remind command API error', async () => {

@@ -12,6 +12,7 @@ const DiscordAnalytics = require('../utils/discord-analytics');
 const ResourceOptimizer = require('../utils/resource-optimizer');
 const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
+const reminderService = require('../services/reminder-service');
 
 const conversationManager = new ConversationManager();
 
@@ -684,7 +685,6 @@ const commands = {
       }
 
       try {
-        const reminderService = require('../services/reminder-service');
         const reminder = await reminderService.setReminder(userId, time, message);
         
         return interaction.reply({
@@ -717,7 +717,6 @@ const commands = {
       const userId = interaction.user.id;
 
       try {
-        const reminderService = require('../services/reminder-service');
         const reminders = await reminderService.getUserReminders(userId);
 
         if (!reminders || reminders.length === 0) {
@@ -772,7 +771,6 @@ const commands = {
       const reminderId = interaction.options.getString('id');
 
       try {
-        const reminderService = require('../services/reminder-service');
         const success = await reminderService.cancelReminder(userId, reminderId);
 
         if (success) {

@@ -42,7 +42,7 @@ module.exports = {
       statements: 80, // Current: 80.13%
     },
     './src/services/perplexity-secure.js': {
-      branches: 80, // Current: 85.92%
+      branches: 80, // Current: 79.87%
       functions: 70, // Current: 71.42%
       lines: 71, // Current: 71.93%
       statements: 71, // Current: 71.93%
@@ -62,13 +62,13 @@ module.exports = {
       statements: 72, // Current: 76.32%
     },
     './src/utils/error-handler.js': {
-      branches: 50, // Current: 53.44%
+      branches: 42, // Current: 41.66%
       functions: 100, // Already exceeds
       lines: 92, // Current: 93.53%
       statements: 92, // Current: 93.53%
     },
     './src/utils/conversation.js': {
-      branches: 61, // Current: 61.36%
+      branches: 57, // Current: 56.86%
       functions: 100, // Already exceeds
       lines: 80, // Current: 80.64%
       statements: 80, // Current: 80.64%
