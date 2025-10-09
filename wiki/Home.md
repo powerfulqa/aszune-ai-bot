@@ -6,7 +6,7 @@ usage, and development of the Aszune AI Bot.
 ## What is Aszune AI Bot?
 
 Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
-the Perplexity API with the **sonar** model. It maintains persistent conversation history for each
+the Perpthe Perplexity API with the **sonar** model. It maintains persistent conversation history for each
 user through SQLite database integration and adds fun emoji reactions based on keywords found in
 messages. The bot supports both traditional `!` commands and modern Discord slash commands, with
 comprehensive analytics and user engagement tracking capabilities.
@@ -49,8 +49,7 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
     performance
   - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
   - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
-
-## Version Information
+& Feature-Flag## Version Information
 
 - **v1.7.0** - Database Integration & Reminder System (2025-10-08)
   - **SQLite Database Integration**: Full persistent data storage for conversation history and user
@@ -65,7 +64,7 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
   - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
   - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
 
-- **v1.6.0** - Analytics Integration & Feature-Flagged Licensing (2025-10-01)
+ged Licensing (2025-10-01)
   - **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
     provide comprehensive system monitoring directly in Discord
   - **Real-time Performance Monitoring**: Live system status, resource utilization, and performance
