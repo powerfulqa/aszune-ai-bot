@@ -71,17 +71,17 @@ quality with 1000+ automated tests and built-in license protection system.
 - 🔒 **Secure Configuration:** `.env` based token and key management (keeps secrets out of code).
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between
   messages.
-- 📝 **Help Command:** `!help` and `/help` commands list all available commands and usage.
-- 🧾 **Conversation Summary:** `!summary` and `/summary` commands generate a summary of your current
+- 📝 **Help Command:** `/help` commands list all available commands and usage.
+- 🧾 **Conversation Summary:** `/summary` commands generate a summary of your current
   conversation using UK English. (Now robust to API requirements: last message must be from
   user/tool)
-- 📝 **Text Summarisation:** `!summarise <text>` or `!summerise <text>` command generates a summary
+- 📝 **Text Summarisation:** `/summarise <text>` command generates a summary
   of any provided text using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
 - 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for
   better efficiency and reliability.
 - 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance and extension.
-- 🆕 **Stats Tracking:** `!stats` and `/stats` commands show per-user message and summary counts.
+- 🆕 **Stats Tracking:** `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
 - 🧪 **Comprehensive Testing:** 1000+ automated tests covering all key functionality with 74%+ code
@@ -188,7 +188,7 @@ quality with 1000+ automated tests and built-in license protection system.
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/chrishaycock/aszune-ai-bot.git
+   git clone https://github.com/powerfulqa/aszune-ai-bot.git
    cd aszune-ai-bot
    ```
 
@@ -313,33 +313,32 @@ script for Pi deployments.
 
 ### Core Commands
 
-| Command                                   | Description                                                 |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `!help` / `/help`                         | Shows a list of available commands and usage                |
-| `!clearhistory` / `/clearhistory`         | Clears your conversation history                            |
-| `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
-| `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
-| `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
+| Command                    | Description                                                 |
+| -------------------------- | ----------------------------------------------------------- |
+| `/help`                    | Shows a list of available commands and usage                |
+| `/clearhistory`            | Clears your conversation history                            |
+| `/summary`                 | Summarises your current conversation in UK English          |
+| `/summarise <text>`        | Summarises any provided text in UK English                  |
+| `/stats`                   | Shows your usage stats (messages sent, summaries requested) |
 
 ### Reminder Commands (NEW in v1.7.0)
 
-| Command                                    | Description                                       |
-| ------------------------------------------ | ------------------------------------------------- |
-| `!remind <time> <message>` / `/remind`     | Set a reminder with natural language time parsing |
-| `!reminders` / `/reminders`                | List all your active reminders                    |
-| `!cancelreminder <id>` / `/cancelreminder` | Cancel a specific reminder by ID                  |
+| Command                 | Description                                       |
+| ----------------------- | ------------------------------------------------- |
+| `/remind`               | Set a reminder with natural language time parsing |
+| `/reminders`            | List all your active reminders                    |
+| `/cancelreminder`       | Cancel a specific reminder by ID                  |
 
 ### Analytics Commands (NEW in v1.6.0)
 
-| Command                     | Description                                                     |
-| --------------------------- | --------------------------------------------------------------- |
-| `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
-| `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
-| `!resources` / `/resources` | View resource optimization status and recommendations           |
-| `!cache` / `/cache`         | Display cache statistics and performance metrics (Fixed v1.6.5) |
+| Command              | Description                                                     |
+| -------------------- | --------------------------------------------------------------- |
+| `/analytics`         | Show Discord server analytics and performance insights          |
+| `/dashboard`         | Display comprehensive performance dashboard with real-time data |
+| `/resources`         | View resource optimization status and recommendations           |
+| `/cache`             | Display cache statistics and performance metrics (Fixed v1.6.5) |
 
-> **Note:** While `!summarise` and `!summerise` exist as text commands, the `/summarise` slash
-> command equivalent may not be fully implemented yet.
+> **Note:** All commands are available as modern Discord slash commands.
 
 ---
 
@@ -407,7 +406,7 @@ Built-in license validation and monitoring:
 aszune-ai-bot/
 ├── src/
 │   ├── index.js                    # Main entry point
-│   ├── commands/                   # Command handlers (slash + text commands)
+│   ├── commands/                   # Command handlers (slash commands only)
 │   │   ├── index.js               # Unified command handler
 │   │   └── reminder.js             # Reminder command handler
 │   ├── config/                     # Configuration settings
@@ -423,25 +422,42 @@ aszune-ai-bot/
 │   │   ├── storage.js              # Data storage service
 │   │   └── throttling-service.js   # Rate limiting and connection throttling
 │   └── utils/                      # Utility functions and helpers
-│       ├── conversation.js         # Conversation management
-│       ├── error-handler.js        # Error handling utilities
-│       ├── input-validator.js      # Input validation and sanitization
-│       ├── logger.js               # Logging utilities
-│       ├── memory-monitor.js       # Memory monitoring and GC
-│       ├── message-chunker.js      # Message chunking
-│       ├── message-chunking/       # Enhanced chunking system
+│       ├── cache-pruner.js        # Cache cleanup utilities
+│       ├── connection-throttler.js # Connection throttling
+│       ├── conversation.js        # Conversation management
+│       ├── debouncer.js           # Function debouncing
+│       ├── discord-analytics.js   # Discord analytics utilities
+│       ├── emoji.js               # Emoji processing
+│       ├── enhanced-cache.js      # Enhanced caching
+│       ├── enhanced-conversation-context.js # Conversation context
+│       ├── error-handler.js       # Error handling utilities
+│       ├── input-validator.js     # Input validation and sanitization
+│       ├── lazy-loader.js         # Lazy loading utilities
+│       ├── license-server.js      # License server utilities
+│       ├── license-validator.js   # License validation
+│       ├── logger.js              # Logging utilities
+│       ├── memory-monitor.js      # Memory monitoring and GC
+│       ├── message-chunker.js     # Message chunking
+│       ├── message-chunking/      # Enhanced chunking system
 │       │   ├── index.js           # Main chunking coordinator
 │       │   ├── chunk-boundary-handler.js
 │       │   ├── source-reference-processor.js
 │       │   └── url-formatter.js
+│       ├── message-formatter.js   # Message formatting
 │       ├── natural-language-reminder.js # AI-powered reminder detection
-│       ├── pi-detector.js          # Raspberry Pi detection
-│       ├── performance-monitor.js  # Performance tracking
-│       ├── time-parser.js          # Advanced time parsing for reminders
-│       └── [other utilities]       # Additional utility modules
+│       ├── performance-dashboard.js # Performance dashboard
+│       ├── performance-monitor.js # Performance tracking
+│       ├── performance-tracker.js # Performance metrics
+│       ├── pi-detector.js         # Raspberry Pi detection
+│       ├── resource-optimizer.js  # Resource optimization
+│       ├── security-monitor.js    # Security monitoring
+│       ├── testUtils.js           # Test utilities
+│       └── time-parser.js         # Advanced time parsing for reminders
 ├── data/                           # Persistent data storage
 │   ├── bot.db                     # SQLite database (auto-created)
-│   └── question_cache.json        # Response cache
+│   ├── question_cache.json        # Response cache
+│   ├── test.db                    # Test database
+│   └── user_stats.json            # User statistics (legacy)
 ├── docs/                          # Version-specific documentation
 ├── scripts/                       # Development and utility scripts
 │   ├── check-triggers.js          # Database trigger validation
@@ -460,17 +476,25 @@ aszune-ai-bot/
 │   └── utils/                     # Test utilities
 ├── __mocks__/                     # Test mocks
 ├── coverage/                      # Code coverage reports
+├── test-results/                  # Test result outputs
+├── logs/                          # Application logs
 ├── .qlty/                         # Code quality configuration
 │   ├── qlty.toml                 # Main qlty configuration
 │   └── configs/                   # Tool-specific configurations
+├── .github/                       # GitHub configuration
+├── .cursor/                       # Cursor IDE configuration
 ├── package.json                   # Project metadata
 ├── ecosystem.config.js            # PM2 deployment config
 ├── jest.config.js                 # Jest test configuration
 ├── jest.setup.js                  # Jest setup file
+├── .prettierrc                    # Prettier configuration
+├── .eslintrc.json                 # ESLint configuration
+├── .env.example                   # Environment variables example
 ├── SECURITY.md                    # Security policy and guidelines
 ├── CONTRIBUTING.md                # Contribution guidelines
 ├── CODE_OF_CONDUCT.md             # Community code of conduct
 ├── CHANGELOG.md                   # Project changelog
+├── LICENSE                        # License file
 └── .env                           # Environment secrets (not committed)
 ```
 
@@ -562,9 +586,11 @@ The test suite includes:
 This project implements specific configurations for branch coverage testing:
 
 - **Overall requirement**: 60% branch coverage threshold
-- **Current metrics**:
-  - index.js: 80% branch coverage
-  - logger.js: 82.45% branch coverage (combined with branch coverage tests)
+- **Current metrics** (as of v1.7.0):
+  - Overall: 65%+ branch coverage
+  - Statements: 73%+ coverage
+  - Functions: 80%+ coverage
+  - Lines: 73%+ coverage
 
 We use separate Jest configurations for branch coverage:
 
@@ -692,12 +718,12 @@ NODE_ENV=development npm start
    [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 2. **Commercial License**:
    [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
-3. **Enterprise License**: Email chrishaycock@users.noreply.github.com
+3. **Enterprise License**: Email contact@aszune-ai-bot.com
 
 ### 📧 Questions?
 
 - **License Issues**: Create a GitHub issue
-- **Commercial Inquiries**: chrishaycock@users.noreply.github.com
+- **Commercial Inquiries**: contact@aszune-ai-bot.com
 - **Technical Support**: Included with paid licenses
 
 **[📄 View Full License Terms](./LICENSE)**
@@ -712,7 +738,7 @@ NODE_ENV=development npm start
 - The bot uses a robust command handler for easier extension and maintenance.
 - Conversation history and rate limiting are managed using JavaScript `Map` objects for better
   performance and reliability.
-- The `!summarise <text>` command is available for summarising arbitrary text.
+- The `/summarise <text>` command is available for summarising arbitrary text.
 - Error handling and environment variable checks have been improved and centralised.
 - The bot's system prompt instructs it to say "I don't know" if it cannot answer a question, rather
   than making up an answer.
