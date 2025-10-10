@@ -9,7 +9,7 @@ const { request } = require('undici');
 
 async function testPerplexityAPI() {
   const apiKey = process.env.PERPLEXITY_API_KEY;
-  
+
   if (!apiKey) {
     console.error('❌ PERPLEXITY_API_KEY not found in environment variables');
     process.exit(1);
@@ -17,17 +17,17 @@ async function testPerplexityAPI() {
 
   console.log('✅ API Key found (length:', apiKey.length, ')');
   console.log('🔑 API Key starts with:', apiKey.substring(0, 10) + '...');
-  
+
   const payload = {
     model: 'sonar',
     messages: [
       {
         role: 'user',
-        content: 'Hi, say hello!'
-      }
+        content: 'Hi, say hello!',
+      },
     ],
     max_tokens: 100,
-    temperature: 0.2
+    temperature: 0.2,
   };
 
   console.log('\n📤 Sending request to Perplexity API...');
@@ -37,7 +37,7 @@ async function testPerplexityAPI() {
     const response = await request('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -47,7 +47,7 @@ async function testPerplexityAPI() {
     console.log('Response Headers:', response.headers);
 
     const body = await response.body.json();
-    
+
     if (response.statusCode === 200) {
       console.log('\n✅ SUCCESS! API is working!');
       console.log('Response:', JSON.stringify(body, null, 2));

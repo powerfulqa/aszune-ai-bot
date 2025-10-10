@@ -74,7 +74,7 @@ describe('Conversation Manager - Advanced Features', () => {
 
     it('clears all conversation data', () => {
       const userId = '123456789012345678';
-      
+
       // Mock getUserStats to return 1 message after addMessage
       mockDatabaseService.getUserStats.mockReturnValueOnce({
         user_id: userId,
@@ -82,7 +82,7 @@ describe('Conversation Manager - Advanced Features', () => {
         total_summaries: 0,
         last_active: new Date().toISOString(),
       });
-      
+
       conversationManager.addMessage(userId, 'user', 'hello');
 
       expect(conversationManager.getHistory(userId)).toHaveLength(1);

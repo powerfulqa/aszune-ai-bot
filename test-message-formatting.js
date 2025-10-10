@@ -30,7 +30,7 @@ describe('Message Formatting Fix Validation', () => {
 
   test('should add system message to empty history', () => {
     const formatted = service._formatMessagesForAPI([]);
-    
+
     expect(formatted).toHaveLength(2);
     expect(formatted[0].role).toBe('system');
     expect(formatted[1].role).toBe('user');
@@ -38,11 +38,9 @@ describe('Message Formatting Fix Validation', () => {
   });
 
   test('should handle single user message', () => {
-    const history = [
-      { role: 'user', content: 'Hello!' }
-    ];
+    const history = [{ role: 'user', content: 'Hello!' }];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     expect(formatted[0].role).toBe('system');
     expect(formatted[1].role).toBe('user');
     expect(formatted[1].content).toBe('Hello!');
@@ -52,10 +50,10 @@ describe('Message Formatting Fix Validation', () => {
   test('should combine consecutive user messages', () => {
     const history = [
       { role: 'user', content: 'Hello' },
-      { role: 'user', content: 'Are you there?' }
+      { role: 'user', content: 'Are you there?' },
     ];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     expect(formatted).toHaveLength(2); // system + combined user message
     expect(formatted[0].role).toBe('system');
     expect(formatted[1].role).toBe('user');
@@ -69,10 +67,10 @@ describe('Message Formatting Fix Validation', () => {
       { role: 'user', content: 'Hello' },
       { role: 'assistant', content: 'Hi there!' },
       { role: 'user', content: 'How are you?' },
-      { role: 'assistant', content: 'I am doing well!' }
+      { role: 'assistant', content: 'I am doing well!' },
     ];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     // Should be: system, user, assistant, user, assistant
     expect(formatted).toHaveLength(5);
     expect(formatted[0].role).toBe('system');
@@ -86,21 +84,19 @@ describe('Message Formatting Fix Validation', () => {
   test('should end with user message', () => {
     const history = [
       { role: 'user', content: 'Hello' },
-      { role: 'assistant', content: 'Hi!' }
+      { role: 'assistant', content: 'Hi!' },
     ];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     const lastMessage = formatted[formatted.length - 1];
     expect(lastMessage.role).toBe('user');
     console.log('✓ End with user message test passed');
   });
 
   test('should handle assistant after system', () => {
-    const history = [
-      { role: 'assistant', content: 'I can help you with that' }
-    ];
+    const history = [{ role: 'assistant', content: 'I can help you with that' }];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     // Should insert placeholder user message before assistant
     expect(formatted[0].role).toBe('system');
     expect(formatted[1].role).toBe('user'); // Placeholder
@@ -112,12 +108,12 @@ describe('Message Formatting Fix Validation', () => {
   test('should skip duplicate system messages', () => {
     const history = [
       { role: 'system', content: 'Extra system message' },
-      { role: 'user', content: 'Hello' }
+      { role: 'user', content: 'Hello' },
     ];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     // Should only have one system message (the one we add)
-    const systemMessages = formatted.filter(msg => msg.role === 'system');
+    const systemMessages = formatted.filter((msg) => msg.role === 'system');
     expect(systemMessages).toHaveLength(1);
     console.log('✓ Duplicate system message test passed');
   });
@@ -132,19 +128,19 @@ describe('Message Formatting Fix Validation', () => {
       { role: 'assistant', content: 'Response 2b' }, // Consecutive assistant
     ];
     const formatted = service._formatMessagesForAPI(history);
-    
+
     // Verify all messages have proper alternation
     for (let i = 1; i < formatted.length - 1; i++) {
       const current = formatted[i];
       const next = formatted[i + 1];
-      
+
       if (current.role === 'user') {
         expect(next.role).toBe('assistant');
       } else if (current.role === 'assistant') {
         expect(next.role).toBe('user');
       }
     }
-    
+
     // Last message should be user
     expect(formatted[formatted.length - 1].role).toBe('user');
     console.log('✓ Complex conversation test passed');
@@ -159,10 +155,10 @@ describe('Message Formatting Fix Validation', () => {
 // Run the tests
 if (require.main === module) {
   console.log('Running message formatting validation tests...\n');
-  
+
   // Set test environment
   process.env.NODE_ENV = 'test';
-  
+
   // Run Jest
   const jest = require('jest');
   jest.run(['--testMatch', '**/test-message-formatting.js', '--verbose']);

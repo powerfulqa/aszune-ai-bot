@@ -636,12 +636,12 @@ class PerplexityService {
     if (!Array.isArray(history) || history.length === 0) {
       return [
         { role: 'system', content: config.SYSTEM_MESSAGES.CHAT },
-        { role: 'user', content: 'Hello' }
+        { role: 'user', content: 'Hello' },
       ];
     }
 
     const messages = [{ role: 'system', content: config.SYSTEM_MESSAGES.CHAT }];
-    
+
     // Clean and ensure alternation
     return this._ensureMessageAlternation(messages, history);
   }
@@ -750,14 +750,25 @@ class PerplexityService {
    * @param {string} content - Response content
    * @private
    */
-  async _trackResponsePerformance(startTime, initialMemoryUsage, historyLength, shouldUseCache, content) {
+  async _trackResponsePerformance(
+    startTime,
+    initialMemoryUsage,
+    historyLength,
+    shouldUseCache,
+    content
+  ) {
     const isCacheHit = Date.now() - startTime < 10;
     const responseTime = Date.now() - startTime;
     const finalMemoryUsage = process.memoryUsage().heapUsed;
     const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
     if (isCacheHit) {
-      await this._trackCacheHitPerformance(responseTime, memoryDelta, historyLength, shouldUseCache);
+      await this._trackCacheHitPerformance(
+        responseTime,
+        memoryDelta,
+        historyLength,
+        shouldUseCache
+      );
     } else {
       await this._trackApiCallPerformance(
         responseTime,
@@ -779,16 +790,32 @@ class PerplexityService {
       const formattedHistory = this._formatMessagesForAPI(history);
       const cacheConfig = this.cacheManager.getCacheConfiguration();
       const shouldUseCache = this.cacheManager.shouldUseCache(opts, cacheConfig);
-      const content = await this._processChatResponse(formattedHistory, opts, cacheConfig, shouldUseCache);
+      const content = await this._processChatResponse(
+        formattedHistory,
+        opts,
+        cacheConfig,
+        shouldUseCache
+      );
 
-      await this._trackResponsePerformance(startTime, initialMemoryUsage, history?.length || 0, shouldUseCache, content);
+      await this._trackResponsePerformance(
+        startTime,
+        initialMemoryUsage,
+        history?.length || 0,
+        shouldUseCache,
+        content
+      );
       return content;
     } catch (error) {
       const errorTime = Date.now() - startTime;
       const finalMemoryUsage = process.memoryUsage().heapUsed;
       const memoryDelta = finalMemoryUsage - initialMemoryUsage;
 
-      await this._trackApiErrorPerformance(errorTime, memoryDelta, history?.length || 0, error.message);
+      await this._trackApiErrorPerformance(
+        errorTime,
+        memoryDelta,
+        history?.length || 0,
+        error.message
+      );
 
       const errorResponse = ErrorHandler.handleError(error, 'generate chat response', {
         historyLength: history?.length || 0,

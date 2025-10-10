@@ -42,14 +42,20 @@ class ApiClient {
 
     if (messages.length === 0) {
       logger.error('Empty messages array provided to buildRequestPayload');
-      throw ErrorHandler.createError('Messages array cannot be empty', ERROR_TYPES.VALIDATION_ERROR);
+      throw ErrorHandler.createError(
+        'Messages array cannot be empty',
+        ERROR_TYPES.VALIDATION_ERROR
+      );
     }
 
     // Validate message format
-    const invalidMessages = messages.filter(msg => !msg.role || !msg.content);
+    const invalidMessages = messages.filter((msg) => !msg.role || !msg.content);
     if (invalidMessages.length > 0) {
       logger.error('Invalid message format detected:', JSON.stringify(invalidMessages));
-      throw ErrorHandler.createError('All messages must have role and content fields', ERROR_TYPES.VALIDATION_ERROR);
+      throw ErrorHandler.createError(
+        'All messages must have role and content fields',
+        ERROR_TYPES.VALIDATION_ERROR
+      );
     }
 
     const payload = {
@@ -60,8 +66,10 @@ class ApiClient {
     };
 
     // Log request summary for debugging
-    logger.info(`API Request: model="${payload.model}", messages=${messages.length}, temperature=${payload.temperature}, max_tokens=${payload.max_tokens}`);
-    
+    logger.info(
+      `API Request: model="${payload.model}", messages=${messages.length}, temperature=${payload.temperature}, max_tokens=${payload.max_tokens}`
+    );
+
     // Log full payload in debug mode
     if (process.env.DEBUG === 'true') {
       logger.debug('Full request payload:', JSON.stringify(payload, null, 2));
@@ -98,7 +106,9 @@ class ApiClient {
 
     // Log request details for debugging
     logger.info(`Making API request to: ${endpoint}`);
-    logger.info(`Request payload summary: model=${payload.model}, messages=${payload.messages?.length || 0}, temperature=${payload.temperature}`);
+    logger.info(
+      `Request payload summary: model=${payload.model}, messages=${payload.messages?.length || 0}, temperature=${payload.temperature}`
+    );
 
     try {
       const response = await request(fullUrl, {

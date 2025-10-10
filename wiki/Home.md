@@ -6,10 +6,10 @@ usage, and development of the Aszune AI Bot.
 ## What is Aszune AI Bot?
 
 Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
-the Perpthe Perplexity API with the **sonar** model. It maintains persistent conversation history for each
-user through SQLite database integration and adds fun emoji reactions based on keywords found in
-messages. The bot supports both traditional `!` commands and modern Discord slash commands, with
-comprehensive analytics and user engagement tracking capabilities.
+the Perpthe Perplexity API with the **sonar** model. It maintains persistent conversation history
+for each user through SQLite database integration and adds fun emoji reactions based on keywords
+found in messages. The bot supports both traditional `!` commands and modern Discord slash commands,
+with comprehensive analytics and user engagement tracking capabilities.
 
 ## Navigation
 
@@ -48,8 +48,8 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
   - **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
     performance
   - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
-  - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
-& Feature-Flag## Version Information
+  - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments &
+    Feature-Flag## Version Information
 
 - **v1.7.0** - Database Integration & Reminder System (2025-10-08)
   - **SQLite Database Integration**: Full persistent data storage for conversation history and user
@@ -65,20 +65,21 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
   - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
 
 ged Licensing (2025-10-01)
-  - **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
-    provide comprehensive system monitoring directly in Discord
-  - **Real-time Performance Monitoring**: Live system status, resource utilization, and performance
-    metrics
-  - **Server Insights**: Discord server analytics with user engagement and command usage patterns
-  - **Resource Optimization**: Automated recommendations for system performance improvements
-  - **Integrated Reporting**: All analytics features accessible without leaving Discord
-  - **Feature-Flagged Licensing**: Complete license validation system implemented but disabled by
-    default for safe deployment
-  - **Safe Deployment Pattern**: License features behind environment variable flags for gradual
-    rollout
-  - **Backward Compatible**: All existing functionality works without license configuration
-  - **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
-  - **Enhanced User Experience**: No need to access Pi directly - all monitoring through Discord
+
+- **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
+  provide comprehensive system monitoring directly in Discord
+- **Real-time Performance Monitoring**: Live system status, resource utilization, and performance
+  metrics
+- **Server Insights**: Discord server analytics with user engagement and command usage patterns
+- **Resource Optimization**: Automated recommendations for system performance improvements
+- **Integrated Reporting**: All analytics features accessible without leaving Discord
+- **Feature-Flagged Licensing**: Complete license validation system implemented but disabled by
+  default for safe deployment
+- **Safe Deployment Pattern**: License features behind environment variable flags for gradual
+  rollout
+- **Backward Compatible**: All existing functionality works without license configuration
+- **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
+- **Enhanced User Experience**: No need to access Pi directly - all monitoring through Discord
 
 - **v1.5.0** - qlty Code Quality Integration (2025-09-29)
   - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
