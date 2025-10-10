@@ -715,15 +715,15 @@ NODE_ENV=development npm start
 ### 🚀 Getting Your License (For Future Use)
 
 1. **Personal License (Free)**:
-   [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+   [Create License Registration Issue](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 2. **Commercial License**:
-   [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
-3. **Enterprise License**: Email contact@aszune-ai-bot.com
+   [Create Commercial License Request](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
+3. **Enterprise License**: Email contact@powerfulqa.com
 
 ### 📧 Questions?
 
 - **License Issues**: Create a GitHub issue
-- **Commercial Inquiries**: contact@aszune-ai-bot.com
+- **Commercial Inquiries**: contact@powerfulqa.com
 - **Technical Support**: Included with paid licenses
 
 **[📄 View Full License Terms](./LICENSE)**
