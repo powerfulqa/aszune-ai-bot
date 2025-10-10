@@ -9,6 +9,7 @@ const logger = require('../utils/logger');
 // Command handler removed - all commands are now slash commands
 const messageFormatter = require('../utils/message-formatter');
 const { chunkMessage } = require('../utils/message-chunking');
+const { formatTablesForDiscord } = require('../utils/message-chunker');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 const databaseService = require('../services/database');
@@ -476,8 +477,11 @@ async function processAIResponse(message, processedData, userId) {
 
     const formattedReply = messageFormatter.formatResponse(response);
 
+    // Format tables for Discord display (convert tables to bullet points)
+    const tableFormattedReply = formatTablesForDiscord(formattedReply);
+
     // Add emojis to response
-    const finalResponse = emojiManager.addEmojisToResponse(formattedReply);
+    const finalResponse = emojiManager.addEmojisToResponse(tableFormattedReply);
 
     // Add bot's reply to the conversation history
     conversationManager.addMessage(processedData.userId, 'assistant', finalResponse);
