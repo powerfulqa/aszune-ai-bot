@@ -8,16 +8,53 @@
 # =========================================
 
 # Memory limits (MB)
-MEMORY_LIMIT=200
-MEMORY_CRITICAL=250
+#MEMORY_LIMIT=200
+#MEMORY_CRITICAL=250
 
 # Performance settings
+#ENABLE_PI_OPTIMIZATIONS=true
+#PI_LOG_LEVEL="WARN"
+#PI_COMPACT_MODE=true
+#PI_LOW_CPU_MODE=true
+#PI_MAX_CONNECTIONS=2
+#PI_DEBOUNCE_MS=500
+#PI_REACTION_LIMIT=2
+
+# Auto-detect Pi model and set appropriate limits
+PI_MODEL=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' || echo "Unknown")
+
+if [[ "$PI_MODEL" == *"Raspberry Pi 5"* ]]; then
+    echo "Detected: Raspberry Pi 5 Model B"
+    MEMORY_LIMIT=400
+    MEMORY_CRITICAL=450
+    PI_MAX_CONNECTIONS=4
+    PI_DEBOUNCE_MS=200
+    PI_LOW_CPU_MODE=false
+    PI_COMPACT_MODE=false
+    PI_VERSION="5"
+elif [[ "$PI_MODEL" == *"Raspberry Pi 4"* ]]; then
+    echo "Detected: Raspberry Pi 4"
+    MEMORY_LIMIT=300
+    MEMORY_CRITICAL=350
+    PI_MAX_CONNECTIONS=3
+    PI_DEBOUNCE_MS=300
+    PI_LOW_CPU_MODE=false
+    PI_COMPACT_MODE=true
+    PI_VERSION="4"
+else
+    echo "Detected: Raspberry Pi 3 or older"
+    MEMORY_LIMIT=200
+    MEMORY_CRITICAL=250
+    PI_MAX_CONNECTIONS=2
+    PI_DEBOUNCE_MS=500
+    PI_LOW_CPU_MODE=true
+    PI_COMPACT_MODE=true
+    PI_VERSION="3"
+fi
+
+# Common settings for all Pi models
 ENABLE_PI_OPTIMIZATIONS=true
 PI_LOG_LEVEL="WARN"
-PI_COMPACT_MODE=true
-PI_LOW_CPU_MODE=true
-PI_MAX_CONNECTIONS=2
-PI_DEBOUNCE_MS=500
 PI_REACTION_LIMIT=2
 
 # Node.js settings
@@ -40,7 +77,7 @@ fi
 # System optimizations
 # =========================================
 
-echo "Applying system optimizations for Raspberry Pi 3..."
+echo "Applying system optimizations for Raspberry Pi $PI_VERSION..."
 
 # Check if running as root/sudo (required for some optimizations)
 if [ "$EUID" -eq 0 ]; then
@@ -88,10 +125,11 @@ export NODE_ENV=$NODE_ENV
 # Start the bot
 # =========================================
 
-echo "Starting Aszune AI Bot with Pi 3 optimizations..."
+echo "Starting Aszune AI Bot with Pi $PI_VERSION optimizations..."
 echo "Memory limit: ${MEMORY_LIMIT}MB"
 echo "Log level: $PI_LOG_LEVEL"
 echo "Optimizations enabled: $ENABLE_PI_OPTIMIZATIONS"
 
 # Start the application
 node src/index.js
+nano start-pi-optimized.sh

@@ -66,11 +66,28 @@ function determinePiModel(cpuInfo, result) {
       result.cores >= 4 && result.ram >= 1 && result.ram <= 8,
     ],
 
-    // Pi 5 indicators
-    pi5: [
+   // Pi 5 indicators  
+   pi5: [
       cpuInfo.includes('BCM2712'),
       cpuInfo.includes('Pi 5'),
+      cpuInfo.includes('Raspberry Pi 5'),
+      cpuInfo.includes('Cortex-A76'),
       result.cores >= 4 && result.ram >= 4,
+      result.ram >= 4,  // Pi 5 has 4GB+ RAM
+    ],
+
+    // DEBUG: Let's see what we're actually getting
+    console.log('=== PI DETECTION DEBUG ===');
+    console.log('cpuInfo contains BCM2712:', cpuInfo.includes('BCM2712'));
+    console.log('cpuInfo contains Pi 5:', cpuInfo.includes('Pi 5'));
+    console.log('cpuInfo contains Raspberry Pi 5:', cpuInfo.includes('Raspberry Pi 5'));
+    console.log('cpuInfo contains Cortex-A76:', cpuInfo.includes('Cortex-A76'));
+    console.log('result.cores:', result.cores);
+    console.log('result.ram:', result.ram);
+    console.log('Full cpuInfo:', cpuInfo.substring(0, 200) + '...');
+    console.log('========================');
+    
+    const modelIndicators = {
     ],
   };
 
