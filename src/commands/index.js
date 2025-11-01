@@ -471,6 +471,9 @@ const commands = {
           { averageResponseTime: resourceStatus.performance.responseTime }
         );
 
+        // Get actual server count from Discord client (not analytics tracking)
+        const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
+
         const embed = {
           color:
             resourceStatus.memory.status === 'good'
@@ -492,7 +495,7 @@ const commands = {
             },
             {
               name: '📈 Optimization Tier',
-              value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${analyticsData.summary.totalServers}\nRecommended: Auto-scaling active`,
+              value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}\nRecommended: Auto-scaling active`,
               inline: true,
             },
             {

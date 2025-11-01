@@ -522,7 +522,7 @@ class PerformanceDashboard {
     // Check analytics
     if (analytics && analytics.summary) {
       if (analytics.summary.errorRate > 10) issues.push('high_error_rate');
-      if (analytics.summary.totalCommands === 0) issues.push('no_activity');
+      // Removed: totalCommands === 0 check - this is normal for quiet periods
     }
 
     // Check performance

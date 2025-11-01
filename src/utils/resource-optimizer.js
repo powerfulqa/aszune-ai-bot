@@ -483,7 +483,7 @@ class ResourceOptimizer {
     if (memoryMB > 400) return 'critical';
     if (memoryMB > 200) return 'high';
     if (memoryMB > 100) return 'normal';
-    return 'low';
+    return 'good'; // Changed from 'low' to 'good' - low memory usage is good!
   }
 
   /**
