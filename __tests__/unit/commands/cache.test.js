@@ -222,7 +222,7 @@ describe('Cache Command', () => {
     const fieldNames = embed.fields.map((f) => f.name);
     expect(fieldNames).toContain('Performance');
     expect(fieldNames).toContain('Operations');
-    expect(fieldNames).toContain('Memory Usage');
+    expect(fieldNames).toContain('Cache Memory Usage'); // Updated name to match v1.7.0 changes
     expect(fieldNames).toContain('Configuration');
 
     // Verify each field contains expected values without "undefined"
@@ -231,7 +231,7 @@ describe('Cache Command', () => {
     expect(performanceField.value).toMatch(/Hits: \d+/);
     expect(performanceField.value).toMatch(/Misses: \d+/);
 
-    const memoryField = embed.fields.find((f) => f.name === 'Memory Usage');
+    const memoryField = embed.fields.find((f) => f.name === 'Cache Memory Usage'); // Updated name to match v1.7.0 changes
     expect(memoryField.value).toMatch(/.+ \/ .+/);
     expect(memoryField.value).toMatch(/Entries: \d+ \/ \d+/);
 

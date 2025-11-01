@@ -78,7 +78,7 @@ describe('Commands - Cache Command', () => {
                 value: expect.stringContaining('Hit Rate: 90%'),
               }),
               expect.objectContaining({
-                name: 'Memory Usage',
+                name: 'Cache Memory Usage', // Updated name to match v1.7.0 changes
                 value: expect.stringContaining('50MB / 100MB'),
               }),
             ]),

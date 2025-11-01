@@ -159,6 +159,10 @@ const commands = {
       const embed = {
         color: config.COLORS.PRIMARY,
         title: 'Cache Statistics',
+        description:
+          cacheStats.entryCount === 0
+            ? '💡 Cache is currently empty - memory will increase as API responses are cached'
+            : null,
         fields: [
           {
             name: 'Performance',
@@ -171,7 +175,7 @@ const commands = {
             inline: true,
           },
           {
-            name: 'Memory Usage',
+            name: 'Cache Memory Usage',
             value: `${cacheStats.memoryUsageFormatted} / ${cacheStats.maxMemoryFormatted}\nEntries: ${cacheStats.entryCount} / ${cacheStats.maxSize}`,
             inline: true,
           },
@@ -181,7 +185,9 @@ const commands = {
             inline: true,
           },
         ],
-        footer: { text: 'Aszai Bot Cache' },
+        footer: {
+          text: 'Cache memory tracks stored responses only - see /resources for total bot memory',
+        },
         timestamp: new Date(),
       };
 
@@ -482,6 +488,7 @@ const commands = {
                 ? 0xffa500
                 : 0xff0000,
           title: '🔧 Resource Optimization',
+          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
           fields: [
             {
               name: '💾 Memory Status',
@@ -500,11 +507,15 @@ const commands = {
             },
             {
               name: '💡 Recommendations',
-              value: recommendations.slice(0, 3).join('\n') || '✅ All systems optimized!',
+              value:
+                recommendations.slice(0, 3).join('\n') ||
+                '✅ System performance is good - continue monitoring',
               inline: false,
             },
           ],
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: {
+            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
+          },
           timestamp: new Date().toISOString(),
         };
 

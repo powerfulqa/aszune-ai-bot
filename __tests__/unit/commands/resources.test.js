@@ -98,6 +98,7 @@ describe('Resources Command', () => {
         {
           color: expect.any(Number),
           title: '🔧 Resource Optimization',
+          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
           fields: expect.arrayContaining([
             expect.objectContaining({
               name: '💾 Memory Status',
@@ -120,7 +121,9 @@ describe('Resources Command', () => {
               inline: false,
             }),
           ]),
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: {
+            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
+          },
           timestamp: expect.any(String),
         },
       ],
@@ -169,6 +172,7 @@ describe('Resources Command', () => {
         {
           color: 0xffa500,
           title: '🔧 Resource Optimization',
+          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
           fields: expect.arrayContaining([
             expect.objectContaining({
               name: '💾 Memory Status',
@@ -191,7 +195,9 @@ describe('Resources Command', () => {
               inline: false,
             }),
           ]),
-          footer: { text: 'Aszai Bot Resource Monitor' },
+          footer: {
+            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
+          },
           timestamp: expect.any(String),
         },
       ],
