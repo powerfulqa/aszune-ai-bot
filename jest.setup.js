@@ -7,6 +7,15 @@ process.env.NODE_ENV = 'test';
 process.env.PERPLEXITY_API_KEY = 'test-key';
 process.env.DISCORD_BOT_TOKEN = 'test-token';
 
+// Mock Web APIs required by undici
+global.File = class File extends Blob {
+  constructor(fileBits, fileName, options = {}) {
+    super(fileBits, options);
+    this.name = fileName;
+    this.lastModified = options.lastModified || Date.now();
+  }
+};
+
 // Mock process.exit to prevent test termination
 jest.spyOn(process, 'exit').mockImplementation((code) => {
   // In test environment, just log the exit code instead of actually exiting
