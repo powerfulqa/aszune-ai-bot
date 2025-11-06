@@ -4,16 +4,19 @@ This page provides detailed documentation for all commands available in the Aszu
 
 ## Command Types
 
-Aszune AI Bot supp### Reminder Commands (NEW in v1.7.0)
+The bot supports modern **slash commands** and still recognises a limited set of legacy `!` text
+commands for backward compatibility. New features (reminders, analytics, cache stats) should use
+slash commands first. Legacy `!` forms will be deprecated.
 
-| Command                                    | Description                                       |
-| ------------------------------------------ | ------------------------------------------------- | -------------------------- |
-| `!remind <time> <message>` / `/remind`     | Set a reminder with natural language time parsing |
-| `!reminders` / `/reminders`                | List all your active reminders                    |
-| `!cancelreminder <id>` / `/cancelreminder` | Cancel a specific reminder by ID                  | rts two types of commands: |
+### Reminder Commands (NEW in v1.7.0)
 
-- **Traditional commands** starting with `!`
-- **Slash commands** starting with `/`
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `/remind`         | Set a reminder with natural language time parsing |
+| `/reminders`      | List all your active reminders                    |
+| `/cancelreminder` | Cancel a specific reminder by ID                  |
+
+Legacy forms (`!remind`, `!reminders`, `!cancelreminder`) still work but are discouraged.
 
 ## Core Commands
 
@@ -290,6 +293,15 @@ Configuration: Strategy: undefined, Uptime: undefined
 ```
 Memory Usage: 0 B / 50 MB
 Configuration: Strategy: hybrid, Uptime: 28s
+
+**Field Definitions (post v1.7.0 clarity fixes):**
+
+- **Hit Rate** – Percentage of successful cache lookups `(hits / (hits + misses)) * 100`
+- **Memory Usage** – Human-readable used vs max memory (e.g., `12.3 MB / 50 MB`)
+- **Evictions** – Entries removed due to memory/size constraints
+- **Entry Count** – Current number of live cache entries
+- **Strategy** – Active eviction strategy (e.g., `hybrid` combines age & usage)
+- **Uptime** – Time since cache manager initialisation (normalised formatting)
 ```
 
 ---

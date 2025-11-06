@@ -267,3 +267,20 @@ user engagement features.
 **Support:** Create issue for any database-related questions or problems
 
 **Next Release Preview:** Enhanced analytics dashboard and export capabilities coming in v1.8.0
+
+---
+
+## 🔁 Post-Release Regression & Clarity Fixes (October 9–10, 2025)
+
+Small, additive fixes were applied after the initial v1.7.0 tag to improve operational clarity and
+test reliability without changing public APIs:
+
+- Cache & memory reporting clarification (normalised units, stable hit rate display)
+- Dashboard warning noise reduction and server count accuracy improvements
+- Raspberry Pi detector fallback hardening (safer unknown model handling)
+- Added lightweight `global.File` mock for undici/Web API compatibility in Jest tests
+- Startup script (`start-pi-optimized.sh`) adjustments: executable mode, adaptive limits per model
+- Added dedicated regression summary file: `REGRESSION-FIX-v1.7.0.md`
+
+All changes are backward compatible; no configuration or migration required. Updated tag `v1.7.0`
+now points to the latest commit containing these fixes.

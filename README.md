@@ -792,6 +792,19 @@ storage
 - **Database Migration**: Automatic database creation and table setup on first run
 - **Zero Configuration**: Database initializes automatically with no manual setup required
 
+#### 1.7.0 Post-Release Regression & Clarity Fixes (2025-10-09 → 2025-10-10)
+
+Additive, non-breaking improvements applied after initial release:
+
+- Normalised cache & memory metric formatting (stable hit rate, human-readable units)
+- Reduced dashboard warning noise & corrected server count calculation
+- Hardened Raspberry Pi model detection fallback (graceful unknown handling)
+- Added test-only `global.File` mock (undici Web API compatibility) in `jest.setup.js`
+- Updated `start-pi-optimized.sh` with adaptive limits per Pi model & executable permissions
+- Added regression summary doc: `docs/REGRESSION-FIX-v1.7.0.md`
+
+No API, config, or database changes required – existing deployments remain compatible.
+
 ### 1.6.0 (2025-01-21) - Analytics & Professional Licensing
 
 **🎯 Major Features**:

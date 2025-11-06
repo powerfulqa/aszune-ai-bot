@@ -38,20 +38,7 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 
 ## Version Information
 
-- **v1.7.0** - Database Integration & Persistence (2025-10-05)
-  - **SQLite Database Integration**: Full persistent data storage for conversation history and user
-    analytics
-  - **Conversation Persistence**: User messages and bot responses stored across bot restarts
-  - **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
-  - **Automatic Setup**: Database and tables created automatically with zero configuration required
-  - **Graceful Fallback**: Seamless operation even when database is unavailable
-  - **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
-    performance
-  - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
-  - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments &
-    Feature-Flag## Version Information
-
-- **v1.7.0** - Database Integration & Reminder System (2025-10-08)
+**v1.7.0** - Database Integration & Reminder System (2025-10-08)
   - **SQLite Database Integration**: Full persistent data storage for conversation history and user
     analytics
   - **Conversation Persistence**: User messages and bot responses stored across bot restarts
@@ -63,6 +50,14 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
     performance
   - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
   - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
+
+  **Post-Release Regression Fixes (Oct 9–10, 2025)**
+  - Normalised cache & memory metric formatting (stable hit rate & units)
+  - Reduced dashboard warning noise; corrected server count logic
+  - Hardened Raspberry Pi model detection fallback
+  - Added `global.File` mock in test setup for undici/Web API compatibility
+  - Adaptive Pi startup script improvements (`start-pi-optimized.sh`)
+  - Added regression summary doc (`docs/REGRESSION-FIX-v1.7.0.md`)
 
 ged Licensing (2025-10-01)
 

@@ -804,7 +804,7 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 
 **Remember**: 1000+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
 
-## �📋 RECENT WORK SUMMARY & NEXT AGENT HEADS UP
+## 📋 RECENT WORK SUMMARY & NEXT AGENT HEADS UP
 
 ### Repository Cleanup Completed (2025-10-08)
 
@@ -824,6 +824,16 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 - **wiki/Home.md**: Added v1.7.0 version information and database/reminder features
 - **wiki/Command-Reference.md**: Added complete reminder command documentation
 - **Copilot Instructions**: Updated with database and reminder system architecture details
+
+### 🔁 Post v1.7.0 Regression & Clarity Fixes (Oct 9–10, 2025)
+
+Additive fixes after initial v1.7.0 tag (no API or schema changes):
+- Normalised cache & memory metric formatting (stable hit rate, readable units)
+- Reduced dashboard warning noise; corrected server count logic
+- Hardened Raspberry Pi model detection fallback paths
+- Added lightweight `global.File` mock in `jest.setup.js` for undici/Web API compatibility in tests
+- Adaptive Pi startup script tuning (`start-pi-optimized.sh`)
+- Added regression summary documentation (`docs/REGRESSION-FIX-v1.7.0.md`)
 
 ### 🎯 NEXT AGENT PRIORITIES
 
