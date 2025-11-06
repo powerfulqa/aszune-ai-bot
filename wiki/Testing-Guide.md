@@ -2,9 +2,10 @@
 
 ## Overview
 
-Aszune AI Bot has a comprehensive test suite covering all critical functionality with 82%+ code
-coverage. The tests are designed to verify that all components work correctly and handle edge cases
-appropriately. With 536 passing tests, the bot ensures production-ready stability and reliability.
+Aszune AI Bot currently has a comprehensive Jest suite: 1,231 tests (1,228 passing locally) with
+72.6% statement / 67.1% branch coverage. Historical CI baseline was 82%+ statements (work in
+progress to restore). The tests are designed to verify critical functionality and edge cases for
+production-ready stability.
 
 ## Test Structure
 

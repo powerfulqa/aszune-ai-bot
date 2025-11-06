@@ -11,8 +11,10 @@
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
 with comprehensive analytics and monitoring features. Built for gaming communities, it provides
 lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time
-performance dashboards and server analytics directly within Discord. Features enterprise-grade code
-quality with 1000+ automated tests and built-in license protection system.
+performance dashboards and server analytics directly within Discord. Current local quality status:
+1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; historical CI target 82%+ (work in
+progress to restore). Built with an enterprise-grade architecture and feature-flagged license
+protection system.
 
 ## Table of Contents
 
@@ -84,8 +86,8 @@ quality with 1000+ automated tests and built-in license protection system.
 - 🆕 **Stats Tracking:** `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
-- 🧪 **Comprehensive Testing:** 1000+ automated tests covering all key functionality with 74%+ code
-  coverage and enterprise-grade quality assurance.
+- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing locally) covering all key functionality –
+  72.6% statement / 67.1% branch coverage (historical CI target 82%+ under restoration).
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
   comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
@@ -507,7 +509,8 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage**: 82%+ overall coverage with 1000 automated tests
+- **Test Coverage**: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches (historical CI
+  target 82%+; restoration in progress)
 - **Code Quality**: 40% reduction in lint errors (22 → 13) with systematic method decomposition
 - **Security**: Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity**: Max 15 complexity per file, 10 per function with enforced decomposition
@@ -604,7 +607,8 @@ implemented.
 For more detailed information about the testing strategy, see the
 [Testing Guide](./wiki/Testing-Guide.md) and [**tests**/README.md](./__tests__/README.md).
 
-Current test coverage: 82%+ overall with 1000 tests.
+Current local test status: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; CI
+historical target 82%+ (restoration in progress).
 
 ---
 

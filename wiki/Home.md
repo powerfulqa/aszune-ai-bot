@@ -73,7 +73,9 @@ ged Licensing (2025-10-01)
 - **Safe Deployment Pattern**: License features behind environment variable flags for gradual
   rollout
 - **Backward Compatible**: All existing functionality works without license configuration
-- **Complete Test Coverage**: All 991 tests passing with full analytics integration coverage
+- **Testing Status (Historical vs Current)**: v1.6.x analytics integration shipped with 991 tests
+  passing; current local suite: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches
+  (historical CI target 82%+; restoration in progress)
 - **Enhanced User Experience**: No need to access Pi directly - all monitoring through Discord
 
 - **v1.5.0** - qlty Code Quality Integration (2025-09-29)
@@ -87,7 +89,8 @@ ged Licensing (2025-10-01)
   - **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
     secrets
   - **Developer Experience**: Unified quality interface replacing fragmented tooling
-  - **Backward Compatibility**: All existing functionality and 82%+ test coverage maintained
+  - **Backward Compatibility**: All existing functionality maintained; coverage now 72.6% statements
+    / 67.1% branches locally (target 82%+)
 
 - **v1.4.1** - Code Quality Excellence & Architecture Refinement (2025-09-28)
   - **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
@@ -103,7 +106,8 @@ ged Licensing (2025-10-01)
   - **All Tests Passing**: Maintained 536 passing tests throughout architectural improvements
 
 - **v1.4.0** - Comprehensive Testing & Coverage Enhancement (2025-01-22)
-  - Massive test coverage improvement from 77.79% to 82%+
+  - Massive historical coverage improvement (77.79% → 82%+); current local coverage 72.6% statements
+    / 67.1% branches (recovery effort active)
   - Added comprehensive test suites for memory monitoring, message chunking, and command handling
   - Expanded test count from 371 to 380+ passing tests
   - Enhanced error handling and recovery mechanisms across all modules
@@ -181,7 +185,8 @@ ged Licensing (2025-10-01)
 - 🆕 **Stats Tracking:** Shows per-user message and summary counts
 - 🆕 **Slash Command Support:** All major commands available as Discord slash commands
 - 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
-- 🧪 **Comprehensive Testing:** 380+ automated tests with 82%+ code coverage
+- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches;
+  historical baseline 82%+ (restoration underway)
 - 🧾 **Branch Coverage Testing:** 82.45% branch coverage for critical components like logger.js
 - 🔧 **Improved Code Quality:** Refactored complex functions into smaller, maintainable units
 - 🔒 **Enhanced Security:** Fixed permissions issues and improved API validation

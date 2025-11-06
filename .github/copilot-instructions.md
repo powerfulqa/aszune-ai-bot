@@ -4,7 +4,8 @@
 
 **Aszune AI Bot** (v1.7.0) is a production Discord bot combining Perplexity AI with comprehensive
 analytics, reminder scheduling, and performance monitoring. Built for Raspberry Pi deployment with
-853+ tests (82% coverage) and strict qlty quality standards.
+current local test status: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; CI
+historical target 82%+ (restoration in progress) and strict qlty quality standards.
 
 **Key Capabilities:**
 
@@ -104,7 +105,7 @@ try {
 }
 ```
 
-## 🧪 Testing Patterns (853+ Tests)
+## 🧪 Testing Patterns (1,231 Tests – 1,228 Passing Local)
 
 ### Mock Structure - MUST Follow Exactly
 
@@ -333,7 +334,7 @@ reminderService.on('reminderDue', async (reminder) => {
 - **File Complexity**: Max 15
 - **Function Complexity**: Max 10
 - **Code Duplication**: Max 50 lines
-- **Test Coverage**: 82%+
+- **Test Coverage**: 72.6% statements / 67.1% branches local (historical CI target 82%+)
 
 ### Commands
 
@@ -802,7 +803,8 @@ databaseService.addBotResponse(userId, response); // Handles foreign keys automa
 db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on foreign key constraint
 ```
 
-**Remember**: 1000+ tests, 82%+ coverage, qlty quality standards - all must pass. When in doubt,
+**Remember**: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches (target 82%+). Honor
+qlty quality standards; when in doubt, inspect existing tests.
 
 ## 📋 RECENT WORK SUMMARY & NEXT AGENT HEADS UP
 
@@ -920,8 +922,8 @@ npm start                    # Production mode
 
 ### Success Metrics
 
-- ✅ All 853+ tests passing
-- ✅ 82%+ code coverage
+- ✅ 1,231 tests defined / 1,228 passing locally
+- ✅ 72.6% statements / 67.1% branches (target 82%+ restoration)
 - ✅ No circular dependencies
 - ✅ Error contracts maintained
 - ✅ Quality thresholds met
@@ -929,5 +931,6 @@ npm start                    # Production mode
 
 ---
 
-**Remember**: This codebase has 853+ tests and 82% coverage. Breaking patterns WILL fail tests. When
+**Remember**: This codebase has 1,231 tests (1,228 passing) with 72.6% statement / 67.1% branch
+coverage (historical target 82%+). Breaking patterns WILL fail tests. When
 in doubt, check existing tests for expected behavior.
