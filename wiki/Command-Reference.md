@@ -540,7 +540,7 @@ responding further.
 - **Integrated Reporting**: All analytics features accessible without leaving Discord
 - **Discord Table Formatting**: Automatic conversion of markdown tables to Discord-friendly bullet
   points
-- **Complete Test Coverage**: All 1000 tests passing with full analytics integration coverage
+- **Testing Status**: Analytics integration originally shipped with 1000 passing tests at ~82% statement coverage; current local suite: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches (historical CI target 82%+; restoration in progress)
 
 ### v1.5.0 - qlty Code Quality Integration
 
@@ -566,7 +566,7 @@ responding further.
   (`commands/index.js`)
 - **Comprehensive Input Validation**: All user inputs are validated and sanitized before processing
 - **Enhanced Error Handling**: Robust error handling with user-friendly error messages
-- **Comprehensive Testing**: 380+ tests with 82%+ coverage ensuring reliability
+- **Comprehensive Testing (Historical)**: Release expanded to 380+ tests achieving ~82% statement coverage then; current local overall: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches
 - **Class-based Architecture**: ConversationManager and other core components use modern class-based
   architecture
 - **Memory Management**: Advanced memory monitoring and optimization
