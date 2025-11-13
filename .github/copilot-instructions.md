@@ -8,7 +8,6 @@ current local test status: 1,231 tests (1,228 passing) – 72.6% statements / 67
 historical target 82%+ (restoration in progress) and strict qlty quality standards.
 
 **Key Capabilities:**
-
 - AI chat powered by Perplexity API with conversation history
 - Natural language reminder system with SQLite persistence
 - Discord analytics dashboard (`/analytics`, `/dashboard`, `/resources`)
@@ -123,12 +122,8 @@ jest.mock('discord.js', () => {
 
   return {
     Client: jest.fn(() => mockClient),
-    GatewayIntentBits: {
-      /* ... */
-    },
-    REST: jest.fn(() => ({
-      /* ... */
-    })),
+    GatewayIntentBits: { /* ... */ },
+    REST: jest.fn(() => ({ /* ... */ })),
   };
 });
 
@@ -146,22 +141,16 @@ jest.mock('../../src/services/database', () => ({
 ```javascript
 // ✅ CORRECT - Test with exact values
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [
-    {
-      color: '#5865F2', // Exact hex - no expect.any()
-      description: 'An unexpected error occurred. Please try again later.', // Exact ErrorHandler message
-      footer: { text: 'Aszai Bot' },
-    },
-  ],
+  embeds: [{
+    color: '#5865F2', // Exact hex - no expect.any()
+    description: 'An unexpected error occurred. Please try again later.',
+    footer: { text: 'Aszai Bot' },
+  }],
 });
 
 // ❌ WRONG - Matchers will fail
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [
-    expect.objectContaining({
-      /* ... */
-    }),
-  ], // DON'T USE
+  embeds: [expect.objectContaining({ /* ... */ })], // DON'T USE
 });
 ```
 
@@ -180,11 +169,6 @@ expect(result).toContain('error');
 
 ### Config Access (PREVENTS CIRCULAR DEPENDENCIES)
 
-````javascript
-## 🚨 CRITICAL WARNINGS
-
-### 1. Config Access (BREAKS APP)
-
 ```javascript
 // ❌ DEADLY - Module-level config access
 const config = require('../config/config');
@@ -198,19 +182,192 @@ function someFunction() {
   }
   return config.FEATURES.LICENSE_VALIDATION;
 }
-````
+```
 
-### 2. Test Error Contracts (BREAKS 536+ TESTS)
+### Module Exports (BACKWARD COMPATIBILITY)
 
 ```javascript
-// ❌ WRONG - Tests expect throws
-catch (error) {
-  return "Error: " + error.message;
+// ✅ CORRECT - Maintains all export patterns
+module.exports = handleChatMessage;
+module.exports.handleChatMessage = handleChatMessage;
+module.exports.default = handleChatMessage;
+
+// ❌ WRONG - Breaking change
+module.exports = { handleChatMessage };
+```
+
+### Cache Service Properties (v1.6.5 Critical Fix)
+
+```javascript
+// ✅ CORRECT - Descriptive property names
+class PerplexityService {
+  constructor() {
+    this.cacheManager = new CacheManager(); // NOT this.cache
+  }
+
+  getCacheStats() {
+    return this.cacheManager.getStats(); // Always delegate
+  }
+}
+```
+
+### Database Error Isolation (v1.7.0)
+
+```javascript
+// ✅ CORRECT - Database errors never break chat flow
+try {
+  databaseService.addUserMessage(userId, content);
+} catch (dbError) {
+  logger.warn('Database error:', dbError);
+  // Continue processing - database is enhancement, not requirement
+}
+```
+
+### Reminder Service Integration (v1.7.0)
+
+```javascript
+// ✅ CORRECT - EventEmitter pattern
+class ReminderService extends EventEmitter {
+  constructor() {
+    super(); // MUST call super()
+    this.activeTimers = new Map();
+  }
 }
 
-// ✅ CORRECT - Re-throw
+// Bot integration
+reminderService.on('reminderDue', async (reminder) => {
+  await channel.send({ embeds: [/* ... */] });
+});
+```
+
+## 🛡️ Security & Quality (qlty Standards)
+
+### Mandatory Practices
+
+- **Zero tolerance** for hardcoded secrets
+- Pre-commit: `npm run security:secrets`
+- Security audit: `npm run security:all`
+
+### Quality Thresholds
+
+- **File Complexity**: Max 15
+- **Function Complexity**: Max 10
+- **Code Duplication**: Max 50 lines
+- **Test Coverage**: 72.6% statements / 67.1% branches local (historical CI target 82%+)
+
+### Commands
+
+```bash
+npm run quality:check        # Quality check
+npm run quality:fix          # Auto-fix
+npm run security:all         # Security audit
+```
+
+## ⚠️ Feature Flag System
+
+### License System Feature Flags
+
+The license validation and enforcement system is implemented but **disabled by default** for safe
+deployment:
+
+```javascript
+// config/config.js - Feature flag configuration
+FEATURES: {
+  LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
+  LICENSE_SERVER: process.env.ENABLE_LICENSE_SERVER === 'true' || false,
+  LICENSE_ENFORCEMENT: process.env.ENABLE_LICENSE_ENFORCEMENT === 'true' || false,
+  DEVELOPMENT_MODE: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
+},
+```
+
+### Usage Patterns (CRITICAL - Follow Exactly)
+
+```javascript
+// ✅ CORRECT - Check feature flags inside methods to avoid circular dependencies
+function validateLicense() {
+  const config = require('../config/config');
+
+  // ALWAYS check if FEATURES exists for backward compatibility
+  if (!config.FEATURES) {
+    return {
+      isValid: true,
+      message: 'License validation disabled (no FEATURES config)',
+      skipValidation: true,
+    };
+  }
+
+  if (!config.FEATURES.LICENSE_VALIDATION && !config.FEATURES.DEVELOPMENT_MODE) {
+    return {
+      isValid: true,
+      message: 'License validation disabled via feature flag',
+      skipValidation: true,
+    };
+  }
+
+  // License validation logic...
+}
+
+// ❌ DEADLY MISTAKE - Module-level feature checks (causes circular dependencies)
+const config = require('../config/config');
+if (config.FEATURES.LICENSE_VALIDATION) {
+  // This WILL break the entire application!
+}
+```
+
+## 📝 Command Handling Patterns
+
+### Dual Command Support
+
+Support both slash commands and text commands:
+
+```javascript
+// Text command handling
+const mockInteraction = {
+  user: message.author,
+  channel: message.channel,
+  content: message.content,
+  reply: (content) => message.reply(content),
+  deferReply: async () => message.channel.sendTyping(),
+  editReply: (content) => message.reply(content),
+};
+```
+
+## 🚨 CRITICAL WARNINGS FOR AI AGENTS
+
+### 1. Configuration Access Patterns (CRITICAL)
+
+**DANGER:** Config access at module level causes circular dependencies!
+
+```javascript
+// ❌ DEADLY MISTAKE - Will break entire app
+const config = require('../config/config');
+const someValue = config.SOME_VALUE; // Module level access = circular dependency
+const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // Also breaks app!
+
+// ✅ ALWAYS ACCESS CONFIG INSIDE FUNCTIONS
+function someFunction() {
+  const config = require('../config/config');
+
+  // Always check FEATURES exists for backward compatibility
+  if (!config.FEATURES) {
+    config.FEATURES = { LICENSE_VALIDATION: false }; // Safe fallback
+  }
+
+  return config.SOME_VALUE;
+}
+```
+
+### 2. Test Error Contract Violations (BREAKS 536+ TESTS)
+
+```javascript
+// ❌ WRONG - Will fail tests expecting thrown errors
 catch (error) {
-  throw error;
+  return "Error: " + error.message; // Tests expect throws, not returns
+}
+
+// ✅ CORRECT - Tests expect thrown exceptions
+catch (error) {
+  throw error; // Re-throw to maintain contract
 }
 ```
 
@@ -255,344 +412,9 @@ try {
   databaseService.addUserMessage(userId, content);
 } catch (dbError) {
   logger.warn('Database error:', dbError);
-  // Continue - database is enhancement only
+  // Continue processing - database is enhancement only
 }
 ```
-
-````
-
-### Module Exports (BACKWARD COMPATIBILITY)
-
-```javascript
-// ✅ CORRECT - Maintains all export patterns
-module.exports = handleChatMessage;
-module.exports.handleChatMessage = handleChatMessage;
-module.exports.default = handleChatMessage;
-
-// ❌ WRONG - Breaking change
-module.exports = { handleChatMessage };
-````
-
-### Cache Service Properties (v1.6.5 Critical Fix)
-
-```javascript
-// ✅ CORRECT - Descriptive property names
-class PerplexityService {
-  constructor() {
-    this.cacheManager = new CacheManager(); // NOT this.cache
-  }
-
-  getCacheStats() {
-    return this.cacheManager.getStats(); // Always delegate
-  }
-}
-```
-
-### Database Error Isolation (v1.7.0)
-
-```javascript
-// ✅ CORRECT - Database errors never break chat flow
-try {
-  databaseService.addUserMessage(userId, content);
-} catch (dbError) {
-  logger.warn('Database error:', dbError);
-  // Continue processing - database is enhancement, not requirement
-}
-```
-
-### Reminder Service Integration (v1.7.0)
-
-```javascript
-// ✅ CORRECT - EventEmitter pattern
-class ReminderService extends EventEmitter {
-  constructor() {
-    super(); // MUST call super()
-    this.activeTimers = new Map();
-  }
-}
-
-// Bot integration
-reminderService.on('reminderDue', async (reminder) => {
-  await channel.send({
-    embeds: [
-      /* ... */
-    ],
-  });
-});
-```
-
-## 🛡️ Security & Quality (qlty Standards)
-
-### Mandatory Practices
-
-- **Zero tolerance** for hardcoded secrets
-- Pre-commit: `npm run security:secrets`
-- Security audit: `npm run security:all`
-
-### Quality Thresholds
-
-- **File Complexity**: Max 15
-- **Function Complexity**: Max 10
-- **Code Duplication**: Max 50 lines
-- **Test Coverage**: 72.6% statements / 67.1% branches local (historical CI target 82%+)
-
-### Commands
-
-```bash
-npm run quality:check        # Quality check
-npm run quality:fix          # Auto-fix
-npm run security:all         # Security audit
-```
-
-## � Feature Flag System
-
-### License System Feature Flags
-
-The license validation and enforcement system is implemented but **disabled by default** for safe
-deployment:
-
-```javascript
-// config/config.js - Feature flag configuration
-FEATURES: {
-  // License System Features (disabled by default for safe deployment)
-  LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
-  LICENSE_SERVER: process.env.ENABLE_LICENSE_SERVER === 'true' || false,
-  LICENSE_ENFORCEMENT: process.env.ENABLE_LICENSE_ENFORCEMENT === 'true' || false,
-
-  // Development mode detection (enables all features for testing)
-  DEVELOPMENT_MODE: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
-},
-```
-
-### Usage Patterns (CRITICAL - Follow Exactly)
-
-```javascript
-// ✅ CORRECT - Check feature flags inside methods to avoid circular dependencies
-function validateLicense() {
-  const config = require('../config/config');
-
-  // ALWAYS check if FEATURES exists for backward compatibility
-  if (!config.FEATURES) {
-    return {
-      isValid: true,
-      message: 'License validation disabled (no FEATURES config)',
-      skipValidation: true,
-    };
-  }
-
-  if (!config.FEATURES.LICENSE_VALIDATION && !config.FEATURES.DEVELOPMENT_MODE) {
-    return {
-      isValid: true,
-      message: 'License validation disabled via feature flag',
-      skipValidation: true,
-    };
-  }
-
-  // License validation logic...
-}
-
-// ❌ DEADLY MISTAKE - Module-level feature checks (causes circular dependencies)
-const config = require('../config/config');
-if (config.FEATURES.LICENSE_VALIDATION) {
-  // This WILL break the entire application!
-}
-```
-
-### Safe Config Access Pattern (MANDATORY)
-
-```javascript
-// Helper function pattern for all config access
-function getConfig() {
-  const config = require('./config/config');
-
-  // Ensure FEATURES property exists (for backward compatibility and tests)
-  if (!config.FEATURES) {
-    config.FEATURES = {
-      LICENSE_VALIDATION: false,
-      LICENSE_SERVER: false,
-      LICENSE_ENFORCEMENT: false,
-      DEVELOPMENT_MODE: false,
-    };
-  }
-
-  return config;
-}
-```
-
-### Feature Flag Testing Requirements
-
-- **Mock Configuration**: Always include FEATURES in test mocks
-- **Graceful Fallback**: Handle missing FEATURES property
-- **No Breaking Changes**: Features disabled by default must not affect existing functionality
-- **Test All States**: Test with features enabled/disabled/missing
-
-### Development Workflow
-
-```bash
-# Default: All license features disabled (safe for main branch)
-npm start
-
-# Development: Enable all features
-NODE_ENV=development npm start
-
-# Individual feature testing
-ENABLE_LICENSE_VALIDATION=true npm start
-ENABLE_LICENSE_SERVER=true npm start
-ENABLE_LICENSE_ENFORCEMENT=true npm start
-```
-
-## �🔧 Module Export Requirements
-
-### Maintain Backward Compatibility
-
-```javascript
-// ✅ CORRECT - Maintains all export patterns
-module.exports = handleChatMessage;
-module.exports.handleChatMessage = handleChatMessage;
-module.exports.default = handleChatMessage;
-
-// ❌ WRONG - Breaking change
-module.exports = {
-  handleChatMessage,
-  default: handleChatMessage,
-};
-```
-
-## 📝 Command Handling Patterns
-
-### Dual Command Support
-
-Support both slash commands and text commands:
-
-```javascript
-// Text command handling
-const mockInteraction = {
-  user: message.author,
-  channel: message.channel,
-  content: message.content,
-  reply: (content) => message.reply(content),
-  deferReply: async () => message.channel.sendTyping(),
-  editReply: (content) => message.reply(content),
-};
-```
-
-## � CRITICAL WARNINGS FOR AI AGENTS
-
-### 1. Configuration Access Patterns (CRITICAL)
-
-**DANGER:** Config access at module level causes circular dependencies!
-
-```javascript
-// ❌ DEADLY MISTAKE - Will break entire app
-const config = require('../config/config');
-const someValue = config.SOME_VALUE; // Module level access = circular dependency
-const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // Also breaks app!
-
-// ✅ ALWAYS ACCESS CONFIG INSIDE FUNCTIONS
-function someFunction() {
-  const config = require('../config/config');
-
-  // Always check FEATURES exists for backward compatibility
-  if (!config.FEATURES) {
-    config.FEATURES = { LICENSE_VALIDATION: false }; // Safe fallback
-  }
-
-  return config.SOME_VALUE;
-}
-```
-
-### 2. Test Error Contract Violations (BREAKS 536+ TESTS)
-
-```javascript
-// ❌ WRONG - Will fail tests expecting thrown errors
-catch (error) {
-  return "Error: " + error.message; // Tests expect throws, not returns
-}
-
-// ✅ CORRECT - Tests expect thrown exceptions
-catch (error) {
-  throw error; // Re-throw to maintain contract
-}
-```
-
-## �🛠️ Common Issues & Solutions
-
-### 3. Circular Dependency Prevention
-
-Move config access inside functions, not at module level:
-
-```javascript
-// ❌ WRONG - Module level
-const config = require('../config/config');
-const someValue = config.SOME_VALUE;
-
-// ✅ CORRECT - Function level
-function someFunction() {
-  const config = require('../config/config');
-  return config.SOME_VALUE;
-}
-```
-
-### 4. Memory Management
-
-```javascript
-// Always clean up in tests
-afterEach(() => {
-  conversationManager.clearAll();
-  jest.clearAllMocks();
-});
-```
-
-### 4b. Test Fixing Patterns (v1.7.0 Lessons)
-
-**Mock Completeness Issues**: When tests fail with "method not called", check for missing mocks:
-
-```javascript
-// ❌ COMMON MISTAKE - Incomplete service mocks
-const mockEmojiManager = {
-  addEmojis: jest.fn(), // Only partial implementation
-};
-
-// ✅ CORRECT - Complete service mocks matching actual usage
-const mockEmojiManager = {
-  addEmojis: jest.fn(),
-  addEmojisToResponse: jest.fn().mockImplementation((text) => text),
-  addReactionsToMessage: jest.fn().mockResolvedValue(),
-};
-```
-
-**Service Method Alignment**: Ensure mocks match actual service calls:
-
-```javascript
-// ❌ WRONG - Mock doesn't match actual service usage
-mockMessageFormatter.createCompactEmbed.mockReturnValue({});
-
-// ✅ CORRECT - Mock includes all methods actually called
-mockMessageFormatter.formatResponse.mockImplementation((text) => text);
-```
-
-**Database Mock Strategy**: Always mock database service for non-database tests:
-
-```javascript
-// ✅ REQUIRED - Database service mock for chat tests
-jest.mock('../../src/services/database', () => ({
-  addUserMessage: jest.fn(),
-  updateUserStats: jest.fn(),
-  getUserMessages: jest.fn().mockReturnValue([]),
-  addBotResponse: jest.fn(),
-}));
-```
-
-### 5. Service Component Architecture (DO NOT MODIFY)
-
-**PerplexityService uses component-based architecture:**
-
-- `ApiClient` - HTTP requests
-- `CacheManager` - Cache operations
-- `ResponseProcessor` - Response handling
-- `ThrottlingService` - Rate limiting
-
-**CRITICAL:** Do not bypass these components or create direct API calls!
 
 ### 6. Cache Service Integration Points (v1.6.5 Critical Fixes)
 
@@ -602,30 +424,15 @@ jest.mock('../../src/services/database', () => ({
 // ✅ REQUIRED - All cache services must implement these methods
 class CacheManager {
   getStats() {
-    // Must return all fields expected by Discord commands
     return {
-      hits,
-      misses,
-      hitRate,
-      sets,
-      deletes,
-      evictions,
-      memoryUsageFormatted,
-      maxMemoryFormatted,
-      entryCount,
-      maxSize,
-      evictionStrategy,
-      uptimeFormatted,
+      hits, misses, hitRate, sets, deletes, evictions,
+      memoryUsageFormatted, maxMemoryFormatted, entryCount,
+      maxSize, evictionStrategy, uptimeFormatted,
     };
   }
 
-  getDetailedInfo() {
-    // Must return stats + entries array
-  }
-
-  invalidateByTag(tag) {
-    // Must support tag-based invalidation
-  }
+  getDetailedInfo() { /* Must return stats + entries array */ }
+  invalidateByTag(tag) { /* Must support tag-based invalidation */ }
 }
 ```
 
@@ -649,7 +456,7 @@ getCacheStats() {
 }
 ```
 
-### 6. Discord API Patterns (CRITICAL)
+### 7. Discord API Patterns (CRITICAL)
 
 **Based on v1.6.1 analytics fixes - Discord API can be unreliable!**
 
@@ -694,18 +501,6 @@ const members = await guild.members.fetch(); // Will hang in large servers!
 - **Member Limits**: Restrict to 1000 members max for performance
 - **Permission Checks**: Verify "View Server Members" permission
 - **Intent Requirements**: "Server Members Intent" and "Presence Intent" must be enabled
-
-### 7. Error Handler Usage Patterns
-
-```javascript
-// ✅ CORRECT - Use ErrorHandler for all errors
-const errorResponse = ErrorHandler.handleError(error, 'context', additionalData);
-// errorResponse.message = user-friendly message
-// errorResponse.type = error category
-
-// ❌ WRONG - Don't create custom error messages
-const customMessage = 'Something went wrong: ' + error.message;
-```
 
 ### 8. Perplexity API Model Evolution (CRITICAL - v1.6.3)
 
@@ -779,10 +574,8 @@ try {
 - **Single Connection**: One database connection per service instance
 - **Proper Cleanup**: Always close connections in afterEach for tests
 - **Mock All Methods**: Non-database tests must mock all DatabaseService methods
-- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint
-  violations
-- **Role-Based Storage**: conversation_history table requires proper role separation
-  (user/assistant)
+- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint violations
+- **Role-Based Storage**: conversation_history table requires proper role separation (user/assistant)
 - **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
 
 **Database Schema Design (Production Ready - v1.7.0):**
@@ -803,94 +596,7 @@ databaseService.addBotResponse(userId, response); // Handles foreign keys automa
 db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on foreign key constraint
 ```
 
-**Remember**: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches (target 82%+). Honor
-qlty quality standards; when in doubt, inspect existing tests.
-
-## 📋 RECENT WORK SUMMARY & NEXT AGENT HEADS UP
-
-### Repository Cleanup Completed (2025-10-08)
-
-**Files Reorganized:**
-
-- **Moved to `/docs`**: 6 technical documentation files (CONVERSATION-CONTEXT-FIX.md,
-  DEPLOYMENT-v1.7.0-COMPLETE.md, FIXES-SUMMARY.md, production-fix.md, REMINDER-FIX-SUMMARY.md,
-  REMINDER-ID-FIX.md)
-- **Moved to `/scripts`**: 6 utility scripts (fix-production.bat, run-tests.bat, start-test.bat,
-  fix-line-endings.ps1, format-code.ps1, check-triggers.js)
-- **Deleted**: 4 obsolete files (junit.xml duplicate, 3 old .tar.gz deployment archives)
-
-**Documentation Updates Applied:**
-
-- **README.md**: Updated with v1.7.0 features, database integration, reminder system, and corrected
-  project structure
-- **wiki/Home.md**: Added v1.7.0 version information and database/reminder features
-- **wiki/Command-Reference.md**: Added complete reminder command documentation
-- **Copilot Instructions**: Updated with database and reminder system architecture details
-
-### 🔁 Post v1.7.0 Regression & Clarity Fixes (Oct 9–10, 2025)
-
-Additive fixes after initial v1.7.0 tag (no API or schema changes):
-- Normalised cache & memory metric formatting (stable hit rate, readable units)
-- Reduced dashboard warning noise; corrected server count logic
-- Hardened Raspberry Pi model detection fallback paths
-- Added lightweight `global.File` mock in `jest.setup.js` for undici/Web API compatibility in tests
-- Adaptive Pi startup script tuning (`start-pi-optimized.sh`)
-- Added regression summary documentation (`docs/REGRESSION-FIX-v1.7.0.md`)
-
-### 🎯 NEXT AGENT PRIORITIES
-
-**Immediate Tasks:**
-
-1. **Test Database Integration**: Run full test suite to ensure database mocking works correctly
-2. **Verify Reminder System**: Test reminder scheduling and Discord notifications
-3. **Update Package Dependencies**: Check for any missing dependencies in package.json
-4. **Validate Documentation Links**: Ensure all internal links in updated documentation work
-
-**Medium-term Goals:**
-
-1. **Performance Testing**: Benchmark database operations and reminder system performance
-2. **Cross-platform Testing**: Verify SQLite works on Windows, Linux, and Raspberry Pi
-3. **Backup Strategy**: Implement database backup and recovery procedures
-4. **Monitoring Integration**: Add database health checks to analytics system
-
-**Long-term Enhancements:**
-
-1. **Database Migration System**: Implement schema versioning and migration scripts
-2. **Advanced Reminder Features**: Recurring reminders, reminder templates, bulk operations
-3. **Analytics Expansion**: Database-driven analytics with historical data and trends
-4. **Multi-server Support**: Enhanced database schema for multi-server deployments
-
-### ⚠️ CRITICAL NEXT AGENT WARNINGS
-
-**Database Integration Risks:**
-
-- **SQLite Dependencies**: Ensure `better-sqlite3` is properly installed and compatible
-- **File Permissions**: Database file (`./data/bot.db`) needs write permissions
-- **Migration Safety**: Any schema changes must be backward compatible
-- **Memory Usage**: SQLite can consume significant memory on large datasets
-
-**Reminder System Considerations:**
-
-- **Timer Management**: Long-running reminders (>24h) use interval checks to prevent memory leaks
-- **Timezone Handling**: All reminders use UTC storage with user-timezone display
-- **Event Integration**: ReminderService emits 'reminderDue' events that must be handled by main bot
-- **Persistence**: Reminder timers are recreated on bot restart from database
-
-**Testing Requirements:**
-
-- **Database Mocks**: All non-database tests must mock DatabaseService methods
-- **Timer Mocks**: Reminder service tests need proper timer mocking
-- **Async Operations**: Database operations are synchronous but reminder events are asynchronous
-- **Cleanup**: Database connections must be properly closed in test teardown
-
-**Documentation Maintenance:**
-
-- **Version Updates**: Keep version numbers consistent across README, wiki, and package.json
-- **Feature Flags**: Document any new feature flags and their purposes
-- **Command Updates**: Update command references when new commands are added
-- **Architecture Changes**: Document significant architectural changes in technical docs
-
-## 📝 Quick Reference
+## 📋 Quick Reference
 
 ### Essential Commands
 
@@ -901,9 +607,9 @@ npm run test:coverage        # Coverage report
 npm run test:critical        # Critical path tests
 
 # Quality & Security
-npm run quality:check        # Quality analysis
-npm run quality:fix          # Auto-fix issues
-npm run security:all         # Full security audit
+npm run quality:check        # Quality check
+npm run quality:fix          # Auto-fix
+npm run security:all         # Security audit
 
 # Development
 npm run dev                  # Development mode
