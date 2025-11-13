@@ -28,7 +28,6 @@ class Dashboard {
 
     this.socket.on('metrics', (data) => {
       this.updateMetrics(data);
-      this.updateCharts(data);
     });
 
     this.socket.on('error', (error) => {
@@ -37,65 +36,7 @@ class Dashboard {
   }
 
   initializeCharts() {
-    // Memory usage chart
-    const memoryCtx = document.getElementById('memoryChart').getContext('2d');
-    this.charts.memory = new Chart(memoryCtx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Memory Usage (%)',
-          data: [],
-          borderColor: '#3498db',
-          backgroundColor: 'rgba(52, 152, 219, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              callback: function(value) {
-                return value + '%';
-              }
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
-      }
-    });
-
-    // Cache performance chart
-    const cacheCtx = document.getElementById('cacheChart').getContext('2d');
-    this.charts.cache = new Chart(cacheCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Cache Hits', 'Cache Misses'],
-        datasets: [{
-          data: [0, 0],
-          backgroundColor: ['#27ae60', '#e74c3c'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
+    // Charts disabled - using full dashboard data instead
   }
 
   setupEventListeners() {
@@ -119,35 +60,11 @@ class Dashboard {
 
   updateMetrics(data) {
     try {
-      // System metrics
-      document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
-      document.getElementById('memory-usage').textContent = `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
-      document.getElementById('cpu-load').textContent = `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
-      document.getElementById('platform').textContent = `${data.system.platform} ${data.system.arch}`;
+      this.updateSystemMetrics(data);
+      this.updateAnalyticsMetrics(data);
+      this.updateResourcesMetrics(data);
 
-      // Process metrics
-      document.getElementById('process-pid').textContent = data.system.process.pid;
-      document.getElementById('process-memory').textContent = data.system.process.rssFormatted;
-      document.getElementById('heap-usage').textContent = `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
-      document.getElementById('node-version-info').textContent = data.system.nodeVersion;
-
-      // Cache metrics
-      document.getElementById('cache-hit-rate').textContent = `${data.cache.hitRate}%`;
-      document.getElementById('cache-requests').textContent = (data.cache.hits + data.cache.misses).toLocaleString();
-      document.getElementById('cache-memory').textContent = data.cache.memoryUsageFormatted;
-      document.getElementById('cache-entries').textContent = data.cache.entryCount.toLocaleString();
-
-      // Database metrics
-      document.getElementById('db-users').textContent = data.database.userCount.toLocaleString();
-      document.getElementById('db-messages').textContent = data.database.totalMessages.toLocaleString();
-      document.getElementById('db-active-reminders').textContent = data.database.reminders.activeReminders.toLocaleString();
-      document.getElementById('db-completed-reminders').textContent = data.database.reminders.completedReminders.toLocaleString();
-
-      // Bot metrics
-      document.getElementById('bot-uptime').textContent = data.uptime;
-      document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleTimeString();
-
-      // Store metrics for charts
+      // Store metrics for potential future use
       this.metricsHistory.push(data);
       if (this.metricsHistory.length > this.maxHistoryPoints) {
         this.metricsHistory.shift();
@@ -159,37 +76,66 @@ class Dashboard {
     }
   }
 
-  updateCharts(data) {
-    try {
-      // Update memory chart with incremental data
-      if (this.charts.memory) {
-        // Use incremental update instead of rebuilding entire dataset
-        const memoryValue = data.system.memory.usagePercent;
-        const timeLabel = new Date(data.timestamp).toLocaleTimeString();
+  updateSystemMetrics(data) {
+    // System metrics
+    document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
+    document.getElementById('memory-usage').textContent = `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
+    document.getElementById('cpu-load').textContent = `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
+    document.getElementById('platform').textContent = `${data.system.platform} ${data.system.arch}`;
 
-        // Add new data point
-        this.charts.memory.data.labels.push(timeLabel);
-        this.charts.memory.data.datasets[0].data.push(memoryValue);
+    // Process metrics
+    document.getElementById('process-pid').textContent = data.system.process.pid;
+    document.getElementById('process-memory').textContent = data.system.process.rssFormatted;
+    document.getElementById('heap-usage').textContent = `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
+    document.getElementById('node-version-info').textContent = data.system.nodeVersion;
 
-        // Remove oldest data point if exceeding max history
-        if (this.charts.memory.data.labels.length > this.maxHistoryPoints) {
-          this.charts.memory.data.labels.shift();
-          this.charts.memory.data.datasets[0].data.shift();
-        }
+    // Cache metrics
+    document.getElementById('cache-hit-rate').textContent = `${data.cache.hitRate}%`;
+    document.getElementById('cache-requests').textContent = (data.cache.hits + data.cache.misses).toLocaleString();
+    document.getElementById('cache-memory').textContent = data.cache.memoryUsageFormatted;
+    document.getElementById('cache-entries').textContent = data.cache.entryCount.toLocaleString();
 
-        // Update chart efficiently (no animation for performance)
-        this.charts.memory.update('none');
-      }
+    // Database metrics
+    document.getElementById('db-users').textContent = data.database.userCount.toLocaleString();
+    document.getElementById('db-messages').textContent = data.database.totalMessages.toLocaleString();
+    document.getElementById('db-active-reminders').textContent = data.database.reminders.activeReminders.toLocaleString();
+    document.getElementById('db-completed-reminders').textContent = data.database.reminders.completedReminders.toLocaleString();
 
-      // Update cache chart
-      if (this.charts.cache) {
-        this.charts.cache.data.datasets[0].data = [data.cache.hits, data.cache.misses];
-        this.charts.cache.update('none');
-      }
+    // Bot metrics
+    document.getElementById('bot-uptime').textContent = data.uptime;
+    document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleTimeString();
+  }
 
-    } catch (error) {
-      console.error('Error updating charts:', error);
-    }
+  updateAnalyticsMetrics(data) {
+    if (!data.analytics) return;
+    
+    document.getElementById('analytics-servers').textContent = data.analytics.summary.totalServers;
+    document.getElementById('analytics-active-users').textContent = data.analytics.summary.totalUsers;
+    document.getElementById('analytics-total-members').textContent = data.analytics.summary.totalUsers;
+    document.getElementById('analytics-bots').textContent = '-';
+    document.getElementById('analytics-success-rate').textContent = `${data.analytics.summary.successRate}%`;
+    document.getElementById('analytics-error-rate').textContent = `${data.analytics.summary.errorRate}%`;
+    document.getElementById('analytics-response-time').textContent = `${data.analytics.summary.avgResponseTime}ms`;
+    document.getElementById('analytics-commands').textContent = data.analytics.summary.totalCommands;
+  }
+
+  updateResourcesMetrics(data) {
+    if (!data.resources) return;
+    
+    document.getElementById('resource-memory-status').textContent = data.resources.memory.status.toUpperCase();
+    document.getElementById('resource-memory-used').textContent = `${data.resources.memory.used}MB`;
+    document.getElementById('resource-memory-free').textContent = `${data.resources.memory.free}MB`;
+    document.getElementById('resource-memory-percent').textContent = `${data.resources.memory.percentage}%`;
+    document.getElementById('resource-performance-status').textContent = data.resources.performance.status.toUpperCase();
+    document.getElementById('resource-response-time').textContent = `${data.resources.performance.responseTime}ms`;
+    document.getElementById('resource-load').textContent = data.resources.performance.load;
+    document.getElementById('resource-optimization-tier').textContent = data.resources.optimizationTier;
+    
+    // Recommendations
+    const recommendationsText = data.analytics?.recommendations?.length > 0 
+      ? data.analytics.recommendations.join('\n')
+      : 'System monitoring active';
+    document.getElementById('resource-recommendations').textContent = recommendationsText;
   }
 
   addActivityItem(message, type = 'info') {

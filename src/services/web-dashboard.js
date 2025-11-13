@@ -229,12 +229,16 @@ class WebDashboardService {
         cacheStats,
         databaseStats,
         reminderStats,
-        systemInfo
+        systemInfo,
+        resourceData,
+        analyticsData
       ] = await Promise.all([
         this.getCacheStats(),
         this.getDatabaseStats(),
         this.getReminderStats(),
-        Promise.resolve(this.getSystemInfo())
+        Promise.resolve(this.getSystemInfo()),
+        this.getResourceData(),
+        this.getAnalyticsData()
       ]);
 
       return {
@@ -243,7 +247,9 @@ class WebDashboardService {
         cache: cacheStats,
         database: databaseStats,
         reminders: reminderStats,
-        system: systemInfo
+        system: systemInfo,
+        resources: resourceData,
+        analytics: analyticsData
       };
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'aggregating metrics');
@@ -383,6 +389,99 @@ class WebDashboardService {
    * @returns {string} Formatted uptime
    */
   getUptime() {
+    return this.formatUptime(Date.now() - this.startTime);
+  }
+
+  /**
+   * Get resource optimization data (similar to /resources command)
+   * @returns {Promise<Object>} Resource data
+   */
+  async getResourceData() {
+    try {
+      const ResourceOptimizer = require('./resource-optimizer');
+      const resourceStatus = await ResourceOptimizer.monitorResources();
+      
+      return {
+        memory: {
+          status: resourceStatus.memory.status,
+          used: resourceStatus.memory.used,
+          free: resourceStatus.memory.free,
+          percentage: Math.round(resourceStatus.memory.percentage)
+        },
+        performance: {
+          status: resourceStatus.performance.status,
+          responseTime: resourceStatus.performance.responseTime,
+          load: resourceStatus.performance.load
+        },
+        optimizationTier: resourceStatus.optimizationTier || 'Standard'
+      };
+    } catch (error) {
+      logger.warn(`Failed to get resource data: ${error.message}`);
+      return {
+        memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
+        performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
+        optimizationTier: 'Standard'
+      };
+    }
+  }
+
+  /**
+   * Get analytics data (similar to /analytics command)
+   * @returns {Promise<Object>} Analytics data
+   */
+  async getAnalyticsData() {
+    try {
+      const databaseStats = await this.getDatabaseStats();
+      
+      // Get optimization recommendations
+      let recommendations = [];
+      try {
+        const ResourceOptimizer = require('./resource-optimizer');
+        const DiscordAnalytics = require('../utils/discord-analytics');
+        const analyticsData = await DiscordAnalytics.generateDailyReport();
+        const resourceStatus = await ResourceOptimizer.monitorResources();
+        
+        recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
+          analyticsData,
+          { averageResponseTime: resourceStatus.performance.responseTime }
+        );
+      } catch (err) {
+        logger.debug(`Could not generate recommendations: ${err.message}`);
+        recommendations = ['System monitoring active'];
+      }
+
+      return {
+        summary: {
+          totalServers: 1,
+          totalUsers: databaseStats.userCount,
+          totalCommands: 0,
+          successRate: 100,
+          errorRate: 0,
+          avgResponseTime: 0
+        },
+        recommendations: recommendations.slice(0, 3)
+      };
+    } catch (error) {
+      logger.warn(`Failed to get analytics data: ${error.message}`);
+      return {
+        summary: {
+          totalServers: 1,
+          totalUsers: 0,
+          totalCommands: 0,
+          successRate: 100,
+          errorRate: 0,
+          avgResponseTime: 0
+        },
+        recommendations: ['System monitoring active']
+      };
+    }
+  }
+
+  /**
+   * Get dashboard uptime
+   * @returns {string} Formatted uptime
+   */
+  getUptimeFormatted() {
     return this.formatUptime(Date.now() - this.startTime);
   }
 

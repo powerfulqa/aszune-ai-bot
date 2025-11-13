@@ -135,14 +135,117 @@
         </div>
 
         <!-- Charts Section -->
-        <div class="charts-section">
-            <div class="chart-container">
-                <h3>Memory Usage Over Time</h3>
-                <canvas id="memoryChart" width="400" height="200"></canvas>
+        <div class="charts-section" style="display: none;"></div>
+
+        <!-- Analytics Section -->
+        <div class="analytics-section">
+            <h2>📊 Discord Analytics</h2>
+            <div class="metrics-grid">
+                <!-- Server Overview -->
+                <div class="metric-card">
+                    <h3>Server Overview</h3>
+                    <div class="metric-content">
+                        <div class="metric-item">
+                            <span class="label">Total Servers:</span>
+                            <span class="value" id="analytics-servers">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Active Users:</span>
+                            <span class="value" id="analytics-active-users">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Total Members:</span>
+                            <span class="value" id="analytics-total-members">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Bot Count:</span>
+                            <span class="value" id="analytics-bots">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Stats -->
+                <div class="metric-card">
+                    <h3>Performance Metrics</h3>
+                    <div class="metric-content">
+                        <div class="metric-item">
+                            <span class="label">Success Rate:</span>
+                            <span class="value" id="analytics-success-rate">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Error Rate:</span>
+                            <span class="value" id="analytics-error-rate">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Avg Response Time:</span>
+                            <span class="value" id="analytics-response-time">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Commands Executed:</span>
+                            <span class="value" id="analytics-commands">-</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="chart-container">
-                <h3>Cache Performance</h3>
-                <canvas id="cacheChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Resources Section -->
+        <div class="resources-section">
+            <h2>🔧 Resource Optimization</h2>
+            <div class="metrics-grid">
+                <!-- Memory Status -->
+                <div class="metric-card">
+                    <h3>Memory Status</h3>
+                    <div class="metric-content">
+                        <div class="metric-item">
+                            <span class="label">Status:</span>
+                            <span class="value" id="resource-memory-status">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Used (Heap):</span>
+                            <span class="value" id="resource-memory-used">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Free (Heap):</span>
+                            <span class="value" id="resource-memory-free">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Usage:</span>
+                            <span class="value" id="resource-memory-percent">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance -->
+                <div class="metric-card">
+                    <h3>Performance</h3>
+                    <div class="metric-content">
+                        <div class="metric-item">
+                            <span class="label">Status:</span>
+                            <span class="value" id="resource-performance-status">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Response Time:</span>
+                            <span class="value" id="resource-response-time">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Load:</span>
+                            <span class="value" id="resource-load">-</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Optimization Tier:</span>
+                            <span class="value" id="resource-optimization-tier">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="metric-card" style="grid-column: 1 / -1;">
+                    <h3>💡 Recommendations</h3>
+                    <div class="metric-content">
+                        <div id="resource-recommendations" style="white-space: pre-wrap; line-height: 1.6;">-</div>
+                    </div>
+                </div>
             </div>
         </div>
 
