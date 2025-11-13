@@ -16,7 +16,7 @@ class WebDashboardService {
     this.isRunning = false;
     this.startTime = Date.now();
     this.errorLogs = []; // Buffer for error logs
-    this.maxErrorLogs = 50; // Keep last 50 errors
+    this.maxErrorLogs = 75; // Keep last 75 errors for professional log snapshot
     this.setupErrorInterception();
   }
 

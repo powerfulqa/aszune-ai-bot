@@ -141,7 +141,7 @@ class Dashboard {
 
   updateErrorLogs(data) {
     if (!data.analytics?.recentErrors || data.analytics.recentErrors.length === 0) {
-      document.getElementById('error-logs').innerHTML = '<div class="error-log-item">No errors logged</div>';
+      document.getElementById('error-logs').innerHTML = '<div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>';
       return;
     }
 
@@ -150,9 +150,9 @@ class Dashboard {
       const errorMsg = error.error || 'Unknown error';
       return `
         <div class="error-log-item">
-          <div class="error-log-time">${timestamp}</div>
-          <div class="error-log-message">${error.message}</div>
-          ${error.error ? `<div class="error-log-detail">${errorMsg}</div>` : ''}
+          <div class="error-log-time">[${timestamp}]</div>
+          <div class="error-log-message">ERROR: ${error.message}</div>
+          ${error.error ? `<div class="error-log-detail">→ ${errorMsg}</div>` : ''}
         </div>
       `;
     }).join('');
