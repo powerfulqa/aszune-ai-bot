@@ -1,0 +1,52 @@
+#!/bin/bash
+# Restart the Aszune AI Bot
+# Usage: ./restart or cd /aszune-ai-bot && ./restart
+
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
+echo "🔄 Restarting Aszune AI Bot..."
+
+# Try systemd first (if bot is running as a service)
+if command -v systemctl &> /dev/null && systemctl is-active --quiet aszune-ai-bot; then
+    echo "📋 Using systemctl to restart service..."
+    sudo systemctl restart aszune-ai-bot
+    sleep 2
+    if systemctl is-active --quiet aszune-ai-bot; then
+        echo "✅ Bot restarted successfully via systemctl"
+        systemctl status aszune-ai-bot
+    else
+        echo "⚠️  Service restart command executed but status is unclear"
+        systemctl status aszune-ai-bot
+    fi
+else
+    # Fallback: kill existing process and start new one
+    echo "🚀 Using direct process management..."
+    
+    # Kill existing node processes running the bot
+    if pgrep -f "node src/index.js" > /dev/null; then
+        echo "⏹️  Stopping existing bot process..."
+        pkill -f "node src/index.js" || true
+        sleep 1
+    fi
+    
+    # Start the bot in background
+    echo "▶️  Starting bot..."
+    nohup npm start > /dev/null 2>&1 &
+    sleep 2
+    
+    # Verify it's running
+    if pgrep -f "node src/index.js" > /dev/null; then
+        echo "✅ Bot started successfully!"
+        ps aux | grep "node src/index.js" | grep -v grep
+    else
+        echo "❌ Failed to start bot"
+        exit 1
+    fi
+fi
+
+echo ""
+echo "💡 Tip: Use 'npm run restart' for the same functionality"
+echo "🌐 Dashboard: http://$(hostname -I | awk '{print $1}'):3000"

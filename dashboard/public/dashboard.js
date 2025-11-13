@@ -63,6 +63,7 @@ class Dashboard {
       this.updateSystemMetrics(data);
       this.updateAnalyticsMetrics(data);
       this.updateResourcesMetrics(data);
+      this.updateErrorLogs(data);
 
       // Store metrics for potential future use
       this.metricsHistory.push(data);
@@ -138,7 +139,26 @@ class Dashboard {
     document.getElementById('resource-recommendations').textContent = recommendationsText;
   }
 
-  addActivityItem(message, type = 'info') {
+  updateErrorLogs(data) {
+    if (!data.analytics?.recentErrors || data.analytics.recentErrors.length === 0) {
+      document.getElementById('error-logs').innerHTML = '<div class="error-log-item">No errors logged</div>';
+      return;
+    }
+
+    const errorLogsHtml = data.analytics.recentErrors.map(error => {
+      const timestamp = new Date(error.timestamp).toLocaleTimeString();
+      const errorMsg = error.error || 'Unknown error';
+      return `
+        <div class="error-log-item">
+          <div class="error-log-time">${timestamp}</div>
+          <div class="error-log-message">${error.message}</div>
+          ${error.error ? `<div class="error-log-detail">${errorMsg}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('error-logs').innerHTML = errorLogsHtml;
+  }  addActivityItem(message, type = 'info') {
     const activityLog = document.getElementById('activity-log');
     const item = document.createElement('div');
     item.className = `activity-item fade-in status-${type}`;

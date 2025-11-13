@@ -15,6 +15,9 @@ class WebDashboardService {
     this.metricsInterval = null;
     this.isRunning = false;
     this.startTime = Date.now();
+    this.errorLogs = []; // Buffer for error logs
+    this.maxErrorLogs = 50; // Keep last 50 errors
+    this.setupErrorInterception();
   }
 
   /**
@@ -109,6 +112,39 @@ class WebDashboardService {
       logger.error(`Failed to stop web dashboard: ${errorResponse.message}`);
       throw error;
     }
+  }
+
+  /**
+   * Setup error logging interception
+   */
+  setupErrorInterception() {
+    // Intercept logger.error calls to track errors for dashboard
+    const originalError = logger.error.bind(logger);
+    logger.error = (message, error) => {
+      // Add to error log buffer
+      this.errorLogs.push({
+        timestamp: new Date().toISOString(),
+        message,
+        error: error ? (error.message || String(error)) : null
+      });
+
+      // Keep only last N errors
+      if (this.errorLogs.length > this.maxErrorLogs) {
+        this.errorLogs.shift();
+      }
+
+      // Call original error method
+      return originalError(message, error);
+    };
+  }
+
+  /**
+   * Get recent error logs
+   * @param {number} limit - Number of recent errors to return
+   * @returns {Array} Array of recent errors
+   */
+  getRecentErrors(limit = 10) {
+    return this.errorLogs.slice(-limit).reverse(); // Return most recent first
   }
 
   /**
@@ -459,7 +495,8 @@ class WebDashboardService {
           errorRate: 0,
           avgResponseTime: 0
         },
-        recommendations: recommendations.slice(0, 3)
+        recommendations: recommendations.slice(0, 3),
+        recentErrors: this.getRecentErrors(10)
       };
     } catch (error) {
       logger.warn(`Failed to get analytics data: ${error.message}`);
@@ -472,7 +509,8 @@ class WebDashboardService {
           errorRate: 0,
           avgResponseTime: 0
         },
-        recommendations: ['System monitoring active']
+        recommendations: ['System monitoring active'],
+        recentErrors: this.getRecentErrors(10)
       };
     }
   }
