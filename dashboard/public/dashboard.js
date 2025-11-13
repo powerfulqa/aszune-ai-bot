@@ -5,7 +5,7 @@ class Dashboard {
     this.socket = null;
     this.charts = {};
     this.metricsHistory = [];
-    this.maxHistoryPoints = 20;
+    this.maxHistoryPoints = 60; // Keep 60 points (1 minute at 1-second intervals)
     this.isConnected = false;
 
     this.initializeSocket();
@@ -122,8 +122,14 @@ class Dashboard {
       // System metrics
       document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
       document.getElementById('memory-usage').textContent = `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
-      document.getElementById('cpu-load').textContent = data.system.cpu.loadAverage[0].toFixed(2);
+      document.getElementById('cpu-load').textContent = `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
       document.getElementById('platform').textContent = `${data.system.platform} ${data.system.arch}`;
+
+      // Process metrics
+      document.getElementById('process-pid').textContent = data.system.process.pid;
+      document.getElementById('process-memory').textContent = data.system.process.rssFormatted;
+      document.getElementById('heap-usage').textContent = `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
+      document.getElementById('node-version-info').textContent = data.system.nodeVersion;
 
       // Cache metrics
       document.getElementById('cache-hit-rate').textContent = `${data.cache.hitRate}%`;
@@ -140,7 +146,6 @@ class Dashboard {
       // Bot metrics
       document.getElementById('bot-uptime').textContent = data.uptime;
       document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleTimeString();
-      document.getElementById('node-version').textContent = data.system.nodeVersion;
 
       // Store metrics for charts
       this.metricsHistory.push(data);
@@ -156,13 +161,23 @@ class Dashboard {
 
   updateCharts(data) {
     try {
-      // Update memory chart
+      // Update memory chart with incremental data
       if (this.charts.memory) {
-        const memoryData = this.metricsHistory.map(m => m.system.memory.usagePercent);
-        const labels = this.metricsHistory.map((_, i) => `-${(this.metricsHistory.length - 1 - i) * 5}s`);
+        // Use incremental update instead of rebuilding entire dataset
+        const memoryValue = data.system.memory.usagePercent;
+        const timeLabel = new Date(data.timestamp).toLocaleTimeString();
 
-        this.charts.memory.data.labels = labels;
-        this.charts.memory.data.datasets[0].data = memoryData;
+        // Add new data point
+        this.charts.memory.data.labels.push(timeLabel);
+        this.charts.memory.data.datasets[0].data.push(memoryValue);
+
+        // Remove oldest data point if exceeding max history
+        if (this.charts.memory.data.labels.length > this.maxHistoryPoints) {
+          this.charts.memory.data.labels.shift();
+          this.charts.memory.data.datasets[0].data.shift();
+        }
+
+        // Update chart efficiently (no animation for performance)
         this.charts.memory.update('none');
       }
 

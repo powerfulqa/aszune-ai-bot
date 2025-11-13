@@ -342,6 +342,7 @@ class WebDashboardService {
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
+    const processMemory = process.memoryUsage();
 
     return {
       platform: os.platform(),
@@ -358,10 +359,21 @@ class WebDashboardService {
         usedFormatted: this.formatBytes(usedMemory),
         usagePercent: Math.round((usedMemory / totalMemory) * 100)
       },
+      process: {
+        pid: process.pid,
+        rss: processMemory.rss,
+        heapTotal: processMemory.heapTotal,
+        heapUsed: processMemory.heapUsed,
+        external: processMemory.external,
+        rssFormatted: this.formatBytes(processMemory.rss),
+        heapTotalFormatted: this.formatBytes(processMemory.heapTotal),
+        heapUsedFormatted: this.formatBytes(processMemory.heapUsed)
+      },
       cpu: {
         count: os.cpus().length,
         model: os.cpus()[0]?.model || 'Unknown',
-        loadAverage: os.loadavg()
+        loadAverage: os.loadavg(),
+        loadPercent: Math.round((os.loadavg()[0] / os.cpus().length) * 100)
       }
     };
   }
