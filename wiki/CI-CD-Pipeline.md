@@ -5,6 +5,15 @@
 Aszune AI Bot uses GitHub Actions for continuous integration and deployment. The pipeline is defined
 in `.github/workflows/unified-ci.yml` and runs automatically on push and pull request events.
 
+v1.8.0 introduced a dual test coverage enforcement model:
+
+| Layer | Threshold | Config | Purpose |
+| ----- | --------- | ------ | ------- |
+| Critical files | ≥80% statements | `jest.critical-coverage.config.js` | Early fail for core reliability paths |
+| Global baseline | ≥65% statements | `jest.config.js` | Sustainable confidence without blocking iteration |
+
+Critical gate runs first; if it fails, the full suite is skipped to save CI minutes.
+
 ## Pipeline Steps
 
 1. **Setup**: Checks out code and sets up Node.js environment
@@ -12,8 +21,9 @@ in `.github/workflows/unified-ci.yml` and runs automatically on push and pull re
 3. **Code Quality**: Runs comprehensive quality checks with qlty integration
 4. **Testing**: Runs all tests with coverage reporting
 5. **Security Scanning**: Performs multi-layered security analysis (npm audit, qlty security)
-6. **Coverage Reporting**: Uploads coverage data to Codecov and QLTY
-7. **Quality Gates**: Enforces code quality standards and metrics
+6. **Coverage Enforcement**: Runs critical coverage gate (80% threshold)
+7. **Coverage Reporting**: Uploads full-suite coverage data to Codecov and QLTY (global ≥65%)
+8. **Quality Gates**: Enforces code quality standards and metrics
 8. **Deployment**: Prepares for deployment when merging to the main branch
 
 ## Workflow Configuration
@@ -33,8 +43,11 @@ The workflow uses the following key features:
 ### Test Execution
 
 ```yaml
-- name: Run tests with coverage
-  run: npm run test:ci
+- name: Critical coverage gate
+run: npm run test:critical:ci
+
+- name: Full test suite (runs only if critical gate passes)
+run: npm test
 ```
 
 ### Security Checks
@@ -52,6 +65,13 @@ The workflow uses the following key features:
   with:
     token: ${{ secrets.CODECOV_TOKEN }}
     fail_ci_if_error: false
+
+- name: Upload critical coverage (optional flag)
+  if: success() && always()
+  uses: codecov/codecov-action@v3
+  with:
+    flags: critical-files
+    fail_ci_if_error: false
 ```
 
 ## Status Badge
@@ -64,7 +84,7 @@ The current status of the CI pipeline is displayed on the README:
 
 - **Automated Quality Assurance**: Tests run automatically on every code change
 - **Early Error Detection**: Identifies issues before they reach production
-- **Coverage Tracking**: Monitors test coverage to ensure code quality
+- **Coverage Tracking**: Dual-threshold monitoring (targeted critical protection + sustainable global baseline)
 - **Security Scanning**: Identifies potential vulnerabilities
 - **Deployment Automation**: Streamlines the release process
 
@@ -94,15 +114,16 @@ The pipeline now includes comprehensive code quality checks with qlty:
 - **Code Standards**: ESLint, Prettier, and documentation formatting
 - **Duplication Detection**: Identifies and prevents code duplication
 - **Secret Detection**: Prevents accidental secret commits
+- **Dual Coverage Gates**: Prevent regressions in critical paths while allowing incremental global improvement
 
 ## Recent Improvements
 
 The CI/CD pipeline was recently enhanced with:
 
-1. **qlty Integration**: Complete unified code quality and security tooling
-2. **Enhanced Security**: Multi-layered security scanning with 3 specialized tools
-3. **Quality Gates**: Automated quality thresholds and standards enforcement
-4. **Improved Test Reporting**: Added JUnit format output for better test visualization
-5. **Enhanced Coverage Reporting**: Added integration with both Codecov and QLTY
-6. **Professional Documentation**: Standardized security and contribution guidelines
-7. **Deployment Preparation**: Added configuration for automatic deployment
+1. **Dual Coverage Strategy (v1.8.0)**: Introduced 80% critical / 65% global enforcement
+2. **qlty Integration**: Unified code quality + security tooling retained
+3. **Enhanced Security**: Multi-layered scanning with specialized tools
+4. **Early Fail Optimization**: Critical coverage gate short-circuits full suite on failure
+5. **Improved Test Reporting**: JUnit output retained for visualization
+6. **Documentation Refresh**: Coverage status, testing guide, and release notes updated
+7. **Deployment Preparation**: Unchanged; pipeline stability improved

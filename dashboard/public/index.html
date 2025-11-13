@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aszune AI Bot Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <h1>Aszune AI Bot Dashboard</h1>
+            <div class="status-indicator">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <div class="metrics-grid">
+            <!-- System Metrics -->
+            <div class="metric-card">
+                <h3>System Status</h3>
+                <div class="metric-content">
+                    <div class="metric-item">
+                        <span class="label">Uptime:</span>
+                        <span class="value" id="system-uptime">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Memory Usage:</span>
+                        <span class="value" id="memory-usage">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">CPU Load:</span>
+                        <span class="value" id="cpu-load">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Platform:</span>
+                        <span class="value" id="platform">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cache Metrics -->
+            <div class="metric-card">
+                <h3>Cache Performance</h3>
+                <div class="metric-content">
+                    <div class="metric-item">
+                        <span class="label">Hit Rate:</span>
+                        <span class="value" id="cache-hit-rate">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Total Requests:</span>
+                        <span class="value" id="cache-requests">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Memory Usage:</span>
+                        <span class="value" id="cache-memory">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Entries:</span>
+                        <span class="value" id="cache-entries">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Metrics -->
+            <div class="metric-card">
+                <h3>Database Stats</h3>
+                <div class="metric-content">
+                    <div class="metric-item">
+                        <span class="label">Total Users:</span>
+                        <span class="value" id="db-users">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Total Messages:</span>
+                        <span class="value" id="db-messages">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Active Reminders:</span>
+                        <span class="value" id="db-active-reminders">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Completed Reminders:</span>
+                        <span class="value" id="db-completed-reminders">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bot Metrics -->
+            <div class="metric-card">
+                <h3>Bot Activity</h3>
+                <div class="metric-content">
+                    <div class="metric-item">
+                        <span class="label">Bot Uptime:</span>
+                        <span class="value" id="bot-uptime">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Last Update:</span>
+                        <span class="value" id="last-update">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Node Version:</span>
+                        <span class="value" id="node-version">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="label">Status:</span>
+                        <span class="value" id="bot-status">Running</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3>Memory Usage Over Time</h3>
+                <canvas id="memoryChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Cache Performance</h3>
+                <canvas id="cacheChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+            <h3>Recent Activity</h3>
+            <div class="activity-log" id="activity-log">
+                <div class="activity-item">Dashboard initialized</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

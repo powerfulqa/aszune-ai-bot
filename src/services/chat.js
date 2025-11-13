@@ -281,12 +281,13 @@ async function trackChatPerformance(metricName, value, metadata = {}) {
  * Process and store user message in database
  * @param {string} userId - User ID
  * @param {string} messageContent - Message content
+ * @param {string} username - Username
  */
-async function processUserMessageStorage(userId, messageContent) {
+async function processUserMessageStorage(userId, messageContent, username = null) {
   if (!userId || !messageContent) return;
 
   try {
-    databaseService.addUserMessage(userId, messageContent);
+    databaseService.addUserMessage(userId, messageContent, 0, username);
     databaseService.updateUserStats(userId, {
       message_count: 1,
       last_active: new Date().toISOString(),
@@ -358,7 +359,7 @@ async function handleChatMessage(message) {
     const messageContent = processedData.sanitizedContent;
 
     // Store user message and update stats in database
-    await processUserMessageStorage(userId, messageContent);
+    await processUserMessageStorage(userId, messageContent, message.author.username);
 
     // Load conversation history
     await loadConversationHistory(userId, messageContent);

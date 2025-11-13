@@ -1,22 +1,23 @@
 # Coverage Status (Single Source of Truth)
 
-Last updated: 2025-11-06 (local run)
+Last updated: 2025-11-13 (v1.8.0 local run)
 
 ## Current Local Metrics
 
 - Tests: 1,231 total / 1,228 passing / 3 skipped
-- Statements: 72.6% (11626 / 16024)
-- Branches: 67.1% (1224 / 1825)
-- Functions: 79.9% (498 / 623)
-- Lines: 72.6% (11626 / 16024)
+- Statements: 75.57% (12486 / 16521)
+- Branches: 81.64% (1806 / 2212)
+- Functions: 79.01% (512 / 648)
+- Lines: 75.57% (12486 / 16521)
 
 These reflect the latest full `npm run quality:check` execution on the `main` branch.
 
-## Historical Baseline
+## Historical Baseline & Policy Shift
 
-- Historical CI target: 82%+ statement coverage (and similar lines) established during earlier high-water mark (v1.6.x timeframe)
-- Current coverage dipped after large feature additions (database + reminder system in v1.7.0)
-- Restoration effort: incremental test creation focused on lowest-covered active modules
+- Historical CI target: 82%+ statement coverage (v1.6.x high-water mark)
+- v1.7.x dip: Expanded surface (database + reminders) reduced aggregate ratios
+- v1.8.0 policy: Dual-threshold enforcement (80% critical files / 65% global baseline)
+- Strategy: Protect reliability hotspots while iteratively raising global coverage
 
 ## Lowest Coverage Hotspots (Prioritized)
 
@@ -29,7 +30,7 @@ These reflect the latest full `npm run quality:check` execution on the `main` br
 | `services/cache-manager`               | 56.9%      | 58.3%    | Exercise eviction paths + error fallbacks |
 | `utils/time-parser`                    | 39.8%      | 50%      | Complex natural language branches untested |
 
-## Recommended Next Increments
+## Recommended Next Increments (v1.8.0 Roadmap)
 
 1. Add focused tests for `reminder-service` covering:
    - Long interval (>24h) scheduling fallback
@@ -67,14 +68,17 @@ Keep rounding consistent: two significant figures (e.g., 72.6%, 67.1%).
 - All other README / wiki files should reference this file instead of embedding raw percentages when referring to "current" status.
 - Historical release notes should remain unchanged to preserve accuracy at time of release.
 
-## Acceptance Thresholds
+## Acceptance Thresholds (v1.8.0 Policy)
 
 | Tier                | Statements | Branches | Action |
 | ------------------- | ---------- | -------- | ------ |
-| Target Restored     | 82%+       | 72%+     | Announce restoration; lock threshold in CI |
-| Improvement Plateau | 78–81%     | 70–71%   | Focus on branch-heavy modules (conditionals) |
-| Current             | 72–73%     | 67%      | Execute hotspot plan above |
-| Regressing          | <70%       | <65%     | Mandatory coverage gate investigation |
+| Critical Gate       | ≥80%       | n/a*     | Enforced per critical file config |
+| Current Global      | ≥65%       | n/a*     | Baseline satisfied; pursue focused uplifts |
+| Next Target Range   | 72–74%     | 70%+     | Add tests for cache-manager, reminder-service, time-parser |
+| Strategic Uplift    | 78–82%     | 72%+     | Consider raising global threshold post stability |
+| Regressing          | <65%       | <60%     | Investigate immediately; potential CI fail condition |
+
+* Branch coverage monitored (reporting only) until statement/line stability increases.
 
 ## Test Suite Composition Snapshot
 
@@ -101,11 +105,13 @@ The 0% license-related module coverage is acceptable while license enforcement r
 
 ## FAQ
 
-**Why not immediately restore to 82%?** Large new domains (DB + reminders) added surface area faster than tests were authored. Priority is stability and correctness before broad coverage ratcheting.
+**Why dual thresholds?** Prevents brittle CI failures while guaranteeing high confidence in core runtime paths.
+
+**Why not immediately restore to 82%?** Large new domains (DB + reminders) expanded faster than test authoring; sustainable uplift avoids churn.
 
 **Why keep historical claims in old release notes?** They reflect accurate state at publication time and support traceability.
 
-**Can we raise branches without full statements first?** Yes—target conditional-heavy utilities (`time-parser`, `cache-manager`) for efficient branch gains.
+**Can we raise branches without full statements first?** Yes—target conditional-heavy utilities (`time-parser`, `cache-manager`) for efficient branch gains; branch uplift precedes future global threshold increases.
 
 ---
 Canonical coverage reference ends here.

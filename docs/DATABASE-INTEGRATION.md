@@ -25,9 +25,17 @@ The `DatabaseService` class provides a clean, robust interface for all database 
 CREATE TABLE user_stats (
     user_id TEXT PRIMARY KEY,
     message_count INTEGER DEFAULT 0,
-    last_active TEXT
+    last_active TEXT,
+    username TEXT
 );
 ```
+
+**Enhanced Features (v1.8.0):**
+
+- **Username Storage**: Stores human-readable Discord usernames alongside numeric user IDs
+- **Analytics Enhancement**: Enables richer user identification and analytics capabilities
+- **Privacy Safe**: Usernames are stored for analytics purposes only and can change
+- **Backward Compatible**: Nullable column with graceful fallback for existing databases
 
 #### Conversation History Table (`conversation_history`)
 

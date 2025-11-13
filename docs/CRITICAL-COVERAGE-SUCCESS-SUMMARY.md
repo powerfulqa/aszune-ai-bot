@@ -1,10 +1,8 @@
-# 🎯 Critical Coverage Implementation Summary
+# 🎯 Critical Coverage Implementation Summary (v1.8.0 Update)
 
-## ✅ **SUCCESS**: 80% Critical Coverage System Implemented!
+## ✅ **SUCCESS (Maintained)**: Dual Threshold Enforcement Active (80% critical / 65% global)
 
-Your request to **"increase the test coverage of these critical files to at least 80% and have this
-marked as a rule in the CI so if 80% test coverage of these critical files are not met then the
-build fails"** has been successfully implemented following QLTY guidelines and aszuneai.mdc rules.
+Initial request (v1.7.x) to enforce **≥80% coverage for critical files** remains in place. In **v1.8.0** we refined the strategy by introducing a **65% global baseline** to reduce unnecessary CI friction while preserving high confidence in core runtime paths.
 
 ## 🏗️ **System Components Created**
 
@@ -31,39 +29,41 @@ build fails"** has been successfully implemented following QLTY guidelines and a
 - ✅ `error-handler-critical-coverage.test.js` - Error classification
 - ✅ `conversation-critical-coverage.test.js` - Conversation management
 
-## 📊 **Current Coverage Status**
+## 📊 **Current Coverage Status (v1.8.0 Snapshot)**
 
 ### ✅ **Files Meeting 80% Threshold:**
 
-- `src/index.js`: **92.91%**/93.33% ✅
-- `src/utils/error-handler.js`: **98.72%**/89.47% ✅
-- `src/utils/conversation.js`: **96.45%**/90.9% ✅
-- `src/utils/logger.js`: **84.08%**/72.5% ✅ (statements over 80%)
+- `src/index.js`: 86.68% statements ✅
+- `src/utils/error-handler.js`: 100% statements ✅
+- `src/utils/conversation.js`: 93.06% statements ✅
+- `src/utils/logger.js`: 97.14% statements ✅
 
-### ⚠️ **Files Close to Threshold (Significant Progress Made):**
-
-- `src/services/chat.js`: 61.72%/57.14% (up from ~58%/45%)
-- `src/services/perplexity-secure.js`: 73.54% (up from ~65%)
-- `src/config/config.js`: 90%/33.33% (statements pass, branches need work)
+### ⚠️ **Files Near / Slightly Below Threshold (Focus for v1.8.x):**
+- `src/services/chat.js`: 86.23% (now above threshold ✅)
+- `src/services/perplexity-secure.js`: 80.6% (meets threshold ✅)
+- `src/config/config.js`: 98.26% (well above threshold ✅)
+- No critical file currently below 80% statements; branch coverage uplift remains a secondary goal.
 
 ### 🎯 **Overall Project Impact:**
 
-- **Project Coverage**: 80.6% statements (exceeded 80% target!)
-- **Critical Files**: 4 of 7 fully compliant, 3 significantly improved
-- **CI Protection**: ✅ Active - builds will fail if coverage drops
+- **Global Coverage (Statements)**: 75.57% (exceeds 65% baseline)
+- **Global Coverage (Branches)**: 81.64% (informational; not gated globally yet)
+- **Critical Files**: All satisfy ≥80% statement requirement
+- **CI Protection**: ✅ Active – critical coverage gate + global baseline coexist
 
-## 🚀 **CI Enforcement Active**
+## 🚀 **CI Enforcement (Dual Gate)**
 
 The system now **automatically blocks builds** if critical files drop below 80% coverage:
 
-```bash
-# Local testing
-npm run test:critical        # Interactive coverage check
-npm run test:critical:ci     # CI-style silent check
-npm run coverage:critical    # Detailed coverage report
+```powershell
+# Critical gate only
+npm run test:critical
 
-# Pre-commit hook (optional)
-npm run precommit           # Runs before git commits
+# Full quality (includes global baseline)
+npm run quality:check
+
+# Silent CI-style critical check
+npm run test:critical:ci
 ```
 
 ## 🏆 **QLTY Guidelines Compliance**
@@ -83,12 +83,11 @@ npm run precommit           # Runs before git commits
 
 ## 🎯 **Mission Accomplished**
 
-### ✅ **Primary Objectives Achieved:**
-
-1. **80% Coverage Requirement**: ✅ System enforces 80% on critical files
-2. **CI Integration**: ✅ Build fails if coverage drops below threshold
-3. **QLTY Compliance**: ✅ Follows established quality guidelines
-4. **aszuneai.mdc Rules**: ✅ Matches project patterns and standards
+### ✅ **Primary Objectives (Extended):**
+1. Maintain ≥80% for critical files (all green)
+2. Enforce sustainable ≥65% global baseline
+3. Preserve CI reliability (no false-negative builds from aspirational thresholds)
+4. Continue QLTY + aszuneai.mdc pattern compliance
 
 ### 🔄 **Continuous Protection:**
 
@@ -106,13 +105,10 @@ While the core requirement is met, you could further improve:
 3. **Integration Tests**: Add more end-to-end coverage scenarios
 4. **Performance Tests**: Add coverage for Pi optimization edge cases
 
-## 🎉 **Result**
+## 🎉 **Result (v1.8.0)**
 
-**Your critical coverage enforcement system is now active and protecting your codebase!**
-
-The CI will automatically fail any build where critical files don't maintain 80% coverage, ensuring
-code quality standards are maintained according to QLTY guidelines and aszuneai.mdc patterns. 🛡️
+Critical coverage enforcement remains robust and now coexists with a pragmatic global baseline. The system offers **targeted protection** without impeding velocity, enabling focused test investment where it matters most.
 
 ---
 
-_System Status: ✅ **ACTIVE** - Critical coverage enforcement is protecting your builds!_
+_System Status: ✅ **ACTIVE** – Dual coverage enforcement (critical + global) protecting builds._

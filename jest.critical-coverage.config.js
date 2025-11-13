@@ -7,79 +7,79 @@ module.exports = {
   // Extend from main configuration
   ...require('./jest.config.js'),
 
-  // Override coverage thresholds for critical files
+  // Override coverage thresholds for critical files - 80% for critical files, 65% global
   coverageThreshold: {
-    // Global thresholds (maintain existing standards)
+    // Global thresholds - Realistic target of 65%
     global: {
-      branches: 60,
-      functions: 60,
-      lines: 60,
-      statements: 60,
+      branches: 65,
+      functions: 65,
+      lines: 65,
+      statements: 65,
     },
 
     // Critical Files - MUST maintain 80%+ coverage for build to pass
     // These are the most important files that could break the entire application
 
-    // 🎯 Tier 1: Core Critical Files (Main Entry & Configuration)
+    // 🎯 Tier 1: Core Critical Files (Main Entry & Configuration) - 80% target
     './src/index.js': {
-      branches: 45, // Adjusted to match current coverage: 48.83%
-      functions: 80, // Current: 83.33%
-      lines: 70, // Adjusted to match current coverage: 70.99%
-      statements: 70, // Adjusted to match current coverage: 70.99%
+      branches: 80, // Target: 80%
+      functions: 80, // Target: 80%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
     './src/config/config.js': {
-      branches: 33, // Current: 33.33%
+      branches: 80, // Target: 80%
       functions: 100, // Already exceeds
-      lines: 90, // Current: 90%
-      statements: 90, // Current: 90%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
 
-    // 🎯 Tier 2: Service Layer Critical Files
+    // 🎯 Tier 2: Service Layer Critical Files - 80% target
     './src/commands/index.js': {
-      branches: 60, // Adjusted to match current coverage: 64.61%
-      functions: 85, // Current: 88.23%
-      lines: 79, // Adjusted to match current coverage: 79.26%
-      statements: 79, // Adjusted to match current coverage: 79.26%
+      branches: 80, // Target: 80%
+      functions: 80, // Target: 80%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
     './src/services/perplexity-secure.js': {
-      branches: 80, // Current: 79.87%
-      functions: 70, // Current: 71.42%
-      lines: 71, // Current: 71.93%
-      statements: 71, // Current: 71.93%
+      branches: 80, // Target: 80%
+      functions: 80, // Target: 80%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
     './src/services/chat.js': {
-      branches: 33, // Current: 33.33%
+      branches: 75, // Adjusted to match current coverage: 78.3%
       functions: 85, // Current: 87.5%
       lines: 77, // Current: 77.51%
       statements: 77, // Current: 77.51%
     },
 
-    // 🎯 Tier 3: Utility Layer Critical Files
+    // 🎯 Tier 3: Utility Layer Critical Files - 80% target
     './src/utils/logger.js': {
-      branches: 47, // Current: 47.05%
+      branches: 80, // Target: 80%
       functions: 90, // Current: 90.9%
-      lines: 72, // Current: 76.32%
-      statements: 72, // Current: 76.32%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
     './src/utils/error-handler.js': {
-      branches: 42, // Current: 41.66%
+      branches: 80, // Target: 80%
       functions: 100, // Already exceeds
       lines: 92, // Current: 93.53%
       statements: 92, // Current: 93.53%
     },
     './src/utils/conversation.js': {
-      branches: 57, // Current: 56.86%
+      branches: 80, // Target: 80%
       functions: 100, // Already exceeds
-      lines: 75, // Reduced from 80% to 75% to accommodate current coverage: 79.47%
-      statements: 75, // Reduced from 80% to 75% to accommodate current coverage: 79.47%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
 
-    // 🎯 Database Integration (v1.7.0) - New Critical File
+    // 🎯 Database Integration (v1.7.0) - New Critical File - 80% target
     './src/services/database.js': {
-      branches: 35, // Current: ~41.7% (with graceful fallbacks)
-      functions: 70, // Current: ~78.6% (core methods tested)
-      lines: 79, // Current: ~79.2% (well tested)
-      statements: 79, // Current: ~79.2% (comprehensive coverage)
+      branches: 75, // Adjusted to match current coverage: 79.58%
+      functions: 80, // Target: 80%
+      lines: 80, // Target: 80%
+      statements: 80, // Target: 80%
     },
   },
 

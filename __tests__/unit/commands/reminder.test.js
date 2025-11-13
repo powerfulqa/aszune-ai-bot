@@ -24,7 +24,6 @@ jest.mock('../../../src/utils/input-validator', () => ({
 
 const { handleSlashCommand } = require('../../../src/commands/index');
 const reminderService = require('../../../src/services/reminder-service');
-const databaseService = require('../../../src/services/database');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
 const { InputValidator } = require('../../../src/utils/input-validator');
 

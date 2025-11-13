@@ -179,6 +179,15 @@ client.once('clientReady', async () => {
     logger.error('Failed to initialize reminder service:', error);
   }
 
+  // Initialize web dashboard service
+  try {
+    const webDashboardService = require('./services/web-dashboard');
+    await webDashboardService.start(3000);
+    logger.info('Web dashboard service initialized on port 3000');
+  } catch (error) {
+    logger.error('Failed to initialize web dashboard service:', error);
+  }
+
   // Initialize Pi optimizations after connection is established
   await bootWithOptimizations();
   await registerSlashCommands();
@@ -232,19 +241,36 @@ const shutdown = async (signal) => {
 async function performShutdownSteps() {
   const errors = [];
 
-  // Step 1: Shutdown reminder service
+  // Step 1: Shutdown web dashboard service
+  const dashboardError = await shutdownWebDashboardService();
+  if (dashboardError) errors.push(dashboardError);
+
+  // Step 2: Shutdown reminder service
   const reminderError = await shutdownReminderService();
   if (reminderError) errors.push(reminderError);
 
-  // Step 2: Shutdown conversation manager
+  // Step 3: Shutdown conversation manager
   const convError = await shutdownConversationManager();
   if (convError) errors.push(convError);
 
-  // Step 3: Shutdown Discord client (always attempt, even if previous steps failed)
+  // Step 4: Shutdown Discord client (always attempt, even if previous steps failed)
   const clientError = await shutdownDiscordClient();
   if (clientError) errors.push(clientError);
 
   return errors;
+}
+
+async function shutdownWebDashboardService() {
+  try {
+    logger.debug('Shutting down web dashboard service...');
+    const webDashboardService = require('./services/web-dashboard');
+    await webDashboardService.stop();
+    logger.debug('Web dashboard service shutdown successful');
+    return null;
+  } catch (dashboardError) {
+    logger.error('Error shutting down web dashboard service:', dashboardError);
+    return dashboardError;
+  }
 }
 
 async function shutdownReminderService() {

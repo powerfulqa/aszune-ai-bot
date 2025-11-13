@@ -73,6 +73,7 @@ describe('DatabaseService - User Stats', function () {
         total_summaries: 0,
         total_commands: 0,
         preferences: '{}',
+        username: null,
       });
     });
 

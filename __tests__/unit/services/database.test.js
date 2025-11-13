@@ -140,6 +140,7 @@ describe('DatabaseService', () => {
         preferences: '{}',
         total_commands: 0,
         total_summaries: 0,
+        username: null,
       });
     });
 
@@ -168,10 +169,12 @@ describe('DatabaseService', () => {
         0,
         0,
         '{}',
+        null,
         1,
         '2023-01-02',
         0,
-        0
+        0,
+        null
       );
     });
 
@@ -186,10 +189,12 @@ describe('DatabaseService', () => {
         0,
         0,
         '{}',
+        null,
         0,
         expect.any(String),
         0,
-        0
+        0,
+        null
       );
     });
 
