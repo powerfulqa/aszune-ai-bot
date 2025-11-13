@@ -1,4 +1,4 @@
-# Aszune AI Bot (v1.7.0)
+# Aszune AI Bot (v1.8.0)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
@@ -11,10 +11,10 @@
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
 with comprehensive analytics and monitoring features. Built for gaming communities, it provides
 lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time
-performance dashboards and server analytics directly within Discord. Current local quality status:
-1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; historical CI target 82%+ (work in
-progress to restore). Built with an enterprise-grade architecture and feature-flagged license
-protection system.
+performance dashboards and server analytics directly within Discord.
+
+v1.8.0 introduces a balanced dual-threshold coverage strategy (≥80% critical files / ≥65% global baseline) to sustain reliability while enabling fast iteration.
+Current local quality status: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01% functions. All critical runtime files meet ≥80% statements.
 
 ## Table of Contents
 
@@ -139,6 +139,8 @@ protection system.
   and resource management.
 - 🏗️ **Service-Oriented Architecture:** Refactored PerplexityService into focused,
   single-responsibility classes for better maintainability and performance.
+- 🌐 **Web Dashboard (v1.8.0):** Optional Express + Socket.io dashboard with live memory, cache, and performance metrics
+- 🧩 **Complexity Reduction (v1.8.0):** Refactored high-complexity functions across chat, cache, and error handling to align with ≤10 function complexity targets
 - 📊 **Code Quality Excellence:** Achieved 94.8% reduction in ESLint issues and eliminated all
   console statements in production code.
 - 🔄 **Code Duplication Elimination:** Systematic removal of duplicate code patterns across services
@@ -509,8 +511,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage**: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches (historical CI
-  target 82%+; restoration in progress)
+- **Test Coverage**: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01% functions (dual thresholds: ≥80% critical files / ≥65% global baseline)
 - **Code Quality**: 40% reduction in lint errors (22 → 13) with systematic method decomposition
 - **Security**: Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity**: Max 15 complexity per file, 10 per function with enforced decomposition

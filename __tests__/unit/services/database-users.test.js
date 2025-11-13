@@ -59,6 +59,7 @@ describe('DatabaseService - User Management', () => {
         total_summaries: 0,
         total_commands: 0,
         preferences: '{}',
+        username: null,
       });
     });
 
@@ -85,6 +86,7 @@ describe('DatabaseService - User Management', () => {
         total_summaries: 0,
         total_commands: 0,
         preferences: '{}',
+        username: null,
       });
     });
   });

@@ -21,7 +21,8 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Release Notes Archive
 
-- [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Persistence (LATEST)
+- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Balanced Coverage, Complexity Reduction & Real-Time Dashboard (LATEST)
+- [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Persistence
 - [v1.6.3](./RELEASE-NOTES-v1.6.3.md) - Perplexity API Model Compatibility Fix
 - [v1.6.2](./RELEASE-NOTES-v1.6.2.md) - Summarise Command API Fix
 - [v1.6.1](./RELEASE-NOTES-v1.6.1.md) - Analytics Data Integration & Documentation Updates

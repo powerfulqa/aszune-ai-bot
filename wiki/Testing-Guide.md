@@ -1,11 +1,11 @@
-# Testing Guide
+# Testing Guide (v1.8.0 Update)
 
 ## Overview
 
 Aszune AI Bot currently has a comprehensive Jest suite: 1,231 tests (1,228 passing locally) with
-72.6% statement / 67.1% branch coverage. Historical CI baseline was 82%+ statements (work in
-progress to restore). The tests are designed to verify critical functionality and edge cases for
-production-ready stability.
+75.57% statement / 81.64% branch / 79.01% function coverage. v1.8.0 introduces a **dual-threshold
+coverage strategy**: ≥80% statements for critical files; ≥65% global baseline. This balances
+reliability and delivery speed while providing a clear uplift roadmap.
 
 ## Test Structure
 
@@ -43,7 +43,7 @@ Tests are organized into:
 - `__tests__/unit/input-validator.test.js`: Input validation and sanitization tests
 - `__tests__/unit/performance-monitor.test.js`: Performance monitoring and optimization tests
 
-## Running Tests
+## Running Tests (Includes Dual Coverage Enforcement)
 
 ````bash
 # Run all tests
@@ -81,19 +81,41 @@ npx jest --watch
 
 ````
 
-## Branch Coverage Testing
+## Coverage & Enforcement Strategy (v1.8.0)
+
+| Category        | Threshold | Enforcement Mechanism | Notes |
+| --------------- | --------- | --------------------- | ----- |
+| Critical Files  | ≥80% stmts| `jest.critical-coverage.config.js` | Fails CI early if violated |
+| Global (All)    | ≥65% stmts| `jest.config.js` (coverageThreshold) | Sustainable baseline |
+| Branch (Global) | Informational | Report only | Uplift targeted modules first |
+
+Critical files: `src/index.js`, `src/config/config.js`, `src/services/chat.js`, `src/services/perplexity-secure.js`, `src/utils/logger.js`, `src/utils/error-handler.js`, `src/utils/conversation.js`.
+
+### Raising Coverage Safely
+1. Focus first on untested decision branches (cache eviction, reminder lifecycle)
+2. Add deterministic tests (avoid time-based flakiness; prefer fake timers)
+3. Keep commits granular – one module uplift per PR when possible
+4. Avoid fragile full-history assertions; prefer targeted functional checks
+
+### Global Threshold Roadmap
+| Phase | Target | Focus Modules |
+| ----- | ------ | ------------- |
+| Current | 65% baseline | Stability ensured |
+| Short-term | 72–74% | cache-manager, reminder-service, time-parser |
+| Mid-term | 78%+ | license modules (smoke tests), advanced time parsing |
+| Long-term | 82% re-evaluation | Broader scenario/performance tests |
+
+## Branch Coverage Testing (Historical + Current Context)
 
 The project implements special configurations for testing branch coverage of critical components:
 
 ### Branch Coverage Requirements
 
-- Overall branch coverage threshold: 60%
-- Current metrics (as of v1.3.0):
-  - index.js: 80% branch coverage
-  - logger.js: 82.45% branch coverage (combined from both test sets)
+- No hard global branch gate in v1.8.0 (focus on statements for confidence first)
+- Historical logger + index branch suites retained for insight
+- Current metrics (v1.8.0): index.js ≥80%, logger.js ~98% statements / high branch ratio
 
-> Note: In v1.3.0, we fixed all logger branch coverage tests that were previously failing. Coverage
-> improved from 57.89% to 82.45%, exceeding our requirements.
+> Note: Historical uplift (v1.3.0) fixed logger branch coverage (57.89% → 82.45%). Branch tracking now informational until global statement target advances.
 
 ### Branch Coverage Configuration
 

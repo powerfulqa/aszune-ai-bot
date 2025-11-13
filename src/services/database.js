@@ -78,7 +78,8 @@ class DatabaseService {
         first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
         total_summaries INTEGER DEFAULT 0,
         total_commands INTEGER DEFAULT 0,
-        preferences TEXT DEFAULT '{}'
+        preferences TEXT DEFAULT '{}',
+        username TEXT
       )
     `);
   }
@@ -256,6 +257,7 @@ class DatabaseService {
           total_summaries: 0,
           total_commands: 0,
           preferences: '{}',
+          username: null,
         }
       );
     } catch (error) {
@@ -547,13 +549,14 @@ class DatabaseService {
       // Atomic upsert to avoid race conditions
       const upsertStmt = db.prepare(`
         INSERT INTO user_stats (
-          user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
           message_count = COALESCE(user_stats.message_count, 0) + ?,
           last_active = ?,
           total_summaries = COALESCE(user_stats.total_summaries, 0) + ?,
-          total_commands = COALESCE(user_stats.total_commands, 0) + ?
+          total_commands = COALESCE(user_stats.total_commands, 0) + ?,
+          username = COALESCE(?, user_stats.username)
       `);
 
       upsertStmt.run(
@@ -564,15 +567,33 @@ class DatabaseService {
         updates.total_summaries || 0,
         updates.total_commands || 0,
         '{}',
+        updates.username || null,
         // UPDATE parameters
         updates.message_count || 0,
         updates.last_active || new Date().toISOString(),
         updates.total_summaries || 0,
-        updates.total_commands || 0
+        updates.total_commands || 0,
+        updates.username || null
       );
     } catch (error) {
       if (this.isDisabled) return;
       throw new Error(`Failed to update user stats for ${userId}: ${error.message}`);
+    }
+  }
+
+  // Update username for existing user
+  updateUsername(userId, username) {
+    try {
+      if (this.isDisabled) return;
+
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        UPDATE user_stats SET username = ? WHERE user_id = ?
+      `);
+      stmt.run(username, userId);
+    } catch (error) {
+      if (this.isDisabled) return;
+      logger.warn(`Failed to update username for ${userId}: ${error.message}`);
     }
   }
 
@@ -597,12 +618,17 @@ class DatabaseService {
     }
   }
 
-  addUserMessage(userId, message, responseTimeMs = 0) {
+  addUserMessage(userId, message, responseTimeMs = 0, username = null) {
     try {
       if (this.isDisabled) return;
 
       const db = this.getDb();
-      this.ensureUserExists(userId);
+      this.ensureUserExists(userId, username);
+
+      // Update username if provided
+      if (username) {
+        this.updateUsername(userId, username);
+      }
 
       // Add to legacy user_messages table
       const legacyStmt = db.prepare(`
@@ -683,7 +709,7 @@ class DatabaseService {
     }
   }
 
-  ensureUserExists(userId) {
+  ensureUserExists(userId, username = null) {
     try {
       if (this.isDisabled) return;
 
@@ -691,14 +717,19 @@ class DatabaseService {
 
       // Try different schema versions, starting with newest and falling back
       const schemaAttempts = [
-        // Latest schema (v1.7.0)
+        // Latest schema (v1.8.0) with username
         {
-          sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, '{}')",
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username) VALUES (?, 0, ?, ?, 0, 0, \'{}\', ?)',
+          params: (now, username) => [userId, now, now, username],
+        },
+        // Previous schema (v1.7.0)
+        {
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
           params: (now) => [userId, now, now],
         },
         // Previous schema (missing first_seen)
         {
-          sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, '{}')",
+          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
           params: (now) => [userId, now],
         },
         // Basic schema (only core columns)
@@ -719,7 +750,7 @@ class DatabaseService {
       for (const attempt of schemaAttempts) {
         try {
           const stmt = db.prepare(attempt.sql);
-          stmt.run(...attempt.params(now));
+          stmt.run(...attempt.params(now, username));
           success = true;
           break;
         } catch (columnError) {
@@ -1055,6 +1086,44 @@ class DatabaseService {
   }
 
   /**
+   * Get overall reminder statistics
+   * @returns {Object} Reminder statistics
+   */
+  getReminderStats() {
+    try {
+      if (this.isDisabled) return this._getDefaultReminderStats();
+
+      const db = this.getDb();
+
+      // Get total count
+      const totalStmt = db.prepare('SELECT COUNT(*) as count FROM reminders');
+      const total = totalStmt.get().count;
+
+      // Get status breakdown
+      const statusStmt = db.prepare(`
+        SELECT status, COUNT(*) as count
+        FROM reminders
+        GROUP BY status
+      `);
+      const statusResults = statusStmt.all();
+
+      const stats = {
+        totalReminders: total,
+        activeReminders: 0,
+        completedReminders: 0,
+        cancelledReminders: 0,
+      };
+
+      this._mapStatusCounts(statusResults, stats);
+      return stats;
+    } catch (error) {
+      if (this.isDisabled) return this._getDefaultReminderStats();
+      logger.warn(`Failed to get reminder stats: ${error.message}`);
+      return this._getDefaultReminderStats();
+    }
+  }
+
+  /**
    * Get default reminder stats object
    * @returns {Object} Default stats object
    */
@@ -1088,40 +1157,40 @@ class DatabaseService {
   }
 
   /**
-   * Get total reminder statistics for analytics
-   * @returns {Object} Reminder statistics object
+   * Get total user count
+   * @returns {number} Total number of users
    */
-  getReminderStats() {
+  getUserCount() {
     try {
-      if (this.isDisabled) return this._getDefaultReminderStats();
+      if (this.isDisabled) return 0;
 
       const db = this.getDb();
-
-      // Get total count
-      const totalStmt = db.prepare('SELECT COUNT(*) as count FROM reminders');
-      const totalResult = totalStmt.get();
-
-      // Get counts by status
-      const statusStmt = db.prepare(`
-        SELECT status, COUNT(*) as count 
-        FROM reminders 
-        GROUP BY status
-      `);
-      const statusResults = statusStmt.all();
-
-      const stats = {
-        ...this._getDefaultReminderStats(),
-        totalReminders: totalResult ? totalResult.count : 0,
-      };
-
-      // Map status counts
-      this._mapStatusCounts(statusResults, stats);
-
-      return stats;
+      const stmt = db.prepare('SELECT COUNT(*) as count FROM users');
+      const result = stmt.get();
+      return result ? result.count : 0;
     } catch (error) {
-      if (this.isDisabled) return this._getDefaultReminderStats();
-      logger.warn(`Failed to get reminder stats: ${error.message}`);
-      return this._getDefaultReminderStats();
+      if (this.isDisabled) return 0;
+      logger.warn(`Failed to get user count: ${error.message}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Get total message count across all conversations
+   * @returns {number} Total number of messages
+   */
+  getTotalMessageCount() {
+    try {
+      if (this.isDisabled) return 0;
+
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT COUNT(*) as count FROM conversation_history');
+      const result = stmt.get();
+      return result ? result.count : 0;
+    } catch (error) {
+      if (this.isDisabled) return 0;
+      logger.warn(`Failed to get total message count: ${error.message}`);
+      return 0;
     }
   }
 
