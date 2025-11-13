@@ -4,9 +4,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "restart": "npm run restart:systemd || npm run restart:standalone",
-    "restart:systemd": "sudo systemctl restart aszune-ai-bot",
-    "restart:standalone": "pkill -f 'node src/index.js' || true && sleep 1 && node src/index.js",
+    "restart": "bash restart || npm run restart:fallback",
+    "restart:fallback": "pkill -f 'node src/index.js' 2>/dev/null || true && sleep 1 && npm start",
     "dev": "nodemon src/index.js",
     "test": "jest",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
