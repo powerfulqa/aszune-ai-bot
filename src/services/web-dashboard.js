@@ -458,23 +458,37 @@ class WebDashboardService {
    */
   async getMetrics() {
     try {
-      const [
-        cacheStats,
-        databaseStats,
-        reminderStats,
-        systemInfo,
-        resourceData,
-        analyticsData
-      ] = await Promise.all([
-        this.getCacheStats(),
-        this.getDatabaseStats(),
-        this.getReminderStats(),
-        Promise.resolve(this.getSystemInfo()),
-        this.getResourceData(),
-        this.getAnalyticsData()
-      ]);
+      logger.debug('Collecting metrics...');
+      
+      // Collect metrics with error handling for each one
+      const cacheStats = await this.getCacheStats().catch(err => {
+        logger.warn(`Cache stats error: ${err.message}`);
+        return { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' };
+      });
 
-      return {
+      const databaseStats = await this.getDatabaseStats().catch(err => {
+        logger.warn(`Database stats error: ${err.message}`);
+        return { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 } };
+      });
+
+      const reminderStats = await this.getReminderStats().catch(err => {
+        logger.warn(`Reminder stats error: ${err.message}`);
+        return { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 };
+      });
+
+      const systemInfo = this.getSystemInfo();
+
+      const resourceData = await this.getResourceData().catch(err => {
+        logger.warn(`Resource data error: ${err.message}`);
+        return { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, optimizationTier: 'unknown' };
+      });
+
+      const analyticsData = await this.getAnalyticsData().catch(err => {
+        logger.warn(`Analytics data error: ${err.message}`);
+        return { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] };
+      });
+
+      const metrics = {
         timestamp: new Date().toISOString(),
         uptime: this.getUptime(),
         cache: cacheStats,
@@ -484,10 +498,12 @@ class WebDashboardService {
         resources: resourceData,
         analytics: analyticsData
       };
+
+      logger.debug('Metrics collected successfully');
+      return metrics;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'aggregating metrics');
       logger.error(`Metrics aggregation error: ${errorResponse.message}`);
-      throw error;
     }
   }
 
