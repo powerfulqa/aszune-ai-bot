@@ -502,13 +502,21 @@ class Dashboard {
       const leaderboardHtml = topUsers.map((user, index) => {
         const rank = index + 1;
         const rankClass = rank <= 3 ? `rank-${rank}` : '';
-        const username = user.username || `User ${user.user_id}`;
+        
+        // Display username if available, otherwise show a cleaned-up user ID
+        let displayName = user.username;
+        if (!displayName || displayName.trim() === '') {
+          // Format user ID for better display (show last 8 digits)
+          const userIdStr = String(user.user_id);
+          displayName = `User ${userIdStr.slice(-8)}`;
+        }
+        
         const interactionCount = user.message_count || 0;
 
         return `
           <div class="leaderboard-row ${rankClass}">
             <span class="rank-badge">${rank}</span>
-            <span class="user-name">${this.escapeHtml(username)}</span>
+            <span class="user-name" title="ID: ${user.user_id}">${this.escapeHtml(displayName)}</span>
             <span class="user-count">${interactionCount}</span>
           </div>
         `;

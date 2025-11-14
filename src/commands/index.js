@@ -16,6 +16,27 @@ const reminderService = require('../services/reminder-service');
 
 const conversationManager = new ConversationManager();
 
+/**
+ * Helper function to ensure user metadata is updated in the database
+ * @param {Object} interaction - Discord interaction object
+ */
+function ensureUserMetadata(interaction) {
+  try {
+    const userId = interaction.user.id;
+    const username = interaction.user.username;
+    
+    // Ensure user exists and username is stored
+    if (databaseService.ensureUserExists) {
+      databaseService.ensureUserExists(userId, username);
+    }
+    if (databaseService.updateUsername) {
+      databaseService.updateUsername(userId, username);
+    }
+  } catch (error) {
+    logger.debug(`Failed to update user metadata: ${error.message}`);
+  }
+}
+
 // Command definitions
 const commands = {
   help: {
@@ -218,6 +239,7 @@ const commands = {
       description: 'Show your usage stats',
     },
     async execute(interaction) {
+      ensureUserMetadata(interaction);
       const userId = interaction.user.id;
       const stats = conversationManager.getUserStats(userId);
       return interaction.reply(
