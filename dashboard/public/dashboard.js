@@ -75,6 +75,7 @@ class Dashboard {
       this.updateResourcesMetrics(data);
       this.updateErrorLogs(data);
       this.fetchAndUpdateRecommendations();
+      this.updateLeaderboard(data);
 
       this.metricsHistory.push(data);
       if (this.metricsHistory.length > this.maxHistoryPoints) {
@@ -392,6 +393,51 @@ class Dashboard {
 
     // Auto-scroll to bottom
     activityLog.scrollTop = activityLog.scrollHeight;
+  }
+
+  async updateLeaderboard(data) {
+    try {
+      const leaderboardContainer = document.getElementById('leaderboard');
+      if (!leaderboardContainer) return;
+
+      // Fetch users data to get usernames and message counts
+      const response = await fetch('/api/database/users?limit=1000&offset=0');
+      if (!response.ok) {
+        console.warn('Failed to fetch leaderboard data');
+        return;
+      }
+
+      const usersData = await response.json();
+      if (!usersData.data || usersData.data.length === 0) {
+        leaderboardContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No users yet</div>';
+        return;
+      }
+
+      // Sort users by message count descending and get top 10
+      const topUsers = usersData.data
+        .sort((a, b) => (b.message_count || 0) - (a.message_count || 0))
+        .slice(0, 10);
+
+      // Build leaderboard HTML
+      const leaderboardHtml = topUsers.map((user, index) => {
+        const rank = index + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        const username = user.username || `User ${user.user_id}`;
+        const interactionCount = user.message_count || 0;
+
+        return `
+          <div class="leaderboard-item ${rankClass}">
+            <div class="leaderboard-rank">${rank}</div>
+            <div class="leaderboard-username">${this.escapeHtml(username)}</div>
+            <div class="leaderboard-stat">${interactionCount} interaction${interactionCount !== 1 ? 's' : ''}</div>
+          </div>
+        `;
+      }).join('');
+
+      leaderboardContainer.innerHTML = leaderboardHtml;
+    } catch (error) {
+      console.error('Error updating leaderboard:', error);
+    }
   }
 }
 
