@@ -282,17 +282,40 @@ class WebDashboardService {
     this.app.post('/api/control/restart', async (req, res) => {
       try {
         logger.info('Restart command received from dashboard');
-        res.json({
-          success: true,
-          message: 'Bot restart initiated',
-          timestamp: new Date().toISOString()
-        });
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execPromise = util.promisify(exec);
+
+        // Determine service name - typically 'aszune-bot' or similar
+        const serviceName = process.env.SERVICE_NAME || 'aszune-bot';
         
-        // Restart the bot after a short delay to allow response to send
-        setTimeout(() => {
-          logger.info('Executing bot restart');
-          process.exit(0);
-        }, 500);
+        try {
+          // Try to restart using systemctl with sudo
+          await execPromise(`sudo systemctl restart ${serviceName}`, {
+            timeout: 10000
+          });
+          
+          logger.info(`Bot restart initiated via systemctl (${serviceName})`);
+          res.json({
+            success: true,
+            message: `Bot restart initiated via systemctl ${serviceName}`,
+            timestamp: new Date().toISOString()
+          });
+        } catch (systemctlError) {
+          logger.warn(`Systemctl restart failed, attempting direct restart: ${systemctlError.message}`);
+          
+          // Fallback: direct process exit (for development)
+          res.json({
+            success: true,
+            message: 'Bot restart initiated (fallback mode)',
+            timestamp: new Date().toISOString()
+          });
+          
+          setTimeout(() => {
+            logger.info('Executing direct bot restart');
+            process.exit(0);
+          }, 500);
+        }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
         res.status(500).json({
@@ -310,25 +333,50 @@ class WebDashboardService {
         const util = require('util');
         const execPromise = util.promisify(exec);
 
-        const { stdout, stderr } = await execPromise('git pull origin main', {
-          cwd: path.join(__dirname, '../../'),
-          timeout: 30000
-        });
+        try {
+          const { stdout, stderr } = await execPromise('git pull origin main', {
+            cwd: path.join(__dirname, '../../'),
+            timeout: 30000
+          });
 
-        logger.info('Git pull completed successfully');
-        res.json({
-          success: true,
-          message: 'Git pull completed',
-          output: stdout,
-          timestamp: new Date().toISOString()
-        });
+          logger.info('Git pull completed successfully');
+          res.json({
+            success: true,
+            message: 'Git pull completed successfully',
+            output: stdout,
+            timestamp: new Date().toISOString()
+          });
+        } catch (pullError) {
+          // Check for permission errors
+          const errorMsg = pullError.message || '';
+          const stderrMsg = pullError.stderr || '';
+          
+          if (stderrMsg.includes('Permission denied') || errorMsg.includes('EACCES')) {
+            logger.error(`Git pull permission denied: ${errorMsg}`);
+            res.status(403).json({
+              success: false,
+              error: 'Permission denied - the current user cannot write to the repository',
+              details: 'Make sure the bot process has write permissions to the git repository directory',
+              output: stderrMsg || errorMsg,
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            logger.error(`Git pull failed: ${errorMsg}`);
+            res.status(400).json({
+              success: false,
+              error: 'Git pull failed',
+              details: errorMsg,
+              output: stderrMsg || errorMsg,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
       } catch (error) {
-        logger.error(`Git pull failed: ${error.message}`);
         const errorResponse = ErrorHandler.handleError(error, 'executing git pull');
         res.status(500).json({
           success: false,
           error: errorResponse.message,
-          output: error.stderr || error.message,
+          output: error.message,
           timestamp: new Date().toISOString()
         });
       }
