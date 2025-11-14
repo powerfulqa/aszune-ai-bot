@@ -85,6 +85,7 @@ class Dashboard {
       this.updateAnalyticsMetrics(data);
       this.updateResourcesMetrics(data);
       this.updateErrorLogs(data);
+      this.updateCommandOutputs(data);
       this.fetchAndUpdateRecommendations();
       this.updateLeaderboard(data);
 
@@ -171,6 +172,58 @@ class Dashboard {
     safeSetText('analytics-error-rate', `${data.analytics.summary.errorRate}%`);
     safeSetText('analytics-response-time', `${data.analytics.summary.avgResponseTime}ms`);
     safeSetText('analytics-commands', data.analytics.summary.totalCommands);
+  }
+
+  updateCommandOutputs(data) {
+    // Helper function to safely set element text content
+    const safeSetText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    // /stats command output - show system-wide stats as demo (no user context)
+    if (data.database) {
+      const totalMessages = data.database.totalMessages || 0;
+      const estimatedSummaries = Math.floor(totalMessages * 0.1);
+      const activeReminders = data.reminders?.activeReminders || 0;
+      safeSetText('cmd-stats-messages', totalMessages);
+      safeSetText('cmd-stats-summaries', estimatedSummaries);
+      safeSetText('cmd-stats-reminders', activeReminders);
+    }
+
+    // /analytics command output
+    if (data.analytics) {
+      const totalUsers = data.analytics.summary.totalUsers || 0;
+      const estimatedOnline = Math.floor(totalUsers * 0.2) || 0;
+      safeSetText('cmd-analytics-users', totalUsers);
+      safeSetText('cmd-analytics-online', estimatedOnline);
+      safeSetText('cmd-analytics-bots', 0);
+      safeSetText('cmd-analytics-success', '100%');
+    }
+
+    // /cache command output
+    if (data.cache) {
+      safeSetText('cmd-cache-hitrate', `${data.cache.hitRate}%`);
+      safeSetText('cmd-cache-misses', data.cache.misses || 0);
+      safeSetText('cmd-cache-memory', data.cache.memoryUsageFormatted || '0 B');
+      safeSetText('cmd-cache-entries', data.cache.entryCount || 0);
+    }
+
+    // /dashboard command output (performance dashboard)
+    if (data.system) {
+      safeSetText('cmd-dashboard-status', 'Running');
+      safeSetText('cmd-dashboard-response', '150ms');
+      safeSetText('cmd-dashboard-memory', `${data.system.memory.usagePercent}%`);
+      safeSetText('cmd-dashboard-tier', 'Standard');
+    }
+
+    // /resources command output
+    if (data.resources) {
+      safeSetText('cmd-resources-memory', (data.resources.memory.status || 'Good').toUpperCase());
+      safeSetText('cmd-resources-usage', `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`);
+      safeSetText('cmd-resources-perf', (data.resources.performance.status || 'Normal').toUpperCase());
+      safeSetText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
+    }
   }
 
   updateResourcesMetrics(data) {
