@@ -124,83 +124,87 @@ class Dashboard {
   }
 
   updateSystemMetrics(data) {
-    document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
-    document.getElementById('memory-usage').textContent = 
-      `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
-    document.getElementById('cpu-load').textContent = 
-      `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
-    document.getElementById('platform').textContent = 
-      `${data.system.platform} ${data.system.arch}`;
+    // Helper function to safely set element text content
+    const safeSetText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
 
-    document.getElementById('process-pid').textContent = data.system.process.pid;
-    document.getElementById('process-memory').textContent = data.system.process.rssFormatted;
-    document.getElementById('heap-usage').textContent = 
-      `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
-    document.getElementById('node-version-info').textContent = data.system.nodeVersion;
+    safeSetText('system-uptime', data.system.uptimeFormatted);
+    safeSetText('memory-usage', `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`);
+    safeSetText('cpu-load', `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`);
+    safeSetText('platform', `${data.system.platform} ${data.system.arch}`);
 
-    document.getElementById('cache-hit-rate').textContent = `${data.cache.hitRate}%`;
-    document.getElementById('cache-requests').textContent = 
-      (data.cache.hits + data.cache.misses).toLocaleString();
-    document.getElementById('cache-memory').textContent = data.cache.memoryUsageFormatted;
-    document.getElementById('cache-entries').textContent = data.cache.entryCount.toLocaleString();
+    safeSetText('process-pid', data.system.process.pid);
+    safeSetText('process-memory', data.system.process.rssFormatted);
+    safeSetText('heap-usage', `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`);
+    safeSetText('node-version-info', data.system.nodeVersion);
 
-    document.getElementById('db-users').textContent = data.database.userCount.toLocaleString();
-    document.getElementById('db-messages').textContent = data.database.totalMessages.toLocaleString();
-    document.getElementById('db-active-reminders').textContent = 
-      data.database.reminders.activeReminders.toLocaleString();
-    document.getElementById('db-completed-reminders').textContent = 
-      data.database.reminders.completedReminders.toLocaleString();
+    safeSetText('cache-hit-rate', `${data.cache.hitRate}%`);
+    safeSetText('cache-requests', (data.cache.hits + data.cache.misses).toLocaleString());
+    safeSetText('cache-memory', data.cache.memoryUsageFormatted);
+    safeSetText('cache-entries', data.cache.entryCount.toLocaleString());
 
-    document.getElementById('bot-uptime').textContent = data.uptime;
-    document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleTimeString();
+    safeSetText('db-users', data.database.userCount.toLocaleString());
+    safeSetText('db-messages', data.database.totalMessages.toLocaleString());
+    safeSetText('db-active-reminders', data.database.reminders.activeReminders.toLocaleString());
+    safeSetText('db-completed-reminders', data.database.reminders.completedReminders.toLocaleString());
+
+    safeSetText('bot-uptime', data.uptime);
+    safeSetText('last-update', new Date(data.timestamp).toLocaleTimeString());
   }
 
   updateAnalyticsMetrics(data) {
     if (!data.analytics) return;
     
-    document.getElementById('analytics-servers').textContent = data.analytics.summary.totalServers;
-    document.getElementById('analytics-active-users').textContent = data.analytics.summary.totalUsers;
-    document.getElementById('analytics-total-members').textContent = data.analytics.summary.totalUsers;
-    document.getElementById('analytics-bots').textContent = '-';
-    document.getElementById('analytics-success-rate').textContent = 
-      `${data.analytics.summary.successRate}%`;
-    document.getElementById('analytics-error-rate').textContent = 
-      `${data.analytics.summary.errorRate}%`;
-    document.getElementById('analytics-response-time').textContent = 
-      `${data.analytics.summary.avgResponseTime}ms`;
-    document.getElementById('analytics-commands').textContent = data.analytics.summary.totalCommands;
+    // Helper function to safely set element text content
+    const safeSetText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    safeSetText('analytics-servers', data.analytics.summary.totalServers);
+    safeSetText('analytics-active-users', data.analytics.summary.totalUsers);
+    safeSetText('analytics-total-members', data.analytics.summary.totalUsers);
+    safeSetText('analytics-bots', '-');
+    safeSetText('analytics-success-rate', `${data.analytics.summary.successRate}%`);
+    safeSetText('analytics-error-rate', `${data.analytics.summary.errorRate}%`);
+    safeSetText('analytics-response-time', `${data.analytics.summary.avgResponseTime}ms`);
+    safeSetText('analytics-commands', data.analytics.summary.totalCommands);
   }
 
   updateResourcesMetrics(data) {
     if (!data.resources) return;
     
+    // Helper function to safely set element text content
+    const safeSetText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    // Helper function to safely set element class
+    const safeSetClass = (id, className) => {
+      const el = document.getElementById(id);
+      if (el) el.className = className;
+    };
+
     // Memory status
     const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
-    document.getElementById('resource-memory-status').textContent = 
-      (data.resources.memory.status || 'Unknown').toUpperCase();
-    document.getElementById('resource-memory-status').className = 
-      `value status-badge ${memStatus}`;
+    safeSetText('resource-memory-status', (data.resources.memory.status || 'Unknown').toUpperCase());
+    safeSetClass('resource-memory-status', `value status-badge ${memStatus}`);
 
-    document.getElementById('resource-memory-used').textContent = 
-      `${data.resources.memory.used}MB`;
-    document.getElementById('resource-memory-free').textContent = 
-      `${data.resources.memory.free}MB`;
-    document.getElementById('resource-memory-percent').textContent = 
-      `${data.resources.memory.percentage}%`;
+    safeSetText('resource-memory-used', `${data.resources.memory.used}MB`);
+    safeSetText('resource-memory-free', `${data.resources.memory.free}MB`);
+    safeSetText('resource-memory-percent', `${data.resources.memory.percentage}%`);
 
     // Performance status
     const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
-    document.getElementById('resource-performance-status').textContent = 
-      (data.resources.performance.status || 'Unknown').toUpperCase();
-    document.getElementById('resource-performance-status').className = 
-      `value status-badge ${perfStatus}`;
+    safeSetText('resource-performance-status', (data.resources.performance.status || 'Unknown').toUpperCase());
+    safeSetClass('resource-performance-status', `value status-badge ${perfStatus}`);
 
-    document.getElementById('resource-response-time').textContent = 
-      `${data.resources.performance.responseTime}ms`;
-    document.getElementById('resource-load').textContent = 
-      data.resources.performance.load || 'normal';
-    document.getElementById('resource-optimization-tier').textContent = 
-      data.resources.optimizationTier || 'Standard';
+    safeSetText('resource-response-time', `${data.resources.performance.responseTime}ms`);
+    safeSetText('resource-load', data.resources.performance.load || 'normal');
+    safeSetText('resource-optimization-tier', data.resources.optimizationTier || 'Standard');
   }
 
   getStatusBadgeClass(status) {
