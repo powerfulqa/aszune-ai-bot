@@ -409,14 +409,14 @@ class Dashboard {
 
       const usersData = await response.json();
       if (!usersData.data || usersData.data.length === 0) {
-        leaderboardContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No users yet</div>';
+        leaderboardContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
         return;
       }
 
-      // Sort users by message count descending and get top 10
+      // Sort users by message count descending and get top 4
       const topUsers = usersData.data
         .sort((a, b) => (b.message_count || 0) - (a.message_count || 0))
-        .slice(0, 10);
+        .slice(0, 4);
 
       // Build leaderboard HTML
       const leaderboardHtml = topUsers.map((user, index) => {
@@ -426,10 +426,10 @@ class Dashboard {
         const interactionCount = user.message_count || 0;
 
         return `
-          <div class="leaderboard-item ${rankClass}">
-            <div class="leaderboard-rank">${rank}</div>
-            <div class="leaderboard-username">${this.escapeHtml(username)}</div>
-            <div class="leaderboard-stat">${interactionCount} interaction${interactionCount !== 1 ? 's' : ''}</div>
+          <div class="leaderboard-row ${rankClass}">
+            <span class="rank-badge">${rank}</span>
+            <span class="user-name">${this.escapeHtml(username)}</span>
+            <span class="user-count">${interactionCount}</span>
           </div>
         `;
       }).join('');
