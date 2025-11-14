@@ -289,6 +289,65 @@
             </div>
         </div>
 
+        <!-- Database Contents Section (Demo Mock Data) -->
+        <div class="database-section">
+            <h2>💾 Database Contents (Read-Only)</h2>
+            <div class="database-controls">
+                <select id="database-table-select" class="table-select" onchange="switchDemoTable(this.value)">
+                    <option value="">Select a table...</option>
+                    <option value="users" selected>users</option>
+                    <option value="conversation_history">conversation_history</option>
+                    <option value="reminders">reminders</option>
+                </select>
+                <input type="text" id="database-search" class="database-search" placeholder="Search table...">
+                <span id="table-info" class="table-info">Demo: 5 sample rows</span>
+            </div>
+            <div id="database-viewer" class="database-viewer">
+                <table class="database-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Messages Sent</th>
+                            <th>Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>123456789</td>
+                            <td>alice</td>
+                            <td>342</td>
+                            <td>2025-11-14 08:50:11</td>
+                        </tr>
+                        <tr>
+                            <td>987654321</td>
+                            <td>bob</td>
+                            <td>215</td>
+                            <td>2025-11-14 08:45:00</td>
+                        </tr>
+                        <tr>
+                            <td>456789123</td>
+                            <td>charlie</td>
+                            <td>189</td>
+                            <td>2025-11-14 08:30:22</td>
+                        </tr>
+                        <tr>
+                            <td>789123456</td>
+                            <td>diana</td>
+                            <td>421</td>
+                            <td>2025-11-14 08:20:45</td>
+                        </tr>
+                        <tr>
+                            <td>321654987</td>
+                            <td>eve</td>
+                            <td>267</td>
+                            <td>2025-11-14 08:15:33</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Error Logs -->
         <div class="error-logs-section">
             <h2>⚠️ Error Logs</h2>
@@ -307,5 +366,72 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <script>
+        // Demo data for different tables
+        const demoData = {
+            users: {
+                headers: ['User ID', 'Username', 'Messages Sent', 'Last Active'],
+                rows: [
+                    ['123456789', 'alice', '342', '2025-11-14 08:50:11'],
+                    ['987654321', 'bob', '215', '2025-11-14 08:45:00'],
+                    ['456789123', 'charlie', '189', '2025-11-14 08:30:22'],
+                    ['789123456', 'diana', '421', '2025-11-14 08:20:45'],
+                    ['321654987', 'eve', '267', '2025-11-14 08:15:33']
+                ]
+            },
+            conversation_history: {
+                headers: ['Message ID', 'User ID', 'Role', 'Content Preview', 'Timestamp'],
+                rows: [
+                    ['1', '123456789', 'user', 'What\'s the best build for a mage?', '2025-11-14 08:50:11'],
+                    ['2', '123456789', 'assistant', 'For mage builds, consider focusing on intelligence...', '2025-11-14 08:50:15'],
+                    ['3', '987654321', 'user', 'How do I improve my game performance?', '2025-11-14 08:45:00'],
+                    ['4', '987654321', 'assistant', 'Here are some optimization tips...', '2025-11-14 08:45:05'],
+                    ['5', '456789123', 'user', 'Where can I find rare items?', '2025-11-14 08:30:22']
+                ]
+            },
+            reminders: {
+                headers: ['Reminder ID', 'User ID', 'Message', 'Scheduled For', 'Status'],
+                rows: [
+                    ['1', '123456789', 'Team meeting', '2025-11-14 10:00:00', 'PENDING'],
+                    ['2', '987654321', 'Submit report', '2025-11-14 17:00:00', 'PENDING'],
+                    ['3', '456789123', 'Code review', '2025-11-14 14:30:00', 'PENDING'],
+                    ['4', '789123456', 'Gaming session', '2025-11-14 19:00:00', 'PENDING'],
+                    ['5', '321654987', 'Check Cyberpunk 2077 release', '2025-11-20 00:00:00', 'PENDING']
+                ]
+            }
+        };
+
+        function switchDemoTable(tableName) {
+            if (!tableName) return;
+            
+            const data = demoData[tableName];
+            const viewer = document.getElementById('database-viewer');
+            const info = document.getElementById('table-info');
+            
+            if (!data) {
+                viewer.innerHTML = '<div class="db-message">No data available</div>';
+                return;
+            }
+            
+            info.textContent = `Demo: ${data.rows.length} sample rows`;
+            
+            let html = '<table class="database-table"><thead><tr>';
+            data.headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            data.rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    html += `<td>${cell}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            viewer.innerHTML = html;
+        }
+    </script>
+
