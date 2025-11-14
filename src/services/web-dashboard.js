@@ -286,19 +286,13 @@ class WebDashboardService {
         const util = require('util');
         const execPromise = util.promisify(exec);
 
-        // Determine service name - typically 'aszune-bot' or similar
+                // Determine service name - typically 'aszune-ai-bot' or similar
         const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
-        const isRoot = process.getuid ? process.getuid() === 0 : true;
         
         try {
           let restartCmd;
-          if (isRoot) {
-            // Running as root, no sudo needed
-            restartCmd = `systemctl restart ${serviceName}`;
-          } else {
-            // Not root, try with sudo
-            restartCmd = `sudo systemctl restart ${serviceName}`;
-          }
+          // Always try without sudo first, since we're likely running as root
+          restartCmd = `systemctl restart ${serviceName}`;
           
           logger.info(`Attempting restart with: ${restartCmd}`);
           await execPromise(restartCmd, {
@@ -313,19 +307,35 @@ class WebDashboardService {
           });
         } catch (systemctlError) {
           logger.warn(`Systemctl restart failed: ${systemctlError.message}`);
-          logger.info('Attempting direct process restart...');
+          logger.info('Attempting with sudo...');
           
-          // Fallback: direct process exit (for development)
-          res.json({
-            success: true,
-            message: 'Bot restart initiated (fallback mode)',
-            timestamp: new Date().toISOString()
-          });
-          
-          setTimeout(() => {
-            logger.info('Executing direct bot restart');
-            process.exit(0);
-          }, 500);
+          try {
+            // Retry with sudo
+            await execPromise(`sudo systemctl restart ${serviceName}`, {
+              timeout: 10000
+            });
+            logger.info('Bot restart succeeded with sudo');
+            res.json({
+              success: true,
+              message: 'Bot restart initiated via systemctl (with sudo)',
+              timestamp: new Date().toISOString()
+            });
+          } catch (sudoError) {
+            logger.warn(`Systemctl with sudo also failed: ${sudoError.message}`);
+            logger.info('Attempting direct process restart (fallback)...');
+            
+            // Fallback: direct process exit
+            res.json({
+              success: true,
+              message: 'Bot restart initiated (fallback mode)',
+              timestamp: new Date().toISOString()
+            });
+            
+            setTimeout(() => {
+              logger.info('Executing direct bot restart');
+              process.exit(0);
+            }, 500);
+          }
         }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
