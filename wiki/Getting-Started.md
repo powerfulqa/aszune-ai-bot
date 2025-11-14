@@ -115,7 +115,7 @@ When the bot starts successfully, you should see the following message in your t
 Discord bot is online!
 ```
 
-You can test the bot by sending the `!help` command in a channel where the bot has access.
+You can test the bot by using the `/help` slash command in a channel where the bot has access.
 
 ## Development Setup (Optional)
 
@@ -138,13 +138,39 @@ npm run test:coverage
 ## Next Steps
 
 - Check out the [Usage Guide](Usage-Guide) to learn how to interact with the bot
-- **Try the new analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore
-  the monitoring capabilities
+- **Try the analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore
+   monitoring capabilities
 - Explore the [Command Reference](Command-Reference) for detailed information about all available
   commands including the new analytics commands
 - Read the [Contributing Guidelines](../CONTRIBUTING.md) if you want to contribute to the project
 - Review the [Code Quality Documentation](../docs/QLTY_INTEGRATION.md) for development standards
 - Visit the [Troubleshooting](Troubleshooting) page if you encounter any issues
+
+## Web Dashboard (Optional, v1.8.0)
+
+Starting with v1.8.0, a lightweight web dashboard is available for continuous real‑time telemetry.
+
+- **Access**: Visit `http://localhost:3000` while the bot is running
+- **Features**: Live metrics (memory, cache, performance), Discord‑style cards showing actual
+   outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders`
+- **Database Viewer**: Read‑only viewer for key tables (users, conversation_history, reminders)
+- **Isolation**: Dashboard failures are isolated and do not affect core bot operations
+
+See the full feature summary in
+[docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md).
+
+## What's New in v1.8.0
+
+🎯 **Balanced Coverage Policy** – Dual thresholds: ≥80% for critical files and ≥65% global baseline
+with a roadmap toward 82%+.
+
+🌐 **Web Dashboard** – Express + Socket.io dashboard providing continuous real‑time telemetry and
+actual command outputs, complementing `/dashboard` inside Discord.
+
+🧩 **Complexity Reduction** – Refactors across chat, cache, and error handling to align with ≤10
+function complexity targets.
+
+📦 **Dependency Refresh** – Updated core packages for stability and security.
 
 ## What's New in v1.6.0
 
@@ -154,5 +180,5 @@ npm run test:coverage
 - **`/dashboard`** - Real-time performance monitoring dashboard
 - **`/resources`** - Resource optimization analysis and recommendations
 
-All monitoring features are accessible directly in Discord - no need to access your Raspberry Pi
-separately!
+All monitoring features are accessible directly in Discord – no need to access your Raspberry Pi
+separately. The v1.8.0 web dashboard provides an optional, continuous view outside Discord.

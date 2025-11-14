@@ -18,6 +18,7 @@ This directory contains project documentation and release notes for the Aszune A
 - **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of
   critical coverage implementation
 - **[PR Description Template](./PR-DESCRIPTION.md)** - Template for pull request descriptions
+ - **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Real-time web dashboard overview and implementation details
 
 ## Release Notes Archive
 

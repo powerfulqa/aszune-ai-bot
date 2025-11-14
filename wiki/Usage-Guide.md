@@ -30,38 +30,39 @@ everything is now available through Discord commands!
 
 ## Basic Interaction
 
-Aszune AI Bot can be interacted with in two ways:
-
-1. **Traditional Commands** - Commands that start with `!`
-2. **Slash Commands** - Commands that start with `/`
+Aszune AI Bot primarily uses **slash commands** (start with `/`). A limited set of legacy `!`
+commands is still recognised for backward compatibility.
 
 ## Available Commands
 
 ### Core Commands
 
-| Command                                   | Description                                                 |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `!help` / `/help`                         | Shows a list of available commands and usage                |
-| `!clearhistory` / `/clearhistory`         | Clears your conversation history                            |
-| `!summary` / `/summary`                   | Summarises your current conversation in UK English          |
-| `!summarise <text>` / `!summerise <text>` | Summarises any provided text in UK English                  |
-| `!stats` / `/stats`                       | Shows your usage stats (messages sent, summaries requested) |
+| Command                       | Description                                                 |
+| ----------------------------- | ----------------------------------------------------------- |
+| `/help`                       | Shows a list of available commands and usage                |
+| `/clearhistory`               | Clears your conversation history                            |
+| `/summary`                    | Summarises your current conversation in UK English          |
+| `/summarise <text>`           | Summarises any provided text in UK English                  |
+| `/stats`                      | Shows your usage stats (messages sent, summaries requested) |
+| Legacy: `!help`, `!clearhistory`, `!summary`, `!summarise`, `!stats` | Limited support         |
 
 ### Analytics Commands (NEW)
 
-| Command                     | Description                                                     |
-| --------------------------- | --------------------------------------------------------------- |
-| `!analytics` / `/analytics` | Show Discord server analytics and performance insights          |
-| `!dashboard` / `/dashboard` | Display comprehensive performance dashboard with real-time data |
-| `!resources` / `/resources` | View resource optimization status and recommendations           |
+| Command        | Description                                                     |
+| -------------- | --------------------------------------------------------------- |
+| `/analytics`   | Show Discord server analytics and performance insights          |
+| `/dashboard`   | Display comprehensive performance dashboard with real-time data |
+| `/resources`   | View resource optimization status and recommendations           |
+| Legacy: `!analytics`, `!dashboard`, `!resources` | Limited support               |
 
 ### Reminder Commands (NEW)
 
 | Command                     | Description                                            |
 | --------------------------- | ------------------------------------------------------ |
-| `!remind <time> <message>`  | Set a reminder for a specific time with custom message |
-| `!reminders` / `/reminders` | List all your active reminders                         |
-| `!cancelreminder <index>`   | Cancel a specific reminder by index number             |
+| `/remind <time> <message>`  | Set a reminder for a specific time with custom message |
+| `/reminders`                | List all your active reminders                         |
+| `/cancelreminder <index>`   | Cancel a specific reminder by index number             |
+| Legacy: `!remind`, `!reminders`, `!cancelreminder` | Limited support             |
 
 ## Asking Questions
 
@@ -119,24 +120,12 @@ previous messages. This enables more coherent and contextual responses over time
 If you want to start a new conversation or clear your history:
 
 ```text
-!clearhistory
-```
-
-or
-
-```text
 /clearhistory
 ```
 
 ## Summarizing Conversations
 
 You can ask the bot to summarize your current conversation:
-
-```text
-!summary
-```
-
-or
 
 ```text
 /summary
@@ -147,7 +136,7 @@ or
 You can also ask the bot to summarize any text:
 
 ```text
-!summarise <your text here>
+/summarise <your text here>
 ```
 
 or
@@ -161,12 +150,6 @@ The bot will generate a concise summary in UK English.
 ## Viewing Your Stats
 
 To see how many messages you've sent to the bot and how many summaries you've requested:
-
-```text
-!stats
-```
-
-or
 
 ```
 /stats
@@ -228,12 +211,12 @@ You can set reminders in two ways:
 
 #### Explicit Commands
 
-Use the `!remind` command with natural language time expressions:
+Use the `/remind` command with natural language time expressions:
 
 ```text
-!remind in 5 minutes Check the oven
-!remind tomorrow at 3pm Team meeting
-!remind next friday Release day!
+/remind in 5 minutes Check the oven
+/remind tomorrow at 3pm Team meeting
+/remind next friday Release day!
 ```
 
 #### Natural Language
@@ -253,7 +236,7 @@ The bot will automatically research the information, find relevant dates, and se
 #### Viewing Your Reminders
 
 ```text
-!reminders
+/reminders
 ```
 
 This shows all your active reminders in chronological order.
@@ -261,8 +244,8 @@ This shows all your active reminders in chronological order.
 #### Cancelling Reminders
 
 ```text
-!reminders  # First see the list with index numbers
-!cancelreminder 1  # Cancel the first reminder
+/reminders  # First see the list with index numbers
+/cancelreminder 1  # Cancel the first reminder
 ```
 
 ### Reminder Features
@@ -302,3 +285,23 @@ many messages too quickly, the bot will remind you to wait.
 - Provide context when necessary
 - Use the summary feature to keep track of long conversations
 - Clear your history when starting a completely new topic
+
+## Version Updates
+
+### v1.8.0 – Dashboard & Coverage Policy (Current)
+
+- **Web Dashboard**: Optional Express + Socket.io dashboard at `http://localhost:3000` showing
+  live metrics and actual outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`,
+  and `/reminders`, plus a read‑only database viewer and recommendations.
+- **Coverage Policy**: Dual thresholds—≥80% for critical runtime files and ≥65% global baseline,
+  with a roadmap toward 82%+.
+- **Complexity Reduction**: Refactors across chat, cache, and error handling to align with ≤10
+  function complexity targets.
+
+### v1.6.0 – Analytics Integration
+
+- **Discord Analytics Commands**: `/analytics`, `/dashboard`, and `/resources` provide comprehensive
+  server monitoring directly in Discord.
+- **Real‑time Performance Monitoring**: Live system status, resource utilisation, and performance
+  metrics.
+- **Resource Optimization**: Automated recommendations for performance improvements.

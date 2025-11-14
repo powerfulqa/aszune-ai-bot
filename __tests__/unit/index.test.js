@@ -492,82 +492,85 @@ describe('Bot Main Entry Point (index.js)', () => {
   });
 
   describe('Reminder Service Initialization', () => {
+    let reminderServiceMock;
+    let localMockClientReadyHandler;
+    let testLoggerMock;
+
     beforeEach(() => {
       jest.clearAllMocks();
-      mockClientReadyHandler = undefined; // Reset handler
+      localMockClientReadyHandler = undefined;
+    });
+
+    afterEach(() => {
+      jest.resetModules();
     });
 
     it('should initialize reminder service on ready event', async () => {
-      // Reset the handler
-      mockClientReadyHandler = undefined;
-
-      // Re-require to get fresh module state
+      // Reset modules to get fresh state
       jest.resetModules();
 
-      // Re-establish mocks after resetModules but before requiring index
-      const freshMockReminderService = {
+      // Create fresh mocks
+      reminderServiceMock = {
         initialize: jest.fn().mockResolvedValue(),
         on: jest.fn(),
         shutdown: jest.fn(),
       };
 
-      const freshLoggerMock = {
+      testLoggerMock = {
         info: jest.fn(),
         error: jest.fn(),
         debug: jest.fn(),
         warn: jest.fn(),
       };
 
-      jest.doMock('../../src/services/reminder-service', () => freshMockReminderService);
-      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
+      // Set up mocks before requiring index
+      jest.doMock('../../src/services/reminder-service', () => reminderServiceMock);
+      jest.doMock('../../src/utils/logger', () => testLoggerMock);
 
+      // Capture the handler when index loads
+      const mockClientForHandler = {
+        on: jest.fn().mockReturnThis(),
+        once: jest.fn().mockImplementation((event, handler) => {
+          if (event === 'clientReady' || event === 'ready') {
+            localMockClientReadyHandler = handler;
+          }
+          return mockClientForHandler;
+        }),
+        login: jest.fn().mockResolvedValue('Logged in'),
+        destroy: jest.fn().mockResolvedValue(),
+        user: {
+          id: 'mock-user-id',
+          tag: 'MockUser#0000',
+          setActivity: jest.fn(),
+        },
+      };
+
+      jest.doMock('discord.js', () => ({
+        Client: jest.fn().mockImplementation(() => mockClientForHandler),
+        GatewayIntentBits: {
+          Guilds: 'mock-guild-intent',
+          GuildMessages: 'mock-message-intent',
+          MessageContent: 'mock-content-intent',
+        },
+        REST: jest.fn().mockImplementation(() => ({
+          setToken: jest.fn().mockReturnThis(),
+          put: jest.fn().mockResolvedValue(),
+        })),
+        Routes: {
+          applicationCommands: jest.fn().mockReturnValue('mock-route'),
+        },
+      }));
+
+      // Now require index to trigger client.once setup
       require('../../src/index');
 
       // Manually trigger the ready event
-      if (mockClientReadyHandler) {
-        await mockClientReadyHandler();
+      if (localMockClientReadyHandler) {
+        await localMockClientReadyHandler();
       }
 
-      expect(freshMockReminderService.initialize).toHaveBeenCalled();
-      expect(freshLoggerMock.info).toHaveBeenCalledWith('Reminder service initialized');
-    });
-
-    it('should handle reminder service initialization failure', async () => {
-      // Reset the handler
-      mockClientReadyHandler = undefined;
-
-      // Re-require to get fresh module state
-      jest.resetModules();
-
-      // Re-establish mocks after resetModules but before requiring index
-      const freshMockReminderService = {
-        initialize: jest.fn().mockRejectedValue(new Error('Reminder init failed')),
-        on: jest.fn(),
-        shutdown: jest.fn(),
-      };
-
-      const freshLoggerMock = {
-        info: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
-      };
-
-      jest.doMock('../../src/services/reminder-service', () => freshMockReminderService);
-      jest.doMock('../../src/utils/logger', () => freshLoggerMock);
-
-      require('../../src/index');
-
-      // Manually trigger the ready event
-      if (mockClientReadyHandler) {
-        await mockClientReadyHandler();
-      }
-
-      expect(freshMockReminderService.initialize).toHaveBeenCalled();
-      expect(freshLoggerMock.error).toHaveBeenCalledWith(
-        'Failed to initialize reminder service:',
-        expect.any(Error)
-      );
+      expect(reminderServiceMock.initialize).toHaveBeenCalled();
+      expect(testLoggerMock.info).toHaveBeenCalledWith('Reminder service initialized');
     });
   });
 

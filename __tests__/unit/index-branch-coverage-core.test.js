@@ -3,122 +3,100 @@
  * Tests basic initialization and error handling
  */
 
-// Mock logger
-const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-jest.mock('../../src/utils/logger', () => mockLogger);
-
-// Mock config
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  CACHE: {
-    CLEANUP_INTERVAL_MS: 300000,
-  },
-  PI_OPTIMIZATIONS: {
-    ENABLED: false,
-    CLEANUP_INTERVAL_MINUTES: 5,
-  },
-  initializePiOptimizations: jest.fn(),
-}));
-
-// Mock client
-const mockClient = {
-  on: jest.fn(),
-  once: jest.fn(),
-  login: jest.fn().mockResolvedValue(),
-  destroy: jest.fn().mockResolvedValue(),
-  user: { tag: 'MockBot#0000', id: '123456789' },
-};
-
-// Mock commands module
-// Commands will be mocked individually in each test
-
-// Mock Discord.js
-jest.mock('discord.js', () => ({
-  Client: jest.fn(() => mockClient),
-  GatewayIntentBits: {
-    Guilds: 1,
-    GuildMessages: 2,
-    MessageContent: 3,
-  },
-  REST: jest.fn(() => ({
-    setToken: jest.fn().mockReturnThis(),
-    put: jest.fn().mockResolvedValue(),
-  })),
-  Routes: {
-    applicationCommands: jest.fn().mockReturnValue('mock-route'),
-  },
-}));
-
-// Mock config
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  PERPLEXITY_API_KEY: 'test-key',
-  PI_OPTIMIZATIONS: { ENABLED: false },
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai',
-      ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
-      },
-    },
-  },
-  FILE_PERMISSIONS: {
-    FILE: 0o644,
-    DIRECTORY: 0o755,
-  },
-  CACHE: {
-    DEFAULT_MAX_ENTRIES: 100,
-    MAX_MEMORY_MB: 50,
-    DEFAULT_TTL_MS: 300000,
-    CLEANUP_INTERVAL_MS: 300000,
-  },
-  initializePiOptimizations: jest.fn(),
-}));
-
-// Mock other modules
-jest.mock('../../src/commands', () => ({
-  handleTextCommand: jest.fn(),
-  handleSlashCommand: jest.fn(),
-}));
-
-// Mock chat service
-jest.mock('../../src/services/chat', () => ({
-  default: jest.fn(),
-}));
-
-// Mock perplexity service
-jest.mock('../../src/services/perplexity-secure', () => ({
-  PERPLEXITY: jest.fn().mockImplementation(() => ({
-    generateChatResponse: jest.fn(),
-    generateSummary: jest.fn(),
-  })),
-}));
-
 describe('index.js - Core Branch Coverage', () => {
+  let index;
+  let mockLogger;
+  let mockClient;
+  let mockRest;
+  let mockConversationManager;
   let originalExit;
   let originalEnv;
 
   beforeEach(() => {
     jest.resetModules();
-
-    // Reset all mocks before each test
     jest.clearAllMocks();
 
-    // Reset mock client state
-    mockClient.on.mockClear();
-    mockClient.once.mockClear();
-    mockClient.login.mockClear();
-    mockClient.destroy.mockClear();
-    mockClient.user = { tag: 'MockBot#0000', id: '123456789' };
+    // Create fresh mocks after resetModules
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-    // Save original process methods
+    mockClient = {
+      on: jest.fn(),
+      once: jest.fn(),
+      login: jest.fn().mockResolvedValue(),
+      destroy: jest.fn().mockResolvedValue(),
+      user: { tag: 'MockBot#0000', id: '123456789' },
+    };
+
+    mockRest = {
+      setToken: jest.fn().mockReturnThis(),
+      put: jest.fn().mockResolvedValue(),
+    };
+
+    mockConversationManager = {
+      initializeIntervals: jest.fn(),
+      destroy: jest.fn().mockResolvedValue(),
+    };
+
+    // Set up mocks after resetModules using jest.doMock
+    jest.doMock('../../src/utils/logger', () => mockLogger);
+
+    jest.doMock('../../src/config/config', () => ({
+      DISCORD_BOT_TOKEN: 'test-token',
+      PERPLEXITY_API_KEY: 'test-key',
+      PI_OPTIMIZATIONS: { ENABLED: false },
+      CACHE: {
+        DEFAULT_MAX_ENTRIES: 100,
+        MAX_MEMORY_MB: 50,
+        DEFAULT_TTL_MS: 300000,
+        CLEANUP_INTERVAL_MS: 300000,
+      },
+      API: {
+        PERPLEXITY: {
+          BASE_URL: 'https://api.perplexity.ai',
+          ENDPOINTS: {
+            CHAT_COMPLETIONS: '/chat/completions',
+          },
+        },
+      },
+      FILE_PERMISSIONS: {
+        FILE: 0o644,
+        DIRECTORY: 0o755,
+      },
+      initializePiOptimizations: jest.fn(),
+    }));
+
+    jest.doMock('discord.js', () => ({
+      Client: jest.fn(() => mockClient),
+      GatewayIntentBits: {
+        Guilds: 1,
+        GuildMessages: 2,
+        MessageContent: 3,
+      },
+      REST: jest.fn(() => mockRest),
+      Routes: {
+        applicationCommands: jest.fn().mockReturnValue('mock-route'),
+      },
+    }));
+
+    jest.doMock('../../src/commands', () => ({
+      handleTextCommand: jest.fn(),
+      handleSlashCommand: jest.fn(),
+      getSlashCommandsData: jest.fn(() => []),
+    }));
+
+    jest.doMock('../../src/services/chat', () => jest.fn());
+
+    jest.doMock('../../src/utils/conversation', () => jest.fn(() => mockConversationManager));
+
+    // Mock process methods
     originalExit = process.exit;
     originalEnv = process.env.NODE_ENV;
+    process.exit = jest.fn();
   });
 
   afterEach(() => {

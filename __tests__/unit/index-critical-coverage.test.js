@@ -3,100 +3,17 @@
  * Focus on uncovered lines and branches to meet critical file requirements
  */
 
-// Mock logger
-const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-jest.mock('../../src/utils/logger', () => mockLogger);
-
-// Mock config with comprehensive options
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  PERPLEXITY_API_KEY: 'test-key',
-  PI_OPTIMIZATIONS: {
-    ENABLED: true,
-    CLEANUP_INTERVAL_MINUTES: 5,
-  },
-  CACHE: {
-    CLEANUP_INTERVAL_MS: 300000,
-  },
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai',
-      ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
-      },
-    },
-  },
-  FILE_PERMISSIONS: {
-    FILE: 0o644,
-    DIRECTORY: 0o755,
-  },
-  initializePiOptimizations: jest.fn().mockResolvedValue(),
-}));
-
-// Mock Discord.js with comprehensive event handling
-const mockClient = {
-  on: jest.fn(),
-  once: jest.fn(),
-  login: jest.fn().mockResolvedValue(),
-  destroy: jest.fn().mockResolvedValue(),
-  user: { tag: 'TestBot#0000', id: '123456789' },
-};
-
-const mockRest = {
-  put: jest.fn().mockResolvedValue(),
-  setToken: jest.fn().mockReturnThis(),
-};
-
-jest.mock('discord.js', () => ({
-  Client: jest.fn(() => mockClient),
-  GatewayIntentBits: {
-    Guilds: 1,
-    GuildMessages: 2,
-    MessageContent: 4,
-  },
-  REST: jest.fn(() => mockRest),
-  Routes: {
-    applicationCommands: jest.fn(() => 'applications/123456789/commands'),
-  },
-}));
-
-// Mock services and utilities
-jest.mock('../../src/services/chat', () => jest.fn());
-jest.mock('../../src/commands', () => ({
-  getSlashCommandsData: jest.fn(() => [
-    { name: 'help', description: 'Show help' },
-    { name: 'stats', description: 'Show stats' },
-  ]),
-  handleSlashCommand: jest.fn(),
-}));
-
-// Mock conversation manager
-const mockConversationManager = {
-  initializeIntervals: jest.fn(),
-  destroy: jest.fn().mockResolvedValue(),
-};
-jest.mock('../../src/utils/conversation', () => jest.fn(() => mockConversationManager));
-
-// Mock lazy loader and Pi optimization modules
-jest.mock('../../src/utils/lazy-loader', () => ({
-  lazyLoad: jest.fn((fn) => fn),
-}));
-
-const mockMemoryMonitor = { initialize: jest.fn() };
-const mockPerformanceMonitor = { initialize: jest.fn() };
-jest.mock('../../src/utils/memory-monitor', () => mockMemoryMonitor);
-jest.mock('../../src/utils/performance-monitor', () => mockPerformanceMonitor);
-
 describe('index.js - Critical Coverage Enhancement', () => {
   let index;
   let originalProcessEnv;
   let originalProcessOn;
   let originalProcessExit;
+  let freshMockLogger;
+  let mockClient;
+  let mockRest;
+  let mockConversationManager;
+  let mockMemoryMonitor;
+  let mockPerformanceMonitor;
 
   beforeAll(() => {
     originalProcessEnv = process.env.NODE_ENV;
@@ -114,6 +31,94 @@ describe('index.js - Critical Coverage Enhancement', () => {
     jest.resetModules();
     jest.clearAllMocks();
 
+    // Create fresh mocks after resetModules
+    freshMockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    mockClient = {
+      on: jest.fn(),
+      once: jest.fn(),
+      login: jest.fn().mockResolvedValue(),
+      destroy: jest.fn().mockResolvedValue(),
+      user: { tag: 'TestBot#0000', id: '123456789' },
+    };
+
+    mockRest = {
+      put: jest.fn().mockResolvedValue(),
+      setToken: jest.fn().mockReturnThis(),
+    };
+
+    mockConversationManager = {
+      initializeIntervals: jest.fn(),
+      destroy: jest.fn().mockResolvedValue(),
+    };
+
+    mockMemoryMonitor = { initialize: jest.fn() };
+    mockPerformanceMonitor = { initialize: jest.fn() };
+
+    // Set up mocks after resetModules
+    jest.doMock('../../src/utils/logger', () => freshMockLogger);
+
+    jest.doMock('../../src/config/config', () => ({
+      DISCORD_BOT_TOKEN: 'test-token',
+      PERPLEXITY_API_KEY: 'test-key',
+      PI_OPTIMIZATIONS: {
+        ENABLED: true,
+        CLEANUP_INTERVAL_MINUTES: 5,
+      },
+      CACHE: {
+        CLEANUP_INTERVAL_MS: 300000,
+      },
+      API: {
+        PERPLEXITY: {
+          BASE_URL: 'https://api.perplexity.ai',
+          ENDPOINTS: {
+            CHAT_COMPLETIONS: '/chat/completions',
+          },
+        },
+      },
+      FILE_PERMISSIONS: {
+        FILE: 0o644,
+        DIRECTORY: 0o755,
+      },
+      initializePiOptimizations: jest.fn().mockResolvedValue(),
+    }));
+
+    jest.doMock('discord.js', () => ({
+      Client: jest.fn(() => mockClient),
+      GatewayIntentBits: {
+        Guilds: 1,
+        GuildMessages: 2,
+        MessageContent: 4,
+      },
+      REST: jest.fn(() => mockRest),
+      Routes: {
+        applicationCommands: jest.fn(() => 'applications/123456789/commands'),
+      },
+    }));
+
+    jest.doMock('../../src/services/chat', () => jest.fn());
+    jest.doMock('../../src/commands', () => ({
+      getSlashCommandsData: jest.fn(() => [
+        { name: 'help', description: 'Show help' },
+        { name: 'stats', description: 'Show stats' },
+      ]),
+      handleSlashCommand: jest.fn(),
+    }));
+
+    jest.doMock('../../src/utils/conversation', () => jest.fn(() => mockConversationManager));
+
+    jest.doMock('../../src/utils/lazy-loader', () => ({
+      lazyLoad: jest.fn((fn) => fn),
+    }));
+
+    jest.doMock('../../src/utils/memory-monitor', () => mockMemoryMonitor);
+    jest.doMock('../../src/utils/performance-monitor', () => mockPerformanceMonitor);
+
     // Mock process methods
     process.on = jest.fn();
     process.exit = jest.fn();
@@ -122,6 +127,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
   describe('Production Environment with Pi Optimizations', () => {
     beforeEach(() => {
       process.env.NODE_ENV = 'production';
+      index = require('../../src/index');
     });
 
     it('should initialize Pi optimizations in production environment', () => {
@@ -144,7 +150,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
         index = require('../../src/index');
       }).not.toThrow();
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(freshMockLogger.warn).toHaveBeenCalledWith(
         'Failed to initialize Pi optimizations:',
         expect.any(Error)
       );
@@ -172,19 +178,25 @@ describe('index.js - Critical Coverage Enhancement', () => {
     });
 
     it('should handle ready event and register slash commands', async () => {
+      process.env.NODE_ENV = 'test';
+      index = require('../../src/index');
+
       // Simulate clientReady event
       const readyHandler = mockClient.once.mock.calls.find((call) => call[0] === 'clientReady')[1];
 
       await readyHandler();
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Discord bot is online as TestBot#0000!');
+      expect(freshMockLogger.info).toHaveBeenCalledWith('Discord bot is online as TestBot#0000!');
       expect(mockRest.put).toHaveBeenCalledWith('applications/123456789/commands', {
         body: expect.any(Array),
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('Slash commands registered successfully');
+      expect(freshMockLogger.info).toHaveBeenCalledWith('Slash commands registered successfully');
     });
 
     it('should handle slash command registration errors', async () => {
+      process.env.NODE_ENV = 'test';
+      index = require('../../src/index');
+
       // Mock REST to throw error
       mockRest.put.mockRejectedValueOnce(new Error('Registration failed'));
 
@@ -192,7 +204,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
       await readyHandler();
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(freshMockLogger.error).toHaveBeenCalledWith(
         'Error registering slash commands:',
         expect.any(Error)
       );
@@ -209,21 +221,27 @@ describe('index.js - Critical Coverage Enhancement', () => {
     });
 
     it('should handle error events', () => {
+      process.env.NODE_ENV = 'test';
+      index = require('../../src/index');
+
       const errorHandler = mockClient.on.mock.calls.find((call) => call[0] === 'error')[1];
       const testError = new Error('Discord client error');
 
       errorHandler(testError);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Discord client error:', testError);
+      expect(freshMockLogger.error).toHaveBeenCalledWith('Discord client error:', testError);
     });
 
     it('should handle warn events', () => {
+      process.env.NODE_ENV = 'test';
+      index = require('../../src/index');
+
       const warnHandler = mockClient.on.mock.calls.find((call) => call[0] === 'warn')[1];
       const testWarning = 'Discord client warning';
 
       warnHandler(testWarning);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('Discord client warning:', testWarning);
+      expect(freshMockLogger.warn).toHaveBeenCalledWith('Discord client warning:', testWarning);
     });
 
     it('should handle interaction events', async () => {
@@ -269,7 +287,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
       await index.shutdown('SIGINT');
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(freshMockLogger.error).toHaveBeenCalledWith(
         'Error shutting down conversation manager:',
         expect.any(Error)
       );
@@ -281,7 +299,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
       await index.shutdown('SIGINT');
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(freshMockLogger.error).toHaveBeenCalledWith(
         'Error shutting down Discord client:',
         expect.any(Error)
       );
@@ -294,7 +312,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
       await Promise.all([shutdownPromise1, shutdownPromise2]);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(freshMockLogger.info).toHaveBeenCalledWith(
         'Shutdown already in progress. Ignoring additional SIGTERM signal.'
       );
     });
@@ -309,7 +327,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
       await index.shutdown('SIGINT');
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Shutdown completed with 2 error(s)');
+      expect(freshMockLogger.error).toHaveBeenCalledWith('Shutdown completed with 2 error(s)');
       // Process.exit would be called in production but not in test
     });
   });
@@ -345,6 +363,18 @@ describe('index.js - Critical Coverage Enhancement', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
+      // Reset modules and re-establish all mocks
+      jest.resetModules();
+      jest.clearAllMocks();
+
+      // Create fresh logger mock
+      const localMockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
       // Mock lazy loader to throw error
       jest.doMock('../../src/utils/lazy-loader', () => ({
         lazyLoad: jest.fn().mockImplementation(() => {
@@ -352,12 +382,22 @@ describe('index.js - Critical Coverage Enhancement', () => {
         }),
       }));
 
+      jest.doMock('../../src/utils/logger', () => localMockLogger);
+      jest.doMock('../../src/config/config', () => ({
+        DISCORD_BOT_TOKEN: 'test-token',
+        PI_OPTIMIZATIONS: { ENABLED: true },
+      }));
+      jest.doMock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
+      }));
+      jest.doMock('../../src/utils/memory-monitor', () => ({ initialize: jest.fn() }));
+      jest.doMock('../../src/utils/performance-monitor', () => ({ initialize: jest.fn() }));
+
       // Re-import to trigger module load time initialization
-      jest.resetModules();
       require('../../src/index');
 
       // Verify error was logged during module initialization
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(localMockLogger.warn).toHaveBeenCalledWith(
         'Failed to initialize Pi optimizations:',
         expect.any(Error)
       );
@@ -371,9 +411,25 @@ describe('index.js - Critical Coverage Enhancement', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
+      // Reset modules and re-establish all mocks
+      jest.resetModules();
+      jest.clearAllMocks();
+
+      const localMockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
       // Mock config with PI optimizations disabled
       jest.doMock('../../src/config/config', () => ({
         PI_OPTIMIZATIONS: { ENABLED: false },
+      }));
+
+      jest.doMock('../../src/utils/logger', () => localMockLogger);
+      jest.doMock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
       }));
 
       // Re-import to trigger module load time initialization
@@ -381,7 +437,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
       require('../../src/index');
 
       // Verify Pi optimizations were not initialized
-      expect(mockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
+      expect(localMockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
 
       // Restore environment
       process.env.NODE_ENV = originalEnv;
@@ -392,9 +448,25 @@ describe('index.js - Critical Coverage Enhancement', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
+      // Reset modules and re-establish all mocks
+      jest.resetModules();
+      jest.clearAllMocks();
+
+      const localMockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
       // Mock config with null PI_OPTIMIZATIONS
       jest.doMock('../../src/config/config', () => ({
         PI_OPTIMIZATIONS: null,
+      }));
+
+      jest.doMock('../../src/utils/logger', () => localMockLogger);
+      jest.doMock('discord.js', () => ({
+        Client: jest.fn(() => mockClient),
       }));
 
       // Re-import to trigger module load time initialization
@@ -402,7 +474,7 @@ describe('index.js - Critical Coverage Enhancement', () => {
       require('../../src/index');
 
       // Verify Pi optimizations were not initialized
-      expect(mockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
+      expect(localMockLogger.info).not.toHaveBeenCalledWith('Initializing Pi optimizations');
 
       // Restore environment
       process.env.NODE_ENV = originalEnv;

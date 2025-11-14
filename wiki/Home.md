@@ -6,10 +6,11 @@ usage, and development of the Aszune AI Bot.
 ## What is Aszune AI Bot?
 
 Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
-the Perpthe Perplexity API with the **sonar** model. It maintains persistent conversation history
+the Perplexity API with the **sonar** model. It maintains persistent conversation history
 for each user through SQLite database integration and adds fun emoji reactions based on keywords
-found in messages. The bot supports both traditional `!` commands and modern Discord slash commands,
-with comprehensive analytics and user engagement tracking capabilities.
+found in messages. The bot primarily supports modern Discord slash commands, with limited legacy `!`
+command compatibility for backward support. Comprehensive analytics and user engagement tracking are
+included.
 
 ## Navigation
 
@@ -23,6 +24,7 @@ with comprehensive analytics and user engagement tracking capabilities.
 - [Pi Optimization Guide](Pi-Optimization-Guide) - Raspberry Pi performance optimizations
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers
+ - [Web Dashboard](../docs/DASHBOARD-v1.8.0-RELEASE.md) - Real-time metrics and command outputs (v1.8.0)
 
 ## Code Quality & Standards
 
@@ -50,6 +52,12 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
   - All 123 test suites passing (1,231 tests total; 1,228 passing, 3 skipped); zero flake detection
   - No breaking changes; full compatibility with v1.7.0 persistence & reminder features
 
+  
+  Web Dashboard (v1.8.0): Available locally at `http://localhost:3000` when the bot is running.
+  Shows live outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and
+  `/reminders` in Discord-style cards, plus a read-only database viewer and recommendations. See
+  [docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md) for details.
+
 **v1.7.0** - Database Integration & Reminder System (2025-10-08)
   - **SQLite Database Integration**: Full persistent data storage for conversation history and user
     analytics
@@ -71,7 +79,7 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
   - Adaptive Pi startup script improvements (`start-pi-optimized.sh`)
   - Added regression summary doc (`docs/REGRESSION-FIX-v1.7.0.md`)
 
-ged Licensing (2025-10-01)
+**v1.6.0** – Analytics & Feature‑Flagged Licensing (2025-10-01)
 
 - **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
   provide comprehensive system monitoring directly in Discord
