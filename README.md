@@ -40,28 +40,7 @@ Current local quality status: 1,231 tests (1,228 passing) – 75.57% statements 
 
 ---
 
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-  - [Prerequisites](#prerequisites)
-  - [Setup Steps](#setup-steps)
-- [Usage](#usage)
-  - [Running the Bot Manually](#running-the-bot-manually)
-  - [Running with PM2 (for Production)](#running-with-pm2-for-production)
-- [Bot Commands](#bot-commands)
-- [Project Structure](#project-structure)
-- [Code Quality](#code-quality)
-  - [Quality Standards](#quality-standards)
-  - [Running Quality Checks](#running-quality-checks)
-- [Testing & Coverage](#testing--coverage)
-  - [Branch Coverage Testing](#branch-coverage-testing)
-- [Troubleshooting](#troubleshooting)
-- [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
-- [License](#license)
-
----
+ 
 
 ## Features
 
@@ -310,6 +289,13 @@ starting the bot, and enables automatic restart after a reboot.
 
 **Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations. Always use the shell
 script for Pi deployments.
+
+---
+
+### Web Dashboard Access (v1.8.0)
+
+- Access: `http://localhost:3000` while the bot is running
+- Details: see `docs/DASHBOARD-v1.8.0-RELEASE.md` for features and screenshots
 
 ---
 
