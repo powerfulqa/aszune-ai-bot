@@ -1,190 +1,1405 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html><!DOCTYPE html><!DOCTYPE html>
+
 <html lang="en">
-<head>
+
+<head><html lang="en">
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><head><html lang="en"><html lang="en">
+
     <title>Aszune AI Bot Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">    <meta charset="UTF-8">
+
 </head>
-<body>
+
+<body>    <meta name="viewport" content="width=device-width, initial-scale=1.0"><head><head>
+
     <div class="dashboard">
+
+        <!-- Header -->    <title>Aszune AI Bot Dashboard</title>
+
         <header class="dashboard-header">
-            <h1>Aszune AI Bot Dashboard</h1>
-            <div class="status-indicator">
-                <span class="status-dot" id="status-dot"></span>
-                <span id="status-text">Connecting...</span>
-            </div>
+
+            <div class="header-left">    <link rel="stylesheet" href="styles.css">    <meta charset="UTF-8">    <meta charset="UTF-8">
+
+                <h1>Aszune AI Bot Dashboard</h1>
+
+                <div class="version-info"></head>
+
+                    <span class="version-badge" id="version-badge">
+
+                        <span class="version-text">v<span id="version-number">1.8.0</span></span><body>    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
+
+                    </span>    <div class="dashboard">
+
+                </div>
+
+            </div>        <!-- Header with Version Info -->    <title>Aszune AI Bot Dashboard</title>    <title>Aszune AI Bot Dashboard</title>
+
+            <div class="header-right">
+
+                <div class="status-indicator">        <header class="dashboard-header">
+
+                    <span class="status-dot connecting" id="status-dot"></span>
+
+                    <span id="status-text">Connecting...</span>            <div class="header-left">    <link rel="stylesheet" href="styles.css">    <link rel="stylesheet" href="styles.css">
+
+                </div>
+
+            </div>                <h1>Aszune AI Bot Dashboard</h1>
+
         </header>
 
-        <div class="metrics-grid">
-            <!-- System Metrics -->
+                <div class="version-info">    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+        <!-- Commands Output Section -->
+
+        <section class="commands-section">                    <span class="version-badge" id="version-badge">
+
+            <h2>🎮 Slash Commands Output</h2>
+
+            <div class="commands-output-grid">                        <span class="version-text">v<span id="version-number">1.8.0</span></span></head></head>
+
+                <!-- /stats -->
+
+                <div class="command-output-card">                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
+
+                    <div class="command-header">
+
+                        <h3><code>/stats</code></h3>                    </span><body><body>
+
+                        <p class="command-description">Your Usage Statistics</p>
+
+                    </div>                </div>
+
+                    <div class="command-embed">
+
+                        <div class="embed-field">            </div>    <div class="dashboard">    <div class="dashboard">
+
+                            <strong>Messages sent:</strong> <span id="cmd-stats-messages">-</span>
+
+                        </div>            <div class="header-right">
+
+                        <div class="embed-field">
+
+                            <strong>Summaries requested:</strong> <span id="cmd-stats-summaries">-</span>                <div class="status-indicator">        <!-- Header with Version Info -->        <header class="dashboard-header">
+
+                        </div>
+
+                        <div class="embed-field">                    <span class="status-dot connecting" id="status-dot"></span>
+
+                            <strong>Active reminders:</strong> <span id="cmd-stats-reminders">-</span>
+
+                        </div>                    <span id="status-text">Connecting...</span>        <header class="dashboard-header">            <h1>Aszune AI Bot Dashboard</h1>
+
+                    </div>
+
+                </div>                </div>
+
+
+
+                <!-- /analytics -->            </div>            <div class="header-left">            <div class="status-indicator">
+
+                <div class="command-output-card">
+
+                    <div class="command-header">        </header>
+
+                        <h3><code>/analytics</code></h3>
+
+                        <p class="command-description">Discord Server Analytics</p>                <h1>Aszune AI Bot Dashboard</h1>                <span class="status-dot" id="status-dot"></span>
+
+                    </div>
+
+                    <div class="command-embed">        <!-- Slash Commands Output Section -->
+
+                        <div class="embed-field">
+
+                            <strong>Total Users:</strong> <span id="cmd-analytics-users">-</span>        <section class="commands-section">                <div class="version-info">                <span id="status-text">Connecting...</span>
+
+                        </div>
+
+                        <div class="embed-field">            <h2>🎮 Slash Commands Output</h2>
+
+                            <strong>Online Members:</strong> <span id="cmd-analytics-online">-</span>
+
+                        </div>            <div class="commands-output-grid">                    <span class="version-badge" id="version-badge">            </div>
+
+                        <div class="embed-field">
+
+                            <strong>Bot Count:</strong> <span id="cmd-analytics-bots">-</span>                <!-- /stats Command Output -->
+
+                        </div>
+
+                        <div class="embed-field">                <div class="command-output-card">                        <span class="version-text">v<span id="version-number">1.8.0</span></span>        </header>
+
+                            <strong>Success Rate:</strong> <span id="cmd-analytics-success">-</span>
+
+                        </div>                    <div class="command-header">
+
+                    </div>
+
+                </div>                        <h3><code>/stats</code></h3>                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
+
+
+
+                <!-- /cache -->                        <p class="command-description">Your Usage Statistics</p>
+
+                <div class="command-output-card">
+
+                    <div class="command-header">                    </div>                    </span>        <div class="metrics-grid">
+
+                        <h3><code>/cache</code></h3>
+
+                        <p class="command-description">Cache Statistics (v1.6.5)</p>                    <div class="command-embed">
+
+                    </div>
+
+                    <div class="command-embed">                        <div class="embed-field">                </div>            <!-- System Metrics -->
+
+                        <div class="embed-field">
+
+                            <strong>Hit Rate:</strong> <span id="cmd-cache-hits">-</span>                            <strong>Messages sent:</strong> <span id="cmd-stats-messages">0</span>
+
+                        </div>
+
+                        <div class="embed-field">                        </div>            </div>            <div class="metric-card">
+
+                            <strong>Misses:</strong> <span id="cmd-cache-misses">-</span>
+
+                        </div>                        <div class="embed-field">
+
+                        <div class="embed-field">
+
+                            <strong>Memory Used:</strong> <span id="cmd-cache-memory">-</span>                            <strong>Summaries requested:</strong> <span id="cmd-stats-summaries">0</span>            <div class="header-right">                <h3>System Status</h3>
+
+                        </div>
+
+                        <div class="embed-field">                        </div>
+
+                            <strong>Entries:</strong> <span id="cmd-cache-entries">-</span>
+
+                        </div>                        <div class="embed-field">                <div class="status-indicator">                <div class="metric-content">
+
+                    </div>
+
+                </div>                            <strong>Active reminders:</strong> <span id="cmd-stats-reminders">0</span>
+
+
+
+                <!-- /dashboard -->                        </div>                    <span class="status-dot" id="status-dot"></span>                    <div class="metric-item">
+
+                <div class="command-output-card">
+
+                    <div class="command-header">                    </div>
+
+                        <h3><code>/dashboard</code></h3>
+
+                        <p class="command-description">Performance Dashboard</p>                </div>                    <span id="status-text">Connecting...</span>                        <span class="label">Uptime:</span>
+
+                    </div>
+
+                    <div class="command-embed">
+
+                        <div class="embed-field">
+
+                            <strong>System Status:</strong> <span id="cmd-dashboard-status" class="status-badge">-</span>                <!-- /analytics Command Output -->                </div>                        <span class="value" id="system-uptime">-</span>
+
+                        </div>
+
+                        <div class="embed-field">                <div class="command-output-card">
+
+                            <strong>Response Time:</strong> <span id="cmd-dashboard-response">-</span>
+
+                        </div>                    <div class="command-header">            </div>                    </div>
+
+                        <div class="embed-field">
+
+                            <strong>Memory Usage:</strong> <span id="cmd-dashboard-memory">-</span>                        <h3><code>/analytics</code></h3>
+
+                        </div>
+
+                        <div class="embed-field">                        <p class="command-description">Discord Server Analytics</p>        </header>                    <div class="metric-item">
+
+                            <strong>Optimization Tier:</strong> <span id="cmd-dashboard-tier">-</span>
+
+                        </div>                    </div>
+
+                    </div>
+
+                </div>                    <div class="command-embed">                        <span class="label">Memory Usage:</span>
+
+
+
+                <!-- /resources -->                        <div class="embed-field">
+
+                <div class="command-output-card">
+
+                    <div class="command-header">                            <strong>Total Users:</strong> <span id="cmd-analytics-users">0</span>        <!-- Slash Commands Reference Section -->                        <span class="value" id="memory-usage">-</span>
+
+                        <h3><code>/resources</code></h3>
+
+                        <p class="command-description">Resource Optimization Status</p>                        </div>
+
+                    </div>
+
+                    <div class="command-embed">                        <div class="embed-field">        <section class="commands-section">                    </div>
+
+                        <div class="embed-field">
+
+                            <strong>Memory Status:</strong> <span id="cmd-resources-mem-status" class="status-badge">-</span>                            <strong>Online Members:</strong> <span id="cmd-analytics-online">0</span>
+
+                        </div>
+
+                        <div class="embed-field">                        </div>            <h2>📋 Available Slash Commands</h2>                    <div class="metric-item">
+
+                            <strong>Used / Free:</strong> <span id="cmd-resources-mem-usage">-</span>
+
+                        </div>                        <div class="embed-field">
+
+                        <div class="embed-field">
+
+                            <strong>Performance Status:</strong> <span id="cmd-resources-perf-status" class="status-badge">-</span>                            <strong>Bot Count:</strong> <span id="cmd-analytics-bots">0</span>            <div class="commands-grid">                        <span class="label">CPU Load:</span>
+
+                        </div>
+
+                        <div class="embed-field">                        </div>
+
+                            <strong>Response Time:</strong> <span id="cmd-resources-response">-</span>
+
+                        </div>                        <div class="embed-field">                <!-- /analytics Command -->                        <span class="value" id="cpu-load">-</span>
+
+                    </div>
+
+                </div>                            <strong>Success Rate:</strong> <span id="cmd-analytics-success">100%</span>
+
+
+
+                <!-- /reminders -->                        </div>                <div class="command-card">                    </div>
+
+                <div class="command-output-card">
+
+                    <div class="command-header">                    </div>
+
+                        <h3><code>/reminders</code></h3>
+
+                        <p class="command-description">Your Active Reminders</p>                </div>                    <h3><code>/analytics</code></h3>                    <div class="metric-item">
+
+                    </div>
+
+                    <div class="command-embed" id="cmd-reminders-list">
+
+                        <div class="embed-field">
+
+                            Loading reminders...                <!-- /cache Command Output -->                    <p class="command-description">Discord Server Analytics</p>                        <span class="label">Platform:</span>
+
+                        </div>
+
+                    </div>                <div class="command-output-card">
+
+                </div>
+
+            </div>                    <div class="command-header">                    <ul class="command-features">                        <span class="value" id="platform">-</span>
+
+        </section>
+
+                        <h3><code>/cache</code></h3>
+
+        <!-- System Metrics -->
+
+        <div class="metrics-grid">                        <p class="command-description">Cache Statistics (v1.6.5)</p>                        <li>Live member data</li>                    </div>
+
             <div class="metric-card">
-                <h3>System Status</h3>
+
+                <h3>System Status</h3>                    </div>
+
                 <div class="metric-content">
-                    <div class="metric-item">
+
+                    <div class="metric-item">                    <div class="command-embed">                        <li>Active user counts</li>                </div>
+
                         <span class="label">Uptime:</span>
-                        <span class="value" id="system-uptime">-</span>
+
+                        <span class="value" id="uptime">-</span>                        <div class="embed-field">
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                            <strong>Hit Rate:</strong> <span id="cmd-cache-hits">78%</span>                        <li>Server statistics</li>            </div>
+
                         <span class="label">Memory Usage:</span>
-                        <span class="value" id="memory-usage">-</span>
+
+                        <span class="value" id="memory-usage">-</span>                        </div>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        <div class="embed-field">                        <li>Presence detection</li>
+
                         <span class="label">CPU Load:</span>
-                        <span class="value" id="cpu-load">-</span>
+
+                        <span class="value" id="cpu-load">-</span>                            <strong>Misses:</strong> <span id="cmd-cache-misses">22%</span>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        </div>                    </ul>            <!-- Process Metrics -->
+
                         <span class="label">Platform:</span>
-                        <span class="value" id="platform">-</span>
+
+                        <span class="value" id="platform">-</span>                        <div class="embed-field">
+
                     </div>
-                </div>
+
+                </div>                            <strong>Memory Used:</strong> <span id="cmd-cache-memory">12.45 MB</span>                </div>            <div class="metric-card">
+
             </div>
 
-            <!-- Process Metrics -->
+                        </div>
+
             <div class="metric-card">
-                <h3>Process Info</h3>
+
+                <h3>Process Info</h3>                        <div class="embed-field">                <h3>Process Info</h3>
+
                 <div class="metric-content">
-                    <div class="metric-item">
+
+                    <div class="metric-item">                            <strong>Entries:</strong> <span id="cmd-cache-entries">142</span>
+
                         <span class="label">Process ID:</span>
-                        <span class="value" id="process-pid">-</span>
+
+                        <span class="value" id="process-pid">-</span>                        </div>                <!-- /cache Command -->                <div class="metric-content">
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                    </div>
+
                         <span class="label">Process Memory:</span>
-                        <span class="value" id="process-memory">-</span>
+
+                        <span class="value" id="process-memory">-</span>                </div>                <div class="command-card">                    <div class="metric-item">
+
                     </div>
+
                     <div class="metric-item">
+
                         <span class="label">Heap Usage:</span>
-                        <span class="value" id="heap-usage">-</span>
+
+                        <span class="value" id="heap-usage">-</span>                <!-- /dashboard Command Output -->                    <h3><code>/cache</code></h3>                        <span class="label">Process ID:</span>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                <div class="command-output-card">
+
                         <span class="label">Node Version:</span>
-                        <span class="value" id="node-version-info">-</span>
+
+                        <span class="value" id="node-version-info">-</span>                    <div class="command-header">                    <p class="command-description">Cache Statistics (v1.6.5)</p>                        <span class="value" id="process-pid">-</span>
+
                     </div>
-                </div>
+
+                </div>                        <h3><code>/dashboard</code></h3>
+
             </div>
 
-            <!-- Cache Metrics -->
+                        <p class="command-description">Performance Dashboard</p>                    <ul class="command-features">                    </div>
+
             <div class="metric-card">
-                <h3>Cache Performance</h3>
+
+                <h3>Cache Performance</h3>                    </div>
+
                 <div class="metric-content">
-                    <div class="metric-item">
+
+                    <div class="metric-item">                    <div class="command-embed">                        <li>Hit rate & performance</li>                    <div class="metric-item">
+
                         <span class="label">Hit Rate:</span>
-                        <span class="value" id="cache-hit-rate">-</span>
+
+                        <span class="value" id="cache-hit-rate">-</span>                        <div class="embed-field">
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                            <strong>System Status:</strong> <span id="cmd-dashboard-status" class="status-badge good">HEALTHY</span>                        <li>Memory usage</li>                        <span class="label">Process Memory:</span>
+
                         <span class="label">Total Requests:</span>
-                        <span class="value" id="cache-requests">-</span>
+
+                        <span class="value" id="cache-requests">-</span>                        </div>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        <div class="embed-field">                        <li>Cache entries</li>                        <span class="value" id="process-memory">-</span>
+
                         <span class="label">Memory Usage:</span>
-                        <span class="value" id="cache-memory">-</span>
+
+                        <span class="value" id="cache-memory">-</span>                            <strong>Response Time:</strong> <span id="cmd-dashboard-response">145ms</span>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        </div>                        <li>Eviction strategy</li>                    </div>
+
                         <span class="label">Entries:</span>
-                        <span class="value" id="cache-entries">-</span>
+
+                        <span class="value" id="cache-entries">-</span>                        <div class="embed-field">
+
                     </div>
-                </div>
+
+                </div>                            <strong>Memory Usage:</strong> <span id="cmd-dashboard-memory">45%</span>                    </ul>                    <div class="metric-item">
+
             </div>
 
-            <!-- Database Metrics -->
+                        </div>
+
             <div class="metric-card">
-                <h3>Database Stats</h3>
+
+                <h3>Database Stats</h3>                        <div class="embed-field">                </div>                        <span class="label">Heap Usage:</span>
+
                 <div class="metric-content">
-                    <div class="metric-item">
+
+                    <div class="metric-item">                            <strong>Optimization Tier:</strong> <span id="cmd-dashboard-tier">Standard</span>
+
                         <span class="label">Total Users:</span>
-                        <span class="value" id="db-users">-</span>
+
+                        <span class="value" id="db-users">-</span>                        </div>                        <span class="value" id="heap-usage">-</span>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                    </div>
+
                         <span class="label">Total Messages:</span>
-                        <span class="value" id="db-messages">-</span>
+
+                        <span class="value" id="db-messages">-</span>                </div>                <!-- /dashboard Command -->                    </div>
+
                     </div>
+
                     <div class="metric-item">
+
                         <span class="label">Active Reminders:</span>
-                        <span class="value" id="db-active-reminders">-</span>
+
+                        <span class="value" id="db-active-reminders">-</span>                <!-- /resources Command Output -->                <div class="command-card">                    <div class="metric-item">
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                <div class="command-output-card">
+
                         <span class="label">Completed Reminders:</span>
-                        <span class="value" id="db-completed-reminders">-</span>
+
+                        <span class="value" id="db-completed-reminders">-</span>                    <div class="command-header">                    <h3><code>/dashboard</code></h3>                        <span class="label">Node Version:</span>
+
                     </div>
-                </div>
+
+                </div>                        <h3><code>/resources</code></h3>
+
             </div>
 
-            <!-- Bot Metrics -->
+                        <p class="command-description">Resource Optimization Status</p>                    <p class="command-description">Performance Dashboard</p>                        <span class="value" id="node-version-info">-</span>
+
             <div class="metric-card">
-                <h3>Bot Activity</h3>
+
+                <h3>Bot Activity</h3>                    </div>
+
                 <div class="metric-content">
-                    <div class="metric-item">
+
+                    <div class="metric-item">                    <div class="command-embed">                    <ul class="command-features">                    </div>
+
                         <span class="label">Bot Uptime:</span>
-                        <span class="value" id="bot-uptime">-</span>
+
+                        <span class="value" id="bot-uptime">-</span>                        <div class="embed-field">
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                            <strong>Memory Status:</strong> <span id="cmd-resources-mem-status" class="status-badge good">GOOD</span>                        <li>System metrics (real-time)</li>                </div>
+
                         <span class="label">Last Update:</span>
-                        <span class="value" id="last-update">-</span>
+
+                        <span class="value" id="last-update">-</span>                        </div>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        <div class="embed-field">                        <li>Resource utilization</li>            </div>
+
                         <span class="label">Node Version:</span>
-                        <span class="value" id="node-version">-</span>
+
+                        <span class="value" id="node-version">-</span>                            <strong>Used / Free:</strong> <span id="cmd-resources-mem-usage">245 MB / 267 MB</span>
+
                     </div>
-                    <div class="metric-item">
+
+                    <div class="metric-item">                        </div>                        <li>Performance correlation</li>
+
                         <span class="label">Status:</span>
-                        <span class="value" id="bot-status">Running</span>
+
+                        <span class="value" id="bot-status" class="status-running">Running</span>                        <div class="embed-field">
+
                     </div>
-                </div>
+
+                </div>                            <strong>Performance Status:</strong> <span id="cmd-resources-perf-status" class="status-badge good">OPTIMAL</span>                        <li>Recommendations</li>            <!-- Cache Metrics -->
+
             </div>
+
+        </div>                        </div>
+
+
+
+        <!-- Analytics Section -->                        <div class="embed-field">                    </ul>            <div class="metric-card">
+
+        <div class="analytics-section">
+
+            <h2>📊 Discord Analytics</h2>                            <strong>Response Time:</strong> <span id="cmd-resources-response">145ms</span>
+
+            <div class="metrics-grid">
+
+                <div class="metric-card">                        </div>                </div>                <h3>Cache Performance</h3>
+
+                    <h3>Server Overview</h3>
+
+                    <div class="metric-content">                    </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Total Servers:</span>                </div>                <div class="metric-content">
+
+                            <span class="value" id="total-servers">-</span>
+
+                        </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Active Users:</span>                <!-- /reminders Command Output -->                <!-- /reminders Command -->                    <div class="metric-item">
+
+                            <span class="value" id="active-users">-</span>
+
+                        </div>                <div class="command-output-card">
+
+                        <div class="metric-item">
+
+                            <span class="label">Total Members:</span>                    <div class="command-header">                <div class="command-card">                        <span class="label">Hit Rate:</span>
+
+                            <span class="value" id="total-members">-</span>
+
+                        </div>                        <h3><code>/reminders</code></h3>
+
+                        <div class="metric-item">
+
+                            <span class="label">Bot Count:</span>                        <p class="command-description">Your Active Reminders</p>                    <h3><code>/reminders</code></h3>                        <span class="value" id="cache-hit-rate">-</span>
+
+                            <span class="value" id="bot-count">-</span>
+
+                        </div>                    </div>
+
+                    </div>
+
+                </div>                    <div class="command-embed" id="cmd-reminders-list">                    <p class="command-description">Reminder Management</p>                    </div>
+
+
+
+                <div class="metric-card">                        <div class="embed-field" style="color: #ffa500;">
+
+                    <h3>Performance Metrics</h3>
+
+                    <div class="metric-content">                            You have no active reminders.                    <ul class="command-features">                    <div class="metric-item">
+
+                        <div class="metric-item">
+
+                            <span class="label">Response Time:</span>                        </div>
+
+                            <span class="value" id="response-time">-</span>
+
+                        </div>                    </div>                        <li>Set reminders</li>                        <span class="label">Total Requests:</span>
+
+                        <div class="metric-item">
+
+                            <span class="label">Avg Processing:</span>                </div>
+
+                            <span class="value" id="avg-processing">-</span>
+
+                        </div>            </div>                        <li>List active reminders</li>                        <span class="value" id="cache-requests">-</span>
+
+                        <div class="metric-item">
+
+                            <span class="label">Success Rate:</span>        </section>
+
+                            <span class="value" id="success-rate">-</span>
+
+                        </div>                        <li>Cancel reminders</li>                    </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Error Rate:</span>        <!-- System Metrics Grid -->
+
+                            <span class="value" id="error-rate">-</span>
+
+                        </div>        <div class="metrics-grid">                        <li>Natural language parsing</li>                    <div class="metric-item">
+
+                    </div>
+
+                </div>            <!-- System Status -->
+
+            </div>
+
+        </div>            <div class="metric-card">                    </ul>                        <span class="label">Memory Usage:</span>
+
+
+
+        <!-- Resources Section -->                <h3>System Status</h3>
+
+        <div class="resources-section">
+
+            <h2>🔧 Resource Optimization</h2>                <div class="metric-content">                </div>                        <span class="value" id="cache-memory">-</span>
+
+            <div class="metrics-grid">
+
+                <div class="metric-card">                    <div class="metric-item">
+
+                    <h3>Memory Status</h3>
+
+                    <div class="metric-content">                        <span class="label">Uptime:</span>                    </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Status:</span>                        <span class="value" id="uptime">-</span>
+
+                            <span class="value" id="mem-status">-</span>
+
+                        </div>                    </div>                <!-- /resources Command -->                    <div class="metric-item">
+
+                        <div class="metric-item">
+
+                            <span class="label">Used (Heap):</span>                    <div class="metric-item">
+
+                            <span class="value" id="mem-used">-</span>
+
+                        </div>                        <span class="label">Memory Usage:</span>                <div class="command-card">                        <span class="label">Entries:</span>
+
+                        <div class="metric-item">
+
+                            <span class="label">Free (Heap):</span>                        <span class="value" id="memory-usage">-</span>
+
+                            <span class="value" id="mem-free">-</span>
+
+                        </div>                    </div>                    <h3><code>/resources</code></h3>                        <span class="value" id="cache-entries">-</span>
+
+                        <div class="metric-item">
+
+                            <span class="label">Usage:</span>                    <div class="metric-item">
+
+                            <span class="value" id="mem-usage">-</span>
+
+                        </div>                        <span class="label">CPU Load:</span>                    <p class="command-description">Resource Optimization</p>                    </div>
+
+                    </div>
+
+                </div>                        <span class="value" id="cpu-load">-</span>
+
+
+
+                <div class="metric-card">                    </div>                    <ul class="command-features">                </div>
+
+                    <h3>Performance</h3>
+
+                    <div class="metric-content">                    <div class="metric-item">
+
+                        <div class="metric-item">
+
+                            <span class="label">Status:</span>                        <span class="label">Platform:</span>                        <li>Memory status & usage</li>            </div>
+
+                            <span class="value" id="perf-status">-</span>
+
+                        </div>                        <span class="value" id="platform">-</span>
+
+                        <div class="metric-item">
+
+                            <span class="label">Response Time:</span>                    </div>                        <li>Performance metrics</li>
+
+                            <span class="value" id="perf-response">-</span>
+
+                        </div>                </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Load:</span>            </div>                        <li>Optimization tier</li>            <!-- Database Metrics -->
+
+                            <span class="value" id="perf-load">-</span>
+
+                        </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Optimization Tier:</span>            <!-- Process Info -->                        <li>Recommendations</li>            <div class="metric-card">
+
+                            <span class="value" id="opt-tier">-</span>
+
+                        </div>            <div class="metric-card">
+
+                    </div>
+
+                </div>                <h3>Process Info</h3>                    </ul>                <h3>Database Stats</h3>
+
+
+
+                <div class="metric-card full-width">                <div class="metric-content">
+
+                    <h3>💡 Recommendations</h3>
+
+                    <div id="recommendations-list">                    <div class="metric-item">                </div>                <div class="metric-content">
+
+                        <div class="recommendation-item info">
+
+                            <span class="rec-severity info">INFO</span>                        <span class="label">Process ID:</span>
+
+                            <div style="flex: 1;">
+
+                                <div class="rec-message"><strong>Loading recommendations...</strong></div>                        <span class="value" id="process-pid">-</span>                    <div class="metric-item">
+
+                            </div>
+
+                        </div>                    </div>
+
+                    </div>
+
+                </div>                    <div class="metric-item">                <!-- /stats Command -->                        <span class="label">Total Users:</span>
+
+            </div>
+
+        </div>                        <span class="label">Process Memory:</span>
+
+
+
+        <!-- Database Contents Section -->                        <span class="value" id="process-memory">-</span>                <div class="command-card">                        <span class="value" id="db-users">-</span>
+
+        <div class="database-section">
+
+            <h2>💾 Database Contents (Read-Only)</h2>                    </div>
+
+            <div class="database-controls">
+
+                <select id="database-table-select" class="table-select">                    <div class="metric-item">                    <h3><code>/stats</code></h3>                    </div>
+
+                    <option value="">Select a table...</option>
+
+                    <option value="users" selected>users</option>                        <span class="label">Heap Usage:</span>
+
+                    <option value="conversation_history">conversation_history</option>
+
+                    <option value="reminders">reminders</option>                        <span class="value" id="heap-usage">-</span>                    <p class="command-description">User Statistics</p>                    <div class="metric-item">
+
+                </select>
+
+                <input type="text" id="database-search" class="database-search" placeholder="Search table...">                    </div>
+
+                <span id="table-info" class="table-info">Loading...</span>
+
+            </div>                    <div class="metric-item">                    <ul class="command-features">                        <span class="label">Total Messages:</span>
+
+            <div id="database-viewer" class="database-viewer">
+
+                <div class="db-message">Loading table data...</div>                        <span class="label">Node Version:</span>
+
+            </div>
+
+        </div>                        <span class="value" id="node-version-info">-</span>                        <li>Messages sent</li>                        <span class="value" id="db-messages">-</span>
+
+
+
+        <!-- Error Logs Section -->                    </div>
+
+        <div class="error-logs-section">
+
+            <h2>⚠️ Error Logs</h2>                </div>                        <li>Summaries requested</li>                    </div>
+
+            <div class="error-log-container">
+
+                <div id="error-logs">            </div>
+
+                    <div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>
+
+                </div>                        <li>Commands executed</li>                    <div class="metric-item">
+
+            </div>
+
+        </div>            <!-- Cache Performance -->
+
+
+
+        <!-- Recent Activity -->            <div class="metric-card">                        <li>Usage patterns</li>                        <span class="label">Active Reminders:</span>
+
+        <div class="activity-section">
+
+            <h3>Recent Activity</h3>                <h3>Cache Performance</h3>
+
+            <div class="activity-log">
+
+                <div class="activity-item">[--:--:--] Dashboard initialized</div>                <div class="metric-content">                    </ul>                        <span class="value" id="db-active-reminders">-</span>
+
+            </div>
+
+        </div>                    <div class="metric-item">
+
+    </div>
+
+                        <span class="label">Hit Rate:</span>                </div>                    </div>
+
+    <!-- Socket.IO and Dashboard Script -->
+
+    <script src="/socket.io/socket.io.js"></script>                        <span class="value" id="cache-hit-rate">-</span>
+
+    <script src="dashboard.js"></script>
+
+</body>                    </div>            </div>                    <div class="metric-item">
+
+</html>
+
+                    <div class="metric-item">
+
+                        <span class="label">Total Requests:</span>        </section>                        <span class="label">Completed Reminders:</span>
+
+                        <span class="value" id="cache-requests">-</span>
+
+                    </div>                        <span class="value" id="db-completed-reminders">-</span>
+
+                    <div class="metric-item">
+
+                        <span class="label">Memory Usage:</span>        <!-- System Metrics Grid -->                    </div>
+
+                        <span class="value" id="cache-memory">-</span>
+
+                    </div>        <div class="metrics-grid">                </div>
+
+                    <div class="metric-item">
+
+                        <span class="label">Entries:</span>            <!-- System Status -->            </div>
+
+                        <span class="value" id="cache-entries">-</span>
+
+                    </div>            <div class="metric-card">
+
+                </div>
+
+            </div>                <h3>System Status</h3>            <!-- Bot Metrics -->
+
+
+
+            <!-- Database Stats -->                <div class="metric-content">            <div class="metric-card">
+
+            <div class="metric-card">
+
+                <h3>Database Stats</h3>                    <div class="metric-item">                <h3>Bot Activity</h3>
+
+                <div class="metric-content">
+
+                    <div class="metric-item">                        <span class="label">Uptime:</span>                <div class="metric-content">
+
+                        <span class="label">Total Users:</span>
+
+                        <span class="value" id="db-users">-</span>                        <span class="value" id="system-uptime">-</span>                    <div class="metric-item">
+
+                    </div>
+
+                    <div class="metric-item">                    </div>                        <span class="label">Bot Uptime:</span>
+
+                        <span class="label">Total Messages:</span>
+
+                        <span class="value" id="db-messages">-</span>                    <div class="metric-item">                        <span class="value" id="bot-uptime">-</span>
+
+                    </div>
+
+                    <div class="metric-item">                        <span class="label">Memory Usage:</span>                    </div>
+
+                        <span class="label">Active Reminders:</span>
+
+                        <span class="value" id="db-active-reminders">-</span>                        <span class="value" id="memory-usage">-</span>                    <div class="metric-item">
+
+                    </div>
+
+                    <div class="metric-item">                    </div>                        <span class="label">Last Update:</span>
+
+                        <span class="label">Completed Reminders:</span>
+
+                        <span class="value" id="db-completed-reminders">-</span>                    <div class="metric-item">                        <span class="value" id="last-update">-</span>
+
+                    </div>
+
+                </div>                        <span class="label">CPU Load:</span>                    </div>
+
+            </div>
+
+                        <span class="value" id="cpu-load">-</span>                    <div class="metric-item">
+
+            <!-- Bot Activity -->
+
+            <div class="metric-card">                    </div>                        <span class="label">Node Version:</span>
+
+                <h3>Bot Activity</h3>
+
+                <div class="metric-content">                    <div class="metric-item">                        <span class="value" id="node-version">-</span>
+
+                    <div class="metric-item">
+
+                        <span class="label">Bot Uptime:</span>                        <span class="label">Platform:</span>                    </div>
+
+                        <span class="value" id="bot-uptime">-</span>
+
+                    </div>                        <span class="value" id="platform">-</span>                    <div class="metric-item">
+
+                    <div class="metric-item">
+
+                        <span class="label">Last Update:</span>                    </div>                        <span class="label">Status:</span>
+
+                        <span class="value" id="last-update">-</span>
+
+                    </div>                </div>                        <span class="value" id="bot-status">Running</span>
+
+                    <div class="metric-item">
+
+                        <span class="label">Node Version:</span>            </div>                    </div>
+
+                        <span class="value" id="node-version">-</span>
+
+                    </div>                </div>
+
+                    <div class="metric-item">
+
+                        <span class="label">Status:</span>            <!-- Process Info -->            </div>
+
+                        <span class="value" id="bot-status" class="status-running">Running</span>
+
+                    </div>            <div class="metric-card">        </div>
+
+                </div>
+
+            </div>                <h3>Process Info</h3>
+
         </div>
 
-        <!-- Charts Section -->
-        <div class="charts-section" style="display: none;"></div>
+                <div class="metric-content">        <!-- Charts Section -->
 
         <!-- Analytics Section -->
-        <div class="analytics-section">
+
+        <div class="analytics-section">                    <div class="metric-item">        <div class="charts-section" style="display: none;"></div>
+
             <h2>📊 Discord Analytics</h2>
-            <div class="metrics-grid">
+
+            <div class="metrics-grid">                        <span class="label">Process ID:</span>
+
                 <!-- Server Overview -->
-                <div class="metric-card">
+
+                <div class="metric-card">                        <span class="value" id="process-pid">-</span>        <!-- Analytics Section -->
+
                     <h3>Server Overview</h3>
-                    <div class="metric-content">
+
+                    <div class="metric-content">                    </div>        <div class="analytics-section">
+
                         <div class="metric-item">
-                            <span class="label">Total Servers:</span>
-                            <span class="value" id="analytics-servers">-</span>
-                        </div>
+
+                            <span class="label">Total Servers:</span>                    <div class="metric-item">            <h2>📊 Discord Analytics</h2>
+
+                            <span class="value" id="total-servers">1</span>
+
+                        </div>                        <span class="label">Process Memory:</span>            <div class="metrics-grid">
+
                         <div class="metric-item">
-                            <span class="label">Active Users:</span>
-                            <span class="value" id="analytics-active-users">-</span>
-                        </div>
+
+                            <span class="label">Active Users:</span>                        <span class="value" id="process-memory">-</span>                <!-- Server Overview -->
+
+                            <span class="value" id="active-users">-</span>
+
+                        </div>                    </div>                <div class="metric-card">
+
                         <div class="metric-item">
-                            <span class="label">Total Members:</span>
-                            <span class="value" id="analytics-total-members">-</span>
-                        </div>
+
+                            <span class="label">Total Members:</span>                    <div class="metric-item">                    <h3>Server Overview</h3>
+
+                            <span class="value" id="total-members">-</span>
+
+                        </div>                        <span class="label">Heap Usage:</span>                    <div class="metric-content">
+
                         <div class="metric-item">
-                            <span class="label">Bot Count:</span>
-                            <span class="value" id="analytics-bots">-</span>
-                        </div>
+
+                            <span class="label">Bot Count:</span>                        <span class="value" id="heap-usage">-</span>                        <div class="metric-item">
+
+                            <span class="value" id="bot-count">-</span>
+
+                        </div>                    </div>                            <span class="label">Total Servers:</span>
+
                     </div>
+
+                </div>                    <div class="metric-item">                            <span class="value" id="analytics-servers">-</span>
+
+
+
+                <!-- Performance Metrics -->                        <span class="label">Node Version:</span>                        </div>
+
+                <div class="metric-card">
+
+                    <h3>Performance Metrics</h3>                        <span class="value" id="node-version-info">-</span>                        <div class="metric-item">
+
+                    <div class="metric-content">
+
+                        <div class="metric-item">                    </div>                            <span class="label">Active Users:</span>
+
+                            <span class="label">Response Time:</span>
+
+                            <span class="value" id="response-time">-</span>                </div>                            <span class="value" id="analytics-active-users">-</span>
+
+                        </div>
+
+                        <div class="metric-item">            </div>                        </div>
+
+                            <span class="label">Avg Processing:</span>
+
+                            <span class="value" id="avg-processing">-</span>                        <div class="metric-item">
+
+                        </div>
+
+                        <div class="metric-item">            <!-- Cache Performance -->                            <span class="label">Total Members:</span>
+
+                            <span class="label">Success Rate:</span>
+
+                            <span class="value" id="success-rate">-</span>            <div class="metric-card">                            <span class="value" id="analytics-total-members">-</span>
+
+                        </div>
+
+                        <div class="metric-item">                <h3>Cache Performance</h3>                        </div>
+
+                            <span class="label">Error Rate:</span>
+
+                            <span class="value" id="error-rate">-</span>                <div class="metric-content">                        <div class="metric-item">
+
+                        </div>
+
+                    </div>                    <div class="metric-item">                            <span class="label">Bot Count:</span>
+
                 </div>
 
-                <!-- Performance Stats -->
-                <div class="metric-card">
-                    <h3>Performance Metrics</h3>
-                    <div class="metric-content">
+            </div>                        <span class="label">Hit Rate:</span>                            <span class="value" id="analytics-bots">-</span>
+
+        </div>
+
+                        <span class="value" id="cache-hit-rate">-</span>                        </div>
+
+        <!-- Resources Section -->
+
+        <div class="resources-section">                    </div>                    </div>
+
+            <h2>🔧 Resource Optimization</h2>
+
+            <div class="metrics-grid">                    <div class="metric-item">                </div>
+
+                <!-- Memory Status -->
+
+                <div class="metric-card">                        <span class="label">Total Requests:</span>
+
+                    <h3>Memory Status</h3>
+
+                    <div class="metric-content">                        <span class="value" id="cache-requests">-</span>                <!-- Performance Stats -->
+
                         <div class="metric-item">
-                            <span class="label">Success Rate:</span>
-                            <span class="value" id="analytics-success-rate">-</span>
-                        </div>
+
+                            <span class="label">Status:</span>                    </div>                <div class="metric-card">
+
+                            <span class="value" id="mem-status">-</span>
+
+                        </div>                    <div class="metric-item">                    <h3>Performance Metrics</h3>
+
                         <div class="metric-item">
-                            <span class="label">Error Rate:</span>
-                            <span class="value" id="analytics-error-rate">-</span>
-                        </div>
+
+                            <span class="label">Used (Heap):</span>                        <span class="label">Memory Usage:</span>                    <div class="metric-content">
+
+                            <span class="value" id="mem-used">-</span>
+
+                        </div>                        <span class="value" id="cache-memory">-</span>                        <div class="metric-item">
+
                         <div class="metric-item">
-                            <span class="label">Avg Response Time:</span>
-                            <span class="value" id="analytics-response-time">-</span>
-                        </div>
+
+                            <span class="label">Free (Heap):</span>                    </div>                            <span class="label">Success Rate:</span>
+
+                            <span class="value" id="mem-free">-</span>
+
+                        </div>                    <div class="metric-item">                            <span class="value" id="analytics-success-rate">-</span>
+
                         <div class="metric-item">
-                            <span class="label">Commands Executed:</span>
-                            <span class="value" id="analytics-commands">-</span>
-                        </div>
+
+                            <span class="label">Usage:</span>                        <span class="label">Entries:</span>                        </div>
+
+                            <span class="value" id="mem-usage">-</span>
+
+                        </div>                        <span class="value" id="cache-entries">-</span>                        <div class="metric-item">
+
                     </div>
+
+                </div>                    </div>                            <span class="label">Error Rate:</span>
+
+
+
+                <!-- Performance -->                </div>                            <span class="value" id="analytics-error-rate">-</span>
+
+                <div class="metric-card">
+
+                    <h3>Performance</h3>            </div>                        </div>
+
+                    <div class="metric-content">
+
+                        <div class="metric-item">                        <div class="metric-item">
+
+                            <span class="label">Status:</span>
+
+                            <span class="value" id="perf-status">-</span>            <!-- Database Stats -->                            <span class="label">Avg Response Time:</span>
+
+                        </div>
+
+                        <div class="metric-item">            <div class="metric-card">                            <span class="value" id="analytics-response-time">-</span>
+
+                            <span class="label">Response Time:</span>
+
+                            <span class="value" id="perf-response">-</span>                <h3>Database Stats</h3>                        </div>
+
+                        </div>
+
+                        <div class="metric-item">                <div class="metric-content">                        <div class="metric-item">
+
+                            <span class="label">Load:</span>
+
+                            <span class="value" id="perf-load">-</span>                    <div class="metric-item">                            <span class="label">Commands Executed:</span>
+
+                        </div>
+
+                        <div class="metric-item">                        <span class="label">Total Users:</span>                            <span class="value" id="analytics-commands">-</span>
+
+                            <span class="label">Optimization Tier:</span>
+
+                            <span class="value" id="opt-tier">-</span>                        <span class="value" id="db-users">-</span>                        </div>
+
+                        </div>
+
+                    </div>                    </div>                    </div>
+
+                </div>
+
+                    <div class="metric-item">                </div>
+
+                <!-- Recommendations -->
+
+                <div class="metric-card full-width">                        <span class="label">Total Messages:</span>            </div>
+
+                    <h3>💡 Recommendations</h3>
+
+                    <div id="recommendations-list">                        <span class="value" id="db-messages">-</span>        </div>
+
+                        <div class="recommendation-item info">
+
+                            <span class="rec-severity info">INFO</span>                    </div>
+
+                            <div style="flex: 1;">
+
+                                <div class="rec-message"><strong>System healthy and performing optimally</strong></div>                    <div class="metric-item">        <!-- Resources Section -->
+
+                                <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ Continue monitoring</div>
+
+                            </div>                        <span class="label">Active Reminders:</span>        <div class="resources-section">
+
+                        </div>
+
+                    </div>                        <span class="value" id="db-active-reminders">-</span>            <h2>🔧 Resource Optimization</h2>
+
+                </div>
+
+            </div>                    </div>            <div class="metrics-grid">
+
+        </div>
+
+                    <div class="metric-item">                <!-- Memory Status -->
+
+        <!-- Database Contents Section -->
+
+        <div class="database-section">                        <span class="label">Completed Reminders:</span>                <div class="metric-card">
+
+            <h2>💾 Database Contents (Read-Only)</h2>
+
+            <div class="database-controls">                        <span class="value" id="db-completed-reminders">-</span>                    <h3>Memory Status</h3>
+
+                <select id="database-table-select" class="table-select">
+
+                    <option value="">Select a table...</option>                    </div>                    <div class="metric-content">
+
+                    <option value="users" selected>users</option>
+
+                    <option value="conversation_history">conversation_history</option>                </div>                        <div class="metric-item">
+
+                    <option value="reminders">reminders</option>
+
+                </select>            </div>                            <span class="label">Status:</span>
+
+                <input type="text" id="database-search" class="database-search" placeholder="Search table...">
+
+                <span id="table-info" class="table-info">Loading...</span>                            <span class="value" id="resource-memory-status">-</span>
+
+            </div>
+
+            <div id="database-viewer" class="database-viewer">            <!-- Bot Activity -->                        </div>
+
+                <div class="db-message">Loading table data...</div>
+
+            </div>            <div class="metric-card">                        <div class="metric-item">
+
+        </div>
+
+                <h3>Bot Activity</h3>                            <span class="label">Used (Heap):</span>
+
+        <!-- Error Logs Section -->
+
+        <div class="error-logs-section">                <div class="metric-content">                            <span class="value" id="resource-memory-used">-</span>
+
+            <h2>⚠️ Error Logs</h2>
+
+            <div class="error-log-container">                    <div class="metric-item">                        </div>
+
+                <div id="error-logs">
+
+                    <div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>                        <span class="label">Bot Uptime:</span>                        <div class="metric-item">
+
+                </div>
+
+            </div>                        <span class="value" id="bot-uptime">-</span>                            <span class="label">Free (Heap):</span>
+
+        </div>
+
+                    </div>                            <span class="value" id="resource-memory-free">-</span>
+
+        <!-- Recent Activity -->
+
+        <div class="activity-section">                    <div class="metric-item">                        </div>
+
+            <h3>Recent Activity</h3>
+
+            <div class="activity-log">                        <span class="label">Last Update:</span>                        <div class="metric-item">
+
+                <div class="activity-item">[--:--:--] Dashboard initialized</div>
+
+            </div>                        <span class="value" id="last-update">-</span>                            <span class="label">Usage:</span>
+
+        </div>
+
+    </div>                    </div>                            <span class="value" id="resource-memory-percent">-</span>
+
+
+
+    <!-- Socket.IO and Dashboard Script -->                    <div class="metric-item">                        </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="dashboard.js"></script>                        <span class="label">Node Version:</span>                    </div>
+
+</body>
+
+</html>                        <span class="value" id="node-version">-</span>                </div>
+
+
+                    </div>
+
+                    <div class="metric-item">                <!-- Performance -->
+
+                        <span class="label">Status:</span>                <div class="metric-card">
+
+                        <span class="value status-running" id="bot-status">Running</span>                    <h3>Performance</h3>
+
+                    </div>                    <div class="metric-content">
+
+                </div>                        <div class="metric-item">
+
+            </div>                            <span class="label">Status:</span>
+
+        </div>                            <span class="value" id="resource-performance-status">-</span>
+
+                        </div>
+
+        <!-- Analytics Section -->                        <div class="metric-item">
+
+        <div class="analytics-section">                            <span class="label">Response Time:</span>
+
+            <h2>📊 Discord Analytics</h2>                            <span class="value" id="resource-response-time">-</span>
+
+            <div class="metrics-grid">                        </div>
+
+                <!-- Server Overview -->                        <div class="metric-item">
+
+                <div class="metric-card">                            <span class="label">Load:</span>
+
+                    <h3>Server Overview</h3>                            <span class="value" id="resource-load">-</span>
+
+                    <div class="metric-content">                        </div>
+
+                        <div class="metric-item">                        <div class="metric-item">
+
+                            <span class="label">Total Servers:</span>                            <span class="label">Optimization Tier:</span>
+
+                            <span class="value" id="analytics-servers">-</span>                            <span class="value" id="resource-optimization-tier">-</span>
+
+                        </div>                        </div>
+
+                        <div class="metric-item">                    </div>
+
+                            <span class="label">Active Users:</span>                </div>
+
+                            <span class="value" id="analytics-active-users">-</span>
+
+                        </div>                <!-- Recommendations -->
+
+                        <div class="metric-item">                <div class="metric-card" style="grid-column: 1 / -1;">
+
+                            <span class="label">Total Members:</span>                    <h3>💡 Recommendations</h3>
+
+                            <span class="value" id="analytics-total-members">-</span>                    <div class="metric-content">
+
+                        </div>                        <div id="resource-recommendations" style="white-space: pre-wrap; line-height: 1.6;">-</div>
+
+                        <div class="metric-item">                    </div>
+
+                            <span class="label">Bot Count:</span>                </div>
+
+                            <span class="value" id="analytics-bots">-</span>            </div>
+
+                        </div>        </div>
+
+                    </div>
+
+                </div>        <!-- Error Logs Section -->
+
+        <div class="error-logs-section">
+
+                <!-- Performance Stats -->            <h2>⚠️ Error Logs</h2>
+
+                <div class="metric-card">            <div class="error-log-container">
+
+                    <h3>Performance Metrics</h3>                <div id="error-logs" style="max-height: 400px; overflow-y: auto;">
+
+                    <div class="metric-content">                    <div class="error-log-item">No errors logged</div>
+
+                        <div class="metric-item">                </div>
+
+                            <span class="label">Success Rate:</span>            </div>
+
+                            <span class="value" id="analytics-success-rate">-</span>        </div>
+
+                        </div>
+
+                        <div class="metric-item">        <!-- Recent Activity -->
+
+                            <span class="label">Error Rate:</span>        <div class="activity-section">
+
+                            <span class="value" id="analytics-error-rate">-</span>            <h3>Recent Activity</h3>
+
+                        </div>            <div class="activity-log" id="activity-log">
+
+                        <div class="metric-item">                <div class="activity-item">Dashboard initialized</div>
+
+                            <span class="label">Avg Response Time:</span>            </div>
+
+                            <span class="value" id="analytics-response-time">-</span>        </div>
+
+                        </div>    </div>
+
+                        <div class="metric-item">
+
+                            <span class="label">Commands Executed:</span>    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+                            <span class="value" id="analytics-commands">-</span>    <script src="dashboard.js"></script>
+
+                        </div></body>
+
+                    </div></html>
                 </div>
             </div>
         </div>
@@ -199,7 +1414,7 @@
                     <div class="metric-content">
                         <div class="metric-item">
                             <span class="label">Status:</span>
-                            <span class="value" id="resource-memory-status">-</span>
+                            <span class="value status-badge" id="resource-memory-status">-</span>
                         </div>
                         <div class="metric-item">
                             <span class="label">Used (Heap):</span>
@@ -222,7 +1437,7 @@
                     <div class="metric-content">
                         <div class="metric-item">
                             <span class="label">Status:</span>
-                            <span class="value" id="resource-performance-status">-</span>
+                            <span class="value status-badge" id="resource-performance-status">-</span>
                         </div>
                         <div class="metric-item">
                             <span class="label">Response Time:</span>
@@ -240,12 +1455,33 @@
                 </div>
 
                 <!-- Recommendations -->
-                <div class="metric-card" style="grid-column: 1 / -1;">
+                <div class="metric-card full-width">
                     <h3>💡 Recommendations</h3>
-                    <div class="metric-content">
-                        <div id="resource-recommendations" style="white-space: pre-wrap; line-height: 1.6;">-</div>
+                    <div class="recommendations-list" id="recommendations-list">
+                        <div class="recommendation-item">
+                            <span class="rec-spinner">⟳</span>
+                            <span class="rec-message">Loading recommendations...</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Database Viewer Section -->
+        <div class="database-section">
+            <h2>💾 Database Contents (Read-Only)</h2>
+            <div class="database-controls">
+                <select id="database-table-select" class="table-select">
+                    <option value="">Select a table...</option>
+                    <option value="users">users</option>
+                    <option value="conversation_history">conversation_history</option>
+                    <option value="reminders">reminders</option>
+                </select>
+                <input type="text" id="database-search" class="database-search" placeholder="Search table...">
+                <span class="table-info" id="table-info">-</span>
+            </div>
+            <div class="database-viewer" id="database-viewer">
+                <div class="db-message">Select a table to view data</div>
             </div>
         </div>
 

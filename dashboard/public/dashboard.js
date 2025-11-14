@@ -1,15 +1,16 @@
-// Aszune AI Bot Dashboard JavaScript
+// Aszune AI Bot Dashboard JavaScript - Enhanced v2.0
 
 class Dashboard {
   constructor() {
     this.socket = null;
     this.charts = {};
     this.metricsHistory = [];
-    this.maxHistoryPoints = 60; // Keep 60 points (1 minute at 1-second intervals)
+    this.maxHistoryPoints = 60;
     this.isConnected = false;
+    this.currentTable = null;
+    this.databaseCache = {};
 
     this.initializeSocket();
-    this.initializeCharts();
     this.setupEventListeners();
   }
 
@@ -35,13 +36,22 @@ class Dashboard {
     });
   }
 
-  initializeCharts() {
-    // Charts disabled - using full dashboard data instead
-  }
-
   setupEventListeners() {
-    // Request fresh metrics on button click (if we add one later)
-    // For now, metrics are pushed automatically
+    // Database table selector
+    const tableSelect = document.getElementById('database-table-select');
+    if (tableSelect) {
+      tableSelect.addEventListener('change', (e) => {
+        this.loadDatabaseTable(e.target.value);
+      });
+    }
+
+    // Database search
+    const searchInput = document.getElementById('database-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.filterDatabaseTable(e.target.value);
+      });
+    }
   }
 
   setConnectionStatus(connected) {
@@ -64,45 +74,71 @@ class Dashboard {
       this.updateAnalyticsMetrics(data);
       this.updateResourcesMetrics(data);
       this.updateErrorLogs(data);
+      this.fetchAndUpdateRecommendations();
 
-      // Store metrics for potential future use
       this.metricsHistory.push(data);
       if (this.metricsHistory.length > this.maxHistoryPoints) {
         this.metricsHistory.shift();
       }
 
+      this.addActivityItem('Metrics updated');
     } catch (error) {
       console.error('Error updating metrics:', error);
       this.addActivityItem(`Error updating metrics: ${error.message}`, 'error');
     }
   }
 
-  updateSystemMetrics(data) {
-    // System metrics
-    document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
-    document.getElementById('memory-usage').textContent = `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
-    document.getElementById('cpu-load').textContent = `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
-    document.getElementById('platform').textContent = `${data.system.platform} ${data.system.arch}`;
+  async fetchVersionInfo() {
+    try {
+      const response = await fetch('/api/version');
+      if (!response.ok) throw new Error('Failed to fetch version info');
+      const data = await response.json();
+      this.updateVersionDisplay(data);
+    } catch (error) {
+      console.error('Error fetching version info:', error);
+    }
+  }
 
-    // Process metrics
+  updateVersionDisplay(versionData) {
+    const versionNumber = document.getElementById('version-number');
+    const commitSha = document.getElementById('commit-sha');
+    const commitLink = document.getElementById('commit-link');
+
+    if (versionNumber) versionNumber.textContent = versionData.version || '1.8.0';
+    if (commitSha) commitSha.textContent = versionData.commit || 'unknown';
+    if (commitLink && versionData.commitUrl) {
+      commitLink.href = versionData.commitUrl;
+    }
+  }
+
+  updateSystemMetrics(data) {
+    document.getElementById('system-uptime').textContent = data.system.uptimeFormatted;
+    document.getElementById('memory-usage').textContent = 
+      `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`;
+    document.getElementById('cpu-load').textContent = 
+      `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`;
+    document.getElementById('platform').textContent = 
+      `${data.system.platform} ${data.system.arch}`;
+
     document.getElementById('process-pid').textContent = data.system.process.pid;
     document.getElementById('process-memory').textContent = data.system.process.rssFormatted;
-    document.getElementById('heap-usage').textContent = `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
+    document.getElementById('heap-usage').textContent = 
+      `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`;
     document.getElementById('node-version-info').textContent = data.system.nodeVersion;
 
-    // Cache metrics
     document.getElementById('cache-hit-rate').textContent = `${data.cache.hitRate}%`;
-    document.getElementById('cache-requests').textContent = (data.cache.hits + data.cache.misses).toLocaleString();
+    document.getElementById('cache-requests').textContent = 
+      (data.cache.hits + data.cache.misses).toLocaleString();
     document.getElementById('cache-memory').textContent = data.cache.memoryUsageFormatted;
     document.getElementById('cache-entries').textContent = data.cache.entryCount.toLocaleString();
 
-    // Database metrics
     document.getElementById('db-users').textContent = data.database.userCount.toLocaleString();
     document.getElementById('db-messages').textContent = data.database.totalMessages.toLocaleString();
-    document.getElementById('db-active-reminders').textContent = data.database.reminders.activeReminders.toLocaleString();
-    document.getElementById('db-completed-reminders').textContent = data.database.reminders.completedReminders.toLocaleString();
+    document.getElementById('db-active-reminders').textContent = 
+      data.database.reminders.activeReminders.toLocaleString();
+    document.getElementById('db-completed-reminders').textContent = 
+      data.database.reminders.completedReminders.toLocaleString();
 
-    // Bot metrics
     document.getElementById('bot-uptime').textContent = data.uptime;
     document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleTimeString();
   }
@@ -114,34 +150,97 @@ class Dashboard {
     document.getElementById('analytics-active-users').textContent = data.analytics.summary.totalUsers;
     document.getElementById('analytics-total-members').textContent = data.analytics.summary.totalUsers;
     document.getElementById('analytics-bots').textContent = '-';
-    document.getElementById('analytics-success-rate').textContent = `${data.analytics.summary.successRate}%`;
-    document.getElementById('analytics-error-rate').textContent = `${data.analytics.summary.errorRate}%`;
-    document.getElementById('analytics-response-time').textContent = `${data.analytics.summary.avgResponseTime}ms`;
+    document.getElementById('analytics-success-rate').textContent = 
+      `${data.analytics.summary.successRate}%`;
+    document.getElementById('analytics-error-rate').textContent = 
+      `${data.analytics.summary.errorRate}%`;
+    document.getElementById('analytics-response-time').textContent = 
+      `${data.analytics.summary.avgResponseTime}ms`;
     document.getElementById('analytics-commands').textContent = data.analytics.summary.totalCommands;
   }
 
   updateResourcesMetrics(data) {
     if (!data.resources) return;
     
-    document.getElementById('resource-memory-status').textContent = data.resources.memory.status.toUpperCase();
-    document.getElementById('resource-memory-used').textContent = `${data.resources.memory.used}MB`;
-    document.getElementById('resource-memory-free').textContent = `${data.resources.memory.free}MB`;
-    document.getElementById('resource-memory-percent').textContent = `${data.resources.memory.percentage}%`;
-    document.getElementById('resource-performance-status').textContent = data.resources.performance.status.toUpperCase();
-    document.getElementById('resource-response-time').textContent = `${data.resources.performance.responseTime}ms`;
-    document.getElementById('resource-load').textContent = data.resources.performance.load;
-    document.getElementById('resource-optimization-tier').textContent = data.resources.optimizationTier;
-    
-    // Recommendations
-    const recommendationsText = data.analytics?.recommendations?.length > 0 
-      ? data.analytics.recommendations.join('\n')
-      : 'System monitoring active';
-    document.getElementById('resource-recommendations').textContent = recommendationsText;
+    // Memory status
+    const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
+    document.getElementById('resource-memory-status').textContent = 
+      (data.resources.memory.status || 'Unknown').toUpperCase();
+    document.getElementById('resource-memory-status').className = 
+      `value status-badge ${memStatus}`;
+
+    document.getElementById('resource-memory-used').textContent = 
+      `${data.resources.memory.used}MB`;
+    document.getElementById('resource-memory-free').textContent = 
+      `${data.resources.memory.free}MB`;
+    document.getElementById('resource-memory-percent').textContent = 
+      `${data.resources.memory.percentage}%`;
+
+    // Performance status
+    const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
+    document.getElementById('resource-performance-status').textContent = 
+      (data.resources.performance.status || 'Unknown').toUpperCase();
+    document.getElementById('resource-performance-status').className = 
+      `value status-badge ${perfStatus}`;
+
+    document.getElementById('resource-response-time').textContent = 
+      `${data.resources.performance.responseTime}ms`;
+    document.getElementById('resource-load').textContent = 
+      data.resources.performance.load || 'normal';
+    document.getElementById('resource-optimization-tier').textContent = 
+      data.resources.optimizationTier || 'Standard';
+  }
+
+  getStatusBadgeClass(status) {
+    if (!status || status === 'unknown') return 'acceptable';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('good') || statusLower.includes('optimal')) return 'good';
+    if (statusLower.includes('warning') || statusLower.includes('acceptable')) return 'acceptable';
+    if (statusLower.includes('degraded')) return 'warning';
+    if (statusLower.includes('critical')) return 'critical';
+    return 'acceptable';
+  }
+
+  async fetchAndUpdateRecommendations() {
+    try {
+      const response = await fetch('/api/recommendations');
+      if (!response.ok) throw new Error('Failed to fetch recommendations');
+      const recommendations = await response.json();
+      this.updateRecommendations(recommendations);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    }
+  }
+
+  updateRecommendations(recommendations) {
+    const container = document.getElementById('recommendations-list');
+    if (!container) return;
+
+    if (!recommendations || recommendations.length === 0) {
+      container.innerHTML = `
+        <div class="recommendation-item info">
+          <span class="rec-severity info">INFO</span>
+          <span class="rec-message">System monitoring active</span>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = recommendations.map(rec => `
+      <div class="recommendation-item ${rec.severity || 'info'}">
+        <span class="rec-severity ${rec.severity || 'info'}">${(rec.severity || 'info').toUpperCase()}</span>
+        <div style="flex: 1;">
+          <div class="rec-message"><strong>${rec.message}</strong></div>
+          <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ ${rec.action}</div>
+        </div>
+      </div>
+    `).join('');
   }
 
   updateErrorLogs(data) {
     if (!data.analytics?.recentErrors || data.analytics.recentErrors.length === 0) {
-      document.getElementById('error-logs').innerHTML = '<div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>';
+      document.getElementById('error-logs').innerHTML = 
+        '<div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>';
       return;
     }
 
@@ -158,7 +257,125 @@ class Dashboard {
     }).join('');
 
     document.getElementById('error-logs').innerHTML = errorLogsHtml;
-  }  addActivityItem(message, type = 'info') {
+  }
+
+  async loadDatabaseTable(tableName) {
+    if (!tableName) {
+      document.getElementById('database-viewer').innerHTML = 
+        '<div class="db-message">Select a table to view data</div>';
+      return;
+    }
+
+    this.currentTable = tableName;
+    document.getElementById('table-info').textContent = 'Loading...';
+
+    try {
+      const response = await fetch(`/api/database/${tableName}?limit=100&offset=0`);
+      if (!response.ok) throw new Error('Failed to fetch table data');
+      
+      const tableData = await response.json();
+      this.databaseCache[tableName] = tableData;
+      this.renderDatabaseTable(tableData);
+    } catch (error) {
+      console.error(`Error loading table ${tableName}:`, error);
+      document.getElementById('database-viewer').innerHTML = 
+        `<div class="db-message">Error loading table: ${error.message}</div>`;
+    }
+  }
+
+  renderDatabaseTable(tableData) {
+    const viewer = document.getElementById('database-viewer');
+    const info = document.getElementById('table-info');
+
+    if (!tableData.data || tableData.data.length === 0) {
+      viewer.innerHTML = '<div class="db-message">No data in this table</div>';
+      info.textContent = `${tableData.table}: 0 rows`;
+      return;
+    }
+
+    const columns = tableData.columns || Object.keys(tableData.data[0]);
+    const tableHtml = `
+      <table class="database-table">
+        <thead>
+          <tr>
+            ${columns.map(col => `<th>${col}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${tableData.data.map(row => `
+            <tr>
+              ${columns.map(col => {
+                let value = row[col];
+                if (value === null || value === undefined) value = '-';
+                if (typeof value === 'string' && value.length > 100) {
+                  value = value.substring(0, 100) + '...';
+                }
+                return `<td>${this.escapeHtml(String(value))}</td>`;
+              }).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    viewer.innerHTML = tableHtml;
+    info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
+  }
+
+  filterDatabaseTable(searchTerm) {
+    if (!this.currentTable || !this.databaseCache[this.currentTable]) return;
+
+    const tableData = this.databaseCache[this.currentTable];
+    const filtered = tableData.data.filter(row => {
+      return Object.values(row).some(val => 
+        String(val).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+
+    if (filtered.length === 0) {
+      document.getElementById('database-viewer').innerHTML = 
+        '<div class="db-message">No matching results</div>';
+      return;
+    }
+
+    const columns = tableData.columns || Object.keys(tableData.data[0]);
+    const tableHtml = `
+      <table class="database-table">
+        <thead>
+          <tr>
+            ${columns.map(col => `<th>${col}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(row => `
+            <tr>
+              ${columns.map(col => {
+                let value = row[col];
+                if (value === null || value === undefined) value = '-';
+                if (typeof value === 'string' && value.length > 100) {
+                  value = value.substring(0, 100) + '...';
+                }
+                return `<td>${this.escapeHtml(String(value))}</td>`;
+              }).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById('database-viewer').innerHTML = tableHtml;
+  }
+
+  escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  addActivityItem(message, type = 'info') {
     const activityLog = document.getElementById('activity-log');
     const item = document.createElement('div');
     item.className = `activity-item fade-in status-${type}`;
@@ -181,11 +398,12 @@ class Dashboard {
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new Dashboard();
+    window.dashboard.fetchVersionInfo();
 });
 
-// Handle page visibility changes to reconnect socket if needed
+// Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden && window.dashboard && !window.dashboard.isConnected) {
-        // Reconnect logic would go here if needed
+        // Reconnect logic could go here
     }
 });

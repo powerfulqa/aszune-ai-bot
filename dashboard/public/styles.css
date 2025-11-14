@@ -368,3 +368,555 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* ===== NEW DASHBOARD ENHANCEMENTS ===== */
+
+/* Header with Version Info */
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.version-info {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.version-badge {
+    display: inline-flex;
+    gap: 10px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.version-text,
+.commit-text {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.commit-text a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.commit-text a:hover {
+    text-decoration: underline;
+    color: #ffed4e;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Commands Reference Section */
+.commands-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.commands-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.commands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.command-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.command-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+    border-left-color: #764ba2;
+}
+
+.command-card h3 {
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.command-card code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.command-description {
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.command-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.command-features li {
+    color: #555;
+    padding: 4px 0;
+    font-size: 0.9rem;
+    padding-left: 16px;
+    position: relative;
+}
+
+.command-features li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+/* Analytics Section */
+.analytics-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.analytics-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+}
+
+/* Resources Section */
+.resources-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.resources-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 3px solid #f39c12;
+    padding-bottom: 10px;
+}
+
+.metric-card.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Recommendations List */
+.recommendations-list,
+#recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.recommendation-item.critical {
+    border-left-color: #e74c3c;
+    background: #fadbd8;
+}
+
+.recommendation-item.warning {
+    border-left-color: #f39c12;
+    background: #fef5e7;
+}
+
+.recommendation-item.info {
+    border-left-color: #3498db;
+    background: #ebf5fb;
+}
+
+.rec-spinner {
+    color: #667eea;
+    animation: spin 1s linear infinite;
+    font-size: 1.2rem;
+}
+
+.rec-message {
+    flex: 1;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.rec-severity {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.rec-severity.critical {
+    background: #e74c3c;
+    color: white;
+}
+
+.rec-severity.warning {
+    background: #f39c12;
+    color: white;
+}
+
+.rec-severity.info {
+    background: #3498db;
+    color: white;
+}
+
+/* Database Section */
+.database-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.database-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 3px solid #27ae60;
+    padding-bottom: 10px;
+}
+
+.database-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.table-select,
+.database-search {
+    padding: 10px 12px;
+    border: 2px solid #ecf0f1;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.table-select:focus,
+.database-search:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.table-select {
+    min-width: 200px;
+    background: white;
+    cursor: pointer;
+}
+
+.database-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.table-info {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #ecf0f1;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 600;
+}
+
+.database-viewer {
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.db-message {
+    padding: 40px 20px;
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.database-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.database-table th {
+    background: #667eea;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+}
+
+.database-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ecf0f1;
+    word-break: break-word;
+    max-width: 300px;
+}
+
+.database-table tbody tr:hover {
+    background: #e8f4f8;
+}
+
+.database-table tbody tr:nth-child(even) {
+    background: #ffffff;
+}
+
+.database-table tbody tr:nth-child(odd) {
+    background: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.status-badge.good {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.status-badge.acceptable {
+    background: #fef5e7;
+    color: #f39c12;
+}
+
+.status-badge.warning {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+.status-badge.critical {
+    background: #f5b7b1;
+    color: #c0392b;
+}
+
+.status-running {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #d5f4e6;
+    color: #27ae60;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Commands Output Section */
+.commands-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.commands-section h2 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.commands-output-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.command-output-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fc 100%);
+    border: 2px solid #e8ecf1;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.command-output-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.command-header {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e8ecf1;
+}
+
+.command-header h3 {
+    color: #667eea;
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+    font-family: 'Courier New', monospace;
+}
+
+.command-description {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.command-embed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.embed-field {
+    padding: 10px;
+    background: white;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #2c3e50;
+}
+
+.embed-field strong {
+    color: #34495e;
+    display: inline-block;
+    min-width: 120px;
+}
+
+.embed-field .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.status-badge.good {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.status-badge.acceptable {
+    background: #fef5e7;
+    color: #f39c12;
+}
+
+.status-badge.warning {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+.status-badge.critical {
+    background: #f8b4d4;
+    color: #c0392b;
+}
+
+/* Responsive Design Updates */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-left,
+    .header-right {
+        width: 100%;
+    }
+
+    .version-info {
+        justify-content: center;
+    }
+
+    .commands-output-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .database-controls {
+        flex-direction: column;
+    }
+
+    .table-select,
+    .database-search {
+        width: 100%;
+    }
+
+    .database-viewer {
+        max-height: 400px;
+    }
+
+    .metric-card.full-width {
+        grid-column: auto;
+    }
+
+    .commands-section,
+    .analytics-section,
+    .resources-section,
+    .database-section,
+    .error-logs-section {
+        padding: 20px;
+    }
+}

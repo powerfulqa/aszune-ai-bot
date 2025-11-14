@@ -174,7 +174,7 @@ class WebDashboardService {
    * Setup API routes
    */
   setupRoutes() {
-    // Health check endpoint
+    // Health and metrics
     this.app.get('/api/health', (req, res) => {
       res.json({
         status: 'healthy',
@@ -183,7 +183,6 @@ class WebDashboardService {
       });
     });
 
-    // Get current metrics
     this.app.get('/api/metrics', async (req, res) => {
       try {
         const metrics = await this.getMetrics();
@@ -197,14 +196,80 @@ class WebDashboardService {
       }
     });
 
-    // Get system information
     this.app.get('/api/system', (req, res) => {
       res.json(this.getSystemInfo());
     });
 
+    this.setupDatabaseRoutes();
+    this.setupVersionRoutes();
+    this.setupRecommendationRoutes();
+
     // Serve the main dashboard page
     this.app.get('/', (req, res) => {
       res.sendFile(path.join(__dirname, '../../dashboard/public/index.html'));
+    });
+  }
+
+  /**
+   * Setup database-related routes
+   * @private
+   */
+  setupDatabaseRoutes() {
+    this.app.get('/api/database/:table', async (req, res) => {
+      try {
+        const { table } = req.params;
+        const { limit = 100, offset = 0 } = req.query;
+        const data = await this.getDatabaseTableContents(table, parseInt(limit), parseInt(offset));
+        res.json(data);
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, `getting database table ${req.params.table}`);
+        res.status(400).json({
+          error: errorResponse.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    this.app.get('/api/database-schema', async (req, res) => {
+      try {
+        const schema = await this.getDatabaseSchema();
+        res.json(schema);
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'getting database schema');
+        res.status(500).json({
+          error: errorResponse.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+  }
+
+  /**
+   * Setup version-related routes
+   * @private
+   */
+  setupVersionRoutes() {
+    this.app.get('/api/version', (req, res) => {
+      res.json(this.getVersionInfo());
+    });
+  }
+
+  /**
+   * Setup recommendation routes
+   * @private
+   */
+  setupRecommendationRoutes() {
+    this.app.get('/api/recommendations', async (req, res) => {
+      try {
+        const recommendations = await this.getDetailedRecommendations();
+        res.json(recommendations);
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'getting recommendations');
+        res.status(500).json({
+          error: errorResponse.message,
+          timestamp: new Date().toISOString()
+        });
+      }
     });
   }
 
@@ -551,6 +616,297 @@ class WebDashboardService {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  /**
+   * Get version and commit information
+   * @returns {Object} Version info
+   */
+  getVersionInfo() {
+    try {
+      const packageJson = require('../../package.json');
+      const { execSync } = require('child_process');
+      
+      let commitSha = 'unknown';
+      let commitUrl = '';
+      let releaseUrl = '';
+      
+      try {
+        commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+        commitUrl = `https://github.com/chrishaycock/aszune-ai-bot/commit/${commitSha}`;
+      } catch (e) {
+        // Git not available
+      }
+
+      const version = packageJson.version || '1.8.0';
+      releaseUrl = `https://github.com/chrishaycock/aszune-ai-bot/releases/tag/v${version}`;
+
+      return {
+        version,
+        commit: commitSha,
+        commitUrl,
+        releaseUrl,
+        nodeVersion: process.version,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      logger.warn(`Failed to get version info: ${error.message}`);
+      return {
+        version: '1.8.0',
+        commit: 'unknown',
+        commitUrl: '',
+        releaseUrl: 'https://github.com/chrishaycock/aszune-ai-bot/releases',
+        nodeVersion: process.version,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Get database schema (list of tables with row counts)
+   * @returns {Promise<Object>} Database schema
+   */
+  async getDatabaseSchema() {
+    try {
+      const tables = [];
+      
+      // Define expected tables
+      const expectedTables = ['users', 'user_messages', 'conversation_history', 'reminders'];
+      
+      for (const tableName of expectedTables) {
+        try {
+          const count = await this.getDatabaseTableRowCount(tableName);
+          tables.push({
+            name: tableName,
+            rowCount: count,
+            description: this.getTableDescription(tableName)
+          });
+        } catch (e) {
+          logger.debug(`Table ${tableName} not found or error reading: ${e.message}`);
+        }
+      }
+      
+      return {
+        tables,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      logger.warn(`Failed to get database schema: ${error.message}`);
+      return {
+        tables: [],
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Get table description
+   * @param {string} tableName - Table name
+   * @returns {string} Description
+   * @private
+   */
+  getTableDescription(tableName) {
+    const descriptions = {
+      users: 'User profiles and stats',
+      user_messages: 'Legacy user messages (deprecated)',
+      conversation_history: 'AI conversation history with roles',
+      reminders: 'User reminders with scheduling info'
+    };
+    return descriptions[tableName] || 'Unknown table';
+  }
+
+  /**
+   * Get row count for a table
+   * @param {string} tableName - Table name
+   * @returns {Promise<number>} Row count
+   * @private
+   */
+  async getDatabaseTableRowCount(tableName) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!databaseService.getDb) {
+          reject(new Error('Database not available'));
+          return;
+        }
+
+        const db = databaseService.getDb();
+        if (!db) {
+          reject(new Error('Database connection unavailable'));
+          return;
+        }
+
+        const result = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
+        resolve(result?.count || 0);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get database table contents with pagination
+   * @param {string} tableName - Table name
+   * @param {number} limit - Row limit
+   * @param {number} offset - Row offset
+   * @returns {Promise<Object>} Table data
+   */
+  async getDatabaseTableContents(tableName, limit = 100, offset = 0) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Validate table name (prevent SQL injection)
+        const validTables = ['users', 'user_messages', 'conversation_history', 'reminders'];
+        if (!validTables.includes(tableName)) {
+          reject(new Error(`Invalid table: ${tableName}`));
+          return;
+        }
+
+        if (!databaseService.getDb) {
+          reject(new Error('Database not available'));
+          return;
+        }
+
+        const db = databaseService.getDb();
+        if (!db) {
+          reject(new Error('Database connection unavailable'));
+          return;
+        }
+
+        // Get total count
+        const countResult = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
+        const totalRows = countResult?.count || 0;
+
+        // Get limited data
+        const data = db.prepare(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`).all(limit, offset);
+
+        resolve({
+          table: tableName,
+          totalRows,
+          limit,
+          offset,
+          returnedRows: data?.length || 0,
+          columns: this.getTableColumns(tableName),
+          data: data || [],
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        logger.warn(`Failed to get database contents for ${tableName}: ${error.message}`);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get table column names
+   * @param {string} tableName - Table name
+   * @returns {Array<string>} Column names
+   * @private
+   */
+  getTableColumns(tableName) {
+    const columns = {
+      users: ['user_id', 'username', 'message_count', 'summary_count', 'last_active'],
+      user_messages: ['id', 'user_id', 'message_content', 'timestamp'],
+      conversation_history: ['id', 'user_id', 'role', 'message', 'timestamp'],
+      reminders: ['id', 'user_id', 'message', 'scheduled_time', 'status', 'created_at']
+    };
+    return columns[tableName] || [];
+  }
+
+  /**
+   * Get detailed recommendations based on metrics
+   * @returns {Promise<Array>} Recommendations
+   */
+  async getDetailedRecommendations() {
+    try {
+      const recommendations = [];
+      const metrics = await this.getMetrics();
+
+      this.addMemoryRecommendations(recommendations, metrics);
+      this.addPerformanceRecommendations(recommendations, metrics);
+      this.addDatabaseRecommendations(recommendations, metrics);
+
+      // System health
+      if (recommendations.length === 0) {
+        recommendations.push({
+          category: 'general',
+          severity: 'info',
+          message: 'System healthy and performing optimally',
+          action: 'Continue monitoring',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      return recommendations.slice(0, 5); // Return top 5 recommendations
+    } catch (error) {
+      logger.warn(`Failed to generate recommendations: ${error.message}`);
+      return [
+        {
+          category: 'general',
+          severity: 'info',
+          message: 'System monitoring active',
+          action: 'Continue monitoring',
+          timestamp: new Date().toISOString()
+        }
+      ];
+    }
+  }
+
+  /**
+   * Add memory-related recommendations
+   * @private
+   */
+  addMemoryRecommendations(recommendations, metrics) {
+    if (!metrics.system || !metrics.system.process) return;
+
+    const ratio = metrics.system.process.heapUsed / metrics.system.process.heapTotal;
+    if (ratio > 0.9) {
+      recommendations.push({
+        category: 'memory',
+        severity: 'critical',
+        message: 'Heap memory usage exceeds 90%',
+        action: 'Consider cache cleanup or server restart',
+        timestamp: new Date().toISOString()
+      });
+    } else if (ratio > 0.75) {
+      recommendations.push({
+        category: 'memory',
+        severity: 'warning',
+        message: 'Heap memory usage at 75%+',
+        action: 'Monitor memory usage closely',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Add performance-related recommendations
+   * @private
+   */
+  addPerformanceRecommendations(recommendations, metrics) {
+    if (metrics.cache && metrics.cache.hitRate < 50) {
+      recommendations.push({
+        category: 'performance',
+        severity: 'warning',
+        message: `Cache hit rate is low (${metrics.cache.hitRate}%)`,
+        action: 'Review cache configuration and eviction policy',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Add database-related recommendations
+   * @private
+   */
+  addDatabaseRecommendations(recommendations, metrics) {
+    if (metrics.database && metrics.database.totalMessages > 10000) {
+      recommendations.push({
+        category: 'database',
+        severity: 'info',
+        message: `Database contains ${metrics.database.totalMessages} messages`,
+        action: 'Consider archival of old messages',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 }
 
