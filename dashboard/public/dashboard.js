@@ -143,11 +143,13 @@ class Dashboard {
     safeSetText('cpu-load', `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`);
     safeSetText('platform', `${data.system.platform} ${data.system.arch}`);
 
-    safeSetText('process-pid', data.system.process.pid);
+    // Process Info
+    safeSetText('process-id', data.system.process.pid);
     safeSetText('process-memory', data.system.process.rssFormatted);
     safeSetText('heap-usage', `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`);
     safeSetText('node-version-info', data.system.nodeVersion);
 
+    // Cache Performance
     safeSetText('cache-hit-rate', `${data.cache.hitRate}%`);
     safeSetText('cache-requests', (data.cache.hits + data.cache.misses).toLocaleString());
     safeSetText('cache-memory', data.cache.memoryUsageFormatted);
@@ -160,6 +162,7 @@ class Dashboard {
 
     safeSetText('bot-uptime', data.uptime);
     safeSetText('last-update', new Date(data.timestamp).toLocaleTimeString());
+    safeSetText('node-version', data.system.nodeVersion);
   }
 
   updateAnalyticsMetrics(data) {
