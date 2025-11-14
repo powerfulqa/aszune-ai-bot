@@ -1165,7 +1165,7 @@ class DatabaseService {
       if (this.isDisabled) return 0;
 
       const db = this.getDb();
-      const stmt = db.prepare('SELECT COUNT(*) as count FROM users');
+      const stmt = db.prepare('SELECT COUNT(*) as count FROM user_stats');
       const result = stmt.get();
       return result ? result.count : 0;
     } catch (error) {

@@ -647,8 +647,8 @@ class WebDashboardService {
    */
   async getResourceData() {
     try {
-      const ResourceOptimizer = require('./resource-optimizer');
-      const resourceStatus = await ResourceOptimizer.monitorResources();
+      const ResourceOptimizer = require('../utils/resource-optimizer');
+      const resourceStatus = ResourceOptimizer.monitorResources();
       
       return {
         memory: {
