@@ -951,8 +951,8 @@ class WebDashboardService {
    */
   getTableColumns(tableName) {
     const columns = {
-      users: ['user_id', 'username', 'message_count', 'summary_count', 'last_active'],
-      user_messages: ['id', 'user_id', 'message_content', 'timestamp'],
+      user_stats: ['user_id', 'username', 'message_count', 'total_summaries', 'total_commands', 'last_active', 'first_seen'],
+      user_messages: ['id', 'user_id', 'message', 'timestamp'],
       conversation_history: ['id', 'user_id', 'role', 'message', 'timestamp'],
       reminders: ['id', 'user_id', 'message', 'scheduled_time', 'status', 'created_at']
     };
