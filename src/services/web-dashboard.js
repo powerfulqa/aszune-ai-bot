@@ -287,11 +287,21 @@ class WebDashboardService {
         const execPromise = util.promisify(exec);
 
         // Determine service name - typically 'aszune-bot' or similar
-        const serviceName = process.env.SERVICE_NAME || 'aszune-bot';
+        const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
+        const isRoot = process.getuid ? process.getuid() === 0 : true;
         
         try {
-          // Try to restart using systemctl with sudo
-          await execPromise(`sudo systemctl restart ${serviceName}`, {
+          let restartCmd;
+          if (isRoot) {
+            // Running as root, no sudo needed
+            restartCmd = `systemctl restart ${serviceName}`;
+          } else {
+            // Not root, try with sudo
+            restartCmd = `sudo systemctl restart ${serviceName}`;
+          }
+          
+          logger.info(`Attempting restart with: ${restartCmd}`);
+          await execPromise(restartCmd, {
             timeout: 10000
           });
           
@@ -302,7 +312,8 @@ class WebDashboardService {
             timestamp: new Date().toISOString()
           });
         } catch (systemctlError) {
-          logger.warn(`Systemctl restart failed, attempting direct restart: ${systemctlError.message}`);
+          logger.warn(`Systemctl restart failed: ${systemctlError.message}`);
+          logger.info('Attempting direct process restart...');
           
           // Fallback: direct process exit (for development)
           res.json({
@@ -318,6 +329,7 @@ class WebDashboardService {
         }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
+        logger.error(`Restart error: ${error.message}`);
         res.status(500).json({
           success: false,
           error: errorResponse.message,
