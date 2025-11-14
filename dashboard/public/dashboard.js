@@ -393,6 +393,11 @@ class Dashboard {
 
   addActivityItem(message, type = 'info') {
     const activityLog = document.getElementById('activity-log');
+    if (!activityLog) {
+      console.warn('Activity log element not found');
+      return;
+    }
+    
     const item = document.createElement('div');
     item.className = `activity-item fade-in status-${type}`;
 
@@ -416,7 +421,7 @@ class Dashboard {
       if (!leaderboardContainer) return;
 
       // Fetch users data to get usernames and message counts
-      const response = await fetch('/api/database/users?limit=1000&offset=0');
+      const response = await fetch('/api/database/user_stats?limit=1000&offset=0');
       if (!response.ok) {
         console.warn('Failed to fetch leaderboard data');
         return;
