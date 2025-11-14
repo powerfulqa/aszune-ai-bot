@@ -9,6 +9,8 @@ class Dashboard {
     this.isConnected = false;
     this.currentTable = null;
     this.databaseCache = {};
+    this.lastActivityLogTime = 0;
+    this.activityLogThrottle = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     this.initializeSocket();
     this.setupEventListeners();
@@ -94,7 +96,12 @@ class Dashboard {
         this.metricsHistory.shift();
       }
 
-      this.addActivityItem('Metrics updated');
+      // Only log metrics update to activity log every 5 minutes (reduce noise)
+      const now = Date.now();
+      if (now - this.lastActivityLogTime >= this.activityLogThrottle) {
+        this.addActivityItem('Metrics updated');
+        this.lastActivityLogTime = now;
+      }
     } catch (error) {
       console.error('Error updating metrics:', error);
       this.addActivityItem(`Error updating metrics: ${error.message}`, 'error');
