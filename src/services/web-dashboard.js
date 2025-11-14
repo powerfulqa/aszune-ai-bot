@@ -557,10 +557,9 @@ class WebDashboardService {
    */
   async getCacheStats() {
     try {
-      // Import cache manager dynamically to avoid circular dependencies
-      const PerplexityService = require('./perplexity-secure');
-      const service = new PerplexityService();
-      return service.getCacheStats();
+      // Import the singleton PerplexityService instance to get actual cache stats
+      const perplexityService = require('./perplexity-secure');
+      return perplexityService.getCacheStats();
     } catch (error) {
       logger.warn(`Failed to get cache stats: ${error.message}`);
       return {
