@@ -447,7 +447,7 @@ class WebDashboardService {
         }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'broadcasting metrics');
-        logger.warn(`Metrics broadcast error: ${errorResponse.message}`);
+        logger.error(`Metrics broadcast error: ${errorResponse.message}`, error);
       }
     }, 5000); // Update every 5 seconds
   }
