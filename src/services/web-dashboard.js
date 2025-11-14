@@ -203,6 +203,7 @@ class WebDashboardService {
     this.setupDatabaseRoutes();
     this.setupVersionRoutes();
     this.setupRecommendationRoutes();
+    this.setupControlRoutes();
 
     // Serve the main dashboard page
     this.app.get('/', (req, res) => {
@@ -267,6 +268,67 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'getting recommendations');
         res.status(500).json({
           error: errorResponse.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+  }
+
+  /**
+   * Setup control routes for bot management
+   * @private
+   */
+  setupControlRoutes() {
+    this.app.post('/api/control/restart', async (req, res) => {
+      try {
+        logger.info('Restart command received from dashboard');
+        res.json({
+          success: true,
+          message: 'Bot restart initiated',
+          timestamp: new Date().toISOString()
+        });
+        
+        // Restart the bot after a short delay to allow response to send
+        setTimeout(() => {
+          logger.info('Executing bot restart');
+          process.exit(0);
+        }, 500);
+      } catch (error) {
+        const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
+        res.status(500).json({
+          success: false,
+          error: errorResponse.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    this.app.post('/api/control/git-pull', async (req, res) => {
+      try {
+        logger.info('Git pull command received from dashboard');
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execPromise = util.promisify(exec);
+
+        const { stdout, stderr } = await execPromise('git pull origin main', {
+          cwd: path.join(__dirname, '../../'),
+          timeout: 30000
+        });
+
+        logger.info('Git pull completed successfully');
+        res.json({
+          success: true,
+          message: 'Git pull completed',
+          output: stdout,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        logger.error(`Git pull failed: ${error.message}`);
+        const errorResponse = ErrorHandler.handleError(error, 'executing git pull');
+        res.status(500).json({
+          success: false,
+          error: errorResponse.message,
+          output: error.stderr || error.message,
           timestamp: new Date().toISOString()
         });
       }

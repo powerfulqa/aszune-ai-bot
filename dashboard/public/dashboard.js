@@ -52,6 +52,17 @@ class Dashboard {
         this.filterDatabaseTable(e.target.value);
       });
     }
+
+    // Control buttons
+    const restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) {
+      restartBtn.addEventListener('click', () => this.handleRestartClick());
+    }
+
+    const gitPullBtn = document.getElementById('git-pull-btn');
+    if (gitPullBtn) {
+      gitPullBtn.addEventListener('click', () => this.handleGitPullClick());
+    }
   }
 
   setConnectionStatus(connected) {
@@ -437,6 +448,73 @@ class Dashboard {
       leaderboardContainer.innerHTML = leaderboardHtml;
     } catch (error) {
       console.error('Error updating leaderboard:', error);
+    }
+  }
+
+  async handleRestartClick() {
+    const btn = document.getElementById('restart-btn');
+    if (!confirm('Are you sure you want to restart the bot? This will temporarily disconnect the bot.')) {
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Restarting...</span>';
+
+    try {
+      const response = await fetch('/api/control/restart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        this.addActivityItem('✓ Bot restart initiated', 'info');
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        this.addActivityItem(`✗ Restart failed: ${data.error}`, 'error');
+      }
+    } catch (error) {
+      this.addActivityItem(`✗ Restart error: ${error.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  async handleGitPullClick() {
+    const btn = document.getElementById('git-pull-btn');
+    if (!confirm('Pull latest changes from GitHub? The bot may need to restart.')) {
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Pulling...</span>';
+
+    try {
+      const response = await fetch('/api/control/git-pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
+        this.addActivityItem(data.output || 'Pull successful', 'info');
+      } else {
+        this.addActivityItem(`✗ Git pull failed: ${data.error}`, 'error');
+        if (data.output) {
+          this.addActivityItem(`Error details: ${data.output}`, 'error');
+        }
+      }
+    } catch (error) {
+      this.addActivityItem(`✗ Git pull error: ${error.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
     }
   }
 }
