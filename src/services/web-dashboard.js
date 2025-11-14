@@ -864,7 +864,7 @@ class WebDashboardService {
     return new Promise((resolve, reject) => {
       try {
         // Validate table name (prevent SQL injection)
-        const validTables = ['users', 'user_messages', 'conversation_history', 'reminders'];
+        const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
         if (!validTables.includes(tableName)) {
           reject(new Error(`Invalid table: ${tableName}`));
           return;
