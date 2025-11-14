@@ -370,6 +370,8 @@ class Dashboard {
     }
 
     const columns = tableData.columns || Object.keys(tableData.data[0]);
+    const dateColumns = ['last_active', 'first_seen', 'timestamp', 'created_at', 'scheduled_time'];
+    
     const tableHtml = `
       <table class="database-table">
         <thead>
@@ -382,8 +384,27 @@ class Dashboard {
             <tr>
               ${columns.map(col => {
                 let value = row[col];
-                if (value === null || value === undefined) value = '-';
-                if (typeof value === 'string' && value.length > 100) {
+                if (value === null || value === undefined) {
+                  value = '-';
+                } else if (dateColumns.includes(col) && typeof value === 'string') {
+                  // Format ISO date strings to readable format
+                  try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                      value = date.toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      });
+                    }
+                  } catch (e) {
+                    // If date parsing fails, keep original value
+                  }
+                } else if (typeof value === 'string' && value.length > 100) {
                   value = value.substring(0, 100) + '...';
                 }
                 return `<td>${this.escapeHtml(String(value))}</td>`;
