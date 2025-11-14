@@ -216,8 +216,8 @@ const commands = {
       const recentEntriesValue =
         detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0
           ? detailedInfo.recentEntries
-              .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
-              .join('\n')
+            .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
+            .join('\n')
           : 'No recent entries';
 
       const recentEntriesField = {
@@ -459,11 +459,11 @@ const commands = {
               value:
                 dashboardData.alerts && dashboardData.alerts.length > 0
                   ? dashboardData.alerts
-                      .slice(0, 3)
-                      .map(
-                        (alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
-                      )
-                      .join('\n')
+                    .slice(0, 3)
+                    .map(
+                      (alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`
+                    )
+                    .join('\n')
                   : '✅ No active alerts',
               inline: false,
             },

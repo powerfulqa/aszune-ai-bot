@@ -183,6 +183,7 @@ client.once('clientReady', async () => {
   try {
     const webDashboardService = require('./services/web-dashboard');
     await webDashboardService.start(3000);
+    webDashboardService.setDiscordClient(client); // Pass Discord client for username resolution
     logger.info('Web dashboard service initialized on port 3000');
   } catch (error) {
     logger.error('Failed to initialize web dashboard service:', error);

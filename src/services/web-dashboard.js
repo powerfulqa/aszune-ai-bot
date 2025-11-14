@@ -17,6 +17,8 @@ class WebDashboardService {
     this.startTime = Date.now();
     this.errorLogs = []; // Buffer for error logs
     this.maxErrorLogs = 75; // Keep last 75 errors for professional log snapshot
+    this.discordClient = null; // Discord client for username resolution
+    this.usernameCache = new Map(); // Cache for resolved usernames (userId -> username)
     this.setupErrorInterception();
   }
 
@@ -111,6 +113,48 @@ class WebDashboardService {
       const errorResponse = ErrorHandler.handleError(error, 'stopping web dashboard');
       logger.error(`Failed to stop web dashboard: ${errorResponse.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * Set Discord client for username resolution
+   * @param {Object} client - Discord.js client instance
+   */
+  setDiscordClient(client) {
+    this.discordClient = client;
+    logger.info('Discord client set for WebDashboardService username resolution');
+  }
+
+  /**
+   * Resolve Discord username from user ID using cached or Discord API
+   * @param {string} userId - Discord user ID
+   * @returns {Promise<string>} Discord username or null
+   * @private
+   */
+  async resolveDiscordUsername(userId) {
+    try {
+      // Check cache first
+      if (this.usernameCache.has(userId)) {
+        return this.usernameCache.get(userId);
+      }
+
+      // If no Discord client, return null
+      if (!this.discordClient) {
+        return null;
+      }
+
+      // Fetch from Discord API
+      const user = await this.discordClient.users.fetch(userId, { cache: false });
+      if (user) {
+        const username = user.username;
+        this.usernameCache.set(userId, username);
+        return username;
+      }
+
+      return null;
+    } catch (error) {
+      logger.debug(`Failed to resolve Discord username for ${userId}: ${error.message}`);
+      return null;
     }
   }
 
@@ -286,7 +330,7 @@ class WebDashboardService {
         const util = require('util');
         const execPromise = util.promisify(exec);
 
-                // Determine service name - typically 'aszune-ai-bot' or similar
+        // Determine service name - typically 'aszune-ai-bot' or similar
         const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
         
         try {
@@ -899,48 +943,59 @@ class WebDashboardService {
    * @returns {Promise<Object>} Table data
    */
   async getDatabaseTableContents(tableName, limit = 100, offset = 0) {
-    return new Promise((resolve, reject) => {
-      try {
-        // Validate table name (prevent SQL injection)
-        const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
-        if (!validTables.includes(tableName)) {
-          reject(new Error(`Invalid table: ${tableName}`));
-          return;
-        }
-
-        if (!databaseService.getDb) {
-          reject(new Error('Database not available'));
-          return;
-        }
-
-        const db = databaseService.getDb();
-        if (!db) {
-          reject(new Error('Database connection unavailable'));
-          return;
-        }
-
-        // Get total count
-        const countResult = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
-        const totalRows = countResult?.count || 0;
-
-        // Get limited data
-        const data = db.prepare(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`).all(limit, offset);
-
-        resolve({
-          table: tableName,
-          totalRows,
-          limit,
-          offset,
-          returnedRows: data?.length || 0,
-          columns: this.getTableColumns(tableName),
-          data: data || [],
-          timestamp: new Date().toISOString()
-        });
-      } catch (error) {
-        logger.warn(`Failed to get database contents for ${tableName}: ${error.message}`);
-        reject(error);
+    try {
+      // Validate table name (prevent SQL injection)
+      const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
+      if (!validTables.includes(tableName)) {
+        throw new Error(`Invalid table: ${tableName}`);
       }
-    });
+
+      if (!databaseService.getDb) {
+        throw new Error('Database not available');
+      }
+
+      const db = databaseService.getDb();
+      if (!db) {
+        throw new Error('Database connection unavailable');
+      }
+
+      // Get total count
+      const countResult = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
+      const totalRows = countResult?.count || 0;
+
+      // Get limited data
+      let data = db.prepare(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`).all(limit, offset);
+
+      // Enrich user_stats with resolved Discord usernames
+      if (tableName === 'user_stats' && data && data.length > 0) {
+        data = await Promise.all(
+          data.map(async (row) => {
+            // If username is null, try to resolve from Discord
+            if (!row.username && this.discordClient) {
+              const resolvedUsername = await this.resolveDiscordUsername(row.user_id);
+              if (resolvedUsername) {
+                return { ...row, username: resolvedUsername };
+              }
+            }
+            return row;
+          })
+        );
+      }
+
+      return {
+        table: tableName,
+        totalRows,
+        limit,
+        offset,
+        returnedRows: data?.length || 0,
+        columns: this.getTableColumns(tableName),
+        data: data || [],
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      logger.warn(`Failed to get database contents for ${tableName}: ${error.message}`);
+      throw error;
+    }
   }
 
   /**

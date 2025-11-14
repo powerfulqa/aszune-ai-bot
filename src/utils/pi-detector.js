@@ -310,24 +310,24 @@ function generateOptimizedConfig(detectedPi) {
 
   // Apply model-specific optimizations
   switch (detectedPi.model) {
-    case 'pi3':
-      return configurePi3(config);
+  case 'pi3':
+    return configurePi3(config);
 
-    case 'pi4':
-      return configurePi4(config, detectedPi.ram);
+  case 'pi4':
+    return configurePi4(config, detectedPi.ram);
 
-    case 'pi5':
-      return configurePi5(config, detectedPi.ram);
+  case 'pi5':
+    return configurePi5(config, detectedPi.ram);
 
-    default:
-      // Unknown Pi model, use safe defaults
-      config.COMPACT_MODE = true;
-      config.MAX_CONNECTIONS = 2;
-      config.MAX_HISTORY = 10;
-      config.CACHE_SIZE = 50;
-      config.LOW_CPU_MODE = true;
-      config.DEBOUNCE_MS = 300;
-      return config;
+  default:
+    // Unknown Pi model, use safe defaults
+    config.COMPACT_MODE = true;
+    config.MAX_CONNECTIONS = 2;
+    config.MAX_HISTORY = 10;
+    config.CACHE_SIZE = 50;
+    config.LOW_CPU_MODE = true;
+    config.DEBOUNCE_MS = 300;
+    return config;
   }
 }
 
