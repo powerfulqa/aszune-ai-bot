@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Contents - Aszune AI Bot Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Aszune AI Bot Dashboard</h1>
+                <div class="version-info">
+                    <span class="version-badge" id="version-badge">
+                        <span class="version-text">v<span id="version-number">1.8.0</span></span>
+                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
+                    </span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="control-buttons">
+                    <button id="git-pull-btn" class="control-btn git-pull-btn" title="Pull latest changes from GitHub">
+                        <span class="btn-icon">⬇️</span>
+                        <span class="btn-label">Git Pull</span>
+                    </button>
+                    <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-label">Restart</span>
+                    </button>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot connecting" id="status-dot"></span>
+                    <span id="status-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Top Navigation Bar for Features -->
+        <nav class="dashboard-navbar">
+            <div class="navbar-content">
+                <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
+                    <span class="navbar-icon">📊</span>
+                    <span class="navbar-label">Dashboard</span>
+                </a>
+                <a href="logs-viewer-demo.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
+                    <span class="navbar-icon">📋</span>
+                    <span class="navbar-label">Log Viewer</span>
+                </a>
+                <a href="service-management-demo.html" class="navbar-item navbar-item-2" title="Service Status & Management">
+                    <span class="navbar-icon">🔧</span>
+                    <span class="navbar-label">Services</span>
+                </a>
+                <a href="config-editor-demo.html" class="navbar-item navbar-item-3" title="Configuration Editor">
+                    <span class="navbar-icon">⚙️</span>
+                    <span class="navbar-label">Config</span>
+                </a>
+                <a href="network-status-demo.html" class="navbar-item navbar-item-5" title="Network & Connectivity Status">
+                    <span class="navbar-icon">🌐</span>
+                    <span class="navbar-label">Network</span>
+                </a>
+                <a href="reminder-management-demo.html" class="navbar-item navbar-item-7" title="Reminder Management Interface">
+                    <span class="navbar-icon">⏰</span>
+                    <span class="navbar-label">Reminders</span>
+                </a>
+                <a href="commands.html" class="navbar-item navbar-link" title="View Slash Commands Output">
+                    <span class="navbar-icon">🎮</span>
+                    <span class="navbar-label">Commands</span>
+                </a>
+                <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
+                    <span class="navbar-icon">💾</span>
+                    <span class="navbar-label">Database</span>
+                </a>
+                <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
+                    <span class="navbar-icon">⚠️</span>
+                    <span class="navbar-label">Errors</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Database Contents Section -->
+        <div class="database-section">
+            <h2>💾 Database Contents (Read-Only)</h2>
+            <div class="database-controls">
+                <select id="database-table-select" class="table-select">
+                    <option value="">Select a table...</option>
+                    <option value="user_stats" selected>user_stats</option>
+                    <option value="conversation_history">conversation_history</option>
+                    <option value="reminders">reminders</option>
+                </select>
+                <input type="text" id="database-search" class="database-search" placeholder="Search table...">
+                <span id="table-info" class="table-info">Loading...</span>
+            </div>
+            <div id="database-viewer" class="database-viewer">
+                <div class="db-message">Select a table to view data...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO and Dashboard Script -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="dashboard.js"></script>
+    <script>
+        // Hide current page link from navbar
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPagePath = window.location.pathname;
+            const currentPageName = currentPagePath.split('/').pop() || 'index.html';
+            const navLinks = document.querySelectorAll('.navbar-item');
+            navLinks.forEach(link => {
+                const linkHref = link.getAttribute('href');
+                if (linkHref === currentPageName || linkHref === currentPagePath.substring(1) || linkHref.includes(currentPageName)) {
+                    link.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

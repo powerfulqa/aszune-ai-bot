@@ -37,133 +37,45 @@
             </div>
         </header>
 
-        <!-- Commands Output Section -->
-        <section class="commands-section">
-            <h2>🎮 Slash Commands Output</h2>
-            <div class="commands-output-grid">
-                <!-- /stats -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/stats</code></h3>
-                        <p class="command-description">Your Usage Statistics</p>
-                    </div>
-                    <div class="command-embed">
-                        <div class="embed-field">
-                            <strong>Messages sent:</strong> <span id="cmd-stats-messages">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Summaries requested:</strong> <span id="cmd-stats-summaries">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Active reminders:</strong> <span id="cmd-stats-reminders">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- /analytics -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/analytics</code></h3>
-                        <p class="command-description">Discord Server Analytics</p>
-                    </div>
-                    <div class="command-embed">
-                        <div class="embed-field">
-                            <strong>Total Users:</strong> <span id="cmd-analytics-users">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Online Members:</strong> <span id="cmd-analytics-online">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Bot Count:</strong> <span id="cmd-analytics-bots">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Success Rate:</strong> <span id="cmd-analytics-success">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- /cache -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/cache</code></h3>
-                        <p class="command-description">Cache Statistics (v1.6.5)</p>
-                    </div>
-                    <div class="command-embed">
-                        <div class="embed-field">
-                            <strong>Hit Rate:</strong> <span id="cmd-cache-hitrate">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Misses:</strong> <span id="cmd-cache-misses">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Memory Used:</strong> <span id="cmd-cache-memory">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Entries:</strong> <span id="cmd-cache-entries">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- /dashboard -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/dashboard</code></h3>
-                        <p class="command-description">Performance Dashboard</p>
-                    </div>
-                    <div class="command-embed">
-                        <div class="embed-field">
-                            <strong>System Status:</strong> <span id="cmd-dashboard-status">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Response Time:</strong> <span id="cmd-dashboard-response">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Memory Usage:</strong> <span id="cmd-dashboard-memory">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Optimization Tier:</strong> <span id="cmd-dashboard-tier">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- /resources -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/resources</code></h3>
-                        <p class="command-description">Resource Optimization</p>
-                    </div>
-                    <div class="command-embed">
-                        <div class="embed-field">
-                            <strong>Memory Status:</strong> <span id="cmd-resources-memory">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Used / Free:</strong> <span id="cmd-resources-usage">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Performance Status:</strong> <span id="cmd-resources-perf">-</span>
-                        </div>
-                        <div class="embed-field">
-                            <strong>Response Time:</strong> <span id="cmd-resources-response">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- /reminders -->
-                <div class="command-output-card">
-                    <div class="command-header">
-                        <h3><code>/reminders</code></h3>
-                        <p class="command-description">Your Active Reminders</p>
-                    </div>
-                    <div class="command-embed">
-                        <div id="cmd-reminders-list" class="reminders-list">
-                            <div class="embed-field">No active reminders</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Top Navigation Bar for Features -->
+        <nav class="dashboard-navbar">
+            <div class="navbar-content">
+                <a href="logs-viewer-demo.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
+                    <span class="navbar-icon">📋</span>
+                    <span class="navbar-label">Log Viewer</span>
+                </a>
+                <a href="service-management-demo.html" class="navbar-item navbar-item-2" title="Service Status & Management">
+                    <span class="navbar-icon">🔧</span>
+                    <span class="navbar-label">Services</span>
+                </a>
+                <a href="config-editor-demo.html" class="navbar-item navbar-item-3" title="Configuration Editor">
+                    <span class="navbar-icon">⚙️</span>
+                    <span class="navbar-label">Config</span>
+                </a>
+                <a href="network-status-demo.html" class="navbar-item navbar-item-5" title="Network & Connectivity Status">
+                    <span class="navbar-icon">🌐</span>
+                    <span class="navbar-label">Network</span>
+                </a>
+                <a href="reminder-management-demo.html" class="navbar-item navbar-item-7" title="Reminder Management Interface">
+                    <span class="navbar-icon">⏰</span>
+                    <span class="navbar-label">Reminders</span>
+                </a>
+                <a href="commands.html" class="navbar-item navbar-link" title="View Slash Commands Output">
+                    <span class="navbar-icon">🎮</span>
+                    <span class="navbar-label">Commands</span>
+                </a>
+                <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
+                    <span class="navbar-icon">💾</span>
+                    <span class="navbar-label">Database</span>
+                </a>
+                <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
+                    <span class="navbar-icon">⚠️</span>
+                    <span class="navbar-label">Errors</span>
+                </a>
             </div>
-        </section>
+        </nav>
 
-        <!-- System Metrics Grid -->
+        <!-- System Metrics Grid (Main Content) -->
         <div class="metrics-grid">
             <!-- System Status -->
             <div class="metric-card">
@@ -288,34 +200,6 @@
             </div>
         </div>
 
-        <!-- Database Contents Section -->
-        <div class="database-section">
-            <h2>💾 Database Contents (Read-Only)</h2>
-            <div class="database-controls">
-                <select id="database-table-select" class="table-select">
-                    <option value="">Select a table...</option>
-                    <option value="user_stats" selected>user_stats</option>
-                    <option value="conversation_history">conversation_history</option>
-                    <option value="reminders">reminders</option>
-                </select>
-                <input type="text" id="database-search" class="database-search" placeholder="Search table...">
-                <span id="table-info" class="table-info">Loading...</span>
-            </div>
-            <div id="database-viewer" class="database-viewer">
-                <div class="db-message">Select a table to view data...</div>
-            </div>
-        </div>
-
-        <!-- Error Logs Section -->
-        <div class="error-logs-section">
-            <h2>⚠️ Error Logs</h2>
-            <div class="error-log-container">
-                <div id="error-logs">
-                    <div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Recent Activity -->
         <div class="activity-section">
             <h3>Recent Activity</h3>
@@ -328,5 +212,16 @@
     <!-- Socket.IO and Dashboard Script -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="dashboard.js"></script>
+    <script>
+        // Hide Dashboard link from navbar on dashboard home page
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.navbar-item');
+            navLinks.forEach(link => {
+                if (link.classList.contains('navbar-home')) {
+                    link.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

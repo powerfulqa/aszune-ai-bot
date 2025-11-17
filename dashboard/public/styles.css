@@ -1033,8 +1033,161 @@ body {
     font-size: 0.9rem;
 }
 
+/* Top Navigation Bar for Features */
+.dashboard-navbar {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.navbar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.navbar-item:hover {
+    background: #f0f0f0;
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.navbar-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.navbar-label {
+    display: inline;
+}
+
+.navbar-item-1 {
+    color: #667eea;
+}
+
+.navbar-item-1:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+}
+
+.navbar-item-2 {
+    color: #f5576c;
+}
+
+.navbar-item-2:hover {
+    background: rgba(245, 87, 108, 0.1);
+    border-color: #f5576c;
+}
+
+.navbar-item-3 {
+    color: #4facfe;
+}
+
+.navbar-item-3:hover {
+    background: rgba(79, 172, 254, 0.1);
+    border-color: #4facfe;
+}
+
+.navbar-item-5 {
+    color: #43e97b;
+}
+
+.navbar-item-5:hover {
+    background: rgba(67, 233, 123, 0.1);
+    border-color: #43e97b;
+}
+
+.navbar-item-7 {
+    color: #fa709a;
+}
+
+.navbar-item-7:hover {
+    background: rgba(250, 112, 154, 0.1);
+    border-color: #fa709a;
+}
+
+/* Links (Commands, Database, Errors) */
+.navbar-link {
+    color: #2c3e50 !important;
+}
+
+.navbar-link:nth-of-type(6) {
+    color: #9c27b0;
+}
+
+.navbar-link:nth-of-type(6):hover {
+    background: rgba(156, 39, 176, 0.1) !important;
+    border-color: #9c27b0 !important;
+}
+
+.navbar-link:nth-of-type(7) {
+    color: #ff9800;
+}
+
+.navbar-link:nth-of-type(7):hover {
+    background: rgba(255, 152, 0, 0.1) !important;
+    border-color: #ff9800 !important;
+}
+
+.navbar-link:nth-of-type(8) {
+    color: #e91e63;
+}
+
+.navbar-link:nth-of-type(8):hover {
+    background: rgba(233, 30, 99, 0.1) !important;
+    border-color: #e91e63 !important;
+}
+
 /* Responsive Design Updates */
 @media (max-width: 768px) {
+    .dashboard-navbar {
+        padding: 10px 15px;
+    }
+
+    .navbar-content {
+        gap: 8px;
+    }
+
+    .navbar-item {
+        flex: 0 1 calc(50% - 4px);
+        justify-content: center;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .navbar-icon {
+        font-size: 1rem;
+    }
+
+    .navbar-label {
+        display: none;
+    }
+
     .dashboard-header {
         flex-direction: column;
         gap: 15px;

@@ -24,7 +24,22 @@ included.
 - [Pi Optimization Guide](Pi-Optimization-Guide) - Raspberry Pi performance optimizations
 - [Troubleshooting](Troubleshooting) - Common issues and solutions
 - [Contributing](Contributing) - Guidelines for developers
- - [Web Dashboard](../docs/DASHBOARD-v1.8.0-RELEASE.md) - Real-time metrics and command outputs (v1.8.0)
+
+### Dashboard Features (v1.9.0)
+
+Comprehensive web-based monitoring and management interface. Access at `http://localhost:3000/dashboard`:
+
+**Complete Overview**: [Dashboard Features Summary](Dashboard-Features-Complete) - All 9 dashboard pages and features  
+**Implementation Details**: [v1.9.0 Dashboard Implementation](V1.9.0-Dashboard-Implementation) - Technical architecture and details
+
+**Individual Features**:
+- [Dashboard Feature 1: Real-Time Log Viewer](Dashboard-Feature-1-Log-Viewer) - Live log streaming, filtering, and export
+- [Dashboard Feature 2: Service Status & Management](Dashboard-Feature-2-Service-Management) - Monitor and control bot services
+- [Dashboard Feature 3: Configuration Editor](Dashboard-Feature-3-Config-Editor) - Safe configuration editing with validation and backups
+- [Dashboard Feature 5: Network & Connectivity Status](Dashboard-Feature-5-Network-Status) - Network interface monitoring and diagnostics
+- [Dashboard Feature 7: Reminder Management Interface](Dashboard-Feature-7-Reminders) - Create, edit, and manage reminders via web UI
+
+**Release Information**: [RELEASE-NOTES-v1.9.0](../docs/RELEASE-NOTES-v1.9.0.md) | [Dashboard API Reference](../docs/Dashboard-API-Reference-v1.9.0.md)
 
 ## Code Quality & Standards
 
@@ -39,6 +54,21 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 - **[Changelog](../CHANGELOG.md)** - Standardized project changelog
 
 ## Version Information
+
+**v1.9.0** - Dashboard Feature Suite Expansion (2025-01-15)
+  - **5 Major Dashboard Enhancements** - Complete monitoring and management capabilities
+  - Feature 1: Real-Time Log Viewer - Live log streaming, multi-level filtering, CSV/JSON export
+  - Feature 2: Service Status & Management - systemd integration, service control, uptime tracking
+  - Feature 3: Configuration Editor - Safe .env and config.js editing with validation & auto-backups
+  - Feature 5: Network & Connectivity Status - Interface monitoring, connectivity checks, bandwidth tracking
+  - Feature 7: Reminder Management Interface - Web-based CRUD operations for reminder scheduling
+  - 15 New API Endpoints - Comprehensive REST API for all dashboard features
+  - WebSocket Support - Real-time log streaming and network status updates
+  - Advanced Filtering & Export - Support for multiple export formats and complex filtering queries
+  - Security Hardening - Integrated validation, audit trails, and rollback capabilities
+  - Full Documentation - Wiki pages for each feature with usage guides, API reference, and troubleshooting
+  - Demo Interface - Interactive HTML demos for all 5 features
+  - Testing: 1,231 tests (1,228 passing) - 72.6% statements / 67.1% branches
 
 **v1.8.0** - Balanced Coverage, Complexity Reduction & Real-Time Dashboard (2025-11-13)
   - Dual-threshold coverage policy: ≥80% critical files / ≥65% global baseline (path toward 82%+ remains strategic)
