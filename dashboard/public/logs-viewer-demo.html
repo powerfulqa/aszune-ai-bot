@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aszune AI Bot Dashboard - Logs Viewer Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .logs-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .logs-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logs-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .log-filter {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            color: #333;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .log-search {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            color: #333;
+            font-size: 13px;
+            min-width: 200px;
+        }
+
+        .log-search::placeholder {
+            color: #999;
+        }
+
+        .log-button {
+            padding: 8px 16px;
+            background: #0d47a1;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .log-button:hover {
+            background: #1565c0;
+        }
+
+        .log-button.pause {
+            background: #f57c00;
+        }
+
+        .log-button.pause:hover {
+            background: #e65100;
+        }
+
+        .log-button.export {
+            background: #558b2f;
+        }
+
+        .log-button.export:hover {
+            background: #689f38;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .logs-table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .logs-table th {
+            padding: 10px;
+            text-align: left;
+            color: #2c3e50;
+            font-weight: 600;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .logs-table th:last-child {
+            border-right: none;
+        }
+
+        .logs-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        .logs-table tr:hover {
+            background: #fafafa;
+        }
+
+        .log-level-DEBUG {
+            color: #1565c0;
+            font-weight: 500;
+        }
+
+        .log-level-INFO {
+            color: #2e7d32;
+            font-weight: 500;
+        }
+
+        .log-level-WARN {
+            color: #f57c00;
+            font-weight: 500;
+        }
+
+        .log-level-ERROR {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        .log-timestamp {
+            color: #a0aec0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .log-message {
+            color: #e0e0e0;
+            max-width: 500px;
+            word-break: break-word;
+        }
+
+        .logs-footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .log-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .log-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .log-stat-value {
+            color: #87ceeb;
+            font-weight: 600;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: #1b5e20;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #4caf50;
+        }
+
+        .live-indicator.pulsing::before {
+            content: '●';
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .no-logs {
+            padding: 40px;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Aszune AI Bot Dashboard</h1>
+                <div class="version-info">
+                    <span class="version-badge" id="version-badge">
+                        <span class="version-text">v<span id="version-number">1.8.0</span></span>
+                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
+                    </span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="control-buttons">
+                    <button id="git-pull-btn" class="control-btn git-pull-btn" title="Pull latest changes from GitHub">
+                        <span class="btn-icon">⬇️</span>
+                        <span class="btn-label">Git Pull</span>
+                    </button>
+                    <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-label">Restart</span>
+                    </button>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot connecting" id="status-dot"></span>
+                    <span id="status-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Top Navigation Bar for Features -->
+        <nav class="dashboard-navbar">
+            <div class="navbar-content">
+                <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
+                    <span class="navbar-icon">📊</span>
+                    <span class="navbar-label">Dashboard</span>
+                </a>
+                <a href="logs-viewer-demo.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
+                    <span class="navbar-icon">📋</span>
+                    <span class="navbar-label">Logs</span>
+                </a>
+                <a href="service-management-demo.html" class="navbar-item navbar-item-2" title="Service Status & Management">
+                    <span class="navbar-icon">🔧</span>
+                    <span class="navbar-label">Services</span>
+                </a>
+                <a href="config-editor-demo.html" class="navbar-item navbar-item-3" title="Configuration Editor">
+                    <span class="navbar-icon">⚙️</span>
+                    <span class="navbar-label">Config</span>
+                </a>
+                <a href="network-status-demo.html" class="navbar-item navbar-item-5" title="Network & Connectivity Status">
+                    <span class="navbar-icon">🌐</span>
+                    <span class="navbar-label">Network</span>
+                </a>
+                <a href="reminder-management-demo.html" class="navbar-item navbar-item-7" title="Reminder Management Interface">
+                    <span class="navbar-icon">⏰</span>
+                    <span class="navbar-label">Reminders</span>
+                </a>
+                <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
+                    <span class="navbar-icon">💾</span>
+                    <span class="navbar-label">Database</span>
+                </a>
+                <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
+                    <span class="navbar-icon">⚠️</span>
+                    <span class="navbar-label">Errors</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Real-Time Log Viewer Section -->
+        <div class="logs-section">
+            <h2>📋 Real-Time Log Viewer</h2>
+            
+            <div class="logs-header">
+                <div class="logs-controls">
+                    <select id="log-filter" class="log-filter">
+                        <option value="ALL">All Levels</option>
+                        <option value="DEBUG">Debug</option>
+                        <option value="INFO" selected>Info</option>
+                        <option value="WARN">Warnings</option>
+                        <option value="ERROR">Errors</option>
+                    </select>
+                    
+                    <input type="text" 
+                           id="log-search" 
+                           class="log-search" 
+                           placeholder="Search logs (e.g., 'cache', 'API', 'database')...">
+                    
+                    <button class="log-button pause" onclick="toggleAutoScroll()">
+                        ⏸ Pause
+                    </button>
+                    
+                    <button class="log-button export" onclick="exportLogs()">
+                        ⬇️ Export
+                    </button>
+                </div>
+                
+                <div>
+                    <span class="live-indicator pulsing">● Live</span>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                <table class="logs-table" id="logs-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Timestamp</th>
+                            <th style="width: 80px;">Level</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-body">
+                        <!-- Sample logs will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="logs-footer">
+                <div class="log-stats">
+                    <div class="log-stat">
+                        <span>Total Logs:</span>
+                        <span class="log-stat-value" id="total-logs">127</span>
+                    </div>
+                    <div class="log-stat">
+                        <span>Errors:</span>
+                        <span class="log-stat-value" id="error-count">3</span>
+                    </div>
+                    <div class="log-stat">
+                        <span>Warnings:</span>
+                        <span class="log-stat-value" id="warn-count">12</span>
+                    </div>
+                </div>
+                <span id="last-update">Last updated: just now</span>
+            </div>
+        </div>
+
+        <!-- Log Level Legend -->
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+            <h3 style="margin-top: 0; margin-bottom: 10px; color: #2c3e50;">Log Levels</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; color: #2c3e50;">
+                <div><span class="log-level-DEBUG">● DEBUG</span> - Detailed diagnostic information</div>
+                <div><span class="log-level-INFO">● INFO</span> - General informational messages</div>
+                <div><span class="log-level-WARN">● WARN</span> - Warning messages for potential issues</div>
+                <div><span class="log-level-ERROR">● ERROR</span> - Error messages for failures</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoScroll = true;
+        let isPaused = false;
+
+        // Sample log data
+        const sampleLogs = [
+            { timestamp: '2025-11-17 10:50:11.234', level: 'INFO', message: 'Web dashboard initialized on port 3000' },
+            { timestamp: '2025-11-17 10:50:12.156', level: 'INFO', message: 'Discord client connected' },
+            { timestamp: '2025-11-17 10:50:13.089', level: 'DEBUG', message: 'Socket.io connection handler ready' },
+            { timestamp: '2025-11-17 10:50:14.342', level: 'INFO', message: 'Perplexity API client initialized' },
+            { timestamp: '2025-11-17 10:50:15.401', level: 'INFO', message: 'Database service connected' },
+            { timestamp: '2025-11-17 10:50:16.523', level: 'DEBUG', message: 'Cache manager: LRU eviction strategy configured' },
+            { timestamp: '2025-11-17 10:50:17.654', level: 'INFO', message: 'Reminder service started' },
+            { timestamp: '2025-11-17 10:50:18.123', level: 'WARN', message: 'Cache hit rate below 80% threshold' },
+            { timestamp: '2025-11-17 10:50:19.456', level: 'INFO', message: 'User 123456789 connected' },
+            { timestamp: '2025-11-17 10:50:20.789', level: 'DEBUG', message: 'Processing message from @alice' },
+            { timestamp: '2025-11-17 10:50:21.234', level: 'INFO', message: 'Perplexity API request sent (model: sonar)' },
+            { timestamp: '2025-11-17 10:50:22.567', level: 'INFO', message: 'AI response received (2.3s)' },
+            { timestamp: '2025-11-17 10:50:23.890', level: 'DEBUG', message: 'Response cached: key_hash_a1b2c3d4' },
+            { timestamp: '2025-11-17 10:50:24.123', level: 'INFO', message: 'Message sent to Discord' },
+            { timestamp: '2025-11-17 10:50:25.456', level: 'INFO', message: 'User message recorded in database' },
+            { timestamp: '2025-11-17 10:50:26.789', level: 'DEBUG', message: 'Metrics updated: response_time=2341ms' },
+            { timestamp: '2025-11-17 10:50:27.234', level: 'INFO', message: 'User 987654321 connected' },
+            { timestamp: '2025-11-17 10:50:28.567', level: 'INFO', message: 'Processing /analytics command' },
+            { timestamp: '2025-11-17 10:50:29.890', level: 'DEBUG', message: 'Fetching guild member data (timeout: 5s)' },
+            { timestamp: '2025-11-17 10:50:30.123', level: 'INFO', message: 'Analytics report generated' },
+            { timestamp: '2025-11-17 10:50:31.456', level: 'ERROR', message: 'Database query timeout: user_stats table' },
+            { timestamp: '2025-11-17 10:50:32.789', level: 'WARN', message: 'Retrying database query (attempt 1/3)' },
+            { timestamp: '2025-11-17 10:50:33.234', level: 'INFO', message: 'Database query succeeded on retry' },
+            { timestamp: '2025-11-17 10:50:34.567', level: 'INFO', message: 'Processing /remind command from @bob' },
+            { timestamp: '2025-11-17 10:50:35.890', level: 'DEBUG', message: 'Time parser: recognized "tomorrow at 3pm"' },
+            { timestamp: '2025-11-17 10:50:36.123', level: 'INFO', message: 'Reminder scheduled for 2025-11-18 15:00:00' },
+            { timestamp: '2025-11-17 10:50:37.456', level: 'DEBUG', message: 'Cache eviction triggered: LRU (removed 23 entries)' },
+            { timestamp: '2025-11-17 10:50:38.789', level: 'INFO', message: 'Dashboard metrics broadcast to 2 clients' },
+            { timestamp: '2025-11-17 10:50:39.234', level: 'INFO', message: 'System health check: OK' },
+        ];
+
+        function renderLogs(logs) {
+            const tbody = document.getElementById('logs-body');
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-logs">No logs match the current filter</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td class="log-timestamp">${log.timestamp}</td>
+                    <td><span class="log-level-${log.level}">${log.level}</span></td>
+                    <td class="log-message">${log.message}</td>
+                </tr>
+            `).join('');
+
+            // Update counters
+            const errorCount = logs.filter(l => l.level === 'ERROR').length;
+            const warnCount = logs.filter(l => l.level === 'WARN').length;
+            document.getElementById('total-logs').textContent = logs.length;
+            document.getElementById('error-count').textContent = errorCount;
+            document.getElementById('warn-count').textContent = warnCount;
+        }
+
+        function updateLogs() {
+            if (isPaused) return;
+
+            const level = document.getElementById('log-filter').value;
+            const search = document.getElementById('log-search').value.toLowerCase();
+
+            let filtered = sampleLogs;
+
+            if (level !== 'ALL') {
+                filtered = filtered.filter(l => l.level === level);
+            }
+
+            if (search) {
+                filtered = filtered.filter(l => l.message.toLowerCase().includes(search));
+            }
+
+            renderLogs(filtered);
+            document.getElementById('last-update').textContent = 'Last updated: just now';
+        }
+
+        function toggleAutoScroll() {
+            isPaused = !isPaused;
+            const btn = event.target;
+            btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+            btn.style.background = isPaused ? '#558b2f' : '#f57c00';
+        }
+
+        function exportLogs() {
+            const level = document.getElementById('log-filter').value;
+            const filtered = level === 'ALL' 
+                ? sampleLogs 
+                : sampleLogs.filter(l => l.level === level);
+
+            const csv = 'Timestamp,Level,Message\n' + 
+                filtered.map(l => `"${l.timestamp}","${l.level}","${l.message}"`).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Event listeners
+        document.getElementById('log-filter').addEventListener('change', updateLogs);
+        document.getElementById('log-search').addEventListener('input', updateLogs);
+
+        // Initial render
+        updateLogs();
+
+        // Simulate live updates
+        setInterval(() => {
+            if (!isPaused && sampleLogs.length < 500) {
+                const newLog = {
+                    timestamp: new Date().toLocaleString('sv-SE'),
+                    level: ['DEBUG', 'INFO', 'WARN', 'ERROR'][Math.floor(Math.random() * 4)],
+                    message: ['User connected', 'Processing message', 'Cache hit', 'Database query', 'API request', 'Log entry'][Math.floor(Math.random() * 6)]
+                };
+                sampleLogs.push(newLog);
+                updateLogs();
+            }
+        }, 3000);
+
+        // Mark the current active nav item
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPagePath = window.location.pathname;
+            const currentPageName = currentPagePath.split('/').pop() || 'index.html';
+            const navLinks = document.querySelectorAll('.navbar-item');
+            navLinks.forEach(link => {
+                const linkHref = link.getAttribute('href');
+                if (linkHref === currentPageName || linkHref === currentPagePath.substring(1) || linkHref.includes(currentPageName)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
