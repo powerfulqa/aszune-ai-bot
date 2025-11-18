@@ -471,10 +471,18 @@
     <script src="dashboard.js"></script>
     <script>
         function loadServices() {
-            const socket = io();
-            socket.emit('request_services', {}, (response) => {
+            const dashboardSocket = window.dashboard?.socket;
+            if (!dashboardSocket) {
+                console.error('Dashboard socket not available');
+                return;
+            }
+            
+            dashboardSocket.emit('request_services', {}, (response) => {
+                console.log('Services response:', response);
                 if (response && response.services) {
                     renderServices(response.services);
+                } else {
+                    console.error('No services received from server', response);
                 }
             });
         }
@@ -523,8 +531,13 @@
         }
 
         function performAction(service, action) {
-            const socket = io();
-            socket.emit('service_action', { service: service, action: action }, (response) => {
+            const dashboardSocket = window.dashboard?.socket;
+            if (!dashboardSocket) {
+                console.error('Dashboard socket not available');
+                return;
+            }
+            
+            dashboardSocket.emit('service_action', { service: service, action: action }, (response) => {
                 if (response && response.success) {
                     alert(`Service ${action} successful`);
                     loadServices(); // Reload service status
@@ -535,8 +548,13 @@
         }
 
         function performQuickAction(actionGroup) {
-            const socket = io();
-            socket.emit('quick_service_action', { group: actionGroup }, (response) => {
+            const dashboardSocket = window.dashboard?.socket;
+            if (!dashboardSocket) {
+                console.error('Dashboard socket not available');
+                return;
+            }
+            
+            dashboardSocket.emit('quick_service_action', { group: actionGroup }, (response) => {
                 if (response && response.success) {
                     alert('Quick action completed successfully');
                     loadServices(); // Reload service status
@@ -558,8 +576,17 @@
                 }
             });
 
-            // Load services from server
-            loadServices();
+            // Wait for dashboard to initialize, then load services
+            const initServices = () => {
+                if (window.dashboard && window.dashboard.socket) {
+                    console.log('Dashboard ready, loading services');
+                    loadServices();
+                } else {
+                    setTimeout(initServices, 100);
+                }
+            };
+            
+            initServices();
         });
     </script>
 </body>

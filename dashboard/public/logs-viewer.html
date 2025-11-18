@@ -382,7 +382,6 @@
     <script>
         let autoScroll = true;
         let isPaused = false;
-        let socket = null;
         let allLogs = []; // Store all logs from server
 
         function renderLogs(logs) {
@@ -454,12 +453,19 @@
         }
 
         function loadLogsFromServer() {
-            if (!socket) return;
+            // Use the dashboard's socket connection
+            const dashboardSocket = window.dashboard?.socket;
+            if (!dashboardSocket) {
+                console.error('Dashboard socket not available');
+                return;
+            }
 
-            socket.emit('request_logs', {}, (response) => {
+            dashboardSocket.emit('request_logs', {}, (response) => {
                 if (response && response.logs) {
                     allLogs = response.logs;
                     updateLogs();
+                } else {
+                    console.error('No logs received from server', response);
                 }
             });
         }
@@ -468,7 +474,7 @@
         document.getElementById('log-filter').addEventListener('change', updateLogs);
         document.getElementById('log-search').addEventListener('input', updateLogs);
 
-        // Mark the current active nav item
+        // Mark the current active nav item and initialize
         document.addEventListener('DOMContentLoaded', () => {
             const currentPagePath = window.location.pathname;
             const currentPageName = currentPagePath.split('/').pop() || 'index.html';
@@ -480,31 +486,37 @@
                 }
             });
 
-            // Connect to Socket.IO and load logs
-            socket = io();
-            
-            socket.on('connect', () => {
-                console.log('Connected to dashboard server');
-                loadLogsFromServer();
-            });
-
-            socket.on('new_log', (logEntry) => {
-                if (!isPaused) {
-                    allLogs.push(logEntry);
-                    // Keep only last 500 logs
-                    if (allLogs.length > 500) {
-                        allLogs.shift();
-                    }
-                    updateLogs();
-                }
-            });
-
-            // Refresh logs every 5 seconds
-            setInterval(() => {
-                if (!isPaused) {
+            // Wait for dashboard to initialize, then load logs
+            const initLogs = () => {
+                if (window.dashboard && window.dashboard.socket) {
+                    console.log('Dashboard ready, loading logs');
                     loadLogsFromServer();
+                    
+                    // Listen for new logs
+                    window.dashboard.socket.on('new_log', (logEntry) => {
+                        if (!isPaused) {
+                            allLogs.push(logEntry);
+                            // Keep only last 500 logs
+                            if (allLogs.length > 500) {
+                                allLogs.shift();
+                            }
+                            updateLogs();
+                        }
+                    });
+
+                    // Refresh logs every 5 seconds
+                    setInterval(() => {
+                        if (!isPaused) {
+                            loadLogsFromServer();
+                        }
+                    }, 5000);
+                } else {
+                    // Dashboard not ready yet, wait a bit
+                    setTimeout(initLogs, 100);
                 }
-            }, 5000);
+            };
+            
+            initLogs();
         });
     </script>
 </body>
