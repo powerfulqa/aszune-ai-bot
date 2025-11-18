@@ -102,7 +102,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="dashboard.js"></script>
     <script>
-        // Hide current page link from navbar
+        // Mark the current active nav item
         document.addEventListener('DOMContentLoaded', () => {
             const currentPagePath = window.location.pathname;
             const currentPageName = currentPagePath.split('/').pop() || 'index.html';
@@ -110,7 +110,7 @@
             navLinks.forEach(link => {
                 const linkHref = link.getAttribute('href');
                 if (linkHref === currentPageName || linkHref === currentPagePath.substring(1) || linkHref.includes(currentPageName)) {
-                    link.style.display = 'none';
+                    link.classList.add('active');
                 }
             });
         });

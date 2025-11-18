@@ -213,12 +213,14 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="dashboard.js"></script>
     <script>
-        // Hide Dashboard link from navbar on dashboard home page
+        // Mark the current active nav item
         document.addEventListener('DOMContentLoaded', () => {
             const navLinks = document.querySelectorAll('.navbar-item');
             navLinks.forEach(link => {
-                if (link.classList.contains('navbar-home')) {
-                    link.style.display = 'none';
+                // Check if this link points to index.html or current page
+                const href = link.getAttribute('href');
+                if (href === 'index.html' || href === '' || href === '#') {
+                    link.classList.add('active');
                 }
             });
         });
