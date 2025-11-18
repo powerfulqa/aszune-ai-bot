@@ -1947,14 +1947,24 @@ class WebDashboardService {
   setupServiceHandlers(socket) {
     socket.on('request_services', (data, callback) => {
       try {
+        const uptimeSeconds = Math.floor(process.uptime());
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        const uptimeFormatted = `${hours}h ${minutes}m`;
+        
+        const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+        
         const services = [
           {
+            id: 'aszune-ai-bot',
             name: 'Aszune AI Bot',
-            status: 'running',
-            uptime: process.uptime(),
+            icon: '🤖',
+            status: 'Running',
+            enabledOnBoot: true,
+            uptime: uptimeFormatted,
             pid: process.pid,
-            memory: process.memoryUsage().heapUsed / 1024 / 1024,
-            cpu: 'N/A'
+            memory: `${memoryMB} MB`,
+            port: '3000 (Dashboard)'
           }
         ];
 
