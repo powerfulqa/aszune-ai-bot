@@ -376,12 +376,13 @@
         </div>
     </div>
 
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         let autoScroll = true;
         let isPaused = false;
-
-        // Logs will be populated from server via Socket.IO
-        const sampleLogs = [];
+        let socket = null;
+        let allLogs = []; // Store all logs from server
 
         function renderLogs(logs) {
             const tbody = document.getElementById('logs-body');
@@ -413,7 +414,7 @@
             const level = document.getElementById('log-filter').value;
             const search = document.getElementById('log-search').value.toLowerCase();
 
-            let filtered = sampleLogs;
+            let filtered = allLogs;
 
             if (level !== 'ALL') {
                 filtered = filtered.filter(l => l.level === level);
@@ -437,8 +438,8 @@
         function exportLogs() {
             const level = document.getElementById('log-filter').value;
             const filtered = level === 'ALL' 
-                ? sampleLogs 
-                : sampleLogs.filter(l => l.level === level);
+                ? allLogs 
+                : allLogs.filter(l => l.level === level);
 
             const csv = 'Timestamp,Level,Message\n' + 
                 filtered.map(l => `"${l.timestamp}","${l.level}","${l.message}"`).join('\n');
@@ -451,25 +452,20 @@
             a.click();
         }
 
+        function loadLogsFromServer() {
+            if (!socket) return;
+
+            socket.emit('request_logs', {}, (response) => {
+                if (response && response.logs) {
+                    allLogs = response.logs;
+                    updateLogs();
+                }
+            });
+        }
+
         // Event listeners
         document.getElementById('log-filter').addEventListener('change', updateLogs);
         document.getElementById('log-search').addEventListener('input', updateLogs);
-
-        // Initial render
-        updateLogs();
-
-        // Simulate live updates
-        setInterval(() => {
-            if (!isPaused && sampleLogs.length < 500) {
-                const newLog = {
-                    timestamp: new Date().toLocaleString('sv-SE'),
-                    level: ['DEBUG', 'INFO', 'WARN', 'ERROR'][Math.floor(Math.random() * 4)],
-                    message: ['User connected', 'Processing message', 'Cache hit', 'Database query', 'API request', 'Log entry'][Math.floor(Math.random() * 6)]
-                };
-                sampleLogs.push(newLog);
-                updateLogs();
-            }
-        }, 3000);
 
         // Mark the current active nav item
         document.addEventListener('DOMContentLoaded', () => {
@@ -482,6 +478,32 @@
                     link.classList.add('active');
                 }
             });
+
+            // Connect to Socket.IO and load logs
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('Connected to dashboard server');
+                loadLogsFromServer();
+            });
+
+            socket.on('new_log', (logEntry) => {
+                if (!isPaused) {
+                    allLogs.push(logEntry);
+                    // Keep only last 500 logs
+                    if (allLogs.length > 500) {
+                        allLogs.shift();
+                    }
+                    updateLogs();
+                }
+            });
+
+            // Refresh logs every 5 seconds
+            setInterval(() => {
+                if (!isPaused) {
+                    loadLogsFromServer();
+                }
+            }, 5000);
         });
     </script>
 </body>
