@@ -335,63 +335,6 @@
                     ⏳ Loading services from server...
                 </div>
             </div>
-                            <span class="info-value">12.5 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="service-actions">
-                        <button class="action-btn btn-stop" onclick="performAction('nginx', 'stop')">⏹ Stop</button>
-                        <button class="action-btn btn-restart" onclick="performAction('nginx', 'restart')">🔄 Restart</button>
-                    </div>
-
-                    <div class="service-logs-preview">
-                        <div class="log-line">[2025-11-17 14:00:00] Nginx configuration loaded</div>
-                        <div class="log-line">[2025-11-17 13:55:23] SSL certificate check: OK</div>
-                        <div class="log-line">[2025-11-17 13:50:10] All proxy backends operational</div>
-                    </div>
-                </div>
-
-                <!-- PostgreSQL Service -->
-                <div class="service-card">
-                    <div class="service-header">
-                        <span class="service-name">🗄️ PostgreSQL</span>
-                        <div class="service-status">
-                            <span class="status-badge status-inactive">Inactive</span>
-                            <span class="enabled-indicator">○ Disabled on boot</span>
-                        </div>
-                    </div>
-
-                    <div class="service-info">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span class="info-value">Stopped</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Uptime</span>
-                            <span class="info-value">---</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Port</span>
-                            <span class="info-value">5432</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Memory</span>
-                            <span class="info-value">0 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="service-actions">
-                        <button class="action-btn btn-start" onclick="performAction('postgresql', 'start')">▶ Start</button>
-                        <button class="action-btn btn-restart" onclick="performAction('postgresql', 'restart')">🔄 Restart</button>
-                    </div>
-
-                    <div class="service-logs-preview">
-                        <div class="log-line">[2025-11-17 08:30:00] PostgreSQL stopped by user</div>
-                        <div class="log-line">[2025-11-17 08:29:50] Graceful shutdown completed</div>
-                        <div class="log-line warn">[2025-11-17 08:20:15] Low disk space warning (85%)</div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Legend -->
             <div class="legend">

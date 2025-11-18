@@ -2306,7 +2306,7 @@ class WebDashboardService {
       // Get optimization recommendations
       let recommendations = [];
       try {
-        const ResourceOptimizer = require('./resource-optimizer');
+        const ResourceOptimizer = require('../utils/resource-optimizer');
         const DiscordAnalytics = require('../utils/discord-analytics');
         const analyticsData = await DiscordAnalytics.generateDailyReport();
         const resourceStatus = await ResourceOptimizer.monitorResources();
