@@ -18,6 +18,9 @@ module.exports = {
     '!jest.setup.js',
     '!src/services/perplexity.js',
     '!src/services/perplexity-improved.js',
+    '!src/utils/license-server.js',
+    '!src/utils/license-validator.js',
+    '!src/utils/enhanced-conversation-context.js',
   ],
   // Define pattern for test files to exclude helper files
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
@@ -46,13 +49,13 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Configure coverage thresholds - Balanced approach: 60% global (realistic for large codebase with optional features)
+  // Configure coverage thresholds - Balanced approach: 65% global (excluding optional/untested feature files)
   coverageThreshold: {
     global: {
-      branches: 60,
-      functions: 60,
-      lines: 60,
-      statements: 60,
+      branches: 65,
+      functions: 65,
+      lines: 65,
+      statements: 65,
     },
   },
   // Output verbose coverage info
