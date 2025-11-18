@@ -293,7 +293,7 @@ class Dashboard {
 
   updateRecommendations(recommendations) {
     const container = document.getElementById('recommendations-list');
-    if (!container) return;
+    if (!container) return; // Element doesn't exist on this page
 
     if (!recommendations || recommendations.length === 0) {
       container.innerHTML = `
@@ -317,8 +317,11 @@ class Dashboard {
   }
 
   updateErrorLogs(data) {
+    const errorLogsElement = document.getElementById('error-logs');
+    if (!errorLogsElement) return; // Element doesn't exist on this page
+
     if (!data.analytics?.recentErrors || data.analytics.recentErrors.length === 0) {
-      document.getElementById('error-logs').innerHTML = 
+      errorLogsElement.innerHTML = 
         '<div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>';
       return;
     }
@@ -335,18 +338,22 @@ class Dashboard {
       `;
     }).join('');
 
-    document.getElementById('error-logs').innerHTML = errorLogsHtml;
+    errorLogsElement.innerHTML = errorLogsHtml;
   }
 
   async loadDatabaseTable(tableName) {
+    const databaseViewer = document.getElementById('database-viewer');
+    const tableInfo = document.getElementById('table-info');
+    if (!databaseViewer) return; // Element doesn't exist on this page
+
     if (!tableName) {
-      document.getElementById('database-viewer').innerHTML = 
+      databaseViewer.innerHTML = 
         '<div class="db-message">Select a table to view data</div>';
       return;
     }
 
     this.currentTable = tableName;
-    document.getElementById('table-info').textContent = 'Loading...';
+    if (tableInfo) tableInfo.textContent = 'Loading...';
 
     try {
       const response = await fetch(`/api/database/${tableName}?limit=100&offset=0`);
@@ -357,7 +364,7 @@ class Dashboard {
       this.renderDatabaseTable(tableData);
     } catch (error) {
       console.error(`Error loading table ${tableName}:`, error);
-      document.getElementById('database-viewer').innerHTML = 
+      databaseViewer.innerHTML = 
         `<div class="db-message">Error loading table: ${error.message}</div>`;
     }
   }
@@ -365,10 +372,11 @@ class Dashboard {
   renderDatabaseTable(tableData) {
     const viewer = document.getElementById('database-viewer');
     const info = document.getElementById('table-info');
+    if (!viewer) return; // Element doesn't exist on this page
 
     if (!tableData.data || tableData.data.length === 0) {
       viewer.innerHTML = '<div class="db-message">No data in this table</div>';
-      info.textContent = `${tableData.table}: 0 rows`;
+      if (info) info.textContent = `${tableData.table}: 0 rows`;
       return;
     }
 
@@ -419,11 +427,14 @@ class Dashboard {
     `;
 
     viewer.innerHTML = tableHtml;
-    info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
+    if (info) info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
   }
 
   filterDatabaseTable(searchTerm) {
     if (!this.currentTable || !this.databaseCache[this.currentTable]) return;
+
+    const databaseViewer = document.getElementById('database-viewer');
+    if (!databaseViewer) return;
 
     const tableData = this.databaseCache[this.currentTable];
     const filtered = tableData.data.filter(row => {
@@ -433,7 +444,7 @@ class Dashboard {
     });
 
     if (filtered.length === 0) {
-      document.getElementById('database-viewer').innerHTML = 
+      databaseViewer.innerHTML = 
         '<div class="db-message">No matching results</div>';
       return;
     }
@@ -463,7 +474,7 @@ class Dashboard {
       </table>
     `;
 
-    document.getElementById('database-viewer').innerHTML = tableHtml;
+    databaseViewer.innerHTML = tableHtml;
   }
 
   escapeHtml(unsafe) {
