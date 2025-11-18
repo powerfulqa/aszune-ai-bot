@@ -467,7 +467,6 @@
             <!-- File Selector -->
             <div class="file-selector">
                 <button class="file-btn active" onclick="switchFile('.env')">📄 .env</button>
-                <button class="file-btn" onclick="switchFile('config.js')">📄 config.js</button>
                 <button class="file-btn" onclick="switchFile('.env.example')">📄 .env.example</button>
             </div>
 
@@ -589,17 +588,40 @@
             const dashboardSocket = window.dashboard?.socket;
             if (!dashboardSocket) {
                 console.error('Dashboard socket not available');
+                document.getElementById('backup-info').innerHTML = '⚠️ Dashboard not connected';
+                document.querySelector('.validation-status').innerHTML = '<span class="status-badge error">⚠ Connection failed</span>';
                 return;
             }
+            
+            // Show loading state
+            document.getElementById('backup-info').innerHTML = '⏳ Loading configuration...';
+            document.getElementById('editor-content').value = 'Loading configuration...';
             
             dashboardSocket.emit('request_config', { filename: currentFile }, (response) => {
                 console.log('Config response:', response);
                 if (response && response.content) {
+                    // Update editor content
                     document.getElementById('editor-content').value = response.content;
                     originalContent = response.content;
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Loaded</span>';
+                    
+                    // Update file info
+                    if (response.lastModified) {
+                        const date = new Date(response.lastModified);
+                        document.getElementById('last-modified').textContent = date.toLocaleString();
+                    }
+                    if (response.size) {
+                        document.getElementById('file-size').textContent = (response.size / 1024).toFixed(2) + ' KB';
+                    }
+                    
+                    // Update status
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Loaded successfully</span>';
+                    document.getElementById('backup-info').innerHTML = '✓ Configuration loaded. All changes are automatically backed up before saving.';
                 } else {
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">⚠ Failed to load</span>';
+                    // Handle error
+                    const errorMsg = response?.error || 'Unknown error';
+                    document.getElementById('editor-content').value = `// Failed to load ${currentFile}\n// Error: ${errorMsg}`;
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge error">⚠ Failed to load</span>';
+                    document.getElementById('backup-info').innerHTML = `⚠️ Failed to load ${currentFile}: ${errorMsg}`;
                 }
             });
         }
