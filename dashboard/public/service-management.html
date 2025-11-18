@@ -330,74 +330,11 @@
         <div class="services-section">
             <h2>🔧 System Services Management</h2>
             
-            <div class="service-grid">
-                <!-- Aszune Bot Service -->
-                <div class="service-card">
-                    <div class="service-header">
-                        <span class="service-name">🤖 Aszune AI Bot</span>
-                        <div class="service-status">
-                            <span class="status-badge status-active">Active</span>
-                            <span class="enabled-indicator yes">● Enabled on boot</span>
-                        </div>
-                    </div>
-
-                    <div class="service-info">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span class="info-value">Running</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Uptime</span>
-                            <span class="info-value">2d 14h 32m</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">PID</span>
-                            <span class="info-value">736579</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Memory</span>
-                            <span class="info-value">108.2 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="service-actions">
-                        <button class="action-btn btn-stop" onclick="performAction('aszune-ai-bot', 'stop')">⏹ Stop</button>
-                        <button class="action-btn btn-restart" onclick="performAction('aszune-ai-bot', 'restart')">🔄 Restart</button>
-                    </div>
-
-                    <div class="service-logs-preview">
-                        <div class="log-line">[2025-11-17 14:32:01] Bot initialized successfully</div>
-                        <div class="log-line">[2025-11-17 14:30:45] Discord client connected</div>
-                        <div class="log-line">[2025-11-17 14:30:40] Database service ready</div>
-                        <div class="log-line warn">[2025-11-17 14:30:35] Cache warming in progress</div>
-                    </div>
+            <div class="service-grid" id="services-grid">
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999;">
+                    ⏳ Loading services from server...
                 </div>
-
-                <!-- Nginx Service -->
-                <div class="service-card">
-                    <div class="service-header">
-                        <span class="service-name">🌐 Nginx</span>
-                        <div class="service-status">
-                            <span class="status-badge status-active">Active</span>
-                            <span class="enabled-indicator yes">● Enabled on boot</span>
-                        </div>
-                    </div>
-
-                    <div class="service-info">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span class="info-value">Running</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Uptime</span>
-                            <span class="info-value">4d 08h 15m</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Port</span>
-                            <span class="info-value">80, 443</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Memory</span>
+            </div>
                             <span class="info-value">12.5 MB</span>
                         </div>
                     </div>
@@ -530,14 +467,80 @@
     </div>
 
     <script>
+        function loadServices() {
+            const socket = io();
+            socket.emit('request_services', {}, (response) => {
+                if (response && response.services) {
+                    renderServices(response.services);
+                }
+            });
+        }
+
+        function renderServices(services) {
+            const grid = document.getElementById('services-grid');
+            if (services.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999;">No services available</div>';
+                return;
+            }
+
+            grid.innerHTML = services.map(service => `
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">${service.icon} ${service.name}</span>
+                        <div class="service-status">
+                            <span class="status-badge status-${service.status === 'Active' ? 'active' : 'inactive'}">${service.status}</span>
+                            <span class="enabled-indicator ${service.enabledOnBoot ? 'yes' : 'no'}">● ${service.enabledOnBoot ? 'Enabled' : 'Disabled'} on boot</span>
+                        </div>
+                    </div>
+
+                    <div class="service-info">
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">${service.status}</span>
+                        </div>
+                        ${service.uptime ? `<div class="info-row">
+                            <span class="info-label">Uptime</span>
+                            <span class="info-value">${service.uptime}</span>
+                        </div>` : ''}
+                        ${service.memory ? `<div class="info-row">
+                            <span class="info-label">Memory</span>
+                            <span class="info-value">${service.memory}</span>
+                        </div>` : ''}
+                    </div>
+
+                    <div class="service-actions">
+                        ${service.status === 'Running' ? 
+                            `<button class="action-btn btn-stop" onclick="performAction('${service.id}', 'stop')">⏹ Stop</button>
+                            <button class="action-btn btn-restart" onclick="performAction('${service.id}', 'restart')">🔄 Restart</button>` :
+                            `<button class="action-btn btn-start" onclick="performAction('${service.id}', 'start')">▶ Start</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function performAction(service, action) {
-            alert(`Demo: Would ${action} ${service}\n\nAPI Call: POST /api/services/${action}\nBody: { "service": "${service}" }`);
-            console.log(`Action: ${action} on service: ${service}`);
+            const socket = io();
+            socket.emit('service_action', { service: service, action: action }, (response) => {
+                if (response && response.success) {
+                    alert(`Service ${action} successful`);
+                    loadServices(); // Reload service status
+                } else {
+                    alert(`Failed to ${action} service: ` + (response?.error || 'Unknown error'));
+                }
+            });
         }
 
         function performQuickAction(actionGroup) {
-            alert(`Demo: Performing quick action: ${actionGroup}\n\nThis would execute multiple service management commands in sequence.`);
-            console.log(`Quick action: ${actionGroup}`);
+            const socket = io();
+            socket.emit('quick_service_action', { group: actionGroup }, (response) => {
+                if (response && response.success) {
+                    alert('Quick action completed successfully');
+                    loadServices(); // Reload service status
+                } else {
+                    alert('Quick action failed: ' + (response?.error || 'Unknown error'));
+                }
+            });
         }
 
         // Mark the current active nav item
@@ -551,6 +554,9 @@
                     link.classList.add('active');
                 }
             });
+
+            // Load services from server
+            loadServices();
         });
     </script>
 </body>

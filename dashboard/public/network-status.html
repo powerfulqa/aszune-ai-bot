@@ -417,37 +417,31 @@
                     <h3>📍 IP Addresses</h3>
                     <div class="info-item">
                         <span class="info-label">Hostname</span>
-                        <span class="info-value">raspberrypi-5</span>
+                        <span class="info-value" id="hostname">Loading...</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Local IP</span>
-                        <span class="info-value">192.168.1.42</span>
+                        <span class="info-value" id="local-ip">Loading...</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">External IP</span>
-                        <span class="info-value">203.0.113.45</span>
+                        <span class="info-value" id="external-ip">Loading...</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Gateway</span>
-                        <span class="info-value">192.168.1.1</span>
+                        <span class="info-value" id="gateway">Loading...</span>
                     </div>
                 </div>
 
                 <!-- Connectivity Status -->
                 <div class="status-card">
                     <h3>🔗 Connectivity</h3>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div id="connectivity-status" style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="connectivity-label">Overall Status</span>
-                            <span class="status-badge badge-connected">● Connected</span>
+                            <span class="connectivity-label">Status</span>
+                            <span class="status-badge">⏳ Loading...</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="connectivity-label">Internet</span>
-                            <span class="status-badge badge-connected">✓ Reachable</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="connectivity-label">DNS</span>
-                            <span class="status-badge badge-connected">✓ Reachable</span>
+                    </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span class="connectivity-label">Gateway</span>
@@ -491,27 +485,9 @@
                             <th>MAC Address</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="network-interfaces">
                         <tr>
-                            <td class="interface-name">eth0</td>
-                            <td><span class="interface-status">Active</span></td>
-                            <td>192.168.1.42</td>
-                            <td>fe80::1234:5678</td>
-                            <td>b8:27:eb:12:34:56</td>
-                        </tr>
-                        <tr>
-                            <td class="interface-name">wlan0</td>
-                            <td><span class="interface-status">Active</span></td>
-                            <td>192.168.1.88</td>
-                            <td>fe80::9876:5432</td>
-                            <td>b8:27:eb:65:43:21</td>
-                        </tr>
-                        <tr>
-                            <td class="interface-name">lo</td>
-                            <td><span class="interface-status loopback">Loopback</span></td>
-                            <td>127.0.0.1</td>
-                            <td>::1</td>
-                            <td>00:00:00:00:00:00</td>
+                            <td colspan="5" style="text-align: center; color: #999;">Loading interfaces...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -554,38 +530,9 @@
 
             <!-- Bandwidth Usage -->
             <div style="margin-top: 30px;">
-                <h3 style="color: #87ceeb; margin-bottom: 15px;">📊 Bandwidth Usage (eth0)</h3>
-                <div class="bandwidth-chart">
-                    <div class="chart-item">
-                        <div class="chart-title">Upload</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 35%;"></div>
-                        </div>
-                        <div class="chart-value">
-                            <span>350 KB/s</span>
-                            <span>1 MB/s max</span>
-                        </div>
-                    </div>
-                    <div class="chart-item">
-                        <div class="chart-title">Download</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 62%;"></div>
-                        </div>
-                        <div class="chart-value">
-                            <span>620 KB/s</span>
-                            <span>1 MB/s max</span>
-                        </div>
-                    </div>
-                    <div class="chart-item">
-                        <div class="chart-title">Total Traffic</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 48%;"></div>
-                        </div>
-                        <div class="chart-value">
-                            <span>970 KB/s</span>
-                            <span>2 MB/s max</span>
-                        </div>
-                    </div>
+                <h3 style="color: #87ceeb; margin-bottom: 15px;">📊 Bandwidth Usage</h3>
+                <div class="bandwidth-chart" id="bandwidth-chart">
+                    <p style="text-align: center; color: #999;">Waiting for bandwidth data from server...</p>
                 </div>
             </div>
 
@@ -593,15 +540,7 @@
             <div class="quick-test">
                 <h3 style="color: #87ceeb; margin: 0 0 10px 0;">🧪 Quick Connectivity Test</h3>
                 <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
-                <div class="test-result" id="test-result" style="display: none;">
-                    <div>$ ping -c 4 8.8.8.8</div>
-                    <div style="margin-top: 5px;">PING 8.8.8.8 from 192.168.1.42</div>
-                    <div>64 bytes from 8.8.8.8: icmp_seq=1 ttl=115 time=42.1 ms</div>
-                    <div>64 bytes from 8.8.8.8: icmp_seq=2 ttl=115 time=41.8 ms</div>
-                    <div>4 packets transmitted, 4 packets received, 0.0% packet loss</div>
-                    <div>round-trip min/avg/max/stddev = 41.8/42.1/42.5/0.2 ms</div>
-                    <div style="margin-top: 10px; color: #4caf50;">✓ Test completed successfully</div>
-                </div>
+                <div class="test-result" id="test-result" style="display: none; margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; color: #2c3e50;"></div>
             </div>
 
             <!-- Legend -->
@@ -641,9 +580,71 @@
 
     <script>
         function runTest() {
+            const socket = io();
             const resultDiv = document.getElementById('test-result');
+            resultDiv.textContent = 'Running connectivity tests...';
             resultDiv.style.display = 'block';
-            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            socket.emit('request_network_test', {}, (response) => {
+                if (response && response.result) {
+                    resultDiv.innerHTML = '<pre>' + response.result + '</pre>';
+                } else {
+                    resultDiv.textContent = 'Test request sent to server.';
+                }
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        }
+
+        function loadNetworkStatus() {
+            const socket = io();
+            socket.emit('request_network_status', {}, (response) => {
+                if (response) {
+                    // Update IP information
+                    if (response.hostname) document.getElementById('hostname').textContent = response.hostname;
+                    if (response.localIp) document.getElementById('local-ip').textContent = response.localIp;
+                    if (response.externalIp) document.getElementById('external-ip').textContent = response.externalIp;
+                    if (response.gateway) document.getElementById('gateway').textContent = response.gateway;
+                    
+                    // Update interfaces table
+                    if (response.interfaces && response.interfaces.length > 0) {
+                        const tbody = document.getElementById('network-interfaces');
+                        tbody.innerHTML = response.interfaces.map(iface => `
+                            <tr>
+                                <td class="interface-name">${iface.name}</td>
+                                <td><span class="interface-status">${iface.status}</span></td>
+                                <td>${iface.ipv4 || '-'}</td>
+                                <td>${iface.ipv6 || '-'}</td>
+                                <td>${iface.mac || '-'}</td>
+                            </tr>
+                        `).join('');
+                    }
+                    
+                    // Update bandwidth if available
+                    if (response.bandwidth) {
+                        const bandwidthDiv = document.getElementById('bandwidth-chart');
+                        bandwidthDiv.innerHTML = `
+                            <div class="chart-item">
+                                <div class="chart-title">Upload</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${response.bandwidth.uploadPercent || 0}%;"></div>
+                                </div>
+                                <div class="chart-value">
+                                    <span>${response.bandwidth.uploadSpeed || '0 KB/s'}</span>
+                                </div>
+                            </div>
+                            <div class="chart-item">
+                                <div class="chart-title">Download</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${response.bandwidth.downloadPercent || 0}%;"></div>
+                                </div>
+                                <div class="chart-value">
+                                    <span>${response.bandwidth.downloadSpeed || '0 KB/s'}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            });
         }
 
         // Mark the current active nav item
@@ -657,6 +658,9 @@
                     link.classList.add('active');
                 }
             });
+            
+            // Load network status
+            loadNetworkStatus();
         });
     </script>
 </body>

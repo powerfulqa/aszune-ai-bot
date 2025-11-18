@@ -380,44 +380,14 @@
         let autoScroll = true;
         let isPaused = false;
 
-        // Sample log data
-        const sampleLogs = [
-            { timestamp: '2025-11-17 10:50:11.234', level: 'INFO', message: 'Web dashboard initialized on port 3000' },
-            { timestamp: '2025-11-17 10:50:12.156', level: 'INFO', message: 'Discord client connected' },
-            { timestamp: '2025-11-17 10:50:13.089', level: 'DEBUG', message: 'Socket.io connection handler ready' },
-            { timestamp: '2025-11-17 10:50:14.342', level: 'INFO', message: 'Perplexity API client initialized' },
-            { timestamp: '2025-11-17 10:50:15.401', level: 'INFO', message: 'Database service connected' },
-            { timestamp: '2025-11-17 10:50:16.523', level: 'DEBUG', message: 'Cache manager: LRU eviction strategy configured' },
-            { timestamp: '2025-11-17 10:50:17.654', level: 'INFO', message: 'Reminder service started' },
-            { timestamp: '2025-11-17 10:50:18.123', level: 'WARN', message: 'Cache hit rate below 80% threshold' },
-            { timestamp: '2025-11-17 10:50:19.456', level: 'INFO', message: 'User 123456789 connected' },
-            { timestamp: '2025-11-17 10:50:20.789', level: 'DEBUG', message: 'Processing message from @alice' },
-            { timestamp: '2025-11-17 10:50:21.234', level: 'INFO', message: 'Perplexity API request sent (model: sonar)' },
-            { timestamp: '2025-11-17 10:50:22.567', level: 'INFO', message: 'AI response received (2.3s)' },
-            { timestamp: '2025-11-17 10:50:23.890', level: 'DEBUG', message: 'Response cached: key_hash_a1b2c3d4' },
-            { timestamp: '2025-11-17 10:50:24.123', level: 'INFO', message: 'Message sent to Discord' },
-            { timestamp: '2025-11-17 10:50:25.456', level: 'INFO', message: 'User message recorded in database' },
-            { timestamp: '2025-11-17 10:50:26.789', level: 'DEBUG', message: 'Metrics updated: response_time=2341ms' },
-            { timestamp: '2025-11-17 10:50:27.234', level: 'INFO', message: 'User 987654321 connected' },
-            { timestamp: '2025-11-17 10:50:28.567', level: 'INFO', message: 'Processing /analytics command' },
-            { timestamp: '2025-11-17 10:50:29.890', level: 'DEBUG', message: 'Fetching guild member data (timeout: 5s)' },
-            { timestamp: '2025-11-17 10:50:30.123', level: 'INFO', message: 'Analytics report generated' },
-            { timestamp: '2025-11-17 10:50:31.456', level: 'ERROR', message: 'Database query timeout: user_stats table' },
-            { timestamp: '2025-11-17 10:50:32.789', level: 'WARN', message: 'Retrying database query (attempt 1/3)' },
-            { timestamp: '2025-11-17 10:50:33.234', level: 'INFO', message: 'Database query succeeded on retry' },
-            { timestamp: '2025-11-17 10:50:34.567', level: 'INFO', message: 'Processing /remind command from @bob' },
-            { timestamp: '2025-11-17 10:50:35.890', level: 'DEBUG', message: 'Time parser: recognized "tomorrow at 3pm"' },
-            { timestamp: '2025-11-17 10:50:36.123', level: 'INFO', message: 'Reminder scheduled for 2025-11-18 15:00:00' },
-            { timestamp: '2025-11-17 10:50:37.456', level: 'DEBUG', message: 'Cache eviction triggered: LRU (removed 23 entries)' },
-            { timestamp: '2025-11-17 10:50:38.789', level: 'INFO', message: 'Dashboard metrics broadcast to 2 clients' },
-            { timestamp: '2025-11-17 10:50:39.234', level: 'INFO', message: 'System health check: OK' },
-        ];
+        // Logs will be populated from server via Socket.IO
+        const sampleLogs = [];
 
         function renderLogs(logs) {
             const tbody = document.getElementById('logs-body');
             
             if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="no-logs">No logs match the current filter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="no-logs">Waiting for logs from server...</td></tr>';
                 return;
             }
 

@@ -479,49 +479,30 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Last Modified</span>
-                    <span class="info-value">2025-11-17 14:32:15 UTC</span>
+                    <span class="info-value" id="last-modified">Loading...</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">File Size</span>
-                    <span class="info-value" id="file-size">847 bytes</span>
+                    <span class="info-value" id="file-size">Loading...</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Status</span>
                     <span class="info-value">
-                        <span class="status-badge">✓ Valid</span>
+                        <span class="status-badge">⏳ Loading...</span>
                     </span>
                 </div>
             </div>
 
             <!-- Backup Notification -->
-            <div class="backup-info">
-                ✓ Automatic backups enabled. All changes backed up with timestamp: .backup.2025-11-17T143215.000Z
+            <div class="backup-info" id="backup-info">
+                ⏳ Connecting to server...
             </div>
 
             <!-- Editor -->
             <div class="editor-container">
                 <div class="editor-pane">
                     <div class="editor-label">Configuration Content</div>
-                    <textarea id="editor-content" spellcheck="false"># Discord Bot Configuration
-DISCORD_BOT_TOKEN=your_discord_bot_token_here
-PERPLEXITY_API_KEY=your_perplexity_api_key_here
-
-# License System Configuration
-ASZUNE_LICENSE_KEY=your_license_key_here
-ASZUNE_LICENSE_FILE=/path/to/license/file
-
-# Development Environment
-NODE_ENV=production
-DEBUG=false
-
-# Dashboard Control
-SERVICE_NAME=aszune-bot
-
-# Raspberry Pi Optimizations
-ENABLE_PI_OPTIMIZATIONS=false
-PI_LOG_LEVEL=ERROR
-PI_DEBOUNCE_MS=300
-PI_MAX_CONNECTIONS=2</textarea>
+                    <textarea id="editor-content" spellcheck="false">Loading configuration...</textarea>
 
                     <div class="editor-actions">
                         <button class="action-btn btn-save" onclick="saveConfig()">💾 Save Changes</button>
@@ -536,23 +517,7 @@ PI_MAX_CONNECTIONS=2</textarea>
                     <div class="editor-label">Validation Results</div>
                     <div class="validation-box">
                         <div class="validation-status">
-                            <span class="status-badge">✓ Valid Syntax</span>
-                        </div>
-
-                        <h4>Warnings</h4>
-                        <div class="validation-item validation-warning">
-                            <strong>Line 3:</strong> PERPLEXITY_API_KEY is empty
-                        </div>
-                        <div class="validation-item validation-warning">
-                            <strong>Line 2:</strong> DISCORD_BOT_TOKEN is empty
-                        </div>
-
-                        <h4>Info</h4>
-                        <div class="validation-item" style="background: rgba(135, 206, 235, 0.1); color: #90caf9; border-left: 3px solid #90caf9;">
-                            <strong>Lines:</strong> 28
-                        </div>
-                        <div class="validation-item" style="background: rgba(135, 206, 235, 0.1); color: #90caf9; border-left: 3px solid #90caf9;">
-                            <strong>Size:</strong> 847 bytes
+                            <span class="status-badge">⏳ Waiting for data...</span>
                         </div>
                     </div>
                 </div>
@@ -561,21 +526,8 @@ PI_MAX_CONNECTIONS=2</textarea>
             <!-- Diff Viewer -->
             <div style="margin-top: 20px;">
                 <h3 style="color: #87ceeb; margin-bottom: 15px;">📊 Change Diff Preview</h3>
-                <div class="diff-view">
-                    <div class="diff-pane">
-                        <div class="diff-label">Original</div>
-                        <div class="diff-content">
-                            PI_DEBOUNCE_MS=300
-                            <span class="diff-removed">- PI_MAX_CONNECTIONS=2</span>
-                        </div>
-                    </div>
-                    <div class="diff-pane">
-                        <div class="diff-label">Modified</div>
-                        <div class="diff-content">
-                            PI_DEBOUNCE_MS=300
-                            <span class="diff-added">+ PI_MAX_CONNECTIONS=4</span>
-                        </div>
-                    </div>
+                <div id="diff-view" class="diff-view" style="min-height: 100px; display: flex; align-items: center; justify-content: center; color: #999; background: #f5f5f5; border-radius: 6px;">
+                    <p>No unsaved changes</p>
                 </div>
             </div>
 
@@ -626,74 +578,74 @@ PI_MAX_CONNECTIONS=2</textarea>
     </div>
 
     <script>
+        let originalContent = '';
+        let currentFile = '.env';
+
+        // Load configuration from server via Socket.IO
+        function loadConfigFromServer() {
+            const socket = io();
+            socket.emit('request_config', { filename: currentFile }, (response) => {
+                if (response && response.content) {
+                    document.getElementById('editor-content').value = response.content;
+                    originalContent = response.content;
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Loaded</span>';
+                } else {
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">⚠ Failed to load</span>';
+                }
+            });
+        }
+
         function switchFile(filename) {
             document.querySelectorAll('.file-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('current-file').textContent = filename;
+            currentFile = filename;
             
-            // Update content based on file
-            const contents = {
-                '.env': `# Discord Bot Configuration
-DISCORD_BOT_TOKEN=your_discord_bot_token_here
-PERPLEXITY_API_KEY=your_perplexity_api_key_here
-
-# License System Configuration
-ASZUNE_LICENSE_KEY=your_license_key_here
-
-# Development Environment
-NODE_ENV=production
-DEBUG=false
-
-# Dashboard Control
-SERVICE_NAME=aszune-bot
-
-# Raspberry Pi Optimizations
-ENABLE_PI_OPTIMIZATIONS=false
-PI_LOG_LEVEL=ERROR`,
-                'config.js': `const config = {
-  PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
-  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
-  DB_PATH: process.env.DB_PATH || './data/bot.db',
-  CACHE_TTL: 3600,
-  MAX_MESSAGE_LENGTH: 2000,
-  FEATURES: {
-    LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
-    DEVELOPMENT_MODE: process.env.NODE_ENV === 'development',
-  }
-};
-module.exports = config;`,
-                '.env.example': `# Example Configuration File
-# Copy this file to .env and fill in your values
-
-# Required
-DISCORD_BOT_TOKEN=your_token_here
-PERPLEXITY_API_KEY=your_key_here
-
-# Optional
-NODE_ENV=production
-DEBUG=false
-ENABLE_PI_OPTIMIZATIONS=false`
-            };
-            
-            document.getElementById('editor-content').value = contents[filename] || '';
-            console.log(`Switched to ${filename}`);
+            // Load content from server
+            loadConfigFromServer();
         }
 
         function saveConfig() {
-            alert('Demo: Configuration saved successfully\n\nAPI Call: POST /api/config/.env\nBody: { "content": "...", "createBackup": true }');
+            const socket = io();
+            const content = document.getElementById('editor-content').value;
+            socket.emit('save_config', { filename: currentFile, content: content }, (response) => {
+                if (response && response.success) {
+                    alert('Configuration saved successfully');
+                    originalContent = content;
+                    loadConfigFromServer();
+                } else {
+                    alert('Failed to save configuration: ' + (response?.error || 'Unknown error'));
+                }
+            });
         }
 
         function validateConfig() {
-            alert('Demo: Configuration validated\n\nAPI Call: POST /api/config/.env/validate\nValidation: ✓ Syntax OK\nWarnings: 2 (empty keys)');
+            const socket = io();
+            const content = document.getElementById('editor-content').value;
+            socket.emit('validate_config', { filename: currentFile, content: content }, (response) => {
+                if (response && response.isValid) {
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Valid</span>';
+                    alert('Configuration is valid');
+                } else {
+                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">⚠ Invalid</span>';
+                    alert('Configuration has errors: ' + (response?.errors?.join(', ') || 'Unknown error'));
+                }
+            });
         }
 
         function revertChanges() {
-            alert('Demo: Reverted to previous version');
-            switchFile('.env');
+            document.getElementById('editor-content').value = originalContent;
+            alert('Changes reverted to last saved version');
         }
 
         function exportConfig() {
-            alert('Demo: Configuration exported\n\nDownload: .env (backup timestamp)');
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(document.getElementById('editor-content').value));
+            element.setAttribute('download', currentFile);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
         }
 
         // Mark the current active nav item
@@ -707,6 +659,9 @@ ENABLE_PI_OPTIMIZATIONS=false`
                     link.classList.add('active');
                 }
             });
+
+            // Load initial config
+            loadConfigFromServer();
         });
     </script>
 </body>
