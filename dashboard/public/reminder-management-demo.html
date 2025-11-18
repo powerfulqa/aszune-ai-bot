@@ -743,7 +743,7 @@
                 datetimeInput.valueAsDate = localDateTime;
             }
 
-            // Hide current page link from navbar
+            // Mark the current active nav item
             // Extract just the filename from current URL (works for both file:// and http://)
             const currentPage = window.location.pathname.split('/').pop() || window.location.href.split('/').pop();
             
@@ -755,7 +755,7 @@
                 
                 // Direct filename match is most reliable
                 if (linkHref === currentPage) {
-                    link.style.display = 'none';
+                    link.classList.add('active');
                 }
             });
         });
