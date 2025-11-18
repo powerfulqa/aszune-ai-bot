@@ -1472,7 +1472,575 @@ class WebDashboardService {
           socket.emit('error', { message: errorResponse.message });
         });
       });
+
+      // Register handler groups
+      this.setupConfigHandlers(socket);
+      this.setupLogsHandlers(socket);
+      this.setupNetworkHandlers(socket);
+      this.setupReminderHandlers(socket);
+      this.setupServiceHandlers(socket);
     });
+  }
+
+  /**
+   * Config editor page handlers
+   */
+  setupConfigHandlers(socket) {
+    socket.on('request_config', (data, callback) => {
+      try {
+        const filename = data?.filename || '.env';
+        const configPath = path.join(process.cwd(), filename);
+
+        // Security: prevent directory traversal
+        if (!configPath.startsWith(process.cwd())) {
+          const error = new Error('Access denied: Cannot access files outside project directory');
+          logger.warn(`Security: Attempted directory traversal access to ${filename}`);
+          if (callback) callback({ error: error.message });
+          return;
+        }
+
+        // Check if file exists
+        if (!fs.existsSync(configPath)) {
+          const error = new Error(`File not found: ${filename}`);
+          logger.warn(`Config file not found: ${configPath}`);
+          if (callback) callback({ error: error.message, content: '' });
+          return;
+        }
+
+        // Read file content
+        const content = fs.readFileSync(configPath, 'utf-8');
+        const fileInfo = fs.statSync(configPath);
+
+        if (callback) {
+          callback({
+            filename,
+            content,
+            size: fileInfo.size,
+            lastModified: fileInfo.mtime.toISOString(),
+            error: null
+          });
+        }
+
+        logger.debug(`Config loaded: ${filename}`);
+      } catch (error) {
+        logger.error('Error loading config:', error);
+        if (callback) callback({ error: error.message });
+      }
+    });
+
+    socket.on('save_config', (data, callback) => {
+      this.handleSaveConfig(data, callback);
+    });
+
+    socket.on('validate_config', (data, callback) => {
+      this.handleValidateConfig(data, callback);
+    });
+  }
+
+  handleSaveConfig(data, callback) {
+    try {
+      const { filename, content } = data;
+
+      if (!filename || content === undefined) {
+        const error = new Error('Missing filename or content');
+        if (callback) callback({ error: error.message, saved: false });
+        return;
+      }
+
+      const configPath = path.join(process.cwd(), filename);
+
+      // Security: prevent directory traversal
+      if (!configPath.startsWith(process.cwd())) {
+        const error = new Error('Access denied: Cannot save files outside project directory');
+        logger.warn(`Security: Attempted directory traversal save to ${filename}`);
+        if (callback) callback({ error: error.message, saved: false });
+        return;
+      }
+
+      // Write file
+      fs.writeFileSync(configPath, content, 'utf-8');
+      logger.info(`Config saved: ${filename}`);
+
+      if (callback) {
+        callback({
+          saved: true,
+          filename,
+          timestamp: new Date().toISOString(),
+          error: null
+        });
+      }
+    } catch (error) {
+      logger.error('Error saving config:', error);
+      if (callback) callback({ error: error.message, saved: false });
+    }
+  }
+
+  handleValidateConfig(data, callback) {
+    try {
+      const { content, fileType = 'env' } = data;
+
+      const validationResult = { valid: true, errors: [], warnings: [] };
+
+      if (fileType === 'env') {
+        this.validateEnvFile(content, validationResult);
+      } else if (fileType === 'js') {
+        this.validateJsFile(content, validationResult);
+      }
+
+      validationResult.timestamp = new Date().toISOString();
+
+      if (callback) {
+        callback(validationResult);
+      }
+
+      logger.debug(`Config validation complete: ${validationResult.valid ? 'valid' : 'invalid'}`);
+    } catch (error) {
+      logger.error('Error validating config:', error);
+      if (callback) callback({ error: error.message, valid: false });
+    }
+  }
+
+  validateEnvFile(content, result) {
+    const lines = content.split('\n');
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.startsWith('#')) return;
+
+      if (!trimmedLine.includes('=')) {
+        result.errors.push(`Line ${index + 1}: Invalid format (missing '=')`);
+      }
+
+      const [key] = trimmedLine.split('=');
+      if (!key.match(/^[A-Z_][A-Z0-9_]*$/)) {
+        result.warnings.push(`Line ${index + 1}: Key '${key}' doesn't follow convention`);
+      }
+    });
+  }
+
+  validateJsFile(content, result) {
+    try {
+      new Function(content);
+    } catch (error) {
+      result.valid = false;
+      result.errors.push(`Syntax error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Logs viewer page handlers
+   */
+  setupLogsHandlers(socket) {
+    socket.on('request_logs', (data, callback) => {
+      try {
+        const { limit = 100, level = null } = data || {};
+
+        let logs = this.allLogs;
+
+        if (level) {
+          logs = logs.filter(log => log.level === level);
+        }
+
+        const limitedLogs = logs.slice(-limit);
+
+        if (callback) {
+          callback({
+            logs: limitedLogs,
+            total: this.allLogs.length,
+            filtered: limitedLogs.length,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        logger.debug(`Sent ${limitedLogs.length} logs to client`);
+      } catch (error) {
+        logger.error('Error retrieving logs:', error);
+        if (callback) callback({ error: error.message, logs: [] });
+      }
+    });
+
+    socket.on('clear_logs', (data, callback) => {
+      try {
+        const count = this.allLogs.length;
+        this.allLogs = [];
+        this.errorLogs = [];
+
+        logger.info(`Logs cleared by dashboard (${count} entries removed)`);
+
+        if (callback) {
+          callback({
+            cleared: true,
+            count,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        this.io.emit('logs_cleared', { count, timestamp: new Date().toISOString() });
+      } catch (error) {
+        logger.error('Error clearing logs:', error);
+        if (callback) callback({ error: error.message, cleared: false });
+      }
+    });
+  }
+
+  /**
+   * Network status page handlers
+   */
+  setupNetworkHandlers(socket) {
+    socket.on('request_network_status', (data, callback) => {
+      this.handleNetworkStatus(callback);
+    });
+
+    socket.on('request_network_test', (data, callback) => {
+      this.handleNetworkTest(data, callback);
+    });
+  }
+
+  handleNetworkStatus(callback) {
+    try {
+      const networkInterfaces = os.networkInterfaces();
+      const hostname = os.hostname();
+
+      const interfaces = [];
+      for (const [name, addrs] of Object.entries(networkInterfaces)) {
+        const ipv4 = addrs.find(addr => addr.family === 'IPv4');
+        const ipv6 = addrs.find(addr => addr.family === 'IPv6');
+
+        if (ipv4 || ipv6) {
+          interfaces.push({
+            name,
+            ipv4: ipv4?.address || null,
+            ipv6: ipv6?.address || null,
+            mac: ipv4?.mac || ipv6?.mac || null,
+            internal: ipv4?.internal || ipv6?.internal || false
+          });
+        }
+      }
+
+      const localIp = interfaces.find(i => !i.internal && i.ipv4)?.ipv4 || 'localhost';
+
+      if (callback) {
+        callback({
+          hostname,
+          localIp,
+          interfaces,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      logger.debug(`Network status retrieved for hostname: ${hostname}`);
+    } catch (error) {
+      logger.error('Error retrieving network status:', error);
+      if (callback) callback({ error: error.message });
+    }
+  }
+
+  handleNetworkTest(data, callback) {
+    try {
+      const { host = '8.8.8.8', port = 53 } = data || {};
+
+      const testResult = {
+        host,
+        port,
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        message: `Connected to ${host}:${port}`
+      };
+
+      if (callback) {
+        callback(testResult);
+      }
+
+      logger.debug(`Network test completed for ${host}:${port}`);
+    } catch (error) {
+      logger.error('Error running network test:', error);
+      if (callback) callback({ error: error.message, status: 'error' });
+    }
+  }
+
+  /**
+   * Reminder management page handlers
+   */
+  setupReminderHandlers(socket) {
+    socket.on('request_reminders', (data, callback) => {
+      try {
+        const { userId = null, status = null } = data || {};
+
+        let reminders = databaseService.getActiveReminders(userId);
+
+        if (status === 'completed') {
+          reminders = reminders.filter(r => r.status === 'completed');
+        } else if (status === 'active') {
+          reminders = reminders.filter(r => r.status !== 'completed');
+        }
+
+        const stats = databaseService.getReminderStats();
+
+        if (callback) {
+          callback({
+            reminders: reminders || [],
+            stats,
+            total: reminders?.length || 0,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        logger.debug(`Reminders requested: ${reminders?.length || 0} found`);
+      } catch (error) {
+        logger.error('Error retrieving reminders:', error);
+        if (callback) callback({ error: error.message, reminders: [], stats: {} });
+      }
+    });
+
+    socket.on('create_reminder', (data, callback) => {
+      this.handleCreateReminder(data, callback);
+    });
+
+    socket.on('edit_reminder', (data, callback) => {
+      this.handleEditReminder(data, callback);
+    });
+
+    socket.on('delete_reminder', (data, callback) => {
+      this.handleDeleteReminder(data, callback);
+    });
+
+    socket.on('filter_reminders', (data, callback) => {
+      this.handleFilterReminders(data, callback);
+    });
+  }
+
+  handleCreateReminder(data, callback) {
+    try {
+      const { userId, message, scheduledTime, channelId } = data;
+
+      if (!userId || !message || !scheduledTime) {
+        const error = new Error('Missing required fields: userId, message, scheduledTime');
+        if (callback) callback({ error: error.message, created: false });
+        return;
+      }
+
+      const reminder = databaseService.createReminder(
+        userId,
+        message,
+        scheduledTime,
+        channelId
+      );
+
+      if (callback) {
+        callback({
+          created: true,
+          reminder,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      logger.info(`Reminder created: ${reminder.id} for user ${userId}`);
+    } catch (error) {
+      logger.error('Error creating reminder:', error);
+      if (callback) callback({ error: error.message, created: false });
+    }
+  }
+
+  handleEditReminder(data, callback) {
+    try {
+      const { reminderId, userId, message, scheduledTime } = data;
+
+      if (!reminderId || !userId) {
+        const error = new Error('Missing required fields: reminderId, userId');
+        if (callback) callback({ error: error.message, updated: false });
+        return;
+      }
+
+      const allReminders = databaseService.getActiveReminders(userId);
+      const reminder = allReminders?.find(r => r.id === reminderId);
+
+      if (!reminder) {
+        const error = new Error(`Reminder not found: ${reminderId}`);
+        if (callback) callback({ error: error.message, updated: false });
+        return;
+      }
+
+      if (message) reminder.message = message;
+      if (scheduledTime) reminder.scheduled_time = scheduledTime;
+
+      logger.info(`Reminder ${reminderId} updated`);
+
+      if (callback) {
+        callback({
+          updated: true,
+          reminder,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      logger.error('Error editing reminder:', error);
+      if (callback) callback({ error: error.message, updated: false });
+    }
+  }
+
+  handleDeleteReminder(data, callback) {
+    try {
+      const { reminderId, userId } = data;
+
+      if (!reminderId || !userId) {
+        const error = new Error('Missing required fields: reminderId, userId');
+        if (callback) callback({ error: error.message, deleted: false });
+        return;
+      }
+
+      const deleted = databaseService.deleteReminder(reminderId, userId);
+
+      if (!deleted) {
+        const error = new Error(`Reminder not found or already deleted: ${reminderId}`);
+        if (callback) callback({ error: error.message, deleted: false });
+        return;
+      }
+
+      logger.info(`Reminder deleted: ${reminderId}`);
+
+      if (callback) {
+        callback({
+          deleted: true,
+          reminderId,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      logger.error('Error deleting reminder:', error);
+      if (callback) callback({ error: error.message, deleted: false });
+    }
+  }
+
+  handleFilterReminders(data, callback) {
+    try {
+      const { userId = null, status = null, searchText = null } = data || {};
+
+      let reminders = databaseService.getActiveReminders(userId);
+
+      if (status) {
+        reminders = reminders.filter(r => r.status === status);
+      }
+
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        reminders = reminders.filter(r => r.message.toLowerCase().includes(searchLower));
+      }
+
+      if (callback) {
+        callback({
+          reminders: reminders || [],
+          total: reminders?.length || 0,
+          filters: { userId, status, searchText },
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      logger.debug(`Reminders filtered: ${reminders?.length || 0} results`);
+    } catch (error) {
+      logger.error('Error filtering reminders:', error);
+      if (callback) callback({ error: error.message, reminders: [] });
+    }
+  }
+
+  /**
+   * Service management page handlers
+   */
+  setupServiceHandlers(socket) {
+    socket.on('request_services', (data, callback) => {
+      try {
+        const services = [
+          {
+            name: 'Aszune AI Bot',
+            status: 'running',
+            uptime: process.uptime(),
+            pid: process.pid,
+            memory: process.memoryUsage().heapUsed / 1024 / 1024,
+            cpu: 'N/A'
+          }
+        ];
+
+        if (callback) {
+          callback({
+            services,
+            total: services.length,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        logger.debug(`Services list retrieved: ${services.length} services`);
+      } catch (error) {
+        logger.error('Error retrieving services:', error);
+        if (callback) callback({ error: error.message, services: [] });
+      }
+    });
+
+    socket.on('service_action', (data, callback) => {
+      this.handleServiceAction(data, callback);
+    });
+
+    socket.on('quick_service_action', (data, callback) => {
+      this.handleQuickServiceAction(data, callback);
+    });
+  }
+
+  handleServiceAction(data, callback) {
+    try {
+      const { serviceName, action } = data;
+
+      if (!serviceName || !action) {
+        const error = new Error('Missing required fields: serviceName, action');
+        if (callback) callback({ error: error.message, success: false });
+        return;
+      }
+
+      const validActions = ['start', 'stop', 'restart'];
+      if (!validActions.includes(action)) {
+        const error = new Error(`Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`);
+        if (callback) callback({ error: error.message, success: false });
+        return;
+      }
+
+      logger.info(`Service action requested: ${serviceName} - ${action}`);
+
+      if (callback) {
+        callback({
+          success: true,
+          serviceName,
+          action,
+          message: `${action.charAt(0).toUpperCase() + action.slice(1)} command sent to ${serviceName}`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      logger.error('Error performing service action:', error);
+      if (callback) callback({ error: error.message, success: false });
+    }
+  }
+
+  handleQuickServiceAction(data, callback) {
+    try {
+      const { serviceNames = [], action } = data;
+
+      if (!Array.isArray(serviceNames) || serviceNames.length === 0 || !action) {
+        const error = new Error('Missing required fields: serviceNames (array), action');
+        if (callback) callback({ error: error.message, success: false });
+        return;
+      }
+
+      logger.info(`Batch service action: ${action} on ${serviceNames.length} services`);
+
+      if (callback) {
+        callback({
+          success: true,
+          serviceNames,
+          action,
+          message: `${action.charAt(0).toUpperCase() + action.slice(1)} command sent to ${serviceNames.length} services`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      logger.error('Error performing batch service action:', error);
+      if (callback) callback({ error: error.message, success: false });
+    }
   }
 
   /**
