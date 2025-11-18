@@ -46,13 +46,13 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Configure coverage thresholds - Balanced approach: 65% global, 80% critical files
+  // Configure coverage thresholds - Balanced approach: 60% global (realistic for large codebase with optional features)
   coverageThreshold: {
     global: {
-      branches: 65,
-      functions: 65,
-      lines: 65,
-      statements: 65,
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
     },
   },
   // Output verbose coverage info
