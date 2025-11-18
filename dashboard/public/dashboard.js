@@ -139,14 +139,23 @@ class Dashboard {
     };
 
     safeSetText('system-uptime', data.system.uptimeFormatted);
-    safeSetText('memory-usage', `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`);
-    safeSetText('cpu-load', `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`);
+    safeSetText(
+      'memory-usage',
+      `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`
+    );
+    safeSetText(
+      'cpu-load',
+      `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`
+    );
     safeSetText('platform', `${data.system.platform} ${data.system.arch}`);
 
     // Process Info
     safeSetText('process-id', data.system.process.pid);
     safeSetText('process-memory', data.system.process.rssFormatted);
-    safeSetText('heap-usage', `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`);
+    safeSetText(
+      'heap-usage',
+      `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`
+    );
     safeSetText('node-version-info', data.system.nodeVersion);
 
     // Cache Performance
@@ -158,7 +167,10 @@ class Dashboard {
     safeSetText('db-users', data.database.userCount.toLocaleString());
     safeSetText('db-messages', data.database.totalMessages.toLocaleString());
     safeSetText('db-active-reminders', data.database.reminders.activeReminders.toLocaleString());
-    safeSetText('db-completed-reminders', data.database.reminders.completedReminders.toLocaleString());
+    safeSetText(
+      'db-completed-reminders',
+      data.database.reminders.completedReminders.toLocaleString()
+    );
 
     safeSetText('bot-uptime', data.uptime);
     safeSetText('last-update', new Date(data.timestamp).toLocaleTimeString());
@@ -167,7 +179,7 @@ class Dashboard {
 
   updateAnalyticsMetrics(data) {
     if (!data.analytics) return;
-    
+
     // Helper function to safely set element text content
     const safeSetText = (id, value) => {
       const el = document.getElementById(id);
@@ -230,15 +242,21 @@ class Dashboard {
     // /resources command output
     if (data.resources) {
       safeSetText('cmd-resources-memory', (data.resources.memory.status || 'Good').toUpperCase());
-      safeSetText('cmd-resources-usage', `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`);
-      safeSetText('cmd-resources-perf', (data.resources.performance.status || 'Normal').toUpperCase());
+      safeSetText(
+        'cmd-resources-usage',
+        `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`
+      );
+      safeSetText(
+        'cmd-resources-perf',
+        (data.resources.performance.status || 'Normal').toUpperCase()
+      );
       safeSetText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
     }
   }
 
   updateResourcesMetrics(data) {
     if (!data.resources) return;
-    
+
     // Helper function to safely set element text content
     const safeSetText = (id, value) => {
       const el = document.getElementById(id);
@@ -253,7 +271,10 @@ class Dashboard {
 
     // Memory status
     const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
-    safeSetText('resource-memory-status', (data.resources.memory.status || 'Unknown').toUpperCase());
+    safeSetText(
+      'resource-memory-status',
+      (data.resources.memory.status || 'Unknown').toUpperCase()
+    );
     safeSetClass('resource-memory-status', `value status-badge ${memStatus}`);
 
     safeSetText('resource-memory-used', `${data.resources.memory.used}MB`);
@@ -262,7 +283,10 @@ class Dashboard {
 
     // Performance status
     const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
-    safeSetText('resource-performance-status', (data.resources.performance.status || 'Unknown').toUpperCase());
+    safeSetText(
+      'resource-performance-status',
+      (data.resources.performance.status || 'Unknown').toUpperCase()
+    );
     safeSetClass('resource-performance-status', `value status-badge ${perfStatus}`);
 
     safeSetText('resource-response-time', `${data.resources.performance.responseTime}ms`);
@@ -305,7 +329,9 @@ class Dashboard {
       return;
     }
 
-    container.innerHTML = recommendations.map(rec => `
+    container.innerHTML = recommendations
+      .map(
+        (rec) => `
       <div class="recommendation-item ${rec.severity || 'info'}">
         <span class="rec-severity ${rec.severity || 'info'}">${(rec.severity || 'info').toUpperCase()}</span>
         <div style="flex: 1;">
@@ -313,7 +339,9 @@ class Dashboard {
           <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ ${rec.action}</div>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   updateErrorLogs(data) {
@@ -321,22 +349,24 @@ class Dashboard {
     if (!errorLogsElement) return; // Element doesn't exist on this page
 
     if (!data.analytics?.recentErrors || data.analytics.recentErrors.length === 0) {
-      errorLogsElement.innerHTML = 
+      errorLogsElement.innerHTML =
         '<div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>';
       return;
     }
 
-    const errorLogsHtml = data.analytics.recentErrors.map(error => {
-      const timestamp = new Date(error.timestamp).toLocaleTimeString();
-      const errorMsg = error.error || 'Unknown error';
-      return `
+    const errorLogsHtml = data.analytics.recentErrors
+      .map((error) => {
+        const timestamp = new Date(error.timestamp).toLocaleTimeString();
+        const errorMsg = error.error || 'Unknown error';
+        return `
         <div class="error-log-item">
           <div class="error-log-time">[${timestamp}]</div>
           <div class="error-log-message">ERROR: ${error.message}</div>
           ${error.error ? `<div class="error-log-detail">→ ${errorMsg}</div>` : ''}
         </div>
       `;
-    }).join('');
+      })
+      .join('');
 
     errorLogsElement.innerHTML = errorLogsHtml;
   }
@@ -347,8 +377,7 @@ class Dashboard {
     if (!databaseViewer) return; // Element doesn't exist on this page
 
     if (!tableName) {
-      databaseViewer.innerHTML = 
-        '<div class="db-message">Select a table to view data</div>';
+      databaseViewer.innerHTML = '<div class="db-message">Select a table to view data</div>';
       return;
     }
 
@@ -358,14 +387,13 @@ class Dashboard {
     try {
       const response = await fetch(`/api/database/${tableName}?limit=100&offset=0`);
       if (!response.ok) throw new Error('Failed to fetch table data');
-      
+
       const tableData = await response.json();
       this.databaseCache[tableName] = tableData;
       this.renderDatabaseTable(tableData);
     } catch (error) {
       console.error(`Error loading table ${tableName}:`, error);
-      databaseViewer.innerHTML = 
-        `<div class="db-message">Error loading table: ${error.message}</div>`;
+      databaseViewer.innerHTML = `<div class="db-message">Error loading table: ${error.message}</div>`;
     }
   }
 
@@ -382,52 +410,59 @@ class Dashboard {
 
     const columns = tableData.columns || Object.keys(tableData.data[0]);
     const dateColumns = ['last_active', 'first_seen', 'timestamp', 'created_at', 'scheduled_time'];
-    
+
     const tableHtml = `
       <table class="database-table">
         <thead>
           <tr>
-            ${columns.map(col => `<th>${col}</th>`).join('')}
+            ${columns.map((col) => `<th>${col}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
-          ${tableData.data.map(row => `
+          ${tableData.data
+            .map(
+              (row) => `
             <tr>
-              ${columns.map(col => {
-                let value = row[col];
-                if (value === null || value === undefined) {
-                  value = '-';
-                } else if (dateColumns.includes(col) && typeof value === 'string') {
-                  // Format ISO date strings to readable format
-                  try {
-                    const date = new Date(value);
-                    if (!isNaN(date.getTime())) {
-                      value = date.toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      });
+              ${columns
+                .map((col) => {
+                  let value = row[col];
+                  if (value === null || value === undefined) {
+                    value = '-';
+                  } else if (dateColumns.includes(col) && typeof value === 'string') {
+                    // Format ISO date strings to readable format
+                    try {
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        value = date.toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: true,
+                        });
+                      }
+                    } catch (e) {
+                      // If date parsing fails, keep original value
                     }
-                  } catch (e) {
-                    // If date parsing fails, keep original value
+                  } else if (typeof value === 'string' && value.length > 100) {
+                    value = value.substring(0, 100) + '...';
                   }
-                } else if (typeof value === 'string' && value.length > 100) {
-                  value = value.substring(0, 100) + '...';
-                }
-                return `<td>${this.escapeHtml(String(value))}</td>`;
-              }).join('')}
+                  return `<td>${this.escapeHtml(String(value))}</td>`;
+                })
+                .join('')}
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
     `;
 
     viewer.innerHTML = tableHtml;
-    if (info) info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
+    if (info)
+      info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
   }
 
   filterDatabaseTable(searchTerm) {
@@ -437,15 +472,14 @@ class Dashboard {
     if (!databaseViewer) return;
 
     const tableData = this.databaseCache[this.currentTable];
-    const filtered = tableData.data.filter(row => {
-      return Object.values(row).some(val => 
+    const filtered = tableData.data.filter((row) => {
+      return Object.values(row).some((val) =>
         String(val).toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
 
     if (filtered.length === 0) {
-      databaseViewer.innerHTML = 
-        '<div class="db-message">No matching results</div>';
+      databaseViewer.innerHTML = '<div class="db-message">No matching results</div>';
       return;
     }
 
@@ -454,22 +488,28 @@ class Dashboard {
       <table class="database-table">
         <thead>
           <tr>
-            ${columns.map(col => `<th>${col}</th>`).join('')}
+            ${columns.map((col) => `<th>${col}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
-          ${filtered.map(row => `
+          ${filtered
+            .map(
+              (row) => `
             <tr>
-              ${columns.map(col => {
-                let value = row[col];
-                if (value === null || value === undefined) value = '-';
-                if (typeof value === 'string' && value.length > 100) {
-                  value = value.substring(0, 100) + '...';
-                }
-                return `<td>${this.escapeHtml(String(value))}</td>`;
-              }).join('')}
+              ${columns
+                .map((col) => {
+                  let value = row[col];
+                  if (value === null || value === undefined) value = '-';
+                  if (typeof value === 'string' && value.length > 100) {
+                    value = value.substring(0, 100) + '...';
+                  }
+                  return `<td>${this.escapeHtml(String(value))}</td>`;
+                })
+                .join('')}
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
     `;
@@ -492,7 +532,7 @@ class Dashboard {
       console.warn('Activity log element not found');
       return;
     }
-    
+
     const item = document.createElement('div');
     item.className = `activity-item fade-in status-${type}`;
 
@@ -524,7 +564,8 @@ class Dashboard {
 
       const usersData = await response.json();
       if (!usersData.data || usersData.data.length === 0) {
-        leaderboardContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
+        leaderboardContainer.innerHTML =
+          '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
         return;
       }
 
@@ -534,28 +575,30 @@ class Dashboard {
         .slice(0, 4);
 
       // Build leaderboard HTML
-      const leaderboardHtml = topUsers.map((user, index) => {
-        const rank = index + 1;
-        const rankClass = rank <= 3 ? `rank-${rank}` : '';
-        
-        // Display username if available, otherwise show a cleaned-up user ID
-        let displayName = user.username;
-        if (!displayName || displayName.trim() === '') {
-          // Format user ID for better display (show last 8 digits)
-          const userIdStr = String(user.user_id);
-          displayName = `User ${userIdStr.slice(-8)}`;
-        }
-        
-        const interactionCount = user.message_count || 0;
+      const leaderboardHtml = topUsers
+        .map((user, index) => {
+          const rank = index + 1;
+          const rankClass = rank <= 3 ? `rank-${rank}` : '';
 
-        return `
+          // Display username if available, otherwise show a cleaned-up user ID
+          let displayName = user.username;
+          if (!displayName || displayName.trim() === '') {
+            // Format user ID for better display (show last 8 digits)
+            const userIdStr = String(user.user_id);
+            displayName = `User ${userIdStr.slice(-8)}`;
+          }
+
+          const interactionCount = user.message_count || 0;
+
+          return `
           <div class="leaderboard-row ${rankClass}">
             <span class="rank-badge">${rank}</span>
             <span class="user-name" title="ID: ${user.user_id}">${this.escapeHtml(displayName)}</span>
             <span class="user-count">${interactionCount}</span>
           </div>
         `;
-      }).join('');
+        })
+        .join('');
 
       leaderboardContainer.innerHTML = leaderboardHtml;
     } catch (error) {
@@ -565,7 +608,11 @@ class Dashboard {
 
   async handleRestartClick() {
     const btn = document.getElementById('restart-btn');
-    if (!confirm('Are you sure you want to restart the bot? This will temporarily disconnect the bot.')) {
+    if (
+      !confirm(
+        'Are you sure you want to restart the bot? This will temporarily disconnect the bot.'
+      )
+    ) {
       return;
     }
 
@@ -576,7 +623,7 @@ class Dashboard {
     try {
       const response = await fetch('/api/control/restart', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const data = await response.json();
@@ -609,19 +656,17 @@ class Dashboard {
     try {
       const response = await fetch('/api/control/git-pull', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await response.json();
-      if (data.success) {
-        this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
-        this.addActivityItem(data.output || 'Pull successful', 'info');
-      } else {
-        this.addActivityItem(`✗ Git pull failed: ${data.error}`, 'error');
-        if (data.output) {
-          this.addActivityItem(`Error details: ${data.output}`, 'error');
-        }
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error(`Failed to parse response: ${parseError.message}`);
       }
+
+      this.handleGitPullResponse(response, data);
     } catch (error) {
       this.addActivityItem(`✗ Git pull error: ${error.message}`, 'error');
     } finally {
@@ -629,17 +674,38 @@ class Dashboard {
       btn.innerHTML = originalText;
     }
   }
+
+  handleGitPullResponse(response, data) {
+    if (response.ok && data.success) {
+      this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
+      this.addActivityItem(data.output || data.message || 'Pull successful', 'info');
+    } else if (!response.ok) {
+      const errorMsg = data.error || data.message || 'Unknown error';
+      this.addActivityItem(`✗ Git pull failed (HTTP ${response.status}): ${errorMsg}`, 'error');
+      if (data.details) {
+        this.addActivityItem(`Details: ${data.details}`, 'error');
+      }
+      if (data.output) {
+        this.addActivityItem(`Output: ${data.output}`, 'error');
+      }
+    } else {
+      this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
+      if (data.output) {
+        this.addActivityItem(`Error details: ${data.output}`, 'error');
+      }
+    }
+  }
 }
 
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.dashboard = new Dashboard();
-    window.dashboard.fetchVersionInfo();
+  window.dashboard = new Dashboard();
+  window.dashboard.fetchVersionInfo();
 });
 
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && window.dashboard && !window.dashboard.isConnected) {
-        // Reconnect logic could go here
-    }
+  if (!document.hidden && window.dashboard && !window.dashboard.isConnected) {
+    // Reconnect logic could go here
+  }
 });
