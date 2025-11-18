@@ -1706,12 +1706,16 @@ class WebDashboardService {
         const ipv6 = addrs.find(addr => addr.family === 'IPv6');
 
         if (ipv4 || ipv6) {
+          const isInternal = ipv4?.internal || ipv6?.internal || false;
+          const isLoopback = name.toLowerCase().includes('lo') || isInternal;
+          
           interfaces.push({
             name,
             ipv4: ipv4?.address || null,
             ipv6: ipv6?.address || null,
             mac: ipv4?.mac || ipv6?.mac || null,
-            internal: ipv4?.internal || ipv6?.internal || false
+            internal: isInternal,
+            status: isLoopback ? 'LOOPBACK' : 'UP'
           });
         }
       }

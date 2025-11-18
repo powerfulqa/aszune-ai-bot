@@ -388,7 +388,11 @@
             const tbody = document.getElementById('logs-body');
             
             if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="no-logs">Waiting for logs from server...</td></tr>';
+                // Check if we have any logs at all or just filtered all out
+                const message = allLogs.length === 0 
+                    ? 'Waiting for logs from server...' 
+                    : 'No logs match the current filter';
+                tbody.innerHTML = `<tr><td colspan="3" class="no-logs">${message}</td></tr>`;
                 return;
             }
 

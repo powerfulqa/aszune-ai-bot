@@ -645,7 +645,8 @@
             
             const content = document.getElementById('editor-content').value;
             dashboardSocket.emit('save_config', { filename: currentFile, content: content }, (response) => {
-                if (response && response.success) {
+                console.log('Save response:', response);
+                if (response && response.saved) {
                     alert('Configuration saved successfully');
                     originalContent = content;
                     loadConfigFromServer();
@@ -663,13 +664,39 @@
             }
             
             const content = document.getElementById('editor-content').value;
-            dashboardSocket.emit('validate_config', { filename: currentFile, content: content }, (response) => {
-                if (response && response.isValid) {
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Valid</span>';
-                    alert('Configuration is valid');
+            const fileType = currentFile.endsWith('.env') || currentFile.endsWith('.example') ? 'env' : 'js';
+            
+            dashboardSocket.emit('validate_config', { content: content, fileType: fileType }, (response) => {
+                console.log('Validation response:', response);
+                
+                if (response && response.valid) {
+                    const warningsHtml = response.warnings && response.warnings.length > 0 
+                        ? `<div style="margin-top: 10px; padding: 10px; background: rgba(245, 124, 0, 0.1); border-left: 3px solid #f57c00; border-radius: 4px;">
+                             <strong>Warnings:</strong><br>${response.warnings.join('<br>')}</div>`
+                        : '';
+                    
+                    document.querySelector('.validation-box').innerHTML = `
+                        <div class="validation-status">
+                            <span class="status-badge">✓ Valid</span>
+                        </div>
+                        ${warningsHtml}
+                    `;
+                    alert('Configuration is valid' + (response.warnings?.length ? ' (with warnings)' : ''));
                 } else {
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">⚠ Invalid</span>';
-                    alert('Configuration has errors: ' + (response?.errors?.join(', ') || 'Unknown error'));
+                    const errorsHtml = response.errors && response.errors.length > 0
+                        ? `<div style="margin-top: 10px; padding: 10px; background: rgba(211, 47, 47, 0.1); border-left: 3px solid #d32f2f; border-radius: 4px;">
+                             <strong>Errors:</strong><br>${response.errors.join('<br>')}</div>`
+                        : '';
+                    
+                    document.querySelector('.validation-box').innerHTML = `
+                        <div class="validation-status">
+                            <span class="status-badge error">⚠ Invalid</span>
+                        </div>
+                        ${errorsHtml}
+                    `;
+                    
+                    const errorMsg = response?.errors?.join('\n') || response?.error || 'Unknown error';
+                    alert('Configuration has errors:\n\n' + errorMsg);
                 }
             });
         }
