@@ -473,14 +473,14 @@
             `).join('');
         }
 
-        function performAction(service, action) {
+        function performAction(serviceName, action) {
             const dashboardSocket = window.dashboard?.socket;
             if (!dashboardSocket) {
                 console.error('Dashboard socket not available');
                 return;
             }
             
-            dashboardSocket.emit('service_action', { service: service, action: action }, (response) => {
+            dashboardSocket.emit('service_action', { serviceName: serviceName, action: action }, (response) => {
                 if (response && response.success) {
                     alert(`Service ${action} successful`);
                     loadServices(); // Reload service status

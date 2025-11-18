@@ -1701,6 +1701,8 @@ class WebDashboardService {
       const hostname = os.hostname();
 
       const interfaces = [];
+      let gateway = null;
+      
       for (const [name, addrs] of Object.entries(networkInterfaces)) {
         const ipv4 = addrs.find(addr => addr.family === 'IPv4');
         const ipv6 = addrs.find(addr => addr.family === 'IPv6');
@@ -1717,6 +1719,15 @@ class WebDashboardService {
             internal: isInternal,
             status: isLoopback ? 'LOOPBACK' : 'UP'
           });
+          
+          // Try to determine gateway from first active interface
+          if (!gateway && !isInternal && ipv4?.address) {
+            const ipParts = ipv4.address.split('.');
+            if (ipParts.length === 4) {
+              // Common gateway pattern: x.x.x.1
+              gateway = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.1`;
+            }
+          }
         }
       }
 
@@ -1726,6 +1737,7 @@ class WebDashboardService {
         callback({
           hostname,
           localIp,
+          gateway,
           interfaces,
           timestamp: new Date().toISOString()
         });

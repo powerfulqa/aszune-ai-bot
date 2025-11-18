@@ -439,11 +439,11 @@
                     <div id="connectivity-status" style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span class="connectivity-label">Status</span>
-                            <span class="status-badge">⏳ Loading...</span>
+                            <span class="status-badge" id="connectivity-status-badge">⏳ Loading...</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span class="connectivity-label">Gateway</span>
-                            <span class="status-badge badge-connected">✓ Reachable</span>
+                            <span class="status-badge" id="gateway-status">⏳ Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -452,20 +452,16 @@
                 <div class="status-card">
                     <h3>⚡ Performance</h3>
                     <div class="info-item">
-                        <span class="info-label">Latency (DNS)</span>
-                        <span class="info-value">24 ms</span>
+                        <span class="info-label">Active Interfaces</span>
+                        <span class="info-value" id="active-interfaces">Loading...</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Latency (Internet)</span>
-                        <span class="info-value">42 ms</span>
+                        <span class="info-label">Total Interfaces</span>
+                        <span class="info-value" id="total-interfaces">Loading...</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Packet Loss</span>
-                        <span class="info-value">0%</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Signal Quality</span>
-                        <span class="info-value">Excellent</span>
+                        <span class="info-label">System Hostname</span>
+                        <span class="info-value" id="system-hostname">Loading...</span>
                     </div>
                 </div>
             </div>
@@ -494,35 +490,8 @@
             <!-- Connectivity Checks -->
             <div style="margin-top: 30px;">
                 <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">✓ Connectivity Checks</h3>
-                <div class="connectivity-checks">
-                    <div class="check-item">
-                        <div class="check-icon">🌍</div>
-                        <div class="check-content">
-                            <div class="check-name">Internet Connectivity</div>
-                            <div class="check-status">✓ Ping 8.8.8.8 successful (42ms)</div>
-                        </div>
-                    </div>
-                    <div class="check-item">
-                        <div class="check-icon">🔍</div>
-                        <div class="check-content">
-                            <div class="check-name">DNS Resolution</div>
-                            <div class="check-status">✓ Ping 1.1.1.1 successful (24ms)</div>
-                        </div>
-                    </div>
-                    <div class="check-item">
-                        <div class="check-icon">🛣️</div>
-                        <div class="check-content">
-                            <div class="check-name">Gateway Reachable</div>
-                            <div class="check-status">✓ Ping 192.168.1.1 successful (2ms)</div>
-                        </div>
-                    </div>
-                    <div class="check-item">
-                        <div class="check-icon">📡</div>
-                        <div class="check-content">
-                            <div class="check-name">Interface Status</div>
-                            <div class="check-status">✓ 2 active interfaces detected</div>
-                        </div>
-                    </div>
+                <div class="connectivity-checks" id="connectivity-checks">
+                    <p style="text-align: center; color: #999;">Network connectivity data will be shown here when available.</p>
                 </div>
             </div>
 
@@ -563,16 +532,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- API Information -->
-            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-                <h3 style="margin-top: 0; color: #2c3e50;">📡 API Endpoints</h3>
-                <ul style="margin: 10px 0; padding-left: 20px; color: #2c3e50; font-family: 'Courier New', monospace; font-size: 11px;">
-                    <li>GET /api/network/interfaces - List all network interfaces</li>
-                    <li>GET /api/network/ip - Get local and external IP addresses</li>
-                    <li>GET /api/network/status - Get connectivity and performance status</li>
-                </ul>
-            </div>
         </div>
     </div>
 
@@ -612,10 +571,42 @@
                 console.log('Network status response:', response);
                 if (response) {
                     // Update IP information
-                    if (response.hostname) document.getElementById('hostname').textContent = response.hostname;
-                    if (response.localIp) document.getElementById('local-ip').textContent = response.localIp;
-                    if (response.externalIp) document.getElementById('external-ip').textContent = response.externalIp;
-                    if (response.gateway) document.getElementById('gateway').textContent = response.gateway;
+                    if (response.hostname) {
+                        document.getElementById('hostname').textContent = response.hostname;
+                        document.getElementById('system-hostname').textContent = response.hostname;
+                    }
+                    if (response.localIp) {
+                        document.getElementById('local-ip').textContent = response.localIp;
+                    }
+                    
+                    // Show external IP status
+                    document.getElementById('external-ip').textContent = 'Not available (requires external API)';
+                    
+                    // Show gateway if available
+                    if (response.gateway) {
+                        document.getElementById('gateway').textContent = response.gateway + ' (estimated)';
+                        document.getElementById('gateway-status').className = 'status-badge badge-connected';
+                        document.getElementById('gateway-status').textContent = '? ' + response.gateway;
+                    } else {
+                        document.getElementById('gateway').textContent = 'Not available';
+                        document.getElementById('gateway-status').textContent = 'Not detected';
+                    }
+                    
+                    // Update connectivity status
+                    const activeCount = response.interfaces?.filter(i => !i.internal).length || 0;
+                    if (activeCount > 0) {
+                        document.getElementById('connectivity-status-badge').className = 'status-badge badge-connected';
+                        document.getElementById('connectivity-status-badge').textContent = '✓ Connected';
+                    } else {
+                        document.getElementById('connectivity-status-badge').className = 'status-badge badge-disconnected';
+                        document.getElementById('connectivity-status-badge').textContent = '✗ No active interfaces';
+                    }
+                    
+                    document.getElementById('gateway-status').textContent = 'Not available';
+                    
+                    // Update performance metrics
+                    document.getElementById('active-interfaces').textContent = activeCount.toString();
+                    document.getElementById('total-interfaces').textContent = response.interfaces?.length.toString() || '0';
                     
                     // Update interfaces table
                     if (response.interfaces && response.interfaces.length > 0) {
