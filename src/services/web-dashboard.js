@@ -2010,7 +2010,25 @@ class WebDashboardService {
     });
   }
 
-  handleServiceAction(data, callback) {
+  async executePm2Command(serviceName, action) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    const pm2Command = `pm2 ${action} ${serviceName}`;
+    logger.debug(`Executing PM2 command: ${pm2Command}`);
+    
+    const { stdout, stderr } = await execPromise(pm2Command);
+    
+    if (stderr && !stderr.includes('Use `pm2 show')) {
+      logger.warn(`PM2 stderr: ${stderr}`);
+    }
+    
+    logger.info(`PM2 ${action} ${serviceName} completed: ${stdout}`);
+    return stdout;
+  }
+
+  async handleServiceAction(data, callback) {
     try {
       const { serviceName, action } = data;
 
@@ -2029,14 +2047,27 @@ class WebDashboardService {
 
       logger.info(`Service action requested: ${serviceName} - ${action}`);
 
-      if (callback) {
-        callback({
-          success: true,
-          serviceName,
-          action,
-          message: `${action.charAt(0).toUpperCase() + action.slice(1)} command sent to ${serviceName}`,
-          timestamp: new Date().toISOString()
-        });
+      try {
+        const output = await this.executePm2Command(serviceName, action);
+
+        if (callback) {
+          callback({
+            success: true,
+            serviceName,
+            action,
+            message: `Successfully ${action === 'stop' ? 'stopped' : action === 'start' ? 'started' : 'restarted'} ${serviceName}`,
+            timestamp: new Date().toISOString(),
+            output
+          });
+        }
+      } catch (execError) {
+        logger.error(`PM2 command failed: ${execError.message}`);
+        if (callback) {
+          callback({
+            error: `Failed to ${action} service: ${execError.message}`,
+            success: false
+          });
+        }
       }
     } catch (error) {
       logger.error('Error performing service action:', error);
@@ -2044,26 +2075,65 @@ class WebDashboardService {
     }
   }
 
-  handleQuickServiceAction(data, callback) {
+  async handleQuickServiceAction(data, callback) {
     try {
-      const { serviceNames = [], action } = data;
+      const { group } = data;
 
-      if (!Array.isArray(serviceNames) || serviceNames.length === 0 || !action) {
-        const error = new Error('Missing required fields: serviceNames (array), action');
+      if (!group) {
+        const error = new Error('Missing required field: group');
         if (callback) callback({ error: error.message, success: false });
         return;
       }
 
-      logger.info(`Batch service action: ${action} on ${serviceNames.length} services`);
+      logger.info(`Quick service action: ${group}`);
 
-      if (callback) {
-        callback({
-          success: true,
-          serviceNames,
-          action,
-          message: `${action.charAt(0).toUpperCase() + action.slice(1)} command sent to ${serviceNames.length} services`,
-          timestamp: new Date().toISOString()
-        });
+      try {
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execPromise = util.promisify(exec);
+
+        let pm2Command;
+        switch (group) {
+          case 'restart-all':
+            pm2Command = 'pm2 restart all';
+            break;
+          case 'start-all':
+            pm2Command = 'pm2 start all';
+            break;
+          case 'stop-non-essential':
+            // Stop all services except the bot itself
+            pm2Command = 'pm2 stop all';
+            break;
+          default:
+            throw new Error(`Unknown quick action group: ${group}`);
+        }
+
+        logger.debug(`Executing PM2 quick action: ${pm2Command}`);
+        const { stdout, stderr } = await execPromise(pm2Command);
+
+        if (stderr && !stderr.includes('Use `pm2 show')) {
+          logger.warn(`PM2 stderr: ${stderr}`);
+        }
+
+        logger.info(`PM2 quick action completed: ${stdout}`);
+
+        if (callback) {
+          callback({
+            success: true,
+            group,
+            message: `Quick action '${group}' completed successfully`,
+            timestamp: new Date().toISOString(),
+            output: stdout
+          });
+        }
+      } catch (execError) {
+        logger.error(`PM2 quick action failed: ${execError.message}`);
+        if (callback) {
+          callback({
+            error: `Failed to execute quick action: ${execError.message}`,
+            success: false
+          });
+        }
       }
     } catch (error) {
       logger.error('Error performing batch service action:', error);
