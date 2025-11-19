@@ -1742,7 +1742,7 @@ class WebDashboardService {
     });
   }
 
-  handleNetworkStatus(callback) {
+  async handleNetworkStatus(callback) {
     try {
       const networkInterfaces = os.networkInterfaces();
       const hostname = os.hostname();
@@ -1766,26 +1766,35 @@ class WebDashboardService {
             internal: isInternal,
             status: isLoopback ? 'LOOPBACK' : 'UP'
           });
-          
-          // Try to determine gateway from first active interface
-          if (!gateway && !isInternal && ipv4?.address) {
-            const ipParts = ipv4.address.split('.');
-            if (ipParts.length === 4) {
-              // Common gateway pattern: x.x.x.1
-              gateway = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.1`;
-            }
-          }
         }
       }
 
       const localIp = interfaces.find(i => !i.internal && i.ipv4)?.ipv4 || 'localhost';
 
+      // Get real gateway detection
+      const gatewayResult = await this.detectGateway();
+      const gatewayIp = gatewayResult.gatewayIp !== 'Not detected' ? gatewayResult.gatewayIp : null;
+
+      // Get external IP
+      let externalIp = null;
+      try {
+        externalIp = await this.getExternalIp();
+      } catch (error) {
+        logger.debug(`Failed to get external IP: ${error.message}`);
+      }
+
+      // Get connectivity status
+      const connectivityStatus = await this.getNetworkStatus();
+
       if (callback) {
         callback({
           hostname,
           localIp,
-          gateway,
+          gateway: gatewayIp,
+          gatewayStatus: gatewayResult.reachable,
+          externalIp: externalIp || null,
           interfaces,
+          connectivity: connectivityStatus,
           timestamp: new Date().toISOString()
         });
       }

@@ -573,23 +573,27 @@
                     // Update IP information
                     if (response.hostname) {
                         document.getElementById('hostname').textContent = response.hostname;
-                        document.getElementById('system-hostname').textContent = response.hostname;
                     }
                     if (response.localIp) {
                         document.getElementById('local-ip').textContent = response.localIp;
                     }
                     
                     // Show external IP status
-                    document.getElementById('external-ip').textContent = 'Not available (requires external API)';
+                    if (response.externalIp) {
+                        document.getElementById('external-ip').textContent = response.externalIp;
+                    } else {
+                        document.getElementById('external-ip').textContent = 'Not available';
+                    }
                     
                     // Show gateway if available
                     if (response.gateway) {
-                        document.getElementById('gateway').textContent = response.gateway + ' (estimated)';
+                        document.getElementById('gateway').textContent = response.gateway;
                         document.getElementById('gateway-status').className = 'status-badge badge-connected';
-                        document.getElementById('gateway-status').textContent = '? ' + response.gateway;
+                        document.getElementById('gateway-status').textContent = '✓ ' + response.gateway;
                     } else {
-                        document.getElementById('gateway').textContent = 'Not available';
-                        document.getElementById('gateway-status').textContent = 'Not detected';
+                        document.getElementById('gateway').textContent = 'Not detected';
+                        document.getElementById('gateway-status').className = 'status-badge badge-disconnected';
+                        document.getElementById('gateway-status').textContent = '✗ Not available';
                     }
                     
                     // Update connectivity status
@@ -602,11 +606,44 @@
                         document.getElementById('connectivity-status-badge').textContent = '✗ No active interfaces';
                     }
                     
-                    document.getElementById('gateway-status').textContent = 'Not available';
-                    
                     // Update performance metrics
                     document.getElementById('active-interfaces').textContent = activeCount.toString();
                     document.getElementById('total-interfaces').textContent = response.interfaces?.length.toString() || '0';
+                    document.getElementById('system-hostname').textContent = response.hostname || 'Unknown';
+                    
+                    // Display connectivity checks from actual network status
+                    const connectivityDiv = document.getElementById('connectivity-checks');
+                    if (response.connectivity) {
+                        const checks = response.connectivity;
+                        connectivityDiv.innerHTML = `
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.internetReachable ? '#4caf50' : '#f44336'};">
+                                    <div style="font-weight: 600; margin-bottom: 5px;">Internet Reachable</div>
+                                    <div style="color: ${checks.internetReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                        ${checks.internetReachable ? '✓ YES' : '✗ NO'}
+                                    </div>
+                                </div>
+                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.dnsReachable ? '#4caf50' : '#f44336'};">
+                                    <div style="font-weight: 600; margin-bottom: 5px;">DNS Reachable</div>
+                                    <div style="color: ${checks.dnsReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                        ${checks.dnsReachable ? '✓ YES' : '✗ NO'}
+                                    </div>
+                                </div>
+                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.gatewayReachable ? '#4caf50' : '#f44336'};">
+                                    <div style="font-weight: 600; margin-bottom: 5px;">Gateway Reachable</div>
+                                    <div style="color: ${checks.gatewayReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                        ${checks.gatewayReachable ? '✓ YES' : '✗ NO'}
+                                    </div>
+                                </div>
+                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.connected ? '#4caf50' : '#f44336'};">
+                                    <div style="font-weight: 600; margin-bottom: 5px;">Overall Connected</div>
+                                    <div style="color: ${checks.connected ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                        ${checks.connected ? '✓ YES' : '✗ NO'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
                     
                     // Update interfaces table
                     if (response.interfaces && response.interfaces.length > 0) {
@@ -614,37 +651,12 @@
                         tbody.innerHTML = response.interfaces.map(iface => `
                             <tr>
                                 <td class="interface-name">${iface.name}</td>
-                                <td><span class="interface-status">${iface.status}</span></td>
+                                <td><span class="interface-status" style="background: ${iface.internal ? '#e0e0e0' : '#4caf50'};">${iface.status}</span></td>
                                 <td>${iface.ipv4 || '-'}</td>
                                 <td>${iface.ipv6 || '-'}</td>
                                 <td>${iface.mac || '-'}</td>
                             </tr>
                         `).join('');
-                    }
-                    
-                    // Update bandwidth if available
-                    if (response.bandwidth) {
-                        const bandwidthDiv = document.getElementById('bandwidth-chart');
-                        bandwidthDiv.innerHTML = `
-                            <div class="chart-item">
-                                <div class="chart-title">Upload</div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${response.bandwidth.uploadPercent || 0}%;"></div>
-                                </div>
-                                <div class="chart-value">
-                                    <span>${response.bandwidth.uploadSpeed || '0 KB/s'}</span>
-                                </div>
-                            </div>
-                            <div class="chart-item">
-                                <div class="chart-title">Download</div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${response.bandwidth.downloadPercent || 0}%;"></div>
-                                </div>
-                                <div class="chart-value">
-                                    <span>${response.bandwidth.downloadSpeed || '0 KB/s'}</span>
-                                </div>
-                            </div>
-                        `;
                     }
                 }
             });
