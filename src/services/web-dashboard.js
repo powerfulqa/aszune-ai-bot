@@ -2285,7 +2285,10 @@ class WebDashboardService {
         return { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 };
       });
 
-      const systemInfo = this.getSystemInfo();
+      const systemInfo = await this.getSystemInfo().catch(err => {
+        logger.warn(`System info error: ${err.message}`);
+        return { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } };
+      });
 
       const resourceData = await this.getResourceData().catch(err => {
         logger.warn(`Resource data error: ${err.message}`);
