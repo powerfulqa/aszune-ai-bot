@@ -598,6 +598,7 @@
             
             dashboardSocket.emit('request_network_status', {}, (response) => {
                 console.log('Network status response:', response);
+                console.log('Connectivity object:', response?.connectivity);
                 if (response) {
                     // Update IP information
                     if (response.hostname) {
@@ -644,6 +645,7 @@
                     document.getElementById('stat-ipv6-count').textContent = ipv6Count.toString();
                     
                     // Update DNS information
+                    console.log('DNS Info:', response.connectivity?.dnsServers, 'DNS Reachable:', response.connectivity?.dnsReachable);
                     if (response.connectivity?.dnsServers && response.connectivity.dnsServers.length > 0) {
                         document.getElementById('dns-primary').textContent = response.connectivity.dnsServers[0];
                         if (response.connectivity.dnsServers.length > 1) {
@@ -661,6 +663,7 @@
                             document.getElementById('dns-status-text').style.color = '#f44336';
                         }
                     } else {
+                        console.warn('No DNS servers detected in response');
                         document.getElementById('dns-primary').textContent = 'Not detected';
                         document.getElementById('dns-secondary').textContent = '-';
                         document.getElementById('dns-status-text').textContent = 'Unknown';
