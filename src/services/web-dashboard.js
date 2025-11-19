@@ -1919,26 +1919,100 @@ class WebDashboardService {
     }
   }
 
-  handleNetworkTest(data, callback) {
+  async handleNetworkTest(data, callback) {
     try {
-      const { host = '8.8.8.8', port = 53 } = data || {};
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+      const dns = require('dns').promises;
 
-      const testResult = {
-        host,
-        port,
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        message: `Connected to ${host}:${port}`
-      };
+      let results = [];
+      results.push('=== NETWORK CONNECTIVITY TEST SUITE ===\n');
 
-      if (callback) {
-        callback(testResult);
+      // Test 1: Gateway ping
+      results.push('Test 1: Gateway Connectivity');
+      try {
+        const gatewayResult = await this.detectGateway();
+        if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
+          const pingCmd = process.platform === 'win32' 
+            ? `ping -n 1 ${gatewayResult.gatewayIp}`
+            : `ping -c 1 ${gatewayResult.gatewayIp}`;
+          await execPromise(pingCmd, { timeout: 3000 });
+          results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
+        } else {
+          results.push('✗ Gateway not detected\n');
+        }
+      } catch (error) {
+        results.push('✗ Gateway ping failed\n');
       }
 
-      logger.debug(`Network test completed for ${host}:${port}`);
+      // Test 2: DNS Resolution
+      results.push('Test 2: DNS Resolution');
+      try {
+        await dns.resolve4('google.com');
+        results.push('✓ DNS resolution working (google.com)\n');
+      } catch (error) {
+        results.push('✗ DNS resolution failed\n');
+      }
+
+      // Test 3: Internet connectivity (ping Google DNS)
+      results.push('Test 3: Internet Connectivity');
+      try {
+        const pingCmd = process.platform === 'win32' 
+          ? 'ping -n 1 8.8.8.8'
+          : 'ping -c 1 8.8.8.8';
+        await execPromise(pingCmd, { timeout: 5000 });
+        results.push('✓ Internet reachable (8.8.8.8)\n');
+      } catch (error) {
+        results.push('✗ Internet ping failed\n');
+      }
+
+      // Test 4: External API access
+      results.push('Test 4: External API Access');
+      try {
+        const { stdout } = await execPromise('curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org', { timeout: 5000 });
+        if (stdout.trim() === '200') {
+          results.push('✓ External API accessible (api.ipify.org)\n');
+        } else {
+          results.push(`⚠ API returned HTTP ${stdout.trim()}\n`);
+        }
+      } catch (error) {
+        results.push('✗ External API test failed\n');
+      }
+
+      // Test 5: Local interfaces
+      results.push('Test 5: Network Interfaces');
+      const interfaces = os.networkInterfaces();
+      const activeInterfaces = Object.entries(interfaces)
+        .filter(([name, addrs]) => addrs.some(a => !a.internal && a.family === 'IPv4'))
+        .map(([name]) => name);
+      
+      if (activeInterfaces.length > 0) {
+        results.push(`✓ Active interfaces: ${activeInterfaces.join(', ')}\n`);
+      } else {
+        results.push('✗ No active network interfaces found\n');
+      }
+
+      results.push('\n=== TEST SUITE COMPLETE ===');
+
+      if (callback) {
+        callback({
+          success: true,
+          result: results.join('\n'),
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      logger.debug('Network test suite completed');
     } catch (error) {
       logger.error('Error running network test:', error);
-      if (callback) callback({ error: error.message, status: 'error' });
+      if (callback) {
+        callback({ 
+          success: false,
+          error: error.message, 
+          result: 'Test suite failed: ' + error.message 
+        });
+      }
     }
   }
 
