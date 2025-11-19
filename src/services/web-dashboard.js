@@ -690,6 +690,27 @@ class WebDashboardService {
     try {
       logger.info(`Service management: ${action} ${service}`);
       
+      // Check if this is the aszune-ai-bot managed by PM2
+      if (service === 'aszune-ai-bot') {
+        try {
+          // Try PM2 command first
+          const pmAction = action === 'restart' ? 'restart' : action === 'stop' ? 'stop' : 'start';
+          await execPromise(`pm2 ${pmAction} ${service}`, { timeout: 10000 });
+          logger.info(`Service ${action} succeeded via PM2: ${service}`);
+          return {
+            success: true,
+            message: `Service ${service} ${action}ed successfully (PM2)`,
+            service,
+            action,
+            timestamp: new Date().toISOString()
+          };
+        } catch (pm2Error) {
+          logger.debug(`PM2 management failed: ${pm2Error.message}, trying systemctl...`);
+          // Fall through to systemctl
+        }
+      }
+
+      // Try systemctl for other services
       const cmd = `systemctl ${action} ${service}`;
       await execPromise(cmd, { timeout: 10000 });
       
