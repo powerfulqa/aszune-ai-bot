@@ -2120,21 +2120,50 @@ class WebDashboardService {
   }
 
   async executePm2Command(serviceName, action) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
+    try {
+      // Use PM2 programmatic API instead of shell command
+      const pm2 = require('pm2');
+      
+      return new Promise((resolve, reject) => {
+        pm2.connect((err) => {
+          if (err) {
+            logger.error(`PM2 connection failed: ${err.message}`);
+            return reject(new Error(`Failed to connect to PM2: ${err.message}`));
+          }
 
-    const pm2Command = `pm2 ${action} ${serviceName}`;
-    logger.debug(`Executing PM2 command: ${pm2Command}`);
-    
-    const { stdout, stderr } = await execPromise(pm2Command);
-    
-    if (stderr && !stderr.includes('Use `pm2 show')) {
-      logger.warn(`PM2 stderr: ${stderr}`);
+          logger.debug(`Executing PM2 ${action} for ${serviceName}`);
+
+          if (action === 'start') {
+            pm2.start(serviceName, (err, apps) => {
+              pm2.disconnect();
+              if (err) return reject(err);
+              logger.info(`PM2 started ${serviceName}`);
+              resolve(`Successfully started ${serviceName}`);
+            });
+          } else if (action === 'stop') {
+            pm2.stop(serviceName, (err, apps) => {
+              pm2.disconnect();
+              if (err) return reject(err);
+              logger.info(`PM2 stopped ${serviceName}`);
+              resolve(`Successfully stopped ${serviceName}`);
+            });
+          } else if (action === 'restart') {
+            pm2.restart(serviceName, (err, apps) => {
+              pm2.disconnect();
+              if (err) return reject(err);
+              logger.info(`PM2 restarted ${serviceName}`);
+              resolve(`Successfully restarted ${serviceName}`);
+            });
+          } else {
+            pm2.disconnect();
+            reject(new Error(`Unknown PM2 action: ${action}`));
+          }
+        });
+      });
+    } catch (error) {
+      logger.error(`PM2 command error: ${error.message}`);
+      throw new Error(`Failed to execute PM2 command: ${error.message}`);
     }
-    
-    logger.info(`PM2 ${action} ${serviceName} completed: ${stdout}`);
-    return stdout;
   }
 
   async handleServiceAction(data, callback) {
