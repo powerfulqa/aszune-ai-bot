@@ -132,4 +132,3 @@ echo "Optimizations enabled: $ENABLE_PI_OPTIMIZATIONS"
 
 # Start the application
 node src/index.js
-nano start-pi-optimized.sh
