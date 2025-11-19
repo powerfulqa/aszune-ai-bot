@@ -2130,45 +2130,67 @@ class WebDashboardService {
 
   async executePm2Command(serviceName, action) {
     try {
-      // Use PM2 programmatic API instead of shell command
-      const pm2 = require('pm2');
-      
-      return new Promise((resolve, reject) => {
-        pm2.connect((err) => {
-          if (err) {
-            logger.error(`PM2 connection failed: ${err.message}`);
-            return reject(new Error(`Failed to connect to PM2: ${err.message}`));
-          }
+      // Try using PM2 programmatic API first
+      try {
+        const pm2 = require('pm2');
+        
+        return await new Promise((resolve, reject) => {
+          pm2.connect((err) => {
+            if (err) {
+              logger.debug(`PM2 connect failed, falling back to shell command: ${err.message}`);
+              // Fall through to shell command
+              return reject(new Error('PM2_UNAVAILABLE'));
+            }
 
-          logger.debug(`Executing PM2 ${action} for ${serviceName}`);
+            logger.debug(`Executing PM2 ${action} for ${serviceName}`);
 
-          if (action === 'start') {
-            pm2.start(serviceName, (err, apps) => {
+            const callback = (err, _apps) => {
               pm2.disconnect();
               if (err) return reject(err);
-              logger.info(`PM2 started ${serviceName}`);
-              resolve(`Successfully started ${serviceName}`);
-            });
-          } else if (action === 'stop') {
-            pm2.stop(serviceName, (err, apps) => {
+              logger.info(`PM2 ${action} succeeded: ${serviceName}`);
+              resolve(`Successfully ${action}ed ${serviceName}`);
+            };
+
+            if (action === 'start') {
+              pm2.start(serviceName, callback);
+            } else if (action === 'stop') {
+              pm2.stop(serviceName, callback);
+            } else if (action === 'restart') {
+              pm2.restart(serviceName, callback);
+            } else {
               pm2.disconnect();
-              if (err) return reject(err);
-              logger.info(`PM2 stopped ${serviceName}`);
-              resolve(`Successfully stopped ${serviceName}`);
-            });
-          } else if (action === 'restart') {
-            pm2.restart(serviceName, (err, apps) => {
-              pm2.disconnect();
-              if (err) return reject(err);
-              logger.info(`PM2 restarted ${serviceName}`);
-              resolve(`Successfully restarted ${serviceName}`);
-            });
-          } else {
-            pm2.disconnect();
-            reject(new Error(`Unknown PM2 action: ${action}`));
-          }
+              reject(new Error(`Unknown PM2 action: ${action}`));
+            }
+          });
         });
-      });
+      } catch (pm2Error) {
+        // If PM2 module not found or unavailable, fall back to shell command
+        if (pm2Error.message === 'PM2_UNAVAILABLE' || pm2Error.code === 'MODULE_NOT_FOUND') {
+          logger.debug(`PM2 API unavailable, using shell command for ${action} ${serviceName}`);
+          
+          const { exec } = require('child_process');
+          const util = require('util');
+          const execPromise = util.promisify(exec);
+          
+          try {
+            const pm2Command = `pm2 ${action} ${serviceName}`;
+            logger.debug(`Executing shell command: ${pm2Command}`);
+            
+            const { stdout, stderr } = await execPromise(pm2Command, { timeout: 10000 });
+            
+            if (stderr && !stderr.includes('Use `pm2 show')) {
+              logger.warn(`PM2 stderr: ${stderr}`);
+            }
+            
+            logger.info(`PM2 shell command succeeded: ${pm2Command}`);
+            return stdout || `Successfully ${action}ed ${serviceName}`;
+          } catch (shellError) {
+            logger.error(`PM2 shell command failed: ${shellError.message}`);
+            throw new Error(`Failed to ${action} service using PM2: ${shellError.message}`);
+          }
+        }
+        throw pm2Error;
+      }
     } catch (error) {
       logger.error(`PM2 command error: ${error.message}`);
       throw new Error(`Failed to execute PM2 command: ${error.message}`);
