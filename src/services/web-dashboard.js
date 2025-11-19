@@ -1236,6 +1236,7 @@ class WebDashboardService {
           }
         }
         
+        logger.debug(`Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`);
         return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
       } else {
         // Linux/Unix: Read from /etc/resolv.conf
@@ -1246,10 +1247,11 @@ class WebDashboardService {
           .map(line => line.split(/\s+/)[1])
           .filter(ip => ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/));
         
+        logger.debug(`Detected ${dnsServers.length} DNS servers from /etc/resolv.conf: ${dnsServers.join(', ')}`);
         return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
       }
     } catch (error) {
-      logger.debug(`Failed to detect DNS servers: ${error.message}`);
+      logger.warn(`Failed to detect DNS servers: ${error.message}`);
       return ['8.8.8.8']; // Fallback to Google DNS
     }
   }
@@ -1264,34 +1266,42 @@ class WebDashboardService {
         // Windows: Check ipconfig /all for "DHCP Enabled"
         const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
         const dhcpEnabled = stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
-        return dhcpEnabled ? 'DHCP' : 'Static';
+        const result = dhcpEnabled ? 'DHCP' : 'Static';
+        logger.debug(`Detected IP assignment on Windows: ${result}`);
+        return result;
       } else {
         // Linux: Check common network config files
         try {
           // Check for dhclient process
           await execPromise('pgrep dhclient', { timeout: 2000 });
+          logger.debug('Detected IP assignment via dhclient: DHCP');
           return 'DHCP';
         } catch {
           // Check NetworkManager or systemd-networkd configs
           try {
             const { stdout } = await execPromise('nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo', { timeout: 3000 });
             if (stdout.includes('auto') || stdout.includes('dhcp')) {
+              logger.debug('Detected IP assignment via NetworkManager: DHCP');
               return 'DHCP';
             }
+            logger.debug('Detected IP assignment via NetworkManager: Static');
             return 'Static';
           } catch {
             // Fallback: Check if /etc/network/interfaces has dhcp
             try {
               const { stdout } = await execPromise('cat /etc/network/interfaces', { timeout: 2000 });
-              return stdout.includes('dhcp') ? 'DHCP' : 'Static';
+              const result = stdout.includes('dhcp') ? 'DHCP' : 'Static';
+              logger.debug(`Detected IP assignment from /etc/network/interfaces: ${result}`);
+              return result;
             } catch {
+              logger.debug('Could not detect IP assignment method');
               return 'Unknown';
             }
           }
         }
       }
     } catch (error) {
-      logger.debug(`Failed to detect DHCP/Static: ${error.message}`);
+      logger.warn(`Failed to detect DHCP/Static: ${error.message}`);
       return 'Unknown';
     }
   }
@@ -2054,32 +2064,61 @@ class WebDashboardService {
           results.push('✗ Gateway not detected\n');
         }
       } catch (error) {
-        results.push('✗ Gateway ping failed\n');
+        results.push(`✗ Gateway ping failed: ${error.message}\n`);
       }
 
-      // Test 2: DNS Resolution
-      results.push('Test 2: DNS Resolution');
+      // Test 2: DNS Server Detection and Testing
+      results.push('Test 2: DNS Server Detection & Testing');
       try {
-        await dns.resolve4('google.com');
-        results.push('✓ DNS resolution working (google.com)\n');
+        const dnsServers = await this.detectDnsServers();
+        results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
+        
+        let dnsWorking = false;
+        for (const dnsServer of dnsServers) {
+          try {
+            const pingCmd = process.platform === 'win32' 
+              ? `ping -n 1 ${dnsServer}`
+              : `ping -c 1 ${dnsServer}`;
+            await execPromise(pingCmd, { timeout: 3000 });
+            results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
+            dnsWorking = true;
+          } catch (error) {
+            results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
+          }
+        }
+        
+        if (dnsWorking) {
+          results.push('  ✓ At least one DNS server is accessible\n');
+        } else {
+          results.push('  ✗ No DNS servers are reachable\n');
+        }
       } catch (error) {
-        results.push('✗ DNS resolution failed\n');
+        results.push(`✗ DNS detection failed: ${error.message}\n`);
       }
 
-      // Test 3: Internet connectivity (ping Google DNS)
-      results.push('Test 3: Internet Connectivity');
+      // Test 3: DNS Resolution
+      results.push('Test 3: DNS Resolution Test');
+      try {
+        const addresses = await dns.resolve4('google.com');
+        results.push(`✓ DNS resolution working (google.com → ${addresses[0]})\n`);
+      } catch (error) {
+        results.push(`✗ DNS resolution failed: ${error.message}\n`);
+      }
+
+      // Test 4: Internet connectivity (ping public DNS)
+      results.push('Test 4: Internet Connectivity (8.8.8.8)');
       try {
         const pingCmd = process.platform === 'win32' 
           ? 'ping -n 1 8.8.8.8'
           : 'ping -c 1 8.8.8.8';
         await execPromise(pingCmd, { timeout: 5000 });
-        results.push('✓ Internet reachable (8.8.8.8)\n');
+        results.push('✓ Internet reachable (Google DNS)\n');
       } catch (error) {
-        results.push('✗ Internet ping failed\n');
+        results.push(`✗ Internet ping failed: ${error.message}\n`);
       }
 
-      // Test 4: External API access
-      results.push('Test 4: External API Access');
+      // Test 5: External API access
+      results.push('Test 5: External API Access');
       try {
         const { stdout } = await execPromise('curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org', { timeout: 5000 });
         if (stdout.trim() === '200') {
@@ -2088,11 +2127,20 @@ class WebDashboardService {
           results.push(`⚠ API returned HTTP ${stdout.trim()}\n`);
         }
       } catch (error) {
-        results.push('✗ External API test failed\n');
+        results.push(`✗ External API test failed: ${error.message}\n`);
       }
 
-      // Test 5: Local interfaces
-      results.push('Test 5: Network Interfaces');
+      // Test 6: IP Assignment Detection
+      results.push('Test 6: IP Configuration');
+      try {
+        const ipAssignment = await this.detectDhcpOrStatic();
+        results.push(`✓ IP Assignment Type: ${ipAssignment}\n`);
+      } catch (error) {
+        results.push(`✗ Could not detect IP assignment: ${error.message}\n`);
+      }
+
+      // Test 7: Local interfaces
+      results.push('Test 7: Network Interfaces');
       const interfaces = os.networkInterfaces();
       const activeInterfaces = Object.entries(interfaces)
         .filter(([name, addrs]) => addrs.some(a => !a.internal && a.family === 'IPv4'))
