@@ -1328,9 +1328,11 @@ class WebDashboardService {
 
     // Detect DNS servers
     checks.dnsServers = await this.detectDnsServers();
+    logger.info(`DNS servers detected: ${checks.dnsServers.join(', ')}`);
     
     // Detect DHCP vs Static IP
     checks.ipAssignment = await this.detectDhcpOrStatic();
+    logger.info(`IP assignment detected: ${checks.ipAssignment}`);
 
     // DNS test - Test actual configured DNS servers
     let dnsWorking = false;
@@ -2019,6 +2021,12 @@ class WebDashboardService {
 
       // Get connectivity status
       const connectivityStatus = await this.getNetworkStatus();
+      
+      logger.info('Network status connectivity data:', {
+        dnsServers: connectivityStatus.dnsServers,
+        ipAssignment: connectivityStatus.ipAssignment,
+        dnsReachable: connectivityStatus.dnsReachable
+      });
 
       if (callback) {
         callback({
