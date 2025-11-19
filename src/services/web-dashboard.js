@@ -2499,6 +2499,67 @@ class WebDashboardService {
     socket.on('quick_service_action', (data, callback) => {
       this.handleQuickServiceAction(data, callback);
     });
+
+    socket.on('request_discord_status', (data, callback) => {
+      this.handleDiscordStatus(callback);
+    });
+  }
+
+  async handleDiscordStatus(callback) {
+    try {
+      if (!this.discordClient) {
+        if (callback) {
+          callback({
+            connected: false,
+            error: 'Discord client not initialized - dashboard started before Discord login'
+          });
+        }
+        return;
+      }
+
+      const isReady = this.discordClient.isReady();
+      
+      if (isReady && this.discordClient.user) {
+        const uptimeMs = this.discordClient.uptime || 0;
+        const uptimeSeconds = Math.floor(uptimeMs / 1000);
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        const seconds = uptimeSeconds % 60;
+        
+        let uptimeFormatted = '';
+        if (hours > 0) uptimeFormatted += `${hours}h `;
+        if (minutes > 0 || hours > 0) uptimeFormatted += `${minutes}m `;
+        uptimeFormatted += `${seconds}s`;
+        
+        if (callback) {
+          callback({
+            connected: true,
+            username: this.discordClient.user.tag,
+            id: this.discordClient.user.id,
+            uptime: uptimeFormatted.trim(),
+            guilds: this.discordClient.guilds.cache.size,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        if (callback) {
+          callback({
+            connected: false,
+            error: 'Discord bot is not connected - may be experiencing rate limiting or network issues'
+          });
+        }
+      }
+
+      logger.debug(`Discord status retrieved: ${isReady ? 'Connected' : 'Disconnected'}`);
+    } catch (error) {
+      logger.error('Error retrieving Discord status:', error);
+      if (callback) {
+        callback({ 
+          connected: false,
+          error: error.message
+        });
+      }
+    }
   }
 
   async executePm2ViaShell(pm2AppName, action) {

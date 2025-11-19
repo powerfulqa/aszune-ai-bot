@@ -330,6 +330,29 @@
         <div class="services-section">
             <h2>🔧 System Services Management</h2>
             
+            <!-- Discord Connection Status Card -->
+            <div class="discord-status-card" style="background: linear-gradient(135deg, #5865F2 0%, #404EED 100%); border-radius: 12px; padding: 20px; margin-bottom: 25px; color: white; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 48px;">💬</div>
+                        <div>
+                            <h3 style="margin: 0 0 8px 0; font-size: 1.3rem;">Discord Connection</h3>
+                            <div id="discord-status-container">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span id="discord-status-dot" class="status-dot connecting" style="width: 12px; height: 12px;"></span>
+                                    <span id="discord-status-text" style="font-size: 1rem; font-weight: 500;">Checking...</span>
+                                </div>
+                                <div id="discord-status-details" style="margin-top: 8px; font-size: 0.9rem; opacity: 0.9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="discord-status-info" style="text-align: right; font-size: 0.85rem; opacity: 0.8;">
+                        <div id="discord-username">Bot: <span id="discord-bot-tag">-</span></div>
+                        <div id="discord-uptime">Uptime: <span id="discord-uptime-value">-</span></div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="service-grid" id="services-grid">
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999;">
                     ⏳ Loading services from server...
@@ -477,6 +500,44 @@
             });
         }
 
+        function loadDiscordStatus() {
+            const dashboardSocket = window.dashboard?.socket;
+            if (!dashboardSocket) {
+                console.error('Dashboard socket not available');
+                return;
+            }
+            
+            dashboardSocket.emit('request_discord_status', {}, (response) => {
+                console.log('Discord status response:', response);
+                
+                const statusDot = document.getElementById('discord-status-dot');
+                const statusText = document.getElementById('discord-status-text');
+                const statusDetails = document.getElementById('discord-status-details');
+                const botTag = document.getElementById('discord-bot-tag');
+                const uptimeValue = document.getElementById('discord-uptime-value');
+                
+                if (response && response.connected) {
+                    statusDot.className = 'status-dot connected';
+                    statusText.textContent = '✓ Connected';
+                    statusDetails.textContent = 'Discord bot is online and responding to commands';
+                    botTag.textContent = response.username || 'Unknown';
+                    uptimeValue.textContent = response.uptime || '0s';
+                } else if (response && response.error) {
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.textContent = '✗ Disconnected';
+                    statusDetails.textContent = response.error;
+                    botTag.textContent = 'N/A';
+                    uptimeValue.textContent = 'N/A';
+                } else {
+                    statusDot.className = 'status-dot warning';
+                    statusText.textContent = '⚠ Unknown';
+                    statusDetails.textContent = 'Unable to determine Discord connection status';
+                    botTag.textContent = 'N/A';
+                    uptimeValue.textContent = 'N/A';
+                }
+            });
+        }
+
         // Mark the current active nav item
         document.addEventListener('DOMContentLoaded', () => {
             const currentPagePath = window.location.pathname;
@@ -492,8 +553,12 @@
             // Wait for dashboard to initialize, then load services
             const initServices = () => {
                 if (window.dashboard && window.dashboard.socket) {
-                    console.log('Dashboard ready, loading services');
+                    console.log('Dashboard ready, loading services and Discord status');
                     loadServices();
+                    loadDiscordStatus();
+                    
+                    // Refresh Discord status every 30 seconds
+                    setInterval(loadDiscordStatus, 30000);
                 } else {
                     setTimeout(initServices, 100);
                 }
