@@ -721,7 +721,7 @@ class WebDashboardService {
   /**
    * Try PM2 programmatic API
    * @param {string} action - Action (start, stop, restart)
-   * @param {string} pm2AppName - PM2 app name (from ecosystem.config.js)
+   * @param {string} pm2AppName - PM2 app name
    * @returns {Promise<Object>} Result or null if failed
    * @private
    */
@@ -772,11 +772,14 @@ class WebDashboardService {
     try {
       logger.info(`Service management: ${action} ${service}`);
       
-      // Map service names to PM2 app names
-      const pm2AppName = service === 'aszune-ai-bot' ? 'aszune-ai' : service;
+      // Map service names to PM2 app names (actual PM2 process name)
+      let pm2AppName = service;
+      if (service === 'aszune-ai-bot' || service === 'aszune-ai') {
+        pm2AppName = 'aszune-bot'; // Actual PM2 process name
+      }
       
       // Try PM2 API for known PM2 services
-      if (['aszune-ai', 'aszune-ai-bot'].includes(service)) {
+      if (['aszune-ai', 'aszune-ai-bot', 'aszune-bot'].includes(service)) {
         const result = await this.tryPm2Api(action, pm2AppName);
         if (result) {
           logger.info(`PM2 API succeeded for ${action}: ${pm2AppName}`);
@@ -2239,8 +2242,11 @@ class WebDashboardService {
 
   async executePm2Command(serviceName, action) {
     try {
-      // Map service names to PM2 app names from ecosystem.config.js
-      const pm2AppName = serviceName === 'aszune-ai-bot' ? 'aszune-ai' : serviceName;
+      // Map service names to actual PM2 app name
+      let pm2AppName = serviceName;
+      if (serviceName === 'aszune-ai-bot' || serviceName === 'aszune-ai') {
+        pm2AppName = 'aszune-bot'; // Actual PM2 process name
+      }
       
       // Try PM2 programmatic API first
       try {
