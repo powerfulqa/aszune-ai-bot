@@ -28,6 +28,55 @@ class WebDashboardService {
     this.setupLogInterception();
   }
 
+  async bindServerWithRetry(preferredPort, maxRetries = 3) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await new Promise((resolve, reject) => {
+          this.server.listen(preferredPort, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+        return preferredPort;
+      } catch (portError) {
+        if (portError.code !== 'EADDRINUSE') {
+          throw portError;
+        }
+
+        if (attempt >= maxRetries - 1) {
+          break; // Exit loop to try alternative port
+        }
+
+        logger.warn(`Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+
+        try {
+          if (process.platform === 'linux' || process.platform === 'darwin') {
+            await execPromise(`fuser -k ${preferredPort}/tcp 2>/dev/null || true`, { timeout: 3000 });
+          }
+        } catch (e) {
+          logger.debug(`Failed to force kill port ${preferredPort}: ${e.message}`);
+        }
+      }
+    }
+
+    // All retries exhausted, find alternative port
+    logger.warn(`Port ${preferredPort} unavailable after retries, finding alternative...`);
+    const altPort = await this.findAvailablePort();
+    await new Promise((resolve, reject) => {
+      this.server.listen(altPort, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    logger.info(`Using alternative port ${altPort} due to port conflict`);
+    return altPort;
+  }
+
   /**
    * Initialize and start the web dashboard
    * @param {number} port - Port to run the dashboard on (optional for testing)
@@ -57,15 +106,9 @@ class WebDashboardService {
       this.setupSocketHandlers();
       this.startMetricsBroadcast();
 
-      await new Promise((resolve, reject) => {
-        this.server.listen(testPort, (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
-
+      const boundPort = await this.bindServerWithRetry(testPort);
       this.isRunning = true;
-      logger.info(`Web dashboard started on port ${testPort}`);
+      logger.info(`Web dashboard started on port ${boundPort}`);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'starting web dashboard');
       logger.error(`Failed to start web dashboard: ${errorResponse.message}`);
