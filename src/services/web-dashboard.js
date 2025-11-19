@@ -1270,35 +1270,75 @@ class WebDashboardService {
         logger.debug(`Detected IP assignment on Windows: ${result}`);
         return result;
       } else {
-        // Linux: Check common network config files
+        // Linux: Check config files in priority order (most reliable first)
+        
+        // Priority 1: Check DietPi network configuration
         try {
-          // Check for dhclient process
-          await execPromise('pgrep dhclient', { timeout: 2000 });
-          logger.debug('Detected IP assignment via dhclient: DHCP');
-          return 'DHCP';
+          const { stdout } = await execPromise('cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"', { timeout: 2000 });
+          if (stdout.includes('AUTO_SETUP_NET_USESTATIC=1')) {
+            logger.debug('Detected IP assignment from DietPi config: Static');
+            return 'Static';
+          } else if (stdout.includes('AUTO_SETUP_NET_USESTATIC=0')) {
+            logger.debug('Detected IP assignment from DietPi config: DHCP');
+            return 'DHCP';
+          }
         } catch {
-          // Check NetworkManager or systemd-networkd configs
-          try {
-            const { stdout } = await execPromise('nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo', { timeout: 3000 });
-            if (stdout.includes('auto') || stdout.includes('dhcp')) {
-              logger.debug('Detected IP assignment via NetworkManager: DHCP');
-              return 'DHCP';
-            }
+          // DietPi config not found, continue to other methods
+        }
+
+        // Priority 2: Check /etc/network/interfaces (Debian standard)
+        try {
+          const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', { timeout: 2000 });
+          if (stdout.includes('iface eth0 inet static') || stdout.includes('iface wlan0 inet static')) {
+            logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
+            return 'Static';
+          } else if (stdout.includes('iface eth0 inet dhcp') || stdout.includes('iface wlan0 inet dhcp')) {
+            logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
+            return 'DHCP';
+          }
+        } catch {
+          // interfaces file not found or unreadable
+        }
+
+        // Priority 3: Check NetworkManager
+        try {
+          const { stdout } = await execPromise('nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo', { timeout: 3000 });
+          if (stdout.includes('manual')) {
             logger.debug('Detected IP assignment via NetworkManager: Static');
             return 'Static';
-          } catch {
-            // Fallback: Check if /etc/network/interfaces has dhcp
-            try {
-              const { stdout } = await execPromise('cat /etc/network/interfaces', { timeout: 2000 });
-              const result = stdout.includes('dhcp') ? 'DHCP' : 'Static';
-              logger.debug(`Detected IP assignment from /etc/network/interfaces: ${result}`);
-              return result;
-            } catch {
-              logger.debug('Could not detect IP assignment method');
-              return 'Unknown';
-            }
+          } else if (stdout.includes('auto') || stdout.includes('dhcp')) {
+            logger.debug('Detected IP assignment via NetworkManager: DHCP');
+            return 'DHCP';
           }
+        } catch {
+          // NetworkManager not available
         }
+
+        // Priority 4: Check systemd-networkd
+        try {
+          const { stdout } = await execPromise('networkctl status 2>/dev/null | grep -E "Address|DHCP"', { timeout: 2000 });
+          if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
+            logger.debug('Detected IP assignment via systemd-networkd: DHCP');
+            return 'DHCP';
+          } else if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
+            logger.debug('Detected IP assignment via systemd-networkd: Static');
+            return 'Static';
+          }
+        } catch {
+          // systemd-networkd not available
+        }
+
+        // Last resort: Check for dhclient process (least reliable - process may exist on static configs)
+        try {
+          await execPromise('pgrep dhclient', { timeout: 2000 });
+          logger.debug('Detected dhclient process running (may indicate DHCP, but not definitive)');
+          // Don't return here - this alone isn't conclusive
+        } catch {
+          // No dhclient process
+        }
+
+        logger.debug('Could not definitively detect IP assignment method from config files');
+        return 'Unknown';
       }
     } catch (error) {
       logger.warn(`Failed to detect DHCP/Static: ${error.message}`);
