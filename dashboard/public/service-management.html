@@ -370,41 +370,11 @@
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="action-btn btn-restart" onclick="performQuickAction('restart-all')">🔄 Restart All Services</button>
                 <button class="action-btn btn-start" onclick="performQuickAction('start-all')">▶ Start All Services</button>
-                <button class="action-btn btn-stop" onclick="performQuickAction('stop-non-essential')">⏹ Stop Non-Essential Services</button>
             </div>
-        </div>
-
-        <!-- Auto-Restart Configuration -->
-        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-            <h3 style="margin-top: 0; color: #2c3e50;">🔁 Auto-Restart Configuration</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                <div>
-                    <label style="display: flex; align-items: center; gap: 8px; color: #2c3e50; cursor: pointer;">
-                        <input type="checkbox" checked style="width: 16px; height: 16px; cursor: pointer;">
-                        Auto-restart bot on failure
-                    </label>
-                    <div style="font-size: 11px; color: #888; margin-top: 5px;">
-                        Max 3 restarts within 10 minutes
-                    </div>
-                </div>
-                <div>
-                    <label style="display: flex; align-items: center; gap: 8px; color: #2c3e50; cursor: pointer;">
-                        <input type="checkbox" checked style="width: 16px; height: 16px; cursor: pointer;">
-                        Restart nginx on certificate renewal
-                    </label>
-                    <div style="font-size: 11px; color: #888; margin-top: 5px;">
-                        Automatic on SSL cert updates
-                    </div>
-                </div>
-                <div>
-                    <label style="display: flex; align-items: center; gap: 8px; color: #2c3e50; cursor: pointer;">
-                        <input type="checkbox" style="width: 16px; height: 16px; cursor: pointer;">
-                        Auto-restart database on timeout
-                    </label>
-                    <div style="font-size: 11px; color: #888; margin-top: 5px;">
-                        Only when essential
-                    </div>
-                </div>
+            <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                <small style="color: #856404;">
+                    <strong>Note:</strong> These actions affect all PM2-managed processes. Use individual service controls above for specific services.
+                </small>
             </div>
         </div>
     </div>

@@ -2344,8 +2344,10 @@ class WebDashboardService {
             pm2Command = 'pm2 start all';
             break;
           case 'stop-non-essential':
-            // Stop all services except the bot itself
-            pm2Command = 'pm2 stop all';
+            // This would stop the bot itself, which would kill the dashboard
+            // For now, just restart all to be safe
+            pm2Command = 'pm2 restart all';
+            logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
             break;
           default:
             throw new Error(`Unknown quick action group: ${group}`);
