@@ -448,6 +448,27 @@
                     </div>
                 </div>
 
+                <!-- Network Statistics -->
+                <div class="status-card">
+                    <h3>📊 Statistics</h3>
+                    <div class="info-item">
+                        <span class="info-label">Total Interfaces</span>
+                        <span class="info-value" id="stat-total-interfaces">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Active Interfaces</span>
+                        <span class="info-value" id="stat-active-interfaces">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IPv4 Addresses</span>
+                        <span class="info-value" id="stat-ipv4-count">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IPv6 Addresses</span>
+                        <span class="info-value" id="stat-ipv6-count">-</span>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Network Interfaces -->
@@ -476,29 +497,6 @@
                 <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">✓ Connectivity Checks</h3>
                 <div class="connectivity-checks" id="connectivity-checks">
                     <p style="text-align: center; color: #999;">Network connectivity data will be shown here when available.</p>
-                </div>
-            </div>
-
-            <!-- Network Statistics -->
-            <div style="margin-top: 30px;">
-                <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">📊 Network Statistics</h3>
-                <div id="network-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #667eea;">
-                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Total Interfaces</div>
-                        <div id="stat-total-interfaces" style="color: #667eea; font-size: 1.5rem; font-weight: 700;">-</div>
-                    </div>
-                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #4caf50;">
-                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Active Interfaces</div>
-                        <div id="stat-active-interfaces" style="color: #4caf50; font-size: 1.5rem; font-weight: 700;">-</div>
-                    </div>
-                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #2196f3;">
-                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">IPv4 Addresses</div>
-                        <div id="stat-ipv4-count" style="color: #2196f3; font-size: 1.5rem; font-weight: 700;">-</div>
-                    </div>
-                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #ff9800;">
-                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">IPv6 Addresses</div>
-                        <div id="stat-ipv6-count" style="color: #ff9800; font-size: 1.5rem; font-weight: 700;">-</div>
-                    </div>
                 </div>
             </div>
 
