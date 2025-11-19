@@ -1234,7 +1234,7 @@ class WebDashboardService {
 
     // DNS test using actual resolution
     try {
-      await dns.resolve4('8.8.8.8');
+      await dns.resolve4('google.com');
       checks.dns = true;
     } catch (error) {
       logger.debug('DNS resolution failed');
