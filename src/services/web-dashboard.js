@@ -721,11 +721,11 @@ class WebDashboardService {
   /**
    * Try PM2 programmatic API
    * @param {string} action - Action (start, stop, restart)
-   * @param {string} service - Service name
+   * @param {string} pm2AppName - PM2 app name (from ecosystem.config.js)
    * @returns {Promise<Object>} Result or null if failed
    * @private
    */
-  async tryPm2Api(action, service) {
+  async tryPm2Api(action, pm2AppName) {
     try {
       const pm2 = require('pm2');
       return await new Promise((resolve, reject) => {
@@ -736,15 +736,15 @@ class WebDashboardService {
           }
 
           const pmAction = action === 'restart' ? 'restart' : action === 'stop' ? 'stop' : 'start';
-          pm2[pmAction](service, (actionErr) => {
+          pm2[pmAction](pm2AppName, (actionErr) => {
             pm2.disconnect();
             if (actionErr) {
               reject(actionErr);
             } else {
               resolve({
                 success: true,
-                message: `Service ${service} ${action}ed successfully (PM2)`,
-                service,
+                message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
+                service: pm2AppName,
                 action,
                 timestamp: new Date().toISOString()
               });
@@ -772,11 +772,14 @@ class WebDashboardService {
     try {
       logger.info(`Service management: ${action} ${service}`);
       
-      // Try PM2 API for aszune-ai-bot
-      if (service === 'aszune-ai-bot') {
-        const result = await this.tryPm2Api(action, service);
+      // Map service names to PM2 app names
+      const pm2AppName = service === 'aszune-ai-bot' ? 'aszune-ai' : service;
+      
+      // Try PM2 API for known PM2 services
+      if (['aszune-ai', 'aszune-ai-bot'].includes(service)) {
+        const result = await this.tryPm2Api(action, pm2AppName);
         if (result) {
-          logger.info(`PM2 API succeeded for ${action}: ${service}`);
+          logger.info(`PM2 API succeeded for ${action}: ${pm2AppName}`);
           return result;
         }
         logger.debug('PM2 API failed, trying shell command...');
@@ -2221,71 +2224,62 @@ class WebDashboardService {
     });
   }
 
+  async executePm2ViaShell(pm2AppName, action) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+    
+    const pm2Command = `pm2 ${action} ${pm2AppName}`;
+    logger.debug(`Shell: ${pm2Command}`);
+    
+    const { stdout } = await execPromise(pm2Command, { timeout: 10000 });
+    logger.info(`PM2 shell OK: ${pm2Command}`);
+    return stdout || `Successfully ${action}ed ${pm2AppName}`;
+  }
+
   async executePm2Command(serviceName, action) {
     try {
-      // Try using PM2 programmatic API first
+      // Map service names to PM2 app names from ecosystem.config.js
+      const pm2AppName = serviceName === 'aszune-ai-bot' ? 'aszune-ai' : serviceName;
+      
+      // Try PM2 programmatic API first
       try {
         const pm2 = require('pm2');
         
         return await new Promise((resolve, reject) => {
           pm2.connect((err) => {
             if (err) {
-              logger.debug(`PM2 connect failed, falling back to shell command: ${err.message}`);
-              // Fall through to shell command
+              logger.debug(`PM2 connect failed: ${err.message}`);
               return reject(new Error('PM2_UNAVAILABLE'));
             }
 
-            logger.debug(`Executing PM2 ${action} for ${serviceName}`);
-
-            const callback = (err, _apps) => {
+            logger.debug(`PM2 ${action}: ${pm2AppName}`);
+            const callback = (err) => {
               pm2.disconnect();
               if (err) return reject(err);
-              logger.info(`PM2 ${action} succeeded: ${serviceName}`);
-              resolve(`Successfully ${action}ed ${serviceName}`);
+              logger.info(`PM2 ${action} OK: ${pm2AppName}`);
+              resolve(`Successfully ${action}ed ${pm2AppName}`);
             };
 
-            if (action === 'start') {
-              pm2.start(serviceName, callback);
-            } else if (action === 'stop') {
-              pm2.stop(serviceName, callback);
-            } else if (action === 'restart') {
-              pm2.restart(serviceName, callback);
-            } else {
+            if (action === 'start') pm2.start(pm2AppName, callback);
+            else if (action === 'stop') pm2.stop(pm2AppName, callback);
+            else if (action === 'restart') pm2.restart(pm2AppName, callback);
+            else {
               pm2.disconnect();
-              reject(new Error(`Unknown PM2 action: ${action}`));
+              reject(new Error(`Unknown action: ${action}`));
             }
           });
         });
       } catch (pm2Error) {
-        // If PM2 module not found or unavailable, fall back to shell command
-        if (pm2Error.message === 'PM2_UNAVAILABLE' || pm2Error.code === 'MODULE_NOT_FOUND') {
-          logger.debug(`PM2 API unavailable, using shell command for ${action} ${serviceName}`);
-          
-          const { exec } = require('child_process');
-          const util = require('util');
-          const execPromise = util.promisify(exec);
-          
-          try {
-            const pm2Command = `pm2 ${action} ${serviceName}`;
-            logger.debug(`Executing shell command: ${pm2Command}`);
-            
-            const { stdout, stderr } = await execPromise(pm2Command, { timeout: 10000 });
-            
-            if (stderr && !stderr.includes('Use `pm2 show')) {
-              logger.warn(`PM2 stderr: ${stderr}`);
-            }
-            
-            logger.info(`PM2 shell command succeeded: ${pm2Command}`);
-            return stdout || `Successfully ${action}ed ${serviceName}`;
-          } catch (shellError) {
-            logger.error(`PM2 shell command failed: ${shellError.message}`);
-            throw new Error(`Failed to ${action} service using PM2: ${shellError.message}`);
-          }
+        // Fallback to shell
+        if (pm2Error.message === 'PM2_UNAVAILABLE') {
+          logger.debug('PM2 API unavailable, trying shell');
+          return await this.executePm2ViaShell(pm2AppName, action);
         }
         throw pm2Error;
       }
     } catch (error) {
-      logger.error(`PM2 command error: ${error.message}`);
+      logger.error(`PM2 error: ${error.message}`);
       throw new Error(`Failed to execute PM2 command: ${error.message}`);
     }
   }
