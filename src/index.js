@@ -163,6 +163,18 @@ async function registerSlashCommands() {
   }
 }
 
+// Initialize web dashboard service BEFORE Discord login
+// This ensures the dashboard remains accessible even if Discord login fails
+async function startWebDashboard() {
+  try {
+    const webDashboardService = require('./services/web-dashboard');
+    await webDashboardService.start(3000);
+    logger.info('Web dashboard service initialized on port 3000');
+  } catch (error) {
+    logger.error('Failed to initialize web dashboard service:', error);
+  }
+}
+
 // Handle ready event
 client.once('clientReady', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
@@ -179,14 +191,13 @@ client.once('clientReady', async () => {
     logger.error('Failed to initialize reminder service:', error);
   }
 
-  // Initialize web dashboard service
+  // Pass Discord client to dashboard for username resolution
   try {
     const webDashboardService = require('./services/web-dashboard');
-    await webDashboardService.start(3000);
-    webDashboardService.setDiscordClient(client); // Pass Discord client for username resolution
-    logger.info('Web dashboard service initialized on port 3000');
+    webDashboardService.setDiscordClient(client);
+    logger.info('Discord client connected to web dashboard');
   } catch (error) {
-    logger.error('Failed to initialize web dashboard service:', error);
+    logger.error('Failed to connect Discord client to dashboard:', error);
   }
 
   // Initialize Pi optimizations after connection is established
@@ -357,19 +368,31 @@ function loginToDiscord(token, isTestMode = false) {
     })
     .catch((error) => {
       logger.error('Failed to log in to Discord:', error);
-      if (!isTestMode) {
+      
+      // Don't exit if it's a session limit error - keep dashboard running
+      if (error.message && error.message.includes('Not enough sessions remaining')) {
+        logger.warn('Discord session limit reached. Dashboard will remain running. Discord will reconnect when limit resets.');
+        // Set up retry after the reset time if possible
+        const resetMatch = error.message.match(/resets at (.+?)(?:\.|$)/);
+        if (resetMatch) {
+          logger.info(`Discord sessions will reset at: ${resetMatch[1]}`);
+        }
+      } else if (!isTestMode) {
         process.exit(1);
       }
     });
 }
 
-// Log in to Discord, with special handling for test environment
-if (process.env.NODE_ENV === 'test') {
-  // In test mode, we still call login but with a mock token that will be resolved in the mock
-  loginToDiscord('test-token', true);
-} else {
-  loginToDiscord(config.DISCORD_BOT_TOKEN, false);
-}
+// Start web dashboard first, BEFORE Discord login
+startWebDashboard().then(() => {
+  // Log in to Discord, with special handling for test environment
+  if (process.env.NODE_ENV === 'test') {
+    // In test mode, we still call login but with a mock token that will be resolved in the mock
+    loginToDiscord('test-token', true);
+  } else {
+    loginToDiscord(config.DISCORD_BOT_TOKEN, false);
+  }
+});
 
 // Export for testing
 module.exports = {
