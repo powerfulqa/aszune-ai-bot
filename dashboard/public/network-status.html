@@ -448,22 +448,6 @@
                     </div>
                 </div>
 
-                <!-- Network Performance -->
-                <div class="status-card">
-                    <h3>⚡ Performance</h3>
-                    <div class="info-item">
-                        <span class="info-label">Active Interfaces</span>
-                        <span class="info-value" id="active-interfaces">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Total Interfaces</span>
-                        <span class="info-value" id="total-interfaces">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">System Hostname</span>
-                        <span class="info-value" id="system-hostname">Loading...</span>
-                    </div>
-                </div>
             </div>
 
             <!-- Network Interfaces -->
@@ -620,11 +604,6 @@
                         document.getElementById('connectivity-status-badge').className = 'status-badge badge-disconnected';
                         document.getElementById('connectivity-status-badge').textContent = '✗ No active interfaces';
                     }
-                    
-                    // Update performance metrics
-                    document.getElementById('active-interfaces').textContent = activeCount.toString();
-                    document.getElementById('total-interfaces').textContent = response.interfaces?.length.toString() || '0';
-                    document.getElementById('system-hostname').textContent = response.hostname || 'Unknown';
                     
                     // Update network statistics
                     const ipv4Count = response.interfaces?.filter(i => i.ipv4).length || 0;
