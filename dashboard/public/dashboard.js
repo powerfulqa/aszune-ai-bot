@@ -526,7 +526,7 @@ class Dashboard {
       .replace(/'/g, '&#039;');
   }
 
-  addActivityItem(message, type = 'info') {
+  addActivityItem(message, type = 'info', preserveFormatting = false) {
     const activityLog = document.getElementById('activity-log');
     if (!activityLog) {
       console.warn('Activity log element not found');
@@ -537,7 +537,16 @@ class Dashboard {
     item.className = `activity-item fade-in status-${type}`;
 
     const timestamp = new Date().toLocaleTimeString();
-    item.textContent = `[${timestamp}] ${message}`;
+    
+    if (preserveFormatting) {
+      // For CLI output, preserve line breaks and use monospace font
+      item.style.whiteSpace = 'pre-wrap';
+      item.style.fontFamily = 'monospace';
+      item.style.fontSize = '0.85em';
+      item.textContent = `[${timestamp}] ${message}`;
+    } else {
+      item.textContent = `[${timestamp}] ${message}`;
+    }
 
     activityLog.appendChild(item);
 
@@ -678,20 +687,24 @@ class Dashboard {
   handleGitPullResponse(response, data) {
     if (response.ok && data.success) {
       this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
-      this.addActivityItem(data.output || data.message || 'Pull successful', 'info');
+      if (data.output) {
+        this.addActivityItem(data.output, 'info', true); // Preserve CLI formatting
+      } else {
+        this.addActivityItem(data.message || 'Pull successful', 'info');
+      }
     } else if (!response.ok) {
       const errorMsg = data.error || data.message || 'Unknown error';
       this.addActivityItem(`✗ Git pull failed (HTTP ${response.status}): ${errorMsg}`, 'error');
       if (data.details) {
-        this.addActivityItem(`Details: ${data.details}`, 'error');
+        this.addActivityItem(data.details, 'error', true);
       }
       if (data.output) {
-        this.addActivityItem(`Output: ${data.output}`, 'error');
+        this.addActivityItem(data.output, 'error', true);
       }
     } else {
       this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
       if (data.output) {
-        this.addActivityItem(`Error details: ${data.output}`, 'error');
+        this.addActivityItem(data.output, 'error', true);
       }
     }
   }
