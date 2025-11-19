@@ -139,6 +139,12 @@ class WebDashboardService {
    */
   async resolveDiscordUsername(userId) {
     try {
+      // Validate that userId is a valid Discord snowflake (numeric string)
+      if (!userId || typeof userId !== 'string' || !/^\d+$/.test(userId)) {
+        logger.debug(`Skipping Discord username resolution for non-snowflake ID: ${userId}`);
+        return null;
+      }
+
       // Check cache first
       if (this.usernameCache.has(userId)) {
         return this.usernameCache.get(userId);
