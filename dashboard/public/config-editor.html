@@ -565,13 +565,13 @@
             <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
                 <h3 style="margin-top: 0; color: #2c3e50;">🔒 Security Features</h3>
                 <ul style="margin: 10px 0; padding-left: 20px; color: #2c3e50;">
-                    <li><strong>Whitelist Protection:</strong> Only .env and config.js files can be edited</li>
-                    <li><strong>Path Traversal Prevention:</strong> Automatic detection of ../ attempts</li>
-                    <li><strong>Automatic Backups:</strong> All changes backed up before saving</li>
-                    <li><strong>Syntax Validation:</strong> Pre-save validation prevents breaking changes</li>
-                    <li><strong>Diff Preview:</strong> Review all changes before committing</li>
-                    <li><strong>Read-Only Preview:</strong> .env.example is viewable but not editable</li>
+                    <li><strong>Path Traversal Prevention:</strong> Automatic detection and blocking of ../ attempts</li>
+                    <li><strong>Syntax Validation:</strong> Pre-save validation prevents breaking changes for .env and .js files</li>
+                    <li><strong>Safe Editing:</strong> Changes only apply after explicit save - no auto-save</li>
                 </ul>
+                <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <strong>⚠️ Warning:</strong> Editing configuration files can break the bot. Always verify changes before saving and keep backups of working configurations.
+                </div>
             </div>
         </div>
     </div>
