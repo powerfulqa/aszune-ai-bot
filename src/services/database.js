@@ -961,6 +961,34 @@ class DatabaseService {
     }
   }
 
+  getAllReminders(userId = null) {
+    try {
+      if (this.isDisabled) return [];
+
+      const db = this.getDb();
+      let stmt;
+
+      if (userId) {
+        stmt = db.prepare(`
+          SELECT * FROM reminders
+          WHERE user_id = ?
+          ORDER BY scheduled_time DESC
+        `);
+        return stmt.all(userId);
+      } else {
+        stmt = db.prepare(`
+          SELECT * FROM reminders
+          ORDER BY scheduled_time DESC
+        `);
+        return stmt.all();
+      }
+    } catch (error) {
+      if (this.isDisabled) return [];
+      logger.warn(`Failed to get all reminders: ${error.message}`);
+      return [];
+    }
+  }
+
   getDueReminders() {
     try {
       if (this.isDisabled) return [];

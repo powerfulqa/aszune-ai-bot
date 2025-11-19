@@ -1781,12 +1781,14 @@ class WebDashboardService {
       try {
         const { userId = null, status = null } = data || {};
 
-        let reminders = databaseService.getActiveReminders(userId);
+        // Get ALL reminders from database (not just future active ones)
+        let reminders = databaseService.getAllReminders(userId);
 
+        // Apply status filter if requested
         if (status === 'completed') {
           reminders = reminders.filter(r => r.status === 'completed');
         } else if (status === 'active') {
-          reminders = reminders.filter(r => r.status !== 'completed');
+          reminders = reminders.filter(r => r.status === 'active' || r.status === 'pending');
         }
 
         const stats = databaseService.getReminderStats();
