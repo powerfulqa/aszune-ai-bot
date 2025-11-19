@@ -23,6 +23,7 @@ class WebDashboardService {
     this.allLogs = []; // Buffer for all logs (INFO, WARN, ERROR, DEBUG)
     this.maxAllLogs = 500; // Keep last 500 logs for viewer
     this.logWatchers = new Set(); // Track socket connections for log streaming
+    this.externalIpCache = { value: null, timestamp: null }; // Cache external IP for 1 hour
     this.setupErrorInterception();
     this.setupLogInterception();
   }
@@ -1064,41 +1065,81 @@ class WebDashboardService {
    * @returns {Promise<Object>} Network status with connectivity info
    * @private
    */
+  async detectGateway() {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    try {
+      let gatewayCommand;
+      if (process.platform === 'linux' || process.platform === 'darwin') {
+        // Linux/macOS: use ip route
+        gatewayCommand = 'ip route | grep default | awk \'{print $3}\' | head -1';
+      } else if (process.platform === 'win32') {
+        // Windows: use route print
+        gatewayCommand = 'route print | findstr /R "0.0.0.0.*0.0.0.0" | findstr /V "255.255.255.255"';
+      }
+
+      if (gatewayCommand) {
+        const { stdout } = await execPromise(gatewayCommand, { timeout: 5000 });
+        const gateway = stdout.trim().split('\n')[0]?.trim();
+        
+        if (gateway && gateway.match(/^(\d+\.){3}\d+$/)) {
+          return { gatewayIp: gateway, reachable: true };
+        }
+      }
+    } catch (error) {
+      logger.debug(`Failed to detect gateway: ${error.message}`);
+    }
+
+    return { gatewayIp: 'Not detected', reachable: false };
+  }
+
   async getNetworkStatus() {
     const { exec } = require('child_process');
     const util = require('util');
     const execPromise = util.promisify(exec);
+    const dns = require('dns').promises;
 
     const checks = {
       dns: false,
       gateway: false,
       internet: false,
-      latency: null
+      gatewayIp: null
     };
 
+    // Detect gateway
+    const gatewayResult = await this.detectGateway();
+    checks.gatewayIp = gatewayResult.gatewayIp;
+    checks.gateway = gatewayResult.reachable;
+
+    // DNS test using actual resolution
     try {
-      await execPromise('ping -c 1 8.8.8.8', { 
-        timeout: 5000 
-      }).catch(() => {});
+      await dns.resolve4('8.8.8.8');
+      checks.dns = true;
+    } catch (error) {
+      logger.debug('DNS resolution failed');
+    }
+
+    // Internet connectivity test
+    try {
+      await execPromise(
+        process.platform === 'win32' 
+          ? 'ping -n 1 8.8.8.8' 
+          : 'ping -c 1 8.8.8.8',
+        { timeout: 5000 }
+      );
       checks.internet = true;
     } catch (error) {
       logger.debug('Internet ping failed');
-    }
-
-    try {
-      await execPromise('ping -c 1 1.1.1.1', { 
-        timeout: 5000 
-      }).catch(() => {});
-      checks.dns = true;
-    } catch (error) {
-      logger.debug('DNS ping failed');
     }
 
     return {
       connected: checks.internet || checks.dns,
       internetReachable: checks.internet,
       dnsReachable: checks.dns,
-      gatewayReachable: checks.gateway
+      gatewayReachable: checks.gateway,
+      gatewayIp: checks.gatewayIp
     };
   }
 
@@ -1962,6 +2003,41 @@ class WebDashboardService {
   /**
    * Service management page handlers
    */
+  async getBootEnabledStatus(serviceName) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    try {
+      if (process.platform === 'linux' || process.platform === 'darwin') {
+        // Check if service is enabled in PM2 (saved config)
+        try {
+          const { stdout } = await execPromise('pm2 startup', { timeout: 5000 });
+          return stdout && stdout.includes('loaded') ? true : false;
+        } catch (error) {
+          logger.debug(`PM2 startup check failed: ${error.message}`);
+          return false;
+        }
+      } else if (process.platform === 'win32') {
+        // Windows: check if service is enabled in registry/services
+        try {
+          const { stdout } = await execPromise(
+            `sc query ${serviceName} | findstr START_TYPE`,
+            { timeout: 5000 }
+          );
+          return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT')) ? true : false;
+        } catch (error) {
+          logger.debug(`Windows service check failed: ${error.message}`);
+          return false;
+        }
+      }
+    } catch (error) {
+      logger.debug(`Failed to get boot enabled status for ${serviceName}: ${error.message}`);
+    }
+
+    return false;
+  }
+
   setupServiceHandlers(socket) {
     socket.on('request_services', (data, callback) => {
       try {
@@ -1969,32 +2045,59 @@ class WebDashboardService {
         const hours = Math.floor(uptimeSeconds / 3600);
         const minutes = Math.floor((uptimeSeconds % 3600) / 60);
         const uptimeFormatted = `${hours}h ${minutes}m`;
-        
+
         const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-        
-        const services = [
-          {
-            id: 'aszune-ai-bot',
-            name: 'Aszune AI Bot',
-            icon: '🤖',
-            status: 'Running',
-            enabledOnBoot: true,
-            uptime: uptimeFormatted,
-            pid: process.pid,
-            memory: `${memoryMB} MB`,
-            port: '3000 (Dashboard)'
+
+        // Get boot enabled status asynchronously
+        this.getBootEnabledStatus('aszune-bot').then((bootEnabled) => {
+          const services = [
+            {
+              id: 'aszune-ai-bot',
+              name: 'Aszune AI Bot',
+              icon: '🤖',
+              status: 'Running',
+              enabledOnBoot: bootEnabled,
+              uptime: uptimeFormatted,
+              pid: process.pid,
+              memory: `${memoryMB} MB`,
+              port: '3000 (Dashboard)'
+            }
+          ];
+
+          if (callback) {
+            callback({
+              services,
+              total: services.length,
+              timestamp: new Date().toISOString()
+            });
           }
-        ];
 
-        if (callback) {
-          callback({
-            services,
-            total: services.length,
-            timestamp: new Date().toISOString()
-          });
-        }
+          logger.debug(`Services list retrieved: ${services.length} services`);
+        }).catch((error) => {
+          logger.error('Error getting boot status:', error);
+          // Return services without boot status
+          const services = [
+            {
+              id: 'aszune-ai-bot',
+              name: 'Aszune AI Bot',
+              icon: '🤖',
+              status: 'Running',
+              enabledOnBoot: false,
+              uptime: uptimeFormatted,
+              pid: process.pid,
+              memory: `${memoryMB} MB`,
+              port: '3000 (Dashboard)'
+            }
+          ];
 
-        logger.debug(`Services list retrieved: ${services.length} services`);
+          if (callback) {
+            callback({
+              services,
+              total: services.length,
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
       } catch (error) {
         logger.error('Error retrieving services:', error);
         if (callback) callback({ error: error.message, services: [] });
@@ -2298,11 +2401,19 @@ class WebDashboardService {
    * Get system information
    * @returns {Object} System info
    */
-  getSystemInfo() {
+  async getSystemInfo() {
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
     const processMemory = process.memoryUsage();
+
+    // Get external IP (cached for 1 hour)
+    let externalIp = 'Not available';
+    try {
+      externalIp = await this.getExternalIp();
+    } catch (error) {
+      logger.debug(`Failed to get external IP: ${error.message}`);
+    }
 
     return {
       platform: os.platform(),
@@ -2310,6 +2421,7 @@ class WebDashboardService {
       nodeVersion: process.version,
       uptime: os.uptime(),
       uptimeFormatted: this.formatUptime(os.uptime() * 1000),
+      externalIp: externalIp,
       memory: {
         total: totalMemory,
         free: freeMemory,
@@ -2336,6 +2448,45 @@ class WebDashboardService {
         loadPercent: Math.round((os.loadavg()[0] / os.cpus().length) * 100)
       }
     };
+  }
+
+  async getExternalIp() {
+    try {
+      // Check if cached and still valid (1 hour cache)
+      const cacheExpiry = 60 * 60 * 1000; // 1 hour
+      if (this.externalIpCache.value && 
+          this.externalIpCache.timestamp && 
+          Date.now() - this.externalIpCache.timestamp < cacheExpiry) {
+        return this.externalIpCache.value;
+      }
+
+      // Fetch external IP from ipify.org API
+      const https = require('https');
+      const response = await new Promise((resolve, reject) => {
+        https.get('https://api.ipify.org?format=json', (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(data);
+              resolve(parsed.ip);
+            } catch (e) {
+              reject(new Error('Failed to parse IP response'));
+            }
+          });
+        }).on('error', reject);
+      });
+
+      // Cache the result
+      this.externalIpCache.value = response;
+      this.externalIpCache.timestamp = Date.now();
+
+      logger.debug(`External IP detected: ${response}`);
+      return response;
+    } catch (error) {
+      logger.warn(`Failed to get external IP from ipify.org: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
