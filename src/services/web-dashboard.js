@@ -2138,12 +2138,31 @@ class WebDashboardService {
 
     try {
       if (process.platform === 'linux' || process.platform === 'darwin') {
-        // Check if service is enabled in PM2 (saved config)
+        // Check if PM2 startup is configured by checking if dump file exists
+        // and if the service exists in systemd
         try {
-          const { stdout } = await execPromise('pm2 startup', { timeout: 5000 });
-          return stdout && stdout.includes('loaded') ? true : false;
+          const { stdout: listOutput } = await execPromise('pm2 list', { timeout: 5000 });
+          
+          // Check if PM2 has any saved processes (dump.pm2 exists and contains our app)
+          try {
+            const { stdout: saveOutput } = await execPromise('pm2 save --force', { timeout: 3000 });
+            // If save succeeds, PM2 is managing processes
+            
+            // Now check if systemd service exists for PM2
+            try {
+              await execPromise('systemctl is-enabled pm2-*', { timeout: 3000 });
+              return true; // PM2 startup is configured
+            } catch (systemdError) {
+              // PM2 processes are saved but systemd not configured
+              logger.debug('PM2 processes saved but systemd startup not configured');
+              return false;
+            }
+          } catch (saveError) {
+            logger.debug(`PM2 save check failed: ${saveError.message}`);
+            return false;
+          }
         } catch (error) {
-          logger.debug(`PM2 startup check failed: ${error.message}`);
+          logger.debug(`PM2 boot status check failed: ${error.message}`);
           return false;
         }
       } else if (process.platform === 'win32') {
