@@ -495,11 +495,26 @@
                 </div>
             </div>
 
-            <!-- Bandwidth Usage -->
+            <!-- Network Statistics -->
             <div style="margin-top: 30px;">
-                <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">📊 Bandwidth Usage</h3>
-                <div class="bandwidth-chart" id="bandwidth-chart">
-                    <p style="text-align: center; color: #999;">Waiting for bandwidth data from server...</p>
+                <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">📊 Network Statistics</h3>
+                <div id="network-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Total Interfaces</div>
+                        <div id="stat-total-interfaces" style="color: #667eea; font-size: 1.5rem; font-weight: 700;">-</div>
+                    </div>
+                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #4caf50;">
+                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Active Interfaces</div>
+                        <div id="stat-active-interfaces" style="color: #4caf50; font-size: 1.5rem; font-weight: 700;">-</div>
+                    </div>
+                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">IPv4 Addresses</div>
+                        <div id="stat-ipv4-count" style="color: #2196f3; font-size: 1.5rem; font-weight: 700;">-</div>
+                    </div>
+                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">IPv6 Addresses</div>
+                        <div id="stat-ipv6-count" style="color: #ff9800; font-size: 1.5rem; font-weight: 700;">-</div>
+                    </div>
                 </div>
             </div>
 
@@ -610,6 +625,14 @@
                     document.getElementById('active-interfaces').textContent = activeCount.toString();
                     document.getElementById('total-interfaces').textContent = response.interfaces?.length.toString() || '0';
                     document.getElementById('system-hostname').textContent = response.hostname || 'Unknown';
+                    
+                    // Update network statistics
+                    const ipv4Count = response.interfaces?.filter(i => i.ipv4).length || 0;
+                    const ipv6Count = response.interfaces?.filter(i => i.ipv6).length || 0;
+                    document.getElementById('stat-total-interfaces').textContent = response.interfaces?.length.toString() || '0';
+                    document.getElementById('stat-active-interfaces').textContent = activeCount.toString();
+                    document.getElementById('stat-ipv4-count').textContent = ipv4Count.toString();
+                    document.getElementById('stat-ipv6-count').textContent = ipv6Count.toString();
                     
                     // Display connectivity checks from actual network status
                     const connectivityDiv = document.getElementById('connectivity-checks');
