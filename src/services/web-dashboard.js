@@ -719,6 +719,45 @@ class WebDashboardService {
   }
 
   /**
+   * Try PM2 programmatic API
+   * @param {string} action - Action (start, stop, restart)
+   * @param {string} service - Service name
+   * @returns {Promise<Object>} Result or null if failed
+   * @private
+   */
+  async tryPm2Api(action, service) {
+    try {
+      const pm2 = require('pm2');
+      return await new Promise((resolve, reject) => {
+        pm2.connect((connectErr) => {
+          if (connectErr) {
+            reject(connectErr);
+            return;
+          }
+
+          const pmAction = action === 'restart' ? 'restart' : action === 'stop' ? 'stop' : 'start';
+          pm2[pmAction](service, (actionErr) => {
+            pm2.disconnect();
+            if (actionErr) {
+              reject(actionErr);
+            } else {
+              resolve({
+                success: true,
+                message: `Service ${service} ${action}ed successfully (PM2)`,
+                service,
+                action,
+                timestamp: new Date().toISOString()
+              });
+            }
+          });
+        });
+      });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
    * Manage service (start/stop/restart)
    * @param {string} action - Action (start, stop, restart)
    * @param {string} service - Service name
@@ -733,29 +772,19 @@ class WebDashboardService {
     try {
       logger.info(`Service management: ${action} ${service}`);
       
-      // Check if this is the aszune-ai-bot managed by PM2
+      // Try PM2 API for aszune-ai-bot
       if (service === 'aszune-ai-bot') {
-        try {
-          // Try PM2 command first
-          const pmAction = action === 'restart' ? 'restart' : action === 'stop' ? 'stop' : 'start';
-          await execPromise(`pm2 ${pmAction} ${service}`, { timeout: 10000 });
-          logger.info(`Service ${action} succeeded via PM2: ${service}`);
-          return {
-            success: true,
-            message: `Service ${service} ${action}ed successfully (PM2)`,
-            service,
-            action,
-            timestamp: new Date().toISOString()
-          };
-        } catch (pm2Error) {
-          logger.debug(`PM2 management failed: ${pm2Error.message}, trying systemctl...`);
-          // Fall through to systemctl
+        const result = await this.tryPm2Api(action, service);
+        if (result) {
+          logger.info(`PM2 API succeeded for ${action}: ${service}`);
+          return result;
         }
+        logger.debug('PM2 API failed, trying shell command...');
       }
 
-      // Try systemctl for other services
+      // Fallback to shell commands
       const cmd = `systemctl ${action} ${service}`;
-      await execPromise(cmd, { timeout: 10000 });
+      await execPromise(cmd, { timeout: 10000, shell: '/bin/bash' });
       
       logger.info(`Service ${action} succeeded: ${service}`);
       return {
