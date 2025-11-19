@@ -471,6 +471,38 @@
 
             </div>
 
+            <!-- DNS and DHCP Information Row -->
+            <div class="status-grid" style="margin-top: 20px;">
+                <div class="status-card">
+                    <h3>🌐 DNS Configuration</h3>
+                    <div class="info-item">
+                        <span class="info-label">Primary DNS</span>
+                        <span class="info-value" id="dns-primary">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Secondary DNS</span>
+                        <span class="info-value" id="dns-secondary">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">DNS Status</span>
+                        <span class="info-value" id="dns-status-text">Checking...</span>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>⚙️ IP Configuration</h3>
+                    <div class="info-item">
+                        <span class="info-label">Assignment Type</span>
+                        <span class="info-value" id="ip-assignment">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Configuration</span>
+                        <span class="info-value" id="ip-config-details">-</span>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- Network Interfaces -->
             <div style="margin-top: 30px;">
                 <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">🔌 Network Interfaces</h3>
@@ -610,6 +642,49 @@
                     document.getElementById('stat-active-interfaces').textContent = activeCount.toString();
                     document.getElementById('stat-ipv4-count').textContent = ipv4Count.toString();
                     document.getElementById('stat-ipv6-count').textContent = ipv6Count.toString();
+                    
+                    // Update DNS information
+                    if (response.connectivity?.dnsServers && response.connectivity.dnsServers.length > 0) {
+                        document.getElementById('dns-primary').textContent = response.connectivity.dnsServers[0];
+                        if (response.connectivity.dnsServers.length > 1) {
+                            document.getElementById('dns-secondary').textContent = response.connectivity.dnsServers.slice(1).join(', ');
+                        } else {
+                            document.getElementById('dns-secondary').textContent = 'Not configured';
+                        }
+                        
+                        // Update DNS status text
+                        if (response.connectivity.dnsReachable) {
+                            document.getElementById('dns-status-text').textContent = '✓ Working';
+                            document.getElementById('dns-status-text').style.color = '#4caf50';
+                        } else {
+                            document.getElementById('dns-status-text').textContent = '✗ Not reachable';
+                            document.getElementById('dns-status-text').style.color = '#f44336';
+                        }
+                    } else {
+                        document.getElementById('dns-primary').textContent = 'Not detected';
+                        document.getElementById('dns-secondary').textContent = '-';
+                        document.getElementById('dns-status-text').textContent = 'Unknown';
+                    }
+                    
+                    // Update IP assignment information
+                    if (response.connectivity?.ipAssignment) {
+                        const ipAssignment = response.connectivity.ipAssignment;
+                        document.getElementById('ip-assignment').textContent = ipAssignment;
+                        
+                        if (ipAssignment === 'DHCP') {
+                            document.getElementById('ip-config-details').textContent = 'IP address assigned automatically';
+                            document.getElementById('ip-assignment').style.color = '#2196f3';
+                        } else if (ipAssignment === 'Static') {
+                            document.getElementById('ip-config-details').textContent = 'IP address manually configured';
+                            document.getElementById('ip-assignment').style.color = '#ff9800';
+                        } else {
+                            document.getElementById('ip-config-details').textContent = 'Unable to determine';
+                            document.getElementById('ip-assignment').style.color = '#999';
+                        }
+                    } else {
+                        document.getElementById('ip-assignment').textContent = 'Unknown';
+                        document.getElementById('ip-config-details').textContent = '-';
+                    }
                     
                     // Display connectivity checks from actual network status
                     const connectivityDiv = document.getElementById('connectivity-checks');

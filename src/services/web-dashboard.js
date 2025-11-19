@@ -1214,6 +1214,88 @@ class WebDashboardService {
     return { gatewayIp: 'Not detected', reachable: false };
   }
 
+  async detectDnsServers() {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    try {
+      if (process.platform === 'win32') {
+        // Windows: Use ipconfig /all to get DNS servers
+        const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
+        const dnsServers = [];
+        const lines = stdout.split('\n');
+        
+        for (const line of lines) {
+          if (line.includes('DNS Servers')) {
+            const match = line.match(/:\s*(\d+\.\d+\.\d+\.\d+)/);
+            if (match) dnsServers.push(match[1]);
+          } else if (line.trim().match(/^\d+\.\d+\.\d+\.\d+$/) && dnsServers.length > 0) {
+            // Additional DNS servers on following lines
+            dnsServers.push(line.trim());
+          }
+        }
+        
+        return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
+      } else {
+        // Linux/Unix: Read from /etc/resolv.conf
+        const { stdout } = await execPromise('cat /etc/resolv.conf', { timeout: 5000 });
+        const dnsServers = stdout
+          .split('\n')
+          .filter(line => line.trim().startsWith('nameserver'))
+          .map(line => line.split(/\s+/)[1])
+          .filter(ip => ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/));
+        
+        return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
+      }
+    } catch (error) {
+      logger.debug(`Failed to detect DNS servers: ${error.message}`);
+      return ['8.8.8.8']; // Fallback to Google DNS
+    }
+  }
+
+  async detectDhcpOrStatic() {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    try {
+      if (process.platform === 'win32') {
+        // Windows: Check ipconfig /all for "DHCP Enabled"
+        const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
+        const dhcpEnabled = stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
+        return dhcpEnabled ? 'DHCP' : 'Static';
+      } else {
+        // Linux: Check common network config files
+        try {
+          // Check for dhclient process
+          await execPromise('pgrep dhclient', { timeout: 2000 });
+          return 'DHCP';
+        } catch {
+          // Check NetworkManager or systemd-networkd configs
+          try {
+            const { stdout } = await execPromise('nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo', { timeout: 3000 });
+            if (stdout.includes('auto') || stdout.includes('dhcp')) {
+              return 'DHCP';
+            }
+            return 'Static';
+          } catch {
+            // Fallback: Check if /etc/network/interfaces has dhcp
+            try {
+              const { stdout } = await execPromise('cat /etc/network/interfaces', { timeout: 2000 });
+              return stdout.includes('dhcp') ? 'DHCP' : 'Static';
+            } catch {
+              return 'Unknown';
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.debug(`Failed to detect DHCP/Static: ${error.message}`);
+      return 'Unknown';
+    }
+  }
+
   async getNetworkStatus() {
     const { exec } = require('child_process');
     const util = require('util');
@@ -1224,7 +1306,9 @@ class WebDashboardService {
       dns: false,
       gateway: false,
       internet: false,
-      gatewayIp: null
+      gatewayIp: null,
+      dnsServers: [],
+      ipAssignment: 'Unknown'
     };
 
     // Detect gateway
@@ -1232,12 +1316,37 @@ class WebDashboardService {
     checks.gatewayIp = gatewayResult.gatewayIp;
     checks.gateway = gatewayResult.reachable;
 
-    // DNS test using actual resolution
-    try {
-      await dns.resolve4('google.com');
-      checks.dns = true;
-    } catch (error) {
-      logger.debug('DNS resolution failed');
+    // Detect DNS servers
+    checks.dnsServers = await this.detectDnsServers();
+    
+    // Detect DHCP vs Static IP
+    checks.ipAssignment = await this.detectDhcpOrStatic();
+
+    // DNS test - Test actual configured DNS servers
+    let dnsWorking = false;
+    for (const dnsServer of checks.dnsServers) {
+      try {
+        // Test DNS server reachability with ping
+        const pingCmd = process.platform === 'win32' 
+          ? `ping -n 1 ${dnsServer}`
+          : `ping -c 1 ${dnsServer}`;
+        await execPromise(pingCmd, { timeout: 3000 });
+        dnsWorking = true;
+        break; // At least one DNS server is reachable
+      } catch (error) {
+        logger.debug(`DNS server ${dnsServer} not reachable`);
+      }
+    }
+    
+    // Also test if DNS resolution actually works
+    if (dnsWorking) {
+      try {
+        await dns.resolve4('google.com');
+        checks.dns = true;
+      } catch (error) {
+        logger.debug('DNS resolution failed despite reachable DNS server');
+        checks.dns = false;
+      }
     }
 
     // Internet connectivity test
@@ -1258,7 +1367,9 @@ class WebDashboardService {
       internetReachable: checks.internet,
       dnsReachable: checks.dns,
       gatewayReachable: checks.gateway,
-      gatewayIp: checks.gatewayIp
+      gatewayIp: checks.gatewayIp,
+      dnsServers: checks.dnsServers,
+      ipAssignment: checks.ipAssignment
     };
   }
 
