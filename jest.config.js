@@ -2,9 +2,12 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
-  // Add timeout and force exit settings to prevent hanging
-  testTimeout: 10000,
-  forceExit: true,
+  // Increased timeout. Explicit coverageReporters fixes earlier CLI misuse ("clover,lcov,text" treated as one module)
+  testTimeout: 30000,
+  coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
+  // forceExit disabled to allow coverage reporters to flush fully
+  // (Re-enable only if hangs recur after coverage artifacts reliably generate)
+  // forceExit: true,
   // detectOpenHandles: true, // Disabled since intervals are properly guarded with test env checks
   maxWorkers: 1,
   collectCoverageFrom: [

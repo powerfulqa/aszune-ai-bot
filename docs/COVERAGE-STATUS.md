@@ -1,14 +1,14 @@
 # Coverage Status (Single Source of Truth)
 
-Last updated: 2025-11-13 (v1.8.0 local run)
+Last updated: 2025-11-20 (v1.9.0 fresh local coverage run)
 
 ## Current Local Metrics
 
-- Tests: 1,231 total / 1,228 passing / 3 skipped
-- Statements: 75.57% (12486 / 16521)
-- Branches: 81.64% (1806 / 2212)
-- Functions: 79.01% (512 / 648)
-- Lines: 75.57% (12486 / 16521)
+- Tests: 1,230 total / 1,226 passing / 4 skipped
+- Statements: 69.30% (12890 / 18600)
+- Branches: 82.05% (1797 / 2190)
+- Functions: 68.47% (504 / 736)
+- Lines: 69.30% (12890 / 18600)
 
 These reflect the latest full `npm run quality:check` execution on the `main` branch.
 
@@ -26,8 +26,8 @@ These reflect the latest full `npm run quality:check` execution on the `main` br
 | `utils/enhanced-conversation-context`  | 0%         | 0%       | Legacy/unused? Confirm usage before investing tests |
 | `utils/license-server`                 | 0%         | 0%       | Feature-flagged; add smoke tests only if enabling soon |
 | `utils/license-validator`              | 0%         | 0%       | Same as above |
-| `services/reminder-service`            | 26.6%      | 50%      | Add lifecycle + edge timing tests |
-| `services/cache-manager`               | 56.9%      | 58.3%    | Exercise eviction paths + error fallbacks |
+| `services/reminder-service`            | 20.56%     | 75%      | Add lifecycle + edge timing tests |
+| `services/cache-manager`               | 58.22%     | 69.23%   | Exercise eviction paths + error fallbacks |
 | `utils/time-parser`                    | 39.8%      | 50%      | Complex natural language branches untested |
 
 ## Recommended Next Increments (v1.8.0 Roadmap)
