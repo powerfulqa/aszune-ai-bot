@@ -2770,7 +2770,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'broadcasting metrics');
         logger.error(`Metrics broadcast error: ${errorResponse.message}`, error);
       }
-    }, 10000); // Update every 10 seconds
+    }, 30000); // Update every 30 seconds
   }
 
   /**
