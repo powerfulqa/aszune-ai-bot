@@ -263,11 +263,25 @@ const shutdown = async (signal) => {
   const uptimeSeconds = Math.floor(process.uptime());
   databaseService.logBotEvent('stop', uptimeSeconds, `Shutdown initiated by ${signal}`);
 
-  // Perform shutdown steps and collect errors
-  const errors = await performShutdownSteps();
+  // Safety timeout - force exit if shutdown takes too long (10 seconds)
+  const shutdownTimeout = setTimeout(() => {
+    logger.error('Shutdown timeout - forcing exit');
+    process.exit(1);
+  }, 10000);
 
-  // Handle shutdown completion
-  handleShutdownCompletion(errors);
+  try {
+    // Perform shutdown steps and collect errors
+    const errors = await performShutdownSteps();
+
+    // Handle shutdown completion
+    handleShutdownCompletion(errors);
+  } catch (error) {
+    logger.error('Unexpected error during shutdown:', error);
+    clearTimeout(shutdownTimeout);
+    process.exit(1);
+  } finally {
+    clearTimeout(shutdownTimeout);
+  }
 };
 
 async function performShutdownSteps() {
@@ -349,12 +363,22 @@ function handleShutdownCompletion(errors) {
     logger.error(`Shutdown completed with ${errors.length} error(s)`);
     // Don't exit in test environment
     if (process.env.NODE_ENV !== 'test') {
+      // Force exit after timeout to ensure PM2 recognizes process termination
+      setTimeout(() => {
+        logger.warn('Force exiting due to shutdown timeout');
+        process.exit(1);
+      }, 2000);
       process.exit(1);
     }
   } else {
     logger.info('Shutdown complete.');
     // Don't exit in test environment
     if (process.env.NODE_ENV !== 'test') {
+      // Force exit after timeout to ensure PM2 recognizes process termination
+      setTimeout(() => {
+        logger.warn('Force exiting after graceful shutdown');
+        process.exit(0);
+      }, 1000);
       process.exit(0);
     }
   }
