@@ -95,13 +95,13 @@ describe('DataStorage', () => {
       expect(logger.error).toHaveBeenCalledWith('Failed to load user stats:', error);
     });
 
-    it('should return empty object and log error if JSON parsing fails', async () => {
+    it('should return empty object and log warning if JSON parsing fails', async () => {
       fs.readFile.mockResolvedValue('invalid json');
       const result = await storage.loadUserStats();
       expect(result).toEqual({});
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to load user stats:',
-        expect.any(SyntaxError)
+      // SyntaxError now logs as warn (corrupted file auto-fix), not error
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Corrupted user stats file')
       );
     });
   });
