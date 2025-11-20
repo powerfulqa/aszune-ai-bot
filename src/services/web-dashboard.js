@@ -1991,8 +1991,6 @@ class WebDashboardService {
             timestamp: new Date().toISOString()
           });
         }
-
-        logger.debug(`Sent ${limitedLogs.length} logs to client`);
       } catch (error) {
         logger.error('Error retrieving logs:', error);
         if (callback) callback({ error: error.message, logs: [] });
@@ -2781,8 +2779,6 @@ class WebDashboardService {
    */
   async getMetrics() {
     try {
-      logger.debug('Collecting metrics...');
-      
       // Collect metrics with error handling for each one
       const cacheStats = await this.getCacheStats().catch(err => {
         logger.warn(`Cache stats error: ${err.message}`);
