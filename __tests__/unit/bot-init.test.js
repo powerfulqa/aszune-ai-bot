@@ -34,6 +34,11 @@ jest.mock('../../src/commands', () => ({
   handleSlashCommand: jest.fn(),
 }));
 jest.mock('../../src/utils/logger', () => mockLogger);
+jest.mock('../../src/services/web-dashboard', () => ({
+  start: jest.fn().mockResolvedValue(),
+  stop: jest.fn().mockResolvedValue(),
+  setDiscordClient: jest.fn(),
+}));
 
 const ConversationManager = require('../../src/utils/conversation');
 let conversationManager;
@@ -60,6 +65,9 @@ describe('Bot Initialization', () => {
   });
 
   it('should create a Discord client and log in', async () => {
+    // Allow async operations to complete
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     // Verify the client was created and logged in
     expect(discordMock.Client).toHaveBeenCalled();
     expect(discordMock.Client().login).toHaveBeenCalled();

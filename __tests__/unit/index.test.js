@@ -92,6 +92,13 @@ jest.mock('discord.js', () => ({
   },
 }));
 
+// Mock web-dashboard service
+jest.mock('../../src/services/web-dashboard', () => ({
+  start: jest.fn().mockResolvedValue(),
+  stop: jest.fn().mockResolvedValue(),
+  setDiscordClient: jest.fn(),
+}));
+
 // Additional mocks
 let mockConfigData = {
   DISCORD_BOT_TOKEN: 'test-token',
@@ -182,7 +189,9 @@ describe('Bot Main Entry Point (index.js)', () => {
     index.__setClient && index.__setClient(mockClient);
   });
 
-  it('should create a Discord client and log in', () => {
+  it('should create a Discord client and log in', async () => {
+    // Allow async operations to complete
+    await new Promise(resolve => setTimeout(resolve, 50));
     expect(client.login).toHaveBeenCalledWith('test-token');
   });
 
