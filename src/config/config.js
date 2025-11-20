@@ -59,6 +59,7 @@ const config = {
 
   // Conversation Context Management
   CONVERSATION_INACTIVITY_TIMEOUT_MS: 15 * 60 * 1000, // 15 minutes - auto-clear context
+  SESSION_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutes - conversation session timeout before treating as new conversation
   CONVERSATION_CONTEXT_WARNING_THRESHOLD: 10, // Warn user approaching limit
 
   // Message and UI Limits
