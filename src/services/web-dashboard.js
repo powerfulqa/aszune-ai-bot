@@ -1282,8 +1282,26 @@ class WebDashboardService {
             logger.debug('Detected IP assignment from DietPi config: DHCP');
             return 'DHCP';
           }
+        } catch (dietpiError) {
+          logger.debug(`DietPi config check failed: ${dietpiError.message}`);
+        }
+
+        // Priority 1b: Check if DietPi is being used (fallback for static configs)
+        try {
+          await execPromise('which dietpi-config', { timeout: 2000 });
+          // DietPi is installed - if we got here, likely static IP was configured via dietpi-config GUI
+          // Check if this looks like a server (DNS/DHCP server indicators)
+          try {
+            const { stdout: services } = await execPromise('systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"', { timeout: 2000 });
+            if (services.trim()) {
+              logger.debug('Detected DNS/DHCP services running on DietPi - assuming static IP');
+              return 'Static';
+            }
+          } catch {
+            // No DNS/DHCP services found
+          }
         } catch {
-          // DietPi config not found, continue to other methods
+          // DietPi not installed
         }
 
         // Priority 2: Check /etc/network/interfaces (Debian standard)
@@ -2754,7 +2772,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'broadcasting metrics');
         logger.error(`Metrics broadcast error: ${errorResponse.message}`, error);
       }
-    }, 5000); // Update every 5 seconds
+    }, 10000); // Update every 10 seconds
   }
 
   /**
