@@ -64,8 +64,32 @@ class DatabaseService {
       this._createRemindersTable(db);
       this._createIndexes(db);
       this._ensureTriggers(db); // Ensure triggers are created after all tables
+      this._runMigrations(db); // Run any necessary schema migrations
     } catch (error) {
       throw new Error(`Failed to initialize database tables: ${error.message}`);
+    }
+  }
+
+  _runMigrations(db) {
+    if (this.isDisabled) return;
+
+    try {
+      // Migration: Add username column to user_stats if it doesn't exist
+      const userStatsInfo = db.prepare(
+        `PRAGMA table_info(user_stats)`
+      ).all();
+      const hasUsernameColumn = userStatsInfo.some(col => col.name === 'username');
+
+      if (!hasUsernameColumn) {
+        logger.info('Running migration: Adding username column to user_stats table');
+        db.exec(`
+          ALTER TABLE user_stats ADD COLUMN username TEXT;
+        `);
+        logger.info('Migration completed: username column added to user_stats');
+      }
+    } catch (error) {
+      logger.warn(`Database migration warning (non-critical): ${error.message}`);
+      // Don't throw - migrations are non-critical
     }
   }
 
