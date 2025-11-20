@@ -10,5 +10,4 @@ describe.skip('index.js - Core Branch Coverage (Archived)', () => {
   it('placeholder test - see index-critical-coverage.test.js for coverage', () => {
     expect(true).toBe(true);
   });
-
 });
