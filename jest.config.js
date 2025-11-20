@@ -4,11 +4,12 @@ module.exports = {
   testEnvironment: 'node',
   // Increased timeout. Explicit coverageReporters fixes earlier CLI misuse ("clover,lcov,text" treated as one module)
   testTimeout: 30000,
+  // Force exit to prevent hanging on open handles in CI
+  // This is enabled because some tests/services leave open timers or sockets
+  forceExit: process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true',
+  // Detect open handles to help debug hanging tests locally
+  detectOpenHandles: process.env.DEBUG_JEST_HANDLES === 'true',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
-  // forceExit disabled to allow coverage reporters to flush fully
-  // (Re-enable only if hangs recur after coverage artifacts reliably generate)
-  // forceExit: true,
-  // detectOpenHandles: true, // Disabled since intervals are properly guarded with test env checks
   maxWorkers: 1,
   collectCoverageFrom: [
     'src/**/*.js',
