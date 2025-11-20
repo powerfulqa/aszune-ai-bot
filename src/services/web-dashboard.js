@@ -36,14 +36,26 @@ class WebDashboardService {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await new Promise((resolve, reject) => {
-          this.server.listen(preferredPort, (err) => {
-            if (err) reject(err);
-            else resolve();
+          const timeout = setTimeout(() => {
+            this.server.removeAllListeners('error');
+            reject(new Error('Server listen timeout'));
+          }, 5000);
+
+          this.server.once('error', (err) => {
+            clearTimeout(timeout);
+            reject(err);
           });
+
+          this.server.once('listening', () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+
+          this.server.listen(preferredPort);
         });
         return preferredPort;
       } catch (portError) {
-        if (portError.code !== 'EADDRINUSE') {
+        if (portError.code !== 'EADDRINUSE' && portError.message !== 'Server listen timeout') {
           throw portError;
         }
 
@@ -65,16 +77,34 @@ class WebDashboardService {
     }
 
     // All retries exhausted, find alternative port
-    logger.warn(`Port ${preferredPort} unavailable after retries, finding alternative...`);
+    logger.warn(`Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`);
     const altPort = await this.findAvailablePort();
-    await new Promise((resolve, reject) => {
-      this.server.listen(altPort, (err) => {
-        if (err) reject(err);
-        else resolve();
+    
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          this.server.removeAllListeners('error');
+          reject(new Error('Alternative port listen timeout'));
+        }, 5000);
+
+        this.server.once('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+
+        this.server.once('listening', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+
+        this.server.listen(altPort);
       });
-    });
-    logger.info(`Using alternative port ${altPort} due to port conflict`);
-    return altPort;
+      logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
+      return altPort;
+    } catch (altPortError) {
+      logger.error(`Failed to bind to alternative port ${altPort}: ${altPortError.message}`);
+      throw new Error(`Unable to bind web dashboard to any port (preferred: ${preferredPort}, alternative: ${altPort})`);
+    }
   }
 
   /**

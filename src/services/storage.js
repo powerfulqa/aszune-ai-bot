@@ -59,6 +59,13 @@ class DataStorage {
 
     try {
       const data = await fs.readFile(this.statsFile, 'utf8');
+      
+      // Handle empty or whitespace-only files
+      if (!data || !data.trim()) {
+        logger.debug('User stats file is empty, starting with empty stats');
+        return {};
+      }
+
       const stats = JSON.parse(data);
       logger.debug('User stats loaded successfully');
       return stats;
@@ -66,6 +73,19 @@ class DataStorage {
       if (error.code === 'ENOENT') {
         // File doesn't exist yet, return empty object
         logger.debug('No user stats file found, starting with empty stats');
+        return {};
+      }
+
+      if (error instanceof SyntaxError) {
+        // Corrupted JSON file - log and recover
+        logger.warn(`Corrupted user stats file (${error.message}), resetting to empty stats`);
+        try {
+          // Attempt to fix by writing valid empty JSON
+          await fs.writeFile(this.statsFile, JSON.stringify({}, null, 2));
+          logger.info('Reset user stats file to valid empty JSON');
+        } catch (writeError) {
+          logger.error('Failed to reset user stats file:', writeError);
+        }
         return {};
       }
 
