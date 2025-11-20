@@ -173,8 +173,35 @@ class Dashboard {
     );
 
     safeSetText('bot-uptime', data.uptime);
-    safeSetText('last-update', new Date(data.timestamp).toLocaleTimeString());
-    safeSetText('node-version', data.system.nodeVersion);
+    
+    // Poll Discord status separately (not in main metrics)
+    this.updateDiscordStatus();
+  }
+
+  updateDiscordStatus() {
+    if (!this.socket) return;
+    
+    this.socket.emit('request_discord_status', {}, (response) => {
+      const statusEl = document.getElementById('discord-connection-status');
+      const uptimeEl = document.getElementById('discord-uptime');
+      
+      if (response && response.connected) {
+        if (statusEl) statusEl.textContent = '✓ Connected';
+        if (uptimeEl) uptimeEl.textContent = response.uptime || '-';
+      } else {
+        if (statusEl) {
+          const errorMsg = response?.error || 'Disconnected';
+          if (errorMsg.includes('rate limit')) {
+            statusEl.textContent = '⚠ Rate Limited';
+          } else if (errorMsg.includes('not initialized')) {
+            statusEl.textContent = '– Not Started';
+          } else {
+            statusEl.textContent = '✗ Disconnected';
+          }
+        }
+        if (uptimeEl) uptimeEl.textContent = '-';
+      }
+    });
   }
 
   updateAnalyticsMetrics(data) {
@@ -583,18 +610,30 @@ class Dashboard {
         .sort((a, b) => (b.message_count || 0) - (a.message_count || 0))
         .slice(0, 4);
 
+      // Check if we have any valid usernames (Discord connected)
+      const hasValidUsernames = topUsers.some(user => user.username && user.username.trim() !== '');
+      
+      if (!hasValidUsernames) {
+        // Discord not connected - show friendly message
+        leaderboardContainer.innerHTML = `
+          <div style="padding: 15px; text-align: center; color: #999; font-size: 0.9rem;">
+            <div style="margin-bottom: 8px;">⚠️ Discord Not Connected</div>
+            <div style="font-size: 0.8rem;">Usernames will appear when Discord reconnects</div>
+          </div>
+        `;
+        return;
+      }
+
       // Build leaderboard HTML
       const leaderboardHtml = topUsers
         .map((user, index) => {
           const rank = index + 1;
           const rankClass = rank <= 3 ? `rank-${rank}` : '';
 
-          // Display username if available, otherwise show a cleaned-up user ID
+          // Display username if available, otherwise skip (Discord disconnected)
           let displayName = user.username;
           if (!displayName || displayName.trim() === '') {
-            // Format user ID for better display (show last 8 digits)
-            const userIdStr = String(user.user_id);
-            displayName = `User ${userIdStr.slice(-8)}`;
+            return ''; // Skip users without usernames when Discord is disconnected
           }
 
           const interactionCount = user.message_count || 0;
