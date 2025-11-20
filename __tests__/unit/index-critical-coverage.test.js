@@ -119,6 +119,13 @@ describe('index.js - Critical Coverage Enhancement', () => {
     jest.doMock('../../src/utils/memory-monitor', () => mockMemoryMonitor);
     jest.doMock('../../src/utils/performance-monitor', () => mockPerformanceMonitor);
 
+    // Mock web-dashboard service to prevent actual port binding
+    jest.doMock('../../src/services/web-dashboard', () => ({
+      start: jest.fn().mockResolvedValue(),
+      stop: jest.fn().mockResolvedValue(),
+      setDiscordClient: jest.fn(),
+    }));
+
     // Mock process methods
     process.on = jest.fn();
     process.exit = jest.fn();

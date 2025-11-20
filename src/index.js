@@ -169,13 +169,21 @@ async function startWebDashboard() {
   try {
     // In test environment avoid multiple starts that cause EADDRINUSE
     if (process.env.NODE_ENV === 'test') {
-      if (global.__WEB_DASHBOARD_STARTED__) {
-        logger.debug('Web dashboard already started (test env) - skipping');
+      if (global.__WEB_DASHBOARD_STARTED__ || global.__WEB_DASHBOARD_SERVICE__) {
+        logger.debug('Web dashboard already started or reserved (test env) - skipping');
         return;
       }
     }
 
     const webDashboardService = require('./services/web-dashboard');
+    
+    // Guard: prevent if service already initialized at module level
+    if (global.__WEB_DASHBOARD_SERVICE__) {
+      logger.debug('Web dashboard service already exists - skipping redundant start');
+      return;
+    }
+    
+    global.__WEB_DASHBOARD_SERVICE__ = true;
     await webDashboardService.start(3000);
     logger.info('Web dashboard service initialized on port 3000');
 
