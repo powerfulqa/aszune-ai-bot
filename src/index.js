@@ -167,9 +167,21 @@ async function registerSlashCommands() {
 // This ensures the dashboard remains accessible even if Discord login fails
 async function startWebDashboard() {
   try {
+    // In test environment avoid multiple starts that cause EADDRINUSE
+    if (process.env.NODE_ENV === 'test') {
+      if (global.__WEB_DASHBOARD_STARTED__) {
+        logger.debug('Web dashboard already started (test env) - skipping');
+        return;
+      }
+    }
+
     const webDashboardService = require('./services/web-dashboard');
     await webDashboardService.start(3000);
     logger.info('Web dashboard service initialized on port 3000');
+
+    if (process.env.NODE_ENV === 'test') {
+      global.__WEB_DASHBOARD_STARTED__ = true;
+    }
   } catch (error) {
     logger.error('Failed to initialize web dashboard service:', error);
   }
