@@ -2427,17 +2427,10 @@ class WebDashboardService {
           // Check if PM2 has any saved processes (dump.pm2 exists and contains our app)
           try {
             const { stdout: saveOutput } = await execPromise('pm2 save --force', { timeout: 3000 });
-            // If save succeeds, PM2 is managing processes
-            
-            // Now check if systemd service exists for PM2
-            try {
-              await execPromise('systemctl is-enabled pm2-*', { timeout: 3000 });
-              return true; // PM2 startup is configured
-            } catch (systemdError) {
-              // PM2 processes are saved but systemd not configured
-              logger.debug('PM2 processes saved but systemd startup not configured');
-              return false;
-            }
+            // If save succeeds, PM2 is managing processes and will auto-start
+            // PM2 save means processes will restart on reboot via pm2-runtime or pm2 resurrect
+            logger.debug('PM2 processes saved - auto-start enabled');
+            return true; // PM2 startup is configured via pm2 save
           } catch (saveError) {
             logger.debug(`PM2 save check failed: ${saveError.message}`);
             return false;

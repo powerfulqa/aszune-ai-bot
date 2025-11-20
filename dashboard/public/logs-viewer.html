@@ -396,7 +396,8 @@
                 return;
             }
 
-            tbody.innerHTML = logs.map(log => `
+            // Reverse logs so latest appears at top
+            tbody.innerHTML = logs.reverse().map(log => `
                 <tr>
                     <td class="log-timestamp">${log.timestamp}</td>
                     <td><span class="log-level-${log.level}">${log.level}</span></td>

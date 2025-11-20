@@ -613,8 +613,9 @@
                         document.getElementById('file-size').textContent = (response.size / 1024).toFixed(2) + ' KB';
                     }
                     
-                    // Update status
+                    // Update status badges
                     document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Loaded successfully</span>';
+                    document.querySelector('.info-value .status-badge').innerHTML = '✓ Ready';
                     document.getElementById('backup-info').innerHTML = '✓ Configuration loaded. All changes are automatically backed up before saving.';
                 } else {
                     // Handle error
