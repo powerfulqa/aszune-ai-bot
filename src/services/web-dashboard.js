@@ -2501,24 +2501,16 @@ class WebDashboardService {
 
     try {
       if (process.platform === 'linux' || process.platform === 'darwin') {
-        // Check if PM2 startup is configured by checking if dump file exists
-        // and if the service exists in systemd
+        // Check if running under PM2
+        if (process.env.pm_id !== undefined) {
+          return true;
+        }
+
+        // Fallback: Check systemd
         try {
-          const { stdout: listOutput } = await execPromise('pm2 list', { timeout: 5000 });
-          
-          // Check if PM2 has any saved processes (dump.pm2 exists and contains our app)
-          try {
-            const { stdout: saveOutput } = await execPromise('pm2 save --force', { timeout: 3000 });
-            // If save succeeds, PM2 is managing processes and will auto-start
-            // PM2 save means processes will restart on reboot via pm2-runtime or pm2 resurrect
-            logger.debug('PM2 processes saved - auto-start enabled');
-            return true; // PM2 startup is configured via pm2 save
-          } catch (saveError) {
-            logger.debug(`PM2 save check failed: ${saveError.message}`);
-            return false;
-          }
+          const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, { timeout: 5000 });
+          return stdout.trim() === 'enabled';
         } catch (error) {
-          logger.debug(`PM2 boot status check failed: ${error.message}`);
           return false;
         }
       } else if (process.platform === 'win32') {
