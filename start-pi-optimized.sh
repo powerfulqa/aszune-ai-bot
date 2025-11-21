@@ -34,19 +34,19 @@ if [[ "$PI_MODEL" == *"Raspberry Pi 5"* ]]; then
     PI_VERSION="5"
 elif [[ "$PI_MODEL" == *"Raspberry Pi 4"* ]]; then
     echo "Detected: Raspberry Pi 4"
-    MEMORY_LIMIT=300
-    MEMORY_CRITICAL=350
-    PI_MAX_CONNECTIONS=3
-    PI_DEBOUNCE_MS=300
+    MEMORY_LIMIT=800
+    MEMORY_CRITICAL=900
+    PI_MAX_CONNECTIONS=6
+    PI_DEBOUNCE_MS=200
     PI_LOW_CPU_MODE=false
-    PI_COMPACT_MODE=true
+    PI_COMPACT_MODE=false
     PI_VERSION="4"
 else
     echo "Detected: Raspberry Pi 3 or older"
-    MEMORY_LIMIT=200
-    MEMORY_CRITICAL=250
-    PI_MAX_CONNECTIONS=2
-    PI_DEBOUNCE_MS=500
+    MEMORY_LIMIT=512
+    MEMORY_CRITICAL=600
+    PI_MAX_CONNECTIONS=3
+    PI_DEBOUNCE_MS=400
     PI_LOW_CPU_MODE=true
     PI_COMPACT_MODE=true
     PI_VERSION="3"

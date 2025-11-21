@@ -219,13 +219,13 @@ function configureNonPi(config) {
 function configurePi3(config) {
   config.COMPACT_MODE = true;
   config.LOW_CPU_MODE = true;
-  config.DEBOUNCE_MS = 500;
-  config.MAX_CONNECTIONS = 1;
-  config.MAX_HISTORY = 5;
-  config.CACHE_SIZE = 25;
+  config.DEBOUNCE_MS = 400;
+  config.MAX_CONNECTIONS = 3;
+  config.MAX_HISTORY = 10;
+  config.CACHE_SIZE = 50;
   config.STREAM_RESPONSES = false;
-  config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 150;
-  config.MEMORY_LIMITS.RAM_CRITICAL_MB = 180;
+  config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 400;
+  config.MEMORY_LIMITS.RAM_CRITICAL_MB = 500;
   return config;
 }
 
@@ -241,27 +241,27 @@ function configurePi4(config, ram) {
     // Pi 4 with 1GB
     config.COMPACT_MODE = true;
     config.LOW_CPU_MODE = true;
-    config.MAX_CONNECTIONS = 1;
-    config.MAX_HISTORY = 5;
-    config.CACHE_SIZE = 25;
-    config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 300;
-    config.MEMORY_LIMITS.RAM_CRITICAL_MB = 400;
+    config.MAX_CONNECTIONS = 4;
+    config.MAX_HISTORY = 15;
+    config.CACHE_SIZE = 75;
+    config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 600;
+    config.MEMORY_LIMITS.RAM_CRITICAL_MB = 800;
   } else if (ramGB < 4) {
     // Pi 4 with 2GB
-    config.COMPACT_MODE = true;
-    config.MAX_CONNECTIONS = 2;
-    config.MAX_HISTORY = 10;
-    config.CACHE_SIZE = 50;
-    config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 500;
-    config.MEMORY_LIMITS.RAM_CRITICAL_MB = 700;
-  } else {
-    // Pi 4 with 4GB+
     config.COMPACT_MODE = false;
-    config.MAX_CONNECTIONS = 4;
+    config.MAX_CONNECTIONS = 6;
     config.MAX_HISTORY = 20;
     config.CACHE_SIZE = 100;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 1000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 1500;
+  } else {
+    // Pi 4 with 4GB+
+    config.COMPACT_MODE = false;
+    config.MAX_CONNECTIONS = 10;
+    config.MAX_HISTORY = 30;
+    config.CACHE_SIZE = 200;
+    config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 2000;
+    config.MEMORY_LIMITS.RAM_CRITICAL_MB = 3000;
     config.DEBOUNCE_MS = 100;
   }
   return config;
