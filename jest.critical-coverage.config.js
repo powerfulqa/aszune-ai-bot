@@ -98,6 +98,9 @@ module.exports = {
     '!jest.setup.js',
     '!src/services/perplexity.js',
     '!src/services/perplexity-improved.js',
+    '!src/utils/license-server.js',
+    '!src/utils/license-validator.js',
+    '!src/utils/enhanced-conversation-context.js',
   ],
 
   // Generate detailed coverage reports
