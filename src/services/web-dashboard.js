@@ -1716,7 +1716,8 @@ class WebDashboardService {
 
         // Determine service name - typically 'aszune-ai-bot' or similar
         const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
-        const pm2AppName = 'aszune-bot'; // Common PM2 name
+        // Use the actual PM2 process name if available (PM2 sets process.env.name), otherwise default to 'aszune-ai'
+        const pm2AppName = process.env.name || 'aszune-ai';
 
         // Step 2: Try PM2 restart first (most likely environment)
         try {
