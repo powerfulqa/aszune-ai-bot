@@ -259,12 +259,13 @@ const shutdown = async (signal) => {
   isShuttingDown = true;
   
   // DIAGNOSTIC: Log detailed signal information to help identify restart loop
-  logger.warn(`========================================`);
-  logger.warn(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
-  logger.warn(`Process uptime: ${Math.floor(process.uptime())}s`);
-  logger.warn(`Stack trace:`);
-  logger.warn(new Error().stack);
-  logger.warn(`========================================`);
+  // Using ERROR level to ensure it shows even with PI_LOG_LEVEL=ERROR
+  logger.error(`========================================`);
+  logger.error(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
+  logger.error(`Process uptime: ${Math.floor(process.uptime())}s`);
+  logger.error(`Stack trace:`);
+  logger.error(new Error().stack);
+  logger.error(`========================================`);
   
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
