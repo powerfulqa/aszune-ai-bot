@@ -708,21 +708,24 @@ const commands = {
       const time = interaction.options.getString('time');
       const message = interaction.options.getString('message');
 
+      // Defer reply immediately to prevent timeout
+      await interaction.deferReply();
+
       // Validate inputs
       const timeValidation = InputValidator.validateTimeString(time);
       if (!timeValidation.valid) {
-        return interaction.reply(`❌ Invalid time format: ${timeValidation.error}`);
+        return interaction.editReply(`❌ Invalid time format: ${timeValidation.error}`);
       }
 
       const messageValidation = InputValidator.validateReminderMessage(message);
       if (!messageValidation.valid) {
-        return interaction.reply(`❌ Invalid reminder message: ${messageValidation.error}`);
+        return interaction.editReply(`❌ Invalid reminder message: ${messageValidation.error}`);
       }
 
       try {
         const reminder = await reminderService.setReminder(userId, time, message);
 
-        return interaction.reply({
+        return interaction.editReply({
           embeds: [
             {
               color: 0x00ff00,
@@ -738,7 +741,7 @@ const commands = {
           time,
           messageLength: message.length,
         });
-        return interaction.reply(errorResponse.message);
+        return interaction.editReply(errorResponse.message);
       }
     },
   },

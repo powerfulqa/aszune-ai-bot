@@ -189,28 +189,21 @@ class ReminderService extends EventEmitter {
 
   async setReminder(userId, timeString, message) {
     try {
-      // Parse the time string to get a scheduled time
-      // For now, create a simple implementation that adds the time to current time
+      // Parse the time string using chrono-node for robust natural language parsing
+      const chrono = require('chrono-node');
       const now = new Date();
-      let scheduledTime;
+      const parsedDate = chrono.parseDate(timeString, now, { forwardDate: true });
 
-      // Simple time parsing - this should be improved with proper time parsing
-      if (timeString.startsWith('in ')) {
-        const timePart = timeString.substring(3);
-        if (timePart.includes('minute')) {
-          const minutes = parseInt(timePart);
-          scheduledTime = new Date(now.getTime() + minutes * 60 * 1000);
-        } else if (timePart.includes('hour')) {
-          const hours = parseInt(timePart);
-          scheduledTime = new Date(now.getTime() + hours * 60 * 60 * 1000);
-        } else {
-          throw new Error('Unsupported time format');
-        }
-      } else {
-        throw new Error('Unsupported time format');
+      if (!parsedDate) {
+        throw new Error('Unsupported time format. Try "in 5 minutes", "tomorrow at 5pm", etc.');
       }
 
-      const reminder = await this.createReminder(userId, message, scheduledTime.toISOString());
+      // Ensure the date is in the future
+      if (parsedDate <= now) {
+        throw new Error('Reminder time must be in the future.');
+      }
+
+      const reminder = await this.createReminder(userId, message, parsedDate.toISOString());
       return reminder;
     } catch (error) {
       logger.error(`Failed to set reminder for user ${userId}:`, error);

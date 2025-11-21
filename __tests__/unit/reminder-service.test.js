@@ -289,8 +289,20 @@ describe('ReminderService', () => {
       );
     });
 
+    it('should parse "tomorrow" format', async () => {
+      const createSpy = jest.spyOn(reminderService, 'createReminder');
+      
+      await reminderService.setReminder('user1', 'tomorrow', 'test message');
+      
+      expect(createSpy).toHaveBeenCalledWith(
+        'user1', 
+        'test message', 
+        expect.any(String)
+      );
+    });
+
     it('should throw on unsupported format', async () => {
-      await expect(reminderService.setReminder('user1', 'tomorrow', 'test'))
+      await expect(reminderService.setReminder('user1', 'not a time', 'test'))
         .rejects.toThrow('Unsupported time format');
     });
 

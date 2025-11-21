@@ -198,6 +198,7 @@ async function startWebDashboard() {
 // Handle ready event
 client.once('clientReady', async () => {
   logger.info(`Discord bot is online as ${client.user.tag}!`);
+  logger.info(`Process ID: ${process.pid}`);
 
   // Log bot startup event
   const databaseService = require('./services/database');
