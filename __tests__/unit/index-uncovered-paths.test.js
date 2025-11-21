@@ -78,7 +78,11 @@ describe('Index Uncovered Paths', () => {
       setDiscordClient: jest.fn()
     }));
     jest.doMock('../../src/utils/license-validator');
-    jest.doMock('../../src/utils/license-server');
+    jest.doMock('../../src/utils/license-server', () => {
+      return jest.fn().mockImplementation(() => ({
+        start: jest.fn()
+      }));
+    });
     jest.doMock('../../src/utils/lazy-loader', () => ({
       lazyLoad: jest.fn().mockReturnValue(() => ({ initialize: jest.fn() }))
     }));

@@ -55,7 +55,12 @@ class WebDashboardService {
         });
         return preferredPort;
       } catch (portError) {
-        if (portError.code !== 'EADDRINUSE' && portError.message !== 'Server listen timeout') {
+        const isAddressInUse = 
+          portError.code === 'EADDRINUSE' || 
+          portError.message?.includes('EADDRINUSE') ||
+          portError.message?.includes('address already in use');
+
+        if (!isAddressInUse && portError.message !== 'Server listen timeout') {
           throw portError;
         }
 

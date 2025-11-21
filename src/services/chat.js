@@ -15,6 +15,7 @@ const databaseService = require('../services/database');
 const naturalLanguageReminderProcessor = require('../utils/natural-language-reminder');
 
 const conversationManager = new ConversationManager();
+const processingMessages = new Set();
 
 /**
  * Check if a message should be ignored by the bot
@@ -356,16 +357,23 @@ async function loadConversationHistory(userId, messageContent) {
  * @returns {Promise<void>}
  */
 async function handleChatMessage(message) {
+  // Deduplication: Prevent processing the same message multiple times
+  if (processingMessages.has(message.id)) {
+    logger.debug(`Ignoring duplicate message processing for ID: ${message.id}`);
+    return null;
+  }
+
+  processingMessages.add(message.id);
   const startTime = Date.now();
 
-  // Process the incoming message
-  const processedData = await processUserMessage(message);
-  if (!processedData) return null;
-
-  // Show typing indicator
-  message.channel.sendTyping();
-
   try {
+    // Process the incoming message
+    const processedData = await processUserMessage(message);
+    if (!processedData) return null;
+
+    // Show typing indicator
+    message.channel.sendTyping();
+
     const userId = processedData.userId;
     const messageContent = processedData.sanitizedContent;
 
@@ -395,7 +403,10 @@ async function handleChatMessage(message) {
       messageLength: processedData?.messageContent?.length || 0,
     });
   } catch (error) {
-    await handleChatError(error, startTime, processedData, message);
+    await handleChatError(error, startTime, null, message);
+  } finally {
+    // Always remove message from processing set
+    processingMessages.delete(message.id);
   }
 }
 

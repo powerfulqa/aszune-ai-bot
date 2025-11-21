@@ -744,6 +744,66 @@ class InputValidator {
     return { valid: true };
   }
 
+  /**
+   * Validate time string format
+   * @param {string} timeString - Time string to validate
+   * @returns {Object} - Validation result
+   */
+  static validateTimeString(timeString) {
+    if (!timeString || typeof timeString !== 'string') {
+      return { valid: false, error: 'Time string is required' };
+    }
+    
+    if (timeString.length > 100) {
+      return { valid: false, error: 'Time string is too long' };
+    }
+
+    // Basic safety check
+    const dangerousPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /data:/gi,
+      /vbscript:/gi,
+      /on\w+\s*=/gi,
+    ];
+
+    if (dangerousPatterns.some(pattern => pattern.test(timeString))) {
+      return { valid: false, error: 'Time string contains unsafe content' };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate reminder message
+   * @param {string} message - Message to validate
+   * @returns {Object} - Validation result
+   */
+  static validateReminderMessage(message) {
+    if (!message || typeof message !== 'string') {
+      return { valid: false, error: 'Message is required' };
+    }
+
+    if (message.length > VALIDATION_LIMITS.MAX_MESSAGE_LENGTH) {
+      return { valid: false, error: 'Message is too long' };
+    }
+
+    // Basic safety check
+    const dangerousPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /data:/gi,
+      /vbscript:/gi,
+      /on\w+\s*=/gi,
+    ];
+
+    if (dangerousPatterns.some(pattern => pattern.test(message))) {
+      return { valid: false, error: 'Message contains unsafe content' };
+    }
+
+    return { valid: true };
+  }
+
   static _validateEmailType(input) {
     if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
       return {

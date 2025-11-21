@@ -136,7 +136,13 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
       });
 
       // Should handle the error gracefully
-      await expect(chatService(mockMessage)).rejects.toThrow('Validation failed');
+      await chatService(mockMessage);
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.any(String),
+        expect.any(Object)
+      );
     });
   });
 

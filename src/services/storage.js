@@ -76,10 +76,15 @@ class DataStorage {
         return {};
       }
 
-      if (error instanceof SyntaxError) {
+      if (error instanceof SyntaxError || error.name === 'SyntaxError' || error.message.includes('JSON')) {
         // Corrupted JSON file - log and recover
         logger.warn(`Corrupted user stats file (${error.message}), resetting to empty stats`);
         try {
+          // Backup corrupted file
+          const backupPath = `${this.statsFile}.corrupted.${Date.now()}`;
+          await fs.writeFile(backupPath, data);
+          logger.info(`Backed up corrupted user stats to ${backupPath}`);
+
           // Attempt to fix by writing valid empty JSON
           await fs.writeFile(this.statsFile, JSON.stringify({}, null, 2));
           logger.info('Reset user stats file to valid empty JSON');
