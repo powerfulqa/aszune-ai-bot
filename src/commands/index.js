@@ -730,14 +730,21 @@ const commands = {
       }
 
       try {
-        const reminder = await reminderService.setReminder(userId, time, message);
+        const reminder = await reminderService.setReminder(
+          userId,
+          time,
+          message,
+          interaction.channelId,
+          interaction.guildId
+        );
+        const timestamp = Math.floor(new Date(reminder.scheduled_time).getTime() / 1000);
 
         return interaction.editReply({
           embeds: [
             {
               color: 0x00ff00,
               title: '⏰ Reminder Set',
-              description: `I'll remind you: **${message}**\n⏰ ${reminder.dueDate}`,
+              description: `I'll remind you: **${message}**\n⏰ <t:${timestamp}:F>`,
               footer: { text: 'Aszai Bot' },
             },
           ],
@@ -778,7 +785,10 @@ const commands = {
         }
 
         const reminderList = reminders
-          .map((r) => `**${r.id}**: ${r.message}\n⏰ ${r.dueDate}`)
+          .map((r) => {
+            const timestamp = Math.floor(new Date(r.scheduled_time).getTime() / 1000);
+            return `**${r.id}**: ${r.message}\n⏰ <t:${timestamp}:R> (<t:${timestamp}:f>)`;
+          })
           .join('\n\n');
 
         return interaction.reply({

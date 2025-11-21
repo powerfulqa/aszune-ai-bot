@@ -187,7 +187,7 @@ class ReminderService extends EventEmitter {
     return databaseService.getUserReminders(userId, includeCompleted);
   }
 
-  async setReminder(userId, timeString, message) {
+  async setReminder(userId, timeString, message, channelId = null, serverId = null) {
     try {
       // Parse the time string using chrono-node for robust natural language parsing
       const chrono = require('chrono-node');
@@ -203,7 +203,14 @@ class ReminderService extends EventEmitter {
         throw new Error('Reminder time must be in the future.');
       }
 
-      const reminder = await this.createReminder(userId, message, parsedDate.toISOString());
+      const reminder = await this.createReminder(
+        userId,
+        message,
+        parsedDate.toISOString(),
+        'UTC',
+        channelId,
+        serverId
+      );
       return reminder;
     } catch (error) {
       logger.error(`Failed to set reminder for user ${userId}:`, error);
