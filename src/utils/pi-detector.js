@@ -381,6 +381,20 @@ function createEnvOverrides(optimizedConfig) {
         ? process.env.PI_STREAM_RESPONSES === 'true'
         : optimizedConfig.STREAM_RESPONSES,
   };
+
+  // Handle memory limits separately to preserve structure
+  if (process.env.PI_MEMORY_LIMIT || process.env.PI_MEMORY_CRITICAL) {
+    overrides.MEMORY_LIMITS = {
+      RAM_THRESHOLD_MB: process.env.PI_MEMORY_LIMIT
+        ? parseInt(process.env.PI_MEMORY_LIMIT)
+        : optimizedConfig.MEMORY_LIMITS.RAM_THRESHOLD_MB,
+      RAM_CRITICAL_MB: process.env.PI_MEMORY_CRITICAL
+        ? parseInt(process.env.PI_MEMORY_CRITICAL)
+        : optimizedConfig.MEMORY_LIMITS.RAM_CRITICAL_MB,
+    };
+  }
+
+  return overrides;
 }
 
 /**
