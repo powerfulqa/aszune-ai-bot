@@ -13,6 +13,7 @@ const ResourceOptimizer = require('../utils/resource-optimizer');
 const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
 const reminderService = require('../services/reminder-service');
+const os = require('os');
 
 const conversationManager = new ConversationManager();
 
@@ -501,6 +502,7 @@ const commands = {
 
         // Get actual server count from Discord client (not analytics tracking)
         const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
+        const hostname = os.hostname();
 
         const embed = {
           color:
@@ -512,6 +514,11 @@ const commands = {
           title: '🔧 Resource Optimization',
           description: '📊 Node.js process memory (heap) - see /cache for cached responses',
           fields: [
+            {
+              name: '🖥️ System Info',
+              value: `Host: \`${hostname}\`\nPID: \`${process.pid}\`\nUser: \`${os.userInfo().username}\``,
+              inline: false,
+            },
             {
               name: '💾 Memory Status',
               value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
