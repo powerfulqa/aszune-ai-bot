@@ -1698,13 +1698,43 @@ class WebDashboardService {
     this.app.post('/api/control/restart', async (req, res) => {
       try {
         logger.info('Restart command received from dashboard');
+        
+        // Step 1: Explicitly disconnect Discord client to show offline status
+        if (this.discordClient) {
+          try {
+            logger.info('Destroying Discord client connection...');
+            await this.discordClient.destroy();
+            logger.info('Discord client disconnected successfully');
+          } catch (disconnectError) {
+            logger.warn(`Failed to disconnect Discord client: ${disconnectError.message}`);
+          }
+        }
+
         const { exec } = require('child_process');
         const util = require('util');
         const execPromise = util.promisify(exec);
 
         // Determine service name - typically 'aszune-ai-bot' or similar
         const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
+        const pm2AppName = 'aszune-bot'; // Common PM2 name
+
+        // Step 2: Try PM2 restart first (most likely environment)
+        try {
+          const pm2Command = `pm2 restart ${pm2AppName}`;
+          logger.info(`Attempting PM2 restart: ${pm2Command}`);
+          await execPromise(pm2Command, { timeout: 10000 });
+          
+          logger.info(`Bot restart initiated via PM2 (${pm2AppName})`);
+          return res.json({
+            success: true,
+            message: `Bot restart initiated via PM2 ${pm2AppName}`,
+            timestamp: new Date().toISOString()
+          });
+        } catch (pm2Error) {
+          logger.debug(`PM2 restart failed (may not be using PM2): ${pm2Error.message}`);
+        }
         
+        // Step 3: Try systemctl restart
         try {
           let restartCmd;
           // Always try without sudo first, since we're likely running as root
@@ -1750,7 +1780,7 @@ class WebDashboardService {
             setTimeout(() => {
               logger.info('Executing direct bot restart');
               process.exit(0);
-            }, 500);
+            }, 1000); // Increased delay to ensure response is sent
           }
         }
       } catch (error) {
