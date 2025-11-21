@@ -132,5 +132,17 @@ echo "Memory limit: ${MEMORY_LIMIT}MB"
 echo "Log level: $PI_LOG_LEVEL"
 echo "Optimizations enabled: $ENABLE_PI_OPTIMIZATIONS"
 
-# Start the application
-node src/index.js
+# Start the application with PM2
+echo "Configuring PM2..."
+pm2 delete aszune-ai 2>/dev/null || true
+
+# Start with all exported environment variables
+pm2 start ecosystem.config.js --update-env
+
+# Save the list for startup
+pm2 save
+
+echo "✅ Bot started with PM2!"
+echo "To enable auto-restart on boot, run: pm2 startup"
+echo "To view logs, run: pm2 logs"
+
