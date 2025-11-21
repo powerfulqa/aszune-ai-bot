@@ -29,6 +29,7 @@ if [[ "$PI_MODEL" == *"Raspberry Pi 5"* ]]; then
     MEMORY_CRITICAL=1800
     PI_MAX_CONNECTIONS=10
     PI_DEBOUNCE_MS=100
+    PI_REACTION_LIMIT=10
     PI_LOW_CPU_MODE=false
     PI_COMPACT_MODE=false
     PI_VERSION="5"
@@ -38,6 +39,7 @@ elif [[ "$PI_MODEL" == *"Raspberry Pi 4"* ]]; then
     MEMORY_CRITICAL=900
     PI_MAX_CONNECTIONS=6
     PI_DEBOUNCE_MS=200
+    PI_REACTION_LIMIT=5
     PI_LOW_CPU_MODE=false
     PI_COMPACT_MODE=false
     PI_VERSION="4"
@@ -47,6 +49,7 @@ else
     MEMORY_CRITICAL=600
     PI_MAX_CONNECTIONS=3
     PI_DEBOUNCE_MS=400
+    PI_REACTION_LIMIT=2
     PI_LOW_CPU_MODE=true
     PI_COMPACT_MODE=true
     PI_VERSION="3"
@@ -55,7 +58,6 @@ fi
 # Common settings for all Pi models
 ENABLE_PI_OPTIMIZATIONS=true
 PI_LOG_LEVEL="WARN"
-PI_REACTION_LIMIT=2
 
 # Node.js settings
 NODE_OPTIONS="--max-old-space-size=$MEMORY_LIMIT"

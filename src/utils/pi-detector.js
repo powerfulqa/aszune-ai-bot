@@ -226,6 +226,7 @@ function configurePi3(config) {
   config.STREAM_RESPONSES = false;
   config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 400;
   config.MEMORY_LIMITS.RAM_CRITICAL_MB = 500;
+  config.REACTION_LIMIT = 2;
   return config;
 }
 
@@ -246,6 +247,7 @@ function configurePi4(config, ram) {
     config.CACHE_SIZE = 75;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 600;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 800;
+    config.REACTION_LIMIT = 3;
   } else if (ramGB < 4) {
     // Pi 4 with 2GB
     config.COMPACT_MODE = false;
@@ -254,6 +256,7 @@ function configurePi4(config, ram) {
     config.CACHE_SIZE = 100;
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 1000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 1500;
+    config.REACTION_LIMIT = 5;
   } else {
     // Pi 4 with 4GB+
     config.COMPACT_MODE = false;
@@ -263,6 +266,7 @@ function configurePi4(config, ram) {
     config.MEMORY_LIMITS.RAM_THRESHOLD_MB = 2000;
     config.MEMORY_LIMITS.RAM_CRITICAL_MB = 3000;
     config.DEBOUNCE_MS = 100;
+    config.REACTION_LIMIT = 8;
   }
   return config;
 }
