@@ -257,6 +257,15 @@ const shutdown = async (signal) => {
   }
 
   isShuttingDown = true;
+  
+  // DIAGNOSTIC: Log detailed signal information to help identify restart loop
+  logger.warn(`========================================`);
+  logger.warn(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
+  logger.warn(`Process uptime: ${Math.floor(process.uptime())}s`);
+  logger.warn(`Stack trace:`);
+  logger.warn(new Error().stack);
+  logger.warn(`========================================`);
+  
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
   // Log bot shutdown event

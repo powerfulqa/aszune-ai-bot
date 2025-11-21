@@ -677,9 +677,8 @@ class Dashboard {
       const data = await response.json();
       if (data.success) {
         this.addActivityItem('✓ Bot restart initiated', 'info');
-        setTimeout(() => {
-          location.reload();
-        }, 2000);
+        // Don't auto-reload - let user manually refresh when ready
+        // The socket will reconnect automatically when the bot comes back online
       } else {
         this.addActivityItem(`✗ Restart failed: ${data.error}`, 'error');
       }
