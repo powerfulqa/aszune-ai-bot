@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'aszune-ai',
       script: 'src/index.js',
-      watch: ['src'],
+      watch: false,
       ignore_watch: ['node_modules', 'data', 'logs', 'coverage', '*.sqlite', '*.json', '*.log', '.git'],
       // Pass environment variables here so pm2 knows them
       env: {
