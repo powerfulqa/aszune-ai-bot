@@ -17,7 +17,7 @@ module.exports = {
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
       },
       // Error handling
-      max_memory_restart: '256M',
+      max_memory_restart: '2G',
       restart_delay: 3000,
       max_restarts: 10,
       // Logging

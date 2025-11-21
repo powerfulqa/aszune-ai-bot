@@ -25,8 +25,8 @@ PI_MODEL=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' || echo "Unknown
 
 if [[ "$PI_MODEL" == *"Raspberry Pi 5"* ]]; then
     echo "Detected: Raspberry Pi 5 Model B"
-    MEMORY_LIMIT=1024
-    MEMORY_CRITICAL=1200
+    MEMORY_LIMIT=1536
+    MEMORY_CRITICAL=1800
     PI_MAX_CONNECTIONS=10
     PI_DEBOUNCE_MS=100
     PI_LOW_CPU_MODE=false
