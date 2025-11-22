@@ -129,7 +129,21 @@ class ErrorHandler {
    * @param {Error} originalError - The original error object
    * @returns {string} - User-friendly error message
    */
-  static getUserFriendlyMessage(errorType) {
+  static getUserFriendlyMessage(errorType, originalError) {
+    // Check if the error message itself is user-friendly (contains helpful instructions)
+    const errorMessage = originalError?.message || '';
+    const lowerMessage = errorMessage.toLowerCase();
+    
+    // If error contains specific user instructions, use it directly
+    if (
+      lowerMessage.includes('try ') ||
+      lowerMessage.includes('must be ') ||
+      lowerMessage.includes('format') ||
+      lowerMessage.includes('example:')
+    ) {
+      return errorMessage;
+    }
+
     const messages = {
       [ERROR_TYPES.API_ERROR]: 'The service is temporarily unavailable. Please try again later.',
       [ERROR_TYPES.RATE_LIMIT_ERROR]:
