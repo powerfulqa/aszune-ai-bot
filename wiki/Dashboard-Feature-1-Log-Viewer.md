@@ -4,14 +4,18 @@
 
 ## Overview
 
-The Real-Time Log Viewer is a powerful web-based tool for streaming, filtering, and analyzing bot logs in real-time. It provides enterprise-grade logging capabilities with advanced search, filtering, and export functionality.
+The Real-Time Log Viewer is a powerful web-based tool for streaming, filtering, and analyzing bot
+logs in real-time. It provides enterprise-grade logging capabilities with advanced search,
+filtering, and export functionality.
 
 ## Features
 
 ### Core Capabilities
+
 - **Live Log Streaming:** WebSocket-based real-time log tail with automatic updates
 - **Multi-Level Filtering:** Filter by severity level (ERROR, WARN, INFO, DEBUG)
-- **Service-Based Filtering:** View logs from specific services (chat, perplexity, cache, database, reminders, etc.)
+- **Service-Based Filtering:** View logs from specific services (chat, perplexity, cache, database,
+  reminders, etc.)
 - **Timestamp Range Filtering:** Select specific time ranges for analysis
 - **Full-Text Search:** Search across log messages and service names
 - **Syntax Highlighting:** Color-coded severity levels for quick visual scanning
@@ -22,6 +26,7 @@ The Real-Time Log Viewer is a powerful web-based tool for streaming, filtering, 
 ## Usage Guide
 
 ### Accessing the Log Viewer
+
 1. Start the bot with dashboard enabled: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Real-Time Log Viewer** or navigate to `/logs`
@@ -29,6 +34,7 @@ The Real-Time Log Viewer is a powerful web-based tool for streaming, filtering, 
 ### Filtering Logs
 
 #### By Severity Level
+
 ```
 Click severity badges: ERROR | WARN | INFO | DEBUG
 - ERROR (Red): Critical errors and failures
@@ -38,6 +44,7 @@ Click severity badges: ERROR | WARN | INFO | DEBUG
 ```
 
 #### By Service Name
+
 ```
 Enter service name in filter field:
 - chat: Chat message handling logs
@@ -49,6 +56,7 @@ Enter service name in filter field:
 ```
 
 #### By Time Range
+
 ```
 Select start and end timestamps:
 - Last 1 hour (default)
@@ -57,6 +65,7 @@ Select start and end timestamps:
 ```
 
 ### Searching Logs
+
 ```
 Use full-text search to find:
 - Error messages: "connection timeout"
@@ -68,6 +77,7 @@ Use full-text search to find:
 ### Export Logs
 
 #### Export as CSV
+
 ```
 Click "Export as CSV" button
 File format:
@@ -76,6 +86,7 @@ File format:
 ```
 
 #### Export as JSON
+
 ```
 Click "Export as JSON" button
 File format:
@@ -96,10 +107,11 @@ File format:
 ## API Reference
 
 ### WebSocket Connection
-**Endpoint:** `ws://localhost:3000/ws/logs`
-**Authentication:** None (local dashboard)
+
+**Endpoint:** `ws://localhost:3000/ws/logs` **Authentication:** None (local dashboard)
 
 ### Message Format
+
 ```javascript
 // Client → Server: Subscribe to logs
 {
@@ -128,11 +140,13 @@ File format:
 ### REST Endpoints
 
 #### Get Recent Logs
+
 ```http
 GET /api/logs?limit=100&severity=ERROR&service=perplexity
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -150,6 +164,7 @@ GET /api/logs?limit=100&severity=ERROR&service=perplexity
 ```
 
 #### Export Logs
+
 ```http
 POST /api/logs/export
 Content-Type: application/json
@@ -166,17 +181,20 @@ Content-Type: application/json
 ## Troubleshooting
 
 ### Logs Not Appearing
+
 1. Verify bot is running: `npm start`
 2. Check dashboard is accessible: `http://localhost:3000/dashboard`
 3. Verify WebSocket connection in browser DevTools (F12 → Network → WS)
 4. Check bot console for connection errors
 
 ### Performance Issues
+
 - If viewer is slow, reduce time range selection
 - Export logs to local file for bulk analysis
 - Clear browser cache (Ctrl+Shift+Delete)
 
 ### Export Not Working
+
 - Verify file system permissions (write access to temp directory)
 - Check browser console for JavaScript errors (F12)
 - Try exporting smaller log ranges
@@ -184,6 +202,7 @@ Content-Type: application/json
 ## Integration Examples
 
 ### Monitor Production Issues
+
 ```
 1. Filter by severity: ERROR
 2. Filter by service: perplexity
@@ -193,6 +212,7 @@ Content-Type: application/json
 ```
 
 ### Debug User Issues
+
 ```
 1. Get user ID from Discord
 2. Search for user ID in logs
@@ -201,6 +221,7 @@ Content-Type: application/json
 ```
 
 ### Performance Analysis
+
 ```
 1. Filter by service: cache
 2. Search for: "miss rate"
@@ -213,6 +234,7 @@ Content-Type: application/json
 **File:** `src/services/web-dashboard.js`
 
 **Key Methods:**
+
 - `setupLogViewerRoutes()` - Initialize log viewer endpoints
 - `streamLogs()` - WebSocket log streaming handler
 - `filterLogs()` - Apply filters to log entries
@@ -220,6 +242,7 @@ Content-Type: application/json
 - `pruneLogs()` - Maintain memory by pruning old entries
 
 **Configuration:**
+
 ```javascript
 LOG_VIEWER: {
   MAX_ENTRIES: 10000,
@@ -248,4 +271,5 @@ LOG_VIEWER: {
 
 Interactive demo available: [`logs-viewer-demo.html`](../dashboard/public/logs-viewer-demo.html)
 
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Real-Time Log Viewer"
+Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Real-Time Log
+Viewer"

@@ -18,11 +18,13 @@ This directory contains project documentation and release notes for the Aszune A
 - **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of
   critical coverage implementation
 - **[PR Description Template](./PR-DESCRIPTION.md)** - Template for pull request descriptions
- - **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Real-time web dashboard overview and implementation details
+- **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Real-time web dashboard overview
+  and implementation details
 
 ## Release Notes Archive
 
-- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Balanced Coverage, Complexity Reduction & Real-Time Dashboard (LATEST)
+- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Balanced Coverage, Complexity Reduction & Real-Time
+  Dashboard (LATEST)
 - [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Persistence
 - [v1.6.3](./RELEASE-NOTES-v1.6.3.md) - Perplexity API Model Compatibility Fix
 - [v1.6.2](./RELEASE-NOTES-v1.6.2.md) - Summarise Command API Fix

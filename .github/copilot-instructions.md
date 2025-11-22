@@ -8,6 +8,7 @@ current local test status: 1,231 tests (1,228 passing) – 72.6% statements / 67
 historical target 82%+ (restoration in progress) and strict qlty quality standards.
 
 **Key Capabilities:**
+
 - AI chat powered by Perplexity API with conversation history
 - Natural language reminder system with SQLite persistence
 - Discord analytics dashboard (`/analytics`, `/dashboard`, `/resources`)
@@ -122,8 +123,12 @@ jest.mock('discord.js', () => {
 
   return {
     Client: jest.fn(() => mockClient),
-    GatewayIntentBits: { /* ... */ },
-    REST: jest.fn(() => ({ /* ... */ })),
+    GatewayIntentBits: {
+      /* ... */
+    },
+    REST: jest.fn(() => ({
+      /* ... */
+    })),
   };
 });
 
@@ -141,16 +146,22 @@ jest.mock('../../src/services/database', () => ({
 ```javascript
 // ✅ CORRECT - Test with exact values
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [{
-    color: '#5865F2', // Exact hex - no expect.any()
-    description: 'An unexpected error occurred. Please try again later.',
-    footer: { text: 'Aszai Bot' },
-  }],
+  embeds: [
+    {
+      color: '#5865F2', // Exact hex - no expect.any()
+      description: 'An unexpected error occurred. Please try again later.',
+      footer: { text: 'Aszai Bot' },
+    },
+  ],
 });
 
 // ❌ WRONG - Matchers will fail
 expect(message.reply).toHaveBeenCalledWith({
-  embeds: [expect.objectContaining({ /* ... */ })], // DON'T USE
+  embeds: [
+    expect.objectContaining({
+      /* ... */
+    }),
+  ], // DON'T USE
 });
 ```
 
@@ -172,7 +183,7 @@ expect(result).toContain('error');
 ```javascript
 // ❌ DEADLY - Module-level config access
 const config = require('../config/config');
-const value = config.FEATURES?.LICENSE_VALIDATION;  // CIRCULAR DEPENDENCY!
+const value = config.FEATURES?.LICENSE_VALIDATION; // CIRCULAR DEPENDENCY!
 
 // ✅ ALWAYS access inside functions
 function someFunction() {
@@ -236,7 +247,11 @@ class ReminderService extends EventEmitter {
 
 // Bot integration
 reminderService.on('reminderDue', async (reminder) => {
-  await channel.send({ embeds: [/* ... */] });
+  await channel.send({
+    embeds: [
+      /* ... */
+    ],
+  });
 });
 ```
 
@@ -340,18 +355,19 @@ const mockInteraction = {
 
 ```javascript
 // ❌ DEADLY MISTAKE - NEVER do this!
-jest.doMock('module', () => mockObject);  // Register hoisted mock
-jest.resetModules();                       // ERASES the mock registration!
-require('module');                         // Uses unhoisted module, not mock!
+jest.doMock('module', () => mockObject); // Register hoisted mock
+jest.resetModules(); // ERASES the mock registration!
+require('module'); // Uses unhoisted module, not mock!
 
 // ❌ DEADLY MISTAKE - Fresh mock objects don't connect properly
 const freshMock = { info: jest.fn() };
 jest.doMock('logger', () => freshMock);
-require('module');  // Module gets freshMock object, but doesn't use it correctly
+require('module'); // Module gets freshMock object, but doesn't use it correctly
 // Tests then fail: "expect(received).toHaveBeenCalledWith() - Received has type: function"
 ```
 
-**Root Cause**: 
+**Root Cause**:
+
 - `jest.doMock()` registers mocks that take effect on the NEXT module import
 - `jest.resetModules()` clears module cache AND all registered doMock() mocks
 - Fresh mock objects created in test scope don't properly connect to required modules
@@ -370,7 +386,7 @@ const logger = require('logger');
 
 describe('tests', () => {
   beforeEach(() => jest.clearAllMocks());
-  
+
   it('test', () => {
     // logger is the same mock instance used by required modules
     expect(logger.info).toHaveBeenCalledWith('message');
@@ -381,7 +397,7 @@ describe('tests', () => {
 it('should register ready handler', () => {
   // Instead of: await handler()
   // Do this: verify handler exists
-  const handlers = mockClient.once.mock.calls.filter(call => call[0] === 'ready');
+  const handlers = mockClient.once.mock.calls.filter((call) => call[0] === 'ready');
   expect(handlers.length).toBeGreaterThan(0);
 });
 
@@ -395,6 +411,7 @@ it('should handle shutdown', () => {
 ```
 
 **Lessons from Nov 2025 Fixes**:
+
 - **Fixed 15 failing tests** by removing jest.doMock() + jest.resetModules() patterns
 - Tests now verify handler registration instead of executing complex mock chains
 - Mock assertions simplified to check critical behavior, not implementation details
@@ -491,14 +508,27 @@ try {
 class CacheManager {
   getStats() {
     return {
-      hits, misses, hitRate, sets, deletes, evictions,
-      memoryUsageFormatted, maxMemoryFormatted, entryCount,
-      maxSize, evictionStrategy, uptimeFormatted,
+      hits,
+      misses,
+      hitRate,
+      sets,
+      deletes,
+      evictions,
+      memoryUsageFormatted,
+      maxMemoryFormatted,
+      entryCount,
+      maxSize,
+      evictionStrategy,
+      uptimeFormatted,
     };
   }
 
-  getDetailedInfo() { /* Must return stats + entries array */ }
-  invalidateByTag(tag) { /* Must support tag-based invalidation */ }
+  getDetailedInfo() {
+    /* Must return stats + entries array */
+  }
+  invalidateByTag(tag) {
+    /* Must support tag-based invalidation */
+  }
 }
 ```
 
@@ -640,8 +670,10 @@ try {
 - **Single Connection**: One database connection per service instance
 - **Proper Cleanup**: Always close connections in afterEach for tests
 - **Mock All Methods**: Non-database tests must mock all DatabaseService methods
-- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint violations
-- **Role-Based Storage**: conversation_history table requires proper role separation (user/assistant)
+- **Foreign Key Handling**: Use ensureUserExists() before adding messages to prevent constraint
+  violations
+- **Role-Based Storage**: conversation_history table requires proper role separation
+  (user/assistant)
 - **Data Integrity**: Foreign key constraints ensure conversation records are linked to valid users
 
 **Database Schema Design (Production Ready - v1.7.0):**
@@ -714,11 +746,12 @@ logger.error(`========================================`);
 logger.error(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
 logger.error(`Process uptime: ${Math.floor(process.uptime())}s`);
 logger.error(`Stack trace:`);
-logger.error(new Error().stack);  // Shows exact caller
+logger.error(new Error().stack); // Shows exact caller
 logger.error(`========================================`);
 ```
 
 Stack trace reveals shutdown source:
+
 - External SIGINT: `at process.<anonymous> (/root/aszune-ai-bot/src/index.js:399:28)`
 - Expected shutdown: Shows proper shutdown flow
 
@@ -797,5 +830,5 @@ pm2 save                    # Save current state
 ---
 
 **Remember**: This codebase has 1,231 tests (1,228 passing) with 72.6% statement / 67.1% branch
-coverage (historical target 82%+). Breaking patterns WILL fail tests. When
-in doubt, check existing tests for expected behavior.
+coverage (historical target 82%+). Breaking patterns WILL fail tests. When in doubt, check existing
+tests for expected behavior.

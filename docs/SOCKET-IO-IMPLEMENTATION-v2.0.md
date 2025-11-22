@@ -2,13 +2,16 @@
 
 **Completed:** Backend Socket.IO event handlers for all 5 production dashboard pages  
 **Commit:** `ee8a41c` - Implement Socket.IO event handlers for dashboard pages  
-**Date:** Phase 6 - Backend Socket.IO Integration  
+**Date:** Phase 6 - Backend Socket.IO Integration
 
 ## Overview
 
-All Socket.IO event listeners have been successfully implemented in the backend (`src/services/web-dashboard.js`). These handlers receive requests from the frontend dashboard pages and return real data to populate the UI.
+All Socket.IO event listeners have been successfully implemented in the backend
+(`src/services/web-dashboard.js`). These handlers receive requests from the frontend dashboard pages
+and return real data to populate the UI.
 
 **Architecture Pattern:**
+
 - **Frontend** → Emits Socket.IO events with `socket.emit('event_name', data, callback)`
 - **Backend** → Listeners receive events and call callbacks with response data
 - **Frontend** → Callback receives response and updates DOM dynamically
@@ -16,6 +19,7 @@ All Socket.IO event listeners have been successfully implemented in the backend 
 ## Implementation Summary
 
 ### File Modified
+
 - `src/services/web-dashboard.js` - Added 568 lines of Socket.IO event handlers
 
 ### Structure Overview
@@ -53,9 +57,11 @@ setupSocketHandlers()
 **Purpose:** Edit and validate configuration files (.env, config.js, etc.)
 
 #### Event: `request_config`
+
 **Frontend:** `socket.emit('request_config', { filename: '.env' }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_config', (data, callback) => {
   // Loads file content with security checks (directory traversal prevention)
@@ -64,6 +70,7 @@ socket.on('request_config', (data, callback) => {
 ```
 
 **Response:**
+
 ```json
 {
   "filename": ".env",
@@ -75,13 +82,16 @@ socket.on('request_config', (data, callback) => {
 ```
 
 **Security:** Prevents directory traversal with path validation
+
 - Checks `configPath.startsWith(process.cwd())`
 - Rejects paths outside project directory
 
 #### Event: `save_config`
+
 **Frontend:** `socket.emit('save_config', { filename: '.env', content: '...' }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('save_config', (data, callback) => {
   // Saves file with security validation
@@ -90,9 +100,11 @@ socket.on('save_config', (data, callback) => {
 ```
 
 #### Event: `validate_config`
+
 **Frontend:** `socket.emit('validate_config', { content: '...', fileType: 'env' }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('validate_config', (data, callback) => {
   // Validates .env or JavaScript syntax
@@ -101,10 +113,11 @@ socket.on('validate_config', (data, callback) => {
 ```
 
 **Validation Rules:**
-- **.env files:** 
+
+- **.env files:**
   - Each line must have format `KEY=value`
   - Keys should follow UPPERCASE_SNAKE_CASE convention
-- **JavaScript files:** 
+- **JavaScript files:**
   - Must be valid JavaScript syntax
   - Uses `new Function(content)` to test
 
@@ -115,9 +128,11 @@ socket.on('validate_config', (data, callback) => {
 **Purpose:** Display real-time system logs with filtering
 
 #### Event: `request_logs`
+
 **Frontend:** `socket.emit('request_logs', { limit: 100, level: 'INFO' }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_logs', (data, callback) => {
   // Returns buffered logs from this.allLogs array
@@ -127,6 +142,7 @@ socket.on('request_logs', (data, callback) => {
 ```
 
 **Response:**
+
 ```json
 {
   "logs": [
@@ -144,14 +160,17 @@ socket.on('request_logs', (data, callback) => {
 ```
 
 **Log Buffering:**
+
 - `this.allLogs` - Stores up to 500 logs (configurable via `this.maxAllLogs`)
 - `this.errorLogs` - Stores up to 75 error logs (configurable via `this.maxErrorLogs`)
 - Auto-rotates when max size reached
 
 #### Event: `clear_logs`
+
 **Frontend:** `socket.emit('clear_logs', {}, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('clear_logs', (data, callback) => {
   // Clears all buffered logs
@@ -167,9 +186,11 @@ socket.on('clear_logs', (data, callback) => {
 **Purpose:** Monitor network connectivity and system network configuration
 
 #### Event: `request_network_status`
+
 **Frontend:** `socket.emit('request_network_status', {}, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_network_status', (data, callback) => {
   // Gets all network interfaces from os.networkInterfaces()
@@ -179,6 +200,7 @@ socket.on('request_network_status', (data, callback) => {
 ```
 
 **Response:**
+
 ```json
 {
   "hostname": "raspberrypi-5",
@@ -211,6 +233,7 @@ socket.on('request_network_status', (data, callback) => {
 ```
 
 **Interface Information Provided:**
+
 - `name` - Interface identifier (eth0, wlan0, lo)
 - `ipv4` - IPv4 address (or null if not available)
 - `ipv6` - IPv6 address (or null if not available)
@@ -218,9 +241,11 @@ socket.on('request_network_status', (data, callback) => {
 - `internal` - Boolean indicating if internal loopback
 
 #### Event: `request_network_test`
+
 **Frontend:** `socket.emit('request_network_test', { host: '8.8.8.8', port: 53 }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_network_test', (data, callback) => {
   // Performs connectivity test to specified host:port
@@ -230,6 +255,7 @@ socket.on('request_network_test', (data, callback) => {
 ```
 
 **Future Enhancement:** Can be extended with:
+
 - Actual `ping` command execution
 - TCP connection test using `net.Socket()`
 - DNS resolution test
@@ -242,9 +268,11 @@ socket.on('request_network_test', (data, callback) => {
 **Purpose:** View, create, edit, delete reminders with full CRUD operations
 
 #### Event: `request_reminders`
+
 **Frontend:** `socket.emit('request_reminders', { userId: null, status: 'active' }, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_reminders', (data, callback) => {
   // Gets all active reminders from database
@@ -255,6 +283,7 @@ socket.on('request_reminders', (data, callback) => {
 ```
 
 **Response:**
+
 ```json
 {
   "reminders": [
@@ -280,21 +309,29 @@ socket.on('request_reminders', (data, callback) => {
 ```
 
 **Database Integration:**
+
 - Calls `databaseService.getActiveReminders(userId)`
 - Calls `databaseService.getReminderStats()`
 
 #### Event: `create_reminder`
-**Frontend:** 
+
+**Frontend:**
+
 ```javascript
-socket.emit('create_reminder', {
-  userId: '123456789',
-  message: 'Check logs',
-  scheduledTime: '2025-11-21T15:00:00.000Z',
-  channelId: '987654321'
-}, callback);
+socket.emit(
+  'create_reminder',
+  {
+    userId: '123456789',
+    message: 'Check logs',
+    scheduledTime: '2025-11-21T15:00:00.000Z',
+    channelId: '987654321',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('create_reminder', (data, callback) => {
   // Creates new reminder in database
@@ -304,23 +341,31 @@ socket.on('create_reminder', (data, callback) => {
 ```
 
 **Validation:**
+
 - `userId` - Required (Discord user ID)
 - `message` - Required (reminder text)
 - `scheduledTime` - Required (ISO 8601 datetime string)
 - `channelId` - Optional (Discord channel ID where reminder should be sent)
 
 #### Event: `edit_reminder`
+
 **Frontend:**
+
 ```javascript
-socket.emit('edit_reminder', {
-  reminderId: 'reminder_1731844335',
-  userId: '123456789',
-  message: 'Updated reminder text',
-  scheduledTime: '2025-11-21T16:00:00.000Z'
-}, callback);
+socket.emit(
+  'edit_reminder',
+  {
+    reminderId: 'reminder_1731844335',
+    userId: '123456789',
+    message: 'Updated reminder text',
+    scheduledTime: '2025-11-21T16:00:00.000Z',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('edit_reminder', (data, callback) => {
   // Updates existing reminder
@@ -332,15 +377,22 @@ socket.on('edit_reminder', (data, callback) => {
 **Note:** Database service may need `updateReminder()` method for full implementation
 
 #### Event: `delete_reminder`
+
 **Frontend:**
+
 ```javascript
-socket.emit('delete_reminder', {
-  reminderId: 'reminder_1731844335',
-  userId: '123456789'
-}, callback);
+socket.emit(
+  'delete_reminder',
+  {
+    reminderId: 'reminder_1731844335',
+    userId: '123456789',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('delete_reminder', (data, callback) => {
   // Deletes reminder from database
@@ -349,19 +401,27 @@ socket.on('delete_reminder', (data, callback) => {
 ```
 
 **Database Integration:**
+
 - Calls `databaseService.deleteReminder(reminderId, userId)`
 
 #### Event: `filter_reminders`
+
 **Frontend:**
+
 ```javascript
-socket.emit('filter_reminders', {
-  userId: '123456789',
-  status: 'active',
-  searchText: 'logs'
-}, callback);
+socket.emit(
+  'filter_reminders',
+  {
+    userId: '123456789',
+    status: 'active',
+    searchText: 'logs',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('filter_reminders', (data, callback) => {
   // Filters reminders by multiple criteria
@@ -371,6 +431,7 @@ socket.on('filter_reminders', (data, callback) => {
 ```
 
 **Filter Options:**
+
 - `userId` - Limit to specific user
 - `status` - Filter by 'active', 'completed', or other status
 - `searchText` - Case-insensitive search in message content
@@ -382,9 +443,11 @@ socket.on('filter_reminders', (data, callback) => {
 **Purpose:** Monitor and control system services (start, stop, restart)
 
 #### Event: `request_services`
+
 **Frontend:** `socket.emit('request_services', {}, callback)`
 
 **Backend Handler:**
+
 ```javascript
 socket.on('request_services', (data, callback) => {
   // Gets list of running services
@@ -395,6 +458,7 @@ socket.on('request_services', (data, callback) => {
 ```
 
 **Response:**
+
 ```json
 {
   "services": [
@@ -413,6 +477,7 @@ socket.on('request_services', (data, callback) => {
 ```
 
 **Service Information Provided:**
+
 - `name` - Service name identifier
 - `status` - Current status (running, stopped, error)
 - `uptime` - Uptime in seconds
@@ -421,15 +486,22 @@ socket.on('request_services', (data, callback) => {
 - `cpu` - CPU usage percentage (currently N/A)
 
 #### Event: `service_action`
+
 **Frontend:**
+
 ```javascript
-socket.emit('service_action', {
-  serviceName: 'Aszune AI Bot',
-  action: 'restart'
-}, callback);
+socket.emit(
+  'service_action',
+  {
+    serviceName: 'Aszune AI Bot',
+    action: 'restart',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('service_action', (data, callback) => {
   // Performs action on specified service
@@ -439,25 +511,34 @@ socket.on('service_action', (data, callback) => {
 ```
 
 **Valid Actions:**
+
 - `start` - Start service if stopped
 - `stop` - Stop service if running
 - `restart` - Restart service
 
 **Future Enhancement:** Can be extended to actually invoke:
+
 - `pm2 start|stop|restart` for PM2
 - `systemctl start|stop|restart` for systemd
 - Windows Service Manager for Windows services
 
 #### Event: `quick_service_action`
+
 **Frontend:**
+
 ```javascript
-socket.emit('quick_service_action', {
-  serviceNames: ['Aszune AI Bot', 'Nginx'],
-  action: 'restart'
-}, callback);
+socket.emit(
+  'quick_service_action',
+  {
+    serviceNames: ['Aszune AI Bot', 'Nginx'],
+    action: 'restart',
+  },
+  callback
+);
 ```
 
 **Backend Handler:**
+
 ```javascript
 socket.on('quick_service_action', (data, callback) => {
   // Performs batch action on multiple services
@@ -513,12 +594,12 @@ try {
   // Process request
   // Validate input
   // Access resources
-  
+
   if (callback) {
     callback({
       success: true,
       data: results,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 } catch (error) {
@@ -527,13 +608,14 @@ try {
     callback({
       error: error.message,
       success: false,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
 ```
 
 **Frontend Error Handling Pattern:**
+
 ```javascript
 socket.emit('event_name', data, (response) => {
   if (response.error) {
@@ -549,57 +631,65 @@ socket.emit('event_name', data, (response) => {
 ## Security Considerations
 
 ### 1. Directory Traversal Prevention (Config Handlers)
+
 - Validates file paths with `configPath.startsWith(process.cwd())`
 - Rejects requests to access files outside project directory
 - Logs security attempts for audit trail
 
 ### 2. Input Validation
+
 - All handlers validate required fields
 - Type checking before processing
 - Safe defaults for optional parameters
 
 ### 3. Error Message Safety
+
 - Error messages logged server-side
 - Sanitized messages sent to client
 - No sensitive information exposed to frontend
 
 ### 4. Rate Limiting (Potential Future Addition)
+
 - Could add Socket.IO middleware to limit request frequency
 - Prevent abuse of resource-intensive operations
 
 ## Integration with Existing Services
 
 ### Database Service
+
 ```javascript
-databaseService.getActiveReminders(userId)
-databaseService.getReminderStats()
-databaseService.createReminder(userId, message, scheduledTime, channelId)
-databaseService.deleteReminder(reminderId, userId)
+databaseService.getActiveReminders(userId);
+databaseService.getReminderStats();
+databaseService.createReminder(userId, message, scheduledTime, channelId);
+databaseService.deleteReminder(reminderId, userId);
 ```
 
 ### File System
+
 ```javascript
-fs.existsSync(filePath)          // Check file existence
-fs.readFileSync(filePath, 'utf-8')  // Read file content
-fs.writeFileSync(filePath, content, 'utf-8')  // Write file
-fs.statSync(filePath)            // Get file metadata
+fs.existsSync(filePath); // Check file existence
+fs.readFileSync(filePath, 'utf-8'); // Read file content
+fs.writeFileSync(filePath, content, 'utf-8'); // Write file
+fs.statSync(filePath); // Get file metadata
 ```
 
 ### System Information
+
 ```javascript
-os.networkInterfaces()            // Get network interfaces
-os.hostname()                      // Get hostname
-process.uptime()                   // Get process uptime
-process.memoryUsage()              // Get memory stats
-process.pid                        // Get process ID
+os.networkInterfaces(); // Get network interfaces
+os.hostname(); // Get hostname
+process.uptime(); // Get process uptime
+process.memoryUsage(); // Get memory stats
+process.pid; // Get process ID
 ```
 
 ### Logger Integration
+
 ```javascript
-logger.debug('Debug message')      // Debug level logging
-logger.info('Information message')  // Info level logging
-logger.warn('Warning message')     // Warning level logging
-logger.error('Error message', error)  // Error level logging
+logger.debug('Debug message'); // Debug level logging
+logger.info('Information message'); // Info level logging
+logger.warn('Warning message'); // Warning level logging
+logger.error('Error message', error); // Error level logging
 ```
 
 ## Testing the Implementation
@@ -635,7 +725,9 @@ logger.error('Error message', error)  // Error level logging
    - Test service action buttons
 
 ### Browser Developer Console
+
 Monitor Socket.IO traffic:
+
 ```javascript
 // In browser console
 socket.on('*', (eventName, data) => {
@@ -646,16 +738,19 @@ socket.on('*', (eventName, data) => {
 ## Performance Considerations
 
 ### Log Buffering
+
 - Limits stored logs to 500 entries (configurable)
 - Prevents unbounded memory growth
 - Auto-rotates oldest logs when max size reached
 
 ### Network Interface Enumeration
+
 - Efficient O(n) iteration through interfaces
 - Minimal overhead for typical server configurations
 - Caches results momentarily for same request
 
 ### Database Queries
+
 - Direct service method calls (no async wrappers needed)
 - Efficient filtering in-memory
 - Returns only requested fields
@@ -711,6 +806,7 @@ socket.on('*', (eventName, data) => {
 ## Code Statistics
 
 **File:** `src/services/web-dashboard.js`
+
 - **Lines Added:** 568
 - **Handlers Implemented:** 14 main events
 - **Methods Created:** 15 helper methods
@@ -719,9 +815,12 @@ socket.on('*', (eventName, data) => {
 
 ## Summary
 
-✅ All Socket.IO event handlers are now fully implemented and ready for production use. The backend can now serve real data to all 5 production dashboard pages. Frontend and backend are perfectly aligned with matching event names, request/response structures, and error handling patterns.
+✅ All Socket.IO event handlers are now fully implemented and ready for production use. The backend
+can now serve real data to all 5 production dashboard pages. Frontend and backend are perfectly
+aligned with matching event names, request/response structures, and error handling patterns.
 
 **Next Steps:**
+
 1. Test each page in browser with running bot
 2. Verify real data appears from each page
 3. Monitor logs for any Socket.IO errors

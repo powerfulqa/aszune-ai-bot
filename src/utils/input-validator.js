@@ -753,7 +753,7 @@ class InputValidator {
     if (!timeString || typeof timeString !== 'string') {
       return { valid: false, error: 'Time string is required' };
     }
-    
+
     if (timeString.length > 100) {
       return { valid: false, error: 'Time string is too long' };
     }
@@ -767,7 +767,7 @@ class InputValidator {
       /on\w+\s*=/gi,
     ];
 
-    if (dangerousPatterns.some(pattern => pattern.test(timeString))) {
+    if (dangerousPatterns.some((pattern) => pattern.test(timeString))) {
       return { valid: false, error: 'Time string contains unsafe content' };
     }
 
@@ -797,7 +797,7 @@ class InputValidator {
       /on\w+\s*=/gi,
     ];
 
-    if (dangerousPatterns.some(pattern => pattern.test(message))) {
+    if (dangerousPatterns.some((pattern) => pattern.test(message))) {
       return { valid: false, error: 'Message contains unsafe content' };
     }
 

@@ -2,7 +2,9 @@
 
 ## ✅ **SUCCESS (Maintained)**: Dual Threshold Enforcement Active (80% critical / 65% global)
 
-Initial request (v1.7.x) to enforce **≥80% coverage for critical files** remains in place. In **v1.8.0** we refined the strategy by introducing a **65% global baseline** to reduce unnecessary CI friction while preserving high confidence in core runtime paths.
+Initial request (v1.7.x) to enforce **≥80% coverage for critical files** remains in place. In
+**v1.8.0** we refined the strategy by introducing a **65% global baseline** to reduce unnecessary CI
+friction while preserving high confidence in core runtime paths.
 
 ## 🏗️ **System Components Created**
 
@@ -39,6 +41,7 @@ Initial request (v1.7.x) to enforce **≥80% coverage for critical files** remai
 - `src/utils/logger.js`: 97.14% statements ✅
 
 ### ⚠️ **Files Near / Slightly Below Threshold (Focus for v1.8.x):**
+
 - `src/services/chat.js`: 86.23% (now above threshold ✅)
 - `src/services/perplexity-secure.js`: 80.6% (meets threshold ✅)
 - `src/config/config.js`: 98.26% (well above threshold ✅)
@@ -84,6 +87,7 @@ npm run test:critical:ci
 ## 🎯 **Mission Accomplished**
 
 ### ✅ **Primary Objectives (Extended):**
+
 1. Maintain ≥80% for critical files (all green)
 2. Enforce sustainable ≥65% global baseline
 3. Preserve CI reliability (no false-negative builds from aspirational thresholds)
@@ -107,7 +111,9 @@ While the core requirement is met, you could further improve:
 
 ## 🎉 **Result (v1.8.0)**
 
-Critical coverage enforcement remains robust and now coexists with a pragmatic global baseline. The system offers **targeted protection** without impeding velocity, enabling focused test investment where it matters most.
+Critical coverage enforcement remains robust and now coexists with a pragmatic global baseline. The
+system offers **targeted protection** without impeding velocity, enabling focused test investment
+where it matters most.
 
 ---
 

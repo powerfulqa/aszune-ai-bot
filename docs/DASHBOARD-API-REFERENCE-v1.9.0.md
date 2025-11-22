@@ -10,7 +10,8 @@ http://localhost:3000/api
 
 ## Authentication
 
-All API endpoints are currently unauthenticated (local dashboard). For production deployments with remote access, implement authentication headers:
+All API endpoints are currently unauthenticated (local dashboard). For production deployments with
+remote access, implement authentication headers:
 
 ```
 Authorization: Bearer <token>
@@ -49,6 +50,7 @@ Error responses:
 Retrieve recent logs with optional filtering and search.
 
 **Query Parameters:**
+
 - `level` (string): Log level filter - ALL, DEBUG, INFO, WARN, ERROR (default: ALL)
 - `service` (string): Filter by service name
 - `search` (string): Full-text search query
@@ -143,6 +145,7 @@ Get status of all services.
 Get specific service details.
 
 **Parameters:**
+
 - `name` (string): Service name (perplexity, cache, database, reminders)
 
 **Example Request:**
@@ -157,6 +160,7 @@ Host: localhost:3000
 Start a stopped service.
 
 **Parameters:**
+
 - `name` (string): Service name
 
 **Request Body:** (empty)
@@ -220,6 +224,7 @@ Restart a service.
 Get current configuration.
 
 **Query Parameters:**
+
 - `section` (string): Optional - 'env' or 'config' (default: both)
 
 **Example Response:**
@@ -352,6 +357,7 @@ Restore from backup.
 Get configuration change history.
 
 **Query Parameters:**
+
 - `limit` (number): Max entries (default: 50)
 - `startDate` (ISO string): Start date
 - `endDate` (ISO string): End date
@@ -446,6 +452,7 @@ Get detailed connectivity test results.
 Get specific interface details.
 
 **Parameters:**
+
 - `name` (string): Interface name (eth0, wlan0, etc.)
 
 ### GET /network/ping/:host
@@ -453,6 +460,7 @@ Get specific interface details.
 Perform ping test.
 
 **Parameters:**
+
 - `host` (string): Host to ping
 
 **Response:**
@@ -505,6 +513,7 @@ Check DNS functionality.
 Get all reminders.
 
 **Query Parameters:**
+
 - `status` (string): Filter by status - active, paused, disabled
 - `type` (string): Filter by type - one-time, recurring
 - `limit` (number): Max entries (default: 50)
@@ -646,6 +655,7 @@ Resume reminder.
 Get reminder execution history.
 
 **Query Parameters:**
+
 - `limit` (number): Max entries (default: 50)
 
 ---
@@ -703,15 +713,15 @@ Real-time network updates (every 5 seconds).
 
 ## Error Codes
 
-| Code | HTTP | Description |
-|------|------|-------------|
-| SUCCESS | 200 | Request successful |
-| INVALID_REQUEST | 400 | Invalid request parameters |
-| UNAUTHORIZED | 401 | Authentication required |
-| FORBIDDEN | 403 | Insufficient permissions |
-| NOT_FOUND | 404 | Resource not found |
-| VALIDATION_ERROR | 422 | Validation failed |
-| INTERNAL_ERROR | 500 | Server error |
+| Code             | HTTP | Description                |
+| ---------------- | ---- | -------------------------- |
+| SUCCESS          | 200  | Request successful         |
+| INVALID_REQUEST  | 400  | Invalid request parameters |
+| UNAUTHORIZED     | 401  | Authentication required    |
+| FORBIDDEN        | 403  | Insufficient permissions   |
+| NOT_FOUND        | 404  | Resource not found         |
+| VALIDATION_ERROR | 422  | Validation failed          |
+| INTERNAL_ERROR   | 500  | Server error               |
 
 ---
 
@@ -744,7 +754,8 @@ curl -X POST http://localhost:3000/api/reminders \
 
 ### Using Postman
 
-1. Import the API collection from [dashboard/postman-collection.json](../dashboard/postman-collection.json)
+1. Import the API collection from
+   [dashboard/postman-collection.json](../dashboard/postman-collection.json)
 2. Set base URL: `http://localhost:3000/api`
 3. Run requests and review responses
 
@@ -763,8 +774,8 @@ const reminderResponse = await fetch('http://localhost:3000/api/reminders', {
   body: JSON.stringify({
     message: 'Test reminder',
     type: 'one-time',
-    scheduledTime: '2024-01-20T14:00:00Z'
-  })
+    scheduledTime: '2024-01-20T14:00:00Z',
+  }),
 });
 const reminderData = await reminderResponse.json();
 console.log(reminderData.data.reminder);

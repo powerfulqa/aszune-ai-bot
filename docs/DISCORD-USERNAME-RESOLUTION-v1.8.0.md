@@ -1,11 +1,16 @@
 # Discord Username Resolution Implementation - v1.8.0
 
 ## Overview
-Implemented real-time Discord username resolution for the dashboard leaderboard and database viewer. The system now automatically resolves Discord usernames from user IDs when database entries have null usernames, providing a much better user experience.
+
+Implemented real-time Discord username resolution for the dashboard leaderboard and database viewer.
+The system now automatically resolves Discord usernames from user IDs when database entries have
+null usernames, providing a much better user experience.
 
 ## Problem Statement
-Before: Dashboard leaderboard showed formatted user IDs (e.g., "User 8830592") for users without stored usernames
-After: Dashboard now displays actual Discord usernames automatically resolved from Discord API
+
+Before: Dashboard leaderboard showed formatted user IDs (e.g., "User 8830592") for users without
+stored usernames After: Dashboard now displays actual Discord usernames automatically resolved from
+Discord API
 
 ## Solution Architecture
 
@@ -14,14 +19,16 @@ After: Dashboard now displays actual Discord usernames automatically resolved fr
 #### 1. **WebDashboardService Enhancement** (`src/services/web-dashboard.js`)
 
 **New Properties:**
+
 - `this.discordClient` - Stores reference to Discord.js client instance
 - `this.usernameCache` - Map for caching resolved usernames (userId → username)
 
 **New Methods:**
 
 ```javascript
-setDiscordClient(client)
+setDiscordClient(client);
 ```
+
 - Sets the Discord client for username resolution
 - Called from src/index.js during bot startup
 - Enables real-time Discord API lookups
@@ -29,6 +36,7 @@ setDiscordClient(client)
 ```javascript
 async resolveDiscordUsername(userId)
 ```
+
 - Resolves Discord username from user ID
 - **Caching Strategy**: Checks cache first before API call
 - **Error Handling**: Gracefully returns null on failures
@@ -40,6 +48,7 @@ async resolveDiscordUsername(userId)
 ```javascript
 async getDatabaseTableContents(tableName, limit, offset)
 ```
+
 - Converted from Promise to async/await for cleaner code
 - **New Feature**: Enriches `user_stats` table results with resolved usernames
 - For each row in user_stats:
@@ -51,6 +60,7 @@ async getDatabaseTableContents(tableName, limit, offset)
 ### 2. **Bot Integration** (`src/index.js`)
 
 **Startup Sequence:**
+
 ```javascript
 const webDashboardService = require('./services/web-dashboard');
 await webDashboardService.start(3000);
@@ -65,6 +75,7 @@ logger.info('Web dashboard service initialized on port 3000');
 ### 3. **Frontend Leaderboard** (`dashboard/public/dashboard.js`)
 
 No changes needed! The frontend automatically benefits from username resolution:
+
 ```javascript
 // Leaderboard display (unchanged - works automatically with enriched data)
 let displayName = user.username;
@@ -101,18 +112,21 @@ if (!displayName || displayName.trim() === '') {
 ## Performance Optimizations
 
 ### 1. **Username Caching**
+
 - First lookup: Discord API call (~100-200ms)
 - Subsequent lookups: Cache hit (~1ms)
 - Reduces load on Discord API
 - Persists for service lifetime (cache cleared on restart)
 
 ### 2. **Lazy Resolution**
+
 - Only resolves usernames when accessed via API
 - Doesn't pre-populate all usernames on startup
 - Reduces initial startup time
 - Efficient for large user bases
 
 ### 3. **Graceful Degradation**
+
 - If Discord API fails → returns null username
 - Frontend falls back to formatted ID display
 - Never breaks dashboard or conversation flow
@@ -121,6 +135,7 @@ if (!displayName || displayName.trim() === '') {
 ## Testing Recommendations
 
 ### Manual Testing
+
 1. **Access Dashboard Database Viewer:**
    - Navigate to http://192.168.1.5:3000
    - Click on "Database" section
@@ -138,6 +153,7 @@ if (!displayName || displayName.trim() === '') {
    - Debug logs show cached vs new lookups
 
 ### Automated Testing
+
 - Existing tests still pass (backward compatible)
 - No breaking changes to existing APIs
 - New methods can be unit tested with mocked Discord client
@@ -145,6 +161,7 @@ if (!displayName || displayName.trim() === '') {
 ## Advantages of Discord.js Client vs discord.id API
 
 ### ✅ Discord.js Client (Implemented)
+
 - No external dependencies
 - Real-time lookups via `client.users.fetch(userId)`
 - No rate limits from third-party services
@@ -154,6 +171,7 @@ if (!displayName || displayName.trim() === '') {
 - Free to use
 
 ### ❌ discord.id API (Not recommended)
+
 - External third-party service dependency
 - Has rate limits
 - Adds latency to dashboard
@@ -164,20 +182,24 @@ if (!displayName || displayName.trim() === '') {
 ## Files Modified
 
 ### 1. `src/services/web-dashboard.js`
+
 - **Lines 11-12**: Added Discord client and cache properties
 - **Lines 120-127**: Added `setDiscordClient()` method
 - **Lines 128-164**: Added `resolveDiscordUsername()` method with caching
 - **Lines 945-1004**: Updated `getDatabaseTableContents()` with async/await and username enrichment
 
 ### 2. `src/index.js`
+
 - **Line 186**: Added `webDashboardService.setDiscordClient(client)`
 
 ### 3. `dashboard/public/dashboard.js`
+
 - No changes (automatically benefits from backend enrichment)
 
 ## Backward Compatibility
 
 ✅ **Fully backward compatible:**
+
 - If Discord client not available → works as before (shows "User XXXX")
 - If Discord API fails → falls back gracefully
 - Existing tests continue to pass
@@ -195,12 +217,14 @@ if (!displayName || displayName.trim() === '') {
 ## Deployment Notes
 
 ### Raspberry Pi Deployment
+
 1. Pull latest code: `git pull origin main`
 2. Restart bot: `systemctl restart aszune-ai-bot`
 3. Monitor logs: `journalctl -u aszune-ai-bot -f`
 4. Verify username resolution in dashboard
 
 ### Production Rollout
+
 - No database migrations required
 - No configuration changes needed
 - Automatic Discord client discovery
@@ -222,6 +246,7 @@ if (!displayName || displayName.trim() === '') {
 ## Success Metrics
 
 After deployment, you should see:
+
 1. **Dashboard Leaderboard**: Displays actual Discord usernames instead of "User XXXX"
 2. **Database Viewer**: Shows resolved usernames in user_stats table
 3. **Performance**: No noticeable slowdown (caching handles API calls)
@@ -231,6 +256,7 @@ After deployment, you should see:
 ## Summary
 
 This implementation provides a seamless username resolution system that:
+
 - ✅ Uses the existing Discord.js client (no external dependencies)
 - ✅ Implements efficient caching to minimize API calls
 - ✅ Gracefully handles failures without breaking functionality
@@ -238,4 +264,5 @@ This implementation provides a seamless username resolution system that:
 - ✅ Requires zero configuration
 - ✅ Works immediately after deployment
 
-The dashboard now provides a significantly better user experience with real Discord usernames displayed throughout the leaderboard and database viewer sections.
+The dashboard now provides a significantly better user experience with real Discord usernames
+displayed throughout the leaderboard and database viewer sections.

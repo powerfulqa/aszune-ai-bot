@@ -173,18 +173,18 @@ class Dashboard {
     );
 
     safeSetText('bot-uptime', data.uptime);
-    
+
     // Poll Discord status separately (not in main metrics)
     this.updateDiscordStatus();
   }
 
   updateDiscordStatus() {
     if (!this.socket) return;
-    
+
     this.socket.emit('request_discord_status', {}, (response) => {
       const statusEl = document.getElementById('discord-connection-status');
       const uptimeEl = document.getElementById('discord-uptime');
-      
+
       if (response && response.connected) {
         if (statusEl) statusEl.textContent = '✓ Connected';
         if (uptimeEl) uptimeEl.textContent = response.uptime || '-';
@@ -322,12 +322,26 @@ class Dashboard {
   }
 
   getStatusBadgeClass(status) {
-    if (!status || status === 'unknown') return 'acceptable';
+    const badgeMap = {
+      good: 'good',
+      optimal: 'good',
+      warning: 'acceptable',
+      acceptable: 'acceptable',
+      degraded: 'warning',
+      critical: 'critical',
+    };
+
+    if (!status || status === 'unknown') {
+      return 'acceptable';
+    }
+
     const statusLower = status.toLowerCase();
-    if (statusLower.includes('good') || statusLower.includes('optimal')) return 'good';
-    if (statusLower.includes('warning') || statusLower.includes('acceptable')) return 'acceptable';
-    if (statusLower.includes('degraded')) return 'warning';
-    if (statusLower.includes('critical')) return 'critical';
+    for (const [key, badge] of Object.entries(badgeMap)) {
+      if (statusLower.includes(key)) {
+        return badge;
+      }
+    }
+
     return 'acceptable';
   }
 
@@ -427,69 +441,90 @@ class Dashboard {
   renderDatabaseTable(tableData) {
     const viewer = document.getElementById('database-viewer');
     const info = document.getElementById('table-info');
-    if (!viewer) return; // Element doesn't exist on this page
+    if (!viewer) return;
 
-    if (!tableData.data || tableData.data.length === 0) {
-      viewer.innerHTML = '<div class="db-message">No data in this table</div>';
-      if (info) info.textContent = `${tableData.table}: 0 rows`;
+    if (!this._hasTableData(tableData)) {
+      this._renderEmptyTableMessage(viewer, info, tableData);
       return;
     }
 
     const columns = tableData.columns || Object.keys(tableData.data[0]);
-    const dateColumns = ['last_active', 'first_seen', 'timestamp', 'created_at', 'scheduled_time'];
+    const tableHtml = this._buildTableHtml(columns, tableData.data);
+    viewer.innerHTML = tableHtml;
+    this._updateTableInfo(info, tableData);
+  }
 
-    const tableHtml = `
-      <table class="database-table">
-        <thead>
-          <tr>
-            ${columns.map((col) => `<th>${col}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${tableData.data
+  _hasTableData(tableData) {
+    return tableData.data && tableData.data.length > 0;
+  }
+
+  _renderEmptyTableMessage(viewer, info, tableData) {
+    viewer.innerHTML = '<div class="db-message">No data in this table</div>';
+    if (info) info.textContent = `${tableData.table}: 0 rows`;
+  }
+
+  _buildTableHtml(columns, rows) {
+    const headerHtml = columns.map((col) => `<th>${col}</th>`).join('');
+    const bodyHtml = rows
+      .map(
+        (row) => `
+        <tr>
+          ${columns
             .map(
-              (row) => `
-            <tr>
-              ${columns
-                .map((col) => {
-                  let value = row[col];
-                  if (value === null || value === undefined) {
-                    value = '-';
-                  } else if (dateColumns.includes(col) && typeof value === 'string') {
-                    // Format ISO date strings to readable format
-                    try {
-                      const date = new Date(value);
-                      if (!isNaN(date.getTime())) {
-                        value = date.toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: true,
-                        });
-                      }
-                    } catch (e) {
-                      // If date parsing fails, keep original value
-                    }
-                  } else if (typeof value === 'string' && value.length > 100) {
-                    value = value.substring(0, 100) + '...';
-                  }
-                  return `<td>${this.escapeHtml(String(value))}</td>`;
-                })
-                .join('')}
-            </tr>
-          `
+              (col) =>
+                `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
             )
             .join('')}
-        </tbody>
+        </tr>
+      `
+      )
+      .join('');
+
+    return `
+      <table class="database-table">
+        <thead><tr>${headerHtml}</tr></thead>
+        <tbody>${bodyHtml}</tbody>
       </table>
     `;
+  }
 
-    viewer.innerHTML = tableHtml;
-    if (info)
+  _formatTableCell(value, columnName) {
+    const dateColumns = ['last_active', 'first_seen', 'timestamp', 'created_at', 'scheduled_time'];
+
+    if (value === null || value === undefined) {
+      return '-';
+    }
+
+    if (dateColumns.includes(columnName) && typeof value === 'string') {
+      try {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          });
+        }
+      } catch (e) {
+        // Keep original value if parsing fails
+      }
+    }
+
+    if (typeof value === 'string' && value.length > 100) {
+      return value.substring(0, 100) + '...';
+    }
+
+    return value;
+  }
+
+  _updateTableInfo(info, tableData) {
+    if (info) {
       info.textContent = `${tableData.table}: ${tableData.totalRows} rows (showing ${tableData.returnedRows})`;
+    }
   }
 
   filterDatabaseTable(searchTerm) {
@@ -564,7 +599,7 @@ class Dashboard {
     item.className = `activity-item fade-in status-${type}`;
 
     const timestamp = new Date().toLocaleTimeString();
-    
+
     if (preserveFormatting) {
       // For CLI output, preserve line breaks and use monospace font
       item.style.whiteSpace = 'pre-wrap';
@@ -591,67 +626,88 @@ class Dashboard {
       const leaderboardContainer = document.getElementById('leaderboard');
       if (!leaderboardContainer) return;
 
-      // Fetch users data to get usernames and message counts
+      const usersData = await this._fetchLeaderboardData();
+      if (!usersData) {
+        return;
+      }
+
+      const topUsers = this._getTopLeaderboardUsers(usersData.data);
+      if (topUsers.length === 0) {
+        this._renderEmptyLeaderboard(leaderboardContainer);
+        return;
+      }
+
+      if (!this._hasValidUsernames(topUsers)) {
+        this._renderDiscordNotConnectedMessage(leaderboardContainer);
+        return;
+      }
+
+      const leaderboardHtml = this._buildLeaderboardHtml(topUsers);
+      leaderboardContainer.innerHTML = leaderboardHtml;
+    } catch (error) {
+      console.error('Error updating leaderboard:', error);
+    }
+  }
+
+  async _fetchLeaderboardData() {
+    try {
       const response = await fetch('/api/database/user_stats?limit=1000&offset=0');
       if (!response.ok) {
         console.warn('Failed to fetch leaderboard data');
-        return;
+        return null;
       }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+      return null;
+    }
+  }
 
-      const usersData = await response.json();
-      if (!usersData.data || usersData.data.length === 0) {
-        leaderboardContainer.innerHTML =
-          '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
-        return;
-      }
+  _getTopLeaderboardUsers(usersData) {
+    if (!usersData || usersData.length === 0) {
+      return [];
+    }
+    return usersData.sort((a, b) => (b.message_count || 0) - (a.message_count || 0)).slice(0, 4);
+  }
 
-      // Sort users by message count descending and get top 4
-      const topUsers = usersData.data
-        .sort((a, b) => (b.message_count || 0) - (a.message_count || 0))
-        .slice(0, 4);
+  _hasValidUsernames(topUsers) {
+    return topUsers.some((user) => user.username && user.username.trim() !== '');
+  }
 
-      // Check if we have any valid usernames (Discord connected)
-      const hasValidUsernames = topUsers.some(user => user.username && user.username.trim() !== '');
-      
-      if (!hasValidUsernames) {
-        // Discord not connected - show friendly message
-        leaderboardContainer.innerHTML = `
-          <div style="padding: 15px; text-align: center; color: #999; font-size: 0.9rem;">
-            <div style="margin-bottom: 8px;">⚠️ Discord Not Connected</div>
-            <div style="font-size: 0.8rem;">Usernames will appear when Discord reconnects</div>
-          </div>
-        `;
-        return;
-      }
+  _renderEmptyLeaderboard(container) {
+    container.innerHTML =
+      '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
+  }
 
-      // Build leaderboard HTML
-      const leaderboardHtml = topUsers
-        .map((user, index) => {
-          const rank = index + 1;
-          const rankClass = rank <= 3 ? `rank-${rank}` : '';
+  _renderDiscordNotConnectedMessage(container) {
+    container.innerHTML = `
+      <div style="padding: 15px; text-align: center; color: #999; font-size: 0.9rem;">
+        <div style="margin-bottom: 8px;">⚠️ Discord Not Connected</div>
+        <div style="font-size: 0.8rem;">Usernames will appear when Discord reconnects</div>
+      </div>
+    `;
+  }
 
-          // Display username if available, otherwise skip (Discord disconnected)
-          let displayName = user.username;
-          if (!displayName || displayName.trim() === '') {
-            return ''; // Skip users without usernames when Discord is disconnected
-          }
+  _buildLeaderboardHtml(topUsers) {
+    return topUsers
+      .map((user, index) => {
+        const displayName = user.username?.trim();
+        if (!displayName) return '';
 
-          const interactionCount = user.message_count || 0;
+        const rank = index + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        const interactionCount = user.message_count || 0;
 
-          return `
+        return `
           <div class="leaderboard-row ${rankClass}">
             <span class="rank-badge">${rank}</span>
             <span class="user-name" title="ID: ${user.user_id}">${this.escapeHtml(displayName)}</span>
             <span class="user-count">${interactionCount}</span>
           </div>
         `;
-        })
-        .join('');
-
-      leaderboardContainer.innerHTML = leaderboardHtml;
-    } catch (error) {
-      console.error('Error updating leaderboard:', error);
-    }
+      })
+      .filter((html) => html !== '')
+      .join('');
   }
 
   async handleRestartClick() {

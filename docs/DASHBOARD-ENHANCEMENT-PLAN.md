@@ -2,13 +2,16 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive enhancement strategy for the Aszune AI Bot web dashboard to improve user experience, reduce information duplication, and provide better visibility into bot capabilities and system state.
+This document outlines a comprehensive enhancement strategy for the Aszune AI Bot web dashboard to
+improve user experience, reduce information duplication, and provide better visibility into bot
+capabilities and system state.
 
 ---
 
 ## Current State Analysis
 
 ### Existing Dashboard Components
+
 1. **System Status** - Uptime, memory, CPU, platform
 2. **Process Info** - PID, memory, heap, node version
 3. **Cache Performance** - Hit rate, requests, memory, entries
@@ -22,7 +25,9 @@ This document outlines a comprehensive enhancement strategy for the Aszune AI Bo
 ### Issues Identified
 
 #### 1. **Missing Slash Command Visibility**
+
 Current slash commands available but not clearly documented in dashboard:
+
 - `/analytics` - Discord server analytics
 - `/cache` - Cache statistics
 - `/dashboard` - Performance dashboard
@@ -33,7 +38,9 @@ Current slash commands available but not clearly documented in dashboard:
 **Problem**: Users don't see what commands are available or what each command does.
 
 #### 2. **Information Duplication**
+
 Multiple sections display overlapping data:
+
 - System metrics appear in both "System Status" and "Bot Activity"
 - Cache data could be deduplicated
 - Analytics and Resources sections have overlapping performance data
@@ -41,7 +48,9 @@ Multiple sections display overlapping data:
 **Problem**: Confusing data layout, unclear which section to reference.
 
 #### 3. **Unknown Values in Resource Section**
+
 Current output shows "UNKNOWN" for:
+
 - Memory status
 - Performance status
 - Response time
@@ -50,7 +59,9 @@ Current output shows "UNKNOWN" for:
 **Problem**: Poor UX - users don't know if system is healthy or not.
 
 #### 4. **No Version/Commit Information**
+
 Currently missing:
+
 - Git commit ID / short SHA
 - Tagged version (currently v1.8.0)
 - Hyperlinks to GitHub repository
@@ -58,7 +69,9 @@ Currently missing:
 **Problem**: Operators don't know which code version is deployed.
 
 #### 5. **No Recommendations Explanation**
+
 "System monitoring active" is vague and doesn't help users understand:
+
 - What optimization recommendations exist
 - How to interpret them
 - What actions to take
@@ -66,7 +79,9 @@ Currently missing:
 **Problem**: Recommendations section provides no actionable insights.
 
 #### 6. **No Database Visibility**
+
 Currently no way to view database contents in dashboard:
+
 - Users table (user_id, message_count, last_active, etc.)
 - Messages table (user_id, message_content, timestamp, etc.)
 - Reminders table (user_id, message, scheduled_time, status, etc.)
@@ -82,6 +97,7 @@ Currently no way to view database contents in dashboard:
 **Location**: Top of dashboard header
 
 **Components**:
+
 ```
 Version: v1.8.0 (Commit: ba6c9df)
   ↑ Clickable hyperlinks to:
@@ -90,11 +106,13 @@ Version: v1.8.0 (Commit: ba6c9df)
 ```
 
 **Implementation**:
+
 - Extract version from `package.json` version field
 - Get short commit SHA from git HEAD
 - Create clickable badge with links
 
 **Benefits**:
+
 - Quick deployment verification
 - Easy access to release notes and code changes
 - Compliance tracking for production deployments
@@ -104,6 +122,7 @@ Version: v1.8.0 (Commit: ba6c9df)
 **Location**: Below header, before metrics
 
 **Structure**: Grid of command cards with:
+
 ```
 ┌─ /analytics ─────────────────────┐
 │ Discord Server Analytics         │
@@ -155,6 +174,7 @@ Version: v1.8.0 (Commit: ba6c9df)
 ```
 
 **Benefits**:
+
 - Clear documentation of available commands
 - Easy command discovery
 - Quick reference for users
@@ -165,16 +185,19 @@ Version: v1.8.0 (Commit: ba6c9df)
 **Consolidation Strategy**:
 
 #### Tier 1: Core System Health (Always visible)
+
 - System Status (consolidated from System/Bot Activity)
 - Process Info
 - Connection Status
 
 #### Tier 2: Performance Metrics (Collapsible)
+
 - Cache Performance
 - Database Stats
 - Discord Analytics
 
 #### Tier 3: Resource & Optimization (Collapsible)
+
 - Resource Status (with real values instead of "unknown")
 - Performance Analysis
 - Recommendations (with actionable insights)
@@ -182,6 +205,7 @@ Version: v1.8.0 (Commit: ba6c9df)
 ### 4. Fix Unknown Values in Resource Section
 
 **Current Issue**:
+
 ```javascript
 {
   status: 'unknown',
@@ -194,6 +218,7 @@ Version: v1.8.0 (Commit: ba6c9df)
 **Solution**:
 
 #### Memory Status Logic
+
 ```javascript
 if (heapUsed / heapTotal > 0.9) return 'critical';
 if (heapUsed / heapTotal > 0.75) return 'warning';
@@ -202,6 +227,7 @@ return 'good';
 ```
 
 #### Performance Status Logic
+
 ```javascript
 if (avgResponseTime > 5000) return 'degraded';
 if (avgResponseTime > 2000) return 'acceptable';
@@ -209,12 +235,14 @@ return 'optimal';
 ```
 
 #### Response Time
+
 ```javascript
 recordResponseTime(startTime, endTime);
 return calculateMovingAverage(last10ResponseTimes);
 ```
 
 #### Load Indicator
+
 ```javascript
 const osLoadAverage = require('os').loadavg();
 const cpuCount = require('os').cpus().length;
@@ -232,31 +260,37 @@ return 'light';
 **Recommendation Categories**:
 
 #### Memory Optimization
+
 - "Memory usage is at 85%. Consider clearing cache entries."
 - "Heap fragmentation detected. Monitor for potential memory leaks."
 - "Memory stable at 45%. Current configuration optimal."
 
 #### Performance Optimization
+
 - "Average response time 3.2s exceeds target (< 2s). Check network or API latency."
 - "Response time improved from 4.1s to 2.8s. Current optimization tier: Standard."
 - "Consistent response time (1.2s average). Performance tier: Optimal."
 
 #### Database Optimization
+
 - "Database now contains 1,542 messages. Performance remains good."
 - "Active reminders: 127. Schedule background cleanup."
 - "Conversation history exceeds 10,000 entries. Consider archival."
 
 #### Bot Efficiency
+
 - "Cache hit rate 78% - excellent performance."
 - "Error rate increased to 3%. Investigate recent changes."
 - "Idle time: 12%. System resources underutilized."
 
 #### Discord Server Insights
+
 - "Active users decreased 15% from yesterday."
 - "Peak activity 8-10 PM. Scale resources accordingly."
 - "200+ members active. Current tier optimal."
 
 **Implementation Approach**:
+
 - Analyze current metrics against thresholds
 - Compare with historical data when available
 - Provide specific, actionable suggestions
@@ -267,6 +301,7 @@ return 'light';
 **Location**: Bottom of dashboard
 
 **Features**:
+
 ```
 ┌─ Database Contents (Read-Only) ──────────────────────┐
 │ Table: users [127 rows]                              │
@@ -301,6 +336,7 @@ return 'light';
 ```
 
 **Technical Requirements**:
+
 - Limited to 100 rows per table (pagination)
 - Scrollable within fixed height container
 - Search/filter capability
@@ -309,6 +345,7 @@ return 'light';
 - Shows row count per table
 
 **Security Considerations**:
+
 - No sensitive data exposure (passwords, tokens)
 - Display user_id instead of full user objects
 - Truncate long message content
@@ -318,13 +355,15 @@ return 'light';
 
 **Deliverable**: `dashboard/public/demo.html`
 
-**Purpose**: 
+**Purpose**:
+
 - Demonstrate new layout without running backend
 - Allow iteration and feedback
 - Test responsive design
 - Show stakeholders final appearance
 
 **Contains**:
+
 - Hardcoded sample data
 - All new sections functional
 - Version/commit with fake links (demo safe)
@@ -337,6 +376,7 @@ return 'light';
 ## Implementation Strategy
 
 ### Phase 1: Backend Enhancements
+
 1. Enhance `src/services/web-dashboard.js`:
    - Add version/commit info endpoint
    - Improve resource metric calculations
@@ -348,6 +388,7 @@ return 'light';
    - Store version from package.json
 
 ### Phase 2: Frontend Structure
+
 1. Update `dashboard/public/index.html`:
    - Add version/commit header
    - Add slash commands reference
@@ -368,12 +409,14 @@ return 'light';
    - Format version/commit links
 
 ### Phase 3: Testing
+
 1. Unit tests for recommendations engine
 2. Integration tests for database queries
 3. Frontend tests for data rendering
 4. Full test suite validation (npm test)
 
 ### Phase 4: Demo & Iteration
+
 1. Create standalone demo version
 2. Gather feedback
 3. Iterate on design
@@ -384,6 +427,7 @@ return 'light';
 ## Data Model: Recommendations Engine
 
 ### Input Metrics
+
 ```javascript
 {
   memory: { used, total, percentage, status },
@@ -396,6 +440,7 @@ return 'light';
 ```
 
 ### Output Format
+
 ```javascript
 [
   {
@@ -410,29 +455,30 @@ return 'light';
 ```
 
 ### Threshold Configuration
+
 ```javascript
 THRESHOLDS = {
   memory: {
-    critical: 90,  // %
+    critical: 90, // %
     warning: 75,
-    acceptable: 50
+    acceptable: 50,
   },
   responseTime: {
-    degraded: 5000,    // ms
+    degraded: 5000, // ms
     acceptable: 2000,
-    optimal: 1000
+    optimal: 1000,
   },
   cacheHitRate: {
-    poor: 50,  // %
+    poor: 50, // %
     acceptable: 70,
-    excellent: 85
+    excellent: 85,
   },
   errorRate: {
-    critical: 5,   // %
+    critical: 5, // %
     warning: 2,
-    acceptable: 0.5
-  }
-}
+    acceptable: 0.5,
+  },
+};
 ```
 
 ---
@@ -440,6 +486,7 @@ THRESHOLDS = {
 ## Success Criteria
 
 ### User Experience
+
 - ✅ All slash commands clearly documented
 - ✅ No "unknown" values in resource section
 - ✅ Version/commit visible and clickable
@@ -449,6 +496,7 @@ THRESHOLDS = {
 - ✅ Responsive design works on mobile
 
 ### Technical
+
 - ✅ All existing tests still pass (1,228+)
 - ✅ New tests added for dashboard features
 - ✅ Code quality maintained (complexity < 15)
@@ -457,6 +505,7 @@ THRESHOLDS = {
 - ✅ Performance: < 2s load time for all sections
 
 ### Deployment
+
 - ✅ Backward compatible with Discord bot
 - ✅ Demo version available for testing
 - ✅ Documentation updated
@@ -466,13 +515,13 @@ THRESHOLDS = {
 
 ## Timeline Estimate
 
-| Phase | Task | Estimate |
-|-------|------|----------|
-| 1 | Backend Enhancements | 2-3 hours |
-| 2 | Frontend Updates | 3-4 hours |
-| 3 | Testing | 1-2 hours |
-| 4 | Demo & Iteration | 1-2 hours |
-| **Total** | | **7-11 hours** |
+| Phase     | Task                 | Estimate       |
+| --------- | -------------------- | -------------- |
+| 1         | Backend Enhancements | 2-3 hours      |
+| 2         | Frontend Updates     | 3-4 hours      |
+| 3         | Testing              | 1-2 hours      |
+| 4         | Demo & Iteration     | 1-2 hours      |
+| **Total** |                      | **7-11 hours** |
 
 ---
 
@@ -494,4 +543,3 @@ THRESHOLDS = {
 3. **Parallel Testing**: Build tests while implementing
 4. **Demo Release**: Share demo version for feedback
 5. **Production Ready**: Final polish and deployment
-

@@ -2,7 +2,9 @@
 
 ## Overview
 
-The Aszune AI Bot Dashboard includes control buttons to restart the bot and pull the latest code changes directly from the web interface. This guide explains how to set them up on your Raspberry Pi 5 running DietPi.
+The Aszune AI Bot Dashboard includes control buttons to restart the bot and pull the latest code
+changes directly from the web interface. This guide explains how to set them up on your Raspberry Pi
+5 running DietPi.
 
 ## Prerequisites
 
@@ -21,6 +23,7 @@ systemctl list-units --type=service | grep aszune
 ```
 
 Common names:
+
 - `aszune-bot.service`
 - `aszune-ai-bot.service`
 - `bot.service`
@@ -41,7 +44,8 @@ SERVICE_NAME=aszune-bot
 
 ### Step 3: Configure Sudoers for Passwordless Systemctl (Recommended)
 
-For the restart button to work without requiring a password, configure sudoers to allow the bot process user to restart the service without a password.
+For the restart button to work without requiring a password, configure sudoers to allow the bot
+process user to restart the service without a password.
 
 ⚠️ **Only do this if the user running the bot is the same user running the web server.**
 
@@ -96,6 +100,7 @@ sudo chmod -R g+w /path/to/aszune-ai-bot
 **Error**: "Command failed" or "Permission denied"
 
 **Solutions**:
+
 1. Check if you configured sudoers correctly
 2. Verify the SERVICE_NAME matches your actual service name:
    ```bash
@@ -111,6 +116,7 @@ sudo chmod -R g+w /path/to/aszune-ai-bot
 **Error**: "Permission denied"
 
 **Solutions**:
+
 1. Check repo ownership:
    ```bash
    ls -ld /path/to/aszune-ai-bot
@@ -124,6 +130,7 @@ sudo chmod -R g+w /path/to/aszune-ai-bot
 **Error**: "fatal: not a git repository"
 
 **Solutions**:
+
 1. Verify .git exists:
    ```bash
    ls -la /path/to/aszune-ai-bot/.git
@@ -140,6 +147,7 @@ sudo chmod -R g+w /path/to/aszune-ai-bot
 If git pull prompts for credentials:
 
 **Solution 1: Use SSH keys (recommended)**
+
 ```bash
 # Generate SSH key if you don't have one
 ssh-keygen -t ed25519 -C "your-email@example.com"
@@ -153,6 +161,7 @@ git remote set-url origin git@github.com:powerfulqa/aszune-ai-bot.git
 ```
 
 **Solution 2: Use GitHub Personal Access Token**
+
 ```bash
 # Create a token at https://github.com/settings/tokens
 # Use it as password when git prompts
@@ -166,6 +175,7 @@ git config --global credential.helper store
 **Issue**: Control buttons don't appear in the header
 
 **Solutions**:
+
 1. Clear browser cache (Ctrl+Shift+Delete)
 2. Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
 3. Check browser console for JavaScript errors (F12)
@@ -218,11 +228,13 @@ botuser ALL=(ALL) NOPASSWD: /bin/systemctl restart my-custom-bot-service
 To pull from a different branch, modify the backend code in `src/services/web-dashboard.js`:
 
 Find this line:
+
 ```javascript
 await execPromise('git pull origin main', {
 ```
 
 Change `main` to your branch name:
+
 ```javascript
 await execPromise('git pull origin develop', {
 ```
@@ -238,6 +250,7 @@ await execPromise('git pull origin develop', {
 If you encounter issues:
 
 1. Check the bot's system logs:
+
    ```bash
    journalctl -u aszune-bot -n 50 -f
    ```
@@ -248,5 +261,4 @@ If you encounter issues:
 
 ---
 
-**Last Updated**: November 14, 2025
-**Version**: v1.8.0
+**Last Updated**: November 14, 2025 **Version**: v1.8.0

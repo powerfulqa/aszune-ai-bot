@@ -173,7 +173,9 @@ describe('index.js - Critical Coverage Enhancement', () => {
 
     it('should handle ready event and register slash commands', async () => {
       // Verify that ready event handler was registered
-      const readyHandlers = mockClient.once.mock.calls.filter((call) => call[0] === 'clientReady' || call[0] === 'ready');
+      const readyHandlers = mockClient.once.mock.calls.filter(
+        (call) => call[0] === 'clientReady' || call[0] === 'ready'
+      );
       expect(readyHandlers.length).toBeGreaterThan(0);
 
       // Verify REST mock has put method available
@@ -185,7 +187,9 @@ describe('index.js - Critical Coverage Enhancement', () => {
       mockRest.put.mockRejectedValueOnce(new Error('Registration failed'));
 
       // Verify the handler was registered - it will log errors internally
-      const readyHandlers = mockClient.once.mock.calls.filter((call) => call[0] === 'clientReady' || call[0] === 'ready');
+      const readyHandlers = mockClient.once.mock.calls.filter(
+        (call) => call[0] === 'clientReady' || call[0] === 'ready'
+      );
       expect(readyHandlers.length).toBeGreaterThan(0);
     });
 

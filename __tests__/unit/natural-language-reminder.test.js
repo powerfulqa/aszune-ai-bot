@@ -119,7 +119,7 @@ describe('Natural Language Reminder Processor', () => {
     });
 
     test('should handle responses without dates', () => {
-      const response = 'I don\'t have information about release dates for that product.';
+      const response = "I don't have information about release dates for that product.";
 
       const dates = naturalLanguageReminderProcessor.extractDatesFromResponse(response);
 
@@ -155,7 +155,7 @@ describe('Natural Language Reminder Processor', () => {
       mockPerplexityService.generateChatResponse = jest
         .fn()
         .mockResolvedValue(
-          'I don\'t have specific information about the release date for this unknown product.'
+          "I don't have specific information about the release date for this unknown product."
         );
 
       const requestData = {

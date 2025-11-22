@@ -21,14 +21,14 @@ These reflect the latest full `npm run quality:check` execution on the `main` br
 
 ## Lowest Coverage Hotspots (Prioritized)
 
-| Module / Area                          | Statements | Branches | Notes |
-| -------------------------------------- | ---------- | -------- | ----- |
-| `utils/enhanced-conversation-context`  | 0%         | 0%       | Legacy/unused? Confirm usage before investing tests |
-| `utils/license-server`                 | 0%         | 0%       | Feature-flagged; add smoke tests only if enabling soon |
-| `utils/license-validator`              | 0%         | 0%       | Same as above |
-| `services/reminder-service`            | 20.56%     | 75%      | Add lifecycle + edge timing tests |
-| `services/cache-manager`               | 58.22%     | 69.23%   | Exercise eviction paths + error fallbacks |
-| `utils/time-parser`                    | 39.8%      | 50%      | Complex natural language branches untested |
+| Module / Area                         | Statements | Branches | Notes                                                  |
+| ------------------------------------- | ---------- | -------- | ------------------------------------------------------ |
+| `utils/enhanced-conversation-context` | 0%         | 0%       | Legacy/unused? Confirm usage before investing tests    |
+| `utils/license-server`                | 0%         | 0%       | Feature-flagged; add smoke tests only if enabling soon |
+| `utils/license-validator`             | 0%         | 0%       | Same as above                                          |
+| `services/reminder-service`           | 20.56%     | 75%      | Add lifecycle + edge timing tests                      |
+| `services/cache-manager`              | 58.22%     | 69.23%   | Exercise eviction paths + error fallbacks              |
+| `utils/time-parser`                   | 39.8%      | 50%      | Complex natural language branches untested             |
 
 ## Recommended Next Increments (v1.8.0 Roadmap)
 
@@ -42,7 +42,8 @@ These reflect the latest full `npm run quality:check` execution on the `main` br
    - Error handling fallbacks returning safe stats
 3. Add minimal contract tests for license modules (only if feature-flag activation planned)
 4. Create parsing matrix tests for `time-parser` (relative, absolute, malformed, DST boundary)
-5. Assess `enhanced-conversation-context` for deprecation vs. revitalization—either remove (and document) or wrap with smoke tests.
+5. Assess `enhanced-conversation-context` for deprecation vs. revitalization—either remove (and
+   document) or wrap with smoke tests.
 
 ## Update Procedure
 
@@ -65,20 +66,21 @@ Keep rounding consistent: two significant figures (e.g., 72.6%, 67.1%).
 
 ## Communication Pattern
 
-- All other README / wiki files should reference this file instead of embedding raw percentages when referring to "current" status.
+- All other README / wiki files should reference this file instead of embedding raw percentages when
+  referring to "current" status.
 - Historical release notes should remain unchanged to preserve accuracy at time of release.
 
 ## Acceptance Thresholds (v1.8.0 Policy)
 
-| Tier                | Statements | Branches | Action |
-| ------------------- | ---------- | -------- | ------ |
-| Critical Gate       | ≥80%       | n/a*     | Enforced per critical file config |
-| Current Global      | ≥65%       | n/a*     | Baseline satisfied; pursue focused uplifts |
-| Next Target Range   | 72–74%     | 70%+     | Add tests for cache-manager, reminder-service, time-parser |
-| Strategic Uplift    | 78–82%     | 72%+     | Consider raising global threshold post stability |
-| Regressing          | <65%       | <60%     | Investigate immediately; potential CI fail condition |
+| Tier              | Statements | Branches | Action                                                     |
+| ----------------- | ---------- | -------- | ---------------------------------------------------------- |
+| Critical Gate     | ≥80%       | n/a\*    | Enforced per critical file config                          |
+| Current Global    | ≥65%       | n/a\*    | Baseline satisfied; pursue focused uplifts                 |
+| Next Target Range | 72–74%     | 70%+     | Add tests for cache-manager, reminder-service, time-parser |
+| Strategic Uplift  | 78–82%     | 72%+     | Consider raising global threshold post stability           |
+| Regressing        | <65%       | <60%     | Investigate immediately; potential CI fail condition       |
 
-* Branch coverage monitored (reporting only) until statement/line stability increases.
+- Branch coverage monitored (reporting only) until statement/line stability increases.
 
 ## Test Suite Composition Snapshot
 
@@ -97,7 +99,9 @@ No current flakes detected in last run (0 retries, no transient failures). If fl
 
 ## License & Feature Flags Note
 
-The 0% license-related module coverage is acceptable while license enforcement remains disabled by default. Before enabling any license feature flags in production, raise those modules to at least minimal (≥50%) statement coverage with:
+The 0% license-related module coverage is acceptable while license enforcement remains disabled by
+default. Before enabling any license feature flags in production, raise those modules to at least
+minimal (≥50%) statement coverage with:
 
 - Validation path test (valid key)
 - Failure path test (invalid key)
@@ -105,13 +109,19 @@ The 0% license-related module coverage is acceptable while license enforcement r
 
 ## FAQ
 
-**Why dual thresholds?** Prevents brittle CI failures while guaranteeing high confidence in core runtime paths.
+**Why dual thresholds?** Prevents brittle CI failures while guaranteeing high confidence in core
+runtime paths.
 
-**Why not immediately restore to 82%?** Large new domains (DB + reminders) expanded faster than test authoring; sustainable uplift avoids churn.
+**Why not immediately restore to 82%?** Large new domains (DB + reminders) expanded faster than test
+authoring; sustainable uplift avoids churn.
 
-**Why keep historical claims in old release notes?** They reflect accurate state at publication time and support traceability.
+**Why keep historical claims in old release notes?** They reflect accurate state at publication time
+and support traceability.
 
-**Can we raise branches without full statements first?** Yes—target conditional-heavy utilities (`time-parser`, `cache-manager`) for efficient branch gains; branch uplift precedes future global threshold increases.
+**Can we raise branches without full statements first?** Yes—target conditional-heavy utilities
+(`time-parser`, `cache-manager`) for efficient branch gains; branch uplift precedes future global
+threshold increases.
 
 ---
+
 Canonical coverage reference ends here.

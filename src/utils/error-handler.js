@@ -133,7 +133,7 @@ class ErrorHandler {
     // Check if the error message itself is user-friendly (contains helpful instructions)
     const errorMessage = originalError?.message || '';
     const lowerMessage = errorMessage.toLowerCase();
-    
+
     // If error contains specific user instructions, use it directly
     if (
       lowerMessage.includes('try ') ||

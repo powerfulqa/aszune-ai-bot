@@ -4,12 +4,16 @@
 
 ## Overview
 
-The Network & Connectivity Status dashboard provides comprehensive monitoring of network interfaces, internet connectivity, and connection quality. Ideal for Raspberry Pi deployments and remote systems where network reliability is critical.
+The Network & Connectivity Status dashboard provides comprehensive monitoring of network interfaces,
+internet connectivity, and connection quality. Ideal for Raspberry Pi deployments and remote systems
+where network reliability is critical.
 
 ## Features
 
 ### Core Capabilities
-- **Interface Monitoring:** Real-time IP addresses and status for all network interfaces (Ethernet, WiFi, etc.)
+
+- **Interface Monitoring:** Real-time IP addresses and status for all network interfaces (Ethernet,
+  WiFi, etc.)
 - **Public IP Detection:** Automatic detection and display of public-facing IP address
 - **Connectivity Checks:** Ping tests to multiple endpoints for reliable internet detection
 - **Connection Quality:** Latency measurements and signal strength metrics
@@ -24,6 +28,7 @@ The Network & Connectivity Status dashboard provides comprehensive monitoring of
 ### Network Interfaces
 
 #### Ethernet Interface (eth0)
+
 ```
 Display:
 - Interface name: eth0
@@ -37,6 +42,7 @@ Display:
 ```
 
 #### WiFi Interface (wlan0)
+
 ```
 Display:
 - Interface name: wlan0
@@ -53,6 +59,7 @@ Display:
 ### Connectivity Detection
 
 #### Internet Connectivity
+
 ```
 Tests connectivity to:
 1. Google Public DNS (8.8.8.8)
@@ -67,6 +74,7 @@ Status indicators:
 ```
 
 #### Public IP Detection
+
 ```
 Retrieves and displays:
 - Public IPv4 address
@@ -79,6 +87,7 @@ Retrieves and displays:
 ### Quality Metrics
 
 #### Latency (Ping)
+
 ```
 Measures round-trip time to:
 - Google DNS: ~15ms (excellent)
@@ -94,6 +103,7 @@ Color coding:
 ```
 
 #### Packet Loss
+
 ```
 Shows packet loss percentage:
 - 0%: No loss (excellent)
@@ -103,6 +113,7 @@ Shows packet loss percentage:
 ```
 
 #### Signal Strength (WiFi)
+
 ```
 For WiFi interfaces only:
 - -30 dBm: Excellent
@@ -115,6 +126,7 @@ For WiFi interfaces only:
 ## Usage Guide
 
 ### Accessing Network Dashboard
+
 1. Start the bot: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Network & Connectivity Status** or navigate to `/network`
@@ -122,6 +134,7 @@ For WiFi interfaces only:
 ### Monitoring Network Health
 
 #### Daily Health Checks
+
 ```
 Each morning verify:
 1. All interfaces show UP status
@@ -144,6 +157,7 @@ Slow bot performance may indicate:
 ```
 
 #### WiFi Optimization
+
 ```
 If WiFi connection is weak:
 1. Check signal strength in dB (aim for > -60dBm)
@@ -156,6 +170,7 @@ If WiFi connection is weak:
 ### Bandwidth Analysis
 
 #### Monitor Throughput
+
 ```
 1. View RX Bytes: Data received
 2. View TX Bytes: Data transmitted
@@ -165,6 +180,7 @@ If WiFi connection is weak:
 ```
 
 #### Historical Trends
+
 ```
 1. Check 24-hour graph
 2. Identify peak usage times
@@ -178,11 +194,13 @@ If WiFi connection is weak:
 ### REST Endpoints
 
 #### Get Network Status
+
 ```http
 GET /api/network/status
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -221,11 +239,13 @@ GET /api/network/status
 ```
 
 #### Get Connectivity Details
+
 ```http
 GET /api/network/connectivity
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -258,11 +278,13 @@ GET /api/network/connectivity
 ```
 
 #### Get Interface Details
+
 ```http
 GET /api/network/interfaces/:name
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -294,11 +316,13 @@ GET /api/network/interfaces/:name
 ```
 
 #### Get Ping Statistics
+
 ```http
 GET /api/network/ping/:host
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -316,19 +340,18 @@ GET /api/network/ping/:host
 ```
 
 #### Get DNS Status
+
 ```http
 GET /api/network/dns
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "dns": {
-    "servers": [
-      "8.8.8.8",
-      "1.1.1.1"
-    ],
+    "servers": ["8.8.8.8", "1.1.1.1"],
     "tests": [
       {
         "domain": "google.com",
@@ -346,6 +369,7 @@ GET /api/network/dns
 **Endpoint:** `ws://localhost:3000/ws/network`
 
 **Real-Time Updates:**
+
 ```javascript
 // Server sends network updates every 5 seconds
 {
@@ -366,6 +390,7 @@ GET /api/network/dns
 ## Network Troubleshooting
 
 ### No Internet Connectivity
+
 ```
 Steps to diagnose:
 1. Check interfaces show UP status
@@ -378,6 +403,7 @@ Steps to diagnose:
 ```
 
 ### High Latency
+
 ```
 If latency > 200ms:
 1. Check number of hops to target (tracert/traceroute)
@@ -390,6 +416,7 @@ If latency > 200ms:
 ```
 
 ### Packet Loss
+
 ```
 If packet loss > 1%:
 1. Test from different host to isolate
@@ -402,6 +429,7 @@ If packet loss > 1%:
 ```
 
 ### DNS Resolution Failure
+
 ```
 If DNS tests fail:
 1. Verify DNS servers configured
@@ -413,6 +441,7 @@ If DNS tests fail:
 ```
 
 ### WiFi Connection Issues
+
 ```
 If WiFi signal is weak:
 1. Check signal strength (aim for > -60 dBm)
@@ -427,6 +456,7 @@ If WiFi signal is weak:
 ## Integration Examples
 
 ### Monitor Raspberry Pi Network
+
 ```
 1. Daily check at 8am
 2. Verify eth0 or wlan0 UP
@@ -437,6 +467,7 @@ If WiFi signal is weak:
 ```
 
 ### Diagnose Slow Bot
+
 ```
 1. Check Perplexity API latency
 2. Verify no packet loss to API
@@ -447,6 +478,7 @@ If WiFi signal is weak:
 ```
 
 ### Network Performance Trending
+
 ```
 1. Track daily latency average
 2. Record WiFi signal strength
@@ -461,6 +493,7 @@ If WiFi signal is weak:
 **File:** `src/services/web-dashboard.js`
 
 **Key Methods:**
+
 - `setupNetworkRoutes()` - Initialize network endpoints
 - `getNetworkInterfaces()` - Query all network interfaces
 - `checkConnectivity()` - Test endpoint reachability
@@ -470,6 +503,7 @@ If WiFi signal is weak:
 - `getDnsStatus()` - Verify DNS functionality
 
 **Configuration:**
+
 ```javascript
 NETWORK: {
   CHECK_INTERVAL: 30000, // 30 seconds
@@ -487,6 +521,7 @@ NETWORK: {
 ## Performance Optimization
 
 ### WiFi Tips for Raspberry Pi
+
 ```
 1. Use 5GHz band if available (less interference)
 2. Position antenna at right angles (try multiple orientations)
@@ -496,6 +531,7 @@ NETWORK: {
 ```
 
 ### Network Tuning
+
 ```
 Increase buffer sizes:
 - net.core.rmem_max = 134217728
@@ -511,6 +547,7 @@ Increase connection backlog:
 ## Advanced Topics
 
 ### Bandwidth Shaping
+
 ```javascript
 // Limit bot traffic to prevent network saturation
 BANDWIDTH_LIMITS: {
@@ -521,6 +558,7 @@ BANDWIDTH_LIMITS: {
 ```
 
 ### Route Monitoring
+
 ```bash
 # View default route
 ip route show
@@ -539,6 +577,8 @@ ip route add 8.8.8.8 via 192.168.1.1 dev eth0
 
 ## Demo
 
-Interactive demo available: [`network-status-demo.html`](../dashboard/public/network-status-demo.html)
+Interactive demo available:
+[`network-status-demo.html`](../dashboard/public/network-status-demo.html)
 
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Network & Connectivity Status"
+Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Network &
+Connectivity Status"

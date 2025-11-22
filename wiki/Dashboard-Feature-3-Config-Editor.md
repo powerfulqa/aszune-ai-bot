@@ -4,11 +4,14 @@
 
 ## Overview
 
-The Configuration Editor provides a safe, validated interface for editing bot configuration without requiring terminal access or bot restarts. Changes are validated, backed up automatically, and logged for audit trails.
+The Configuration Editor provides a safe, validated interface for editing bot configuration without
+requiring terminal access or bot restarts. Changes are validated, backed up automatically, and
+logged for audit trails.
 
 ## Features
 
 ### Core Capabilities
+
 - **File-Based Editing:** Edit `.env` environment variables and `config.js` settings
 - **Pre-Submission Validation:** Catches errors before saving to prevent misconfiguration
 - **Automatic Backups:** Creates timestamped backups before each save
@@ -24,6 +27,7 @@ The Configuration Editor provides a safe, validated interface for editing bot co
 ### Configuration Types
 
 #### Environment Variables (.env)
+
 ```
 Discord Bot Token: DISCORD_BOT_TOKEN=xxx
 Perplexity API Key: PERPLEXITY_API_KEY=xxx
@@ -34,30 +38,32 @@ Debug Mode: DEBUG=true|false
 ```
 
 #### Configuration Settings (config.js)
+
 ```javascript
 // API endpoints
-API.PERPLEXITY.BASE_URL
-API.PERPLEXITY.DEFAULT_MODEL
+API.PERPLEXITY.BASE_URL;
+API.PERPLEXITY.DEFAULT_MODEL;
 
 // Cache settings
-CACHE.MAX_SIZE
-CACHE.TTL
-CACHE.EVICTION_STRATEGY
+CACHE.MAX_SIZE;
+CACHE.TTL;
+CACHE.EVICTION_STRATEGY;
 
 // Performance tuning
-PERFORMANCE.TIMEOUT
-PERFORMANCE.MAX_RETRIES
-PERFORMANCE.THROTTLE_RATE
+PERFORMANCE.TIMEOUT;
+PERFORMANCE.MAX_RETRIES;
+PERFORMANCE.THROTTLE_RATE;
 
 // Feature flags
-FEATURES.LICENSE_VALIDATION
-FEATURES.LICENSE_SERVER
-FEATURES.LICENSE_ENFORCEMENT
+FEATURES.LICENSE_VALIDATION;
+FEATURES.LICENSE_SERVER;
+FEATURES.LICENSE_ENFORCEMENT;
 ```
 
 ### Validation System
 
 #### Pre-Save Validation
+
 ```
 Before allowing save, editor verifies:
 1. Required fields are populated
@@ -68,6 +74,7 @@ Before allowing save, editor verifies:
 ```
 
 #### Format Validation
+
 ```
 Validates data types:
 - Strings: Non-empty, max length
@@ -81,6 +88,7 @@ Validates data types:
 ### Backup System
 
 #### Automatic Backups
+
 ```
 Before each save:
 1. Current config copied to .backup directory
@@ -90,6 +98,7 @@ Before each save:
 ```
 
 #### Manual Restore
+
 ```
 To restore previous configuration:
 1. Click "Backups" button
@@ -102,6 +111,7 @@ To restore previous configuration:
 ## Usage Guide
 
 ### Accessing Configuration Editor
+
 1. Start the bot: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Configuration Editor** or navigate to `/config`
@@ -110,6 +120,7 @@ To restore previous configuration:
 ### Editing Environment Variables
 
 #### Basic Steps
+
 ```
 1. Click ".env Settings" tab
 2. Locate desired variable in list
@@ -120,6 +131,7 @@ To restore previous configuration:
 ```
 
 #### Example: Updating API Key
+
 ```
 Current: PERPLEXITY_API_KEY=old_key_xxx
 New: PERPLEXITY_API_KEY=new_key_yyy
@@ -133,6 +145,7 @@ New: PERPLEXITY_API_KEY=new_key_yyy
 ```
 
 #### Example: Enabling Debug Mode
+
 ```
 Current: DEBUG=false
 New: DEBUG=true
@@ -147,6 +160,7 @@ New: DEBUG=true
 ### Editing Application Configuration
 
 #### Via Web Interface
+
 ```
 1. Click "config.js Settings" tab
 2. Browse configuration options organized by section
@@ -156,6 +170,7 @@ New: DEBUG=true
 ```
 
 #### Configuration Sections
+
 ```
 API Settings
 ├── Perplexity Base URL
@@ -181,6 +196,7 @@ Feature Flags
 ### Viewing Change History
 
 #### Access Change Log
+
 ```
 1. Click "Change History" tab
 2. View all recent configuration changes
@@ -190,6 +206,7 @@ Feature Flags
 ```
 
 #### Change Log Entry
+
 ```
 Timestamp: 2024-01-15T10:35:00Z
 User: admin
@@ -203,6 +220,7 @@ Status: Success
 ### Reverting Changes
 
 #### Quick Revert
+
 ```
 1. In Change History, find desired change
 2. Click "Revert" button
@@ -212,6 +230,7 @@ Status: Success
 ```
 
 #### Restore from Backup
+
 ```
 1. Click "Backups" tab
 2. Browse available backup dates/times
@@ -226,11 +245,13 @@ Status: Success
 ### REST Endpoints
 
 #### Get Current Configuration
+
 ```http
 GET /api/config
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -255,6 +276,7 @@ GET /api/config
 ```
 
 #### Update Configuration
+
 ```http
 POST /api/config
 Content-Type: application/json
@@ -267,6 +289,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -283,6 +306,7 @@ Content-Type: application/json
 ```
 
 #### Validate Configuration
+
 ```http
 POST /api/config/validate
 Content-Type: application/json
@@ -295,6 +319,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "valid": true,
@@ -305,11 +330,13 @@ Content-Type: application/json
 ```
 
 #### Get Backups
+
 ```http
 GET /api/config/backups
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -330,6 +357,7 @@ GET /api/config/backups
 ```
 
 #### Restore from Backup
+
 ```http
 POST /api/config/restore
 Content-Type: application/json
@@ -340,20 +368,25 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "message": "Configuration restored successfully",
-  "config": { /* restored configuration */ }
+  "config": {
+    /* restored configuration */
+  }
 }
 ```
 
 #### Get Change History
+
 ```http
 GET /api/config/history?limit=50&startDate=2024-01-14&endDate=2024-01-15
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -376,26 +409,27 @@ GET /api/config/history?limit=50&startDate=2024-01-14&endDate=2024-01-15
 
 ### Environment Variables
 
-| Variable | Type | Validation | Example |
-|----------|------|-----------|---------|
-| DISCORD_BOT_TOKEN | String | Non-empty, 59 chars | `MjA4NDI5...` |
-| PERPLEXITY_API_KEY | String | Non-empty, 32+ chars | `ppl_xxx...` |
-| PORT | Number | 1024-65535 | `3000` |
-| DEBUG | Boolean | true/false | `true` |
-| DB_PATH | String | Valid path, writable | `./data/bot.db` |
+| Variable           | Type    | Validation           | Example         |
+| ------------------ | ------- | -------------------- | --------------- |
+| DISCORD_BOT_TOKEN  | String  | Non-empty, 59 chars  | `MjA4NDI5...`   |
+| PERPLEXITY_API_KEY | String  | Non-empty, 32+ chars | `ppl_xxx...`    |
+| PORT               | Number  | 1024-65535           | `3000`          |
+| DEBUG              | Boolean | true/false           | `true`          |
+| DB_PATH            | String  | Valid path, writable | `./data/bot.db` |
 
 ### Configuration Settings
 
-| Setting | Type | Constraints | Default |
-|---------|------|------------|---------|
-| CACHE.MAX_SIZE | Number | 10-1024 MB | 512 |
-| CACHE.TTL | Number | 300-86400 sec | 3600 |
-| API.TIMEOUT | Number | 1000-30000 ms | 5000 |
-| FEATURES.LICENSE_VALIDATION | Boolean | true/false | false |
+| Setting                     | Type    | Constraints   | Default |
+| --------------------------- | ------- | ------------- | ------- |
+| CACHE.MAX_SIZE              | Number  | 10-1024 MB    | 512     |
+| CACHE.TTL                   | Number  | 300-86400 sec | 3600    |
+| API.TIMEOUT                 | Number  | 1000-30000 ms | 5000    |
+| FEATURES.LICENSE_VALIDATION | Boolean | true/false    | false   |
 
 ## Troubleshooting
 
 ### Validation Error on Save
+
 ```
 Error: "PERPLEXITY_API_KEY must be at least 32 characters"
 
@@ -407,6 +441,7 @@ Solution:
 ```
 
 ### Can't Find Configuration Option
+
 ```
 Option not listed in editor:
 
@@ -417,6 +452,7 @@ Option not listed in editor:
 ```
 
 ### Backup File Not Found
+
 ```
 Error: "Backup from specified timestamp not found"
 
@@ -428,6 +464,7 @@ Solution:
 ```
 
 ### Changes Not Taking Effect
+
 ```
 If configuration change doesn't apply:
 
@@ -451,6 +488,7 @@ If configuration change doesn't apply:
 ## Integration Examples
 
 ### Update API Key
+
 ```
 1. Receive new Perplexity API key
 2. Open Configuration Editor
@@ -461,6 +499,7 @@ If configuration change doesn't apply:
 ```
 
 ### Enable Debug Mode
+
 ```
 1. Troubleshooting performance issue
 2. Open Configuration Editor
@@ -472,6 +511,7 @@ If configuration change doesn't apply:
 ```
 
 ### Adjust Cache Settings
+
 ```
 1. Monitor cache hit rates
 2. Identify that cache is too small
@@ -487,6 +527,7 @@ If configuration change doesn't apply:
 **File:** `src/services/web-dashboard.js`
 
 **Key Methods:**
+
 - `setupConfigEditorRoutes()` - Initialize config editing endpoints
 - `getConfiguration()` - Read current config from files
 - `validateConfiguration()` - Pre-save validation
@@ -496,6 +537,7 @@ If configuration change doesn't apply:
 - `getChangeHistory()` - Query change audit log
 
 **Configuration:**
+
 ```javascript
 CONFIG_EDITOR: {
   BACKUP_DIR: './.backup',
@@ -509,6 +551,7 @@ CONFIG_EDITOR: {
 ## Advanced Topics
 
 ### Custom Validation Rules
+
 ```javascript
 // Add validation for custom fields
 VALIDATION_RULES: {
@@ -523,6 +566,7 @@ VALIDATION_RULES: {
 ```
 
 ### Backup Encryption
+
 ```javascript
 // Enable backup encryption (optional)
 BACKUP_ENCRYPTION: {
@@ -544,4 +588,5 @@ BACKUP_ENCRYPTION: {
 
 Interactive demo available: [`config-editor-demo.html`](../dashboard/public/config-editor-demo.html)
 
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Configuration Editor"
+Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Configuration
+Editor"

@@ -37,18 +37,18 @@ async function handleReminderSubcommands(message, args) {
   const subcommand = args[0]?.toLowerCase();
 
   switch (subcommand) {
-  case 'set':
-  case 'create':
-    return await handleSetReminder(message, args.slice(1));
-  case 'list':
-  case 'show':
-    return await handleListReminders(message);
-  case 'cancel':
-  case 'delete':
-    return await handleCancelReminder(message, args.slice(1));
-  case 'help':
-  default:
-    return await handleReminderHelp(message);
+    case 'set':
+    case 'create':
+      return await handleSetReminder(message, args.slice(1));
+    case 'list':
+    case 'show':
+      return await handleListReminders(message);
+    case 'cancel':
+    case 'delete':
+      return await handleCancelReminder(message, args.slice(1));
+    case 'help':
+    default:
+      return await handleReminderHelp(message);
   }
 }
 

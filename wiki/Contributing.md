@@ -62,7 +62,8 @@ maintainability analysis.
 
 ### Quality Requirements
 
-- **Test Coverage**: Current local 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; historical CI target 82%+ (restoration in progress)
+- **Test Coverage**: Current local 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches;
+  historical CI target 82%+ (restoration in progress)
 - **File Complexity**: Maximum 15 per file
 - **Function Complexity**: Maximum 10 per function
 - **Code Duplication**: Maximum 50 lines identical code

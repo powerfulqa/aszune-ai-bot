@@ -46,5 +46,4 @@
 - [GitHub Repository](https://github.com/chrishaycock/aszune-ai-bot)
 - [Discord.js Documentation](https://discord.js.org/)
 - [Perplexity API Documentation](https://docs.perplexity.ai/)
-
 ```

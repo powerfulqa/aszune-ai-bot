@@ -37,32 +37,32 @@ commands is still recognised for backward compatibility.
 
 ### Core Commands
 
-| Command                       | Description                                                 |
-| ----------------------------- | ----------------------------------------------------------- |
-| `/help`                       | Shows a list of available commands and usage                |
-| `/clearhistory`               | Clears your conversation history                            |
-| `/summary`                    | Summarises your current conversation in UK English          |
-| `/summarise <text>`           | Summarises any provided text in UK English                  |
-| `/stats`                      | Shows your usage stats (messages sent, summaries requested) |
-| Legacy: `!help`, `!clearhistory`, `!summary`, `!summarise`, `!stats` | Limited support         |
+| Command                                                              | Description                                                 |
+| -------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `/help`                                                              | Shows a list of available commands and usage                |
+| `/clearhistory`                                                      | Clears your conversation history                            |
+| `/summary`                                                           | Summarises your current conversation in UK English          |
+| `/summarise <text>`                                                  | Summarises any provided text in UK English                  |
+| `/stats`                                                             | Shows your usage stats (messages sent, summaries requested) |
+| Legacy: `!help`, `!clearhistory`, `!summary`, `!summarise`, `!stats` | Limited support                                             |
 
 ### Analytics Commands (NEW)
 
-| Command        | Description                                                     |
-| -------------- | --------------------------------------------------------------- |
-| `/analytics`   | Show Discord server analytics and performance insights          |
-| `/dashboard`   | Display comprehensive performance dashboard with real-time data |
-| `/resources`   | View resource optimization status and recommendations           |
-| Legacy: `!analytics`, `!dashboard`, `!resources` | Limited support               |
+| Command                                          | Description                                                     |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| `/analytics`                                     | Show Discord server analytics and performance insights          |
+| `/dashboard`                                     | Display comprehensive performance dashboard with real-time data |
+| `/resources`                                     | View resource optimization status and recommendations           |
+| Legacy: `!analytics`, `!dashboard`, `!resources` | Limited support                                                 |
 
 ### Reminder Commands (NEW)
 
-| Command                     | Description                                            |
-| --------------------------- | ------------------------------------------------------ |
-| `/remind <time> <message>`  | Set a reminder for a specific time with custom message |
-| `/reminders`                | List all your active reminders                         |
-| `/cancelreminder <index>`   | Cancel a specific reminder by index number             |
-| Legacy: `!remind`, `!reminders`, `!cancelreminder` | Limited support             |
+| Command                                            | Description                                            |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| `/remind <time> <message>`                         | Set a reminder for a specific time with custom message |
+| `/reminders`                                       | List all your active reminders                         |
+| `/cancelreminder <index>`                          | Cancel a specific reminder by index number             |
+| Legacy: `!remind`, `!reminders`, `!cancelreminder` | Limited support                                        |
 
 ## Asking Questions
 
@@ -290,9 +290,9 @@ many messages too quickly, the bot will remind you to wait.
 
 ### v1.8.0 – Dashboard & Coverage Policy (Current)
 
-- **Web Dashboard**: Optional Express + Socket.io dashboard at `http://localhost:3000` showing
-  live metrics and actual outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`,
-  and `/reminders`, plus a read‑only database viewer and recommendations.
+- **Web Dashboard**: Optional Express + Socket.io dashboard at `http://localhost:3000` showing live
+  metrics and actual outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and
+  `/reminders`, plus a read‑only database viewer and recommendations.
 - **Coverage Policy**: Dual thresholds—≥80% for critical runtime files and ≥65% global baseline,
   with a roadmap toward 82%+.
 - **Complexity Reduction**: Refactors across chat, cache, and error handling to align with ≤10

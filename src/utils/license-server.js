@@ -359,8 +359,8 @@ class LicenseServer {
     <div class="section">
         <h2>🚨 Recent Violations</h2>
         ${data.topViolations
-    .map(
-      (v) => `
+          .map(
+            (v) => `
             <div class="violation-item">
                 <strong>Instance:</strong> ${v.instanceId}<br>
                 <strong>Time:</strong> ${v.reportedAt}<br>
@@ -368,8 +368,8 @@ class LicenseServer {
                 <strong>Host:</strong> ${v.hostname}
             </div>
         `
-    )
-    .join('')}
+          )
+          .join('')}
     </div>
 
     <div class="section">

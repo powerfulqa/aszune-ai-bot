@@ -6,10 +6,10 @@ usage, and development of the Aszune AI Bot.
 ## What is Aszune AI Bot?
 
 Aszune AI Bot is a Discord bot designed to provide gaming lore, game logic, guides, and advice using
-the Perplexity API with the **sonar** model. It maintains persistent conversation history
-for each user through SQLite database integration and adds fun emoji reactions based on keywords
-found in messages. The bot primarily supports modern Discord slash commands, with limited legacy `!`
-command compatibility for backward support. Comprehensive analytics and user engagement tracking are
+the Perplexity API with the **sonar** model. It maintains persistent conversation history for each
+user through SQLite database integration and adds fun emoji reactions based on keywords found in
+messages. The bot primarily supports modern Discord slash commands, with limited legacy `!` command
+compatibility for backward support. Comprehensive analytics and user engagement tracking are
 included.
 
 ## Navigation
@@ -27,19 +27,29 @@ included.
 
 ### Dashboard Features (v1.9.0)
 
-Comprehensive web-based monitoring and management interface. Access at `http://localhost:3000/dashboard`:
+Comprehensive web-based monitoring and management interface. Access at
+`http://localhost:3000/dashboard`:
 
-**Complete Overview**: [Dashboard Features Summary](Dashboard-Features-Complete) - All 9 dashboard pages and features  
-**Implementation Details**: [v1.9.0 Dashboard Implementation](V1.9.0-Dashboard-Implementation) - Technical architecture and details
+**Complete Overview**: [Dashboard Features Summary](Dashboard-Features-Complete) - All 9 dashboard
+pages and features  
+**Implementation Details**: [v1.9.0 Dashboard Implementation](V1.9.0-Dashboard-Implementation) -
+Technical architecture and details
 
 **Individual Features**:
-- [Dashboard Feature 1: Real-Time Log Viewer](Dashboard-Feature-1-Log-Viewer) - Live log streaming, filtering, and export
-- [Dashboard Feature 2: Service Status & Management](Dashboard-Feature-2-Service-Management) - Monitor and control bot services
-- [Dashboard Feature 3: Configuration Editor](Dashboard-Feature-3-Config-Editor) - Safe configuration editing with validation and backups
-- [Dashboard Feature 5: Network & Connectivity Status](Dashboard-Feature-5-Network-Status) - Network interface monitoring and diagnostics
-- [Dashboard Feature 7: Reminder Management Interface](Dashboard-Feature-7-Reminders) - Create, edit, and manage reminders via web UI
 
-**Release Information**: [RELEASE-NOTES-v1.9.0](../docs/RELEASE-NOTES-v1.9.0.md) | [Dashboard API Reference](../docs/Dashboard-API-Reference-v1.9.0.md)
+- [Dashboard Feature 1: Real-Time Log Viewer](Dashboard-Feature-1-Log-Viewer) - Live log streaming,
+  filtering, and export
+- [Dashboard Feature 2: Service Status & Management](Dashboard-Feature-2-Service-Management) -
+  Monitor and control bot services
+- [Dashboard Feature 3: Configuration Editor](Dashboard-Feature-3-Config-Editor) - Safe
+  configuration editing with validation and backups
+- [Dashboard Feature 5: Network & Connectivity Status](Dashboard-Feature-5-Network-Status) - Network
+  interface monitoring and diagnostics
+- [Dashboard Feature 7: Reminder Management Interface](Dashboard-Feature-7-Reminders) - Create,
+  edit, and manage reminders via web UI
+
+**Release Information**: [RELEASE-NOTES-v1.9.0](../docs/RELEASE-NOTES-v1.9.0.md) |
+[Dashboard API Reference](../docs/Dashboard-API-Reference-v1.9.0.md)
 
 ## Code Quality & Standards
 
@@ -56,58 +66,69 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 ## Version Information
 
 **v1.9.0** - Dashboard Feature Suite Expansion (2025-01-15)
-  - **5 Major Dashboard Enhancements** - Complete monitoring and management capabilities
-  - Feature 1: Real-Time Log Viewer - Live log streaming, multi-level filtering, CSV/JSON export
-  - Feature 2: Service Status & Management - systemd integration, service control, uptime tracking
-  - Feature 3: Configuration Editor - Safe .env and config.js editing with validation & auto-backups
-  - Feature 5: Network & Connectivity Status - Interface monitoring, connectivity checks, bandwidth tracking
-  - Feature 7: Reminder Management Interface - Web-based CRUD operations for reminder scheduling
-  - 15 New API Endpoints - Comprehensive REST API for all dashboard features
-  - WebSocket Support - Real-time log streaming and network status updates
-  - Advanced Filtering & Export - Support for multiple export formats and complex filtering queries
-  - Security Hardening - Integrated validation, audit trails, and rollback capabilities
-  - Full Documentation - Wiki pages for each feature with usage guides, API reference, and troubleshooting
-  - Demo Interface - Interactive HTML demos for all 5 features
-  - Testing: 1,231 tests (1,228 passing) - 72.6% statements / 67.1% branches
+
+- **5 Major Dashboard Enhancements** - Complete monitoring and management capabilities
+- Feature 1: Real-Time Log Viewer - Live log streaming, multi-level filtering, CSV/JSON export
+- Feature 2: Service Status & Management - systemd integration, service control, uptime tracking
+- Feature 3: Configuration Editor - Safe .env and config.js editing with validation & auto-backups
+- Feature 5: Network & Connectivity Status - Interface monitoring, connectivity checks, bandwidth
+  tracking
+- Feature 7: Reminder Management Interface - Web-based CRUD operations for reminder scheduling
+- 15 New API Endpoints - Comprehensive REST API for all dashboard features
+- WebSocket Support - Real-time log streaming and network status updates
+- Advanced Filtering & Export - Support for multiple export formats and complex filtering queries
+- Security Hardening - Integrated validation, audit trails, and rollback capabilities
+- Full Documentation - Wiki pages for each feature with usage guides, API reference, and
+  troubleshooting
+- Demo Interface - Interactive HTML demos for all 5 features
+- Testing: 1,231 tests (1,228 passing) - 72.6% statements / 67.1% branches
 
 **v1.8.0** - Balanced Coverage, Complexity Reduction & Real-Time Dashboard (2025-11-13)
-  - Dual-threshold coverage policy: ≥80% critical files / ≥65% global baseline (path toward 82%+ remains strategic)
-  - Web dashboard (Express + Socket.io) delivering real-time memory, cache, and performance metrics
-  - Function complexity reductions across chat, cache management, error handling (aligning with ≤10 complexity target)
-  - Dead code & duplicate logic pruning; deprecated low-value legacy modules flagged (license stubs, enhanced conversation context)
-  - Dependency refresh (discord.js, better-sqlite3, undici, chrono-node, express, socket.io) for stability & security
-  - CI resilience: critical gate executes first, preventing unnecessary full-suite runs on failure
-  - Coverage (local): 75.57% statements / 81.64% branches / 79.01% functions / 75.57% lines (all critical files ≥80% statements)
-  - Roadmap focus: targeted tests for `cache-manager`, `reminder-service`, `time-parser` + license module smoke tests before activation
-  - All 123 test suites passing (1,231 tests total; 1,228 passing, 3 skipped); zero flake detection
-  - No breaking changes; full compatibility with v1.7.0 persistence & reminder features
 
-  
-  Web Dashboard (v1.8.0): Available locally at `http://localhost:3000` when the bot is running.
-  Shows live outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and
-  `/reminders` in Discord-style cards, plus a read-only database viewer and recommendations. See
-  [docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md) for details.
+- Dual-threshold coverage policy: ≥80% critical files / ≥65% global baseline (path toward 82%+
+  remains strategic)
+- Web dashboard (Express + Socket.io) delivering real-time memory, cache, and performance metrics
+- Function complexity reductions across chat, cache management, error handling (aligning with ≤10
+  complexity target)
+- Dead code & duplicate logic pruning; deprecated low-value legacy modules flagged (license stubs,
+  enhanced conversation context)
+- Dependency refresh (discord.js, better-sqlite3, undici, chrono-node, express, socket.io) for
+  stability & security
+- CI resilience: critical gate executes first, preventing unnecessary full-suite runs on failure
+- Coverage (local): 75.57% statements / 81.64% branches / 79.01% functions / 75.57% lines (all
+  critical files ≥80% statements)
+- Roadmap focus: targeted tests for `cache-manager`, `reminder-service`, `time-parser` + license
+  module smoke tests before activation
+- All 123 test suites passing (1,231 tests total; 1,228 passing, 3 skipped); zero flake detection
+- No breaking changes; full compatibility with v1.7.0 persistence & reminder features
+
+Web Dashboard (v1.8.0): Available locally at `http://localhost:3000` when the bot is running. Shows
+live outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders` in
+Discord-style cards, plus a read-only database viewer and recommendations. See
+[docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md) for details.
 
 **v1.7.0** - Database Integration & Reminder System (2025-10-08)
-  - **SQLite Database Integration**: Full persistent data storage for conversation history and user
-    analytics
-  - **Conversation Persistence**: User messages and bot responses stored across bot restarts
-  - **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
-  - **Reminder System**: AI-powered reminder scheduling with natural language processing
-  - **Automatic Setup**: Database and tables created automatically with zero configuration required
-  - **Graceful Fallback**: Seamless operation even when database is unavailable
-  - **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
-    performance
-  - **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
-  - **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
 
-  **Post-Release Regression Fixes (Oct 9–10, 2025)**
-  - Normalised cache & memory metric formatting (stable hit rate & units)
-  - Reduced dashboard warning noise; corrected server count logic
-  - Hardened Raspberry Pi model detection fallback
-  - Added `global.File` mock in test setup for undici/Web API compatibility
-  - Adaptive Pi startup script improvements (`start-pi-optimized.sh`)
-  - Added regression summary doc (`docs/REGRESSION-FIX-v1.7.0.md`)
+- **SQLite Database Integration**: Full persistent data storage for conversation history and user
+  analytics
+- **Conversation Persistence**: User messages and bot responses stored across bot restarts
+- **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
+- **Reminder System**: AI-powered reminder scheduling with natural language processing
+- **Automatic Setup**: Database and tables created automatically with zero configuration required
+- **Graceful Fallback**: Seamless operation even when database is unavailable
+- **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
+  performance
+- **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
+- **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
+
+**Post-Release Regression Fixes (Oct 9–10, 2025)**
+
+- Normalised cache & memory metric formatting (stable hit rate & units)
+- Reduced dashboard warning noise; corrected server count logic
+- Hardened Raspberry Pi model detection fallback
+- Added `global.File` mock in test setup for undici/Web API compatibility
+- Adaptive Pi startup script improvements (`start-pi-optimized.sh`)
+- Added regression summary doc (`docs/REGRESSION-FIX-v1.7.0.md`)
 
 **v1.6.0** – Analytics & Feature‑Flagged Licensing (2025-10-01)
 
@@ -235,7 +256,8 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 - 🆕 **Stats Tracking:** Shows per-user message and summary counts
 - 🆕 **Slash Command Support:** All major commands available as Discord slash commands
 - 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
-- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches (historical high watermark 82%+ statements; strategic restoration underway)
+- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches
+  (historical high watermark 82%+ statements; strategic restoration underway)
 - 🧾 **Branch Coverage Testing:** 82.45% branch coverage for critical components like logger.js
 - 🔧 **Improved Code Quality:** Refactored complex functions into smaller, maintainable units
 - 🔒 **Enhanced Security:** Fixed permissions issues and improved API validation

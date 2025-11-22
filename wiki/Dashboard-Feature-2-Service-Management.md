@@ -4,12 +4,16 @@
 
 ## Overview
 
-The Service Status & Management interface provides real-time monitoring and control of core bot services. It integrates with systemd to enable start/stop/restart operations and tracks service health metrics.
+The Service Status & Management interface provides real-time monitoring and control of core bot
+services. It integrates with systemd to enable start/stop/restart operations and tracks service
+health metrics.
 
 ## Features
 
 ### Core Capabilities
-- **Real-Time Service Status:** Monitor status of all core services (perplexity, cache, database, reminders)
+
+- **Real-Time Service Status:** Monitor status of all core services (perplexity, cache, database,
+  reminders)
 - **Systemd Integration:** Direct interaction with systemd service manager
 - **Service Control:** Start, stop, and restart individual services from dashboard
 - **Uptime Tracking:** Historical uptime metrics with availability percentages
@@ -22,7 +26,9 @@ The Service Status & Management interface provides real-time monitoring and cont
 ## Features Explained
 
 ### Service Status Display
+
 Each service shows:
+
 - **Current Status:** RUNNING, STOPPED, ERROR
 - **Uptime:** Time since last start (hours:minutes:seconds format)
 - **Availability:** Percentage uptime over last 24 hours
@@ -33,6 +39,7 @@ Each service shows:
 ### Service Control Operations
 
 #### Start Service
+
 ```
 Click "Start" button on stopped service
 - Confirms service is not already running
@@ -42,6 +49,7 @@ Click "Start" button on stopped service
 ```
 
 #### Stop Service
+
 ```
 Click "Stop" button on running service
 - Shows confirmation prompt
@@ -51,6 +59,7 @@ Click "Stop" button on running service
 ```
 
 #### Restart Service
+
 ```
 Click "Restart" button on any service
 - Shows confirmation with expected downtime
@@ -63,6 +72,7 @@ Click "Restart" button on any service
 ## Usage Guide
 
 ### Accessing Service Management
+
 1. Start the bot: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Service Status & Management** or navigate to `/services`
@@ -70,6 +80,7 @@ Click "Restart" button on any service
 ### Monitoring Service Health
 
 #### Daily Health Checks
+
 ```
 At start of day:
 1. Check all services are "RUNNING"
@@ -79,6 +90,7 @@ At start of day:
 ```
 
 #### Responding to Service Failures
+
 ```
 If service shows ERROR status:
 1. Click "View Logs" to see error details
@@ -88,6 +100,7 @@ If service shows ERROR status:
 ```
 
 #### Performance Optimization
+
 ```
 If service has high resource usage:
 1. Check current memory/CPU metrics
@@ -101,11 +114,13 @@ If service has high resource usage:
 ### REST Endpoints
 
 #### Get Service Status
+
 ```http
 GET /api/services
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -135,11 +150,13 @@ GET /api/services
 ```
 
 #### Get Individual Service Status
+
 ```http
 GET /api/services/:serviceName
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -163,11 +180,13 @@ GET /api/services/:serviceName
 ```
 
 #### Start Service
+
 ```http
 POST /api/services/:serviceName/start
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -182,11 +201,13 @@ POST /api/services/:serviceName/start
 ```
 
 #### Stop Service
+
 ```http
 POST /api/services/:serviceName/stop
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -201,11 +222,13 @@ POST /api/services/:serviceName/stop
 ```
 
 #### Restart Service
+
 ```http
 POST /api/services/:serviceName/restart
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -222,35 +245,39 @@ POST /api/services/:serviceName/restart
 
 ### Service Status Codes
 
-| Status | Meaning | Action |
-|--------|---------|--------|
-| RUNNING | Service is active | Monitor performance |
-| STOPPED | Service is inactive | Start if needed |
-| ERROR | Service crashed or unhealthy | Restart or investigate |
-| STARTING | Service is initializing | Wait 5-10 seconds |
-| STOPPING | Service is shutting down | Wait for completion |
+| Status   | Meaning                      | Action                 |
+| -------- | ---------------------------- | ---------------------- |
+| RUNNING  | Service is active            | Monitor performance    |
+| STOPPED  | Service is inactive          | Start if needed        |
+| ERROR    | Service crashed or unhealthy | Restart or investigate |
+| STARTING | Service is initializing      | Wait 5-10 seconds      |
+| STOPPING | Service is shutting down     | Wait for completion    |
 
 ## Service Descriptions
 
 ### Perplexity Service
+
 - **Purpose:** Handles AI API requests to Perplexity
 - **Critical:** Yes - required for chat functionality
 - **Typical CPU:** 2-5% when idle, 10-20% when processing
 - **Typical Memory:** 100-200 MB
 
 ### Cache Service
+
 - **Purpose:** Manages response caching and memory optimization
 - **Critical:** No - bot works without cache but slower
 - **Typical CPU:** 1-3% when idle
 - **Typical Memory:** 150-300 MB
 
 ### Database Service
+
 - **Purpose:** Handles SQLite persistence operations
 - **Critical:** No - conversation history optional but recommended
 - **Typical CPU:** 1-2% when idle
 - **Typical Memory:** 50-100 MB
 
 ### Reminders Service
+
 - **Purpose:** Manages scheduled reminders
 - **Critical:** No - optional feature
 - **Typical CPU:** <1% when idle
@@ -259,6 +286,7 @@ POST /api/services/:serviceName/restart
 ## Troubleshooting
 
 ### Service Won't Start
+
 ```
 1. Check system resources: Is system out of memory?
 2. View logs: Click "View Logs" for error details
@@ -267,6 +295,7 @@ POST /api/services/:serviceName/restart
 ```
 
 ### Service Running But Unhealthy
+
 ```
 1. Click service for metrics details
 2. Check if CPU/memory unusually high
@@ -276,6 +305,7 @@ POST /api/services/:serviceName/restart
 ```
 
 ### High Resource Usage
+
 ```
 If service using excessive resources:
 1. Note timestamp and service name
@@ -286,6 +316,7 @@ If service using excessive resources:
 ```
 
 ### Cannot Connect to Systemd
+
 ```
 If restart button shows "Permission denied":
 1. Verify bot is running as user with systemd access
@@ -297,6 +328,7 @@ If restart button shows "Permission denied":
 ## Integration Examples
 
 ### Daily Health Monitoring
+
 ```
 1. Open dashboard each morning
 2. Check all services show RUNNING
@@ -306,6 +338,7 @@ If restart button shows "Permission denied":
 ```
 
 ### Performance Trending
+
 ```
 1. Access dashboard at same time daily
 2. Screenshot service metrics
@@ -315,6 +348,7 @@ If restart button shows "Permission denied":
 ```
 
 ### Automated Recovery
+
 ```
 Set up monitoring:
 1. Check service health every 5 minutes
@@ -329,6 +363,7 @@ Set up monitoring:
 **File:** `src/services/web-dashboard.js`
 
 **Key Methods:**
+
 - `setupServiceManagementRoutes()` - Initialize service management endpoints
 - `getServiceStatus()` - Query systemd for current service state
 - `startService()` - Execute systemd start command
@@ -338,6 +373,7 @@ Set up monitoring:
 - `calculateUptime()` - Compute service uptime statistics
 
 **Configuration:**
+
 ```javascript
 SERVICE_MANAGEMENT: {
   UPDATE_INTERVAL: 5000, // 5 seconds
@@ -360,6 +396,7 @@ SERVICE_MANAGEMENT: {
 ## Advanced Topics
 
 ### Systemd Integration
+
 ```bash
 # View service status manually
 systemctl status aszune-ai-bot
@@ -372,6 +409,7 @@ journalctl -u aszune-ai-bot -n 50
 ```
 
 ### Resource Limits
+
 ```javascript
 // Configure resource limits per service
 LIMITS: {
@@ -391,6 +429,8 @@ LIMITS: {
 
 ## Demo
 
-Interactive demo available: [`service-management-demo.html`](../dashboard/public/service-management-demo.html)
+Interactive demo available:
+[`service-management-demo.html`](../dashboard/public/service-management-demo.html)
 
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Service Status & Management"
+Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Service Status &
+Management"

@@ -96,7 +96,7 @@ describe('DatabaseService - Core', function () {
       // Verify tables exist by running a simple query
       const db = dbService.getDb();
       expect(() => {
-        db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'user_stats\'').get();
+        db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_stats'").get();
       }).not.toThrow();
     });
   });

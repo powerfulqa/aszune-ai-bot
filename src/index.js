@@ -176,13 +176,13 @@ async function startWebDashboard() {
     }
 
     const webDashboardService = require('./services/web-dashboard');
-    
+
     // Guard: prevent if service already initialized at module level
     if (global.__WEB_DASHBOARD_SERVICE__) {
       logger.debug('Web dashboard service already exists - skipping redundant start');
       return;
     }
-    
+
     global.__WEB_DASHBOARD_SERVICE__ = true;
     await webDashboardService.start(3000);
     logger.info('Web dashboard service initialized on port 3000');
@@ -257,7 +257,7 @@ const shutdown = async (signal) => {
   }
 
   isShuttingDown = true;
-  
+
   // DIAGNOSTIC: Log detailed signal information to help identify restart loop
   // Using ERROR level to ensure it shows even with PI_LOG_LEVEL=ERROR
   logger.error(`========================================`);
@@ -266,7 +266,7 @@ const shutdown = async (signal) => {
   logger.error(`Stack trace:`);
   logger.error(new Error().stack);
   logger.error(`========================================`);
-  
+
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
   // Log bot shutdown event
@@ -423,10 +423,12 @@ function loginToDiscord(token, isTestMode = false) {
     })
     .catch((error) => {
       logger.error('Failed to log in to Discord:', error);
-      
+
       // Don't exit if it's a session limit error - keep dashboard running
       if (error.message && error.message.includes('Not enough sessions remaining')) {
-        logger.warn('Discord session limit reached. Dashboard will remain running. Discord will reconnect when limit resets.');
+        logger.warn(
+          'Discord session limit reached. Dashboard will remain running. Discord will reconnect when limit resets.'
+        );
         // Set up retry after the reset time if possible
         const resetMatch = error.message.match(/resets at (.+?)(?:\.|$)/);
         if (resetMatch) {

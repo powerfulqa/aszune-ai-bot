@@ -191,7 +191,7 @@ describe('Bot Main Entry Point (index.js)', () => {
 
   it('should create a Discord client and log in', async () => {
     // Allow async operations to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(client.login).toHaveBeenCalledWith('test-token');
   });
 

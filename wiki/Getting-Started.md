@@ -139,7 +139,7 @@ npm run test:coverage
 
 - Check out the [Usage Guide](Usage-Guide) to learn how to interact with the bot
 - **Try the analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore
-   monitoring capabilities
+  monitoring capabilities
 - Explore the [Command Reference](Command-Reference) for detailed information about all available
   commands including the new analytics commands
 - Read the [Contributing Guidelines](../CONTRIBUTING.md) if you want to contribute to the project
@@ -152,7 +152,7 @@ Starting with v1.8.0, a lightweight web dashboard is available for continuous re
 
 - **Access**: Visit `http://localhost:3000` while the bot is running
 - **Features**: Live metrics (memory, cache, performance), Discord‑style cards showing actual
-   outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders`
+  outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders`
 - **Database Viewer**: Read‑only viewer for key tables (users, conversation_history, reminders)
 - **Isolation**: Dashboard failures are isolated and do not affect core bot operations
 

@@ -320,11 +320,15 @@ async function loadConversationHistory(userId, messageContent) {
       if (dbConversationHistory && dbConversationHistory.length > 0) {
         // Filter messages by session timeout - only load recent messages within last 30 minutes
         const sessionCutoffTime = new Date(Date.now() - SESSION_TIMEOUT_MS).toISOString();
-        const recentMessages = dbConversationHistory.filter((msg) => msg.timestamp >= sessionCutoffTime);
+        const recentMessages = dbConversationHistory.filter(
+          (msg) => msg.timestamp >= sessionCutoffTime
+        );
 
         // If no recent messages, start fresh (session timeout expired)
         if (recentMessages.length === 0) {
-          logger.debug(`Session timeout: No messages within ${SESSION_TIMEOUT_MS / 60000} minutes for user ${userId}`);
+          logger.debug(
+            `Session timeout: No messages within ${SESSION_TIMEOUT_MS / 60000} minutes for user ${userId}`
+          );
           return conversationHistory; // Return only current in-memory history
         }
 

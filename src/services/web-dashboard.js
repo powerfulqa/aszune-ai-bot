@@ -55,8 +55,8 @@ class WebDashboardService {
         });
         return preferredPort;
       } catch (portError) {
-        const isAddressInUse = 
-          portError.code === 'EADDRINUSE' || 
+        const isAddressInUse =
+          portError.code === 'EADDRINUSE' ||
           portError.message?.includes('EADDRINUSE') ||
           portError.message?.includes('address already in use');
 
@@ -68,12 +68,16 @@ class WebDashboardService {
           break; // Exit loop to try alternative port
         }
 
-        logger.warn(`Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`);
-        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        logger.warn(
+          `Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`
+        );
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
 
         try {
           if (process.platform === 'linux' || process.platform === 'darwin') {
-            await execPromise(`fuser -k ${preferredPort}/tcp 2>/dev/null || true`, { timeout: 3000 });
+            await execPromise(`fuser -k ${preferredPort}/tcp 2>/dev/null || true`, {
+              timeout: 3000,
+            });
           }
         } catch (e) {
           logger.debug(`Failed to force kill port ${preferredPort}: ${e.message}`);
@@ -82,9 +86,11 @@ class WebDashboardService {
     }
 
     // All retries exhausted, find alternative port
-    logger.warn(`Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`);
+    logger.warn(
+      `Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`
+    );
     const altPort = await this.findAvailablePort();
-    
+
     try {
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -108,7 +114,9 @@ class WebDashboardService {
       return altPort;
     } catch (altPortError) {
       logger.error(`Failed to bind to alternative port ${altPort}: ${altPortError.message}`);
-      throw new Error(`Unable to bind web dashboard to any port (preferred: ${preferredPort}, alternative: ${altPort})`);
+      throw new Error(
+        `Unable to bind web dashboard to any port (preferred: ${preferredPort}, alternative: ${altPort})`
+      );
     }
   }
 
@@ -125,15 +133,16 @@ class WebDashboardService {
 
       // Use provided port, or default to 3000, or find random port for testing
       const defaultPort = port || 3000;
-      const testPort = process.env.NODE_ENV === 'test' ? await this.findAvailablePort() : defaultPort;
+      const testPort =
+        process.env.NODE_ENV === 'test' ? await this.findAvailablePort() : defaultPort;
 
       this.app = express();
       this.server = http.createServer(this.app);
       this.io = socketIo(this.server, {
         cors: {
           origin: '*',
-          methods: ['GET', 'POST']
-        }
+          methods: ['GET', 'POST'],
+        },
       });
 
       this.setupMiddleware();
@@ -259,7 +268,7 @@ class WebDashboardService {
       this.errorLogs.push({
         timestamp: new Date().toISOString(),
         message,
-        error: error ? (error.message || String(error)) : null
+        error: error ? error.message || String(error) : null,
       });
 
       // Keep only last N errors
@@ -279,15 +288,15 @@ class WebDashboardService {
     const self = this;
 
     // Intercept all log methods
-    ['debug', 'info', 'warn', 'error'].forEach(level => {
+    ['debug', 'info', 'warn', 'error'].forEach((level) => {
       const originalMethod = logger[level].bind(logger);
-      logger[level] = function(message, error) {
+      logger[level] = function (message, error) {
         // Add to all logs buffer with timestamp and level
         self.allLogs.push({
           timestamp: new Date().toISOString(),
           level: level.toUpperCase(),
           message: typeof message === 'string' ? message : String(message),
-          error: error ? (error.message || String(error)) : null
+          error: error ? error.message || String(error) : null,
         });
 
         // Keep only last N logs
@@ -300,7 +309,7 @@ class WebDashboardService {
           self.io.emit('log:new', {
             timestamp: new Date().toISOString(),
             level: level.toUpperCase(),
-            message: typeof message === 'string' ? message : String(message)
+            message: typeof message === 'string' ? message : String(message),
           });
         }
 
@@ -321,11 +330,14 @@ class WebDashboardService {
     let filtered = this.allLogs;
 
     if (levelFilter && levelFilter !== 'ALL') {
-      filtered = filtered.filter(log => log.level === levelFilter.toUpperCase());
+      filtered = filtered.filter((log) => log.level === levelFilter.toUpperCase());
     }
 
     // Return most recent first
-    return filtered.slice().reverse().slice(offset, offset + limit);
+    return filtered
+      .slice()
+      .reverse()
+      .slice(offset, offset + limit);
   }
 
   /**
@@ -341,11 +353,13 @@ class WebDashboardService {
 
     const searchTerm = keyword.toLowerCase();
     return this.allLogs
-      .filter(log => 
-        log.message.toLowerCase().includes(searchTerm) ||
-        (log.error && log.error.toLowerCase().includes(searchTerm))
+      .filter(
+        (log) =>
+          log.message.toLowerCase().includes(searchTerm) ||
+          (log.error && log.error.toLowerCase().includes(searchTerm))
       )
-      .slice().reverse()
+      .slice()
+      .reverse()
       .slice(0, limit);
   }
 
@@ -372,7 +386,10 @@ class WebDashboardService {
     this.app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+      );
       if (req.method === 'OPTIONS') {
         res.sendStatus(200);
       } else {
@@ -390,7 +407,7 @@ class WebDashboardService {
       res.json({
         status: 'healthy',
         uptime: this.getUptime(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
 
@@ -402,7 +419,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'getting metrics');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -439,10 +456,13 @@ class WebDashboardService {
         const data = await this.getDatabaseTableContents(table, parseInt(limit), parseInt(offset));
         res.json(data);
       } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, `getting database table ${req.params.table}`);
+        const errorResponse = ErrorHandler.handleError(
+          error,
+          `getting database table ${req.params.table}`
+        );
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -455,7 +475,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'getting database schema');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -488,27 +508,27 @@ class WebDashboardService {
     this.app.get('/api/logs', async (req, res) => {
       try {
         const { level = 'ALL', limit = 100, offset = 0, search } = req.query;
-        
+
         if (search) {
           const results = this.searchLogs(search, parseInt(limit));
           res.json({
             logs: results,
             total: results.length,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         } else {
           const logs = this.getFilteredLogs(level, parseInt(limit), parseInt(offset));
           res.json({
             logs,
             total: this.allLogs.length,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting logs');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -535,7 +555,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'exporting logs');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -549,8 +569,8 @@ class WebDashboardService {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="logs.csv"');
     res.write('Timestamp,Level,Message,Error\n');
-    
-    logs.forEach(log => {
+
+    logs.forEach((log) => {
       const escapedMsg = `"${(log.message || '').replace(/"/g, '""')}"`;
       const escapedErr = `"${(log.error || '').replace(/"/g, '""')}"`;
       res.write(`${log.timestamp},${log.level},${escapedMsg},${escapedErr}\n`);
@@ -587,13 +607,13 @@ class WebDashboardService {
         const services = await this.getServiceStatus();
         res.json({
           services,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting service status');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -612,14 +632,14 @@ class WebDashboardService {
         if (!['start', 'stop', 'restart'].includes(action)) {
           return res.status(400).json({
             error: 'Invalid action. Must be start, stop, or restart',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
         if (!service) {
           return res.status(400).json({
             error: 'Service name is required',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -629,7 +649,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'managing service');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -644,18 +664,18 @@ class WebDashboardService {
       try {
         const { service } = req.params;
         const { lines = 50 } = req.query;
-        
+
         const logs = await this.getServiceLogs(service, parseInt(lines));
         res.json({
           service,
           logs,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting service logs');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -676,22 +696,22 @@ class WebDashboardService {
 
     for (const service of services) {
       try {
-        const { stdout } = await execPromise(`systemctl is-active ${service}`, { 
-          timeout: 5000 
+        const { stdout } = await execPromise(`systemctl is-active ${service}`, {
+          timeout: 5000,
         }).catch(() => ({ stdout: 'inactive' }));
-        
+
         results.push({
           name: service,
           status: stdout.trim() || 'unknown',
           uptime: await this.getServiceUptime(service),
-          enabled: await this.isServiceEnabled(service)
+          enabled: await this.isServiceEnabled(service),
         });
       } catch (error) {
         results.push({
           name: service,
           status: 'error',
           uptime: null,
-          enabled: false
+          enabled: false,
         });
       }
     }
@@ -715,13 +735,13 @@ class WebDashboardService {
         `systemctl show ${service} --property=ActiveEnterTimestamp --value`,
         { timeout: 5000 }
       );
-      
+
       if (!stdout.trim() || stdout.includes('n/a')) return null;
 
       const startTime = new Date(stdout.trim());
       const now = new Date();
       const diff = now - startTime;
-      
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -783,7 +803,7 @@ class WebDashboardService {
                 message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
                 service: pm2AppName,
                 action,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               });
             }
           });
@@ -809,13 +829,13 @@ class WebDashboardService {
 
     try {
       logger.info(`Service management: ${action} ${service}`);
-      
+
       // Map service names to PM2 app names (actual PM2 process name)
       let pm2AppName = service;
       if (service === 'aszune-ai-bot' || service === 'aszune-ai') {
         pm2AppName = 'aszune-bot'; // Actual PM2 process name
       }
-      
+
       // For PM2 services, use shell command directly (PM2 daemon may not be accessible)
       if (['aszune-ai', 'aszune-ai-bot', 'aszune-bot'].includes(service)) {
         try {
@@ -828,7 +848,7 @@ class WebDashboardService {
             message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
             service: pm2AppName,
             action,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
         } catch (pm2Error) {
           logger.warn(`PM2 shell command failed: ${pm2Error.message}`);
@@ -840,14 +860,14 @@ class WebDashboardService {
       const cmd = `systemctl ${action} ${service}`;
       logger.debug(`Executing: ${cmd}`);
       await execPromise(cmd, { timeout: 10000, shell: '/bin/bash' });
-      
+
       logger.info(`Service ${action} succeeded: ${service}`);
       return {
         success: true,
         message: `Service ${service} ${action}ed successfully`,
         service,
         action,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.warn(`Service ${action} failed: ${service} - ${error.message}`);
@@ -872,8 +892,8 @@ class WebDashboardService {
         `journalctl -u ${service} -n ${lines} --no-pager --output=short-iso`,
         { timeout: 10000 }
       );
-      
-      return stdout.split('\n').filter(line => line.trim().length > 0);
+
+      return stdout.split('\n').filter((line) => line.trim().length > 0);
     } catch (error) {
       logger.debug(`Failed to get service logs for ${service}: ${error.message}`);
       return [];
@@ -902,13 +922,13 @@ class WebDashboardService {
         res.json({
           file,
           content,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'reading config file');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -927,7 +947,7 @@ class WebDashboardService {
         if (!content) {
           return res.status(400).json({
             error: 'Content is required',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -937,7 +957,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'updating config file');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -956,7 +976,7 @@ class WebDashboardService {
         if (!content) {
           return res.status(400).json({
             error: 'Content is required for validation',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -966,7 +986,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'validating config file');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -978,13 +998,13 @@ class WebDashboardService {
    */
   async readConfigFile(filename) {
     const allowedFiles = ['.env', 'config.js', '.env.example'];
-    
+
     if (!allowedFiles.includes(filename)) {
       throw new Error(`Access denied: ${filename} is not in the allowed file list`);
     }
 
     const filepath = path.join(process.cwd(), filename);
-    
+
     if (!filepath.startsWith(process.cwd())) {
       throw new Error('Path traversal attempt detected');
     }
@@ -1002,13 +1022,13 @@ class WebDashboardService {
    */
   async updateConfigFile(filename, content, createBackup = true) {
     const allowedFiles = ['.env', 'config.js'];
-    
+
     if (!allowedFiles.includes(filename)) {
       throw new Error(`Access denied: ${filename} cannot be modified`);
     }
 
     const filepath = path.join(process.cwd(), filename);
-    
+
     if (!filepath.startsWith(process.cwd())) {
       throw new Error('Path traversal attempt detected');
     }
@@ -1026,7 +1046,7 @@ class WebDashboardService {
       file: filename,
       updated: true,
       message: `Configuration file ${filename} updated successfully`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1044,7 +1064,7 @@ class WebDashboardService {
       lines.forEach((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed || trimmed.startsWith('#')) return;
-        
+
         if (!trimmed.includes('=')) {
           errors.push(`Line ${idx + 1}: Invalid format. Expected KEY=VALUE`);
         }
@@ -1071,7 +1091,7 @@ class WebDashboardService {
       isValid: errors.length === 0,
       errors,
       warnings,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1095,13 +1115,13 @@ class WebDashboardService {
         const interfaces = await this.getNetworkInterfaces();
         res.json({
           interfaces,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting network interfaces');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1117,13 +1137,13 @@ class WebDashboardService {
         const ipInfo = await this.getIPAddresses();
         res.json({
           ipInfo,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting IP addresses');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1139,13 +1159,13 @@ class WebDashboardService {
         const status = await this.getNetworkStatus();
         res.json({
           status,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting network status');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1161,15 +1181,15 @@ class WebDashboardService {
     const result = [];
 
     for (const [name, addrs] of Object.entries(interfaces)) {
-      const ipv4 = addrs.find(a => a.family === 'IPv4');
-      const ipv6 = addrs.find(a => a.family === 'IPv6');
+      const ipv4 = addrs.find((a) => a.family === 'IPv4');
+      const ipv6 = addrs.find((a) => a.family === 'IPv6');
 
       result.push({
         name,
         status: name.includes('lo') ? 'loopback' : 'active',
         ipv4: ipv4 ? ipv4.address : null,
         ipv6: ipv6 ? ipv6.address : null,
-        mac: addrs[0]?.mac || null
+        mac: addrs[0]?.mac || null,
       });
     }
 
@@ -1190,7 +1210,7 @@ class WebDashboardService {
     let localIP = 'localhost';
 
     for (const addrs of Object.values(local)) {
-      const ipv4 = addrs.find(a => a.family === 'IPv4' && !a.internal);
+      const ipv4 = addrs.find((a) => a.family === 'IPv4' && !a.internal);
       if (ipv4) {
         localIP = ipv4.address;
         break;
@@ -1199,8 +1219,8 @@ class WebDashboardService {
 
     let externalIP = 'Unable to determine';
     try {
-      const { stdout } = await execPromise('curl -s https://api.ipify.org', { 
-        timeout: 5000 
+      const { stdout } = await execPromise('curl -s https://api.ipify.org', {
+        timeout: 5000,
       }).catch(() => ({ stdout: '' }));
       externalIP = stdout.trim() || 'Unable to determine';
     } catch (error) {
@@ -1210,7 +1230,7 @@ class WebDashboardService {
     return {
       local: localIP,
       external: externalIP,
-      hostname: os.hostname()
+      hostname: os.hostname(),
     };
   }
 
@@ -1228,16 +1248,17 @@ class WebDashboardService {
       let gatewayCommand;
       if (process.platform === 'linux' || process.platform === 'darwin') {
         // Linux/macOS: use ip route
-        gatewayCommand = 'ip route | grep default | awk \'{print $3}\' | head -1';
+        gatewayCommand = "ip route | grep default | awk '{print $3}' | head -1";
       } else if (process.platform === 'win32') {
         // Windows: use route print
-        gatewayCommand = 'route print | findstr /R "0.0.0.0.*0.0.0.0" | findstr /V "255.255.255.255"';
+        gatewayCommand =
+          'route print | findstr /R "0.0.0.0.*0.0.0.0" | findstr /V "255.255.255.255"';
       }
 
       if (gatewayCommand) {
         const { stdout } = await execPromise(gatewayCommand, { timeout: 5000 });
         const gateway = stdout.trim().split('\n')[0]?.trim();
-        
+
         if (gateway && gateway.match(/^(\d+\.){3}\d+$/)) {
           return { gatewayIp: gateway, reachable: true };
         }
@@ -1260,7 +1281,7 @@ class WebDashboardService {
         const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
         const dnsServers = [];
         const lines = stdout.split('\n');
-        
+
         for (const line of lines) {
           if (line.includes('DNS Servers')) {
             const match = line.match(/:\s*(\d+\.\d+\.\d+\.\d+)/);
@@ -1270,19 +1291,23 @@ class WebDashboardService {
             dnsServers.push(line.trim());
           }
         }
-        
-        logger.debug(`Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`);
+
+        logger.debug(
+          `Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`
+        );
         return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
       } else {
         // Linux/Unix: Read from /etc/resolv.conf
         const { stdout } = await execPromise('cat /etc/resolv.conf', { timeout: 5000 });
         const dnsServers = stdout
           .split('\n')
-          .filter(line => line.trim().startsWith('nameserver'))
-          .map(line => line.split(/\s+/)[1])
-          .filter(ip => ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/));
-        
-        logger.debug(`Detected ${dnsServers.length} DNS servers from /etc/resolv.conf: ${dnsServers.join(', ')}`);
+          .filter((line) => line.trim().startsWith('nameserver'))
+          .map((line) => line.split(/\s+/)[1])
+          .filter((ip) => ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/));
+
+        logger.debug(
+          `Detected ${dnsServers.length} DNS servers from /etc/resolv.conf: ${dnsServers.join(', ')}`
+        );
         return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
       }
     } catch (error) {
@@ -1300,16 +1325,20 @@ class WebDashboardService {
       if (process.platform === 'win32') {
         // Windows: Check ipconfig /all for "DHCP Enabled"
         const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
-        const dhcpEnabled = stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
+        const dhcpEnabled =
+          stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
         const result = dhcpEnabled ? 'DHCP' : 'Static';
         logger.debug(`Detected IP assignment on Windows: ${result}`);
         return result;
       } else {
         // Linux: Check config files in priority order (most reliable first)
-        
+
         // Priority 1: Check DietPi network configuration
         try {
-          const { stdout } = await execPromise('cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"', { timeout: 2000 });
+          const { stdout } = await execPromise(
+            'cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"',
+            { timeout: 2000 }
+          );
           if (stdout.includes('AUTO_SETUP_NET_USESTATIC=1')) {
             logger.debug('Detected IP assignment from DietPi config: Static');
             return 'Static';
@@ -1327,7 +1356,10 @@ class WebDashboardService {
           // DietPi is installed - if we got here, likely static IP was configured via dietpi-config GUI
           // Check if this looks like a server (DNS/DHCP server indicators)
           try {
-            const { stdout: services } = await execPromise('systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"', { timeout: 2000 });
+            const { stdout: services } = await execPromise(
+              'systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"',
+              { timeout: 2000 }
+            );
             if (services.trim()) {
               logger.debug('Detected DNS/DHCP services running on DietPi - assuming static IP');
               return 'Static';
@@ -1341,11 +1373,19 @@ class WebDashboardService {
 
         // Priority 2: Check /etc/network/interfaces (Debian standard)
         try {
-          const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', { timeout: 2000 });
-          if (stdout.includes('iface eth0 inet static') || stdout.includes('iface wlan0 inet static')) {
+          const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
+            timeout: 2000,
+          });
+          if (
+            stdout.includes('iface eth0 inet static') ||
+            stdout.includes('iface wlan0 inet static')
+          ) {
             logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
             return 'Static';
-          } else if (stdout.includes('iface eth0 inet dhcp') || stdout.includes('iface wlan0 inet dhcp')) {
+          } else if (
+            stdout.includes('iface eth0 inet dhcp') ||
+            stdout.includes('iface wlan0 inet dhcp')
+          ) {
             logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
             return 'DHCP';
           }
@@ -1355,7 +1395,10 @@ class WebDashboardService {
 
         // Priority 3: Check NetworkManager
         try {
-          const { stdout } = await execPromise('nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo', { timeout: 3000 });
+          const { stdout } = await execPromise(
+            'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
+            { timeout: 3000 }
+          );
           if (stdout.includes('manual')) {
             logger.debug('Detected IP assignment via NetworkManager: Static');
             return 'Static';
@@ -1369,7 +1412,10 @@ class WebDashboardService {
 
         // Priority 4: Check systemd-networkd
         try {
-          const { stdout } = await execPromise('networkctl status 2>/dev/null | grep -E "Address|DHCP"', { timeout: 2000 });
+          const { stdout } = await execPromise(
+            'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
+            { timeout: 2000 }
+          );
           if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
             logger.debug('Detected IP assignment via systemd-networkd: DHCP');
             return 'DHCP';
@@ -1411,7 +1457,7 @@ class WebDashboardService {
       internet: false,
       gatewayIp: null,
       dnsServers: [],
-      ipAssignment: 'Unknown'
+      ipAssignment: 'Unknown',
     };
 
     // Detect gateway
@@ -1422,7 +1468,7 @@ class WebDashboardService {
     // Detect DNS servers
     checks.dnsServers = await this.detectDnsServers();
     logger.info(`DNS servers detected: ${checks.dnsServers.join(', ')}`);
-    
+
     // Detect DHCP vs Static IP
     checks.ipAssignment = await this.detectDhcpOrStatic();
     logger.info(`IP assignment detected: ${checks.ipAssignment}`);
@@ -1432,9 +1478,8 @@ class WebDashboardService {
     for (const dnsServer of checks.dnsServers) {
       try {
         // Test DNS server reachability with ping
-        const pingCmd = process.platform === 'win32' 
-          ? `ping -n 1 ${dnsServer}`
-          : `ping -c 1 ${dnsServer}`;
+        const pingCmd =
+          process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
         await execPromise(pingCmd, { timeout: 3000 });
         dnsWorking = true;
         break; // At least one DNS server is reachable
@@ -1442,7 +1487,7 @@ class WebDashboardService {
         logger.debug(`DNS server ${dnsServer} not reachable`);
       }
     }
-    
+
     // Also test if DNS resolution actually works
     if (dnsWorking) {
       try {
@@ -1456,12 +1501,9 @@ class WebDashboardService {
 
     // Internet connectivity test
     try {
-      await execPromise(
-        process.platform === 'win32' 
-          ? 'ping -n 1 8.8.8.8' 
-          : 'ping -c 1 8.8.8.8',
-        { timeout: 5000 }
-      );
+      await execPromise(process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8', {
+        timeout: 5000,
+      });
       checks.internet = true;
     } catch (error) {
       logger.debug('Internet ping failed');
@@ -1474,7 +1516,7 @@ class WebDashboardService {
       gatewayReachable: checks.gateway,
       gatewayIp: checks.gatewayIp,
       dnsServers: checks.dnsServers,
-      ipAssignment: checks.ipAssignment
+      ipAssignment: checks.ipAssignment,
     };
   }
 
@@ -1501,13 +1543,13 @@ class WebDashboardService {
         res.json({
           reminders,
           total: reminders.length,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'getting reminders');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1525,7 +1567,7 @@ class WebDashboardService {
         if (!message || !scheduledTime || !userId) {
           return res.status(400).json({
             error: 'Message, scheduledTime, and userId are required',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -1533,13 +1575,13 @@ class WebDashboardService {
         res.status(201).json({
           reminder,
           message: 'Reminder created successfully',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'creating reminder');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1559,13 +1601,13 @@ class WebDashboardService {
         res.json({
           reminder,
           message: 'Reminder updated successfully',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'updating reminder');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1583,13 +1625,13 @@ class WebDashboardService {
 
         res.json({
           message: 'Reminder deleted successfully',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'deleting reminder');
         res.status(400).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1626,7 +1668,7 @@ class WebDashboardService {
         scheduled_time: new Date(scheduledTime).toISOString(),
         created_at: new Date().toISOString(),
         reminder_type: reminderType,
-        status: 'active'
+        status: 'active',
       };
 
       databaseService.addReminder?.(reminder);
@@ -1647,7 +1689,7 @@ class WebDashboardService {
         id,
         message: message || undefined,
         scheduled_time: scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       databaseService.updateReminder?.(id, updated);
@@ -1684,7 +1726,7 @@ class WebDashboardService {
         const errorResponse = ErrorHandler.handleError(error, 'getting recommendations');
         res.status(500).json({
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1698,7 +1740,7 @@ class WebDashboardService {
     this.app.post('/api/control/restart', async (req, res) => {
       try {
         logger.info('Restart command received from dashboard');
-        
+
         // Step 1: Explicitly disconnect Discord client to show offline status
         if (this.discordClient) {
           try {
@@ -1724,60 +1766,60 @@ class WebDashboardService {
           const pm2Command = `pm2 restart ${pm2AppName}`;
           logger.info(`Attempting PM2 restart: ${pm2Command}`);
           await execPromise(pm2Command, { timeout: 10000 });
-          
+
           logger.info(`Bot restart initiated via PM2 (${pm2AppName})`);
           return res.json({
             success: true,
             message: `Bot restart initiated via PM2 ${pm2AppName}`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         } catch (pm2Error) {
           logger.debug(`PM2 restart failed (may not be using PM2): ${pm2Error.message}`);
         }
-        
+
         // Step 3: Try systemctl restart
         try {
           let restartCmd;
           // Always try without sudo first, since we're likely running as root
           restartCmd = `systemctl restart ${serviceName}`;
-          
+
           logger.info(`Attempting restart with: ${restartCmd}`);
           await execPromise(restartCmd, {
-            timeout: 10000
+            timeout: 10000,
           });
-          
+
           logger.info(`Bot restart initiated via systemctl (${serviceName})`);
           res.json({
             success: true,
             message: `Bot restart initiated via systemctl ${serviceName}`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         } catch (systemctlError) {
           logger.warn(`Systemctl restart failed: ${systemctlError.message}`);
           logger.info('Attempting with sudo...');
-          
+
           try {
             // Retry with sudo
             await execPromise(`sudo systemctl restart ${serviceName}`, {
-              timeout: 10000
+              timeout: 10000,
             });
             logger.info('Bot restart succeeded with sudo');
             res.json({
               success: true,
               message: 'Bot restart initiated via systemctl (with sudo)',
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             });
           } catch (sudoError) {
             logger.warn(`Systemctl with sudo also failed: ${sudoError.message}`);
             logger.info('Attempting direct process restart (fallback)...');
-            
+
             // Fallback: direct process exit
             res.json({
               success: true,
               message: 'Bot restart initiated (fallback mode)',
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             });
-            
+
             setTimeout(() => {
               logger.info('Executing direct bot restart');
               process.exit(0);
@@ -1790,7 +1832,7 @@ class WebDashboardService {
         res.status(500).json({
           success: false,
           error: errorResponse.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1805,7 +1847,7 @@ class WebDashboardService {
         try {
           const { stdout, stderr } = await execPromise('git pull origin main', {
             cwd: path.join(__dirname, '../../'),
-            timeout: 30000
+            timeout: 30000,
           });
 
           logger.info('Git pull completed successfully');
@@ -1813,21 +1855,22 @@ class WebDashboardService {
             success: true,
             message: 'Git pull completed successfully',
             output: stdout,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         } catch (pullError) {
           // Check for permission errors
           const errorMsg = pullError.message || '';
           const stderrMsg = pullError.stderr || '';
-          
+
           if (stderrMsg.includes('Permission denied') || errorMsg.includes('EACCES')) {
             logger.error(`Git pull permission denied: ${errorMsg}`);
             res.status(403).json({
               success: false,
               error: 'Permission denied - the current user cannot write to the repository',
-              details: 'Make sure the bot process has write permissions to the git repository directory',
+              details:
+                'Make sure the bot process has write permissions to the git repository directory',
               output: stderrMsg || errorMsg,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             });
           } else {
             logger.error(`Git pull failed: ${errorMsg}`);
@@ -1836,7 +1879,7 @@ class WebDashboardService {
               error: 'Git pull failed',
               details: errorMsg,
               output: stderrMsg || errorMsg,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             });
           }
         }
@@ -1846,7 +1889,7 @@ class WebDashboardService {
           success: false,
           error: errorResponse.message,
           output: error.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -1860,24 +1903,28 @@ class WebDashboardService {
       logger.debug(`Dashboard client connected: ${socket.id}`);
 
       // Send initial metrics
-      this.getMetrics().then(metrics => {
-        socket.emit('metrics', metrics);
-      }).catch(error => {
-        const errorResponse = ErrorHandler.handleError(error, 'sending initial metrics');
-        socket.emit('error', { message: errorResponse.message });
-      });
+      this.getMetrics()
+        .then((metrics) => {
+          socket.emit('metrics', metrics);
+        })
+        .catch((error) => {
+          const errorResponse = ErrorHandler.handleError(error, 'sending initial metrics');
+          socket.emit('error', { message: errorResponse.message });
+        });
 
       socket.on('disconnect', () => {
         logger.debug(`Dashboard client disconnected: ${socket.id}`);
       });
 
       socket.on('request-metrics', () => {
-        this.getMetrics().then(metrics => {
-          socket.emit('metrics', metrics);
-        }).catch(error => {
-          const errorResponse = ErrorHandler.handleError(error, 'sending requested metrics');
-          socket.emit('error', { message: errorResponse.message });
-        });
+        this.getMetrics()
+          .then((metrics) => {
+            socket.emit('metrics', metrics);
+          })
+          .catch((error) => {
+            const errorResponse = ErrorHandler.handleError(error, 'sending requested metrics');
+            socket.emit('error', { message: errorResponse.message });
+          });
       });
 
       // Register handler groups
@@ -1924,7 +1971,7 @@ class WebDashboardService {
             content,
             size: fileInfo.size,
             lastModified: fileInfo.mtime.toISOString(),
-            error: null
+            error: null,
           });
         }
 
@@ -1973,7 +2020,7 @@ class WebDashboardService {
           saved: true,
           filename,
           timestamp: new Date().toISOString(),
-          error: null
+          error: null,
         });
       }
     } catch (error) {
@@ -2044,7 +2091,7 @@ class WebDashboardService {
         let logs = this.allLogs;
 
         if (level) {
-          logs = logs.filter(log => log.level === level);
+          logs = logs.filter((log) => log.level === level);
         }
 
         const limitedLogs = logs.slice(-limit);
@@ -2054,7 +2101,7 @@ class WebDashboardService {
             logs: limitedLogs,
             total: this.allLogs.length,
             filtered: limitedLogs.length,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
       } catch (error) {
@@ -2075,7 +2122,7 @@ class WebDashboardService {
           callback({
             cleared: true,
             count,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -2107,27 +2154,27 @@ class WebDashboardService {
 
       const interfaces = [];
       let gateway = null;
-      
+
       for (const [name, addrs] of Object.entries(networkInterfaces)) {
-        const ipv4 = addrs.find(addr => addr.family === 'IPv4');
-        const ipv6 = addrs.find(addr => addr.family === 'IPv6');
+        const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
+        const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
 
         if (ipv4 || ipv6) {
           const isInternal = ipv4?.internal || ipv6?.internal || false;
           const isLoopback = name.toLowerCase().includes('lo') || isInternal;
-          
+
           interfaces.push({
             name,
             ipv4: ipv4?.address || null,
             ipv6: ipv6?.address || null,
             mac: ipv4?.mac || ipv6?.mac || null,
             internal: isInternal,
-            status: isLoopback ? 'LOOPBACK' : 'UP'
+            status: isLoopback ? 'LOOPBACK' : 'UP',
           });
         }
       }
 
-      const localIp = interfaces.find(i => !i.internal && i.ipv4)?.ipv4 || 'localhost';
+      const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
 
       // Get real gateway detection
       const gatewayResult = await this.detectGateway();
@@ -2143,11 +2190,11 @@ class WebDashboardService {
 
       // Get connectivity status
       const connectivityStatus = await this.getNetworkStatus();
-      
+
       logger.info('Network status connectivity data:', {
         dnsServers: connectivityStatus.dnsServers,
         ipAssignment: connectivityStatus.ipAssignment,
-        dnsReachable: connectivityStatus.dnsReachable
+        dnsReachable: connectivityStatus.dnsReachable,
       });
 
       if (callback) {
@@ -2159,7 +2206,7 @@ class WebDashboardService {
           externalIp: externalIp || null,
           interfaces,
           connectivity: connectivityStatus,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -2185,9 +2232,10 @@ class WebDashboardService {
       try {
         const gatewayResult = await this.detectGateway();
         if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
-          const pingCmd = process.platform === 'win32' 
-            ? `ping -n 1 ${gatewayResult.gatewayIp}`
-            : `ping -c 1 ${gatewayResult.gatewayIp}`;
+          const pingCmd =
+            process.platform === 'win32'
+              ? `ping -n 1 ${gatewayResult.gatewayIp}`
+              : `ping -c 1 ${gatewayResult.gatewayIp}`;
           await execPromise(pingCmd, { timeout: 3000 });
           results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
         } else {
@@ -2202,13 +2250,12 @@ class WebDashboardService {
       try {
         const dnsServers = await this.detectDnsServers();
         results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
-        
+
         let dnsWorking = false;
         for (const dnsServer of dnsServers) {
           try {
-            const pingCmd = process.platform === 'win32' 
-              ? `ping -n 1 ${dnsServer}`
-              : `ping -c 1 ${dnsServer}`;
+            const pingCmd =
+              process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
             await execPromise(pingCmd, { timeout: 3000 });
             results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
             dnsWorking = true;
@@ -2216,7 +2263,7 @@ class WebDashboardService {
             results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
           }
         }
-        
+
         if (dnsWorking) {
           results.push('  ✓ At least one DNS server is accessible\n');
         } else {
@@ -2238,9 +2285,7 @@ class WebDashboardService {
       // Test 4: Internet connectivity (ping public DNS)
       results.push('Test 4: Internet Connectivity (8.8.8.8)');
       try {
-        const pingCmd = process.platform === 'win32' 
-          ? 'ping -n 1 8.8.8.8'
-          : 'ping -c 1 8.8.8.8';
+        const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
         await execPromise(pingCmd, { timeout: 5000 });
         results.push('✓ Internet reachable (Google DNS)\n');
       } catch (error) {
@@ -2250,7 +2295,10 @@ class WebDashboardService {
       // Test 5: External API access
       results.push('Test 5: External API Access');
       try {
-        const { stdout } = await execPromise('curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org', { timeout: 5000 });
+        const { stdout } = await execPromise(
+          'curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org',
+          { timeout: 5000 }
+        );
         if (stdout.trim() === '200') {
           results.push('✓ External API accessible (api.ipify.org)\n');
         } else {
@@ -2273,9 +2321,9 @@ class WebDashboardService {
       results.push('Test 7: Network Interfaces');
       const interfaces = os.networkInterfaces();
       const activeInterfaces = Object.entries(interfaces)
-        .filter(([name, addrs]) => addrs.some(a => !a.internal && a.family === 'IPv4'))
+        .filter(([name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
         .map(([name]) => name);
-      
+
       if (activeInterfaces.length > 0) {
         results.push(`✓ Active interfaces: ${activeInterfaces.join(', ')}\n`);
       } else {
@@ -2288,7 +2336,7 @@ class WebDashboardService {
         callback({
           success: true,
           result: results.join('\n'),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -2296,10 +2344,10 @@ class WebDashboardService {
     } catch (error) {
       logger.error('Error running network test:', error);
       if (callback) {
-        callback({ 
+        callback({
           success: false,
-          error: error.message, 
-          result: 'Test suite failed: ' + error.message 
+          error: error.message,
+          result: 'Test suite failed: ' + error.message,
         });
       }
     }
@@ -2318,9 +2366,9 @@ class WebDashboardService {
 
         // Apply status filter if requested
         if (status === 'completed') {
-          reminders = reminders.filter(r => r.status === 'completed');
+          reminders = reminders.filter((r) => r.status === 'completed');
         } else if (status === 'active') {
-          reminders = reminders.filter(r => r.status === 'active' || r.status === 'pending');
+          reminders = reminders.filter((r) => r.status === 'active' || r.status === 'pending');
         }
 
         const stats = databaseService.getReminderStats();
@@ -2330,7 +2378,7 @@ class WebDashboardService {
             reminders: reminders || [],
             stats,
             total: reminders?.length || 0,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -2368,18 +2416,13 @@ class WebDashboardService {
         return;
       }
 
-      const reminder = databaseService.createReminder(
-        userId,
-        message,
-        scheduledTime,
-        channelId
-      );
+      const reminder = databaseService.createReminder(userId, message, scheduledTime, channelId);
 
       if (callback) {
         callback({
           created: true,
           reminder,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -2401,7 +2444,7 @@ class WebDashboardService {
       }
 
       const allReminders = databaseService.getActiveReminders(userId);
-      const reminder = allReminders?.find(r => r.id === reminderId);
+      const reminder = allReminders?.find((r) => r.id === reminderId);
 
       if (!reminder) {
         const error = new Error(`Reminder not found: ${reminderId}`);
@@ -2418,7 +2461,7 @@ class WebDashboardService {
         callback({
           updated: true,
           reminder,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -2451,7 +2494,7 @@ class WebDashboardService {
         callback({
           deleted: true,
           reminderId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -2467,12 +2510,12 @@ class WebDashboardService {
       let reminders = databaseService.getActiveReminders(userId);
 
       if (status) {
-        reminders = reminders.filter(r => r.status === status);
+        reminders = reminders.filter((r) => r.status === status);
       }
 
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        reminders = reminders.filter(r => r.message.toLowerCase().includes(searchLower));
+        reminders = reminders.filter((r) => r.message.toLowerCase().includes(searchLower));
       }
 
       if (callback) {
@@ -2480,7 +2523,7 @@ class WebDashboardService {
           reminders: reminders || [],
           total: reminders?.length || 0,
           filters: { userId, status, searchText },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -2508,7 +2551,9 @@ class WebDashboardService {
 
         // Fallback: Check systemd
         try {
-          const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, { timeout: 5000 });
+          const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, {
+            timeout: 5000,
+          });
           return stdout.trim() === 'enabled';
         } catch (error) {
           return false;
@@ -2516,10 +2561,9 @@ class WebDashboardService {
       } else if (process.platform === 'win32') {
         // Windows: check if service is enabled in registry/services
         try {
-          const { stdout } = await execPromise(
-            `sc query ${serviceName} | findstr START_TYPE`,
-            { timeout: 5000 }
-          );
+          const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
+            timeout: 5000,
+          });
           return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT')) ? true : false;
         } catch (error) {
           logger.debug(`Windows service check failed: ${error.message}`);
@@ -2544,55 +2588,57 @@ class WebDashboardService {
         const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
 
         // Get boot enabled status asynchronously
-        this.getBootEnabledStatus('aszune-bot').then((bootEnabled) => {
-          const services = [
-            {
-              id: 'aszune-ai-bot',
-              name: 'Aszune AI Bot',
-              icon: '🤖',
-              status: 'Running',
-              enabledOnBoot: bootEnabled,
-              uptime: uptimeFormatted,
-              pid: process.pid,
-              memory: `${memoryMB} MB`,
-              port: '3000 (Dashboard)'
+        this.getBootEnabledStatus('aszune-bot')
+          .then((bootEnabled) => {
+            const services = [
+              {
+                id: 'aszune-ai-bot',
+                name: 'Aszune AI Bot',
+                icon: '🤖',
+                status: 'Running',
+                enabledOnBoot: bootEnabled,
+                uptime: uptimeFormatted,
+                pid: process.pid,
+                memory: `${memoryMB} MB`,
+                port: '3000 (Dashboard)',
+              },
+            ];
+
+            if (callback) {
+              callback({
+                services,
+                total: services.length,
+                timestamp: new Date().toISOString(),
+              });
             }
-          ];
 
-          if (callback) {
-            callback({
-              services,
-              total: services.length,
-              timestamp: new Date().toISOString()
-            });
-          }
+            logger.debug(`Services list retrieved: ${services.length} services`);
+          })
+          .catch((error) => {
+            logger.error('Error getting boot status:', error);
+            // Return services without boot status
+            const services = [
+              {
+                id: 'aszune-ai-bot',
+                name: 'Aszune AI Bot',
+                icon: '🤖',
+                status: 'Running',
+                enabledOnBoot: false,
+                uptime: uptimeFormatted,
+                pid: process.pid,
+                memory: `${memoryMB} MB`,
+                port: '3000 (Dashboard)',
+              },
+            ];
 
-          logger.debug(`Services list retrieved: ${services.length} services`);
-        }).catch((error) => {
-          logger.error('Error getting boot status:', error);
-          // Return services without boot status
-          const services = [
-            {
-              id: 'aszune-ai-bot',
-              name: 'Aszune AI Bot',
-              icon: '🤖',
-              status: 'Running',
-              enabledOnBoot: false,
-              uptime: uptimeFormatted,
-              pid: process.pid,
-              memory: `${memoryMB} MB`,
-              port: '3000 (Dashboard)'
+            if (callback) {
+              callback({
+                services,
+                total: services.length,
+                timestamp: new Date().toISOString(),
+              });
             }
-          ];
-
-          if (callback) {
-            callback({
-              services,
-              total: services.length,
-              timestamp: new Date().toISOString()
-            });
-          }
-        });
+          });
       } catch (error) {
         logger.error('Error retrieving services:', error);
         if (callback) callback({ error: error.message, services: [] });
@@ -2618,26 +2664,26 @@ class WebDashboardService {
         if (callback) {
           callback({
             connected: false,
-            error: 'Discord client not initialized - dashboard started before Discord login'
+            error: 'Discord client not initialized - dashboard started before Discord login',
           });
         }
         return;
       }
 
       const isReady = this.discordClient.isReady();
-      
+
       if (isReady && this.discordClient.user) {
         const uptimeMs = this.discordClient.uptime || 0;
         const uptimeSeconds = Math.floor(uptimeMs / 1000);
         const hours = Math.floor(uptimeSeconds / 3600);
         const minutes = Math.floor((uptimeSeconds % 3600) / 60);
         const seconds = uptimeSeconds % 60;
-        
+
         let uptimeFormatted = '';
         if (hours > 0) uptimeFormatted += `${hours}h `;
         if (minutes > 0 || hours > 0) uptimeFormatted += `${minutes}m `;
         uptimeFormatted += `${seconds}s`;
-        
+
         if (callback) {
           callback({
             connected: true,
@@ -2645,14 +2691,15 @@ class WebDashboardService {
             id: this.discordClient.user.id,
             uptime: uptimeFormatted.trim(),
             guilds: this.discordClient.guilds.cache.size,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
       } else {
         if (callback) {
           callback({
             connected: false,
-            error: 'Discord bot is not connected - may be experiencing rate limiting or network issues'
+            error:
+              'Discord bot is not connected - may be experiencing rate limiting or network issues',
           });
         }
       }
@@ -2661,9 +2708,9 @@ class WebDashboardService {
     } catch (error) {
       logger.error('Error retrieving Discord status:', error);
       if (callback) {
-        callback({ 
+        callback({
           connected: false,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -2673,10 +2720,10 @@ class WebDashboardService {
     const { exec } = require('child_process');
     const util = require('util');
     const execPromise = util.promisify(exec);
-    
+
     const pm2Command = `pm2 ${action} ${pm2AppName}`;
     logger.debug(`Shell: ${pm2Command}`);
-    
+
     await execPromise(pm2Command, { timeout: 10000 });
     logger.info(`PM2 shell OK: ${pm2Command}`);
     return `Successfully ${action}ed ${pm2AppName}`;
@@ -2689,7 +2736,7 @@ class WebDashboardService {
       if (serviceName === 'aszune-ai-bot' || serviceName === 'aszune-ai') {
         pm2AppName = 'aszune-bot'; // Actual PM2 process name
       }
-      
+
       // Use PM2 shell command directly (daemon may not be accessible from app context)
       logger.debug(`PM2 shell command: ${action} ${pm2AppName}`);
       return await this.executePm2ViaShell(pm2AppName, action);
@@ -2711,7 +2758,9 @@ class WebDashboardService {
 
       const validActions = ['start', 'stop', 'restart'];
       if (!validActions.includes(action)) {
-        const error = new Error(`Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`);
+        const error = new Error(
+          `Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`
+        );
         if (callback) callback({ error: error.message, success: false });
         return;
       }
@@ -2728,7 +2777,7 @@ class WebDashboardService {
             action,
             message: `Successfully ${action === 'stop' ? 'stopped' : action === 'start' ? 'started' : 'restarted'} ${serviceName}`,
             timestamp: new Date().toISOString(),
-            output
+            output,
           });
         }
       } catch (execError) {
@@ -2736,7 +2785,7 @@ class WebDashboardService {
         if (callback) {
           callback({
             error: `Failed to ${action} service: ${execError.message}`,
-            success: false
+            success: false,
           });
         }
       }
@@ -2796,7 +2845,7 @@ class WebDashboardService {
             group,
             message: `Quick action '${group}' completed successfully`,
             timestamp: new Date().toISOString(),
-            output: stdout
+            output: stdout,
           });
         }
       } catch (execError) {
@@ -2804,7 +2853,7 @@ class WebDashboardService {
         if (callback) {
           callback({
             error: `Failed to execute quick action: ${execError.message}`,
-            success: false
+            success: false,
           });
         }
       }
@@ -2838,34 +2887,84 @@ class WebDashboardService {
   async getMetrics() {
     try {
       // Collect metrics with error handling for each one
-      const cacheStats = await this.getCacheStats().catch(err => {
+      const cacheStats = await this.getCacheStats().catch((err) => {
         logger.warn(`Cache stats error: ${err.message}`);
-        return { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' };
+        return {
+          hits: 0,
+          misses: 0,
+          hitRate: 0,
+          sets: 0,
+          deletes: 0,
+          evictions: 0,
+          entryCount: 0,
+          memoryUsage: 0,
+          memoryUsageFormatted: '0 B',
+          uptime: 0,
+          uptimeFormatted: '0s',
+        };
       });
 
-      const databaseStats = await this.getDatabaseStats().catch(err => {
+      const databaseStats = await this.getDatabaseStats().catch((err) => {
         logger.warn(`Database stats error: ${err.message}`);
-        return { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 } };
+        return {
+          userCount: 0,
+          totalMessages: 0,
+          reminders: {
+            totalReminders: 0,
+            activeReminders: 0,
+            completedReminders: 0,
+            cancelledReminders: 0,
+          },
+        };
       });
 
-      const reminderStats = await this.getReminderStats().catch(err => {
+      const reminderStats = await this.getReminderStats().catch((err) => {
         logger.warn(`Reminder stats error: ${err.message}`);
-        return { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 };
+        return {
+          totalReminders: 0,
+          activeReminders: 0,
+          completedReminders: 0,
+          cancelledReminders: 0,
+        };
       });
 
-      const systemInfo = await this.getSystemInfo().catch(err => {
+      const systemInfo = await this.getSystemInfo().catch((err) => {
         logger.warn(`System info error: ${err.message}`);
-        return { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } };
+        return {
+          platform: 'unknown',
+          arch: 'unknown',
+          nodeVersion: 'unknown',
+          uptime: 0,
+          uptimeFormatted: '0s',
+          externalIp: 'Not available',
+          memory: { usagePercent: 0 },
+          cpu: { loadPercent: 0, loadAverage: [0, 0, 0] },
+        };
       });
 
-      const resourceData = await this.getResourceData().catch(err => {
+      const resourceData = await this.getResourceData().catch((err) => {
         logger.warn(`Resource data error: ${err.message}`);
-        return { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, optimizationTier: 'unknown' };
+        return {
+          memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
+          performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
+          optimizationTier: 'unknown',
+        };
       });
 
-      const analyticsData = await this.getAnalyticsData().catch(err => {
+      const analyticsData = await this.getAnalyticsData().catch((err) => {
         logger.warn(`Analytics data error: ${err.message}`);
-        return { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] };
+        return {
+          summary: {
+            totalServers: 0,
+            totalUsers: 0,
+            successRate: 0,
+            errorRate: 0,
+            avgResponseTime: 0,
+            totalCommands: 0,
+          },
+          recentErrors: [],
+          recommendations: [],
+        };
       });
 
       const metrics = {
@@ -2876,7 +2975,7 @@ class WebDashboardService {
         reminders: reminderStats,
         system: systemInfo,
         resources: resourceData,
-        analytics: analyticsData
+        analytics: analyticsData,
       };
 
       logger.debug('Metrics collected successfully');
@@ -2909,7 +3008,7 @@ class WebDashboardService {
         memoryUsage: 0,
         memoryUsageFormatted: '0 B',
         uptime: 0,
-        uptimeFormatted: '0s'
+        uptimeFormatted: '0s',
       };
     }
   }
@@ -2924,7 +3023,9 @@ class WebDashboardService {
       const userCount = databaseService.getUserCount ? databaseService.getUserCount() : 0;
 
       // Get total messages
-      const totalMessages = databaseService.getTotalMessageCount ? databaseService.getTotalMessageCount() : 0;
+      const totalMessages = databaseService.getTotalMessageCount
+        ? databaseService.getTotalMessageCount()
+        : 0;
 
       // Get reminder stats
       const reminderStats = databaseService.getReminderStats();
@@ -2932,7 +3033,7 @@ class WebDashboardService {
       return {
         userCount,
         totalMessages,
-        reminders: reminderStats
+        reminders: reminderStats,
       };
     } catch (error) {
       logger.warn(`Failed to get database stats: ${error.message}`);
@@ -2943,8 +3044,8 @@ class WebDashboardService {
           totalReminders: 0,
           activeReminders: 0,
           completedReminders: 0,
-          cancelledReminders: 0
-        }
+          cancelledReminders: 0,
+        },
       };
     }
   }
@@ -2963,7 +3064,7 @@ class WebDashboardService {
         totalReminders: 0,
         activeReminders: 0,
         completedReminders: 0,
-        cancelledReminders: 0
+        cancelledReminders: 0,
       };
     }
   }
@@ -3000,7 +3101,7 @@ class WebDashboardService {
         totalFormatted: this.formatBytes(totalMemory),
         freeFormatted: this.formatBytes(freeMemory),
         usedFormatted: this.formatBytes(usedMemory),
-        usagePercent: Math.round((usedMemory / totalMemory) * 100)
+        usagePercent: Math.round((usedMemory / totalMemory) * 100),
       },
       process: {
         pid: process.pid,
@@ -3010,14 +3111,14 @@ class WebDashboardService {
         external: processMemory.external,
         rssFormatted: this.formatBytes(processMemory.rss),
         heapTotalFormatted: this.formatBytes(processMemory.heapTotal),
-        heapUsedFormatted: this.formatBytes(processMemory.heapUsed)
+        heapUsedFormatted: this.formatBytes(processMemory.heapUsed),
       },
       cpu: {
         count: os.cpus().length,
         model: os.cpus()[0]?.model || 'Unknown',
         loadAverage: os.loadavg(),
-        loadPercent: Math.round((os.loadavg()[0] / os.cpus().length) * 100)
-      }
+        loadPercent: Math.round((os.loadavg()[0] / os.cpus().length) * 100),
+      },
     };
   }
 
@@ -3025,27 +3126,33 @@ class WebDashboardService {
     try {
       // Check if cached and still valid (1 hour cache)
       const cacheExpiry = 60 * 60 * 1000; // 1 hour
-      if (this.externalIpCache.value && 
-          this.externalIpCache.timestamp && 
-          Date.now() - this.externalIpCache.timestamp < cacheExpiry) {
+      if (
+        this.externalIpCache.value &&
+        this.externalIpCache.timestamp &&
+        Date.now() - this.externalIpCache.timestamp < cacheExpiry
+      ) {
         return this.externalIpCache.value;
       }
 
       // Fetch external IP from ipify.org API
       const https = require('https');
       const response = await new Promise((resolve, reject) => {
-        https.get('https://api.ipify.org?format=json', (res) => {
-          let data = '';
-          res.on('data', (chunk) => { data += chunk; });
-          res.on('end', () => {
-            try {
-              const parsed = JSON.parse(data);
-              resolve(parsed.ip);
-            } catch (e) {
-              reject(new Error('Failed to parse IP response'));
-            }
-          });
-        }).on('error', reject);
+        https
+          .get('https://api.ipify.org?format=json', (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              try {
+                const parsed = JSON.parse(data);
+                resolve(parsed.ip);
+              } catch (e) {
+                reject(new Error('Failed to parse IP response'));
+              }
+            });
+          })
+          .on('error', reject);
       });
 
       // Cache the result
@@ -3076,27 +3183,27 @@ class WebDashboardService {
     try {
       const ResourceOptimizer = require('../utils/resource-optimizer');
       const resourceStatus = ResourceOptimizer.monitorResources();
-      
+
       return {
         memory: {
           status: resourceStatus.memory.status,
           used: resourceStatus.memory.used,
           free: resourceStatus.memory.free,
-          percentage: Math.round(resourceStatus.memory.percentage)
+          percentage: Math.round(resourceStatus.memory.percentage),
         },
         performance: {
           status: resourceStatus.performance.status,
           responseTime: resourceStatus.performance.responseTime,
-          load: resourceStatus.performance.load
+          load: resourceStatus.performance.load,
         },
-        optimizationTier: resourceStatus.optimizationTier || 'Standard'
+        optimizationTier: resourceStatus.optimizationTier || 'Standard',
       };
     } catch (error) {
       logger.warn(`Failed to get resource data: ${error.message}`);
       return {
         memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
         performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
-        optimizationTier: 'Standard'
+        optimizationTier: 'Standard',
       };
     }
   }
@@ -3108,7 +3215,7 @@ class WebDashboardService {
   async getAnalyticsData() {
     try {
       const databaseStats = await this.getDatabaseStats();
-      
+
       // Get optimization recommendations
       let recommendations = [];
       try {
@@ -3116,7 +3223,7 @@ class WebDashboardService {
         const DiscordAnalytics = require('../utils/discord-analytics');
         const analyticsData = await DiscordAnalytics.generateDailyReport();
         const resourceStatus = await ResourceOptimizer.monitorResources();
-        
+
         recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
           analyticsData,
           { averageResponseTime: resourceStatus.performance.responseTime }
@@ -3133,10 +3240,10 @@ class WebDashboardService {
           totalCommands: 0,
           successRate: 100,
           errorRate: 0,
-          avgResponseTime: 0
+          avgResponseTime: 0,
         },
         recommendations: recommendations.slice(0, 3),
-        recentErrors: this.getRecentErrors(10)
+        recentErrors: this.getRecentErrors(10),
       };
     } catch (error) {
       logger.warn(`Failed to get analytics data: ${error.message}`);
@@ -3147,10 +3254,10 @@ class WebDashboardService {
           totalCommands: 0,
           successRate: 100,
           errorRate: 0,
-          avgResponseTime: 0
+          avgResponseTime: 0,
         },
         recommendations: ['System monitoring active'],
-        recentErrors: this.getRecentErrors(10)
+        recentErrors: this.getRecentErrors(10),
       };
     }
   }
@@ -3201,11 +3308,11 @@ class WebDashboardService {
     try {
       const packageJson = require('../../package.json');
       const { execSync } = require('child_process');
-      
+
       let commitSha = 'unknown';
       let commitUrl = '';
       let releaseUrl = '';
-      
+
       try {
         commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
         commitUrl = `https://github.com/chrishaycock/aszune-ai-bot/commit/${commitSha}`;
@@ -3222,7 +3329,7 @@ class WebDashboardService {
         commitUrl,
         releaseUrl,
         nodeVersion: process.version,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.warn(`Failed to get version info: ${error.message}`);
@@ -3232,7 +3339,7 @@ class WebDashboardService {
         commitUrl: '',
         releaseUrl: 'https://github.com/chrishaycock/aszune-ai-bot/releases',
         nodeVersion: process.version,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -3244,32 +3351,32 @@ class WebDashboardService {
   async getDatabaseSchema() {
     try {
       const tables = [];
-      
+
       // Define expected tables
       const expectedTables = ['users', 'user_messages', 'conversation_history', 'reminders'];
-      
+
       for (const tableName of expectedTables) {
         try {
           const count = await this.getDatabaseTableRowCount(tableName);
           tables.push({
             name: tableName,
             rowCount: count,
-            description: this.getTableDescription(tableName)
+            description: this.getTableDescription(tableName),
           });
         } catch (e) {
           logger.debug(`Table ${tableName} not found or error reading: ${e.message}`);
         }
       }
-      
+
       return {
         tables,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.warn(`Failed to get database schema: ${error.message}`);
       return {
         tables: [],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -3285,7 +3392,7 @@ class WebDashboardService {
       users: 'User profiles and stats',
       user_messages: 'Legacy user messages (deprecated)',
       conversation_history: 'AI conversation history with roles',
-      reminders: 'User reminders with scheduling info'
+      reminders: 'User reminders with scheduling info',
     };
     return descriptions[tableName] || 'Unknown table';
   }
@@ -3373,7 +3480,7 @@ class WebDashboardService {
         returnedRows: data?.length || 0,
         columns: this.getTableColumns(tableName),
         data: data || [],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.warn(`Failed to get database contents for ${tableName}: ${error.message}`);
@@ -3389,10 +3496,18 @@ class WebDashboardService {
    */
   getTableColumns(tableName) {
     const columns = {
-      user_stats: ['user_id', 'username', 'message_count', 'total_summaries', 'total_commands', 'last_active', 'first_seen'],
+      user_stats: [
+        'user_id',
+        'username',
+        'message_count',
+        'total_summaries',
+        'total_commands',
+        'last_active',
+        'first_seen',
+      ],
       user_messages: ['id', 'user_id', 'message', 'timestamp'],
       conversation_history: ['id', 'user_id', 'role', 'message', 'timestamp'],
-      reminders: ['id', 'user_id', 'message', 'scheduled_time', 'status', 'created_at']
+      reminders: ['id', 'user_id', 'message', 'scheduled_time', 'status', 'created_at'],
     };
     return columns[tableName] || [];
   }
@@ -3417,7 +3532,7 @@ class WebDashboardService {
           severity: 'info',
           message: 'System healthy and performing optimally',
           action: 'Continue monitoring',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -3430,8 +3545,8 @@ class WebDashboardService {
           severity: 'info',
           message: 'System monitoring active',
           action: 'Continue monitoring',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       ];
     }
   }
@@ -3450,7 +3565,7 @@ class WebDashboardService {
         severity: 'critical',
         message: 'Heap memory usage exceeds 90%',
         action: 'Consider cache cleanup or server restart',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else if (ratio > 0.75) {
       recommendations.push({
@@ -3458,7 +3573,7 @@ class WebDashboardService {
         severity: 'warning',
         message: 'Heap memory usage at 75%+',
         action: 'Monitor memory usage closely',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -3474,7 +3589,7 @@ class WebDashboardService {
         severity: 'warning',
         message: `Cache hit rate is low (${metrics.cache.hitRate}%)`,
         action: 'Review cache configuration and eviction policy',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -3490,7 +3605,7 @@ class WebDashboardService {
         severity: 'info',
         message: `Database contains ${metrics.database.totalMessages} messages`,
         action: 'Consider archival of old messages',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }

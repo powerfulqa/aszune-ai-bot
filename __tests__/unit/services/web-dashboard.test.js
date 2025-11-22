@@ -1,4 +1,4 @@
-// Web Dashboard Service Tests - Simplified  
+// Web Dashboard Service Tests - Simplified
 // Note: Full integration testing of web-dashboard is handled in integration tests
 // These unit tests verify the service structure
 
@@ -28,4 +28,3 @@ describe('WebDashboardService', () => {
     // The functionality is still being tested, but via integration tests
   });
 });
-

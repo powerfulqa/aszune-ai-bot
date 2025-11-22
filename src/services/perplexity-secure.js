@@ -409,7 +409,11 @@ class PerplexityService {
    * @private
    */
   _validateResponseStructure(responseData) {
-    if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
+    if (
+      !responseData.choices ||
+      !Array.isArray(responseData.choices) ||
+      responseData.choices.length === 0
+    ) {
       throw ErrorHandler.createError(
         'Invalid response: missing or empty choices array',
         ERROR_TYPES.API_ERROR

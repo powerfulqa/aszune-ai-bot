@@ -8,11 +8,13 @@
 
 ## 📊 Dashboard System Architecture
 
-The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface for system monitoring, management, and operational control. The system consists of:
+The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface for system
+monitoring, management, and operational control. The system consists of:
 
 1. **Unified Header Bar** - Consistent branding and controls across all pages
 2. **Smart Navigation** - 9-item navbar with auto-hiding of current page
-3. **5 Core Feature Pages** - Log Viewer, Service Management, Config Editor, Network Status, Reminders
+3. **5 Core Feature Pages** - Log Viewer, Service Management, Config Editor, Network Status,
+   Reminders
 4. **Reference Pages** - Commands, Database, Error Logs
 5. **Real-Time Updates** - Socket.io for logs, polling for system metrics
 
@@ -21,9 +23,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ## 🎯 Dashboard Pages Overview
 
 ### 1. 📊 Dashboard (index.html)
+
 **Purpose**: Main system overview and analytics hub
 
 **Features**:
+
 - Real-time system metrics overview
 - Bot activity statistics
 - Cache performance metrics
@@ -35,9 +39,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 2. 📋 Real-Time Log Viewer (logs-viewer-demo.html)
+
 **Purpose**: Monitor application logs with real-time streaming and filtering
 
 **Key Capabilities**:
+
 - Live log streaming via Socket.io
 - Filter by log level (Debug, Info, Warning, Error)
 - Full-text search across logs
@@ -47,12 +53,14 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - Export functionality
 
 **Use Cases**:
+
 - Troubleshooting bot issues in real-time
 - Monitoring API interactions
 - Debugging user message handling
 - Tracking cache operations
 
 **Demo Data**:
+
 - Real perplexity API calls
 - Cache operations (hits/misses)
 - User message processing
@@ -61,9 +69,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 3. 🔧 Service Management (service-management-demo.html)
+
 **Purpose**: Monitor and control system services
 
 **Key Capabilities**:
+
 - View service status (running/stopped)
 - Display service uptime and memory usage
 - One-click restart controls
@@ -73,12 +83,14 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - Automatic health check polling (5-second intervals)
 
 **Managed Services**:
+
 - `aszune-ai-bot` - Main Discord bot
 - `nginx` - Web server
 - `postgresql` - Database server
 - Other systemd services
 
 **Use Cases**:
+
 - Quick service restart on failures
 - Performance monitoring
 - Uptime verification
@@ -88,9 +100,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 4. ⚙️ Configuration Editor (config-editor-demo.html)
+
 **Purpose**: View and edit bot configuration securely
 
 **Key Capabilities**:
+
 - View .env and config.js files
 - Safe editing with validation
 - Automatic timestamped backups
@@ -101,12 +115,14 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - Rollback to previous versions
 
 **Protected Edits**:
+
 - Only approved files can be edited (.env, config.js)
 - .env.example is read-only
 - Path traversal attacks prevented
 - Required keys validated
 
 **Use Cases**:
+
 - Update API keys without redeployment
 - Configure reminder schedules
 - Adjust cache settings
@@ -116,9 +132,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 5. 🌐 Network & Connectivity Status (network-status-demo.html)
+
 **Purpose**: Monitor network interfaces and connectivity
 
 **Key Capabilities**:
+
 - Display local and external IP addresses
 - Network interface status (eth0, wlan0, lo)
 - IPv4 and IPv6 support
@@ -131,11 +149,13 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - **v1.9.0 Enhancement**: Improved text contrast for accessibility
 
 **Network Interfaces**:
+
 - **eth0**: Wired ethernet connection
 - **wlan0**: WiFi wireless connection
 - **lo**: Loopback interface (127.0.0.1)
 
 **Use Cases**:
+
 - Verify network connectivity
 - Monitor WiFi signal strength
 - Check DNS resolution
@@ -144,6 +164,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - Monitor bandwidth usage
 
 **Accessibility Improvements**:
+
 - Dark label colors (#2c3e50) for better contrast
 - Improved readability on light backgrounds
 - Enhanced visual hierarchy
@@ -151,9 +172,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 6. ⏰ Reminder Management (reminder-management-demo.html)
+
 **Purpose**: Create, view, and manage reminders
 
 **Key Capabilities**:
+
 - Create reminders with custom messages
 - Schedule reminders for future times
 - Categorize by type (General, Important, Follow-up, Maintenance)
@@ -167,12 +190,14 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - **v1.9.0 Enhancement**: Fixed navbar link hiding
 
 **Reminder Types**:
+
 - **General**: Standard reminders
 - **Important**: High-priority items
 - **Follow-up**: Requires follow-up action
 - **Maintenance**: System maintenance tasks
 
 **Use Cases**:
+
 - Schedule maintenance windows
 - Set important task reminders
 - Track follow-up items
@@ -183,9 +208,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 7. 🎮 Commands Reference (commands.html)
+
 **Purpose**: Display all bot slash commands and usage
 
 **Included Commands**:
+
 - `/help` - List all commands
 - `/chat` - Send a message to the AI
 - `/summary` - Summarize conversation
@@ -198,6 +225,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - `/clear` - Clear conversation history
 
 **Use Cases**:
+
 - User self-service help
 - Command discovery
 - Usage documentation
@@ -206,9 +234,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 8. 💾 Database Viewer (database.html)
+
 **Purpose**: View database contents and structure
 
 **Features**:
+
 - View database tables
 - Display table schemas
 - Browse table contents
@@ -216,6 +246,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - View data types and constraints
 
 **Use Cases**:
+
 - Verify data persistence
 - Debug data issues
 - Monitor conversation history
@@ -225,9 +256,11 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ---
 
 ### 9. ⚠️ Error Logs (error-logs.html)
+
 **Purpose**: View historical error logs and warnings
 
 **Features**:
+
 - Display error history
 - Filter by severity
 - Timestamp tracking
@@ -236,6 +269,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - Export error logs
 
 **Use Cases**:
+
 - Post-incident analysis
 - Trend identification
 - Performance debugging
@@ -247,6 +281,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 ## 🎨 UI/UX Design
 
 ### Header Design
+
 - **Logo/Title**: "Aszune AI Bot Dashboard"
 - **Version Badge**: Shows current version (v1.9.0) and commit SHA
 - **Control Buttons**:
@@ -255,6 +290,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - **Status Indicator**: Real-time connection status (green = connected)
 
 ### Navigation Bar
+
 - **Sticky Position**: Always visible during scrolling
 - **Current Page Hiding**: Automatically hides the current page's link
 - **Visual Feedback**: Indicates active page
@@ -262,6 +298,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - **Icon + Label**: Clear identification of each section
 
 ### Color Scheme
+
 - **Primary**: Purple gradient (#667eea to #764ba2)
 - **Text**: Dark gray (#2c3e50)
 - **Accents**: Sky blue (#87ceeb)
@@ -270,6 +307,7 @@ The Aszune AI Bot v1.9.0 dashboard provides a comprehensive web-based interface 
 - **Error**: Red (#e74c3c)
 
 ### Typography
+
 - **Font Family**: System default (-apple-system, BlinkMacSystemFont, 'Segoe UI')
 - **Headings**: Bold, dark gray
 - **Body**: Regular weight, good line spacing
@@ -298,18 +336,21 @@ API Integration (backend endpoints)
 ## 📱 Responsive Design
 
 ### Desktop (1200px+)
+
 - Full-width layout
 - All navbar items visible
 - Optimized spacing
 - Charts and graphs displayed
 
 ### Tablet (768px - 1199px)
+
 - Adjusted grid layouts
 - Navbar items may wrap
 - Touch-friendly buttons
 - Stacked charts
 
 ### Mobile (< 768px)
+
 - Single column layout
 - Hamburger menu for navbar
 - Larger touch targets
@@ -343,13 +384,13 @@ API Integration (backend endpoints)
 
 ## 🚀 Performance Metrics
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Page Load | < 500ms | ✅ |
-| Log Streaming | 60+ entries/sec | ✅ |
-| Memory (Dashboard) | < 50MB | ✅ |
-| Service Polling | 5-second interval | ✅ |
-| Navbar Response | Instant | ✅ |
+| Metric             | Target            | Status |
+| ------------------ | ----------------- | ------ |
+| Page Load          | < 500ms           | ✅     |
+| Log Streaming      | 60+ entries/sec   | ✅     |
+| Memory (Dashboard) | < 50MB            | ✅     |
+| Service Polling    | 5-second interval | ✅     |
+| Navbar Response    | Instant           | ✅     |
 
 ---
 
@@ -368,6 +409,7 @@ API Integration (backend endpoints)
 ## 🎯 Future Enhancements
 
 **Planned for Post-v1.9.0**:
+
 - [ ] Authentication layer
 - [ ] Multi-user sessions
 - [ ] Dark mode theme

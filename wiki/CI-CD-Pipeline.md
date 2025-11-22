@@ -7,10 +7,10 @@ in `.github/workflows/unified-ci.yml` and runs automatically on push and pull re
 
 v1.8.0 introduced a dual test coverage enforcement model:
 
-| Layer | Threshold | Config | Purpose |
-| ----- | --------- | ------ | ------- |
-| Critical files | ≥80% statements | `jest.critical-coverage.config.js` | Early fail for core reliability paths |
-| Global baseline | ≥65% statements | `jest.config.js` | Sustainable confidence without blocking iteration |
+| Layer           | Threshold       | Config                             | Purpose                                           |
+| --------------- | --------------- | ---------------------------------- | ------------------------------------------------- |
+| Critical files  | ≥80% statements | `jest.critical-coverage.config.js` | Early fail for core reliability paths             |
+| Global baseline | ≥65% statements | `jest.config.js`                   | Sustainable confidence without blocking iteration |
 
 Critical gate runs first; if it fails, the full suite is skipped to save CI minutes.
 
@@ -24,7 +24,7 @@ Critical gate runs first; if it fails, the full suite is skipped to save CI minu
 6. **Coverage Enforcement**: Runs critical coverage gate (80% threshold)
 7. **Coverage Reporting**: Uploads full-suite coverage data to Codecov and QLTY (global ≥65%)
 8. **Quality Gates**: Enforces code quality standards and metrics
-8. **Deployment**: Prepares for deployment when merging to the main branch
+9. **Deployment**: Prepares for deployment when merging to the main branch
 
 ## Workflow Configuration
 
@@ -84,7 +84,8 @@ The current status of the CI pipeline is displayed on the README:
 
 - **Automated Quality Assurance**: Tests run automatically on every code change
 - **Early Error Detection**: Identifies issues before they reach production
-- **Coverage Tracking**: Dual-threshold monitoring (targeted critical protection + sustainable global baseline)
+- **Coverage Tracking**: Dual-threshold monitoring (targeted critical protection + sustainable
+  global baseline)
 - **Security Scanning**: Identifies potential vulnerabilities
 - **Deployment Automation**: Streamlines the release process
 
@@ -114,7 +115,8 @@ The pipeline now includes comprehensive code quality checks with qlty:
 - **Code Standards**: ESLint, Prettier, and documentation formatting
 - **Duplication Detection**: Identifies and prevents code duplication
 - **Secret Detection**: Prevents accidental secret commits
-- **Dual Coverage Gates**: Prevent regressions in critical paths while allowing incremental global improvement
+- **Dual Coverage Gates**: Prevent regressions in critical paths while allowing incremental global
+  improvement
 
 ## Recent Improvements
 

@@ -19,6 +19,7 @@
 ### Accessing the Dashboard
 
 1. **Start the Bot:**
+
    ```bash
    npm start
    ```
@@ -60,6 +61,7 @@ From the main dashboard menu, select any feature:
 **Purpose:** Monitor and analyze bot logs in real-time
 
 **Key Capabilities:**
+
 - Live WebSocket-based log streaming
 - Multi-level filtering (DEBUG, INFO, WARN, ERROR)
 - Service-based filtering
@@ -69,14 +71,15 @@ From the main dashboard menu, select any feature:
 - Memory-efficient (10K entries max)
 
 **Typical Use Cases:**
+
 - Debug issues in production
 - Monitor error rates
 - Track service performance
 - Analyze user interactions
 - Create audit trails
 
-**Demo:** `dashboard/public/logs-viewer-demo.html`
-**Wiki:** [Dashboard-Feature-1-Log-Viewer.md](../wiki/Dashboard-Feature-1-Log-Viewer.md)
+**Demo:** `dashboard/public/logs-viewer-demo.html` **Wiki:**
+[Dashboard-Feature-1-Log-Viewer.md](../wiki/Dashboard-Feature-1-Log-Viewer.md)
 
 ---
 
@@ -85,6 +88,7 @@ From the main dashboard menu, select any feature:
 **Purpose:** Monitor and control bot services with systemd integration
 
 **Key Capabilities:**
+
 - Real-time service status monitoring
 - Start/stop/restart services
 - Uptime tracking and availability metrics
@@ -94,14 +98,15 @@ From the main dashboard menu, select any feature:
 - Historical uptime data
 
 **Typical Use Cases:**
+
 - Daily health checks
 - Emergency service restarts
 - Performance monitoring
 - Maintenance scheduling
 - Availability trending
 
-**Demo:** `dashboard/public/service-management-demo.html`
-**Wiki:** [Dashboard-Feature-2-Service-Management.md](../wiki/Dashboard-Feature-2-Service-Management.md)
+**Demo:** `dashboard/public/service-management-demo.html` **Wiki:**
+[Dashboard-Feature-2-Service-Management.md](../wiki/Dashboard-Feature-2-Service-Management.md)
 
 ---
 
@@ -110,6 +115,7 @@ From the main dashboard menu, select any feature:
 **Purpose:** Safely edit bot configuration without restarting
 
 **Key Capabilities:**
+
 - Edit .env variables
 - Edit config.js settings
 - Pre-save validation
@@ -119,14 +125,15 @@ From the main dashboard menu, select any feature:
 - Syntax highlighting
 
 **Typical Use Cases:**
+
 - Update API keys
 - Enable/disable features
 - Adjust performance settings
 - Change database paths
 - Modify cache settings
 
-**Demo:** `dashboard/public/config-editor-demo.html`
-**Wiki:** [Dashboard-Feature-3-Config-Editor.md](../wiki/Dashboard-Feature-3-Config-Editor.md)
+**Demo:** `dashboard/public/config-editor-demo.html` **Wiki:**
+[Dashboard-Feature-3-Config-Editor.md](../wiki/Dashboard-Feature-3-Config-Editor.md)
 
 ---
 
@@ -135,6 +142,7 @@ From the main dashboard menu, select any feature:
 **Purpose:** Monitor network interfaces and connectivity health
 
 **Key Capabilities:**
+
 - Display all network interfaces
 - Public IP detection
 - Connectivity tests to multiple endpoints
@@ -144,14 +152,15 @@ From the main dashboard menu, select any feature:
 - Bandwidth monitoring
 
 **Typical Use Cases:**
+
 - Verify internet connectivity
 - Diagnose slow performance
 - Monitor WiFi quality
 - Track bandwidth usage
 - Identify ISP issues
 
-**Demo:** `dashboard/public/network-status-demo.html`
-**Wiki:** [Dashboard-Feature-5-Network-Status.md](../wiki/Dashboard-Feature-5-Network-Status.md)
+**Demo:** `dashboard/public/network-status-demo.html` **Wiki:**
+[Dashboard-Feature-5-Network-Status.md](../wiki/Dashboard-Feature-5-Network-Status.md)
 
 ---
 
@@ -160,6 +169,7 @@ From the main dashboard menu, select any feature:
 **Purpose:** Create, view, edit, and manage scheduled reminders
 
 **Key Capabilities:**
+
 - Web-based CRUD operations
 - Flexible scheduling (one-time, daily, weekly, custom)
 - Persistent SQLite storage
@@ -169,14 +179,15 @@ From the main dashboard menu, select any feature:
 - Timezone support
 
 **Typical Use Cases:**
+
 - Schedule team meetings
 - Set daily tasks
 - Create recurring reminders
 - Track reminder history
 - Manage alert notifications
 
-**Demo:** `dashboard/public/reminder-management-demo.html`
-**Wiki:** [Dashboard-Feature-7-Reminders.md](../wiki/Dashboard-Feature-7-Reminders.md)
+**Demo:** `dashboard/public/reminder-management-demo.html` **Wiki:**
+[Dashboard-Feature-7-Reminders.md](../wiki/Dashboard-Feature-7-Reminders.md)
 
 ---
 
@@ -276,6 +287,7 @@ dashboard/
 **Current Status:** Unauthenticated (local dashboard only)
 
 **For Production Deployments:**
+
 1. Implement JWT token authentication
 2. Add role-based access control (RBAC)
 3. Use HTTPS/TLS encryption
@@ -285,12 +297,14 @@ dashboard/
 ### Data Protection
 
 **Sensitive Information:**
+
 - API keys are redacted in logs and exports
 - Passwords never displayed in configuration editor
 - Database credentials protected
 - Token values masked in UI
 
 **Backup Security:**
+
 - Backups stored in `.backup/` directory
 - Apply file permissions to protect sensitive data
 - Rotate backups automatically (30-day retention)
@@ -298,12 +312,14 @@ dashboard/
 ### API Security
 
 **Validation:**
+
 - Input validation on all endpoints
 - Request size limits
 - Parameter type checking
 - Sanitization of user inputs
 
 **Rate Limiting (Recommended):**
+
 ```javascript
 {
   windowMs: 15 * 60 * 1000,  // 15 minutes
@@ -319,6 +335,7 @@ dashboard/
 ### Optimization Tips
 
 #### Dashboard Performance
+
 - Limit log entries to last 10,000
 - Paginate result sets (50-100 items per page)
 - Use WebSocket for real-time updates instead of polling
@@ -326,6 +343,7 @@ dashboard/
 - Compress export files before download
 
 #### Server Performance
+
 - Use connection pooling for database
 - Implement caching layer for expensive operations
 - Use worker threads for long-running tasks
@@ -333,6 +351,7 @@ dashboard/
 - Optimize network requests (batch where possible)
 
 #### Network Performance
+
 - Minimize WebSocket payload size
 - Compress responses with gzip
 - Use HTTP/2 for multiplexing
@@ -342,6 +361,7 @@ dashboard/
 ### Monitoring
 
 **Key Metrics to Track:**
+
 - API response times
 - WebSocket connection count
 - Memory usage trend
@@ -351,6 +371,7 @@ dashboard/
 - Cache hit rate
 
 **Recommended Tools:**
+
 - Application Performance Monitoring (APM)
 - System resource monitoring
 - Network traffic analysis
@@ -376,6 +397,7 @@ http://localhost:3000/dashboard
 ### Production Deployment
 
 #### Prerequisites
+
 - Node.js 16+ installed
 - MongoDB or SQLite for persistence
 - systemd or process manager (PM2)
@@ -385,6 +407,7 @@ http://localhost:3000/dashboard
 #### Steps
 
 1. **Install & Configure**
+
    ```bash
    npm install
    npm run build
@@ -393,6 +416,7 @@ http://localhost:3000/dashboard
    ```
 
 2. **Start with Process Manager**
+
    ```bash
    npm install -g pm2
    pm2 start src/index.js --name "aszune-ai-bot"
@@ -401,14 +425,15 @@ http://localhost:3000/dashboard
    ```
 
 3. **Configure Reverse Proxy (nginx)**
+
    ```nginx
    server {
      listen 443 ssl;
      server_name bot.example.com;
-     
+
      ssl_certificate /path/to/cert.pem;
      ssl_certificate_key /path/to/key.pem;
-     
+
      location / {
        proxy_pass http://localhost:3000;
        proxy_http_version 1.1;
@@ -442,6 +467,7 @@ npm start
 ```
 
 **Pi-Specific Configuration:**
+
 ```javascript
 {
   MEMORY_LIMIT: 256,        // MB
@@ -461,6 +487,7 @@ npm start
 **Symptoms:** 404 or connection refused
 
 **Solutions:**
+
 1. Verify bot is running: `npm start`
 2. Check port 3000 is not blocked: `lsof -i :3000`
 3. Verify URL is correct: `http://localhost:3000/dashboard`
@@ -472,6 +499,7 @@ npm start
 **Symptoms:** Log viewer not updating, real-time features not working
 
 **Solutions:**
+
 1. Verify WebSocket port (default 3000)
 2. Check firewall rules
 3. Clear browser cache
@@ -484,6 +512,7 @@ npm start
 **Symptoms:** API calls fail with Internal Server Error
 
 **Solutions:**
+
 1. Check bot logs: Use Log Viewer feature
 2. Verify endpoint URL is correct
 3. Check request parameters
@@ -496,6 +525,7 @@ npm start
 **Symptoms:** Service shows "ERROR" or "UNHEALTHY"
 
 **Solutions:**
+
 1. Try restart from dashboard
 2. Check logs for specific error
 3. Verify service dependencies
@@ -508,6 +538,7 @@ npm start
 **Symptoms:** Dashboard shows increasing memory usage
 
 **Solutions:**
+
 1. Check log buffering size (reduce if needed)
 2. Enable garbage collection: `--expose-gc` flag
 3. Reduce cache size in configuration
@@ -520,6 +551,7 @@ npm start
 **Symptoms:** Updated config appears saved but behavior unchanged
 
 **Solutions:**
+
 1. Verify save was successful (success message shown)
 2. Check if bot restart required
 3. Verify changes were written to file
@@ -532,6 +564,7 @@ npm start
 **Symptoms:** Network connectivity shows ERROR
 
 **Solutions:**
+
 1. Verify internet connection
 2. Check DNS configuration
 3. Test with manual ping (terminal)
@@ -550,13 +583,13 @@ npm start
 const checkHealth = async () => {
   const services = await fetch('http://localhost:3000/api/services');
   const data = await services.json();
-  
+
   if (!data.success) {
     console.error('Health check failed');
     return;
   }
-  
-  const unhealthy = data.data.services.filter(s => s.health !== 'healthy');
+
+  const unhealthy = data.data.services.filter((s) => s.health !== 'healthy');
   if (unhealthy.length > 0) {
     console.warn('Unhealthy services:', unhealthy);
     // Send alert
@@ -575,22 +608,22 @@ schedule.scheduleJob('0 8 * * *', checkHealth);
 const analyzeLogs = async () => {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   const logs = await fetch(
     `http://localhost:3000/api/logs?level=ERROR&startTime=${yesterday.toISOString()}`
   );
   const data = await logs.json();
-  
+
   console.log(`Found ${data.data.logs.length} errors`);
-  
+
   // Export for analysis
   const export_res = await fetch('http://localhost:3000/api/logs/export', {
     method: 'POST',
     body: JSON.stringify({
       format: 'json',
       level: 'ERROR',
-      startTime: yesterday.toISOString()
-    })
+      startTime: yesterday.toISOString(),
+    }),
   });
 };
 ```
@@ -606,22 +639,22 @@ const createTeamReminders = async () => {
       type: 'recurring',
       recurrence: 'daily',
       scheduledTime: '09:00',
-      timezone: 'America/New_York'
+      timezone: 'America/New_York',
     },
     {
       message: 'Weekly review on Friday',
       type: 'recurring',
       recurrence: 'weekly',
       scheduledTime: '17:00',
-      timezone: 'America/New_York'
-    }
+      timezone: 'America/New_York',
+    },
   ];
-  
+
   for (const reminder of reminders) {
     await fetch('http://localhost:3000/api/reminders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reminder)
+      body: JSON.stringify(reminder),
     });
   }
 };
@@ -651,7 +684,8 @@ For issues, questions, or feature requests:
 1. Check [Troubleshooting](#troubleshooting) section
 2. Review relevant wiki article
 3. Check bot logs via Log Viewer
-4. File issue on GitHub: [github.com/powerfulqa/aszune-ai-bot/issues](https://github.com/powerfulqa/aszune-ai-bot/issues)
+4. File issue on GitHub:
+   [github.com/powerfulqa/aszune-ai-bot/issues](https://github.com/powerfulqa/aszune-ai-bot/issues)
 5. Contact maintainers
 
 ---

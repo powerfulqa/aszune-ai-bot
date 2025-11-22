@@ -4,11 +4,14 @@
 
 ## Overview
 
-The Reminder Management Interface provides a comprehensive web-based interface for managing scheduled reminders. Create, view, edit, and delete reminders with persistent SQLite storage and automatic recovery.
+The Reminder Management Interface provides a comprehensive web-based interface for managing
+scheduled reminders. Create, view, edit, and delete reminders with persistent SQLite storage and
+automatic recovery.
 
 ## Features
 
 ### Core Capabilities
+
 - **CRUD Operations:** Create, read, update, and delete reminders through intuitive UI
 - **Persistent Storage:** All reminders stored in SQLite with automatic backup
 - **Flexible Scheduling:** Support for various time formats and intervals
@@ -25,6 +28,7 @@ The Reminder Management Interface provides a comprehensive web-based interface f
 ### Reminder Types
 
 #### One-Time Reminders
+
 ```
 Set reminder for specific date/time:
 - Date: January 20, 2024
@@ -35,6 +39,7 @@ Set reminder for specific date/time:
 ```
 
 #### Daily Reminders
+
 ```
 Set reminder that repeats each day:
 - Time: 9:00 AM every day
@@ -44,6 +49,7 @@ Set reminder that repeats each day:
 ```
 
 #### Weekly Reminders
+
 ```
 Set reminder for specific day/time each week:
 - Day: Monday, Wednesday, Friday
@@ -53,6 +59,7 @@ Set reminder for specific day/time each week:
 ```
 
 #### Custom Interval Reminders
+
 ```
 Set reminder to repeat at custom intervals:
 - Every 2 hours: Regular status checks
@@ -64,6 +71,7 @@ Set reminder to repeat at custom intervals:
 ### Reminder Lifecycle
 
 #### Creation
+
 ```
 1. User fills out reminder form in dashboard
 2. System validates input
@@ -73,6 +81,7 @@ Set reminder to repeat at custom intervals:
 ```
 
 #### Execution
+
 ```
 1. Bot checks for due reminders every 60 seconds
 2. When reminder time arrives, notification triggers
@@ -82,6 +91,7 @@ Set reminder to repeat at custom intervals:
 ```
 
 #### History
+
 ```
 Track all reminder executions:
 - Date and time executed
@@ -94,6 +104,7 @@ Track all reminder executions:
 ## Usage Guide
 
 ### Accessing Reminder Dashboard
+
 1. Start the bot: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Reminder Management Interface** or navigate to `/reminders`
@@ -101,6 +112,7 @@ Track all reminder executions:
 ### Creating a Reminder
 
 #### Basic Steps
+
 ```
 1. Click "Create New Reminder" button
 2. Enter reminder message
@@ -112,6 +124,7 @@ Track all reminder executions:
 ```
 
 #### Example: One-Time Reminder
+
 ```
 Message: "Doctor appointment"
 Date: January 20, 2024
@@ -123,6 +136,7 @@ Result: Reminder triggered at 3:00 PM on Jan 20
 ```
 
 #### Example: Daily Reminder
+
 ```
 Message: "Time to backup important files"
 Time: 11:00 PM
@@ -133,6 +147,7 @@ Result: Reminder triggers every day at 11:00 PM local time
 ```
 
 #### Example: Weekly Reminder
+
 ```
 Message: "Weekly project review meeting"
 Days: Monday, Wednesday, Friday
@@ -146,6 +161,7 @@ Result: Reminder triggers at 2:00 PM on M/W/F
 ### Viewing Reminders
 
 #### All Reminders List
+
 ```
 Shows all active reminders:
 - Message content
@@ -162,6 +178,7 @@ Sortable by:
 ```
 
 #### Reminder Details
+
 ```
 Click reminder to see full details:
 - Complete message
@@ -176,6 +193,7 @@ Click reminder to see full details:
 ### Editing Reminders
 
 #### Modify Existing Reminder
+
 ```
 1. Click reminder in list
 2. Click "Edit" button
@@ -186,6 +204,7 @@ Click reminder to see full details:
 ```
 
 #### Example: Update Meeting Time
+
 ```
 Current: Monday 2:00 PM → Friday 3:00 PM
 1. Click reminder
@@ -196,6 +215,7 @@ Current: Monday 2:00 PM → Friday 3:00 PM
 ```
 
 #### Example: Extend Reminder Period
+
 ```
 Current: Repeats for 30 days → Continue indefinitely
 1. Click reminder
@@ -207,6 +227,7 @@ Current: Repeats for 30 days → Continue indefinitely
 ### Deleting Reminders
 
 #### Remove Single Reminder
+
 ```
 1. Find reminder in list
 2. Click "Delete" button
@@ -216,6 +237,7 @@ Current: Repeats for 30 days → Continue indefinitely
 ```
 
 #### Delete Multiple Reminders
+
 ```
 1. Select checkboxes for reminders to delete
 2. Click "Delete Selected" button
@@ -226,6 +248,7 @@ Current: Repeats for 30 days → Continue indefinitely
 ### Viewing Execution History
 
 #### Recent Executions
+
 ```
 View when reminders were triggered:
 - Date and time executed
@@ -241,6 +264,7 @@ Sort by:
 ```
 
 #### History Analysis
+
 ```
 Analyze reminder performance:
 - Total reminders created
@@ -255,11 +279,13 @@ Analyze reminder performance:
 ### REST Endpoints
 
 #### Get All Reminders
+
 ```http
 GET /api/reminders
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -282,11 +308,13 @@ GET /api/reminders
 ```
 
 #### Get Reminder Details
+
 ```http
 GET /api/reminders/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -315,6 +343,7 @@ GET /api/reminders/:id
 ```
 
 #### Create Reminder
+
 ```http
 POST /api/reminders
 Content-Type: application/json
@@ -329,6 +358,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -344,6 +374,7 @@ Content-Type: application/json
 ```
 
 #### Create Recurring Reminder
+
 ```http
 POST /api/reminders
 Content-Type: application/json
@@ -359,6 +390,7 @@ Content-Type: application/json
 ```
 
 #### Update Reminder
+
 ```http
 PUT /api/reminders/:id
 Content-Type: application/json
@@ -371,6 +403,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -385,11 +418,13 @@ Content-Type: application/json
 ```
 
 #### Delete Reminder
+
 ```http
 DELETE /api/reminders/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -399,11 +434,13 @@ DELETE /api/reminders/:id
 ```
 
 #### Get Execution History
+
 ```http
 GET /api/reminders/:id/history?limit=50
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -421,11 +458,13 @@ GET /api/reminders/:id/history?limit=50
 ```
 
 #### Pause Reminder
+
 ```http
 POST /api/reminders/:id/pause
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -438,11 +477,13 @@ POST /api/reminders/:id/pause
 ```
 
 #### Resume Reminder
+
 ```http
 POST /api/reminders/:id/resume
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -457,6 +498,7 @@ POST /api/reminders/:id/resume
 ## Reminder Scheduling
 
 ### Time Format Support
+
 ```
 Natural language parsing:
 - "tomorrow at 2pm"
@@ -470,6 +512,7 @@ Natural language parsing:
 ```
 
 ### Recurrence Patterns
+
 ```
 Supported patterns:
 - once: Single execution
@@ -484,6 +527,7 @@ Supported patterns:
 ```
 
 ### Timezone Support
+
 ```
 Valid timezones:
 - UTC
@@ -501,6 +545,7 @@ Set with: "timezone": "America/New_York"
 ## Troubleshooting
 
 ### Reminder Not Triggering
+
 ```
 Steps to diagnose:
 1. Verify bot is running
@@ -513,6 +558,7 @@ Steps to diagnose:
 ```
 
 ### Can't Create Reminder
+
 ```
 If creation fails:
 1. Verify message is not empty
@@ -524,6 +570,7 @@ If creation fails:
 ```
 
 ### Reminder Executes at Wrong Time
+
 ```
 If timing is off:
 1. Verify timezone is correct
@@ -534,6 +581,7 @@ If timing is off:
 ```
 
 ### Execution History Missing
+
 ```
 If history not showing:
 1. Verify reminder actually executed
@@ -546,6 +594,7 @@ If history not showing:
 ## Integration Examples
 
 ### Daily Team Standup
+
 ```
 Message: "@team Daily standup at 9 AM"
 Type: Recurring (daily)
@@ -557,6 +606,7 @@ Result: Reminder triggers every day at 9 AM
 ```
 
 ### Weekly Backup Reminder
+
 ```
 Message: "Remember to backup files!"
 Type: Recurring (weekly)
@@ -569,6 +619,7 @@ Result: Reminder triggers every Friday at 5 PM
 ```
 
 ### One-Time Event Reminder
+
 ```
 Message: "Conference keynote starting in 30 minutes"
 Type: One-time
@@ -581,6 +632,7 @@ Result: Reminder triggers once at specified time
 ```
 
 ### Medication Reminder (Raspberry Pi)
+
 ```
 Message: "Take medication"
 Type: Recurring (every 8 hours)
@@ -596,6 +648,7 @@ Result: Reminder triggers 3x daily at specified times
 **File:** `src/services/web-dashboard.js` & `src/services/reminder-service.js`
 
 **Key Methods:**
+
 - `setupReminderRoutes()` - Initialize reminder endpoints
 - `createReminder()` - Add new reminder to database
 - `updateReminder()` - Modify existing reminder
@@ -606,6 +659,7 @@ Result: Reminder triggers 3x daily at specified times
 - `pauseReminder()` / `resumeReminder()` - Pause/resume operations
 
 **Database Schema:**
+
 ```sql
 CREATE TABLE reminders (
   id TEXT PRIMARY KEY,
@@ -633,6 +687,7 @@ CREATE TABLE reminder_history (
 ```
 
 **Configuration:**
+
 ```javascript
 REMINDERS: {
   CHECK_INTERVAL: 60000, // 60 seconds
@@ -657,6 +712,7 @@ REMINDERS: {
 ## Advanced Topics
 
 ### Custom Recurrence Logic
+
 ```javascript
 // Define complex recurring patterns
 RECURRENCE: {
@@ -667,6 +723,7 @@ RECURRENCE: {
 ```
 
 ### Reminder Escalation
+
 ```javascript
 // Escalate reminders if not acknowledged
 ESCALATION: {
@@ -680,6 +737,7 @@ ESCALATION: {
 ```
 
 ### Integration with Other Services
+
 ```javascript
 // Send reminders to multiple channels
 INTEGRATIONS: {
@@ -700,6 +758,8 @@ INTEGRATIONS: {
 
 ## Demo
 
-Interactive demo available: [`reminder-management-demo.html`](../dashboard/public/reminder-management-demo.html)
+Interactive demo available:
+[`reminder-management-demo.html`](../dashboard/public/reminder-management-demo.html)
 
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Reminder Management Interface"
+Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Reminder
+Management Interface"

@@ -59,7 +59,7 @@ class DataStorage {
 
     try {
       const data = await fs.readFile(this.statsFile, 'utf8');
-      
+
       // Handle empty or whitespace-only files
       if (!data || !data.trim()) {
         logger.debug('User stats file is empty, starting with empty stats');
@@ -76,7 +76,11 @@ class DataStorage {
         return {};
       }
 
-      if (error instanceof SyntaxError || error.name === 'SyntaxError' || error.message.includes('JSON')) {
+      if (
+        error instanceof SyntaxError ||
+        error.name === 'SyntaxError' ||
+        error.message.includes('JSON')
+      ) {
         // Corrupted JSON file - log and recover
         logger.warn(`Corrupted user stats file (${error.message}), resetting to empty stats`);
         try {

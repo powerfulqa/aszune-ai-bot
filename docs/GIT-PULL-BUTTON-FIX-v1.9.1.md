@@ -9,15 +9,18 @@
 
 ## 📋 Issue Summary
 
-**Problem:** The git pull button on the dashboard had stopped working in the current version, though it was functional in v1.8.
+**Problem:** The git pull button on the dashboard had stopped working in the current version, though
+it was functional in v1.8.
 
-**Root Cause:** The frontend code did not properly validate HTTP response status codes before processing JSON responses from the backend.
+**Root Cause:** The frontend code did not properly validate HTTP response status codes before
+processing JSON responses from the backend.
 
 ---
 
 ## 🔍 Root Cause Analysis
 
 ### Backend Behavior
+
 The backend `/api/control/git-pull` POST endpoint returns HTTP status codes for different scenarios:
 
 ```javascript
@@ -59,12 +62,13 @@ The backend `/api/control/git-pull` POST endpoint returns HTTP status codes for 
 ### Frontend Bug
 
 **Original (Broken) Code:**
+
 ```javascript
 async handleGitPullClick() {
   try {
     const response = await fetch('/api/control/git-pull', { method: 'POST' });
     const data = await response.json();  // ❌ BUG: Doesn't check response.ok
-    
+
     if (data.success) {
       // Success path
       this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
@@ -78,7 +82,8 @@ async handleGitPullClick() {
 }
 ```
 
-**Problem:** 
+**Problem:**
+
 - Fetch API doesn't automatically reject on HTTP error status codes (400, 403, 500)
 - Code assumed if JSON parsing succeeded, the response was valid
 - Did not check `response.ok` property (which is true for 200-299, false otherwise)
@@ -92,6 +97,7 @@ async handleGitPullClick() {
 ### Split into Two Methods for Clarity
 
 **Main Method (`handleGitPullClick`):**
+
 ```javascript
 async handleGitPullClick() {
   const btn = document.getElementById('git-pull-btn');
@@ -128,6 +134,7 @@ async handleGitPullClick() {
 ```
 
 **Response Handler (`handleGitPullResponse`):**
+
 ```javascript
 handleGitPullResponse(response, data) {
   // Path 1: HTTP success AND success flag
@@ -167,7 +174,8 @@ handleGitPullResponse(response, data) {
    - HTTP error (400, 403, 500) - Include status code in message
    - Success with error flag - Standard error display
    - Successful pull - Show output and success message
-4. **✅ Display all error details** - Include HTTP status code, error message, details field, and stderr output
+4. **✅ Display all error details** - Include HTTP status code, error message, details field, and
+   stderr output
 5. **✅ Reduced complexity** - Split from 27 statements to 14 + 15 to pass linting rules
 
 ---
@@ -177,24 +185,28 @@ handleGitPullResponse(response, data) {
 ### Test Scenarios
 
 **Scenario 1: Successful Git Pull**
+
 - Button clicked → confirmation shown
 - Backend returns 200 OK with `success: true`
 - **Expected:** ✓ "Git pull completed - changes loaded" message, show git output
 - **Result:** ✅ Works correctly
 
 **Scenario 2: Permission Denied Error**
+
 - Button clicked → confirmation shown
 - Backend returns 403 Forbidden with `success: false`
 - **Expected:** ✗ "Git pull failed (HTTP 403): Permission denied..." message, show details
 - **Result:** ✅ Works correctly
 
 **Scenario 3: Git Command Failure**
+
 - Button clicked → confirmation shown
 - Backend returns 400 Bad Request with `success: false`
 - **Expected:** ✗ "Git pull failed (HTTP 400): Git pull failed" message, show error output
 - **Result:** ✅ Works correctly
 
 **Scenario 4: Network Error**
+
 - Button clicked → confirmation shown
 - Fetch fails (network error, timeout, etc.)
 - **Expected:** ✗ "Git pull error: [network error message]"
@@ -205,16 +217,19 @@ handleGitPullResponse(response, data) {
 ## 📊 Code Quality Impact
 
 ### Statement Count Reduction
+
 - **Before:** 27 statements (exceeds 25 limit)
 - **After:** 14 + 15 = 29, but split into two methods (14 in main, 15 in helper)
 - **Result:** ✅ Passes linting (each method under limit)
 
 ### Line Ending Fix
+
 - **Issue:** Auto-formatted code had LF instead of CRLF
 - **Solution:** Ran `npm run quality:fix` (Prettier)
 - **Result:** ✅ All 53 line ending errors fixed
 
 ### Test Coverage
+
 - Frontend handlers not unit-tested (browser DOM code)
 - Manual testing confirmed functionality works correctly
 - Backend endpoint already has full error handling in place
@@ -224,6 +239,7 @@ handleGitPullResponse(response, data) {
 ## 🔄 Files Changed
 
 **Modified:** `dashboard/public/dashboard.js`
+
 - Lines 645-678: Refactored git pull handling into two methods
 - Additions: 69 lines added (new structure)
 - Removals: 0 lines removed (functionality preserved)
@@ -261,14 +277,17 @@ handleGitPullResponse(response, data) {
 
 ## 📝 Regression Analysis
 
-**Why it broke:** Fetch API doesn't auto-reject on HTTP errors, and code assumed JSON parsing success meant request was valid.
+**Why it broke:** Fetch API doesn't auto-reject on HTTP errors, and code assumed JSON parsing
+success meant request was valid.
 
-**Why not caught earlier:** 
+**Why not caught earlier:**
+
 - Frontend browser code not unit-tested
 - Regression appeared only when testing manually
 - Git permissions or network issues may have masked the bug
 
 **Prevention for future:**
+
 - Document Fetch API behavior in code comments
 - Add frontend integration tests for dashboard controls
 - Consider adding error boundary component for dashboard
@@ -277,7 +296,10 @@ handleGitPullResponse(response, data) {
 
 ## ✨ Summary
 
-The git pull button feature has been restored to full functionality by properly validating HTTP response status codes before processing JSON responses. The fix includes three distinct error handling paths and displays detailed diagnostic information including HTTP status codes, error messages, and stderr output for debugging failed git pulls.
+The git pull button feature has been restored to full functionality by properly validating HTTP
+response status codes before processing JSON responses. The fix includes three distinct error
+handling paths and displays detailed diagnostic information including HTTP status codes, error
+messages, and stderr output for debugging failed git pulls.
 
 **Regression:** Fixed ✅  
 **Quality:** Passing ✅  

@@ -6,23 +6,30 @@
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-1200%2B%20Passing-brightgreen.svg)](#testing--coverage)
 
-[Release Notes](./docs/RELEASE-NOTES-v1.9.0.md) | [Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
+[Release Notes](./docs/RELEASE-NOTES-v1.9.0.md) |
+[Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
 
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
 with comprehensive analytics and monitoring features. Built for gaming communities, it provides
 lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time
 performance dashboards and server analytics directly within Discord.
 
-**v1.9.0** introduces **5 major dashboard features** with unified header, smart navigation, and UI improvements:
+**v1.9.0** introduces **5 major dashboard features** with unified header, smart navigation, and UI
+improvements:
+
 - 📋 **Real-Time Log Viewer** - Live log streaming with filtering and search
 - 🔧 **Service Status & Management** - Monitor and control services with one-click restart
 - ⚙️ **Configuration Editor** - Safe configuration management with validation and backups
-- 🌐 **Network & Connectivity Status** - Deep network diagnostics and monitoring (improved accessibility)
+- 🌐 **Network & Connectivity Status** - Deep network diagnostics and monitoring (improved
+  accessibility)
 - ⏰ **Reminder Management** - Create and schedule reminders with persistent storage
 
-All features include a **unified dashboard header** (version, Git Pull, Restart buttons) and **intelligent navigation bar** that auto-hides the current page. Fully backward compatible with v1.8.x.
+All features include a **unified dashboard header** (version, Git Pull, Restart buttons) and
+**intelligent navigation bar** that auto-hides the current page. Fully backward compatible with
+v1.8.x.
 
-**Current Status**: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01% functions
+**Current Status**: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01%
+functions
 
 ## Table of Contents
 
@@ -48,8 +55,6 @@ All features include a **unified dashboard header** (version, Git Pull, Restart 
 
 ---
 
- 
-
 ## Features
 
 - 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar**
@@ -61,11 +66,10 @@ All features include a **unified dashboard header** (version, Git Pull, Restart 
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between
   messages.
 - 📝 **Help Command:** `/help` commands list all available commands and usage.
-- 🧾 **Conversation Summary:** `/summary` commands generate a summary of your current
-  conversation using UK English. (Now robust to API requirements: last message must be from
-  user/tool)
-- 📝 **Text Summarisation:** `/summarise <text>` command generates a summary
-  of any provided text using UK English.
+- 🧾 **Conversation Summary:** `/summary` commands generate a summary of your current conversation
+  using UK English. (Now robust to API requirements: last message must be from user/tool)
+- 📝 **Text Summarisation:** `/summarise <text>` command generates a summary of any provided text
+  using UK English.
 - 🇬🇧 **UK English Responses:** All bot replies and summaries use UK English spelling and phrasing.
 - 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting for
   better efficiency and reliability.
@@ -73,7 +77,9 @@ All features include a **unified dashboard header** (version, Git Pull, Restart 
 - 🆕 **Stats Tracking:** `/stats` commands show per-user message and summary counts.
 - 📋 **Slash Command Support:** All major commands are available as Discord slash commands for a
   modern user experience.
-- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing locally) covering all key functionality – live metrics maintained in `docs/COVERAGE-STATUS.md` (dual-threshold: ≥80% critical / ≥65% global baseline).
+- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing locally) covering all key functionality –
+  live metrics maintained in `docs/COVERAGE-STATUS.md` (dual-threshold: ≥80% critical / ≥65% global
+  baseline).
 - 🛡️ **Enhanced Error Handling:** Robust error handling for API failures and edge cases with
   comprehensive error recovery.
 - 🛑 **Graceful Shutdown:** Improved shutdown process to handle signals and uncaught exceptions.
@@ -125,14 +131,19 @@ All features include a **unified dashboard header** (version, Git Pull, Restart 
   and resource management.
 - 🏗️ **Service-Oriented Architecture:** Refactored PerplexityService into focused,
   single-responsibility classes for better maintainability and performance.
-- 🌐 **Web Dashboard (v1.8.0):** Optional Express + Socket.io dashboard with live memory, cache, and performance metrics
-- 🧩 **Real-Time Username Resolution (v1.8.0):** Dashboard database viewer & leaderboard enriched with resolved Discord usernames (privacy-safe fallback when unavailable)
-- 📊 **Cache vs Heap Transparency:** `/cache` shows cached AI response memory only; `/resources` reports total Node.js process heap usage
-- 🧩 **Complexity Reduction (v1.8.0):** Refactored high-complexity functions across chat, cache, and error handling to align with ≤10 function complexity targets
+- 🌐 **Web Dashboard (v1.8.0):** Optional Express + Socket.io dashboard with live memory, cache, and
+  performance metrics
+- 🧩 **Real-Time Username Resolution (v1.8.0):** Dashboard database viewer & leaderboard enriched
+  with resolved Discord usernames (privacy-safe fallback when unavailable)
+- 📊 **Cache vs Heap Transparency:** `/cache` shows cached AI response memory only; `/resources`
+  reports total Node.js process heap usage
+- 🧩 **Complexity Reduction (v1.8.0):** Refactored high-complexity functions across chat, cache, and
+  error handling to align with ≤10 function complexity targets
 
 - 📊 **Dashboard Enhancements (v1.9.0):** 5 major monitoring and management features
   - 📋 **Real-Time Log Viewer:** Live log streaming with filtering, search, and export (CSV/JSON)
-  - 🔧 **Service Status & Management:** systemd integration for start/stop/restart with uptime tracking
+  - 🔧 **Service Status & Management:** systemd integration for start/stop/restart with uptime
+    tracking
   - ⚙️ **Configuration Editor:** Safe .env and config.js editing with validation and auto-backups
   - 🌐 **Network & Connectivity:** Interface monitoring, IP detection, and connectivity checks
   - ⏰ **Reminder Management:** CRUD operations with persistent scheduling and history tracking
@@ -175,68 +186,90 @@ All features include a **unified dashboard header** (version, Git Pull, Restart 
 
 ## Dashboard Features Documentation (v1.9.0)
 
-The v1.9.0 release introduces 5 major dashboard enhancements for comprehensive monitoring and management:
+The v1.9.0 release introduces 5 major dashboard enhancements for comprehensive monitoring and
+management:
 
 ### 📋 Feature 1: Real-Time Log Viewer
-**Purpose:** Stream and analyze bot logs in real-time with advanced filtering and search capabilities
+
+**Purpose:** Stream and analyze bot logs in real-time with advanced filtering and search
+capabilities
+
 - **Live Streaming:** WebSocket-based log tail with auto-scrolling
 - **Multi-Level Filtering:** By severity (ERROR, WARN, INFO, DEBUG), service name, timestamp ranges
 - **Search & Highlighting:** Full-text search with color-coded result highlighting
 - **Export Functionality:** Download logs as CSV or JSON for analysis
 - **Memory Efficient:** Only maintains last 10,000 log entries in memory
 - **Demo:** [`logs-viewer-demo.html`](dashboard/public/logs-viewer-demo.html)
-- **API Reference:** See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-1-real-time-log-viewer)
+- **API Reference:** See
+  [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-1-real-time-log-viewer)
 
 ### 🔧 Feature 2: Service Status & Management
+
 **Purpose:** Monitor and control bot services with systemd integration
-- **Service Status:** Real-time status monitoring for core services (perplexity, cache, database, reminders)
+
+- **Service Status:** Real-time status monitoring for core services (perplexity, cache, database,
+  reminders)
 - **System Control:** Start/stop/restart individual services via dashboard UI
 - **Uptime Tracking:** Historical uptime metrics with availability graphs
 - **systemd Integration:** Direct interaction with systemd service manager
 - **Health Checks:** Automated health verification for each service
 - **Demo:** [`service-management-demo.html`](dashboard/public/service-management-demo.html)
-- **API Reference:** See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-2-service-status--management)
+- **API Reference:** See
+  [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-2-service-status--management)
 
 ### ⚙️ Feature 3: Configuration Editor
+
 **Purpose:** Safely edit bot configuration without restarting
+
 - **File-Based Editing:** Edit `.env` environment variables and `config.js` settings
 - **Validation:** Pre-submission validation prevents invalid configurations
 - **Auto-Backup:** Automatic backups before each save
 - **Safe Mode:** Restricted to configurable keys for security
 - **Version Control:** Track configuration changes with timestamps
 - **Demo:** [`config-editor-demo.html`](dashboard/public/config-editor-demo.html)
-- **API Reference:** See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-3-configuration-editor)
+- **API Reference:** See
+  [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-3-configuration-editor)
 
 ### 🌐 Feature 5: Network & Connectivity Status
+
 **Purpose:** Monitor network interfaces and connectivity health
+
 - **Interface Monitoring:** Real-time IP addresses and status for all network interfaces
 - **Connectivity Checks:** Ping tests to multiple endpoints (Google DNS, Cloudflare, GitHub)
 - **Public IP Detection:** Automatic detection and display of public IP address
 - **Connection Quality:** Signal strength and latency metrics
 - **Historical Data:** Network status trends over time
 - **Demo:** [`network-status-demo.html`](dashboard/public/network-status-demo.html)
-- **API Reference:** See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-5-network--connectivity-status)
+- **API Reference:** See
+  [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-5-network--connectivity-status)
 
 ### ⏰ Feature 7: Reminder Management Interface
+
 **Purpose:** Create, view, edit, and manage reminders via web dashboard
+
 - **CRUD Operations:** Create, read, update, delete reminders through intuitive UI
 - **Persistent Storage:** All reminders stored in SQLite with automatic recovery
 - **Scheduling:** Flexible scheduling with natural language support
 - **History Tracking:** View past reminder notifications and execution history
 - **Edit Existing:** Modify reminder times, messages, and status
 - **Demo:** [`reminder-management-demo.html`](dashboard/public/reminder-management-demo.html)
-- **API Reference:** See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-7-reminder-management-interface)
+- **API Reference:** See
+  [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md#feature-7-reminder-management-interface)
 
 ### 🔐 Security & Access Control
+
 - All dashboard endpoints require authentication
 - Configuration changes logged for audit trail
 - Service restart confirmation prevents accidental downtime
 - API rate limiting prevents abuse
 
 ### 📊 Dashboard Access
-Access the web dashboard at `http://localhost:3000/dashboard` (default port) after starting the bot with `npm start` or `npm run dev`.
 
-See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md) for complete API reference, backend implementation details, and technical specifications.
+Access the web dashboard at `http://localhost:3000/dashboard` (default port) after starting the bot
+with `npm start` or `npm run dev`.
+
+See [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md) for complete API reference, backend
+implementation details, and technical specifications.
 
 ---
 
@@ -386,30 +419,30 @@ script for Pi deployments.
 
 ### Core Commands
 
-| Command                    | Description                                                 |
-| -------------------------- | ----------------------------------------------------------- |
-| `/help`                    | Shows a list of available commands and usage                |
-| `/clearhistory`            | Clears your conversation history                            |
-| `/summary`                 | Summarises your current conversation in UK English          |
-| `/summarise <text>`        | Summarises any provided text in UK English                  |
-| `/stats`                   | Shows your usage stats (messages sent, summaries requested) |
+| Command             | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `/help`             | Shows a list of available commands and usage                |
+| `/clearhistory`     | Clears your conversation history                            |
+| `/summary`          | Summarises your current conversation in UK English          |
+| `/summarise <text>` | Summarises any provided text in UK English                  |
+| `/stats`            | Shows your usage stats (messages sent, summaries requested) |
 
 ### Reminder Commands (NEW in v1.7.0)
 
-| Command                 | Description                                       |
-| ----------------------- | ------------------------------------------------- |
-| `/remind`               | Set a reminder with natural language time parsing |
-| `/reminders`            | List all your active reminders                    |
-| `/cancelreminder`       | Cancel a specific reminder by ID                  |
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `/remind`         | Set a reminder with natural language time parsing |
+| `/reminders`      | List all your active reminders                    |
+| `/cancelreminder` | Cancel a specific reminder by ID                  |
 
 ### Analytics Commands (NEW in v1.6.0)
 
-| Command              | Description                                                     |
-| -------------------- | --------------------------------------------------------------- |
-| `/analytics`         | Show Discord server analytics and performance insights          |
-| `/dashboard`         | Display comprehensive performance dashboard with real-time data |
-| `/resources`         | View resource optimization status and recommendations           |
-| `/cache`             | Display cache statistics and performance metrics (Fixed v1.6.5) |
+| Command      | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `/analytics` | Show Discord server analytics and performance insights          |
+| `/dashboard` | Display comprehensive performance dashboard with real-time data |
+| `/resources` | View resource optimization status and recommendations           |
+| `/cache`     | Display cache statistics and performance metrics (Fixed v1.6.5) |
 
 > **Note:** All commands are available as modern Discord slash commands.
 
@@ -580,7 +613,8 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage**: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01% functions (dual thresholds: ≥80% critical files / ≥65% global baseline)
+- **Test Coverage**: 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches / 79.01%
+  functions (dual thresholds: ≥80% critical files / ≥65% global baseline)
 - **Code Quality**: 40% reduction in lint errors (22 → 13) with systematic method decomposition
 - **Security**: Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity**: Max 15 complexity per file, 10 per function with enforced decomposition
@@ -677,18 +711,22 @@ implemented.
 For more detailed information about the testing strategy, see the
 [Testing Guide](./wiki/Testing-Guide.md) and [**tests**/README.md](./__tests__/README.md).
 
-Live coverage metrics (statements / branches / functions / lines) are intentionally not duplicated here—refer to `docs/COVERAGE-STATUS.md` for the single source of truth and historical policy context.
+Live coverage metrics (statements / branches / functions / lines) are intentionally not duplicated
+here—refer to `docs/COVERAGE-STATUS.md` for the single source of truth and historical policy
+context.
 
 ### Error Handling Contracts (Runtime Reliability)
 
 - Services THROW errors (never return error strings)
 - User-facing errors are formatted as Discord embeds (consistent color/footer contract)
-- Database errors are isolated (logged + flow continues; conversation never breaks due to persistence failure)
+- Database errors are isolated (logged + flow continues; conversation never breaks due to
+  persistence failure)
 - Config access occurs inside functions to prevent circular dependencies
 
 ### Web Dashboard Metrics (v1.8.0)
 
 The optional dashboard (port 3000) provides:
+
 1. System Status: uptime, process ID, Node.js version, memory snapshot
 2. Cache Performance: hit rate, hits/misses, eviction strategy, recent entries
 3. Database Viewer: `user_stats` with real-time username enrichment
@@ -698,12 +736,16 @@ The optional dashboard (port 3000) provides:
 
 ### Perplexity Model Versioning
 
-Current default model: `sonar`.
-Deprecated historical names (retained only in release notes for traceability): `llama-3.1-sonar-small-128k-chat`, `llama-3.1-sonar-large-128k-online`, `sonar-pro` (temporary). See `RELEASE-NOTES-v1.6.2.md`, `RELEASE-NOTES-v1.6.3.md`, and `PERPLEXITY-API-FIX-v1.7.0.md` for evolution history.
+Current default model: `sonar`. Deprecated historical names (retained only in release notes for
+traceability): `llama-3.1-sonar-small-128k-chat`, `llama-3.1-sonar-large-128k-online`, `sonar-pro`
+(temporary). See `RELEASE-NOTES-v1.6.2.md`, `RELEASE-NOTES-v1.6.3.md`, and
+`PERPLEXITY-API-FIX-v1.7.0.md` for evolution history.
 
 ### Legacy Text Command Compatibility
 
-Modern usage should prefer slash commands. Legacy prefix commands (e.g. `!summary`, `!summarise`, `!help`, `!stats`) remain supported for backward compatibility and will emit identical behavior via a mock interaction layer.
+Modern usage should prefer slash commands. Legacy prefix commands (e.g. `!summary`, `!summarise`,
+`!help`, `!stats`) remain supported for backward compatibility and will emit identical behavior via
+a mock interaction layer.
 
 ---
 
