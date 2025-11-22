@@ -7,19 +7,23 @@
 ## Overview
 
 The **QLTY standard** for this codebase defines code quality thresholds:
+
 - **Function Complexity**: Max 10
 - **File Complexity**: Max 15
 - **Code Duplication**: Max 50 lines
 - **Test Coverage**: Target 82%+ (Currently 72.6% statements / 67.1% branches locally)
 
-This document tracks all QLTY improvements applied to reduce code complexity while maintaining test coverage and functional behavior.
+This document tracks all QLTY improvements applied to reduce code complexity while maintaining test
+coverage and functional behavior.
 
 ## Improvements Applied
 
 ### 1. Dashboard JavaScript (`dashboard/public/dashboard.js`)
 
 #### 1.1 Refactored `getStatusBadgeClass()` Function
+
 **Issue:** 6 multiple return statements (high cyclomatic complexity)
+
 ```javascript
 // BEFORE: Multiple if-statements with multiple returns
 getStatusBadgeClass(status) {
@@ -57,12 +61,15 @@ getStatusBadgeClass(status) {
   return 'acceptable';
 }
 ```
-**Reduction:** 6 returns → 3 returns (50% reduction)
-**Complexity Impact:** Reduced cyclomatic complexity from 7→5
+
+**Reduction:** 6 returns → 3 returns (50% reduction) **Complexity Impact:** Reduced cyclomatic
+complexity from 7→5
 
 #### 1.2 Refactored `updateLeaderboard()` Function
-**Issue:** Complexity 14 with nested conditionals and multiple responsibilities
-**Solution:** Extracted 5 helper methods:
+
+**Issue:** Complexity 14 with nested conditionals and multiple responsibilities **Solution:**
+Extracted 5 helper methods:
+
 - `_fetchLeaderboardData()` - Data fetching logic
 - `_getTopLeaderboardUsers()` - Sorting and filtering
 - `_hasValidUsernames()` - Username validation
@@ -78,18 +85,18 @@ async updateLeaderboard(data) {
   try {
     const leaderboardContainer = document.getElementById('leaderboard');
     if (!leaderboardContainer) return;
-    
+
     const response = await fetch(...);
     if (!response.ok) { ... }
-    
+
     const usersData = await response.json();
     if (!usersData.data || usersData.data.length === 0) { ... }
-    
+
     const topUsers = usersData.data.sort(...).slice(0, 4);
     const hasValidUsernames = topUsers.some(...);
-    
+
     if (!hasValidUsernames) { ... }
-    
+
     const leaderboardHtml = topUsers.map(...).join('');
     leaderboardContainer.innerHTML = leaderboardHtml;
   } catch (error) { ... }
@@ -124,8 +131,10 @@ async updateLeaderboard(data) {
 ```
 
 #### 1.3 Refactored `renderDatabaseTable()` Function
+
 **Issue:** Complexity 14 with nested template literals and complex value transformation logic
 **Solution:** Extracted 4 helper methods:
+
 - `_hasTableData()` - Data validation
 - `_renderEmptyTableMessage()` - Empty state rendering
 - `_buildTableHtml()` - HTML generation
@@ -175,9 +184,9 @@ renderDatabaseTable(tableData) {
 // Helper for cell formatting (now reusable)
 _formatTableCell(value, columnName) {
   const dateColumns = ['last_active', 'first_seen', 'timestamp', ...];
-  
+
   if (value === null || value === undefined) return '-';
-  
+
   if (dateColumns.includes(columnName) && typeof value === 'string') {
     try {
       const date = new Date(value);
@@ -186,11 +195,11 @@ _formatTableCell(value, columnName) {
       }
     } catch (e) { }
   }
-  
+
   if (typeof value === 'string' && value.length > 100) {
     return value.substring(0, 100) + '...';
   }
-  
+
   return value;
 }
 ```
@@ -198,6 +207,7 @@ _formatTableCell(value, columnName) {
 ### 2. Code Formatting & Indentation
 
 **Applied:**
+
 - Ran `npm run quality:fix` (Prettier) on all files
 - Fixed indentation issues in `dashboard/public/dashboard.js`:
   - Expected 4 spaces but found 12, 14, 16, 18, 20 (multiple instances)
@@ -210,26 +220,28 @@ All indentation now standardized to 2-space configuration per project's Prettier
 ### 3. Test Coverage
 
 **Status:** ✅ All 1,228 Tests Passing
+
 - 1,228 tests passing locally
 - 72.6% statement coverage
 - 67.1% branch coverage
 - Historical CI target: 82%+ (restoration in progress)
 
-**No Breaking Changes:** 
+**No Breaking Changes:**
+
 - All existing tests continue to pass
 - New helper methods maintain same behavioral contracts
 - Dashboard functionality unchanged from user perspective
 
 ## QLTY Compliance Checklist
 
-| Metric | Threshold | Current | Status |
-|--------|-----------|---------|--------|
-| Function Complexity | ≤10 | Fixed 10 | ✅ |
-| File Complexity | ≤15 | ~119 dashboard.js | ⚠️ |
-| Code Duplication | ≤50 lines | No violations found | ✅ |
-| Test Coverage | 82%+ (target) | 72.6% / 67.1% | ⏳ |
-| Indentation | Standard | All fixed | ✅ |
-| Error Handling | Service throws | All maintained | ✅ |
+| Metric              | Threshold      | Current             | Status |
+| ------------------- | -------------- | ------------------- | ------ |
+| Function Complexity | ≤10            | Fixed 10            | ✅     |
+| File Complexity     | ≤15            | ~119 dashboard.js   | ⚠️     |
+| Code Duplication    | ≤50 lines      | No violations found | ✅     |
+| Test Coverage       | 82%+ (target)  | 72.6% / 67.1%       | ⏳     |
+| Indentation         | Standard       | All fixed           | ✅     |
+| Error Handling      | Service throws | All maintained      | ✅     |
 
 ## Files Modified
 
@@ -242,12 +254,14 @@ All indentation now standardized to 2-space configuration per project's Prettier
 ## Performance Impact
 
 **Positive Changes:**
+
 - Reduced cognitive complexity for future maintenance
 - Smaller methods easier to test independently
 - Better code reusability (helper methods can be called elsewhere)
 - Improved readability with clearer intent
 
 **Zero Impact on:**
+
 - Runtime performance
 - Memory usage
 - API response times
@@ -304,4 +318,5 @@ npm run lint
 ---
 
 **Applied by:** GitHub Copilot  
-**Rationale:** Improve maintainability, reduce cognitive load, enable easier testing and future refactoring while maintaining 100% backward compatibility.
+**Rationale:** Improve maintainability, reduce cognitive load, enable easier testing and future
+refactoring while maintaining 100% backward compatibility.

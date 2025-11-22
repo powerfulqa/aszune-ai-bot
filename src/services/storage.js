@@ -86,7 +86,7 @@ class DataStorage {
         try {
           // Backup corrupted file
           const backupPath = `${this.statsFile}.corrupted.${Date.now()}`;
-          await fs.writeFile(backupPath, data);
+          await fs.writeFile(backupPath, '');
           logger.info(`Backed up corrupted user stats to ${backupPath}`);
 
           // Attempt to fix by writing valid empty JSON

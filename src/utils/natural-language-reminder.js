@@ -219,7 +219,7 @@ class NaturalLanguageReminderProcessor {
           success: false,
           reason: 'Could not extract event from message',
           response:
-            "I couldn't understand what event you want to be reminded about. Please try rephrasing your request.",
+            'I couldn\'t understand what event you want to be reminded about. Please try rephrasing your request.',
         };
       }
 

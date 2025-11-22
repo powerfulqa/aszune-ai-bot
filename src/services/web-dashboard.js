@@ -1248,7 +1248,7 @@ class WebDashboardService {
       let gatewayCommand;
       if (process.platform === 'linux' || process.platform === 'darwin') {
         // Linux/macOS: use ip route
-        gatewayCommand = "ip route | grep default | awk '{print $3}' | head -1";
+        gatewayCommand = 'ip route | grep default | awk \'{print $3}\' | head -1';
       } else if (process.platform === 'win32') {
         // Windows: use route print
         gatewayCommand =
@@ -2814,20 +2814,20 @@ class WebDashboardService {
 
         let pm2Command;
         switch (group) {
-          case 'restart-all':
-            pm2Command = 'pm2 restart all';
-            break;
-          case 'start-all':
-            pm2Command = 'pm2 start all';
-            break;
-          case 'stop-non-essential':
-            // This would stop the bot itself, which would kill the dashboard
-            // For now, just restart all to be safe
-            pm2Command = 'pm2 restart all';
-            logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-            break;
-          default:
-            throw new Error(`Unknown quick action group: ${group}`);
+        case 'restart-all':
+          pm2Command = 'pm2 restart all';
+          break;
+        case 'start-all':
+          pm2Command = 'pm2 start all';
+          break;
+        case 'stop-non-essential':
+          // This would stop the bot itself, which would kill the dashboard
+          // For now, just restart all to be safe
+          pm2Command = 'pm2 restart all';
+          logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
+          break;
+        default:
+          throw new Error(`Unknown quick action group: ${group}`);
         }
 
         logger.debug(`Executing PM2 quick action: ${pm2Command}`);

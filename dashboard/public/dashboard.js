@@ -471,8 +471,7 @@ class Dashboard {
         <tr>
           ${columns
             .map(
-              (col) =>
-                `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
+              (col) => `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
             )
             .join('')}
         </tr>
