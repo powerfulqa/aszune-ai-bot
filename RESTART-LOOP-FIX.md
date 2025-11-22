@@ -1,6 +1,88 @@
 # Dashboard Restart Loop Fix
 
-## Problem
+## ✅ ROOT CAUSE IDENTIFIED
+
+**The bot is being managed by BOTH systemd AND PM2, causing a conflict!**
+
+The systemd service `/etc/systemd/system/aszune-ai-bot.service` is configured with:
+```
+Restart=always
+RestartSec=15
+```
+
+This causes systemd to:
+1. Start `start-pi-optimized.sh` which launches PM2
+2. Script exits successfully after starting PM2
+3. Systemd waits 15 seconds (RestartSec=15)
+4. Systemd sends SIGINT to restart the service
+5. Loop repeats forever!
+
+## 🔧 IMMEDIATE FIX
+
+Run these commands on your Raspberry Pi:
+
+```bash
+# Stop the systemd service
+sudo systemctl stop aszune-ai-bot.service
+
+# Disable it from starting on boot
+sudo systemctl disable aszune-ai-bot.service
+
+# Verify it's disabled
+systemctl status aszune-ai-bot.service
+# Should show: "disabled" and "inactive (dead)"
+
+# PM2 should now be stable
+pm2 status
+
+# Monitor logs to confirm no more restarts
+pm2 logs aszune-ai --lines 50
+```
+
+## 📋 Choose Your Process Manager
+
+You need to pick ONE process manager:
+
+### Option 1: Use PM2 (RECOMMENDED)
+Already done! The systemd service is now disabled, PM2 manages the bot.
+
+**To start bot on system boot with PM2:**
+```bash
+pm2 startup
+# Follow the command it outputs
+pm2 save
+```
+
+### Option 2: Use Systemd (Alternative)
+If you prefer systemd, you need to modify the service file:
+
+```bash
+sudo nano /etc/systemd/system/aszune-ai-bot.service
+```
+
+Change it to run Node.js directly instead of the startup script:
+```ini
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /root/aszune-ai-bot/src/index.js
+Restart=on-failure
+RestartSec=5
+# Remove: Restart=always
+```
+
+Then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable aszune-ai-bot.service
+sudo systemctl start aszune-ai-bot.service
+
+# Stop PM2
+pm2 delete aszune-ai
+```
+
+---
+
+## Original Investigation Notes
 The bot is receiving SIGINT signals every ~15 seconds, causing continuous restarts. This creates a restart loop visible in:
 - PM2 logs showing repeated `Stopping app:aszune-ai` and `App [aszune-ai:0] online`
 - Dashboard showing disconnect/reconnect every ~15 seconds
