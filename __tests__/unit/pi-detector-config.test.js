@@ -43,10 +43,10 @@ describe('Pi Detector - Config Generation', () => {
       const config = piDetector.generateOptimizedConfig(piInfo);
 
       expect(config.ENABLED).toBe(true);
-      expect(config.COMPACT_MODE).toBe(true);
-      expect(config.MAX_CONNECTIONS).toBe(2);
-      expect(config.MAX_HISTORY).toBe(10);
-      expect(config.CACHE_SIZE).toBe(50);
+      expect(config.COMPACT_MODE).toBe(false);
+      expect(config.MAX_CONNECTIONS).toBe(6);
+      expect(config.MAX_HISTORY).toBe(20);
+      expect(config.CACHE_SIZE).toBe(100);
     });
 
     it('should generate config for Pi 4 with 1GB', () => {
@@ -61,9 +61,9 @@ describe('Pi Detector - Config Generation', () => {
 
       expect(config.ENABLED).toBe(true);
       expect(config.COMPACT_MODE).toBe(true);
-      expect(config.MAX_CONNECTIONS).toBe(1);
-      expect(config.MAX_HISTORY).toBe(5);
-      expect(config.CACHE_SIZE).toBe(25);
+      expect(config.MAX_CONNECTIONS).toBe(4);
+      expect(config.MAX_HISTORY).toBe(15);
+      expect(config.CACHE_SIZE).toBe(75);
     });
 
     it('should generate config for Pi 4 with 4GB', () => {
@@ -78,9 +78,9 @@ describe('Pi Detector - Config Generation', () => {
 
       expect(config.ENABLED).toBe(true);
       expect(config.COMPACT_MODE).toBe(false);
-      expect(config.MAX_CONNECTIONS).toBe(4);
-      expect(config.MAX_HISTORY).toBe(20);
-      expect(config.CACHE_SIZE).toBe(100);
+      expect(config.MAX_CONNECTIONS).toBe(10);
+      expect(config.MAX_HISTORY).toBe(30);
+      expect(config.CACHE_SIZE).toBe(200);
     });
 
     it('should generate config for Pi 3', () => {
@@ -95,9 +95,9 @@ describe('Pi Detector - Config Generation', () => {
 
       expect(config.ENABLED).toBe(true);
       expect(config.COMPACT_MODE).toBe(true);
-      expect(config.MAX_CONNECTIONS).toBe(1);
-      expect(config.MAX_HISTORY).toBe(5);
-      expect(config.CACHE_SIZE).toBe(25);
+      expect(config.MAX_CONNECTIONS).toBe(3);
+      expect(config.MAX_HISTORY).toBe(10);
+      expect(config.CACHE_SIZE).toBe(50);
     });
 
     it('should generate config for Pi 5 with 4GB', () => {

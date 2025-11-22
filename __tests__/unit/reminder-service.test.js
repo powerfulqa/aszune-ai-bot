@@ -273,7 +273,10 @@ describe('ReminderService', () => {
       expect(createSpy).toHaveBeenCalledWith(
         'user1', 
         'test message', 
-        expect.any(String)
+        expect.any(String),
+        expect.any(String),
+        null,
+        null
       );
     });
 
@@ -285,7 +288,10 @@ describe('ReminderService', () => {
       expect(createSpy).toHaveBeenCalledWith(
         'user1', 
         'test message', 
-        expect.any(String)
+        expect.any(String),
+        expect.any(String),
+        null,
+        null
       );
     });
 
@@ -297,7 +303,10 @@ describe('ReminderService', () => {
       expect(createSpy).toHaveBeenCalledWith(
         'user1', 
         'test message', 
-        expect.any(String)
+        expect.any(String),
+        expect.any(String),
+        null,
+        null
       );
     });
 

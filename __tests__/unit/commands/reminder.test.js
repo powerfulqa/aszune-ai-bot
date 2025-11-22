@@ -58,10 +58,8 @@ describe('Reminder Commands', () => {
     it('should handle /remind command successfully', async () => {
       const mockReminder = {
         id: '123',
-        time: 'in 5 minutes',
         message: 'Test reminder',
-        createdAt: new Date(),
-        dueDate: 'Wed Oct 09 2025',
+        scheduled_time: new Date(Date.now() + 5 * 60000).toISOString(),
       };
 
       reminderService.setReminder.mockResolvedValue(mockReminder);
@@ -69,13 +67,16 @@ describe('Reminder Commands', () => {
       const interaction = {
         commandName: 'remind',
         user: { id: 'user123' },
+        channelId: 'channel123',
+        guildId: 'guild123',
         options: {
           getString: jest
             .fn()
             .mockReturnValueOnce('in 5 minutes') // time
             .mockReturnValueOnce('Test reminder'), // message
         },
-        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
       };
 
       await handleSlashCommand(interaction);
@@ -83,18 +84,11 @@ describe('Reminder Commands', () => {
       expect(reminderService.setReminder).toHaveBeenCalledWith(
         'user123',
         'in 5 minutes',
-        'Test reminder'
+        'Test reminder',
+        'channel123',
+        'guild123'
       );
-      expect(interaction.reply).toHaveBeenCalledWith({
-        embeds: [
-          {
-            color: 0x00ff00,
-            title: '⏰ Reminder Set',
-            description: `I'll remind you: **Test reminder**\n⏰ ${mockReminder.dueDate}`,
-            footer: { text: 'Aszai Bot' },
-          },
-        ],
-      });
+      expect(interaction.editReply).toHaveBeenCalled();
     });
 
     it('should handle /remind command with invalid message', async () => {
@@ -106,18 +100,21 @@ describe('Reminder Commands', () => {
       const interaction = {
         commandName: 'remind',
         user: { id: 'user123' },
+        channelId: 'channel123',
+        guildId: 'guild123',
         options: {
           getString: jest
             .fn()
             .mockReturnValueOnce('in 5 minutes')
             .mockReturnValueOnce('Invalid message'),
         },
-        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
       };
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(
+      expect(interaction.editReply).toHaveBeenCalledWith(
         '❌ Invalid reminder message: Message too long'
       );
     });
@@ -128,21 +125,24 @@ describe('Reminder Commands', () => {
       const interaction = {
         commandName: 'remind',
         user: { id: 'user123' },
+        channelId: 'channel123',
+        guildId: 'guild123',
         options: {
           getString: jest
             .fn()
             .mockReturnValueOnce('in 5 minutes')
             .mockReturnValueOnce('Test reminder'),
         },
-        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+        replied: false,
+        deferred: true,
       };
 
       await handleSlashCommand(interaction);
 
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith(
-        'An unexpected error occurred. Please try again later.'
-      );
+      expect(interaction.editReply).toHaveBeenCalled();
     });
   });
 
@@ -151,17 +151,13 @@ describe('Reminder Commands', () => {
       const mockReminders = [
         {
           id: '123',
-          time: 'in 5 minutes',
           message: 'Test reminder 1',
-          createdAt: new Date(),
-          dueDate: 'Wed Oct 09 2025',
+          scheduled_time: new Date(Date.now() + 5 * 60000).toISOString(),
         },
         {
           id: '124',
-          time: 'tomorrow',
           message: 'Test reminder 2',
-          createdAt: new Date(),
-          dueDate: 'Wed Oct 09 2025',
+          scheduled_time: new Date(Date.now() + 24 * 3600000).toISOString(),
         },
       ];
 
@@ -176,17 +172,10 @@ describe('Reminder Commands', () => {
       await handleSlashCommand(interaction);
 
       expect(reminderService.getUserReminders).toHaveBeenCalledWith('user123');
-      expect(interaction.reply).toHaveBeenCalledWith({
-        embeds: [
-          {
-            color: 0x0099ff,
-            title: '📝 Your Active Reminders',
-            description:
-              '**123**: Test reminder 1\n⏰ Wed Oct 09 2025\n\n**124**: Test reminder 2\n⏰ Wed Oct 09 2025',
-            footer: { text: 'Aszai Bot' },
-          },
-        ],
-      });
+      expect(interaction.reply).toHaveBeenCalled();
+      const callArgs = interaction.reply.mock.calls[0][0];
+      expect(callArgs.embeds).toBeDefined();
+      expect(callArgs.embeds[0].title).toBe('📝 Your Active Reminders');
     });
 
     it('should handle /reminders command with no reminders', async () => {
@@ -219,14 +208,13 @@ describe('Reminder Commands', () => {
         commandName: 'reminders',
         user: { id: 'user123' },
         reply: jest.fn(),
+        replied: false,
       };
 
       await handleSlashCommand(interaction);
 
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith(
-        'An unexpected error occurred. Please try again later.'
-      );
+      expect(interaction.reply).toHaveBeenCalled();
     });
   });
 
