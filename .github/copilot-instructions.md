@@ -664,6 +664,80 @@ db.prepare('INSERT INTO conversation_history ...').run(...); // May fail on fore
 
 ## 📋 Quick Reference
 
+### Process Management & Deployment (CRITICAL - Nov 2025)
+
+**Production deployment uses PM2 on Raspberry Pi 5** - systemd conflicts MUST be avoided!
+
+#### PM2 vs Systemd Conflict (DEADLY MISTAKE)
+
+```bash
+# ❌ DEADLY - Running BOTH PM2 and systemd service causes restart loops!
+# Systemd service with Restart=always and RestartSec=15 will:
+# 1. Start start-pi-optimized.sh (which launches PM2)
+# 2. Script exits successfully
+# 3. Systemd waits 15 seconds and sends SIGINT to restart
+# 4. Creates infinite 15-second restart loop
+
+# ✅ CORRECT - Choose ONE process manager
+sudo systemctl disable aszune-ai-bot.service  # Disable systemd
+pm2 startup                                   # Enable PM2 auto-start
+pm2 save                                      # Save process list
+
+# Verify only PM2 is managing the bot
+systemctl status aszune-ai-bot.service  # Should show: disabled, inactive
+pm2 status                              # Should show: online, watching disabled
+```
+
+#### Raspberry Pi Deployment Process
+
+```bash
+# Production startup (uses PM2)
+cd ~/aszune-ai-bot
+sudo ./start-pi-optimized.sh    # Applies Pi optimizations + starts PM2
+
+# PM2 auto-start on boot (replaces systemd service)
+pm2 startup                      # Creates pm2-root.service
+pm2 save                         # Saves process list to ~/.pm2/dump.pm2
+
+# Verify auto-start configuration
+systemctl is-enabled pm2-root.service   # Should output: enabled
+cat ~/.pm2/dump.pm2                     # Should contain aszune-ai config
+```
+
+#### Shutdown Diagnostic Logging (v1.9.0)
+
+Enhanced logging tracks unexpected restarts:
+
+```javascript
+// Logs detailed shutdown diagnostics at ERROR level (visible with PI_LOG_LEVEL=ERROR)
+logger.error(`========================================`);
+logger.error(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
+logger.error(`Process uptime: ${Math.floor(process.uptime())}s`);
+logger.error(`Stack trace:`);
+logger.error(new Error().stack);  // Shows exact caller
+logger.error(`========================================`);
+```
+
+Stack trace reveals shutdown source:
+- External SIGINT: `at process.<anonymous> (/root/aszune-ai-bot/src/index.js:399:28)`
+- Expected shutdown: Shows proper shutdown flow
+
+#### Troubleshooting Restart Loops
+
+```bash
+# Check for systemd + PM2 conflict
+systemctl status aszune-ai-bot.service  # Should be disabled
+ps aux | grep "aszune-ai\|index.js"     # Should show ONE PM2 process
+
+# Monitor for restart patterns
+pm2 logs aszune-ai --lines 200 | grep "SHUTDOWN TRIGGERED"
+# Look for consistent uptime patterns (e.g., always 15-16s = systemd conflict)
+
+# Diagnostic scripts
+./diagnose-restart-loop.sh   # Automated checks for conflicts
+./find-sigint-source.sh      # Traces SIGINT signal sources
+```
+
 ### Essential Commands
 
 ```bash
@@ -680,17 +754,36 @@ npm run security:all         # Security audit
 # Development
 npm run dev                  # Development mode
 npm start                    # Production mode
+
+# Production Deployment (Pi 5)
+sudo ./start-pi-optimized.sh # Start with Pi optimizations
+pm2 status                   # Check bot status
+pm2 logs aszune-ai          # View live logs
+pm2 restart aszune-ai       # Restart bot
+pm2 save                    # Save current state
 ```
 
 ### Key Files
 
-- `src/index.js` - Bot orchestration, shutdown handling
+- `src/index.js` - Bot orchestration, shutdown handling, SIGINT/SIGTERM handlers
 - `src/services/chat.js` - Message handling, reminder detection
 - `src/services/perplexity-secure.js` - AI API with caching
 - `src/services/database.js` - SQLite persistence (v1.7.0)
 - `src/services/reminder-service.js` - Reminder scheduling (v1.7.0)
+- `src/services/web-dashboard.js` - Dashboard server, control endpoints
 - `src/config/config.js` - Configuration (function-level access only!)
 - `src/utils/error-handler.js` - Centralized error handling
+- `ecosystem.config.js` - PM2 configuration (watch: false, max_memory_restart: 2G)
+- `start-pi-optimized.sh` - Pi 5 optimized startup script
+- `RESTART-LOOP-FIX.md` - Systemd + PM2 conflict resolution guide
+
+### Deployment Files (Raspberry Pi 5)
+
+- `/etc/systemd/system/aszune-ai-bot.service` - **MUST BE DISABLED** (conflicts with PM2)
+- `/etc/systemd/system/pm2-root.service` - PM2 auto-start service (enabled)
+- `/root/.pm2/dump.pm2` - PM2 saved process list (resurrects on boot)
+- `logs/aszune-out.log` - PM2 stdout log
+- `logs/aszune-error.log` - PM2 stderr log (includes shutdown diagnostics)
 
 ### Success Metrics
 
