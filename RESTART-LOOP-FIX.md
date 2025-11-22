@@ -31,7 +31,50 @@ Changed `dashboard/public/dashboard.js` to NOT auto-reload after restart. The da
 
 ## Required Actions on Raspberry Pi
 
-### Step 1: Stop PM2 and Delete Previous Configuration
+### URGENT: Pull Latest Code First
+The diagnostic logging has been updated to ERROR level so it will show up in your logs:
+
+```bash
+cd ~/aszune-ai-bot
+git pull
+pm2 restart aszune-ai
+```
+
+### Option 1: Run Diagnostic Script (RECOMMENDED)
+```bash
+cd ~/aszune-ai-bot
+chmod +x diagnose-restart-loop.sh
+./diagnose-restart-loop.sh
+```
+
+This will check for:
+- PM2 auto-restart settings
+- Cron jobs that might restart the bot
+- Systemd timers
+- Memory limits
+- Capture the shutdown diagnostic in realtime
+
+### Option 2: Manual Diagnostic Steps
+
+### Step 1: Monitor for Diagnostic Output
+```bash
+# Watch logs in realtime
+pm2 logs aszune-ai --lines 100
+
+# Look for this output when the restart happens:
+# ========================================
+# SHUTDOWN TRIGGERED - Signal: SIGINT
+# Process uptime: XXs  
+# Stack trace:
+# Error
+#     at shutdown (/root/aszune-ai-bot/src/index.js:XXX:XX)
+#     ... (this will show WHAT called shutdown)
+# ========================================
+```
+
+The stack trace will reveal exactly what's triggering the shutdown!
+
+### Step 2: Stop PM2 and Delete Previous Configuration (If Needed)
 ```bash
 # Stop the current process (use the actual PM2 process name from 'pm2 status')
 pm2 stop aszune-ai
@@ -43,7 +86,7 @@ pm2 delete aszune-ai
 pm2 save
 ```
 
-### Step 2: Restart with Explicit No-Watch Configuration
+### Step 3: Restart with Explicit No-Watch Configuration
 ```bash
 # Navigate to the bot directory
 cd ~/aszune-ai-bot
@@ -58,7 +101,7 @@ sudo ./start-pi-optimized.sh
 # - Save the PM2 configuration
 ```
 
-### Step 3: Verify No Watch Mode
+### Step 4: Verify No Watch Mode
 ```bash
 # Check the PM2 configuration (use actual process name from pm2 status)
 pm2 describe aszune-ai
@@ -67,7 +110,7 @@ pm2 describe aszune-ai
 # Also verify in pm2 status output - the "watching" column should show "disabled"
 ```
 
-### Step 4: Monitor Logs for Diagnostic Information
+### Step 5: Monitor Logs for Diagnostic Information
 ```bash
 # Watch the logs to see the new diagnostic output
 pm2 logs aszune-ai --lines 100
@@ -80,7 +123,7 @@ pm2 logs aszune-ai --lines 100
 # ========================================
 ```
 
-### Step 5: Check for External Processes (If Still Restarting)
+### Step 6: Check for External Processes (If Still Restarting)
 If the restart loop continues after fixing PM2:
 
 ```bash
