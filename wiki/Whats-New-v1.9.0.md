@@ -83,32 +83,32 @@ npm start
 
 ### Access Dashboard Features
 
-**Main Dashboard**
+#### Main Dashboard
 
 - URL: `http://localhost:3000/dashboard/index.html`
 - Shows system overview and quick access to all features
 
-**Log Viewer**
+#### Log Viewer
 
 - URL: `http://localhost:3000/dashboard/logs-viewer-demo.html`
 - Real-time application logs with filtering
 
-**Service Management**
+#### Service Management
 
 - URL: `http://localhost:3000/dashboard/service-management-demo.html`
 - Monitor and control services
 
-**Configuration Editor**
+#### Configuration Editor
 
 - URL: `http://localhost:3000/dashboard/config-editor-demo.html`
 - Edit bot configuration safely
 
-**Network Status**
+#### Network Status
 
 - URL: `http://localhost:3000/dashboard/network-status-demo.html`
 - Monitor network connectivity
 
-**Reminders**
+#### Reminders
 
 - URL: `http://localhost:3000/dashboard/reminder-management-demo.html`
 - Create and manage reminders

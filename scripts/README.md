@@ -129,7 +129,7 @@ The script generates ready-to-use templates with:
 
 ```json
 {
-  "key": "ASZUNE-BIZZ-A1B2-C3D4-E5F6",
+  "key": "ASZUNE-BIZZ-XXXX-XXXX-XXXX",
   "type": "commercial",
   "status": "active",
   "allowedServers": -1,
