@@ -16,6 +16,66 @@ class Dashboard {
     this.setupEventListeners();
   }
 
+  /**
+   * Get element safely by ID
+   * @param {string} id - Element ID
+   * @returns {Element|null} Element or null if not found
+   * @private
+   */
+  _getElement(id) {
+    return document.getElementById(id);
+  }
+
+  /**
+   * Set element text content safely
+   * @param {string} id - Element ID
+   * @param {*} value - Value to set
+   * @private
+   */
+  _setText(id, value) {
+    const el = this._getElement(id);
+    if (el) el.textContent = value;
+  }
+
+  /**
+   * Set element HTML content safely
+   * @param {string} id - Element ID
+   * @param {string} html - HTML to set
+   * @private
+   */
+  _setHTML(id, html) {
+    const el = this._getElement(id);
+    if (el) el.innerHTML = html;
+  }
+
+  /**
+   * Set element class safely
+   * @param {string} id - Element ID
+   * @param {string} className - Class name to set
+   * @private
+   */
+  _setClass(id, className) {
+    const el = this._getElement(id);
+    if (el) el.className = className;
+  }
+
+  /**
+   * Fetch and parse JSON safely
+   * @param {string} url - URL to fetch
+   * @param {Object} options - Fetch options
+   * @returns {Promise<Object>} Parsed JSON
+   * @private
+   */
+  async _fetchJson(url, options = {}) {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    try {
+      return await response.json();
+    } catch (error) {
+      throw new Error(`Failed to parse response: ${error.message}`);
+    }
+  }
+
   initializeSocket() {
     this.socket = io();
 
@@ -40,7 +100,7 @@ class Dashboard {
 
   setupEventListeners() {
     // Database table selector
-    const tableSelect = document.getElementById('database-table-select');
+    const tableSelect = this._getElement('database-table-select');
     if (tableSelect) {
       tableSelect.addEventListener('change', (e) => {
         this.loadDatabaseTable(e.target.value);
@@ -48,7 +108,7 @@ class Dashboard {
     }
 
     // Database search
-    const searchInput = document.getElementById('database-search');
+    const searchInput = this._getElement('database-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.filterDatabaseTable(e.target.value);
@@ -56,12 +116,12 @@ class Dashboard {
     }
 
     // Control buttons
-    const restartBtn = document.getElementById('restart-btn');
+    const restartBtn = this._getElement('restart-btn');
     if (restartBtn) {
       restartBtn.addEventListener('click', () => this.handleRestartClick());
     }
 
-    const gitPullBtn = document.getElementById('git-pull-btn');
+    const gitPullBtn = this._getElement('git-pull-btn');
     if (gitPullBtn) {
       gitPullBtn.addEventListener('click', () => this.handleGitPullClick());
     }
@@ -69,15 +129,12 @@ class Dashboard {
 
   setConnectionStatus(connected) {
     this.isConnected = connected;
-    const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
-
     if (connected) {
-      statusDot.className = 'status-dot connected';
-      statusText.textContent = 'Connected';
+      this._setClass('status-dot', 'status-dot connected');
+      this._setText('status-text', 'Connected');
     } else {
-      statusDot.className = 'status-dot error';
-      statusText.textContent = 'Disconnected';
+      this._setClass('status-dot', 'status-dot error');
+      this._setText('status-text', 'Disconnected');
     }
   }
 
@@ -110,9 +167,7 @@ class Dashboard {
 
   async fetchVersionInfo() {
     try {
-      const response = await fetch('/api/version');
-      if (!response.ok) throw new Error('Failed to fetch version info');
-      const data = await response.json();
+      const data = await this._fetchJson('/api/version');
       this.updateVersionDisplay(data);
     } catch (error) {
       console.error('Error fetching version info:', error);
@@ -120,59 +175,39 @@ class Dashboard {
   }
 
   updateVersionDisplay(versionData) {
-    const versionNumber = document.getElementById('version-number');
-    const commitSha = document.getElementById('commit-sha');
-    const commitLink = document.getElementById('commit-link');
-
-    if (versionNumber) versionNumber.textContent = versionData.version || '1.8.0';
-    if (commitSha) commitSha.textContent = versionData.commit || 'unknown';
+    this._setText('version-number', versionData.version || '1.8.0');
+    this._setText('commit-sha', versionData.commit || 'unknown');
+    const commitLink = this._getElement('commit-link');
     if (commitLink && versionData.commitUrl) {
       commitLink.href = versionData.commitUrl;
     }
   }
 
   updateSystemMetrics(data) {
-    // Helper function to safely set element text content
-    const safeSetText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
-
-    safeSetText('system-uptime', data.system.uptimeFormatted);
-    safeSetText(
-      'memory-usage',
-      `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`
-    );
-    safeSetText(
-      'cpu-load',
-      `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`
-    );
-    safeSetText('platform', `${data.system.platform} ${data.system.arch}`);
+    // System metrics
+    this._setText('system-uptime', data.system.uptimeFormatted);
+    this._setText('memory-usage', `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`);
+    this._setText('cpu-load', `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`);
+    this._setText('platform', `${data.system.platform} ${data.system.arch}`);
 
     // Process Info
-    safeSetText('process-id', data.system.process.pid);
-    safeSetText('process-memory', data.system.process.rssFormatted);
-    safeSetText(
-      'heap-usage',
-      `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`
-    );
-    safeSetText('node-version-info', data.system.nodeVersion);
+    this._setText('process-id', data.system.process.pid);
+    this._setText('process-memory', data.system.process.rssFormatted);
+    this._setText('heap-usage', `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`);
+    this._setText('node-version-info', data.system.nodeVersion);
 
     // Cache Performance
-    safeSetText('cache-hit-rate', `${data.cache.hitRate}%`);
-    safeSetText('cache-requests', (data.cache.hits + data.cache.misses).toLocaleString());
-    safeSetText('cache-memory', data.cache.memoryUsageFormatted);
-    safeSetText('cache-entries', data.cache.entryCount.toLocaleString());
+    this._setText('cache-hit-rate', `${data.cache.hitRate}%`);
+    this._setText('cache-requests', (data.cache.hits + data.cache.misses).toLocaleString());
+    this._setText('cache-memory', data.cache.memoryUsageFormatted);
+    this._setText('cache-entries', data.cache.entryCount.toLocaleString());
 
-    safeSetText('db-users', data.database.userCount.toLocaleString());
-    safeSetText('db-messages', data.database.totalMessages.toLocaleString());
-    safeSetText('db-active-reminders', data.database.reminders.activeReminders.toLocaleString());
-    safeSetText(
-      'db-completed-reminders',
-      data.database.reminders.completedReminders.toLocaleString()
-    );
+    this._setText('db-users', data.database.userCount.toLocaleString());
+    this._setText('db-messages', data.database.totalMessages.toLocaleString());
+    this._setText('db-active-reminders', data.database.reminders.activeReminders.toLocaleString());
+    this._setText('db-completed-reminders', data.database.reminders.completedReminders.toLocaleString());
 
-    safeSetText('bot-uptime', data.uptime);
+    this._setText('bot-uptime', data.uptime);
 
     // Poll Discord status separately (not in main metrics)
     this.updateDiscordStatus();
@@ -207,118 +242,82 @@ class Dashboard {
   updateAnalyticsMetrics(data) {
     if (!data.analytics) return;
 
-    // Helper function to safely set element text content
-    const safeSetText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
-
-    safeSetText('analytics-servers', data.analytics.summary.totalServers);
-    safeSetText('analytics-active-users', data.analytics.summary.totalUsers);
-    safeSetText('analytics-total-members', data.analytics.summary.totalUsers);
-    safeSetText('analytics-bots', '-');
-    safeSetText('analytics-success-rate', `${data.analytics.summary.successRate}%`);
-    safeSetText('analytics-error-rate', `${data.analytics.summary.errorRate}%`);
-    safeSetText('analytics-response-time', `${data.analytics.summary.avgResponseTime}ms`);
-    safeSetText('analytics-commands', data.analytics.summary.totalCommands);
+    this._setText('analytics-servers', data.analytics.summary.totalServers);
+    this._setText('analytics-active-users', data.analytics.summary.totalUsers);
+    this._setText('analytics-total-members', data.analytics.summary.totalUsers);
+    this._setText('analytics-bots', '-');
+    this._setText('analytics-success-rate', `${data.analytics.summary.successRate}%`);
+    this._setText('analytics-error-rate', `${data.analytics.summary.errorRate}%`);
+    this._setText('analytics-response-time', `${data.analytics.summary.avgResponseTime}ms`);
+    this._setText('analytics-commands', data.analytics.summary.totalCommands);
   }
 
   updateCommandOutputs(data) {
-    // Helper function to safely set element text content
-    const safeSetText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
-
     // /stats command output - show system-wide stats as demo (no user context)
     if (data.database) {
       const totalMessages = data.database.totalMessages || 0;
       const estimatedSummaries = Math.floor(totalMessages * 0.1);
       const activeReminders = data.reminders?.activeReminders || 0;
-      safeSetText('cmd-stats-messages', totalMessages);
-      safeSetText('cmd-stats-summaries', estimatedSummaries);
-      safeSetText('cmd-stats-reminders', activeReminders);
+      this._setText('cmd-stats-messages', totalMessages);
+      this._setText('cmd-stats-summaries', estimatedSummaries);
+      this._setText('cmd-stats-reminders', activeReminders);
     }
 
     // /analytics command output
     if (data.analytics) {
       const totalUsers = data.analytics.summary.totalUsers || 0;
       const estimatedOnline = Math.floor(totalUsers * 0.2) || 0;
-      safeSetText('cmd-analytics-users', totalUsers);
-      safeSetText('cmd-analytics-online', estimatedOnline);
-      safeSetText('cmd-analytics-bots', 0);
-      safeSetText('cmd-analytics-success', '100%');
+      this._setText('cmd-analytics-users', totalUsers);
+      this._setText('cmd-analytics-online', estimatedOnline);
+      this._setText('cmd-analytics-bots', 0);
+      this._setText('cmd-analytics-success', '100%');
     }
 
     // /cache command output
     if (data.cache) {
-      safeSetText('cmd-cache-hitrate', `${data.cache.hitRate}%`);
-      safeSetText('cmd-cache-misses', data.cache.misses || 0);
-      safeSetText('cmd-cache-memory', data.cache.memoryUsageFormatted || '0 B');
-      safeSetText('cmd-cache-entries', data.cache.entryCount || 0);
+      this._setText('cmd-cache-hitrate', `${data.cache.hitRate}%`);
+      this._setText('cmd-cache-misses', data.cache.misses || 0);
+      this._setText('cmd-cache-memory', data.cache.memoryUsageFormatted || '0 B');
+      this._setText('cmd-cache-entries', data.cache.entryCount || 0);
     }
 
     // /dashboard command output (performance dashboard)
     if (data.system) {
-      safeSetText('cmd-dashboard-status', 'Running');
-      safeSetText('cmd-dashboard-response', '150ms');
-      safeSetText('cmd-dashboard-memory', `${data.system.memory.usagePercent}%`);
-      safeSetText('cmd-dashboard-tier', 'Standard');
+      this._setText('cmd-dashboard-status', 'Running');
+      this._setText('cmd-dashboard-response', '150ms');
+      this._setText('cmd-dashboard-memory', `${data.system.memory.usagePercent}%`);
+      this._setText('cmd-dashboard-tier', 'Standard');
     }
 
     // /resources command output
     if (data.resources) {
-      safeSetText('cmd-resources-memory', (data.resources.memory.status || 'Good').toUpperCase());
-      safeSetText(
-        'cmd-resources-usage',
-        `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`
-      );
-      safeSetText(
-        'cmd-resources-perf',
-        (data.resources.performance.status || 'Normal').toUpperCase()
-      );
-      safeSetText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
+      this._setText('cmd-resources-memory', (data.resources.memory.status || 'Good').toUpperCase());
+      this._setText('cmd-resources-usage', `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`);
+      this._setText('cmd-resources-perf', (data.resources.performance.status || 'Normal').toUpperCase());
+      this._setText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
     }
   }
 
   updateResourcesMetrics(data) {
     if (!data.resources) return;
 
-    // Helper function to safely set element text content
-    const safeSetText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
-
-    // Helper function to safely set element class
-    const safeSetClass = (id, className) => {
-      const el = document.getElementById(id);
-      if (el) el.className = className;
-    };
-
     // Memory status
     const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
-    safeSetText(
-      'resource-memory-status',
-      (data.resources.memory.status || 'Unknown').toUpperCase()
-    );
-    safeSetClass('resource-memory-status', `value status-badge ${memStatus}`);
+    this._setText('resource-memory-status', (data.resources.memory.status || 'Unknown').toUpperCase());
+    this._setClass('resource-memory-status', `value status-badge ${memStatus}`);
 
-    safeSetText('resource-memory-used', `${data.resources.memory.used}MB`);
-    safeSetText('resource-memory-free', `${data.resources.memory.free}MB`);
-    safeSetText('resource-memory-percent', `${data.resources.memory.percentage}%`);
+    this._setText('resource-memory-used', `${data.resources.memory.used}MB`);
+    this._setText('resource-memory-free', `${data.resources.memory.free}MB`);
+    this._setText('resource-memory-percent', `${data.resources.memory.percentage}%`);
 
     // Performance status
     const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
-    safeSetText(
-      'resource-performance-status',
-      (data.resources.performance.status || 'Unknown').toUpperCase()
-    );
-    safeSetClass('resource-performance-status', `value status-badge ${perfStatus}`);
+    this._setText('resource-performance-status', (data.resources.performance.status || 'Unknown').toUpperCase());
+    this._setClass('resource-performance-status', `value status-badge ${perfStatus}`);
 
-    safeSetText('resource-response-time', `${data.resources.performance.responseTime}ms`);
-    safeSetText('resource-load', data.resources.performance.load || 'normal');
-    safeSetText('resource-optimization-tier', data.resources.optimizationTier || 'Standard');
+    this._setText('resource-response-time', `${data.resources.performance.responseTime}ms`);
+    this._setText('resource-load', data.resources.performance.load || 'normal');
+    this._setText('resource-optimization-tier', data.resources.optimizationTier || 'Standard');
   }
 
   getStatusBadgeClass(status) {
@@ -710,92 +709,79 @@ class Dashboard {
   }
 
   async handleRestartClick() {
-    const btn = document.getElementById('restart-btn');
-    if (
-      !confirm(
-        'Are you sure you want to restart the bot? This will temporarily disconnect the bot.'
-      )
-    ) {
+    const btn = this._getElement('restart-btn');
+    if (!confirm('Are you sure you want to restart the bot? This will temporarily disconnect the bot.')) {
       return;
     }
 
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Restarting...</span>';
+    const originalText = btn?.innerHTML;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Restarting...</span>';
+    }
 
     try {
-      const response = await fetch('/api/control/restart', {
+      const data = await this._fetchJson('/api/control/restart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await response.json();
       if (data.success) {
         this.addActivityItem('✓ Bot restart initiated', 'info');
-        // Don't auto-reload - let user manually refresh when ready
-        // The socket will reconnect automatically when the bot comes back online
       } else {
         this.addActivityItem(`✗ Restart failed: ${data.error}`, 'error');
       }
     } catch (error) {
       this.addActivityItem(`✗ Restart error: ${error.message}`, 'error');
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
   }
 
   async handleGitPullClick() {
-    const btn = document.getElementById('git-pull-btn');
+    const btn = this._getElement('git-pull-btn');
     if (!confirm('Pull latest changes from GitHub? The bot may need to restart.')) {
       return;
     }
 
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Pulling...</span>';
+    const originalText = btn?.innerHTML;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Pulling...</span>';
+    }
 
     try {
-      const response = await fetch('/api/control/git-pull', {
+      const data = await this._fetchJson('/api/control/git-pull', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        throw new Error(`Failed to parse response: ${parseError.message}`);
-      }
-
-      this.handleGitPullResponse(response, data);
+      this.handleGitPullResponse(data);
     } catch (error) {
       this.addActivityItem(`✗ Git pull error: ${error.message}`, 'error');
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
   }
 
-  handleGitPullResponse(response, data) {
-    if (response.ok && data.success) {
+  handleGitPullResponse(data) {
+    if (data.success) {
       this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
       if (data.output) {
-        this.addActivityItem(data.output, 'info', true); // Preserve CLI formatting
+        this.addActivityItem(data.output, 'info', true);
       } else {
         this.addActivityItem(data.message || 'Pull successful', 'info');
       }
-    } else if (!response.ok) {
-      const errorMsg = data.error || data.message || 'Unknown error';
-      this.addActivityItem(`✗ Git pull failed (HTTP ${response.status}): ${errorMsg}`, 'error');
+    } else {
+      this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
       if (data.details) {
         this.addActivityItem(data.details, 'error', true);
       }
-      if (data.output) {
-        this.addActivityItem(data.output, 'error', true);
-      }
-    } else {
-      this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
       if (data.output) {
         this.addActivityItem(data.output, 'error', true);
       }

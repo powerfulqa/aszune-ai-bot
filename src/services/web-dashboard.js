@@ -7,6 +7,7 @@ const fs = require('fs');
 const databaseService = require('./database');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
+const NetworkDetector = require('./network-detector');
 
 class WebDashboardService {
   constructor() {
@@ -28,88 +29,90 @@ class WebDashboardService {
     this.setupLogInterception();
   }
 
-  async bindServerWithRetry(preferredPort, maxRetries = 3) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
+  /**
+   * Create promise-based server listener with timeout
+   * @private
+   */
+  _createServerListener(port, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.server.removeAllListeners('error');
+        reject(new Error('Server listen timeout'));
+      }, timeoutMs);
 
+      this.server.once('error', (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+      this.server.once('listening', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+
+      this.server.listen(port);
+    });
+  }
+
+  /**
+   * Check if error is port-in-use
+   * @private
+   */
+  _isPortInUseError(error) {
+    return (
+      error.code === 'EADDRINUSE' ||
+      error.message?.includes('EADDRINUSE') ||
+      error.message?.includes('address already in use')
+    );
+  }
+
+  /**
+   * Force kill process on port (Linux/macOS)
+   * @private
+   */
+  async _forceKillPort(port) {
+    if (process.platform !== 'linux' && process.platform !== 'darwin') {
+      return;
+    }
+
+    try {
+      const { exec } = require('child_process');
+      const { promisify } = require('util');
+      const execPromise = promisify(exec);
+      await execPromise(`fuser -k ${port}/tcp 2>/dev/null || true`, { timeout: 3000 });
+    } catch (e) {
+      logger.debug(`Failed to force kill port ${port}: ${e.message}`);
+    }
+  }
+
+  async bindServerWithRetry(preferredPort, maxRetries = 3) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            this.server.removeAllListeners('error');
-            reject(new Error('Server listen timeout'));
-          }, 5000);
-
-          this.server.once('error', (err) => {
-            clearTimeout(timeout);
-            reject(err);
-          });
-
-          this.server.once('listening', () => {
-            clearTimeout(timeout);
-            resolve();
-          });
-
-          this.server.listen(preferredPort);
-        });
+        await this._createServerListener(preferredPort);
         return preferredPort;
       } catch (portError) {
-        const isAddressInUse =
-          portError.code === 'EADDRINUSE' ||
-          portError.message?.includes('EADDRINUSE') ||
-          portError.message?.includes('address already in use');
-
-        if (!isAddressInUse && portError.message !== 'Server listen timeout') {
+        if (!this._isPortInUseError(portError) && portError.message !== 'Server listen timeout') {
           throw portError;
         }
 
-        if (attempt >= maxRetries - 1) {
-          break; // Exit loop to try alternative port
-        }
+        if (attempt >= maxRetries - 1) break;
 
         logger.warn(
           `Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`
         );
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-
-        try {
-          if (process.platform === 'linux' || process.platform === 'darwin') {
-            await execPromise(`fuser -k ${preferredPort}/tcp 2>/dev/null || true`, {
-              timeout: 3000,
-            });
-          }
-        } catch (e) {
-          logger.debug(`Failed to force kill port ${preferredPort}: ${e.message}`);
-        }
+        await this._forceKillPort(preferredPort);
       }
     }
 
-    // All retries exhausted, find alternative port
+    // Fallback to alternative port
     logger.warn(
       `Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`
     );
     const altPort = await this.findAvailablePort();
 
     try {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          this.server.removeAllListeners('error');
-          reject(new Error('Alternative port listen timeout'));
-        }, 5000);
-
-        this.server.once('error', (err) => {
-          clearTimeout(timeout);
-          reject(err);
-        });
-
-        this.server.once('listening', () => {
-          clearTimeout(timeout);
-          resolve();
-        });
-
-        this.server.listen(altPort);
-      });
+      await this._createServerListener(altPort);
       logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
       return altPort;
     } catch (altPortError) {
@@ -1235,316 +1238,12 @@ class WebDashboardService {
   }
 
   /**
-   * Get network connectivity status
+   * Get network connectivity status - delegates to NetworkDetector service
    * @returns {Promise<Object>} Network status with connectivity info
    * @private
    */
-  async detectGateway() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    try {
-      let gatewayCommand;
-      if (process.platform === 'linux' || process.platform === 'darwin') {
-        // Linux/macOS: use ip route
-        gatewayCommand = "ip route | grep default | awk '{print $3}' | head -1";
-      } else if (process.platform === 'win32') {
-        // Windows: use route print
-        gatewayCommand =
-          'route print | findstr /R "0.0.0.0.*0.0.0.0" | findstr /V "255.255.255.255"';
-      }
-
-      if (gatewayCommand) {
-        const { stdout } = await execPromise(gatewayCommand, { timeout: 5000 });
-        const gateway = stdout.trim().split('\n')[0]?.trim();
-
-        if (gateway && gateway.match(/^(\d+\.){3}\d+$/)) {
-          return { gatewayIp: gateway, reachable: true };
-        }
-      }
-    } catch (error) {
-      logger.debug(`Failed to detect gateway: ${error.message}`);
-    }
-
-    return { gatewayIp: 'Not detected', reachable: false };
-  }
-
-  async detectDnsServers() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    try {
-      if (process.platform === 'win32') {
-        // Windows: Use ipconfig /all to get DNS servers
-        const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
-        const dnsServers = [];
-        const lines = stdout.split('\n');
-
-        for (const line of lines) {
-          if (line.includes('DNS Servers')) {
-            const match = line.match(/:\s*(\d+\.\d+\.\d+\.\d+)/);
-            if (match) dnsServers.push(match[1]);
-          } else if (line.trim().match(/^\d+\.\d+\.\d+\.\d+$/) && dnsServers.length > 0) {
-            // Additional DNS servers on following lines
-            dnsServers.push(line.trim());
-          }
-        }
-
-        logger.debug(
-          `Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`
-        );
-        return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
-      } else {
-        // Linux/Unix: Read from /etc/resolv.conf
-        const { stdout } = await execPromise('cat /etc/resolv.conf', { timeout: 5000 });
-        const dnsServers = stdout
-          .split('\n')
-          .filter((line) => line.trim().startsWith('nameserver'))
-          .map((line) => line.split(/\s+/)[1])
-          .filter((ip) => ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/));
-
-        logger.debug(
-          `Detected ${dnsServers.length} DNS servers from /etc/resolv.conf: ${dnsServers.join(', ')}`
-        );
-        return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
-      }
-    } catch (error) {
-      logger.warn(`Failed to detect DNS servers: ${error.message}`);
-      return ['8.8.8.8']; // Fallback to Google DNS
-    }
-  }
-
-  async detectDhcpOrStatic() {
-    try {
-      if (process.platform === 'win32') {
-        return await this._detectDhcpWindowsStyle();
-      }
-      return await this._detectDhcpLinuxStyle();
-    } catch (error) {
-      logger.warn(`Failed to detect DHCP/Static: ${error.message}`);
-      return 'Unknown';
-    }
-  }
-
-  async _detectDhcpWindowsStyle() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-    const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
-    const dhcpEnabled =
-      stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
-    const result = dhcpEnabled ? 'DHCP' : 'Static';
-    logger.debug(`Detected IP assignment on Windows: ${result}`);
-    return result;
-  }
-
-  async _detectDhcpLinuxStyle() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    // Try DietPi config
-    const dietPiResult = await this._checkDietPiConfig(execPromise);
-    if (dietPiResult) return dietPiResult;
-
-    // Try /etc/network/interfaces
-    const interfacesResult = await this._checkNetworkInterfaces(execPromise);
-    if (interfacesResult) return interfacesResult;
-
-    // Try NetworkManager
-    const nmResult = await this._checkNetworkManager(execPromise);
-    if (nmResult) return nmResult;
-
-    // Try systemd-networkd
-    const systemdResult = await this._checkSystemdNetworkd(execPromise);
-    if (systemdResult) return systemdResult;
-
-    // Try dhclient process
-    await this._checkDhclientProcess(execPromise);
-
-    logger.debug('Could not definitively detect IP assignment method from config files');
-    return 'Unknown';
-  }
-
-  async _checkDietPiConfig(execPromise) {
-    try {
-      const { stdout } = await execPromise(
-        'cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"',
-        { timeout: 2000 }
-      );
-      if (stdout.includes('AUTO_SETUP_NET_USESTATIC=1')) {
-        logger.debug('Detected IP assignment from DietPi config: Static');
-        return 'Static';
-      } else if (stdout.includes('AUTO_SETUP_NET_USESTATIC=0')) {
-        logger.debug('Detected IP assignment from DietPi config: DHCP');
-        return 'DHCP';
-      }
-    } catch (dietpiError) {
-      logger.debug(`DietPi config check failed: ${dietpiError.message}`);
-      // Check for server services if DietPi is installed
-      try {
-        await execPromise('which dietpi-config', { timeout: 2000 });
-        const { stdout: services } = await execPromise(
-          'systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"',
-          { timeout: 2000 }
-        );
-        if (services.trim()) {
-          logger.debug('Detected DNS/DHCP services running on DietPi - assuming static IP');
-          return 'Static';
-        }
-      } catch {
-        // DietPi not installed
-      }
-    }
-    return null;
-  }
-
-  async _checkNetworkInterfaces(execPromise) {
-    try {
-      const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
-        timeout: 2000,
-      });
-      if (
-        stdout.includes('iface eth0 inet static') ||
-        stdout.includes('iface wlan0 inet static')
-      ) {
-        logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
-        return 'Static';
-      } else if (
-        stdout.includes('iface eth0 inet dhcp') ||
-        stdout.includes('iface wlan0 inet dhcp')
-      ) {
-        logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
-        return 'DHCP';
-      }
-    } catch {
-      // interfaces file not found or unreadable
-    }
-    return null;
-  }
-
-  async _checkNetworkManager(execPromise) {
-    try {
-      const { stdout } = await execPromise(
-        'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
-        { timeout: 3000 }
-      );
-      if (stdout.includes('manual')) {
-        logger.debug('Detected IP assignment via NetworkManager: Static');
-        return 'Static';
-      } else if (stdout.includes('auto') || stdout.includes('dhcp')) {
-        logger.debug('Detected IP assignment via NetworkManager: DHCP');
-        return 'DHCP';
-      }
-    } catch {
-      // NetworkManager not available
-    }
-    return null;
-  }
-
-  async _checkSystemdNetworkd(execPromise) {
-    try {
-      const { stdout } = await execPromise(
-        'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
-        { timeout: 2000 }
-      );
-      if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
-        logger.debug('Detected IP assignment via systemd-networkd: DHCP');
-        return 'DHCP';
-      } else if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
-        logger.debug('Detected IP assignment via systemd-networkd: Static');
-        return 'Static';
-      }
-    } catch {
-      // systemd-networkd not available
-    }
-    return null;
-  }
-
-  async _checkDhclientProcess(execPromise) {
-    try {
-      await execPromise('pgrep dhclient', { timeout: 2000 });
-      logger.debug('Detected dhclient process running (may indicate DHCP, but not definitive)');
-    } catch {
-      // No dhclient process
-    }
-  }
-
   async getNetworkStatus() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-    const dns = require('dns').promises;
-
-    const checks = {
-      dns: false,
-      gateway: false,
-      internet: false,
-      gatewayIp: null,
-      dnsServers: [],
-      ipAssignment: 'Unknown',
-    };
-
-    // Detect gateway
-    const gatewayResult = await this.detectGateway();
-    checks.gatewayIp = gatewayResult.gatewayIp;
-    checks.gateway = gatewayResult.reachable;
-
-    // Detect DNS servers
-    checks.dnsServers = await this.detectDnsServers();
-    logger.info(`DNS servers detected: ${checks.dnsServers.join(', ')}`);
-
-    // Detect DHCP vs Static IP
-    checks.ipAssignment = await this.detectDhcpOrStatic();
-    logger.info(`IP assignment detected: ${checks.ipAssignment}`);
-
-    // DNS test - Test actual configured DNS servers
-    let dnsWorking = false;
-    for (const dnsServer of checks.dnsServers) {
-      try {
-        // Test DNS server reachability with ping
-        const pingCmd =
-          process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
-        await execPromise(pingCmd, { timeout: 3000 });
-        dnsWorking = true;
-        break; // At least one DNS server is reachable
-      } catch (error) {
-        logger.debug(`DNS server ${dnsServer} not reachable`);
-      }
-    }
-
-    // Also test if DNS resolution actually works
-    if (dnsWorking) {
-      try {
-        await dns.resolve4('google.com');
-        checks.dns = true;
-      } catch (error) {
-        logger.debug('DNS resolution failed despite reachable DNS server');
-        checks.dns = false;
-      }
-    }
-
-    // Internet connectivity test
-    try {
-      await execPromise(process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8', {
-        timeout: 5000,
-      });
-      checks.internet = true;
-    } catch (error) {
-      logger.debug('Internet ping failed');
-    }
-
-    return {
-      connected: checks.internet || checks.dns,
-      internetReachable: checks.internet,
-      dnsReachable: checks.dns,
-      gatewayReachable: checks.gateway,
-      gatewayIp: checks.gatewayIp,
-      dnsServers: checks.dnsServers,
-      ipAssignment: checks.ipAssignment,
-    };
+    return NetworkDetector.getNetworkStatus();
   }
 
   /**
@@ -1929,29 +1628,14 @@ class WebDashboardService {
     this.io.on('connection', (socket) => {
       logger.debug(`Dashboard client connected: ${socket.id}`);
 
-      // Send initial metrics
-      this.getMetrics()
-        .then((metrics) => {
-          socket.emit('metrics', metrics);
-        })
-        .catch((error) => {
-          const errorResponse = ErrorHandler.handleError(error, 'sending initial metrics');
-          socket.emit('error', { message: errorResponse.message });
-        });
+      this._emitMetricsToSocket(socket, 'sending initial metrics');
 
       socket.on('disconnect', () => {
         logger.debug(`Dashboard client disconnected: ${socket.id}`);
       });
 
       socket.on('request-metrics', () => {
-        this.getMetrics()
-          .then((metrics) => {
-            socket.emit('metrics', metrics);
-          })
-          .catch((error) => {
-            const errorResponse = ErrorHandler.handleError(error, 'sending requested metrics');
-            socket.emit('error', { message: errorResponse.message });
-          });
+        this._emitMetricsToSocket(socket, 'sending requested metrics');
       });
 
       // Register handler groups
@@ -3634,6 +3318,43 @@ class WebDashboardService {
         action: 'Consider archival of old messages',
         timestamp: new Date().toISOString(),
       });
+    }
+  }
+
+  /**
+   * Send standard HTTP response with timestamp
+   * @private
+   */
+  _sendResponse(res, data, statusCode = 200) {
+    res.status(statusCode).json({
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Send error HTTP response with timestamp
+   * @private
+   */
+  _sendErrorResponse(res, error, context, statusCode = 500) {
+    const errorResponse = ErrorHandler.handleError(error, context);
+    res.status(statusCode).json({
+      error: errorResponse.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Send socket metrics helper to avoid duplication
+   * @private
+   */
+  async _emitMetricsToSocket(socket, context) {
+    try {
+      const metrics = await this.getMetrics();
+      socket.emit('metrics', metrics);
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, context);
+      socket.emit('error', { message: errorResponse.message });
     }
   }
 }

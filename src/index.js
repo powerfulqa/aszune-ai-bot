@@ -195,55 +195,61 @@ async function startWebDashboard() {
   }
 }
 
-// Handle ready event
-client.once('clientReady', async () => {
-  logger.info(`Discord bot is online as ${client.user.tag}!`);
-  logger.info(`Process ID: ${process.pid}`);
+// Set up Discord event handlers
+function _setupDiscordEventHandlers() {
+  client.once('clientReady', async () => {
+    logger.info(`Discord bot is online as ${client.user.tag}!`);
+    logger.info(`Process ID: ${process.pid}`);
 
-  // Log bot startup event
-  const databaseService = require('./services/database');
-  databaseService.logBotEvent('start', 0, 'Bot started successfully');
+    // Log bot startup event
+    const databaseService = require('./services/database');
+    databaseService.logBotEvent('start', 0, 'Bot started successfully');
 
-  // Initialize reminder service
-  try {
-    await reminderService.initialize();
-    logger.info('Reminder service initialized');
-  } catch (error) {
-    logger.error('Failed to initialize reminder service:', error);
-  }
+    // Initialize reminder service
+    try {
+      await reminderService.initialize();
+      logger.info('Reminder service initialized');
+    } catch (error) {
+      logger.error('Failed to initialize reminder service:', error);
+    }
 
-  // Pass Discord client to dashboard for username resolution
-  try {
-    const webDashboardService = require('./services/web-dashboard');
-    webDashboardService.setDiscordClient(client);
-    logger.info('Discord client connected to web dashboard');
-  } catch (error) {
-    logger.error('Failed to connect Discord client to dashboard:', error);
-  }
+    // Pass Discord client to dashboard for username resolution
+    try {
+      const webDashboardService = require('./services/web-dashboard');
+      webDashboardService.setDiscordClient(client);
+      logger.info('Discord client connected to web dashboard');
+    } catch (error) {
+      logger.error('Failed to connect Discord client to dashboard:', error);
+    }
 
-  // Initialize Pi optimizations after connection is established
-  await bootWithOptimizations();
-  await registerSlashCommands();
-});
+    // Initialize Pi optimizations after connection is established
+    await bootWithOptimizations();
+    await registerSlashCommands();
+  });
 
-// Handle chat messages
-client.on('messageCreate', handleChatMessage);
+  client.on('messageCreate', handleChatMessage);
 
-// Handle slash commands
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  await commandHandler.handleSlashCommand(interaction);
-});
+  client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    await commandHandler.handleSlashCommand(interaction);
+  });
 
-// Handle errors
-client.on('error', (error) => {
-  logger.error('Discord client error:', error);
-});
+  client.on('error', (error) => {
+    logger.error('Discord client error:', error);
+  });
 
-// Handle warnings
-client.on('warn', (info) => {
-  logger.warn('Discord client warning:', info);
-});
+  client.on('warn', (info) => {
+    logger.warn('Discord client warning:', info);
+  });
+}
+
+// Set up process signal handlers
+function _setupProcessSignalHandlers() {
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('unhandledRejection', unhandledRejectionHandler);
+  process.on('uncaughtException', uncaughtExceptionHandler);
+}
 
 // Flag to prevent multiple shutdown executions
 let isShuttingDown = false;
@@ -295,75 +301,54 @@ const shutdown = async (signal) => {
   }
 };
 
+// Shutdown step registry - maps step name to shutdown function
+const shutdownSteps = [
+  {
+    name: 'web dashboard service',
+    handler: async () => {
+      const webDashboardService = require('./services/web-dashboard');
+      await webDashboardService.stop();
+    },
+  },
+  {
+    name: 'reminder service',
+    handler: () => {
+      reminderService.shutdown();
+    },
+  },
+  {
+    name: 'conversation manager',
+    handler: async () => {
+      await conversationManager.destroy();
+    },
+  },
+  {
+    name: 'Discord client',
+    handler: async () => {
+      await client.destroy();
+    },
+  },
+];
+
+async function _executeShutdownStep(step) {
+  try {
+    logger.debug(`Shutting down ${step.name}...`);
+    await step.handler();
+    logger.debug(`${step.name} shutdown successful`);
+    return null;
+  } catch (error) {
+    logger.error(`Error shutting down ${step.name}:`, error);
+    return error;
+  }
+}
+
 async function performShutdownSteps() {
   const errors = [];
-
-  // Step 1: Shutdown web dashboard service
-  const dashboardError = await shutdownWebDashboardService();
-  if (dashboardError) errors.push(dashboardError);
-
-  // Step 2: Shutdown reminder service
-  const reminderError = await shutdownReminderService();
-  if (reminderError) errors.push(reminderError);
-
-  // Step 3: Shutdown conversation manager
-  const convError = await shutdownConversationManager();
-  if (convError) errors.push(convError);
-
-  // Step 4: Shutdown Discord client (always attempt, even if previous steps failed)
-  const clientError = await shutdownDiscordClient();
-  if (clientError) errors.push(clientError);
-
+  for (const step of shutdownSteps) {
+    const error = await _executeShutdownStep(step);
+    if (error) errors.push(error);
+  }
   return errors;
-}
-
-async function shutdownWebDashboardService() {
-  try {
-    logger.debug('Shutting down web dashboard service...');
-    const webDashboardService = require('./services/web-dashboard');
-    await webDashboardService.stop();
-    logger.debug('Web dashboard service shutdown successful');
-    return null;
-  } catch (dashboardError) {
-    logger.error('Error shutting down web dashboard service:', dashboardError);
-    return dashboardError;
-  }
-}
-
-async function shutdownReminderService() {
-  try {
-    logger.debug('Shutting down reminder service...');
-    reminderService.shutdown();
-    logger.debug('Reminder service shutdown successful');
-    return null;
-  } catch (reminderError) {
-    logger.error('Error shutting down reminder service:', reminderError);
-    return reminderError;
-  }
-}
-
-async function shutdownConversationManager() {
-  try {
-    logger.debug('Shutting down conversation manager...');
-    await conversationManager.destroy();
-    logger.debug('Conversation manager shutdown successful');
-    return null;
-  } catch (convError) {
-    logger.error('Error shutting down conversation manager:', convError);
-    return convError;
-  }
-}
-
-async function shutdownDiscordClient() {
-  try {
-    logger.debug('Shutting down Discord client...');
-    await client.destroy();
-    logger.debug('Discord client shutdown successful');
-    return null;
-  } catch (clientError) {
-    logger.error('Error shutting down Discord client:', clientError);
-    return clientError;
-  }
 }
 
 function handleShutdownCompletion(errors) {
@@ -404,7 +389,6 @@ function unhandledRejectionHandler(reason, promise) {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Don't exit here, just log
 }
-process.on('unhandledRejection', unhandledRejectionHandler);
 
 // Handle uncaught exceptions
 function uncaughtExceptionHandler(error) {
@@ -412,10 +396,9 @@ function uncaughtExceptionHandler(error) {
   // Always exit with error code on uncaught exceptions
   shutdown('uncaughtException');
 }
-process.on('uncaughtException', uncaughtExceptionHandler);
 
 // Helper function to handle Discord login with appropriate error handling
-function loginToDiscord(token, isTestMode = false) {
+function _handleDiscordLogin(token, isTestMode = false) {
   return client
     .login(token)
     .then(() => {
@@ -440,14 +423,28 @@ function loginToDiscord(token, isTestMode = false) {
     });
 }
 
-// Start web dashboard first, BEFORE Discord login
-startWebDashboard().then(() => {
+// Initialize startup sequence
+async function _initializeBot() {
+  // Set up event handlers before Discord login
+  _setupDiscordEventHandlers();
+  _setupProcessSignalHandlers();
+
+  // Start web dashboard first, BEFORE Discord login
+  await startWebDashboard();
+
   // Log in to Discord, with special handling for test environment
   if (process.env.NODE_ENV === 'test') {
-    // In test mode, we still call login but with a mock token that will be resolved in the mock
-    loginToDiscord('test-token', true);
+    _handleDiscordLogin('test-token', true);
   } else {
-    loginToDiscord(config.DISCORD_BOT_TOKEN, false);
+    _handleDiscordLogin(config.DISCORD_BOT_TOKEN, false);
+  }
+}
+
+// Initialize bot startup sequence
+_initializeBot().catch((error) => {
+  logger.error('Failed to initialize bot:', error);
+  if (process.env.NODE_ENV !== 'test') {
+    process.exit(1);
   }
 });
 

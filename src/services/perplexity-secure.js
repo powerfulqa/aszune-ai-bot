@@ -86,34 +86,11 @@ class PerplexityService {
    * @returns {Object} Cache statistics
    */
   getCacheStats() {
-    try {
-      // Handle missing cacheManager
-      if (!this.cacheManager) {
-        throw new Error('Cache manager not available');
-      }
-      return this.cacheManager.getStats();
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
-      logger.error(`Cache stats error: ${errorResponse.message}`);
-      return {
-        hits: 0,
-        misses: 0,
-        sets: 0,
-        deletes: 0,
-        evictions: 0,
-        hitRate: 0,
-        entryCount: 0,
-        memoryUsage: 0,
-        memoryUsageFormatted: '0 B',
-        maxMemory: 0,
-        maxMemoryFormatted: '0 B',
-        maxSize: 0,
-        uptime: 0,
-        uptimeFormatted: '0s',
-        evictionStrategy: 'hybrid',
-        error: errorResponse.message,
-      };
-    }
+    return this._executeWithErrorHandling(
+      () => this.cacheManager ? this.cacheManager.getStats() : (() => { throw new Error('Cache manager not available'); })(),
+      'getting cache statistics',
+      { hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0, hitRate: 0, entryCount: 0, memoryUsage: 0, memoryUsageFormatted: '0 B', maxMemory: 0, maxMemoryFormatted: '0 B', maxSize: 0, uptime: 0, uptimeFormatted: '0s', evictionStrategy: 'hybrid' }
+    );
   }
 
   /**
@@ -121,17 +98,11 @@ class PerplexityService {
    * @returns {Object} Detailed cache information
    */
   getDetailedCacheInfo() {
-    try {
-      return this.cacheManager.getDetailedInfo();
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting detailed cache info');
-      logger.error(`Detailed cache info error: ${errorResponse.message}`);
-      return {
-        error: errorResponse.message,
-        stats: this.getCacheStats(),
-        entries: [],
-      };
-    }
+    return this._executeWithErrorHandling(
+      () => this.cacheManager.getDetailedInfo(),
+      'getting detailed cache info',
+      { entries: [], stats: { hits: 0, misses: 0 }, error: 'Cache unavailable' }
+    );
   }
 
   /**
@@ -140,13 +111,11 @@ class PerplexityService {
    * @returns {number} Number of entries invalidated
    */
   invalidateCacheByTag(tag) {
-    try {
-      return this.cacheManager.invalidateByTag(tag);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'invalidating cache by tag', { tag });
-      logger.error(`Cache tag invalidation error: ${errorResponse.message}`);
-      return 0;
-    }
+    return this._executeWithErrorHandling(
+      () => this.cacheManager.invalidateByTag(tag),
+      'invalidating cache by tag',
+      0
+    );
   }
 
   /**
@@ -162,6 +131,79 @@ class PerplexityService {
     // Log final cache statistics
     const finalStats = this.getCacheStats();
     logger.info('Final cache statistics:', finalStats);
+  }
+
+  /**
+   * Execute operation with unified error handling
+   * @param {Function} operation - Operation to execute
+   * @param {string} context - Context for error messages
+   * @param {*} defaultValue - Default value on error
+   * @returns {*} Operation result or default value
+   * @private
+   */
+  _executeWithErrorHandling(operation, context, defaultValue = null) {
+    try {
+      return operation();
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, context);
+      logger.warn(`${context} error: ${errorResponse.message}`);
+      return defaultValue;
+    }
+  }
+
+  /**
+   * Extract header value from headers object
+   * @param {Object|Headers} headers - Headers object
+   * @param {string} key - Header key
+   * @returns {string} Header value or empty string
+   * @private
+   */
+  _extractHeader(headers, key) {
+    if (!headers || !key) return '';
+    if (typeof headers !== 'object' && typeof headers !== 'function') return '';
+    if (headers && headers.get && typeof headers.get === 'function') {
+      try {
+        return headers.get(key) || '';
+      } catch (e) {}
+    }
+    if (Object.prototype.hasOwnProperty.call(headers, key)) return headers[key] || '';
+    if (Object.prototype.hasOwnProperty.call(headers, key.toLowerCase())) return headers[key.toLowerCase()] || '';
+    if (Object.prototype.hasOwnProperty.call(headers, key.toUpperCase())) return headers[key.toUpperCase()] || '';
+    return '';
+  }
+
+  /**
+   * Track API performance metric
+   * @param {string} metricName - Metric name
+   * @param {number} value - Metric value
+   * @param {Object} metadata - Additional metadata
+   * @private
+   */
+  async _trackMetric(metricName, value, metadata = {}) {
+    try {
+      const databaseService = require('../services/database');
+      await databaseService.logPerformanceMetric(metricName, value, metadata);
+    } catch (error) {
+      logger.warn(`Failed to log ${metricName}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get PI optimization settings
+   * @returns {Object} PI optimization settings
+   * @private
+   */
+  _getPiSettings() {
+    const defaultSettings = { enabled: false, lowCpuMode: false };
+    try {
+      if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
+        return { enabled: Boolean(config.PI_OPTIMIZATIONS.ENABLED), lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE) };
+      }
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'accessing PI_OPTIMIZATIONS config');
+      logger.warn(`Config access error: ${errorResponse.message}`);
+    }
+    return defaultSettings;
   }
 
   /**
@@ -182,83 +224,7 @@ class PerplexityService {
    * @returns {string} The header value
    */
   _safeGetHeader(headers, key) {
-    // Return empty string if headers or key is missing
-    if (!headers || !key) return '';
-    try {
-      return this._tryGetHeaderValue(headers, key);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, `getting header "${key}"`);
-      logger.warn(`Header access error: ${errorResponse.message}`);
-      return '';
-    }
-  }
-
-  /**
-   * Helper method to extract header value using various methods
-   * @param {Object|Headers} headers - The headers object
-   * @param {string} key - The header key to get
-   * @returns {string} The header value
-   * @private
-   */
-  _tryGetHeaderValue(headers, key) {
-    // Check if headers is an object at all
-    if (typeof headers !== 'object' && typeof headers !== 'function') {
-      return '';
-    }
-
-    // Try Headers object API first
-    const headerFromGetMethod = this._tryHeadersGetMethod(headers, key);
-    if (headerFromGetMethod !== null) {
-      return headerFromGetMethod;
-    }
-
-    // Fall back to plain object access
-    return this._tryObjectPropertyAccess(headers, key);
-  }
-
-  /**
-   * Try to get header using Headers.get() method
-   * @param {Object|Headers} headers - The headers object
-   * @param {string} key - The header key to get
-   * @returns {string|null} The header value or null if not found/applicable
-   * @private
-   */
-  _tryHeadersGetMethod(headers, key) {
-    if (headers && headers.get && typeof headers.get === 'function') {
-      try {
-        return headers.get(key) || '';
-      } catch (innerError) {
-        // If headers.get fails, return null to try other methods
-        return null;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Try to access header as an object property with case variations
-   * @param {Object} headers - The headers object
-   * @param {string} key - The header key to get
-   * @returns {string} The header value
-   * @private
-   */
-  _tryObjectPropertyAccess(headers, key) {
-    // Check for exact case
-    if (Object.prototype.hasOwnProperty.call(headers, key)) {
-      return headers[key] || '';
-    }
-
-    // Check lowercase
-    if (Object.prototype.hasOwnProperty.call(headers, key.toLowerCase())) {
-      return headers[key.toLowerCase()] || '';
-    }
-
-    // Check uppercase
-    if (Object.prototype.hasOwnProperty.call(headers, key.toUpperCase())) {
-      return headers[key.toUpperCase()] || '';
-    }
-
-    return '';
+    return this._executeWithErrorHandling(() => this._extractHeader(headers, key), `getting header "${key}"`, '');
   }
 
   /**
@@ -304,29 +270,7 @@ class PerplexityService {
    * @private
    */
   _getPiOptimizationSettings() {
-    const defaultSettings = {
-      enabled: false,
-      lowCpuMode: false,
-    };
-
-    try {
-      // Check if config has PI_OPTIMIZATIONS property
-      if (
-        config &&
-        typeof config.PI_OPTIMIZATIONS === 'object' &&
-        config.PI_OPTIMIZATIONS !== null
-      ) {
-        return {
-          enabled: Boolean(config.PI_OPTIMIZATIONS.ENABLED),
-          lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE),
-        };
-      }
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'accessing PI_OPTIMIZATIONS config');
-      logger.warn(`Config access error: ${errorResponse.message}`);
-    }
-
-    return defaultSettings;
+    return this._getPiSettings();
   }
 
   /**
@@ -357,12 +301,7 @@ class PerplexityService {
    * @private
    */
   _validateResponseExists(response) {
-    if (!response) {
-      throw ErrorHandler.createError(
-        'Invalid response: response is null or undefined',
-        ERROR_TYPES.API_ERROR
-      );
-    }
+    if (!response) throw ErrorHandler.createError('Invalid response: response is null or undefined', ERROR_TYPES.API_ERROR);
   }
 
   /**
@@ -371,12 +310,7 @@ class PerplexityService {
    * @private
    */
   _validateResponseBody(body) {
-    if (!body || typeof body.json !== 'function') {
-      throw ErrorHandler.createError(
-        'Invalid response: body is missing or does not have json method',
-        ERROR_TYPES.API_ERROR
-      );
-    }
+    if (!body || typeof body.json !== 'function') throw ErrorHandler.createError('Invalid response: body is missing or does not have json method', ERROR_TYPES.API_ERROR);
   }
 
   /**
@@ -388,18 +322,10 @@ class PerplexityService {
   async _parseResponseJson(body) {
     try {
       const responseData = await body.json();
-      if (!responseData || typeof responseData !== 'object') {
-        throw ErrorHandler.createError(
-          'Invalid response: response is not a valid object',
-          ERROR_TYPES.API_ERROR
-        );
-      }
+      if (!responseData || typeof responseData !== 'object') throw ErrorHandler.createError('Invalid response: response is not a valid object', ERROR_TYPES.API_ERROR);
       return responseData;
     } catch (error) {
-      throw ErrorHandler.createError(
-        `Failed to parse response as JSON: ${error.message}`,
-        ERROR_TYPES.API_ERROR
-      );
+      throw ErrorHandler.createError(`Failed to parse response as JSON: ${error.message}`, ERROR_TYPES.API_ERROR);
     }
   }
 
@@ -409,31 +335,10 @@ class PerplexityService {
    * @private
    */
   _validateResponseStructure(responseData) {
-    if (
-      !responseData.choices ||
-      !Array.isArray(responseData.choices) ||
-      responseData.choices.length === 0
-    ) {
-      throw ErrorHandler.createError(
-        'Invalid response: missing or empty choices array',
-        ERROR_TYPES.API_ERROR
-      );
-    }
-
+    if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) throw ErrorHandler.createError('Invalid response: missing or empty choices array', ERROR_TYPES.API_ERROR);
     const firstChoice = responseData.choices[0];
-    if (!firstChoice || typeof firstChoice !== 'object') {
-      throw ErrorHandler.createError(
-        'Invalid response: invalid choice structure',
-        ERROR_TYPES.API_ERROR
-      );
-    }
-
-    if (!firstChoice.message || typeof firstChoice.message !== 'object') {
-      throw ErrorHandler.createError(
-        'Invalid response: choice missing required message field',
-        ERROR_TYPES.API_ERROR
-      );
-    }
+    if (!firstChoice || typeof firstChoice !== 'object') throw ErrorHandler.createError('Invalid response: invalid choice structure', ERROR_TYPES.API_ERROR);
+    if (!firstChoice.message || typeof firstChoice.message !== 'object') throw ErrorHandler.createError('Invalid response: choice missing required message field', ERROR_TYPES.API_ERROR);
   }
 
   /**
@@ -566,18 +471,13 @@ class PerplexityService {
   }
 
   /**
-   * Track performance metrics for API operations
+   * Track performance metrics for API operations (LEGACY - use _trackMetric directly)
    * @param {string} metricName - Name of the metric
    * @param {number} value - Metric value
    * @param {Object} metadata - Additional metadata
    */
   async _trackApiPerformance(metricName, value, metadata = {}) {
-    try {
-      const databaseService = require('../services/database');
-      await databaseService.logPerformanceMetric(metricName, value, metadata);
-    } catch (metricError) {
-      logger.warn(`Failed to log API metric ${metricName}: ${metricError.message}`);
-    }
+    return this._trackMetric(metricName, value, metadata);
   }
 
   /**
@@ -588,15 +488,8 @@ class PerplexityService {
    * @param {boolean} cacheEnabled - Whether caching was enabled
    */
   async _trackCacheHitPerformance(responseTime, memoryDelta, historyLength, cacheEnabled) {
-    await this._trackApiPerformance('api_cache_hit_time', responseTime, {
-      historyLength,
-      cacheEnabled,
-      operation: 'cache_hit',
-    });
-
-    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
-      operation: 'cache_hit',
-    });
+    await this._trackMetric('api_cache_hit_time', responseTime, { historyLength, cacheEnabled, operation: 'cache_hit' });
+    await this._trackMetric('memory_usage_delta', memoryDelta, { operation: 'cache_hit' });
   }
 
   /**
@@ -608,29 +501,10 @@ class PerplexityService {
    * @param {boolean} cacheEnabled - Whether caching was enabled
    * @param {number} contentLength - Length of response content
    */
-  async _trackApiCallPerformance(
-    totalTime,
-    memoryDelta,
-    finalMemoryUsage,
-    historyLength,
-    cacheEnabled,
-    contentLength
-  ) {
-    await this._trackApiPerformance('api_response_time', totalTime, {
-      historyLength,
-      cacheEnabled,
-      cacheHit: false,
-      contentLength,
-      operation: 'api_call',
-    });
-
-    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
-      operation: 'api_call',
-    });
-
-    await this._trackApiPerformance('memory_usage_current', finalMemoryUsage, {
-      operation: 'api_call_end',
-    });
+  async _trackApiCallPerformance(totalTime, memoryDelta, finalMemoryUsage, historyLength, cacheEnabled, contentLength) {
+    await this._trackMetric('api_response_time', totalTime, { historyLength, cacheEnabled, cacheHit: false, contentLength, operation: 'api_call' });
+    await this._trackMetric('memory_usage_delta', memoryDelta, { operation: 'api_call' });
+    await this._trackMetric('memory_usage_current', finalMemoryUsage, { operation: 'api_call_end' });
   }
 
   /**
@@ -641,13 +515,8 @@ class PerplexityService {
    * @param {string} errorMessage - Error message
    */
   async _trackApiErrorPerformance(errorTime, memoryDelta, historyLength, errorMessage) {
-    await this._trackApiPerformance('api_error_time', errorTime, {
-      historyLength,
-      error: errorMessage,
-      operation: 'api_error',
-    });
-
-    await this._trackApiPerformance('memory_usage_delta', memoryDelta, {
+    await this._trackMetric('api_error_time', errorTime, { historyLength, error: errorMessage, operation: 'api_error' });
+    await this._trackMetric('memory_usage_delta', memoryDelta, {
       operation: 'api_error',
     });
   }
