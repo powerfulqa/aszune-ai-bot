@@ -274,16 +274,6 @@ class PerplexityService {
   }
 
   /**
-   * Safe way to access headers that works with both Headers objects and plain objects
-   * @param {Object|Headers} headers - The headers object
-   * @param {string} key - The header key to get
-   * @returns {string} The header value
-   */
-  _safeGetHeader(headers, key) {
-    return this._executeWithErrorHandling(() => this._extractHeader(headers, key), `getting header "${key}"`, '');
-  }
-
-  /**
    * Determine if caching should be used based on options and configuration
    * @param {Object} options - The cache options
    * @param {Object} cacheConfig - The cache configuration
