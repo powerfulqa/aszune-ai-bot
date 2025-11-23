@@ -188,11 +188,6 @@ const config = {
 
   // Feature Flags (for development and gradual rollout)
   FEATURES: {
-    // License System Features (disabled by default for safe deployment)
-    LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
-    LICENSE_SERVER: process.env.ENABLE_LICENSE_SERVER === 'true' || false,
-    LICENSE_ENFORCEMENT: process.env.ENABLE_LICENSE_ENFORCEMENT === 'true' || false,
-
     // Development mode detection (enables all features for testing)
     DEVELOPMENT_MODE: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
   },

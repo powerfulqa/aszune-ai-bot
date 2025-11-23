@@ -18,54 +18,15 @@ try {
 // Set up logger early
 const logger = require('./utils/logger');
 
-// Initialize license validation conditionally
-let licenseValidator = null;
-
 // Helper function to get config inside functions to avoid circular dependencies
 function getConfig() {
-  const config = require('./config/config');
-
-  // Ensure FEATURES property exists (for backward compatibility and tests)
-  if (!config.FEATURES) {
-    config.FEATURES = {
-      LICENSE_VALIDATION: false,
-      LICENSE_SERVER: false,
-      LICENSE_ENFORCEMENT: false,
-      DEVELOPMENT_MODE: false,
-    };
-  }
-
-  return config;
+  return require('./config/config');
 }
 
 // Initialize Pi-specific optimizations if enabled
 async function bootWithOptimizations() {
   const currentConfig = getConfig();
-
-  // Initialize license validation only if enabled
-  if (currentConfig.FEATURES.LICENSE_VALIDATION || currentConfig.FEATURES.DEVELOPMENT_MODE) {
-    const LicenseValidator = require('./utils/license-validator');
-    licenseValidator = new LicenseValidator();
-
-    logger.info('Validating software license...');
-    const licenseValid = await licenseValidator.enforceLicense();
-
-    if (!licenseValid) {
-      logger.error('License validation failed - see above for details');
-      // Will exit in licenseValidator.enforceLicense() if needed
-    } else {
-      logger.info('License validation successful - starting bot...');
-    }
-  } else {
-    logger.info('License validation disabled via feature flags - starting bot...');
-  }
-
-  // Start license server if enabled
-  if (currentConfig.FEATURES.LICENSE_SERVER || currentConfig.FEATURES.DEVELOPMENT_MODE) {
-    const LicenseServer = require('./utils/license-server');
-    const server = new LicenseServer();
-    server.start();
-  }
+  logger.info('Bot initialization started...');
   // Pi optimizations are now initialized at module load time in production mode
 }
 
