@@ -2288,33 +2288,36 @@ class WebDashboardService {
     return false;
   }
 
+  /**
+   * Build service object with system info
+   * @private
+   */
+  _buildServiceObject(bootEnabled) {
+    const uptimeSeconds = Math.floor(process.uptime());
+    const hours = Math.floor(uptimeSeconds / 3600);
+    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+    const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+
+    return {
+      id: 'aszune-ai-bot',
+      name: 'Aszune AI Bot',
+      icon: '🤖',
+      status: 'Running',
+      enabledOnBoot: bootEnabled,
+      uptime: `${hours}h ${minutes}m`,
+      pid: process.pid,
+      memory: `${memoryMB} MB`,
+      port: '3000 (Dashboard)',
+    };
+  }
+
   setupServiceHandlers(socket) {
+    // Handle request_services event
     socket.on('request_services', (data, callback) => {
       try {
-        const uptimeSeconds = Math.floor(process.uptime());
-        const hours = Math.floor(uptimeSeconds / 3600);
-        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-        const uptimeFormatted = `${hours}h ${minutes}m`;
-
-        const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-
-        // Get boot enabled status asynchronously
         this.getBootEnabledStatus('aszune-bot')
           .then((bootEnabled) => {
-            const services = [
-              {
-                id: 'aszune-ai-bot',
-                name: 'Aszune AI Bot',
-                icon: '🤖',
-                status: 'Running',
-                enabledOnBoot: bootEnabled,
-                uptime: uptimeFormatted,
-                pid: process.pid,
-                memory: `${memoryMB} MB`,
-                port: '3000 (Dashboard)',
-              },
-            ];
-
+            const services = [this._buildServiceObject(bootEnabled)];
             if (callback) {
               callback({
                 services,
@@ -2322,26 +2325,11 @@ class WebDashboardService {
                 timestamp: new Date().toISOString(),
               });
             }
-
-            logger.debug(`Services list retrieved: ${services.length} services`);
+            logger.debug(`Services retrieved: ${services.length}`);
           })
           .catch((error) => {
             logger.error('Error getting boot status:', error);
-            // Return services without boot status
-            const services = [
-              {
-                id: 'aszune-ai-bot',
-                name: 'Aszune AI Bot',
-                icon: '🤖',
-                status: 'Running',
-                enabledOnBoot: false,
-                uptime: uptimeFormatted,
-                pid: process.pid,
-                memory: `${memoryMB} MB`,
-                port: '3000 (Dashboard)',
-              },
-            ];
-
+            const services = [this._buildServiceObject(false)];
             if (callback) {
               callback({
                 services,
@@ -2356,14 +2344,17 @@ class WebDashboardService {
       }
     });
 
+    // Handle service_action event
     socket.on('service_action', (data, callback) => {
       this.handleServiceAction(data, callback);
     });
 
+    // Handle quick_service_action event
     socket.on('quick_service_action', (data, callback) => {
       this.handleQuickServiceAction(data, callback);
     });
 
+    // Handle request_discord_status event
     socket.on('request_discord_status', (data, callback) => {
       this.handleDiscordStatus(callback);
     });
@@ -2501,6 +2492,25 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Map quick action group to PM2 command
+   * @private
+   */
+  _mapGroupToPm2Command(group) {
+    switch (group) {
+      case 'restart-all':
+        return 'pm2 restart all';
+      case 'start-all':
+        return 'pm2 start all';
+      case 'stop-non-essential':
+        // This would stop the bot itself, which would kill the dashboard
+        logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
+        return 'pm2 restart all';
+      default:
+        throw new Error(`Unknown quick action group: ${group}`);
+    }
+  }
+
   async handleQuickServiceAction(data, callback) {
     try {
       const { group } = data;
@@ -2518,24 +2528,7 @@ class WebDashboardService {
         const util = require('util');
         const execPromise = util.promisify(exec);
 
-        let pm2Command;
-        switch (group) {
-          case 'restart-all':
-            pm2Command = 'pm2 restart all';
-            break;
-          case 'start-all':
-            pm2Command = 'pm2 start all';
-            break;
-          case 'stop-non-essential':
-            // This would stop the bot itself, which would kill the dashboard
-            // For now, just restart all to be safe
-            pm2Command = 'pm2 restart all';
-            logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-            break;
-          default:
-            throw new Error(`Unknown quick action group: ${group}`);
-        }
-
+        const pm2Command = this._mapGroupToPm2Command(group);
         logger.debug(`Executing PM2 quick action: ${pm2Command}`);
         const { stdout, stderr } = await execPromise(pm2Command);
 
