@@ -154,16 +154,19 @@ class NaturalLanguageReminderProcessor {
    * @returns {string} - Date type classification
    */
   classifyDateType(dateText) {
-    if (/\d{4}-\d{2}-\d{2}/.test(dateText)) return 'iso';
-    if (
-      /(?:January|February|March|April|May|June|July|August|September|October|November|December)/i.test(
-        dateText
-      )
-    )
-      return 'full';
-    if (/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(dateText)) return 'abbreviated';
-    if (/Q[1-4]/i.test(dateText) || /quarter/i.test(dateText)) return 'quarter';
-    if (/^\d{4}$/.test(dateText)) return 'year';
+    const patterns = [
+      { regex: /\d{4}-\d{2}-\d{2}/, type: 'iso' },
+      { regex: /(?:January|February|March|April|May|June|July|August|September|October|November|December)/i, type: 'full' },
+      { regex: /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i, type: 'abbreviated' },
+      { regex: /Q[1-4]/i, type: 'quarter' },
+      { regex: /quarter/i, type: 'quarter' },
+      { regex: /^\d{4}$/, type: 'year' },
+    ];
+
+    for (const { regex, type } of patterns) {
+      if (regex.test(dateText)) return type;
+    }
+
     return 'unknown';
   }
 

@@ -197,18 +197,40 @@ class PerplexityService {
    * @returns {string} Header value or empty string
    * @private
    */
-  _extractHeader(headers, key) {
-    if (!headers || !key) return '';
-    if (typeof headers !== 'object' && typeof headers !== 'function') return '';
-    if (headers && headers.get && typeof headers.get === 'function') {
+  /**
+   * Try to get header value using .get() method
+   * @private
+   */
+  _tryHeaderGet(headers, key) {
+    if (headers && typeof headers.get === 'function') {
       try {
         return headers.get(key) || '';
-      } catch (e) {}
+      } catch (e) {
+        return '';
+      }
     }
+    return null;
+  }
+
+  /**
+   * Try to get header value from object with case variations
+   * @private
+   */
+  _tryHeaderObject(headers, key) {
     if (Object.prototype.hasOwnProperty.call(headers, key)) return headers[key] || '';
     if (Object.prototype.hasOwnProperty.call(headers, key.toLowerCase())) return headers[key.toLowerCase()] || '';
     if (Object.prototype.hasOwnProperty.call(headers, key.toUpperCase())) return headers[key.toUpperCase()] || '';
     return '';
+  }
+
+  _extractHeader(headers, key) {
+    if (!headers || !key) return '';
+    if (typeof headers !== 'object' && typeof headers !== 'function') return '';
+
+    const getResult = this._tryHeaderGet(headers, key);
+    if (getResult !== null) return getResult;
+
+    return this._tryHeaderObject(headers, key);
   }
 
   /**
