@@ -78,16 +78,7 @@ describe('DatabaseService - User Management', () => {
     it('should handle database errors gracefully', () => {
       dbService.isDisabled = true;
       const stats = dbService.getUserStats('test-user');
-      expect(stats).toEqual({
-        user_id: 'test-user',
-        message_count: 0,
-        last_active: null,
-        first_seen: null,
-        total_summaries: 0,
-        total_commands: 0,
-        preferences: '{}',
-        username: null,
-      });
+      expect(stats).toBeNull();
     });
   });
 

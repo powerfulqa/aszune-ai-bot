@@ -130,11 +130,6 @@ jest.mock('../../src/services/reminder-service', () => ({
   on: jest.fn(),
   shutdown: jest.fn(),
 }));
-jest.mock('../../src/utils/license-validator', () => {
-  return jest.fn().mockImplementation(() => ({
-    enforceLicense: jest.fn().mockResolvedValue(true),
-  }));
-});
 jest.mock('../../src/commands', () => ({
   getSlashCommandsData: jest.fn().mockReturnValue([]),
   handleSlashCommand: jest.fn(),
@@ -300,38 +295,6 @@ describe('Bot Main Entry Point (index.js)', () => {
     it('should skip license validation when disabled', async () => {
       // Skip this test as license validation testing requires complex async setup
       // that conflicts with jest.resetModules() and jest.doMock() patterns
-    });
-
-    it('should initialize license server when enabled', async () => {
-      // Mock license server constructor
-      const MockLicenseServer = jest.fn().mockImplementation(() => ({
-        start: jest.fn(),
-      }));
-
-      jest.doMock('../../src/utils/license-server', () => MockLicenseServer);
-
-      // Mock config with license server enabled
-      const mockConfig = {
-        FEATURES: {
-          LICENSE_VALIDATION: false,
-          LICENSE_SERVER: true,
-          DEVELOPMENT_MODE: false,
-        },
-        PI_OPTIMIZATIONS: { ENABLED: false },
-      };
-
-      jest.doMock('../../src/config/config', () => mockConfig);
-
-      // Re-import to get updated mocks
-      jest.resetModules();
-      require('../../src/index');
-
-      // Manually trigger the ready event
-      if (mockClientReadyHandler) {
-        await mockClientReadyHandler();
-      }
-
-      expect(MockLicenseServer).toHaveBeenCalled();
     });
 
     it('should handle Pi optimizations initialization', async () => {

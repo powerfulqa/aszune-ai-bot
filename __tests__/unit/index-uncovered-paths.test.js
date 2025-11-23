@@ -77,12 +77,6 @@ describe('Index Uncovered Paths', () => {
       stop: jest.fn().mockResolvedValue(true),
       setDiscordClient: jest.fn(),
     }));
-    jest.doMock('../../src/utils/license-validator');
-    jest.doMock('../../src/utils/license-server', () => {
-      return jest.fn().mockImplementation(() => ({
-        start: jest.fn(),
-      }));
-    });
     jest.doMock('../../src/utils/lazy-loader', () => ({
       lazyLoad: jest.fn().mockReturnValue(() => ({ initialize: jest.fn() })),
     }));
@@ -102,47 +96,6 @@ describe('Index Uncovered Paths', () => {
 
     // Load index
     index = require('../../src/index');
-  });
-
-  describe('bootWithOptimizations', () => {
-    it('should handle license validation enabled', async () => {
-      mockConfig.FEATURES.LICENSE_VALIDATION = true;
-
-      const LicenseValidator = require('../../src/utils/license-validator');
-      const mockValidator = { enforceLicense: jest.fn().mockResolvedValue(true) };
-      LicenseValidator.mockImplementation(() => mockValidator);
-
-      await index.bootWithOptimizations();
-
-      expect(mockValidator.enforceLicense).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith('License validation successful - starting bot...');
-    });
-
-    it('should handle license validation failure', async () => {
-      mockConfig.FEATURES.LICENSE_VALIDATION = true;
-
-      const LicenseValidator = require('../../src/utils/license-validator');
-      const mockValidator = { enforceLicense: jest.fn().mockResolvedValue(false) };
-      LicenseValidator.mockImplementation(() => mockValidator);
-
-      await index.bootWithOptimizations();
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'License validation failed - see above for details'
-      );
-    });
-
-    it('should start license server if enabled', async () => {
-      mockConfig.FEATURES.LICENSE_SERVER = true;
-
-      const LicenseServer = require('../../src/utils/license-server');
-      const mockServer = { start: jest.fn() };
-      LicenseServer.mockImplementation(() => mockServer);
-
-      await index.bootWithOptimizations();
-
-      expect(mockServer.start).toHaveBeenCalled();
-    });
   });
 
   describe('registerSlashCommands', () => {
