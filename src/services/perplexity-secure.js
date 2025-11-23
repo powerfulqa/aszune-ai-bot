@@ -198,43 +198,30 @@ class PerplexityService {
    * @private
    */
   /**
-   * Try to get header value using .get() method
-   * @private
-   */
-  _tryHeaderGet(headers, key) {
-    if (headers && typeof headers.get === 'function') {
-      try {
-        return headers.get(key) || '';
-      } catch (e) {
-        return '';
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Try to get header value from object with case variations
-   * @private
-   */
-  _tryHeaderObject(headers, key) {
-    if (Object.prototype.hasOwnProperty.call(headers, key)) return headers[key] || '';
-    if (Object.prototype.hasOwnProperty.call(headers, key.toLowerCase())) return headers[key.toLowerCase()] || '';
-    if (Object.prototype.hasOwnProperty.call(headers, key.toUpperCase())) return headers[key.toUpperCase()] || '';
-    return '';
-  }
-
-  /**
-   * Safely extract header value with fallback handling
+   * Safely extract header value with multiple fallback strategies
    * @private
    */
   _safeGetHeader(headers, key) {
     if (!headers || !key) return '';
-    if (typeof headers !== 'object' && typeof headers !== 'function') return '';
 
-    const getResult = this._tryHeaderGet(headers, key);
-    if (getResult !== null) return getResult;
+    // Try Headers.get() method first (for Fetch API Headers)
+    if (typeof headers.get === 'function') {
+      try {
+        const result = headers.get(key);
+        if (result) return result;
+      } catch (e) {
+        // Fall through to object access
+      }
+    }
 
-    return this._tryHeaderObject(headers, key);
+    // Try direct object property access
+    if (headers[key]) return headers[key];
+
+    // Try case-insensitive lookups
+    if (headers[key.toLowerCase()]) return headers[key.toLowerCase()];
+    if (headers[key.toUpperCase()]) return headers[key.toUpperCase()];
+
+    return '';
   }
 
   _extractHeader(headers, key) {
