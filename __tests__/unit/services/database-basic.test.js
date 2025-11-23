@@ -83,7 +83,7 @@ describe('DatabaseService - Basic Operations', () => {
       dbService.initTables();
 
       const db = dbService.getDb();
-      const tables = db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\'').all();
+      const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
 
       const tableNames = tables.map((t) => t.name);
       expect(tableNames).toContain('user_stats');

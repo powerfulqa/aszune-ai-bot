@@ -327,24 +327,24 @@ function generateOptimizedConfig(detectedPi) {
 
   // Apply model-specific optimizations
   switch (detectedPi.model) {
-  case 'pi3':
-    return configurePi3(config);
+    case 'pi3':
+      return configurePi3(config);
 
-  case 'pi4':
-    return configurePi4(config, detectedPi.ram);
+    case 'pi4':
+      return configurePi4(config, detectedPi.ram);
 
-  case 'pi5':
-    return configurePi5(config, detectedPi.ram);
+    case 'pi5':
+      return configurePi5(config, detectedPi.ram);
 
-  default:
-    // Unknown Pi model, use safe defaults
-    config.COMPACT_MODE = true;
-    config.MAX_CONNECTIONS = 2;
-    config.MAX_HISTORY = 10;
-    config.CACHE_SIZE = 50;
-    config.LOW_CPU_MODE = true;
-    config.DEBOUNCE_MS = 300;
-    return config;
+    default:
+      // Unknown Pi model, use safe defaults
+      config.COMPACT_MODE = true;
+      config.MAX_CONNECTIONS = 2;
+      config.MAX_HISTORY = 10;
+      config.CACHE_SIZE = 50;
+      config.LOW_CPU_MODE = true;
+      config.DEBOUNCE_MS = 300;
+      return config;
   }
 }
 
@@ -377,19 +377,39 @@ function _getNumEnvOverride(envVar1, envVar2, defaultValue) {
 
 function createEnvOverrides(optimizedConfig) {
   const overrides = {
-    ENABLED: _getBoolEnvOverride('PI_OPTIMIZATIONS_ENABLED', 'ENABLE_PI_OPTIMIZATIONS', optimizedConfig.ENABLED),
+    ENABLED: _getBoolEnvOverride(
+      'PI_OPTIMIZATIONS_ENABLED',
+      'ENABLE_PI_OPTIMIZATIONS',
+      optimizedConfig.ENABLED
+    ),
     LOW_CPU_MODE: _getBoolEnvOverride('PI_LOW_CPU_MODE', null, optimizedConfig.LOW_CPU_MODE),
-    COMPACT_MODE: _getBoolEnvOverride('PI_OPTIMIZATIONS_COMPACT_MODE', 'PI_COMPACT_MODE', optimizedConfig.COMPACT_MODE),
+    COMPACT_MODE: _getBoolEnvOverride(
+      'PI_OPTIMIZATIONS_COMPACT_MODE',
+      'PI_COMPACT_MODE',
+      optimizedConfig.COMPACT_MODE
+    ),
     CACHE_ENABLED: _getBoolEnvOverride('PI_CACHE_ENABLED', null, optimizedConfig.CACHE_ENABLED),
-    MAX_CONNECTIONS: _getNumEnvOverride('PI_OPTIMIZATIONS_MAX_CONNECTIONS', 'PI_MAX_CONNECTIONS', optimizedConfig.MAX_CONNECTIONS),
+    MAX_CONNECTIONS: _getNumEnvOverride(
+      'PI_OPTIMIZATIONS_MAX_CONNECTIONS',
+      'PI_MAX_CONNECTIONS',
+      optimizedConfig.MAX_CONNECTIONS
+    ),
     DEBOUNCE_MS: _getNumEnvOverride('PI_DEBOUNCE_MS', null, optimizedConfig.DEBOUNCE_MS),
     REACTION_LIMIT: _getNumEnvOverride('PI_REACTION_LIMIT', null, optimizedConfig.REACTION_LIMIT),
-    STREAM_RESPONSES: _getBoolEnvOverride('PI_STREAM_RESPONSES', null, optimizedConfig.STREAM_RESPONSES),
+    STREAM_RESPONSES: _getBoolEnvOverride(
+      'PI_STREAM_RESPONSES',
+      null,
+      optimizedConfig.STREAM_RESPONSES
+    ),
   };
   if (process.env.PI_MEMORY_LIMIT || process.env.PI_MEMORY_CRITICAL) {
     overrides.MEMORY_LIMITS = {
-      RAM_THRESHOLD_MB: process.env.PI_MEMORY_LIMIT ? parseInt(process.env.PI_MEMORY_LIMIT) : optimizedConfig.MEMORY_LIMITS.RAM_THRESHOLD_MB,
-      RAM_CRITICAL_MB: process.env.PI_MEMORY_CRITICAL ? parseInt(process.env.PI_MEMORY_CRITICAL) : optimizedConfig.MEMORY_LIMITS.RAM_CRITICAL_MB,
+      RAM_THRESHOLD_MB: process.env.PI_MEMORY_LIMIT
+        ? parseInt(process.env.PI_MEMORY_LIMIT)
+        : optimizedConfig.MEMORY_LIMITS.RAM_THRESHOLD_MB,
+      RAM_CRITICAL_MB: process.env.PI_MEMORY_CRITICAL
+        ? parseInt(process.env.PI_MEMORY_CRITICAL)
+        : optimizedConfig.MEMORY_LIMITS.RAM_CRITICAL_MB,
     };
   }
   return overrides;
