@@ -1,0 +1,1113 @@
+
+> aszuneai@1.9.0 test
+> jest
+
+PASS __tests__/unit/services/database-uptime.test.js
+  DatabaseService - Uptime
+    logBotEvent
+      √ should record uptime without throwing (143 ms)
+      √ should handle database errors gracefully (120 ms)
+      √ should handle zero uptime (131 ms)
+      √ should handle negative uptime (121 ms)
+    getUptimeStats
+      √ should return default uptime stats when no data exists (122 ms)
+      √ should calculate uptime statistics correctly (135 ms)
+      √ should handle database errors gracefully (115 ms)
+
+PASS __tests__/unit/text-commands-removal.test.js
+  Text Commands Removal
+    Migration to Slash Commands Only
+      √ should verify that both handleTextCommand and handleSlashCommand exist (913 ms)
+      √ should confirm all text commands have been migrated to slash commands (507 ms)
+      √ should confirm reminder functionality exists as separate slash commands (502 ms)
+      √ should verify help command shows updated syntax without text commands (505 ms)
+
+PASS __tests__/unit/services/database-errors.test.js
+  DatabaseService - Errors
+    logError
+      √ should log errors without throwing (131 ms)
+      √ should handle database errors gracefully (122 ms)
+      √ should handle null parameters (121 ms)
+      √ should handle empty context (121 ms)
+    getErrorStats
+      √ should return default stats when no errors logged (119 ms)
+      √ should aggregate error statistics correctly (136 ms)
+      √ should handle database errors gracefully (115 ms)
+
+  console.log
+    [2025-11-23T14:03:12.952Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:12.995Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:12.998Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.013Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.014Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.015Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.017Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.019Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.019Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.032Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.032Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.033Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.034Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.035Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.036Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.048Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.049Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.050Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.061Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.062Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.063Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.075Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.076Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.077Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.error
+    [2025-11-23T14:03:13.109Z] [ERROR] Error in loading cache:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as loadCache] (src/services/cache-manager.js:207:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:191:7)
+
+  console.error
+    Error: Unexpected token 'i', "invalid json data" is not valid JSON
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as loadCache] (src/services/cache-manager.js:207:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:191:7)
+
+  console.error
+    Stack: SyntaxError: Unexpected token 'i', "invalid json data" is not valid JSON
+        at JSON.parse (<anonymous>)
+        at CacheManager.parse [as loadCache] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\cache-manager.js:201:19)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:191:7)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as loadCache] (src/services/cache-manager.js:207:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:191:7)
+
+  console.warn
+    [2025-11-23T14:03:13.125Z] [WARN] Cache load error: An unexpected error occurred. Please try again later.
+
+    [0m [90m 167 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mWARN[39m) {
+     [90m 168 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'WARN'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 169 |[39m       console[33m.[39mwarn(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 170 |[39m       [36mif[39m (data) console[33m.[39mwarn(data)[33m;[39m
+     [90m 171 |[39m
+     [90m 172 |[39m       [90m// Write to file[39m[0m
+
+      at Logger.warn (src/utils/logger.js:169:15)
+      at CacheManager.warn [as loadCache] (src/services/cache-manager.js:208:14)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:191:7)
+
+  console.error
+    [2025-11-23T14:03:13.130Z] [ERROR] Error in saving cache:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as saveCache] (src/services/cache-manager.js:229:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:192:7)
+
+  console.error
+    Error: Cache write error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as saveCache] (src/services/cache-manager.js:229:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:192:7)
+
+  console.error
+    Stack: Error: Cache write error
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:120:38)
+        at Promise.then.completed (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+        at _runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at run (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (c:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (c:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at CacheManager.handleError [as saveCache] (src/services/cache-manager.js:229:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:192:7)
+
+  console.error
+    [2025-11-23T14:03:13.138Z] [ERROR] Cache save error: An unexpected error occurred. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at CacheManager.error [as saveCache] (src/services/cache-manager.js:230:14)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:192:7)
+
+  console.log
+    [2025-11-23T14:03:13.141Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.142Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:13.144Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.error
+    [2025-11-23T14:03:13.145Z] [ERROR] API request failed for endpoint /chat/completions:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    Error: Temporary network error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    [2025-11-23T14:03:13.176Z] [ERROR] Error in API call to Perplexity API:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    Error: Request failed: Temporary network error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    Stack: Error: Request failed: Temporary network error
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:210:22)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    [2025-11-23T14:03:13.184Z] [ERROR] API request failed: An unexpected error occurred. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at PerplexityService.error [as sendChatRequest] (src/services/perplexity-secure.js:474:14)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    [2025-11-23T14:03:13.187Z] [ERROR] Error in API retry:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    Error: Request failed: Temporary network error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.error
+    Stack: Error: Request failed: Temporary network error
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:210:22)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:210:22)
+
+  console.log
+    [2025-11-23T14:03:14.205Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.206Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.206Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.220Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.221Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.222Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.error
+    [2025-11-23T14:03:14.223Z] [ERROR] API request failed for endpoint /chat/completions:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    Error: Permanent API error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    [2025-11-23T14:03:14.227Z] [ERROR] Error in API call to Perplexity API:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    Error: Request failed: Permanent API error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    Stack: Error: Request failed: Permanent API error
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:223:7)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    [2025-11-23T14:03:14.232Z] [ERROR] API request failed: The service is temporarily unavailable. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at PerplexityService.error [as sendChatRequest] (src/services/perplexity-secure.js:474:14)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    [2025-11-23T14:03:14.245Z] [ERROR] Error in generate chat response:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as generateChatResponse] (src/services/perplexity-secure.js:754:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    Error: Request failed: Permanent API error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as generateChatResponse] (src/services/perplexity-secure.js:754:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    Stack: Error: Request failed: Permanent API error
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:223:7)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as generateChatResponse] (src/services/perplexity-secure.js:754:42)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.error
+    [2025-11-23T14:03:14.249Z] [ERROR] Failed to generate chat response: The service is temporarily unavailable. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at PerplexityService.error [as generateChatResponse] (src/services/perplexity-secure.js:758:14)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:223:7)
+
+  console.log
+    [2025-11-23T14:03:14.253Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.254Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:14.255Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.error
+    [2025-11-23T14:03:14.256Z] [ERROR] API request failed for endpoint /chat/completions:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    Error: Request timeout
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:457:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:468:20)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    [2025-11-23T14:03:14.259Z] [ERROR] Error in API call to Perplexity API:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    Error: Request failed: Request timeout
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    Stack: Error: Request failed: Request timeout
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:238:22)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:473:42)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    [2025-11-23T14:03:14.266Z] [ERROR] API request failed: An unexpected error occurred. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at PerplexityService.error [as sendChatRequest] (src/services/perplexity-secure.js:474:14)
+      at ResponseProcessor.generateResponseWithRetry (src/services/response-processor.js:135:14)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    [2025-11-23T14:03:14.267Z] [ERROR] Error in API retry:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    Error: Request failed: Request timeout
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.error
+    Stack: Error: Request failed: Request timeout
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:457:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:468:20)
+        at ResponseProcessor.generateResponseWithRetry (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\response-processor.js:135:14)
+        at PerplexityService._processChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:666:22)
+        at PerplexityService.generateChatResponse (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:727:23)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-advanced.test.js:238:22)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at ResponseProcessor.handleError [as generateResponseWithRetry] (src/services/response-processor.js:141:22)
+      at PerplexityService._processChatResponse (src/services/perplexity-secure.js:666:22)
+      at PerplexityService.generateChatResponse (src/services/perplexity-secure.js:727:23)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-advanced.test.js:238:22)
+
+  console.log
+    [2025-11-23T14:03:15.280Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=1024
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:15.280Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T14:03:15.281Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+PASS __tests__/unit/services/perplexity-secure-advanced.test.js
+  PerplexitySecure Service - Advanced
+    question caching
+      √ should cache questions and return cached responses (65 ms)
+      √ should not cache when caching is disabled (17 ms)
+      √ should handle cache file read errors gracefully (14 ms)
+      √ should handle cache file write errors gracefully (13 ms)
+      √ should handle corrupted cache data (13 ms)
+    file permission security
+      √ should handle file permission errors gracefully (14 ms)
+      √ should create cache directory with proper permissions (51 ms)
+    retry mechanism
+      √ should retry on temporary failures (1079 ms)
+      √ should not retry on permanent failures (33 ms)
+      √ should handle timeout errors (1041 ms)
+
+PASS __tests__/unit/reminder-service.test.js
+  ReminderService
+    initialize
+      √ should initialize successfully (4 ms)
+      √ should not initialize twice (1 ms)
+      √ should handle initialization errors (16 ms)
+    loadAndScheduleReminders
+      √ should load and schedule active reminders (1 ms)
+      √ should handle errors during loading
+    scheduleReminder
+      √ should complete past due reminders immediately (1 ms)
+      √ should schedule future reminders with setTimeout (3 ms)
+      √ should schedule long-term reminders with interval check (1 ms)
+      √ should clear existing timer before scheduling new one (1 ms)
+      √ should handle scheduling errors (6 ms)
+    executeReminder
+      √ should execute reminder successfully (1 ms)
+      √ should not emit if database completion fails (1 ms)
+      √ should handle execution errors
+    createReminder
+      √ should create and schedule a reminder (1 ms)
+      √ should validate scheduled time format (1 ms)
+      √ should validate future time (1 ms)
+      √ should handle database creation failure
+      √ should handle errors
+    cancelReminder
+      √ should cancel existing reminder (1 ms)
+      √ should return false if reminder not found (1 ms)
+      √ should handle errors (2 ms)
+    setReminder
+      √ should parse "in X minutes" format (247 ms)
+      √ should parse "in X hours" format (241 ms)
+      √ should parse "tomorrow" format (112 ms)
+      √ should throw on unsupported format (133 ms)
+      √ should handle errors (113 ms)
+    deleteReminder
+      √ should delete reminder and clear timer (1 ms)
+      √ should return false if delete fails (1 ms)
+      √ should handle errors (1 ms)
+    Event Emitter
+      √ should register and emit events
+      √ should handle listener errors gracefully (1 ms)
+    getUserReminders
+      √ should delegate to database service (1 ms)
+
+PASS __tests__/unit/conversation-memory-performance.test.js
+  ConversationManager - Memory and Performance
+    Memory and Performance Edge Cases
+      √ should handle many concurrent users efficiently (8 ms)
+      √ should handle rapid successive messages from same user (1 ms)
+      √ should handle alternating user and assistant messages (1 ms)
+    Cleanup Operations
+      √ should cleanup old conversations (1 ms)
+      √ should preserve user stats during cleanup (1 ms)
+
+(node:26644) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGINT listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26644) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+PASS __tests__/unit/main-index-advanced.test.js
+  Main Index - Advanced
+    √ should handle bootWithOptimizations function (221 ms)
+    √ should handle registerSlashCommands function (165 ms)
+    √ should handle Pi optimization detection (1 ms)
+    √ should handle enhanced cache initialization
+    √ should handle perplexity service initialization (1 ms)
+    √ should handle error scenarios gracefully (169 ms)
+    √ should handle multiple imports without conflicts (159 ms)
+    √ should handle environment variable changes (157 ms)
+    √ should handle missing dependencies gracefully (160 ms)
+
+PASS __tests__/unit/message-chunker-basic.test.js
+  Message Chunker - Basic
+    √ should not chunk message that fits within max length (3 ms)
+    √ should chunk a message that exceeds max length (1 ms)
+    √ should preserve paragraph breaks when possible (1 ms)
+    √ should add correct chunk numbering (1 ms)
+    √ should handle empty message
+    √ should handle null or undefined input (1 ms)
+    √ should handle very small chunk size (2 ms)
+
+PASS __tests__/unit/commands-slash-handler.test.js
+  Commands - Slash Command Handler
+    handleSlashCommand
+      √ should handle /help command (3 ms)
+      √ should handle /clearhistory command (1 ms)
+      √ should handle /summary command (2 ms)
+      √ should handle /summary command API error (15 ms)
+      √ should handle /summary command with only assistant messages in history (1 ms)
+      √ should handle /summary command with no history (1 ms)
+      √ should handle /stats command
+      √ should handle /summarise command with text (2 ms)
+      √ should handle /summarise command without text
+      √ should handle /summarise command with empty text (1 ms)
+      √ should handle /summarise command with invalid text (1 ms)
+      √ should handle /summarise command API error (1 ms)
+      √ should handle command execution error when not deferred (2 ms)
+      √ should handle unknown command
+      √ should handle command execution error (1 ms)
+      √ should handle slash command with invalid user ID (3 ms)
+      √ should handle slash command when already replied (1 ms)
+      √ should handle slash command when already deferred and replied
+
+PASS __tests__/unit/config-pi-optimization.test.js
+  Config - Pi Optimization Branch Coverage
+    Pi Optimization Environment Variables
+      √ should handle various debounce values (5 ms)
+      √ should handle various memory limit values (4 ms)
+      √ should handle max connections setting (4 ms)
+      √ should use default values when Pi env vars are not set (5 ms)
+    initializePiOptimizations Function Branches
+      √ should return config when pi-detector succeeds (5 ms)
+      √ should handle pi-detector errors gracefully (5 ms)
+      √ should handle missing pi-detector module gracefully (4 ms)
+      √ should handle pi-detector returning null (4 ms)
+      √ should handle pi-detector returning undefined (4 ms)
+    Configuration Structure Edge Cases
+      √ should handle different PI_LOG_LEVEL values (5 ms)
+      √ should handle boolean environment variables correctly (3 ms)
+      √ should handle reaction limit values (4 ms)
+      √ should handle stream responses setting (4 ms)
+      √ should have all required configuration sections (4 ms)
+
+PASS __tests__/unit/emoji.test.js
+  appendEmoji
+    √ adds the correct emoji for known keywords (3 ms)
+    √ does not modify the text if no keyword is present (1 ms)
+    √ is case-insensitive
+    √ can add multiple emojis
+    √ does not add emoji for keywords inside other words (1 ms)
+    √ adds all matching emojis in correct order
+    √ handles empty string
+    √ handles string with only emojis as keywords
+
+PASS __tests__/unit/emoji-manager.test.js
+  EmojiManager
+    √ adds emojis to response based on keywords (2 ms)
+    √ adds multiple emojis when multiple keywords are found (1 ms)
+    √ does not add emojis when no keywords are found
+    √ gets reactions for a message based on keywords (1 ms)
+    √ returns empty array when no reaction keywords are found (1 ms)
+    √ adds reactions to a message (1 ms)
+    √ handles errors when adding reactions (7 ms)
+
+Terminate batch job (Y/N)? 

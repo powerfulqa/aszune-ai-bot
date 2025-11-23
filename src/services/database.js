@@ -345,13 +345,13 @@ class DatabaseService {
 
   // Stats methods
   getUserStats(userId) {
-    return this._executeSql(
+    return this._executeSqlStrict(
       (db) => {
         const stmt = db.prepare('SELECT * FROM user_stats WHERE user_id = ?');
         const stats = stmt.get(userId);
         return stats || { ...this._getDefaultStats('user'), user_id: userId };
       },
-      { ...this._getDefaultStats('user'), user_id: userId }
+      `Failed to get user stats for ${userId}`
     );
   }
 
@@ -543,13 +543,13 @@ class DatabaseService {
   }
 
   addUserMessage(userId, message, responseTimeMs = 0, username = null) {
-    return this._executeSql((db) => {
+    return this._executeSqlStrict((db) => {
       this.ensureUserExists(userId, username);
       if (username) this.updateUsername(userId, username);
       db.prepare('INSERT INTO user_messages (user_id, message) VALUES (?, ?)').run(userId, message);
       db.prepare('INSERT INTO conversation_history (user_id, message, role, message_length, response_time_ms) VALUES (?, ?, ?, ?, ?)').run(userId, message, 'user', message.length, responseTimeMs);
       this.updateUserStats(userId, { message_count: 1 });
-    });
+    }, `Failed to add user message for ${userId}`);
   }
 
   addBotResponse(userId, response, responseTimeMs = 0) {
@@ -695,12 +695,12 @@ class DatabaseService {
   }
 
   clearUserData(userId) {
-    return this._executeSql((db) => {
+    return this._executeSqlStrict((db) => {
       const tables = ['user_stats', 'user_messages', 'conversation_history', 'command_usage', 'error_logs', 'reminders'];
       tables.forEach((table) => {
         db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(userId);
       });
-    });
+    }, `Failed to clear user data for ${userId}`);
   }
 
   clearUserConversationData(userId) {
