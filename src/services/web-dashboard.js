@@ -2369,38 +2369,39 @@ class WebDashboardService {
     });
   }
 
+  /**
+   * Format uptime from milliseconds
+   * @private
+   */
+  _formatUptime(uptimeMs) {
+    const uptimeSeconds = Math.floor(uptimeMs / 1000);
+    const hours = Math.floor(uptimeSeconds / 3600);
+    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+    const seconds = uptimeSeconds % 60;
+
+    let result = '';
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0 || hours > 0) result += `${minutes}m `;
+    result += `${seconds}s`;
+    return result.trim();
+  }
+
   async handleDiscordStatus(callback) {
     try {
       if (!this.discordClient) {
-        if (callback) {
-          callback({
-            connected: false,
-            error: 'Discord client not initialized - dashboard started before Discord login',
-          });
-        }
+        if (callback) callback({ connected: false, error: 'Discord client not initialized' });
         return;
       }
 
       const isReady = this.discordClient.isReady();
-
       if (isReady && this.discordClient.user) {
-        const uptimeMs = this.discordClient.uptime || 0;
-        const uptimeSeconds = Math.floor(uptimeMs / 1000);
-        const hours = Math.floor(uptimeSeconds / 3600);
-        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-        const seconds = uptimeSeconds % 60;
-
-        let uptimeFormatted = '';
-        if (hours > 0) uptimeFormatted += `${hours}h `;
-        if (minutes > 0 || hours > 0) uptimeFormatted += `${minutes}m `;
-        uptimeFormatted += `${seconds}s`;
-
+        const uptime = this._formatUptime(this.discordClient.uptime || 0);
         if (callback) {
           callback({
             connected: true,
             username: this.discordClient.user.tag,
             id: this.discordClient.user.id,
-            uptime: uptimeFormatted.trim(),
+            uptime,
             guilds: this.discordClient.guilds.cache.size,
             timestamp: new Date().toISOString(),
           });
@@ -2409,21 +2410,15 @@ class WebDashboardService {
         if (callback) {
           callback({
             connected: false,
-            error:
-              'Discord bot is not connected - may be experiencing rate limiting or network issues',
+            error: 'Discord bot is not connected',
           });
         }
       }
 
-      logger.debug(`Discord status retrieved: ${isReady ? 'Connected' : 'Disconnected'}`);
+      logger.debug(`Discord status: ${isReady ? 'Connected' : 'Disconnected'}`);
     } catch (error) {
       logger.error('Error retrieving Discord status:', error);
-      if (callback) {
-        callback({
-          connected: false,
-          error: error.message,
-        });
-      }
+      if (callback) callback({ connected: false, error: error.message });
     }
   }
 
@@ -2592,93 +2587,67 @@ class WebDashboardService {
   }
 
   /**
+   * Safe collector helper with fallback defaults
+   * @private
+   */
+  async _safeCollectMetric(collector, metricName, fallbackValue) {
+    try {
+      return await collector();
+    } catch (err) {
+      logger.warn(`${metricName} error: ${err.message}`);
+      return fallbackValue;
+    }
+  }
+
+  /**
    * Get comprehensive metrics from all services
    * @returns {Promise<Object>} Metrics object
    */
   async getMetrics() {
     try {
-      // Collect metrics with error handling for each one
-      const cacheStats = await this.getCacheStats().catch((err) => {
-        logger.warn(`Cache stats error: ${err.message}`);
-        return {
-          hits: 0,
-          misses: 0,
-          hitRate: 0,
-          sets: 0,
-          deletes: 0,
-          evictions: 0,
-          entryCount: 0,
-          memoryUsage: 0,
-          memoryUsageFormatted: '0 B',
-          uptime: 0,
-          uptimeFormatted: '0s',
-        };
-      });
+      const [cacheStats, databaseStats, reminderStats, systemInfo, resourceData, analyticsData] = 
+        await Promise.all([
+          this._safeCollectMetric(
+            () => this.getCacheStats(),
+            'Cache stats',
+            { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, 
+              memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' }
+          ),
+          this._safeCollectMetric(
+            () => this.getDatabaseStats(),
+            'Database stats',
+            { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, 
+              completedReminders: 0, cancelledReminders: 0 } }
+          ),
+          this._safeCollectMetric(
+            () => this.getReminderStats(),
+            'Reminder stats',
+            { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 }
+          ),
+          this._safeCollectMetric(
+            () => this.getSystemInfo(),
+            'System info',
+            { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, 
+              uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, 
+              cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } }
+          ),
+          this._safeCollectMetric(
+            () => this.getResourceData(),
+            'Resource data',
+            { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, 
+              performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, 
+              optimizationTier: 'unknown' }
+          ),
+          this._safeCollectMetric(
+            () => this.getAnalyticsData(),
+            'Analytics data',
+            { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, 
+              avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] }
+          ),
+        ]);
 
-      const databaseStats = await this.getDatabaseStats().catch((err) => {
-        logger.warn(`Database stats error: ${err.message}`);
-        return {
-          userCount: 0,
-          totalMessages: 0,
-          reminders: {
-            totalReminders: 0,
-            activeReminders: 0,
-            completedReminders: 0,
-            cancelledReminders: 0,
-          },
-        };
-      });
-
-      const reminderStats = await this.getReminderStats().catch((err) => {
-        logger.warn(`Reminder stats error: ${err.message}`);
-        return {
-          totalReminders: 0,
-          activeReminders: 0,
-          completedReminders: 0,
-          cancelledReminders: 0,
-        };
-      });
-
-      const systemInfo = await this.getSystemInfo().catch((err) => {
-        logger.warn(`System info error: ${err.message}`);
-        return {
-          platform: 'unknown',
-          arch: 'unknown',
-          nodeVersion: 'unknown',
-          uptime: 0,
-          uptimeFormatted: '0s',
-          externalIp: 'Not available',
-          memory: { usagePercent: 0 },
-          cpu: { loadPercent: 0, loadAverage: [0, 0, 0] },
-        };
-      });
-
-      const resourceData = await this.getResourceData().catch((err) => {
-        logger.warn(`Resource data error: ${err.message}`);
-        return {
-          memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
-          performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
-          optimizationTier: 'unknown',
-        };
-      });
-
-      const analyticsData = await this.getAnalyticsData().catch((err) => {
-        logger.warn(`Analytics data error: ${err.message}`);
-        return {
-          summary: {
-            totalServers: 0,
-            totalUsers: 0,
-            successRate: 0,
-            errorRate: 0,
-            avgResponseTime: 0,
-            totalCommands: 0,
-          },
-          recentErrors: [],
-          recommendations: [],
-        };
-      });
-
-      const metrics = {
+      logger.debug('Metrics collected successfully');
+      return {
         timestamp: new Date().toISOString(),
         uptime: this.getUptime(),
         cache: cacheStats,
@@ -2688,9 +2657,6 @@ class WebDashboardService {
         resources: resourceData,
         analytics: analyticsData,
       };
-
-      logger.debug('Metrics collected successfully');
-      return metrics;
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'aggregating metrics');
       logger.error(`Metrics aggregation error: ${errorResponse.message}`);
