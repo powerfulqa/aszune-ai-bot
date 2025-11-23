@@ -214,6 +214,32 @@ class TimeParser {
    * @param {Date} referenceTime - Reference time (default: now)
    * @returns {string} - Relative time description
    */
+  /**
+   * Format time difference into a relative time string
+   * @private
+   */
+  _formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays) {
+    if (diffSeconds < 60) {
+      return diffSeconds <= 1 ? 'in 1 second' : `in ${diffSeconds} seconds`;
+    }
+    if (diffMinutes < 60) {
+      return diffMinutes === 1 ? 'in 1 minute' : `in ${diffMinutes} minutes`;
+    }
+    if (diffHours < 24) {
+      return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
+    }
+    if (diffDays < 7) {
+      return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
+    }
+    if (diffDays < 30) {
+      return this._formatWeeks(diffDays);
+    }
+    if (diffDays < 365) {
+      return this._formatMonths(diffDays);
+    }
+    return this._formatYears(diffDays);
+  }
+
   getRelativeTime(targetTime, referenceTime = new Date()) {
     const diffMs = targetTime.getTime() - referenceTime.getTime();
     const diffSeconds = Math.floor(diffMs / 1000);
@@ -221,21 +247,7 @@ class TimeParser {
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffSeconds < 60) {
-      return diffSeconds <= 1 ? 'in 1 second' : `in ${diffSeconds} seconds`;
-    } else if (diffMinutes < 60) {
-      return diffMinutes === 1 ? 'in 1 minute' : `in ${diffMinutes} minutes`;
-    } else if (diffHours < 24) {
-      return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
-    } else if (diffDays < 7) {
-      return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
-    } else if (diffDays < 30) {
-      return this._formatWeeks(diffDays);
-    } else if (diffDays < 365) {
-      return this._formatMonths(diffDays);
-    } else {
-      return this._formatYears(diffDays);
-    }
+    return this._formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays);
   }
 
   /**
