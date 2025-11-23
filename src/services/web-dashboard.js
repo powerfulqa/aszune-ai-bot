@@ -1317,131 +1317,158 @@ class WebDashboardService {
   }
 
   async detectDhcpOrStatic() {
+    try {
+      if (process.platform === 'win32') {
+        return await this._detectDhcpWindowsStyle();
+      }
+      return await this._detectDhcpLinuxStyle();
+    } catch (error) {
+      logger.warn(`Failed to detect DHCP/Static: ${error.message}`);
+      return 'Unknown';
+    }
+  }
+
+  async _detectDhcpWindowsStyle() {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+    const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
+    const dhcpEnabled =
+      stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
+    const result = dhcpEnabled ? 'DHCP' : 'Static';
+    logger.debug(`Detected IP assignment on Windows: ${result}`);
+    return result;
+  }
+
+  async _detectDhcpLinuxStyle() {
     const { exec } = require('child_process');
     const util = require('util');
     const execPromise = util.promisify(exec);
 
+    // Try DietPi config
+    const dietPiResult = await this._checkDietPiConfig(execPromise);
+    if (dietPiResult) return dietPiResult;
+
+    // Try /etc/network/interfaces
+    const interfacesResult = await this._checkNetworkInterfaces(execPromise);
+    if (interfacesResult) return interfacesResult;
+
+    // Try NetworkManager
+    const nmResult = await this._checkNetworkManager(execPromise);
+    if (nmResult) return nmResult;
+
+    // Try systemd-networkd
+    const systemdResult = await this._checkSystemdNetworkd(execPromise);
+    if (systemdResult) return systemdResult;
+
+    // Try dhclient process
+    await this._checkDhclientProcess(execPromise);
+
+    logger.debug('Could not definitively detect IP assignment method from config files');
+    return 'Unknown';
+  }
+
+  async _checkDietPiConfig(execPromise) {
     try {
-      if (process.platform === 'win32') {
-        // Windows: Check ipconfig /all for "DHCP Enabled"
-        const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
-        const dhcpEnabled =
-          stdout.includes('DHCP Enabled') && stdout.match(/DHCP Enabled[.\s:]*Yes/i);
-        const result = dhcpEnabled ? 'DHCP' : 'Static';
-        logger.debug(`Detected IP assignment on Windows: ${result}`);
-        return result;
-      } else {
-        // Linux: Check config files in priority order (most reliable first)
-
-        // Priority 1: Check DietPi network configuration
-        try {
-          const { stdout } = await execPromise(
-            'cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"',
-            { timeout: 2000 }
-          );
-          if (stdout.includes('AUTO_SETUP_NET_USESTATIC=1')) {
-            logger.debug('Detected IP assignment from DietPi config: Static');
-            return 'Static';
-          } else if (stdout.includes('AUTO_SETUP_NET_USESTATIC=0')) {
-            logger.debug('Detected IP assignment from DietPi config: DHCP');
-            return 'DHCP';
-          }
-        } catch (dietpiError) {
-          logger.debug(`DietPi config check failed: ${dietpiError.message}`);
-        }
-
-        // Priority 1b: Check if DietPi is being used (fallback for static configs)
-        try {
-          await execPromise('which dietpi-config', { timeout: 2000 });
-          // DietPi is installed - if we got here, likely static IP was configured via dietpi-config GUI
-          // Check if this looks like a server (DNS/DHCP server indicators)
-          try {
-            const { stdout: services } = await execPromise(
-              'systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"',
-              { timeout: 2000 }
-            );
-            if (services.trim()) {
-              logger.debug('Detected DNS/DHCP services running on DietPi - assuming static IP');
-              return 'Static';
-            }
-          } catch {
-            // No DNS/DHCP services found
-          }
-        } catch {
-          // DietPi not installed
-        }
-
-        // Priority 2: Check /etc/network/interfaces (Debian standard)
-        try {
-          const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
-            timeout: 2000,
-          });
-          if (
-            stdout.includes('iface eth0 inet static') ||
-            stdout.includes('iface wlan0 inet static')
-          ) {
-            logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
-            return 'Static';
-          } else if (
-            stdout.includes('iface eth0 inet dhcp') ||
-            stdout.includes('iface wlan0 inet dhcp')
-          ) {
-            logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
-            return 'DHCP';
-          }
-        } catch {
-          // interfaces file not found or unreadable
-        }
-
-        // Priority 3: Check NetworkManager
-        try {
-          const { stdout } = await execPromise(
-            'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
-            { timeout: 3000 }
-          );
-          if (stdout.includes('manual')) {
-            logger.debug('Detected IP assignment via NetworkManager: Static');
-            return 'Static';
-          } else if (stdout.includes('auto') || stdout.includes('dhcp')) {
-            logger.debug('Detected IP assignment via NetworkManager: DHCP');
-            return 'DHCP';
-          }
-        } catch {
-          // NetworkManager not available
-        }
-
-        // Priority 4: Check systemd-networkd
-        try {
-          const { stdout } = await execPromise(
-            'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
-            { timeout: 2000 }
-          );
-          if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
-            logger.debug('Detected IP assignment via systemd-networkd: DHCP');
-            return 'DHCP';
-          } else if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
-            logger.debug('Detected IP assignment via systemd-networkd: Static');
-            return 'Static';
-          }
-        } catch {
-          // systemd-networkd not available
-        }
-
-        // Last resort: Check for dhclient process (least reliable - process may exist on static configs)
-        try {
-          await execPromise('pgrep dhclient', { timeout: 2000 });
-          logger.debug('Detected dhclient process running (may indicate DHCP, but not definitive)');
-          // Don't return here - this alone isn't conclusive
-        } catch {
-          // No dhclient process
-        }
-
-        logger.debug('Could not definitively detect IP assignment method from config files');
-        return 'Unknown';
+      const { stdout } = await execPromise(
+        'cat /boot/dietpi.txt 2>/dev/null | grep -E "^AUTO_SETUP_NET_USESTATIC"',
+        { timeout: 2000 }
+      );
+      if (stdout.includes('AUTO_SETUP_NET_USESTATIC=1')) {
+        logger.debug('Detected IP assignment from DietPi config: Static');
+        return 'Static';
+      } else if (stdout.includes('AUTO_SETUP_NET_USESTATIC=0')) {
+        logger.debug('Detected IP assignment from DietPi config: DHCP');
+        return 'DHCP';
       }
-    } catch (error) {
-      logger.warn(`Failed to detect DHCP/Static: ${error.message}`);
-      return 'Unknown';
+    } catch (dietpiError) {
+      logger.debug(`DietPi config check failed: ${dietpiError.message}`);
+      // Check for server services if DietPi is installed
+      try {
+        await execPromise('which dietpi-config', { timeout: 2000 });
+        const { stdout: services } = await execPromise(
+          'systemctl list-units --type=service --state=running | grep -E "dnsmasq|bind9|isc-dhcp-server"',
+          { timeout: 2000 }
+        );
+        if (services.trim()) {
+          logger.debug('Detected DNS/DHCP services running on DietPi - assuming static IP');
+          return 'Static';
+        }
+      } catch {
+        // DietPi not installed
+      }
+    }
+    return null;
+  }
+
+  async _checkNetworkInterfaces(execPromise) {
+    try {
+      const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
+        timeout: 2000,
+      });
+      if (
+        stdout.includes('iface eth0 inet static') ||
+        stdout.includes('iface wlan0 inet static')
+      ) {
+        logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
+        return 'Static';
+      } else if (
+        stdout.includes('iface eth0 inet dhcp') ||
+        stdout.includes('iface wlan0 inet dhcp')
+      ) {
+        logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
+        return 'DHCP';
+      }
+    } catch {
+      // interfaces file not found or unreadable
+    }
+    return null;
+  }
+
+  async _checkNetworkManager(execPromise) {
+    try {
+      const { stdout } = await execPromise(
+        'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
+        { timeout: 3000 }
+      );
+      if (stdout.includes('manual')) {
+        logger.debug('Detected IP assignment via NetworkManager: Static');
+        return 'Static';
+      } else if (stdout.includes('auto') || stdout.includes('dhcp')) {
+        logger.debug('Detected IP assignment via NetworkManager: DHCP');
+        return 'DHCP';
+      }
+    } catch {
+      // NetworkManager not available
+    }
+    return null;
+  }
+
+  async _checkSystemdNetworkd(execPromise) {
+    try {
+      const { stdout } = await execPromise(
+        'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
+        { timeout: 2000 }
+      );
+      if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
+        logger.debug('Detected IP assignment via systemd-networkd: DHCP');
+        return 'DHCP';
+      } else if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
+        logger.debug('Detected IP assignment via systemd-networkd: Static');
+        return 'Static';
+      }
+    } catch {
+      // systemd-networkd not available
+    }
+    return null;
+  }
+
+  async _checkDhclientProcess(execPromise) {
+    try {
+      await execPromise('pgrep dhclient', { timeout: 2000 });
+      logger.debug('Detected dhclient process running (may indicate DHCP, but not definitive)');
+    } catch {
+      // No dhclient process
     }
   }
 
