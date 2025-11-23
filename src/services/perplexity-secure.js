@@ -223,7 +223,11 @@ class PerplexityService {
     return '';
   }
 
-  _extractHeader(headers, key) {
+  /**
+   * Safely extract header value with fallback handling
+   * @private
+   */
+  _safeGetHeader(headers, key) {
     if (!headers || !key) return '';
     if (typeof headers !== 'object' && typeof headers !== 'function') return '';
 
@@ -231,6 +235,10 @@ class PerplexityService {
     if (getResult !== null) return getResult;
 
     return this._tryHeaderObject(headers, key);
+  }
+
+  _extractHeader(headers, key) {
+    return this._safeGetHeader(headers, key);
   }
 
   /**
