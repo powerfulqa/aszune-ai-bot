@@ -10,6 +10,11 @@ const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache');
 
+// Cache management constants
+const CACHE_EVICTION_PERCENTAGE = 0.1; // Remove 10% when cache full
+const FILE_PERMISSIONS_SECURE = 0o600; // Secure file permissions (owner read/write only)
+const JSON_INDENT_LEVEL = 2; // JSON indentation for readability
+
 /**
  * Cache Manager class for handling response caching
  */
@@ -144,7 +149,7 @@ class CacheManager {
 
     if (cacheStats.totalEntries >= maxEntries) {
       // Remove oldest entries to make room
-      const entriesToRemove = Math.floor(maxEntries * 0.1); // Remove 10%
+      const entriesToRemove = Math.floor(maxEntries * CACHE_EVICTION_PERCENTAGE);
       for (let i = 0; i < entriesToRemove; i++) {
         this.cache.evictOldest();
       }
@@ -217,8 +222,8 @@ class CacheManager {
       // Ensure cache directory exists
       await fs.mkdir(cacheDir, { recursive: true });
 
-      await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), {
-        mode: 0o600, // Secure file permissions
+      await fs.writeFile(cachePath, JSON.stringify(cache, null, JSON_INDENT_LEVEL), {
+        mode: FILE_PERMISSIONS_SECURE,
       });
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'saving cache');

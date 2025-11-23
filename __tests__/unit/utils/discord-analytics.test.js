@@ -179,7 +179,7 @@ describe('DiscordAnalytics - generateDailyReport', () => {
     expect(report.recommendations).toContain('No activity detected today');
   });
 
-  it('should include successRate and avgResponseTime fields for analytics command compatibility', () => {
+  it('should include successRate and avgResponseTime fields for analytics compatibility', () => {
     const report = DiscordAnalytics.generateDailyReport(mockActivityHistory);
 
     // Analytics command expects successRate field

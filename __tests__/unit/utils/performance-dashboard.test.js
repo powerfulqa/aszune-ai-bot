@@ -124,7 +124,7 @@ describe('PerformanceDashboard - generateDashboardReport', () => {
     expect(report.overview.optimizationTier).toBe('small');
   });
 
-  it('should include both responseTime and averageResponseTime fields for dashboard compatibility', () => {
+  it('should include responseTime and averageResponseTime fields for compatibility', () => {
     const report = PerformanceDashboard.generateDashboardReport(
       mockActivityHistory,
       mockPerformanceMetrics
