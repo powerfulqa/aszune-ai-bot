@@ -2480,23 +2480,13 @@ class WebDashboardService {
 
   async handleServiceAction(data, callback) {
     try {
+      const validationError = this._validateServiceActionInput(data);
+      if (validationError) {
+        if (callback) callback({ error: validationError, success: false });
+        return;
+      }
+
       const { serviceName, action } = data;
-
-      if (!serviceName || !action) {
-        const error = new Error('Missing required fields: serviceName, action');
-        if (callback) callback({ error: error.message, success: false });
-        return;
-      }
-
-      const validActions = ['start', 'stop', 'restart'];
-      if (!validActions.includes(action)) {
-        const error = new Error(
-          `Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`
-        );
-        if (callback) callback({ error: error.message, success: false });
-        return;
-      }
-
       logger.info(`Service action requested: ${serviceName} - ${action}`);
 
       try {
@@ -2528,6 +2518,27 @@ class WebDashboardService {
   }
 
   /**
+   * Validate service action input
+   * @param {Object} data - Service action data
+   * @returns {string|null} Error message or null if valid
+   * @private
+   */
+  _validateServiceActionInput(data) {
+    const { serviceName, action } = data;
+
+    if (!serviceName || !action) {
+      return 'Missing required fields: serviceName, action';
+    }
+
+    const validActions = ['start', 'stop', 'restart'];
+    if (!validActions.includes(action)) {
+      return `Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`;
+    }
+
+    return null;
+  }
+
+  /**
    * Map quick action group to PM2 command
    * @private
    */
@@ -2550,9 +2561,9 @@ class WebDashboardService {
     try {
       const { group } = data;
 
-      if (!group) {
-        const error = new Error('Missing required field: group');
-        if (callback) callback({ error: error.message, success: false });
+      const validationError = this._validateQuickServiceActionInput(group);
+      if (validationError) {
+        if (callback) callback({ error: validationError, success: false });
         return;
       }
 
@@ -2595,6 +2606,19 @@ class WebDashboardService {
       logger.error('Error performing batch service action:', error);
       if (callback) callback({ error: error.message, success: false });
     }
+  }
+
+  /**
+   * Validate quick service action input
+   * @param {string} group - Action group name
+   * @returns {string|null} Error message or null if valid
+   * @private
+   */
+  _validateQuickServiceActionInput(group) {
+    if (!group) {
+      return 'Missing required field: group';
+    }
+    return null;
   }
 
   /**
