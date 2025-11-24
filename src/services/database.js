@@ -131,21 +131,34 @@ class DatabaseService {
 
     const db = this.getDb();
     try {
-      this._createUserStatsTable(db);
-      this._createConversationHistoryTable(db);
-      this._createCommandUsageTable(db);
-      this._createPerformanceMetricsTable(db);
-      this._createErrorLogsTable(db);
-      this._createServerAnalyticsTable(db);
-      this._createBotUptimeTable(db);
-      this._createUserMessagesTable(db);
-      this._createRemindersTable(db);
+      this._initializeAllTables(db);
       this._createIndexes(db);
-      this._ensureTriggers(db); // Ensure triggers are created after all tables
-      this._runMigrations(db); // Run any necessary schema migrations
+      this._ensureTriggers(db);
+      this._runMigrations(db);
     } catch (error) {
       throw new Error(`Failed to initialize database tables: ${error.message}`);
     }
+  }
+
+  /**
+   * Initialize all required database tables
+   * @param {Database} db - Database connection
+   * @private
+   */
+  _initializeAllTables(db) {
+    const tableCreators = [
+      this._createUserStatsTable.bind(this),
+      this._createConversationHistoryTable.bind(this),
+      this._createCommandUsageTable.bind(this),
+      this._createPerformanceMetricsTable.bind(this),
+      this._createErrorLogsTable.bind(this),
+      this._createServerAnalyticsTable.bind(this),
+      this._createBotUptimeTable.bind(this),
+      this._createUserMessagesTable.bind(this),
+      this._createRemindersTable.bind(this),
+    ];
+
+    tableCreators.forEach((creator) => creator(db));
   }
 
   _runMigrations(db) {
