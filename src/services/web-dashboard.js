@@ -1705,25 +1705,21 @@ class WebDashboardService {
 
   handleSaveConfig(data, callback) {
     try {
-      const { filename, content } = data;
-
-      if (!filename || content === undefined) {
-        const error = new Error('Missing filename or content');
-        if (callback) callback({ error: error.message, saved: false });
+      const validationError = this._validateConfigSaveInput(data);
+      if (validationError) {
+        if (callback) callback({ error: validationError, saved: false });
         return;
       }
 
+      const { filename, content } = data;
       const configPath = path.join(process.cwd(), filename);
 
-      // Security: prevent directory traversal
-      if (!configPath.startsWith(process.cwd())) {
-        const error = new Error('Access denied: Cannot save files outside project directory');
-        logger.warn(`Security: Attempted directory traversal save to ${filename}`);
-        if (callback) callback({ error: error.message, saved: false });
+      const traversalError = this._validatePathSafety(configPath, filename);
+      if (traversalError) {
+        if (callback) callback({ error: traversalError, saved: false });
         return;
       }
 
-      // Write file
       fs.writeFileSync(configPath, content, 'utf-8');
       logger.info(`Config saved: ${filename}`);
 
@@ -1741,18 +1737,41 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Validate config save input data
+   * @param {Object} data - Input data
+   * @returns {string|null} - Error message or null if valid
+   * @private
+   */
+  _validateConfigSaveInput(data) {
+    const { filename, content } = data || {};
+    if (!filename || content === undefined) {
+      return 'Missing filename or content';
+    }
+    return null;
+  }
+
+  /**
+   * Validate path safety for file operations
+   * @param {string} configPath - Full path to config file
+   * @param {string} filename - Original filename for logging
+   * @returns {string|null} - Error message or null if safe
+   * @private
+   */
+  _validatePathSafety(configPath, filename) {
+    if (!configPath.startsWith(process.cwd())) {
+      logger.warn(`Security: Attempted directory traversal save to ${filename}`);
+      return 'Access denied: Cannot save files outside project directory';
+    }
+    return null;
+  }
+
   handleValidateConfig(data, callback) {
     try {
       const { content, fileType = 'env' } = data;
-
       const validationResult = { valid: true, errors: [], warnings: [] };
 
-      if (fileType === 'env') {
-        this.validateEnvFile(content, validationResult);
-      } else if (fileType === 'js') {
-        this.validateJsFile(content, validationResult);
-      }
-
+      this._performFileValidation(fileType, content, validationResult);
       validationResult.timestamp = new Date().toISOString();
 
       if (callback) {
@@ -1763,6 +1782,21 @@ class WebDashboardService {
     } catch (error) {
       logger.error('Error validating config:', error);
       if (callback) callback({ error: error.message, valid: false });
+    }
+  }
+
+  /**
+   * Perform file type-specific validation
+   * @param {string} fileType - Type of file (env, js, etc.)
+   * @param {string} content - File content to validate
+   * @param {Object} result - Result object to populate
+   * @private
+   */
+  _performFileValidation(fileType, content, result) {
+    if (fileType === 'env') {
+      this.validateEnvFile(content, result);
+    } else if (fileType === 'js') {
+      this.validateJsFile(content, result);
     }
   }
 
