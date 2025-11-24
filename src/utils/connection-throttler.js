@@ -32,34 +32,7 @@ class ConnectionThrottler {
       const executeNow = this.activeConnections < this.maxConnections;
 
       // Create a task to execute
-      const task = async () => {
-        try {
-          this.activeConnections++;
-          logger.debug(
-            `[ConnectionThrottler] Starting ${requestType} request (${this.activeConnections}/${this.maxConnections} active)`
-          );
-
-          const result = await requestFn();
-
-          this.activeConnections--;
-          logger.debug(
-            `[ConnectionThrottler] Completed ${requestType} request (${this.activeConnections}/${this.maxConnections} active)`
-          );
-
-          // Process next in queue if any
-          this._processQueue();
-
-          resolve(result);
-        } catch (error) {
-          this.activeConnections--;
-          logger.error(`[ConnectionThrottler] Error in ${requestType} request:`, error);
-
-          // Process next in queue even if this one failed
-          this._processQueue();
-
-          reject(error);
-        }
-      };
+      const task = this._createExecutionTask(requestFn, requestType, resolve, reject);
 
       if (executeNow) {
         task();
@@ -70,6 +43,46 @@ class ConnectionThrottler {
         this.connectionQueue.push(task);
       }
     });
+  }
+
+  /**
+   * Create an execution task for handling a network request
+   * @private
+   * @param {Function} requestFn - The request function to execute
+   * @param {String} requestType - Type of request for logging
+   * @param {Function} resolve - Promise resolve callback
+   * @param {Function} reject - Promise reject callback
+   * @returns {Function} Async task function
+   */
+  _createExecutionTask(requestFn, requestType, resolve, reject) {
+    return async () => {
+      try {
+        this.activeConnections++;
+        logger.debug(
+          `[ConnectionThrottler] Starting ${requestType} request (${this.activeConnections}/${this.maxConnections} active)`
+        );
+
+        const result = await requestFn();
+
+        this.activeConnections--;
+        logger.debug(
+          `[ConnectionThrottler] Completed ${requestType} request (${this.activeConnections}/${this.maxConnections} active)`
+        );
+
+        // Process next in queue if any
+        this._processQueue();
+
+        resolve(result);
+      } catch (error) {
+        this.activeConnections--;
+        logger.error(`[ConnectionThrottler] Error in ${requestType} request:`, error);
+
+        // Process next in queue even if this one failed
+        this._processQueue();
+
+        reject(error);
+      }
+    };
   }
 
   /**
