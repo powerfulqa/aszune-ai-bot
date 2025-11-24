@@ -778,29 +778,37 @@ class PerplexityService {
     if (!error || !error.message) return false;
 
     const message = error.message.toLowerCase();
+    return this._isTemporaryError(message) && !this._isPermanentError(message);
+  }
 
-    // Retry on temporary/network errors
-    if (
+  /**
+   * Check if error message indicates temporary issue
+   * @param {string} message - Error message
+   * @returns {boolean} - True if temporary error
+   * @private
+   */
+  _isTemporaryError(message) {
+    return (
       message.includes('temporary') ||
       message.includes('network') ||
       message.includes('timeout') ||
       message.includes('429')
-    ) {
-      return true;
-    }
+    );
+  }
 
-    // Don't retry on permanent errors
-    if (
+  /**
+   * Check if error message indicates permanent issue
+   * @param {string} message - Error message
+   * @returns {boolean} - True if permanent error
+   * @private
+   */
+  _isPermanentError(message) {
+    return (
       message.includes('permanent') ||
       message.includes('invalid') ||
       message.includes('unauthorized') ||
       message.includes('forbidden')
-    ) {
-      return false;
-    }
-
-    // Default to not retryable for unknown errors
-    return false;
+    );
   }
 
   /**
