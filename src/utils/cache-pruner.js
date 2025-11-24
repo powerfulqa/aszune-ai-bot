@@ -92,32 +92,8 @@ class CachePruner {
       // Calculate how many to remove
       const removeCount = Math.ceil(entryCount * this.prunePercentage);
 
-      // Find oldest entries without sorting the entire array
-      // Use a min-heap approach to find the N oldest entries in O(n log k) time
-      const oldestEntries = [];
-      const findOldestEntries = (key, value) => {
-        const timestamp = value.lastAccessed || 0;
-
-        // If we haven't collected enough entries yet, just add it
-        if (oldestEntries.length < removeCount) {
-          oldestEntries.push({ key, timestamp });
-          // Re-heapify if necessary (keep newest at top for easy removal)
-          if (oldestEntries.length > 1) {
-            oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
-          }
-          return;
-        }
-
-        // If this entry is older than the newest in our collection, replace it
-        if (timestamp < oldestEntries[0].timestamp) {
-          oldestEntries[0] = { key, timestamp };
-          // Restore heap property
-          oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
-        }
-      };
-
-      // Find oldest entries
-      Object.entries(cache).forEach(([key, value]) => findOldestEntries(key, value));
+      // Find oldest entries using helper method
+      const oldestEntries = this._findOldestCacheEntries(cache, removeCount);
 
       // Remove identified oldest entries
       oldestEntries.forEach(({ key }) => {
@@ -135,6 +111,40 @@ class CachePruner {
         throw error;
       }
     }
+  }
+
+  /**
+   * Find oldest cache entries using min-heap approach
+   * @private
+   * @param {Object} cache - Cache object
+   * @param {number} removeCount - Number of entries to find
+   * @returns {Array} Array of oldest entries with key and timestamp
+   */
+  _findOldestCacheEntries(cache, removeCount) {
+    const oldestEntries = [];
+
+    Object.entries(cache).forEach(([key, value]) => {
+      const timestamp = value.lastAccessed || 0;
+
+      // If we haven't collected enough entries yet, just add it
+      if (oldestEntries.length < removeCount) {
+        oldestEntries.push({ key, timestamp });
+        // Re-heapify if necessary (keep newest at top for easy removal)
+        if (oldestEntries.length > 1) {
+          oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
+        }
+        return;
+      }
+
+      // If this entry is older than the newest in our collection, replace it
+      if (timestamp < oldestEntries[0].timestamp) {
+        oldestEntries[0] = { key, timestamp };
+        // Restore heap property
+        oldestEntries.sort((a, b) => b.timestamp - a.timestamp);
+      }
+    });
+
+    return oldestEntries;
   }
 
   /**
