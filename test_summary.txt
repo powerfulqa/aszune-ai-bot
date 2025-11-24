@@ -1,0 +1,666 @@
+
+> aszuneai@1.9.0 test
+> jest __tests__/unit/services/perplexity-secure-comprehensive.test.js __tests__/unit/services/perplexity-secure-private-methods.test.js
+
+PASS __tests__/unit/services/perplexity-secure-private-methods.test.js
+  PerplexitySecure Service - Private Methods
+    _safeGetHeader method
+      √ should return empty string for null headers (3 ms)
+      √ should return empty string for undefined headers
+      √ should return empty string for null key (1 ms)
+      √ should get header using Headers.get() method (1 ms)
+      √ should fall back to object property access (1 ms)
+      √ should check lowercase header names
+      √ should check uppercase header names (1 ms)
+      √ should handle Headers.get() throwing error (1 ms)
+      √ should handle non-object headers (1 ms)
+      √ should handle function headers
+    _shouldUseCache method
+      √ should return false when caching is explicitly disabled
+      √ should return true when in test environment
+      √ should return true when cache is enabled and caching not disabled (2 ms)
+    _buildRequestPayload method
+      √ should build basic request payload with defaults (1 ms)
+      √ should use custom options when provided (1 ms)
+    _getPiOptimizationSettings method
+      √ should return default settings when PI_OPTIMIZATIONS is not configured (4 ms)
+      √ should return settings from config when available (1 ms)
+      √ should handle config access errors gracefully (3 ms)
+    _generateCacheKey method
+      √ should generate consistent cache key for same history (1 ms)
+      √ should generate different keys for different history (1 ms)
+    _formatCacheEntry method
+      √ should format string entry with timestamp
+      √ should preserve existing object entry with timestamp (1 ms)
+      √ should add timestamp to object entry without one
+      √ should handle null entry (1 ms)
+    _isRetryableError method
+      √ should return false for null error
+      √ should return false for error without message
+      √ should return true for temporary errors (1 ms)
+      √ should return true for network errors
+      √ should return true for 429 errors
+      √ should return false for permanent errors (1 ms)
+      √ should return false for invalid errors
+      √ should return false for unauthorized errors
+      √ should return false for forbidden errors
+      √ should return false for unknown errors by default
+
+  console.error
+    [2025-11-23T23:01:43.234Z] [ERROR] Error in extracting response content:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:69)
+
+  console.error
+    Error: Empty response received from the service.
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:69)
+
+  console.error
+    Stack: Error: Empty response received from the service.
+        at PerplexityService._extractResponseContent (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:424:15)
+        at _extractResponseContent (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:454:38)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\expect\build\toThrowMatchers.js:74:11)
+        at Object.throwingMatcher [as toThrow] (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\expect\build\index.js:320:21)
+        at Object.toThrow (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:454:69)
+        at Promise.then.completed (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+        at _runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at run (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:69)
+
+  console.warn
+    [2025-11-23T23:01:43.301Z] [WARN] Response processing error: An unexpected error occurred. Please try again later.
+
+    [0m [90m 167 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mWARN[39m) {
+     [90m 168 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'WARN'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 169 |[39m       console[33m.[39mwarn(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 170 |[39m       [36mif[39m (data) console[33m.[39mwarn(data)[33m;[39m
+     [90m 171 |[39m
+     [90m 172 |[39m       [90m// Write to file[39m[0m
+
+      at Logger.warn (src/utils/logger.js:169:15)
+      at PerplexityService.warn [as _extractResponseContent] (src/services/perplexity-secure.js:447:14)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:454:69)
+
+  console.error
+    [2025-11-23T23:01:43.306Z] [ERROR] Error in extracting response content:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:73)
+
+  console.error
+    Error: Empty response received from the service.
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:73)
+
+  console.error
+    Stack: Error: Empty response received from the service.
+        at PerplexityService._extractResponseContent (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:429:15)
+        at _extractResponseContent (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:459:38)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\expect\build\toThrowMatchers.js:74:11)
+        at Object.throwingMatcher [as toThrow] (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\expect\build\index.js:320:21)
+        at Object.toThrow (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:459:73)
+        at Promise.then.completed (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+        at _runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at run (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as _extractResponseContent] (src/services/perplexity-secure.js:446:42)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:73)
+
+  console.warn
+    [2025-11-23T23:01:43.317Z] [WARN] Response processing error: An unexpected error occurred. Please try again later.
+
+    [0m [90m 167 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mWARN[39m) {
+     [90m 168 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'WARN'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 169 |[39m       console[33m.[39mwarn(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 170 |[39m       [36mif[39m (data) console[33m.[39mwarn(data)[33m;[39m
+     [90m 171 |[39m
+     [90m 172 |[39m       [90m// Write to file[39m[0m
+
+      at Logger.warn (src/utils/logger.js:169:15)
+      at PerplexityService.warn [as _extractResponseContent] (src/services/perplexity-secure.js:447:14)
+      at _extractResponseContent (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:38)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (__tests__/unit/services/perplexity-secure-comprehensive.test.js:459:73)
+
+  console.log
+    [2025-11-23T23:01:43.341Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=256
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T23:01:43.344Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T23:01:43.345Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T23:01:43.347Z] [INFO] API Request: model="sonar", messages=2, temperature=0.2, max_tokens=256
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T23:01:43.347Z] [INFO] Making API request to: /chat/completions
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    [2025-11-23T23:01:43.348Z] [INFO] Request payload summary: model=sonar, messages=2, temperature=0.2
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.error
+    [2025-11-23T23:01:43.349Z] [ERROR] API request failed for endpoint /chat/completions:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:464:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:475:20)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    Error: Summary API error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at ApiClient.error [as makeRequest] (src/services/api-client.js:123:14)
+      at makeApiRequest (src/services/perplexity-secure.js:464:14)
+      at PerplexityService.sendChatRequest (src/services/perplexity-secure.js:475:20)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    [2025-11-23T23:01:43.355Z] [ERROR] Error in API call to Perplexity API:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:480:42)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    Error: Request failed: Summary API error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:480:42)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    Stack: Error: Request failed: Summary API error
+        at Function.createError (C:\Users\chris\aszune-ai\aszune-ai-bot\src\utils\error-handler.js:287:19)
+        at ApiClient.createError [as handleRequestError] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:216:25)
+        at ApiClient.handleRequestError [as makeRequest] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\api-client.js:124:18)
+        at makeApiRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:464:14)
+        at PerplexityService.sendChatRequest (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:475:20)
+        at PerplexityService.generateTextSummary (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:980:22)
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:741:7)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at Function.handleError [as handleApiError] (src/utils/error-handler.js:240:17)
+      at PerplexityService.handleApiError [as sendChatRequest] (src/services/perplexity-secure.js:480:42)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    [2025-11-23T23:01:43.362Z] [ERROR] API request failed: The service is temporarily unavailable. Please try again later.
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at PerplexityService.error [as sendChatRequest] (src/services/perplexity-secure.js:481:14)
+      at PerplexityService.generateTextSummary (src/services/perplexity-secure.js:980:22)
+      at Object.<anonymous> (__tests__/unit/services/perplexity-secure-comprehensive.test.js:741:7)
+
+  console.error
+    [2025-11-23T23:01:43.366Z] [ERROR] Error in getting cache statistics:
+
+    [0m [90m 184 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mERROR[39m) {
+     [90m 185 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'ERROR'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 186 |[39m       console[33m.[39merror(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 187 |[39m
+     [90m 188 |[39m       [90m// Write to file[39m
+     [90m 189 |[39m       [36mthis[39m[33m.[39m_writeToFile(formattedMessage)[33m;[39m[0m
+
+      at Logger.error (src/utils/logger.js:186:15)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as getCacheStats] (src/services/perplexity-secure.js:112:42)
+      at Object.getCacheStats (__tests__/unit/services/perplexity-secure-comprehensive.test.js:772:40)
+
+  console.error
+    Error: Cache error
+
+    [0m [90m 218 |[39m             stack[33m:[39m error[33m.[39mstack[33m,[39m
+     [90m 219 |[39m           }[33m;[39m
+    [31m[1m>[22m[39m[90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+     [90m     |[39m                   [31m[1m^[22m[39m
+     [90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m[0m
+
+      at Logger.error (src/utils/logger.js:220:19)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as getCacheStats] (src/services/perplexity-secure.js:112:42)
+      at Object.getCacheStats (__tests__/unit/services/perplexity-secure-comprehensive.test.js:772:40)
+
+  console.error
+    Stack: Error: Cache error
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:768:17)
+        at C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-mock\build\index.js:397:39
+        at Object.<anonymous> (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-mock\build\index.js:404:13)
+        at Object.mockConstructor [as getStats] (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-mock\build\index.js:148:19)
+        at PerplexityService.getStats [as getCacheStats] (C:\Users\chris\aszune-ai\aszune-ai-bot\src\services\perplexity-secure.js:110:32)
+        at Object.getCacheStats (C:\Users\chris\aszune-ai\aszune-ai-bot\__tests__\unit\services\perplexity-secure-comprehensive.test.js:772:40)
+        at Promise.then.completed (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:316:40)
+        at _runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at _runTestsForDescribeBlock (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:121:9)
+        at run (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (C:\Users\chris\aszune-ai\aszune-ai-bot\node_modules\jest-runner\build\runTest.js:444:34)
+
+    [0m [90m 219 |[39m           }[33m;[39m
+     [90m 220 |[39m           console[33m.[39merror([32m'Error:'[39m[33m,[39m error[33m.[39mmessage [33m||[39m error)[33m;[39m
+    [31m[1m>[22m[39m[90m 221 |[39m           [36mif[39m (error[33m.[39mstack) console[33m.[39merror([32m'Stack:'[39m[33m,[39m error[33m.[39mstack)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 222 |[39m         }
+     [90m 223 |[39m
+     [90m 224 |[39m         [90m// Write error details to file[39m[0m
+
+      at Logger.error (src/utils/logger.js:221:36)
+      at Function.error [as handleError] (src/utils/error-handler.js:207:14)
+      at PerplexityService.handleError [as getCacheStats] (src/services/perplexity-secure.js:112:42)
+      at Object.getCacheStats (__tests__/unit/services/perplexity-secure-comprehensive.test.js:772:40)
+
+  console.warn
+    [2025-11-23T23:01:43.374Z] [WARN] Cache statistics error: An unexpected error occurred. Please try again later.
+
+    [0m [90m 167 |[39m     [36mif[39m ([36mthis[39m[33m.[39m_getLogLevel() [33m<=[39m [36mthis[39m[33m.[39mlevels[33m.[39m[33mWARN[39m) {
+     [90m 168 |[39m       [36mconst[39m formattedMessage [33m=[39m [36mthis[39m[33m.[39m_formatMessage([32m'WARN'[39m[33m,[39m message)[33m;[39m
+    [31m[1m>[22m[39m[90m 169 |[39m       console[33m.[39mwarn(formattedMessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 170 |[39m       [36mif[39m (data) console[33m.[39mwarn(data)[33m;[39m
+     [90m 171 |[39m
+     [90m 172 |[39m       [90m// Write to file[39m[0m
+
+      at Logger.warn (src/utils/logger.js:169:15)
+      at PerplexityService.warn [as getCacheStats] (src/services/perplexity-secure.js:113:14)
+      at Object.getCacheStats (__tests__/unit/services/perplexity-secure-comprehensive.test.js:772:40)
+
+  console.log
+    [2025-11-23T23:01:43.381Z] [INFO] Final cache statistics:
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    {
+      hits: 0,
+      misses: 0,
+      sets: 0,
+      deletes: 0,
+      evictions: 0,
+      hitRate: 0,
+      entryCount: 0,
+      memoryUsage: 0,
+      memoryUsageFormatted: '0 B',
+      maxMemory: 0,
+      maxMemoryFormatted: '0 B',
+      maxSize: 0,
+      uptime: 0,
+      uptimeFormatted: '0s',
+      evictionStrategy: 'hybrid',
+      error: 'An unexpected error occurred. Please try again later.'
+    }
+
+      at Logger.log [as info] (src/utils/logger.js:153:25)
+
+  console.log
+    [2025-11-23T23:01:43.383Z] [INFO] Final cache statistics:
+
+      at Logger.log [as info] (src/utils/logger.js:152:15)
+
+  console.log
+    {
+      hits: 0,
+      misses: 0,
+      sets: 0,
+      deletes: 0,
+      evictions: 0,
+      hitRate: 0,
+      entryCount: 0,
+      memoryUsage: 0,
+      memoryUsageFormatted: '0 B',
+      maxMemory: 0,
+      maxMemoryFormatted: '0 B',
+      maxSize: 0,
+      uptime: 0,
+      uptimeFormatted: '0s',
+      evictionStrategy: 'hybrid',
+      error: 'An unexpected error occurred. Please try again later.'
+    }
+
+      at Logger.log [as info] (src/utils/logger.js:153:25)
+
+PASS __tests__/unit/services/perplexity-secure-comprehensive.test.js
+  PerplexitySecure Service - Comprehensive Coverage
+    _safeGetHeader method
+      √ should return empty string for null headers (2 ms)
+      √ should return empty string for undefined headers
+      √ should return empty string for null key
+      √ should get header using Headers.get() method (1 ms)
+      √ should fall back to object property access
+      √ should check lowercase header names (1 ms)
+      √ should check uppercase header names
+      √ should handle Headers.get() throwing error (1 ms)
+      √ should handle non-object headers
+      √ should handle function headers (1 ms)
+    _shouldUseCache method
+      √ should return false when caching is explicitly disabled
+      √ should return true when in test environment
+      √ should return true when cache is enabled and caching not disabled (1 ms)
+    _buildRequestPayload method
+      √ should build basic request payload with defaults (1 ms)
+      √ should use custom options when provided
+      √ should handle streaming when PI optimizations enabled
+      √ should not enable streaming in low CPU mode
+    _getPiOptimizationSettings method
+      √ should return default settings when PI_OPTIMIZATIONS is not configured (4 ms)
+      √ should return settings from config when available
+      √ should handle config access errors gracefully (3 ms)
+    _handleApiResponse method
+      √ should throw error for null response (53 ms)
+      √ should throw error for undefined response
+      √ should handle error status codes (1 ms)
+      √ should handle response without body (1 ms)
+      √ should handle body without json method
+      √ should handle JSON parsing errors
+      √ should handle invalid response object (1 ms)
+      √ should handle missing choices array (1 ms)
+      √ should handle invalid choice structure
+      √ should handle missing message field
+      √ should return valid response data (1 ms)
+    _handleErrorResponse method
+      √ should handle error response with text body
+      √ should handle error response without body (1 ms)
+      √ should handle body text error
+      √ should handle long error messages (1 ms)
+    _extractResponseContent method
+      √ should extract content from message.content
+      √ should extract content from choice.content (1 ms)
+      √ should handle empty response (73 ms)
+      √ should handle empty choices (14 ms)
+      √ should return default message for invalid structure (1 ms)
+    _generateErrorMessage method
+      √ should return rate limit message for 429 status (1 ms)
+      √ should return service unavailable message for 5xx status
+      √ should return network error message for network errors (1 ms)
+      √ should return empty response message for empty response errors
+      √ should return unexpected format message for invalid errors
+      √ should return original error message for unknown errors (1 ms)
+    _isRetryableError method
+      √ should return false for null error
+      √ should return false for error without message (1 ms)
+      √ should return true for temporary errors
+      √ should return true for network errors
+      √ should return true for 429 errors (1 ms)
+      √ should return false for permanent errors
+      √ should return false for invalid errors (1 ms)
+      √ should return false for unauthorized errors
+      √ should return false for forbidden errors (1 ms)
+      √ should return false for unknown errors by default
+    _getCacheConfiguration method
+      √ should return default config when PI_OPTIMIZATIONS not configured (4 ms)
+      √ should return cache config when PI optimizations enabled (1 ms)
+      √ should handle config access errors (5 ms)
+    _formatCacheEntry method
+      √ should format string entry with timestamp (1 ms)
+      √ should preserve existing object entry with timestamp
+      √ should add timestamp to object entry without one (1 ms)
+      √ should handle null entry
+    _generateCacheKey method
+      √ should generate consistent cache key for same history (1 ms)
+      √ should generate different keys for different history
+    generateTextSummary method
+      √ should generate text summary with correct options (6 ms)
+      √ should handle text summary errors (17 ms)
+    getCacheStats method
+      √ should return cache stats when available (1 ms)
+      √ should return error stats when cache throws (15 ms)
+      √ should handle missing cache gracefully
+    shutdown method
+      √ should clear all active intervals (2 ms)
+      √ should handle shutdown when no intervals exist (2 ms)
+
+--------------------------------|---------|----------|---------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                                                                                                                                    
+--------------------------------|---------|----------|---------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+All files                       |   10.54 |    58.75 |   31.63 |   10.54 |                                                                                                                                                                                                                                                      
+ src                            |       0 |        0 |       0 |       0 |                                                                                                                                                                                                                                                      
+  index.js                      |       0 |        0 |       0 |       0 | 1-422                                                                                                                                                                                                                                                
+ src/commands                   |       0 |        0 |       0 |       0 |                                                                                                                                                                                                                                                      
+  index.js                      |       0 |        0 |       0 |       0 | 1-981                                                                                                                                                                                                                                                
+  reminder.js                   |       0 |        0 |       0 |       0 | 1-363                                                                                                                                                                                                                                                
+ src/config                     |   86.78 |    33.33 |      50 |   86.78 |                                                                                                                                                                                                                                                      
+  config.js                     |   86.78 |    33.33 |      50 |   86.78 | 11-12,34-35,37-38,200-223                                                                                                                                                                                                                            
+ src/services                   |   14.49 |    77.07 |   38.46 |   14.49 |                                                                                                                                                                                                                                                      
+  api-client.js                 |   66.81 |       32 |      75 |   66.81 | 39-41,44-49,54-59,75-76,80-81,91-96,135-139,144-145,152-156,160-164,168-172,181-204,213-214                                                                                                                                                          
+  cache-manager.js              |   43.04 |    66.66 |    12.5 |   43.04 | 42-49,56-77,86-87,95-101,109-120,129-141,148-157,163-173,180-186,193-211,218-232,239-263,270-281,289-296,302-306                                                                                                                                     
+  chat.js                       |       0 |        0 |       0 |       0 | 1-550                                                                                                                                                                                                                                                
+  database.js                   |       0 |        0 |       0 |       0 | 1-1075                                                                                                                                                                                                                                               
+  network-detector.js           |       0 |        0 |       0 |       0 | 1-312                                                                                                                                                                                                                                                
+  perplexity-secure.js          |   61.43 |    91.52 |      50 |   61.43 | 25-41,74-82,140-145,153-158,184-191,228-229,239-245,259-263,270-274,307-308,473,501,503,526-527,537-539,551-554,564-568,577-588,598-615,626-654,665-683,695-723,726-770,780-802,858-868,871-876,890-907,916-923,932-965,989-1022,1053-1091,1108-1138 
+  reminder-service.js           |       0 |        0 |       0 |       0 | 1-282                                                                                                                                                                                                                                                
+  response-processor.js         |   35.23 |    33.33 |    12.5 |   35.23 | 23-43,51-88,96-122,131-152,160-161,169-175,183-190                                                                                                                                                                                                   
+  storage.js                    |       0 |        0 |       0 |       0 | 1-107                                                                                                                                                                                                                                                
+  throttling-service.js         |   71.42 |      100 |      40 |   71.42 | 36-48,55-56,63-67                                                                                                                                                                                                                                    
+  web-dashboard.js              |       0 |        0 |       0 |       0 | 1-3324                                                                                                                                                                                                                                               
+ src/utils                      |    8.57 |    36.53 |   25.97 |    8.57 |                                                                                                                                                                                                                                                      
+  cache-pruner.js               |       0 |        0 |       0 |       0 | 1-195                                                                                                                                                                                                                                                
+  connection-throttler.js       |   44.79 |       50 |      25 |   44.79 | 20,31-73,80-84,90-93                                                                                                                                                                                                                                 
+  conversation.js               |       0 |        0 |       0 |       0 | 1-346                                                                                                                                                                                                                                                
+  dashboard-socket-handlers.js  |       0 |        0 |       0 |       0 | 1-149                                                                                                                                                                                                                                                
+  debouncer.js                  |       0 |        0 |       0 |       0 | 1-29                                                                                                                                                                                                                                                 
+  discord-analytics.js          |       0 |        0 |       0 |       0 | 1-773                                                                                                                                                                                                                                                
+  emoji.js                      |       0 |        0 |       0 |       0 | 1-107                                                                                                                                                                                                                                                
+  enhanced-cache.js             |   41.56 |       20 |    6.89 |   41.56 | 24-32,39-47,54-57,63-65,72-73,80-81,137-138,147-174,184-230,238-253,259-267,275-290,297-318,325-345,352-385,391-400,406-414,420-432,438-459,465-472,479-482,489-491,497-502,508-517,523-527,533-538,546-555,563-568                                  
+  error-handler.js              |   77.64 |    42.85 |   76.92 |   77.64 | 77-78,85-86,88-89,97-102,106-107,113-114,121-122,144-145,185-187,203,205,251-259,269-277,301-333                                                                                                                                                     
+  input-validator.js            |       0 |        0 |       0 |       0 | 1-845                                                                                                                                                                                                                                                
+  lazy-loader.js                |       0 |        0 |       0 |       0 | 1-21                                                                                                                                                                                                                                                 
+  logger.js                     |   62.04 |    60.86 |   63.63 |   62.04 | 22-23,31-36,56-68,76-103,120-142,195-201,203-208,210-212,238-242                                                                                                                                                                                     
+  memory-monitor.js             |       0 |        0 |       0 |       0 | 1-205                                                                                                                                                                                                                                                
+  message-chunker.js            |       0 |        0 |       0 |       0 | 1-588                                                                                                                                                                                                                                                
+  message-formatter.js          |       0 |        0 |       0 |       0 | 1-174                                                                                                                                                                                                                                                
+  natural-language-reminder.js  |       0 |        0 |       0 |       0 | 1-381                                                                                                                                                                                                                                                
+  performance-dashboard.js      |       0 |        0 |       0 |       0 | 1-844                                                                                                                                                                                                                                                
+  performance-monitor.js        |       0 |        0 |       0 |       0 | 1-291                                                                                                                                                                                                                                                
+  performance-tracker.js        |       0 |        0 |       0 |       0 | 1-182                                                                                                                                                                                                                                                
+  pi-detector.js                |       0 |        0 |       0 |       0 | 1-510                                                                                                                                                                                                                                                
+  resource-optimizer.js         |       0 |        0 |       0 |       0 | 1-582                                                                                                                                                                                                                                                
+  security-monitor.js           |       0 |        0 |       0 |       0 | 1-271                                                                                                                                                                                                                                                
+  testUtils.js                  |       0 |        0 |       0 |       0 | 1-72                                                                                                                                                                                                                                                 
+  time-parser.js                |       0 |        0 |       0 |       0 | 1-321                                                                                                                                                                                                                                                
+ src/utils/message-chunking     |       0 |        0 |       0 |       0 |                                                                                                                                                                                                                                                      
+  chunk-boundary-handler.js     |       0 |        0 |       0 |       0 | 1-298                                                                                                                                                                                                                                                
+  index.js                      |       0 |        0 |       0 |       0 | 1-142                                                                                                                                                                                                                                                
+  source-reference-processor.js |       0 |        0 |       0 |       0 | 1-307                                                                                                                                                                                                                                                
+  url-formatter.js              |       0 |        0 |       0 |       0 | 1-442                                                                                                                                                                                                                                                
+--------------------------------|---------|----------|---------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Jest: "global" coverage threshold for statements (64%) not met: 10.54%
+Jest: "global" coverage threshold for branches (64%) not met: 58.75%
+Jest: "global" coverage threshold for lines (64%) not met: 10.54%
+Jest: "global" coverage threshold for functions (64%) not met: 31.63%
+Test Suites: 2 passed, 2 total
+Tests:       106 passed, 106 total
+Snapshots:   0 total
+Time:        1.484 s
+Ran all test suites matching /__tests__\\unit\\services\\perplexity-secure-comprehensive.test.js|__tests__\\unit\\services\\perplexity-secure-private-methods.test.js/i.

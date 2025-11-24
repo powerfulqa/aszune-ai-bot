@@ -39,14 +39,14 @@ class ResourceOptimizer {
     );
     const piOptimizations = ResourceOptimizer._applyPiOptimizations(baseConfig);
 
-    const result = ResourceOptimizer._buildOptimizationResult(
+    const result = ResourceOptimizer._buildOptimizationResult({
       tier,
       baseConfig,
-      validatedServerCount,
+      serverCount: validatedServerCount,
       activeUsers,
       performanceAdjustments,
-      piOptimizations
-    );
+      piOptimizations,
+    });
 
     ResourceOptimizer._logOptimization(validatedServerCount, tier, result);
     return result;
@@ -104,14 +104,14 @@ class ResourceOptimizer {
    * Builds the optimization result object
    * @private
    */
-  static _buildOptimizationResult(
+  static _buildOptimizationResult({
     tier,
     baseConfig,
     serverCount,
     activeUsers,
     performanceAdjustments,
-    piOptimizations
-  ) {
+    piOptimizations,
+  }) {
     const result = {
       tier,
       memoryAllocation: baseConfig.memoryAllocation,

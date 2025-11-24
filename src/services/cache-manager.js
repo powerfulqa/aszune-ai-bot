@@ -9,6 +9,7 @@ const config = require('../config/config');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache');
+const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
 
 // Cache management constants
 const CACHE_EVICTION_PERCENTAGE = 0.1; // Remove 10% when cache full
@@ -241,24 +242,7 @@ class CacheManager {
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
       logger.error(`Cache stats error: ${errorResponse.message}`);
-      return {
-        hits: 0,
-        misses: 0,
-        sets: 0,
-        deletes: 0,
-        evictions: 0,
-        hitRate: 0,
-        entryCount: 0,
-        memoryUsage: 0,
-        memoryUsageFormatted: '0 B',
-        maxMemory: 0,
-        maxMemoryFormatted: '0 B',
-        maxSize: 0,
-        uptime: 0,
-        uptimeFormatted: '0s',
-        evictionStrategy: 'hybrid',
-        error: errorResponse.message,
-      };
+      return getCacheStatsErrorResponse(errorResponse.message);
     }
   }
 

@@ -219,24 +219,12 @@ class TimeParser {
    * @private
    */
   _formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays) {
-    if (diffSeconds < 60) {
-      return diffSeconds <= 1 ? 'in 1 second' : `in ${diffSeconds} seconds`;
-    }
-    if (diffMinutes < 60) {
-      return diffMinutes === 1 ? 'in 1 minute' : `in ${diffMinutes} minutes`;
-    }
-    if (diffHours < 24) {
-      return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
-    }
-    if (diffDays < 7) {
-      return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
-    }
-    if (diffDays < 30) {
-      return this._formatWeeks(diffDays);
-    }
-    if (diffDays < 365) {
-      return this._formatMonths(diffDays);
-    }
+    if (diffSeconds < 60) return diffSeconds <= 1 ? 'in 1 second' : `in ${diffSeconds} seconds`;
+    if (diffMinutes < 60) return diffMinutes === 1 ? 'in 1 minute' : `in ${diffMinutes} minutes`;
+    if (diffHours < 24) return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
+    if (diffDays < 7) return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
+    if (diffDays < 30) return this._formatWeeks(diffDays);
+    if (diffDays < 365) return this._formatMonths(diffDays);
     return this._formatYears(diffDays);
   }
 

@@ -8,6 +8,7 @@ const databaseService = require('./database');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
+const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
 
 class WebDashboardService {
   constructor() {
@@ -2667,19 +2668,7 @@ class WebDashboardService {
       return perplexityService.getCacheStats();
     } catch (error) {
       logger.warn(`Failed to get cache stats: ${error.message}`);
-      return {
-        hits: 0,
-        misses: 0,
-        hitRate: 0,
-        sets: 0,
-        deletes: 0,
-        evictions: 0,
-        entryCount: 0,
-        memoryUsage: 0,
-        memoryUsageFormatted: '0 B',
-        uptime: 0,
-        uptimeFormatted: '0s',
-      };
+      return getEmptyCacheStats();
     }
   }
 

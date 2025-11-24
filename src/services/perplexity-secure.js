@@ -17,6 +17,7 @@ const { ApiClient } = require('./api-client');
 const { CacheManager } = require('./cache-manager');
 const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
+const { getCacheStatsErrorResponse, getEmptyCacheStats } = require('../utils/cache-stats-helper');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -88,47 +89,13 @@ class PerplexityService {
   getCacheStats() {
     try {
       if (!this.cacheManager) {
-        return {
-          hits: 0,
-          misses: 0,
-          sets: 0,
-          deletes: 0,
-          evictions: 0,
-          hitRate: 0,
-          entryCount: 0,
-          memoryUsage: 0,
-          memoryUsageFormatted: '0 B',
-          maxMemory: 0,
-          maxMemoryFormatted: '0 B',
-          maxSize: 0,
-          uptime: 0,
-          uptimeFormatted: '0s',
-          evictionStrategy: 'hybrid',
-          error: 'An unexpected error occurred. Please try again later.',
-        };
+        return getEmptyCacheStats();
       }
       return this.cacheManager.getStats();
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'getting cache statistics');
       logger.warn(`Cache statistics error: ${errorResponse.message}`);
-      return {
-        hits: 0,
-        misses: 0,
-        sets: 0,
-        deletes: 0,
-        evictions: 0,
-        hitRate: 0,
-        entryCount: 0,
-        memoryUsage: 0,
-        memoryUsageFormatted: '0 B',
-        maxMemory: 0,
-        maxMemoryFormatted: '0 B',
-        maxSize: 0,
-        uptime: 0,
-        uptimeFormatted: '0s',
-        evictionStrategy: 'hybrid',
-        error: errorResponse.message,
-      };
+      return getCacheStatsErrorResponse(errorResponse.message);
     }
   }
 
