@@ -148,25 +148,41 @@ class ApiClient {
       const body = await response.body.json();
 
       // Validate response structure
-      if (!body || !body.choices || !Array.isArray(body.choices) || body.choices.length === 0) {
-        throw ErrorHandler.createError(
-          'Invalid response: missing or empty choices array',
-          ERROR_TYPES.API_ERROR
-        );
-      }
-
-      const firstChoice = body.choices[0];
-      if (!firstChoice || (!firstChoice.message && !firstChoice.text && !firstChoice.content)) {
-        throw ErrorHandler.createError(
-          'Invalid response: missing content in choices',
-          ERROR_TYPES.API_ERROR
-        );
-      }
+      this._validateResponseStructure(body);
+      this._validateChoiceContent(body.choices[0]);
 
       return body;
     } catch (parseError) {
       throw ErrorHandler.createError(
         `Failed to parse API response: ${parseError.message}`,
+        ERROR_TYPES.API_ERROR
+      );
+    }
+  }
+
+  /**
+   * Validate response has required structure
+   * @param {Object} body - Response body
+   * @private
+   */
+  _validateResponseStructure(body) {
+    if (!body || !body.choices || !Array.isArray(body.choices) || body.choices.length === 0) {
+      throw ErrorHandler.createError(
+        'Invalid response: missing or empty choices array',
+        ERROR_TYPES.API_ERROR
+      );
+    }
+  }
+
+  /**
+   * Validate choice object has required content
+   * @param {Object} choice - Choice object from response
+   * @private
+   */
+  _validateChoiceContent(choice) {
+    if (!choice || (!choice.message && !choice.text && !choice.content)) {
+      throw ErrorHandler.createError(
+        'Invalid response: missing content in choices',
         ERROR_TYPES.API_ERROR
       );
     }
