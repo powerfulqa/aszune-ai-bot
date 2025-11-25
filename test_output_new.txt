@@ -1,9 +1,0 @@
-
-> aszuneai@1.9.0 quality:check
-> npm run test:critical:ci
-
-
-> aszuneai@1.9.0 test:critical:ci
-> jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci
-
-Terminate batch job (Y/N)? 
