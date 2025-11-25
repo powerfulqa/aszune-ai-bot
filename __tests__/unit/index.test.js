@@ -360,13 +360,13 @@ describe('Bot Main Entry Point (index.js)', () => {
   });
 
   describe('Reminder Service Initialization', () => {
-    let reminderServiceMock;
-    let localMockClientReadyHandler;
-    let testLoggerMock;
+    let _reminderServiceMock;
+    let _localMockClientReadyHandler;
+    let _testLoggerMock;
 
     beforeEach(() => {
       jest.clearAllMocks();
-      localMockClientReadyHandler = undefined;
+      _localMockClientReadyHandler = undefined;
     });
 
     afterEach(() => {

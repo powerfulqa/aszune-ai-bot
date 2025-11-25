@@ -31,7 +31,7 @@ class Logger {
     try {
       await fs.mkdir(this.logDir, { recursive: true });
     } catch (error) {
-      console.error('Failed to create log directory:', error);
+      // Silent failure - do not output to console in library code
     }
   }
 
@@ -64,7 +64,7 @@ class Logger {
       // Append to log file
       await fs.appendFile(this.logFile, formattedMessage + '\n');
     } catch (error) {
-      console.error('Failed to write to log file:', error);
+      // Silent failure - do not output to console in library code
     }
   }
 
@@ -97,8 +97,7 @@ class Logger {
         }
       }
     } catch (error) {
-      // Fail silently, don't crash if log rotation fails
-      console.error('Log rotation failed:', error);
+      // Silent failure - do not output to console in library code
     }
   }
 
@@ -119,12 +118,6 @@ class Logger {
   debug(message, ...dataArgs) {
     if (this._getLogLevel() <= this.levels.DEBUG) {
       const formattedMessage = this._formatMessage('DEBUG', message);
-      console.log(formattedMessage);
-
-      // Log each data argument
-      dataArgs.forEach((data) => {
-        if (data !== undefined) console.log(data);
-      });
 
       // Write to file
       this._writeToFile(formattedMessage);
@@ -149,8 +142,6 @@ class Logger {
   info(message, data) {
     if (this._getLogLevel() <= this.levels.INFO) {
       const formattedMessage = this._formatMessage('INFO', message);
-      console.log(formattedMessage);
-      if (data) console.log(data);
 
       // Write to file
       this._writeToFile(formattedMessage);
@@ -166,8 +157,6 @@ class Logger {
   warn(message, data) {
     if (this._getLogLevel() <= this.levels.WARN) {
       const formattedMessage = this._formatMessage('WARN', message);
-      console.warn(formattedMessage);
-      if (data) console.warn(data);
 
       // Write to file
       this._writeToFile(formattedMessage);
@@ -183,7 +172,6 @@ class Logger {
   error(message, error) {
     if (this._getLogLevel() <= this.levels.ERROR) {
       const formattedMessage = this._formatMessage('ERROR', message);
-      console.error(formattedMessage);
 
       // Write to file
       this._writeToFile(formattedMessage);
@@ -198,17 +186,14 @@ class Logger {
             status: error.response.status,
             data: error.response.data,
           };
-          console.error('API Error Response:', errorDetails);
         } else if (error.request) {
           // No response received
           errorDetails = {
             type: 'No API Response',
             request: error.request,
           };
-          console.error('No response received from API:', error.request);
         } else if (typeof error === 'object' && !error.message && !error.stack) {
           // Simple data object
-          console.error(error);
           errorDetails = error;
         } else {
           // General error
@@ -217,8 +202,6 @@ class Logger {
             message: error.message || String(error),
             stack: error.stack,
           };
-          console.error('Error:', error.message || error);
-          if (error.stack) console.error('Stack:', error.stack);
         }
 
         // Write error details to file

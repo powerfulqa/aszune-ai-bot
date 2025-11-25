@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { Client: _Client, GatewayIntentBits: _GatewayIntentBits, REST: _REST, Routes: _Routes } = require('discord.js');
 
 // Mock dependencies
 jest.mock('discord.js', () => ({

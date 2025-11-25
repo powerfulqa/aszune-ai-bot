@@ -353,11 +353,6 @@ function generateOptimizedConfig(detectedPi) {
  * @returns {Promise<Object>} The configuration object
  */
 /**
- * Helper function to create environment overrides
- * @param {Object} optimizedConfig - Base optimized configuration
- * @returns {Object} Environment variable overrides
- */
-/**
  * Helper to get boolean env override
  */
 function _getBoolEnvOverride(envVar1, envVar2, defaultValue) {
@@ -375,43 +370,46 @@ function _getNumEnvOverride(envVar1, envVar2, defaultValue) {
   return defaultValue;
 }
 
-function createEnvOverrides(optimizedConfig) {
-  const overrides = {
-    ENABLED: _getBoolEnvOverride(
-      'PI_OPTIMIZATIONS_ENABLED',
-      'ENABLE_PI_OPTIMIZATIONS',
-      optimizedConfig.ENABLED
-    ),
+/**
+ * Helper to build core override object
+ * @private
+ */
+function _buildCoreOverrides(optimizedConfig) {
+  return {
+    ENABLED: _getBoolEnvOverride('PI_OPTIMIZATIONS_ENABLED', 'ENABLE_PI_OPTIMIZATIONS', optimizedConfig.ENABLED),
     LOW_CPU_MODE: _getBoolEnvOverride('PI_LOW_CPU_MODE', null, optimizedConfig.LOW_CPU_MODE),
-    COMPACT_MODE: _getBoolEnvOverride(
-      'PI_OPTIMIZATIONS_COMPACT_MODE',
-      'PI_COMPACT_MODE',
-      optimizedConfig.COMPACT_MODE
-    ),
+    COMPACT_MODE: _getBoolEnvOverride('PI_OPTIMIZATIONS_COMPACT_MODE', 'PI_COMPACT_MODE', optimizedConfig.COMPACT_MODE),
     CACHE_ENABLED: _getBoolEnvOverride('PI_CACHE_ENABLED', null, optimizedConfig.CACHE_ENABLED),
-    MAX_CONNECTIONS: _getNumEnvOverride(
-      'PI_OPTIMIZATIONS_MAX_CONNECTIONS',
-      'PI_MAX_CONNECTIONS',
-      optimizedConfig.MAX_CONNECTIONS
-    ),
+    MAX_CONNECTIONS: _getNumEnvOverride('PI_OPTIMIZATIONS_MAX_CONNECTIONS', 'PI_MAX_CONNECTIONS', optimizedConfig.MAX_CONNECTIONS),
     DEBOUNCE_MS: _getNumEnvOverride('PI_DEBOUNCE_MS', null, optimizedConfig.DEBOUNCE_MS),
     REACTION_LIMIT: _getNumEnvOverride('PI_REACTION_LIMIT', null, optimizedConfig.REACTION_LIMIT),
-    STREAM_RESPONSES: _getBoolEnvOverride(
-      'PI_STREAM_RESPONSES',
-      null,
-      optimizedConfig.STREAM_RESPONSES
-    ),
+    STREAM_RESPONSES: _getBoolEnvOverride('PI_STREAM_RESPONSES', null, optimizedConfig.STREAM_RESPONSES),
   };
-  if (process.env.PI_MEMORY_LIMIT || process.env.PI_MEMORY_CRITICAL) {
-    overrides.MEMORY_LIMITS = {
-      RAM_THRESHOLD_MB: process.env.PI_MEMORY_LIMIT
-        ? parseInt(process.env.PI_MEMORY_LIMIT)
-        : optimizedConfig.MEMORY_LIMITS.RAM_THRESHOLD_MB,
-      RAM_CRITICAL_MB: process.env.PI_MEMORY_CRITICAL
-        ? parseInt(process.env.PI_MEMORY_CRITICAL)
-        : optimizedConfig.MEMORY_LIMITS.RAM_CRITICAL_MB,
-    };
+}
+
+/**
+ * Helper to build memory limit overrides
+ * @private
+ */
+function _buildMemoryOverrides(optimizedConfig) {
+  if (!process.env.PI_MEMORY_LIMIT && !process.env.PI_MEMORY_CRITICAL) {
+    return null;
   }
+
+  return {
+    RAM_THRESHOLD_MB: process.env.PI_MEMORY_LIMIT ? parseInt(process.env.PI_MEMORY_LIMIT) : optimizedConfig.MEMORY_LIMITS.RAM_THRESHOLD_MB,
+    RAM_CRITICAL_MB: process.env.PI_MEMORY_CRITICAL ? parseInt(process.env.PI_MEMORY_CRITICAL) : optimizedConfig.MEMORY_LIMITS.RAM_CRITICAL_MB,
+  };
+}
+
+function createEnvOverrides(optimizedConfig) {
+  const overrides = _buildCoreOverrides(optimizedConfig);
+  const memoryOverrides = _buildMemoryOverrides(optimizedConfig);
+  
+  if (memoryOverrides) {
+    overrides.MEMORY_LIMITS = memoryOverrides;
+  }
+  
   return overrides;
 }
 

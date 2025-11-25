@@ -1572,7 +1572,7 @@ class WebDashboardService {
         const execPromise = util.promisify(exec);
 
         try {
-          const { stdout, stderr } = await execPromise('git pull origin main', {
+          const { stdout } = await execPromise('git pull origin main', {
             cwd: path.join(__dirname, '../../'),
             timeout: 30000,
           });
@@ -1899,7 +1899,6 @@ class WebDashboardService {
       const hostname = os.hostname();
 
       const interfaces = [];
-      let gateway = null;
 
       for (const [name, addrs] of Object.entries(networkInterfaces)) {
         const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
