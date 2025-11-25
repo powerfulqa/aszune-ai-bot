@@ -45,7 +45,7 @@ describe('Pi Detector - Initialization', () => {
     it('should initialize and return optimized config', async () => {
       // Mock successful Pi detection
       fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2');
-      execSync.mockReturnValue("temp=42.3'C");
+      execSync.mockReturnValue('temp=42.3\'C');
 
       const result = await piDetector.initPiOptimizations();
 
@@ -62,7 +62,7 @@ describe('Pi Detector - Initialization', () => {
 
       // Mock successful Pi detection
       fs.readFile.mockResolvedValue('Hardware : BCM2711 Raspberry Pi 4 Model B Rev 1.2');
-      execSync.mockReturnValue("temp=42.3'C");
+      execSync.mockReturnValue('temp=42.3\'C');
 
       const result = await piDetector.initPiOptimizations();
 

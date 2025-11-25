@@ -137,7 +137,7 @@ describe('Chat Service - Basic', () => {
       );
 
       expect(result).toBeTruthy();
-      expect(result.message).toContain("I'll remind you");
+      expect(result.message).toContain('I\'ll remind you');
     });
 
     it('should return null for non-reminder messages', async () => {
@@ -164,7 +164,7 @@ describe('Chat Service - Basic', () => {
       // Should return error response object instead of null when there's an error
       expect(result).toBeTruthy();
       expect(result.success).toBe(false);
-      expect(result.message).toContain("Sorry, I couldn't set that reminder");
+      expect(result.message).toContain('Sorry, I couldn\'t set that reminder');
     });
 
     it('should handle different reminder pattern variations', async () => {
@@ -179,7 +179,7 @@ describe('Chat Service - Basic', () => {
       for (const pattern of patterns) {
         mockHandleReminderCommand.mockReturnValue({
           success: true,
-          message: "I'll remind you",
+          message: 'I\'ll remind you',
         });
 
         const result = await checkForSimpleReminderRequest(
@@ -190,7 +190,7 @@ describe('Chat Service - Basic', () => {
         );
 
         expect(result).toBeTruthy();
-        expect(result.message).toContain("I'll remind you");
+        expect(result.message).toContain('I\'ll remind you');
         mockHandleReminderCommand.mockClear();
       }
     });
@@ -204,7 +204,7 @@ describe('Chat Service - Basic', () => {
       );
 
       expect(result).toBeTruthy();
-      expect(result.message).toContain("I'll remind you");
+      expect(result.message).toContain('I\'ll remind you');
     });
 
     it('should test reply function in simple reminder', async () => {
@@ -220,7 +220,7 @@ describe('Chat Service - Basic', () => {
 
       expect(result).toBeTruthy();
       expect(result.success).toBe(true);
-      expect(result.message).toContain("I'll remind you");
+      expect(result.message).toContain('I\'ll remind you');
       expect(result.message).toContain('in 5 minute');
     });
 
@@ -254,7 +254,7 @@ describe('Chat Service - Basic', () => {
       // Should return error response when command fails
       expect(result).toBeTruthy();
       expect(result.success).toBe(false);
-      expect(result.message).toContain("Sorry, I couldn't set that reminder");
+      expect(result.message).toContain('Sorry, I couldn\'t set that reminder');
     });
 
     it('should test uncovered error handling paths', async () => {

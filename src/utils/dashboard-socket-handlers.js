@@ -4,7 +4,6 @@
  */
 
 const logger = require('./logger');
-const { ErrorHandler } = require('./error-handler');
 
 class SocketHandlers {
   constructor(webDashboardInstance) {
