@@ -14,8 +14,8 @@ module.exports = {
 
   // Only run the tests we need for branch coverage
   testMatch: [
-    '<rootDir>/__tests__/unit/logger.test.js',
-    '<rootDir>/__tests__/unit/logger-branch-coverage.test.js',
+    '<rootDir>/../__tests__/unit/logger.test.js',
+    '<rootDir>/../__tests__/unit/logger-branch-coverage.test.js',
   ],
 
   // Collect coverage information

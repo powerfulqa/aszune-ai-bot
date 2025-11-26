@@ -6,7 +6,7 @@ module.exports = {
   collectCoverage: true,
   coveragePathIgnorePatterns: ['/node_modules/', '/__tests__/', '/coverage/'],
   // Use the Jest setup file to handle process.exit mocking
-  setupFilesAfterEnv: ['./jest.setup.js'],
+  setupFilesAfterEnv: ['../jest.setup.js'],
   // Only apply coverage thresholds to index.js
   coverageThreshold: {
     './src/index.js': {

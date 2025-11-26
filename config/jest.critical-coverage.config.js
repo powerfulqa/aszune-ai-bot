@@ -5,7 +5,10 @@
  */
 module.exports = {
   // Extend from main configuration
-  ...require('./jest.config.js'),
+  ...require('../jest.config.js'),
+
+  // Override rootDir to point to project root instead of config folder
+  rootDir: '../',
 
   // Override coverage thresholds for critical files - 64% global to match Jest's measurement
   coverageThreshold: {
