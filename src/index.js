@@ -25,7 +25,7 @@ function getConfig() {
 
 // Initialize Pi-specific optimizations if enabled
 async function bootWithOptimizations() {
-  const currentConfig = getConfig();
+  const _currentConfig = getConfig();
   logger.info('Bot initialization started...');
   // Pi optimizations are now initialized at module load time in production mode
 }

@@ -22,7 +22,7 @@
       { "max": 50, "skipBlankLines": true, "skipComments": true }
     ],
     "max-statements": ["error", 25],
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
   },
   "overrides": [
     {
@@ -35,7 +35,7 @@
         "max-statements": ["error", 100],
         "complexity": ["error", { "max": 30 }],
         "max-depth": ["error", 6],
-        "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+        "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
         "no-console": "off"
       }
     }

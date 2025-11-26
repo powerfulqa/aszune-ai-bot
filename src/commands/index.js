@@ -268,7 +268,7 @@ const commands = {
         const guild = interaction.guild;
 
         // Get real server statistics instead of empty analytics
-        const { onlineCount, botCount, totalMembers, humanMembers } = await getGuildMemberStats(guild);
+        const { onlineCount, botCount, _totalMembers, humanMembers } = await getGuildMemberStats(guild);
 
         // Create mock analytics data with real server stats
         const analyticsData = {
@@ -348,7 +348,7 @@ const commands = {
 
         // Generate comprehensive dashboard with real server data
         const guild = interaction.guild;
-        const { onlineCount, botCount, totalMembers, humanMembers } = await getGuildMemberStats(guild);
+        const { _onlineCount, _botCount, _totalMembers, humanMembers } = await getGuildMemberStats(guild);
 
         const dashboardData = await PerformanceDashboard.generateDashboardReport();
         const realTimeStatus = PerformanceDashboard.getRealTimeStatus();

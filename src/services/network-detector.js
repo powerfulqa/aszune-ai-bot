@@ -125,7 +125,7 @@ class NetworkDetector {
     const { stdout } = await execPromise('ipconfig /all', { timeout: 5000 });
     const dnsServers = [];
 
-    stdout.split('\n').forEach((line, idx, lines) => {
+    stdout.split('\n').forEach((line, _idx, _lines) => {
       if (line.includes('DNS Servers')) {
         const match = line.match(/:\s*(\d+\.\d+\.\d+\.\d+)/);
         if (match) dnsServers.push(match[1]);

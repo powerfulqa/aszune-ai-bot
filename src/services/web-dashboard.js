@@ -2066,7 +2066,7 @@ class WebDashboardService {
       results.push('Test 7: Network Interfaces');
       const interfaces = os.networkInterfaces();
       const activeInterfaces = Object.entries(interfaces)
-        .filter(([name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
+        .filter(([_name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
         .map(([name]) => name);
 
       if (activeInterfaces.length > 0) {
