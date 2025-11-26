@@ -9,7 +9,7 @@ v1.8.0 introduced a dual test coverage enforcement model:
 
 | Layer           | Threshold       | Config                             | Purpose                                           |
 | --------------- | --------------- | ---------------------------------- | ------------------------------------------------- |
-| Critical files  | ≥80% statements | `jest.critical-coverage.config.js` | Early fail for core reliability paths             |
+| Critical files  | ≥80% statements | `config/jest.critical-coverage.config.js` | Early fail for core reliability paths             |
 | Global baseline | ≥65% statements | `jest.config.js`                   | Sustainable confidence without blocking iteration |
 
 Critical gate runs first; if it fails, the full suite is skipped to save CI minutes.

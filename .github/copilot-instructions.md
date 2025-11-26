@@ -767,8 +767,8 @@ pm2 logs aszune-ai --lines 200 | grep "SHUTDOWN TRIGGERED"
 # Look for consistent uptime patterns (e.g., always 15-16s = systemd conflict)
 
 # Diagnostic scripts
-./diagnose-restart-loop.sh   # Automated checks for conflicts
-./find-sigint-source.sh      # Traces SIGINT signal sources
+./scripts/diagnose-restart-loop.sh   # Automated checks for conflicts
+./scripts/find-sigint-source.sh      # Traces SIGINT signal sources
 ```
 
 ### Essential Commands

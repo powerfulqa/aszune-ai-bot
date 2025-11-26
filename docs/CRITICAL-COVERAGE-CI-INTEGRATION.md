@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Critical Coverage Tests
         run: |
-          npx jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests
+          npx jest --config=config/jest.critical-coverage.config.js --coverage --silent --passWithNoTests
           echo "Critical coverage check completed"
         env:
           CI: true
@@ -73,9 +73,9 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "test:critical": "jest --config=jest.critical-coverage.config.js --coverage",
-    "test:critical:ci": "jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci",
-    "coverage:critical": "jest --config=jest.critical-coverage.config.js --coverage --coverageReporters=lcov --coverageReporters=text-summary",
+    "test:critical": "jest --config=config/jest.critical-coverage.config.js --coverage",
+    "test:critical:ci": "jest --config=config/jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci",
+    "coverage:critical": "jest --config=config/jest.critical-coverage.config.js --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "precommit": "npm run test:critical:ci"
   }
 }

@@ -146,8 +146,8 @@ pm2 restart aszune-ai
 
 ```bash
 cd ~/aszune-ai-bot
-chmod +x diagnose-restart-loop.sh
-./diagnose-restart-loop.sh
+chmod +x scripts/diagnose-restart-loop.sh
+./scripts/diagnose-restart-loop.sh
 ```
 
 This will check for:

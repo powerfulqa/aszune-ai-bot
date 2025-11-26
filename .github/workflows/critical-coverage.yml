@@ -27,7 +27,7 @@ jobs:
     - name: Run Critical Coverage Tests
       run: |
         echo "🔍 Running critical file coverage check..."
-        npx jest --config=jest.critical-coverage.config.js --coverage --silent --passWithNoTests
+        npx jest --config=config/jest.critical-coverage.config.js --coverage --silent --passWithNoTests
         echo "✅ Critical coverage check completed"
       env:
         CI: true

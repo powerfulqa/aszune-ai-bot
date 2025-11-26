@@ -205,7 +205,7 @@ npm test               # Full test suite
 
 - **Copilot Instructions:** `.github/copilot-instructions.md`
 - **Quality Standards:** QLTY thresholds defined in instructions
-- **Test Configuration:** `jest.config.js`, `jest.critical-coverage.config.js`
+- **Test Configuration:** `jest.config.js`, `config/jest.critical-coverage.config.js`
 - **Prettier Config:** Standard 2-space indentation
 - **ESLint Config:** `.eslintrc.json`
 

@@ -137,7 +137,7 @@ pm2 restart aszune-bot
 
 ## 📝 Testing
 
-Basic test created in `test-message-formatting.js` covering:
+Basic test created in `scripts/test-message-formatting.js` covering:
 
 - Empty history handling
 - Single user message

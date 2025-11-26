@@ -152,7 +152,7 @@ describe('Message Formatting for API', () => {
 
 ```bash
 # Test with actual Perplexity API call
-node test-perplexity-api.js
+node scripts/test-perplexity-api.js
 ```
 
 Should now succeed where it was failing before.

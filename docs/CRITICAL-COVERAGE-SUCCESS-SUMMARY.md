@@ -10,7 +10,7 @@ friction while preserving high confidence in core runtime paths.
 
 ### 1. **Critical Coverage Configuration**
 
-- ✅ `jest.critical-coverage.config.js` - Enforces 80% thresholds on critical files
+- ✅ `config/jest.critical-coverage.config.js` - Enforces 80% thresholds on critical files
 - ✅ File-specific thresholds for all 7 identified critical files
 - ✅ Tiered approach (Tier 1: Core, Tier 2: Services, Tier 3: Utilities)
 

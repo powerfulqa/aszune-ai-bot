@@ -46,7 +46,7 @@ All core persistence (database) and reminder functionality from v1.7.0 remains f
 ### Enforcement Mechanism
 
 - `jest.config.js` → global baseline (65%)
-- `jest.critical-coverage.config.js` → per-file 80% thresholds
+- `config/jest.critical-coverage.config.js` → per-file 80% thresholds
 - CI pipeline executes critical coverage first; aborts full suite on failure
 
 ---

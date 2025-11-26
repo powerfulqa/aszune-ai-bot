@@ -85,7 +85,7 @@ npx jest --watch
 
 | Category        | Threshold | Enforcement Mechanism | Notes |
 | --------------- | --------- | --------------------- | ----- |
-| Critical Files  | ≥80% stmts| `jest.critical-coverage.config.js` | Fails CI early if violated |
+| Critical Files  | ≥80% stmts| `config/jest.critical-coverage.config.js` | Fails CI early if violated |
 | Global (All)    | ≥65% stmts| `jest.config.js` (coverageThreshold) | Sustainable baseline |
 | Branch (Global) | Informational | Report only | Uplift targeted modules first |
 
