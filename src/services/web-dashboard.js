@@ -1464,162 +1464,179 @@ class WebDashboardService {
    * @private
    */
   setupControlRoutes() {
-    this.app.post('/api/control/restart', async (req, res) => {
-      try {
-        logger.info('Restart command received from dashboard');
-
-        // Step 1: Explicitly disconnect Discord client to show offline status
-        if (this.discordClient) {
-          try {
-            logger.info('Destroying Discord client connection...');
-            await this.discordClient.destroy();
-            logger.info('Discord client disconnected successfully');
-          } catch (disconnectError) {
-            logger.warn(`Failed to disconnect Discord client: ${disconnectError.message}`);
-          }
-        }
-
-        const { exec } = require('child_process');
-        const util = require('util');
-        const execPromise = util.promisify(exec);
-
-        // Determine service name - typically 'aszune-ai-bot' or similar
-        const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
-        // Use the actual PM2 process name if available (PM2 sets process.env.name), otherwise default to 'aszune-ai'
-        const pm2AppName = process.env.name || 'aszune-ai';
-
-        // Step 2: Try PM2 restart first (most likely environment)
-        try {
-          const pm2Command = `pm2 restart ${pm2AppName}`;
-          logger.info(`Attempting PM2 restart: ${pm2Command}`);
-          await execPromise(pm2Command, { timeout: 10000 });
-
-          logger.info(`Bot restart initiated via PM2 (${pm2AppName})`);
-          return res.json({
-            success: true,
-            message: `Bot restart initiated via PM2 ${pm2AppName}`,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (pm2Error) {
-          logger.debug(`PM2 restart failed (may not be using PM2): ${pm2Error.message}`);
-        }
-
-        // Step 3: Try systemctl restart
-        try {
-          let restartCmd;
-          // Always try without sudo first, since we're likely running as root
-          restartCmd = `systemctl restart ${serviceName}`;
-
-          logger.info(`Attempting restart with: ${restartCmd}`);
-          await execPromise(restartCmd, {
-            timeout: 10000,
-          });
-
-          logger.info(`Bot restart initiated via systemctl (${serviceName})`);
-          res.json({
-            success: true,
-            message: `Bot restart initiated via systemctl ${serviceName}`,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (systemctlError) {
-          logger.warn(`Systemctl restart failed: ${systemctlError.message}`);
-          logger.info('Attempting with sudo...');
-
-          try {
-            // Retry with sudo
-            await execPromise(`sudo systemctl restart ${serviceName}`, {
-              timeout: 10000,
-            });
-            logger.info('Bot restart succeeded with sudo');
-            res.json({
-              success: true,
-              message: 'Bot restart initiated via systemctl (with sudo)',
-              timestamp: new Date().toISOString(),
-            });
-          } catch (sudoError) {
-            logger.warn(`Systemctl with sudo also failed: ${sudoError.message}`);
-            logger.info('Attempting direct process restart (fallback)...');
-
-            // Fallback: direct process exit
-            res.json({
-              success: true,
-              message: 'Bot restart initiated (fallback mode)',
-              timestamp: new Date().toISOString(),
-            });
-
-            setTimeout(() => {
-              logger.info('Executing direct bot restart');
-              process.exit(0);
-            }, 1000); // Increased delay to ensure response is sent
-          }
-        }
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
-        logger.error(`Restart error: ${error.message}`);
-        res.status(500).json({
-          success: false,
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
+    this.app.post('/api/control/restart', (req, res) => {
+      this._handleRestartRequest(res);
     });
 
-    this.app.post('/api/control/git-pull', async (req, res) => {
-      try {
-        logger.info('Git pull command received from dashboard');
-        const { exec } = require('child_process');
-        const util = require('util');
-        const execPromise = util.promisify(exec);
+    this.app.post('/api/control/git-pull', (req, res) => {
+      this._handleGitPullRequest(res);
+    });
+  }
 
+  async _handleRestartRequest(res) {
+    try {
+      logger.info('Restart command received from dashboard');
+
+      // Step 1: Explicitly disconnect Discord client to show offline status
+      if (this.discordClient) {
         try {
-          const { stdout } = await execPromise('git pull origin main', {
-            cwd: path.join(__dirname, '../../'),
-            timeout: 30000,
-          });
-
-          logger.info('Git pull completed successfully');
-          res.json({
-            success: true,
-            message: 'Git pull completed successfully',
-            output: stdout,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (pullError) {
-          // Check for permission errors
-          const errorMsg = pullError.message || '';
-          const stderrMsg = pullError.stderr || '';
-
-          if (stderrMsg.includes('Permission denied') || errorMsg.includes('EACCES')) {
-            logger.error(`Git pull permission denied: ${errorMsg}`);
-            res.status(403).json({
-              success: false,
-              error: 'Permission denied - the current user cannot write to the repository',
-              details:
-                'Make sure the bot process has write permissions to the git repository directory',
-              output: stderrMsg || errorMsg,
-              timestamp: new Date().toISOString(),
-            });
-          } else {
-            logger.error(`Git pull failed: ${errorMsg}`);
-            res.status(400).json({
-              success: false,
-              error: 'Git pull failed',
-              details: errorMsg,
-              output: stderrMsg || errorMsg,
-              timestamp: new Date().toISOString(),
-            });
-          }
+          logger.info('Destroying Discord client connection...');
+          await this.discordClient.destroy();
+          logger.info('Discord client disconnected successfully');
+        } catch (disconnectError) {
+          logger.warn(`Failed to disconnect Discord client: ${disconnectError.message}`);
         }
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'executing git pull');
-        res.status(500).json({
-          success: false,
-          error: errorResponse.message,
-          output: error.message,
+      }
+
+      const result = await this._attemptRestart();
+      res.json(result);
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'restarting bot');
+      logger.error(`Restart error: ${error.message}`);
+      res.status(500).json({
+        success: false,
+        error: errorResponse.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async _attemptRestart() {
+    const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
+    const pm2AppName = process.env.name || 'aszune-ai';
+
+    const pm2Result = await this._tryPm2Restart(pm2AppName);
+    if (pm2Result) return pm2Result;
+
+    const systemctlResult = await this._trySystemctlRestart(serviceName);
+    if (systemctlResult) return systemctlResult;
+
+    const sudoResult = await this._trySystemctlWithSudo(serviceName);
+    if (sudoResult) return sudoResult;
+
+    return this._fallbackRestart();
+  }
+
+  async _tryPm2Restart(pm2AppName) {
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+      const pm2Command = `pm2 restart ${pm2AppName}`;
+      logger.info(`Attempting PM2 restart: ${pm2Command}`);
+      await execPromise(pm2Command, { timeout: 10000 });
+      logger.info(`Bot restart initiated via PM2 (${pm2AppName})`);
+      return {
+        success: true,
+        message: `Bot restart initiated via PM2 ${pm2AppName}`,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      logger.debug(`PM2 restart failed (may not be using PM2): ${error.message}`);
+      return null;
+    }
+  }
+
+  async _trySystemctlRestart(serviceName) {
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+      const restartCmd = `systemctl restart ${serviceName}`;
+      logger.info(`Attempting restart with: ${restartCmd}`);
+      await execPromise(restartCmd, { timeout: 10000 });
+      logger.info(`Bot restart initiated via systemctl (${serviceName})`);
+      return {
+        success: true,
+        message: `Bot restart initiated via systemctl ${serviceName}`,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      logger.warn(`Systemctl restart failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  async _trySystemctlWithSudo(serviceName) {
+    try {
+      logger.info('Attempting with sudo...');
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+      await execPromise(`sudo systemctl restart ${serviceName}`, { timeout: 10000 });
+      logger.info('Bot restart succeeded with sudo');
+      return {
+        success: true,
+        message: 'Bot restart initiated via systemctl (with sudo)',
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      logger.warn(`Systemctl with sudo also failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  _fallbackRestart() {
+    logger.info('Attempting direct process restart (fallback)...');
+    setTimeout(() => {
+      logger.info('Executing direct bot restart');
+      process.exit(0);
+    }, 1000);
+    return {
+      success: true,
+      message: 'Bot restart initiated (fallback mode)',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  async _handleGitPullRequest(res) {
+    try {
+      logger.info('Git pull command received from dashboard');
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+
+      try {
+        const { stdout } = await execPromise('git pull origin main', {
+          cwd: path.join(__dirname, '../../'),
+          timeout: 30000,
+        });
+
+        logger.info('Git pull completed successfully');
+        res.json({
+          success: true,
+          message: 'Git pull completed successfully',
+          output: stdout,
           timestamp: new Date().toISOString(),
         });
+      } catch (pullError) {
+        // Check for permission errors
+        const errorMsg = pullError.message || '';
+        const stderrMsg = pullError.stderr || '';
+
+        if (stderrMsg.includes('Permission denied') || errorMsg.includes('EACCES')) {
+          logger.error(`Git pull permission denied: ${errorMsg}`);
+          res.status(403).json({
+            success: false,
+            error: 'Permission denied - check file permissions',
+            timestamp: new Date().toISOString(),
+          });
+        } else {
+          res.json({
+            success: false,
+            error: pullError.message,
+            timestamp: new Date().toISOString(),
+          });
+        }
       }
-    });
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, 'git pull operation');
+      res.status(500).json({
+        success: false,
+        error: errorResponse.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   /**
@@ -1895,58 +1912,18 @@ class WebDashboardService {
 
   async handleNetworkStatus(callback) {
     try {
-      const networkInterfaces = os.networkInterfaces();
       const hostname = os.hostname();
-
-      const interfaces = [];
-
-      for (const [name, addrs] of Object.entries(networkInterfaces)) {
-        const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
-        const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
-
-        if (ipv4 || ipv6) {
-          const isInternal = ipv4?.internal || ipv6?.internal || false;
-          const isLoopback = name.toLowerCase().includes('lo') || isInternal;
-
-          interfaces.push({
-            name,
-            ipv4: ipv4?.address || null,
-            ipv6: ipv6?.address || null,
-            mac: ipv4?.mac || ipv6?.mac || null,
-            internal: isInternal,
-            status: isLoopback ? 'LOOPBACK' : 'UP',
-          });
-        }
-      }
-
+      const interfaces = await this._buildNetworkInterfaces();
       const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
-
-      // Get real gateway detection
       const gatewayResult = await this.detectGateway();
-      const gatewayIp = gatewayResult.gatewayIp !== 'Not detected' ? gatewayResult.gatewayIp : null;
-
-      // Get external IP
-      let externalIp = null;
-      try {
-        externalIp = await this.getExternalIp();
-      } catch (error) {
-        logger.debug(`Failed to get external IP: ${error.message}`);
-      }
-
-      // Get connectivity status
+      const externalIp = await this._safeGetExternalIp();
       const connectivityStatus = await this.getNetworkStatus();
-
-      logger.info('Network status connectivity data:', {
-        dnsServers: connectivityStatus.dnsServers,
-        ipAssignment: connectivityStatus.ipAssignment,
-        dnsReachable: connectivityStatus.dnsReachable,
-      });
 
       if (callback) {
         callback({
           hostname,
           localIp,
-          gateway: gatewayIp,
+          gateway: gatewayResult.gatewayIp !== 'Not detected' ? gatewayResult.gatewayIp : null,
           gatewayStatus: gatewayResult.reachable,
           externalIp: externalIp || null,
           interfaces,
@@ -1954,7 +1931,6 @@ class WebDashboardService {
           timestamp: new Date().toISOString(),
         });
       }
-
       logger.debug(`Network status retrieved for hostname: ${hostname}`);
     } catch (error) {
       logger.error('Error retrieving network status:', error);
@@ -1962,139 +1938,186 @@ class WebDashboardService {
     }
   }
 
+  async _buildNetworkInterfaces() {
+    const networkInterfaces = os.networkInterfaces();
+    const interfaces = [];
+
+    for (const [name, addrs] of Object.entries(networkInterfaces)) {
+      const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
+      const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
+
+      if (ipv4 || ipv6) {
+        const isInternal = ipv4?.internal || ipv6?.internal || false;
+        const isLoopback = name.toLowerCase().includes('lo') || isInternal;
+
+        interfaces.push({
+          name,
+          ipv4: ipv4?.address || null,
+          ipv6: ipv6?.address || null,
+          mac: ipv4?.mac || ipv6?.mac || null,
+          internal: isInternal,
+          status: isLoopback ? 'LOOPBACK' : 'UP',
+        });
+      }
+    }
+    return interfaces;
+  }
+
+  async _safeGetExternalIp() {
+    try {
+      return await this.getExternalIp();
+    } catch (error) {
+      logger.debug(`Failed to get external IP: ${error.message}`);
+      return null;
+    }
+  }
+
   async handleNetworkTest(data, callback) {
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
-      const dns = require('dns').promises;
-
-      let results = [];
-      results.push('=== NETWORK CONNECTIVITY TEST SUITE ===\n');
-
-      // Test 1: Gateway ping
-      results.push('Test 1: Gateway Connectivity');
-      try {
-        const gatewayResult = await this.detectGateway();
-        if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
-          const pingCmd =
-            process.platform === 'win32'
-              ? `ping -n 1 ${gatewayResult.gatewayIp}`
-              : `ping -c 1 ${gatewayResult.gatewayIp}`;
-          await execPromise(pingCmd, { timeout: 3000 });
-          results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
-        } else {
-          results.push('✗ Gateway not detected\n');
-        }
-      } catch (error) {
-        results.push(`✗ Gateway ping failed: ${error.message}\n`);
-      }
-
-      // Test 2: DNS Server Detection and Testing
-      results.push('Test 2: DNS Server Detection & Testing');
-      try {
-        const dnsServers = await this.detectDnsServers();
-        results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
-
-        let dnsWorking = false;
-        for (const dnsServer of dnsServers) {
-          try {
-            const pingCmd =
-              process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
-            await execPromise(pingCmd, { timeout: 3000 });
-            results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
-            dnsWorking = true;
-          } catch (error) {
-            results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
-          }
-        }
-
-        if (dnsWorking) {
-          results.push('  ✓ At least one DNS server is accessible\n');
-        } else {
-          results.push('  ✗ No DNS servers are reachable\n');
-        }
-      } catch (error) {
-        results.push(`✗ DNS detection failed: ${error.message}\n`);
-      }
-
-      // Test 3: DNS Resolution
-      results.push('Test 3: DNS Resolution Test');
-      try {
-        const addresses = await dns.resolve4('google.com');
-        results.push(`✓ DNS resolution working (google.com → ${addresses[0]})\n`);
-      } catch (error) {
-        results.push(`✗ DNS resolution failed: ${error.message}\n`);
-      }
-
-      // Test 4: Internet connectivity (ping public DNS)
-      results.push('Test 4: Internet Connectivity (8.8.8.8)');
-      try {
-        const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
-        await execPromise(pingCmd, { timeout: 5000 });
-        results.push('✓ Internet reachable (Google DNS)\n');
-      } catch (error) {
-        results.push(`✗ Internet ping failed: ${error.message}\n`);
-      }
-
-      // Test 5: External API access
-      results.push('Test 5: External API Access');
-      try {
-        const { stdout } = await execPromise(
-          'curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org',
-          { timeout: 5000 }
-        );
-        if (stdout.trim() === '200') {
-          results.push('✓ External API accessible (api.ipify.org)\n');
-        } else {
-          results.push(`⚠ API returned HTTP ${stdout.trim()}\n`);
-        }
-      } catch (error) {
-        results.push(`✗ External API test failed: ${error.message}\n`);
-      }
-
-      // Test 6: IP Assignment Detection
-      results.push('Test 6: IP Configuration');
-      try {
-        const ipAssignment = await this.detectDhcpOrStatic();
-        results.push(`✓ IP Assignment Type: ${ipAssignment}\n`);
-      } catch (error) {
-        results.push(`✗ Could not detect IP assignment: ${error.message}\n`);
-      }
-
-      // Test 7: Local interfaces
-      results.push('Test 7: Network Interfaces');
-      const interfaces = os.networkInterfaces();
-      const activeInterfaces = Object.entries(interfaces)
-        .filter(([_name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
-        .map(([name]) => name);
-
-      if (activeInterfaces.length > 0) {
-        results.push(`✓ Active interfaces: ${activeInterfaces.join(', ')}\n`);
-      } else {
-        results.push('✗ No active network interfaces found\n');
-      }
+      const results = ['=== NETWORK CONNECTIVITY TEST SUITE ===\n'];
+      
+      await this._addGatewayTest(results);
+      await this._addDnsTests(results);
+      await this._addInternetTests(results);
+      await this._addConfigurationTests(results);
 
       results.push('\n=== TEST SUITE COMPLETE ===');
 
       if (callback) {
         callback({
           success: true,
-          result: results.join('\n'),
+          message: 'Network test completed',
+          results: results.join('\n'),
           timestamp: new Date().toISOString(),
         });
       }
-
-      logger.debug('Network test suite completed');
+      logger.info('Network test completed successfully');
     } catch (error) {
-      logger.error('Error running network test:', error);
+      logger.error('Network test error:', error);
       if (callback) {
         callback({
           success: false,
           error: error.message,
-          result: 'Test suite failed: ' + error.message,
+          timestamp: new Date().toISOString(),
         });
       }
+    }
+  }
+
+  async _addGatewayTest(results) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    results.push('Test 1: Gateway Connectivity');
+    try {
+      const gatewayResult = await this.detectGateway();
+      if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
+        const pingCmd =
+          process.platform === 'win32'
+            ? `ping -n 1 ${gatewayResult.gatewayIp}`
+            : `ping -c 1 ${gatewayResult.gatewayIp}`;
+        await execPromise(pingCmd, { timeout: 3000 });
+        results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
+      } else {
+        results.push('✗ Gateway not detected\n');
+      }
+    } catch (error) {
+      results.push(`✗ Gateway ping failed: ${error.message}\n`);
+    }
+  }
+
+  async _addDnsTests(results) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+    const dns = require('dns').promises;
+
+    results.push('Test 2: DNS Server Detection & Testing');
+    try {
+      const dnsServers = await this.detectDnsServers();
+      results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
+
+      let dnsWorking = false;
+      for (const dnsServer of dnsServers) {
+        try {
+          const pingCmd =
+            process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
+          await execPromise(pingCmd, { timeout: 3000 });
+          results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
+          dnsWorking = true;
+        } catch (error) {
+          results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
+        }
+      }
+
+      if (dnsWorking) {
+        results.push('  ✓ At least one DNS server is accessible\n');
+      } else {
+        results.push('  ✗ No DNS servers are reachable\n');
+      }
+    } catch (error) {
+      results.push(`✗ DNS detection failed: ${error.message}\n`);
+    }
+
+    results.push('Test 3: DNS Resolution Test');
+    try {
+      const addresses = await dns.resolve4('google.com');
+      results.push(`✓ DNS resolution working (google.com → ${addresses[0]})\n`);
+    } catch (error) {
+      results.push(`✗ DNS resolution failed: ${error.message}\n`);
+    }
+  }
+
+  async _addInternetTests(results) {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    results.push('Test 4: Internet Connectivity (8.8.8.8)');
+    try {
+      const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
+      await execPromise(pingCmd, { timeout: 5000 });
+      results.push('✓ Internet reachable (Google DNS)\n');
+    } catch (error) {
+      results.push(`✗ Internet ping failed: ${error.message}\n`);
+    }
+
+    results.push('Test 5: External API Access');
+    try {
+      const { stdout } = await execPromise(
+        'curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org',
+        { timeout: 5000 }
+      );
+      if (stdout.trim() === '200') {
+        results.push('✓ External API accessible (api.ipify.org)\n');
+      } else {
+        results.push(`⚠ API returned HTTP ${stdout.trim()}\n`);
+      }
+    } catch (error) {
+      results.push(`✗ External API test failed: ${error.message}\n`);
+    }
+  }
+
+  async _addConfigurationTests(results) {
+    results.push('Test 6: IP Configuration');
+    try {
+      const ipAssignment = await this.detectDhcpOrStatic();
+      results.push(`✓ IP Assignment Type: ${ipAssignment}\n`);
+    } catch (error) {
+      results.push(`✗ Could not detect IP assignment: ${error.message}\n`);
+    }
+
+    results.push('Test 7: Network Interfaces');
+    const interfaces = os.networkInterfaces();
+    const activeInterfaces = Object.entries(interfaces)
+      .filter(([_name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
+      .map(([name]) => name);
+
+    if (activeInterfaces.length > 0) {
+      results.push(`✓ Active interfaces: ${activeInterfaces.join(', ')}\n`);
+    } else {
+      results.push('✗ No active network interfaces found\n');
     }
   }
 
@@ -2656,62 +2679,64 @@ class WebDashboardService {
    */
   async getMetrics() {
     try {
-      const [cacheStats, databaseStats, reminderStats, systemInfo, resourceData, analyticsData] = 
-        await Promise.all([
-          this._safeCollectMetric(
-            () => this.getCacheStats(),
-            'Cache stats',
-            { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, 
-              memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' }
-          ),
-          this._safeCollectMetric(
-            () => this.getDatabaseStats(),
-            'Database stats',
-            { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, 
-              completedReminders: 0, cancelledReminders: 0 } }
-          ),
-          this._safeCollectMetric(
-            () => this.getReminderStats(),
-            'Reminder stats',
-            { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 }
-          ),
-          this._safeCollectMetric(
-            () => this.getSystemInfo(),
-            'System info',
-            { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, 
-              uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, 
-              cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } }
-          ),
-          this._safeCollectMetric(
-            () => this.getResourceData(),
-            'Resource data',
-            { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, 
-              performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, 
-              optimizationTier: 'unknown' }
-          ),
-          this._safeCollectMetric(
-            () => this.getAnalyticsData(),
-            'Analytics data',
-            { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, 
-              avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] }
-          ),
-        ]);
-
+      const stats = await this._collectAllMetrics();
       logger.debug('Metrics collected successfully');
       return {
         timestamp: new Date().toISOString(),
         uptime: this.getUptime(),
-        cache: cacheStats,
-        database: databaseStats,
-        reminders: reminderStats,
-        system: systemInfo,
-        resources: resourceData,
-        analytics: analyticsData,
+        cache: stats[0],
+        database: stats[1],
+        reminders: stats[2],
+        system: stats[3],
+        resources: stats[4],
+        analytics: stats[5],
       };
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'aggregating metrics');
       logger.error(`Metrics aggregation error: ${errorResponse.message}`);
     }
+  }
+
+  async _collectAllMetrics() {
+    return Promise.all([
+      this._safeCollectMetric(
+        () => this.getCacheStats(),
+        'Cache stats',
+        { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, 
+          memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' }
+      ),
+      this._safeCollectMetric(
+        () => this.getDatabaseStats(),
+        'Database stats',
+        { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, 
+          completedReminders: 0, cancelledReminders: 0 } }
+      ),
+      this._safeCollectMetric(
+        () => this.getReminderStats(),
+        'Reminder stats',
+        { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 }
+      ),
+      this._safeCollectMetric(
+        () => this.getSystemInfo(),
+        'System info',
+        { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, 
+          uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, 
+          cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } }
+      ),
+      this._safeCollectMetric(
+        () => this.getResourceData(),
+        'Resource data',
+        { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, 
+          performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, 
+          optimizationTier: 'unknown' }
+      ),
+      this._safeCollectMetric(
+        () => this.getAnalyticsData(),
+        'Analytics data',
+        { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, 
+          avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] }
+      ),
+    ]);
   }
 
   /**
