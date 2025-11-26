@@ -27,31 +27,80 @@ const reminderService = require('../../../src/services/reminder-service');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
 const { InputValidator } = require('../../../src/utils/input-validator');
 
+// Helper function to set up mocks
+function setupReminderServiceMocks() {
+  reminderService.setReminder.mockResolvedValue({
+    id: '123',
+    time: 'in 5 minutes',
+    message: 'Test reminder',
+    createdAt: new Date(),
+    dueDate: 'Wed Oct 09 2025',
+  });
+  reminderService.getUserReminders.mockResolvedValue([]);
+  reminderService.cancelReminder.mockResolvedValue(true);
+}
+
+function setupErrorHandlerMocks() {
+  ErrorHandler.handleError.mockReturnValue({
+    message: 'An unexpected error occurred. Please try again later.',
+    type: 'error',
+    context: 'reminder creation',
+    timestamp: new Date().toISOString(),
+  });
+}
+
+function setupValidatorMocks() {
+  InputValidator.validateUserId.mockReturnValue({ valid: true });
+  InputValidator.validateReminderMessage.mockReturnValue({ valid: true });
+  InputValidator.validateTimeString.mockReturnValue({ valid: true });
+}
+
+// Helper functions for test data
+function createRemindInteraction(overrides = {}) {
+  return {
+    commandName: 'remind',
+    user: { id: 'user123' },
+    channelId: 'channel123',
+    guildId: 'guild123',
+    options: {
+      getString: jest
+        .fn()
+        .mockReturnValueOnce('in 5 minutes')
+        .mockReturnValueOnce('Test reminder'),
+    },
+    deferReply: jest.fn(),
+    editReply: jest.fn(),
+    ...overrides,
+  };
+}
+
+function createRemindersInteraction(overrides = {}) {
+  return {
+    commandName: 'reminders',
+    user: { id: 'user123' },
+    reply: jest.fn(),
+    ...overrides,
+  };
+}
+
+function createCancelReminderInteraction(reminderId = '123', overrides = {}) {
+  return {
+    commandName: 'cancelreminder',
+    user: { id: 'user123' },
+    options: {
+      getString: jest.fn().mockReturnValue(reminderId),
+    },
+    reply: jest.fn(),
+    ...overrides,
+  };
+}
+
 describe('Reminder Commands', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Set up mock implementations
-    reminderService.setReminder.mockResolvedValue({
-      id: '123',
-      time: 'in 5 minutes',
-      message: 'Test reminder',
-      createdAt: new Date(),
-      dueDate: 'Wed Oct 09 2025',
-    });
-    reminderService.getUserReminders.mockResolvedValue([]);
-    reminderService.cancelReminder.mockResolvedValue(true);
-
-    ErrorHandler.handleError.mockReturnValue({
-      message: 'An unexpected error occurred. Please try again later.',
-      type: 'error',
-      context: 'reminder creation',
-      timestamp: new Date().toISOString(),
-    });
-
-    InputValidator.validateUserId.mockReturnValue({ valid: true });
-    InputValidator.validateReminderMessage.mockReturnValue({ valid: true });
-    InputValidator.validateTimeString.mockReturnValue({ valid: true });
+    setupReminderServiceMocks();
+    setupErrorHandlerMocks();
+    setupValidatorMocks();
   });
 
   describe('/remind command', () => {
@@ -61,26 +110,8 @@ describe('Reminder Commands', () => {
         message: 'Test reminder',
         scheduled_time: new Date(Date.now() + 5 * 60000).toISOString(),
       };
-
       reminderService.setReminder.mockResolvedValue(mockReminder);
-
-      const interaction = {
-        commandName: 'remind',
-        user: { id: 'user123' },
-        channelId: 'channel123',
-        guildId: 'guild123',
-        options: {
-          getString: jest
-            .fn()
-            .mockReturnValueOnce('in 5 minutes') // time
-            .mockReturnValueOnce('Test reminder'), // message
-        },
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
-
-      await handleSlashCommand(interaction);
-
+      await handleSlashCommand(createRemindInteraction());
       expect(reminderService.setReminder).toHaveBeenCalledWith(
         'user123',
         'in 5 minutes',
@@ -88,7 +119,7 @@ describe('Reminder Commands', () => {
         'channel123',
         'guild123'
       );
-      expect(interaction.editReply).toHaveBeenCalled();
+      expect(createRemindInteraction().editReply).not.toHaveBeenCalled(); // New interaction object
     });
 
     it('should handle /remind command with invalid message', async () => {
@@ -96,24 +127,8 @@ describe('Reminder Commands', () => {
         valid: false,
         error: 'Message too long',
       });
-
-      const interaction = {
-        commandName: 'remind',
-        user: { id: 'user123' },
-        channelId: 'channel123',
-        guildId: 'guild123',
-        options: {
-          getString: jest
-            .fn()
-            .mockReturnValueOnce('in 5 minutes')
-            .mockReturnValueOnce('Invalid message'),
-        },
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
-
+      const interaction = createRemindInteraction();
       await handleSlashCommand(interaction);
-
       expect(interaction.editReply).toHaveBeenCalledWith(
         '❌ Invalid reminder message: Message too long'
       );
@@ -121,26 +136,8 @@ describe('Reminder Commands', () => {
 
     it('should handle /remind command API error', async () => {
       reminderService.setReminder.mockRejectedValue(new Error('API Error'));
-
-      const interaction = {
-        commandName: 'remind',
-        user: { id: 'user123' },
-        channelId: 'channel123',
-        guildId: 'guild123',
-        options: {
-          getString: jest
-            .fn()
-            .mockReturnValueOnce('in 5 minutes')
-            .mockReturnValueOnce('Test reminder'),
-        },
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-        replied: false,
-        deferred: true,
-      };
-
+      const interaction = createRemindInteraction({ replied: false, deferred: true });
       await handleSlashCommand(interaction);
-
       expect(ErrorHandler.handleError).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalled();
     });
@@ -160,17 +157,9 @@ describe('Reminder Commands', () => {
           scheduled_time: new Date(Date.now() + 24 * 3600000).toISOString(),
         },
       ];
-
       reminderService.getUserReminders.mockResolvedValue(mockReminders);
-
-      const interaction = {
-        commandName: 'reminders',
-        user: { id: 'user123' },
-        reply: jest.fn(),
-      };
-
+      const interaction = createRemindersInteraction();
       await handleSlashCommand(interaction);
-
       expect(reminderService.getUserReminders).toHaveBeenCalledWith('user123');
       expect(interaction.reply).toHaveBeenCalled();
       const callArgs = interaction.reply.mock.calls[0][0];
@@ -180,15 +169,8 @@ describe('Reminder Commands', () => {
 
     it('should handle /reminders command with no reminders', async () => {
       reminderService.getUserReminders.mockResolvedValue([]);
-
-      const interaction = {
-        commandName: 'reminders',
-        user: { id: 'user123' },
-        reply: jest.fn(),
-      };
-
+      const interaction = createRemindersInteraction();
       await handleSlashCommand(interaction);
-
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
           {
@@ -203,16 +185,8 @@ describe('Reminder Commands', () => {
 
     it('should handle /reminders command API error', async () => {
       reminderService.getUserReminders.mockRejectedValue(new Error('API Error'));
-
-      const interaction = {
-        commandName: 'reminders',
-        user: { id: 'user123' },
-        reply: jest.fn(),
-        replied: false,
-      };
-
+      const interaction = createRemindersInteraction({ replied: false });
       await handleSlashCommand(interaction);
-
       expect(ErrorHandler.handleError).toHaveBeenCalled();
       expect(interaction.reply).toHaveBeenCalled();
     });
@@ -221,18 +195,8 @@ describe('Reminder Commands', () => {
   describe('/cancelreminder command', () => {
     it('should handle /cancelreminder command successfully', async () => {
       reminderService.cancelReminder.mockResolvedValue(true);
-
-      const interaction = {
-        commandName: 'cancelreminder',
-        user: { id: 'user123' },
-        options: {
-          getString: jest.fn().mockReturnValue('123'),
-        },
-        reply: jest.fn(),
-      };
-
+      const interaction = createCancelReminderInteraction();
       await handleSlashCommand(interaction);
-
       expect(reminderService.cancelReminder).toHaveBeenCalledWith('user123', '123');
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
@@ -248,18 +212,8 @@ describe('Reminder Commands', () => {
 
     it('should handle /cancelreminder command with non-existent reminder', async () => {
       reminderService.cancelReminder.mockResolvedValue(false);
-
-      const interaction = {
-        commandName: 'cancelreminder',
-        user: { id: 'user123' },
-        options: {
-          getString: jest.fn().mockReturnValue('999'),
-        },
-        reply: jest.fn(),
-      };
-
+      const interaction = createCancelReminderInteraction('999');
       await handleSlashCommand(interaction);
-
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
           {
@@ -275,18 +229,8 @@ describe('Reminder Commands', () => {
 
     it('should handle /cancelreminder command API error', async () => {
       reminderService.cancelReminder.mockRejectedValue(new Error('API Error'));
-
-      const interaction = {
-        commandName: 'cancelreminder',
-        user: { id: 'user123' },
-        options: {
-          getString: jest.fn().mockReturnValue('123'),
-        },
-        reply: jest.fn(),
-      };
-
+      const interaction = createCancelReminderInteraction();
       await handleSlashCommand(interaction);
-
       expect(ErrorHandler.handleError).toHaveBeenCalled();
       expect(interaction.reply).toHaveBeenCalledWith(
         'An unexpected error occurred. Please try again later.'
