@@ -29,8 +29,8 @@ logged for audit trails.
 #### Environment Variables (.env)
 
 ```
-Discord Bot Token: DISCORD_BOT_TOKEN=xxx
-Perplexity API Key: PERPLEXITY_API_KEY=xxx
+Discord Bot Token: DISCORD_BOT_TOKEN=your_discord_bot_token_here
+Perplexity API Key: PERPLEXITY_API_KEY=your_perplexity_api_key_here
 Database Path: DB_PATH=./data/bot.db
 License Key: ASZUNE_LICENSE_KEY=xxx
 Port: PORT=3000
@@ -133,8 +133,8 @@ To restore previous configuration:
 #### Example: Updating API Key
 
 ```
-Current: PERPLEXITY_API_KEY=old_key_xxx
-New: PERPLEXITY_API_KEY=new_key_yyy
+Current: PERPLEXITY_API_KEY=old_key_example
+New: PERPLEXITY_API_KEY=new_key_example
 
 1. Find PERPLEXITY_API_KEY field
 2. Clear current value
