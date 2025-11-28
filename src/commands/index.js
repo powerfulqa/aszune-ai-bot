@@ -39,6 +39,127 @@ function ensureUserMetadata(interaction) {
   }
 }
 
+function buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount) {
+  return {
+    color: 0x5865f2,
+    title: '📊 Discord Analytics Dashboard',
+    fields: [
+      {
+        name: '🏢 Server Overview',
+        value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
+        inline: true,
+      },
+      {
+        name: '📈 Performance',
+        value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
+        inline: true,
+      },
+      {
+        name: '🎯 Top Commands',
+        value:
+          analyticsData?.commandStats
+            ?.slice(0, 3)
+            .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
+            .join('\n') || 'No data yet',
+        inline: true,
+      },
+      {
+        name: '💡 Server Insights',
+        value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
+        inline: false,
+      },
+    ],
+    footer: { text: 'Aszai Bot Analytics' },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+function buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers) {
+  return {
+    color:
+      dashboardData.overview.status === 'healthy'
+        ? 0x00ff00
+        : dashboardData.overview.status === 'warning'
+          ? 0xffa500
+          : 0xff0000,
+    title: '🖥️ Performance Dashboard',
+    fields: [
+      {
+        name: '🚦 System Status',
+        value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
+        inline: true,
+      },
+      {
+        name: '⚡ Performance',
+        value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
+        inline: true,
+      },
+      {
+        name: '📊 Activity',
+        value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
+        inline: true,
+      },
+      {
+        name: '🚨 Active Alerts',
+        value:
+          dashboardData.alerts && dashboardData.alerts.length > 0
+            ? dashboardData.alerts
+              .slice(0, 3)
+              .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
+              .join('\n')
+            : '✅ No active alerts',
+        inline: false,
+      },
+    ],
+    footer: { text: 'Aszai Bot Dashboard • Real-time data' },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+function buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations) {
+  return {
+    color:
+      resourceStatus.memory.status === 'good'
+        ? 0x00ff00
+        : resourceStatus.memory.status === 'warning'
+          ? 0xffa500
+          : 0xff0000,
+    title: '🔧 Resource Optimization',
+    description: '📊 Node.js process memory (heap) - see /cache for cached responses',
+    fields: [
+      {
+        name: '🖥️ System Info',
+        value: `Host: \`${hostname}\`\nPID: \`${process.pid}\`\nUser: \`${os.userInfo().username}\``,
+        inline: false,
+      },
+      {
+        name: '💾 Memory Status',
+        value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
+        inline: true,
+      },
+      {
+        name: '⚙️ Performance',
+        value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
+        inline: true,
+      },
+      {
+        name: '📈 Optimization Tier',
+        value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}\nRecommended: Auto-scaling active`,
+        inline: true,
+      },
+      {
+        name: '💡 Recommendations',
+        value: recommendations.slice(0, 3).join('\n') || '✅ System performance is good - continue monitoring',
+        inline: false,
+      },
+    ],
+    footer: {
+      text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
 // Command definitions
 const commands = {
   help: {
@@ -254,130 +375,6 @@ const commands = {
     textCommand: '!stats',
   },
 
-  // Helper: Build analytics embed
-  _buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount) {
-    return {
-      color: 0x5865f2,
-      title: '📊 Discord Analytics Dashboard',
-      fields: [
-        {
-          name: '🏢 Server Overview',
-          value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
-          inline: true,
-        },
-        {
-          name: '📈 Performance',
-          value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
-          inline: true,
-        },
-        {
-          name: '🎯 Top Commands',
-          value:
-            analyticsData?.commandStats
-              ?.slice(0, 3)
-              .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
-              .join('\n') || 'No data yet',
-          inline: true,
-        },
-        {
-          name: '💡 Server Insights',
-          value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
-          inline: false,
-        },
-      ],
-      footer: { text: 'Aszai Bot Analytics' },
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  // Helper: Build dashboard embed
-  _buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers) {
-    return {
-      color:
-        dashboardData.overview.status === 'healthy'
-          ? 0x00ff00
-          : dashboardData.overview.status === 'warning'
-            ? 0xffa500
-            : 0xff0000,
-      title: '🖥️ Performance Dashboard',
-      fields: [
-        {
-          name: '🚦 System Status',
-          value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
-          inline: true,
-        },
-        {
-          name: '⚡ Performance',
-          value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
-          inline: true,
-        },
-        {
-          name: '📊 Activity',
-          value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
-          inline: true,
-        },
-        {
-          name: '🚨 Active Alerts',
-          value:
-            dashboardData.alerts && dashboardData.alerts.length > 0
-              ? dashboardData.alerts
-                .slice(0, 3)
-                .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
-                .join('\n')
-              : '✅ No active alerts',
-          inline: false,
-        },
-      ],
-      footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  // Helper: Build resources embed
-  _buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations) {
-    return {
-      color:
-        resourceStatus.memory.status === 'good'
-          ? 0x00ff00
-          : resourceStatus.memory.status === 'warning'
-            ? 0xffa500
-            : 0xff0000,
-      title: '🔧 Resource Optimization',
-      description: '📊 Node.js process memory (heap) - see /cache for cached responses',
-      fields: [
-        {
-          name: '🖥️ System Info',
-          value: `Host: \`${hostname}\`\nPID: \`${process.pid}\`\nUser: \`${os.userInfo().username}\``,
-          inline: false,
-        },
-        {
-          name: '💾 Memory Status',
-          value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
-          inline: true,
-        },
-        {
-          name: '⚙️ Performance',
-          value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
-          inline: true,
-        },
-        {
-          name: '📈 Optimization Tier',
-          value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}\nRecommended: Auto-scaling active`,
-          inline: true,
-        },
-        {
-          name: '💡 Recommendations',
-          value: recommendations.slice(0, 3).join('\n') || '✅ System performance is good - continue monitoring',
-          inline: false,
-        },
-      ],
-      footer: {
-        text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
-      },
-      timestamp: new Date().toISOString(),
-    };
-  },
-
   analytics: {
     data: {
       name: 'analytics',
@@ -410,7 +407,7 @@ const commands = {
           mostActiveUser: null,
           popularCommands: [],
         };
-        const embed = this._buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount);
+        const embed = buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching analytics:', error);
@@ -433,7 +430,7 @@ const commands = {
         const { _onlineCount, _botCount, _totalMembers, humanMembers } = await getGuildMemberStats(guild);
         const dashboardData = await PerformanceDashboard.generateDashboardReport();
         const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
-        const embed = this._buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers);
+        const embed = buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching dashboard:', error);
@@ -460,7 +457,7 @@ const commands = {
         );
         const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
         const hostname = os.hostname();
-        const embed = this._buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations);
+        const embed = buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching resource data:', error);
@@ -884,7 +881,9 @@ async function handleSlashCommand(interaction) {
  * @returns {Array} - Array of command data
  */
 function getSlashCommandsData() {
-  return Object.values(commands).map((command) => command.data);
+  return Object.values(commands)
+    .filter((command) => command && command.data && typeof command.data.name === 'string')
+    .map((command) => command.data);
 }
 
 module.exports = {
