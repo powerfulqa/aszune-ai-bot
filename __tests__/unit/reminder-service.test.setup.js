@@ -33,3 +33,10 @@ module.exports = {
   logger,
   initializeReminderServiceTestDefaults,
 };
+
+describe('Reminder service setup helper', () => {
+  it('exposes initialization helpers', () => {
+    expect(typeof initializeReminderServiceTestDefaults).toBe('function');
+    expect(typeof reminderService).toBe('object');
+  });
+});

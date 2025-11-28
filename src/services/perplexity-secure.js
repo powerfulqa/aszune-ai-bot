@@ -89,7 +89,8 @@ class PerplexityService {
   getCacheStats() {
     try {
       if (!this.cacheManager) {
-        return getEmptyCacheStats();
+        logger.warn('Cache statistics requested before cache manager initialized');
+        return { ...getEmptyCacheStats(), error: 'Cache unavailable' };
       }
       return this.cacheManager.getStats();
     } catch (error) {

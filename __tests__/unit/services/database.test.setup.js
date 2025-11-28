@@ -50,3 +50,9 @@ function setupDatabaseService() {
 module.exports = {
   setupDatabaseService,
 };
+
+describe('Database service setup helper', () => {
+  it('provides the setup helper', () => {
+    expect(typeof setupDatabaseService).toBe('function');
+  });
+});

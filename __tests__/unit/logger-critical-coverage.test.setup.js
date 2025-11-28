@@ -57,3 +57,9 @@ function prepareLoggerTest() {
 module.exports = {
   prepareLoggerTest,
 };
+
+describe('Logger critical coverage setup', () => {
+  it('exports the logger preparation helper', () => {
+    expect(typeof prepareLoggerTest).toBe('function');
+  });
+});

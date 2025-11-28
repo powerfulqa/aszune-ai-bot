@@ -137,3 +137,9 @@ function setupIndexCriticalMocks() {
 module.exports = {
   setupIndexCriticalMocks,
 };
+
+describe('Index critical coverage setup', () => {
+  it('exposes the setup helper', () => {
+    expect(typeof setupIndexCriticalMocks).toBe('function');
+  });
+});

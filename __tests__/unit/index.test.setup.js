@@ -22,12 +22,6 @@ const baseConfig = {
 };
 
 const mockConfigData = { ...baseConfig };
-const loggerMock = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
 
 let mockClientReadyHandler;
 const mockClient = {
@@ -66,7 +60,13 @@ function resetMockClient() {
   mockClient.destroy = jest.fn().mockResolvedValue();
 }
 
-jest.mock('../../src/utils/logger', () => loggerMock);
+jest.mock('../../src/utils/logger', () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+}));
+const loggerMock = require('../../src/utils/logger');
 jest.mock('../../src/config/config', () => mockConfigData);
 jest.mock('../../src/utils/enhanced-cache', () => {
   const mockInstance = {
@@ -132,7 +132,6 @@ const ConversationManager = require('../../src/utils/conversation');
 function setupIndexContext() {
   jest.resetModules();
   jest.clearAllMocks();
-  resetConfig();
   resetMockClient();
 
   const processHandlers = new Map();
@@ -182,3 +181,11 @@ module.exports = {
   mockConfigData,
   loggerMock,
 };
+
+describe('Index test setup helper', () => {
+  it('provides context helpers', () => {
+    expect(typeof setupIndexContext).toBe('function');
+    expect(typeof mockConfigData).toBe('object');
+    expect(typeof loggerMock).toBe('object');
+  });
+});

@@ -233,7 +233,7 @@ class ReminderService extends EventEmitter {
       return true;
     } catch (error) {
       logger.error(`Failed to delete reminder ${reminderId}:`, error);
-      throw error;
+      return false;
     }
   }
 

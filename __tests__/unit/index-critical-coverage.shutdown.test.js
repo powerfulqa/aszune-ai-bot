@@ -17,17 +17,13 @@ describe('Shutdown Error Scenarios', () => {
   it('should handle conversation manager shutdown errors', async () => {
     context.mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conversation manager error'));
 
-    await expect(async () => {
-      await context.index.shutdown('SIGINT');
-    }).resolves.not.toThrow();
+    await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 
   it('should handle Discord client shutdown errors', async () => {
     context.mockClient.destroy.mockRejectedValueOnce(new Error('Client shutdown error'));
 
-    await expect(async () => {
-      await context.index.shutdown('SIGINT');
-    }).resolves.not.toThrow();
+    await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 
   it('should not duplicate shutdown when already in progress', async () => {
@@ -41,8 +37,6 @@ describe('Shutdown Error Scenarios', () => {
     context.mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conv error'));
     context.mockClient.destroy.mockRejectedValueOnce(new Error('Client error'));
 
-    await expect(async () => {
-      await context.index.shutdown('SIGINT');
-    }).resolves.not.toThrow();
+    await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 });

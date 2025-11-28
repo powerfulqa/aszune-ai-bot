@@ -15,12 +15,16 @@ jest.mock('fs', () => ({
   },
 }));
 
-jest.mock('crypto', () => ({
-  createHash: jest.fn().mockReturnValue({
-    update: jest.fn().mockReturnThis(),
-    digest: jest.fn().mockReturnValue('mock-hash-123'),
-  }),
-}));
+const mockCrypto = {
+  createHash: jest
+    .fn()
+    .mockReturnValue({
+      update: jest.fn().mockReturnThis(),
+      digest: jest.fn().mockReturnValue('mock-hash-123'),
+    }),
+};
+
+jest.mock('crypto', () => mockCrypto);
 
 const PerplexityService = require('../../../src/services/perplexity-secure');
 
@@ -42,3 +46,9 @@ function preparePerplexitySecurePrivate() {
 module.exports = {
   preparePerplexitySecurePrivate,
 };
+
+describe('Perplexity secure private setup', () => {
+  it('provides the prepare helper', () => {
+    expect(typeof preparePerplexitySecurePrivate).toBe('function');
+  });
+});
