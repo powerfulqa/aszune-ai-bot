@@ -216,15 +216,28 @@ class TimeParser {
    */
   /**
    * Format time difference into a relative time string
+   * Uses lookup table pattern to reduce cognitive complexity
    * @private
    */
   _formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays) {
-    if (diffSeconds < 60) return diffSeconds <= 1 ? 'in 1 second' : `in ${diffSeconds} seconds`;
-    if (diffMinutes < 60) return diffMinutes === 1 ? 'in 1 minute' : `in ${diffMinutes} minutes`;
-    if (diffHours < 24) return diffHours === 1 ? 'in 1 hour' : `in ${diffHours} hours`;
-    if (diffDays < 7) return diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
-    if (diffDays < 30) return this._formatWeeks(diffDays);
-    if (diffDays < 365) return this._formatMonths(diffDays);
+    // Time unit definitions with thresholds and formatters
+    const timeUnits = [
+      { max: 60, value: diffSeconds, format: (v) => v <= 1 ? 'in 1 second' : `in ${v} seconds` },
+      { max: 60, value: diffMinutes, format: (v) => v === 1 ? 'in 1 minute' : `in ${v} minutes` },
+      { max: 24, value: diffHours, format: (v) => v === 1 ? 'in 1 hour' : `in ${v} hours` },
+      { max: 7, value: diffDays, format: (v) => v === 1 ? 'tomorrow' : `in ${v} days` },
+      { max: 30, value: diffDays, format: (v) => this._formatWeeks(v) },
+      { max: 365, value: diffDays, format: (v) => this._formatMonths(v) },
+    ];
+
+    // Check time units in order (seconds -> minutes -> hours -> days -> weeks -> months)
+    if (diffSeconds < 60) return timeUnits[0].format(diffSeconds);
+    if (diffMinutes < 60) return timeUnits[1].format(diffMinutes);
+    if (diffHours < 24) return timeUnits[2].format(diffHours);
+    if (diffDays < 7) return timeUnits[3].format(diffDays);
+    if (diffDays < 30) return timeUnits[4].format(diffDays);
+    if (diffDays < 365) return timeUnits[5].format(diffDays);
+
     return this._formatYears(diffDays);
   }
 

@@ -4,6 +4,15 @@
  */
 const config = require('../config/config');
 const { ErrorHandler } = require('./error-handler');
+const {
+  checkRequired,
+  checkStringType,
+  checkArrayType,
+  checkMaxLength,
+  checkNotEmpty,
+  invalidResult,
+  validResult,
+} = require('./validation-helpers');
 
 /**
  * Validation rules and patterns
@@ -91,10 +100,7 @@ class InputValidator {
    * @returns {Object|null} - Error object if invalid, null if valid
    */
   static _validateRequired(value, fieldName) {
-    if (!value) {
-      return { valid: false, error: `${fieldName} is required` };
-    }
-    return null;
+    return checkRequired(value, fieldName);
   }
 
   /**
@@ -104,10 +110,7 @@ class InputValidator {
    * @returns {Object|null} - Error object if invalid, null if valid
    */
   static _validateStringType(value, fieldName) {
-    if (typeof value !== 'string') {
-      return { valid: false, error: `${fieldName} must be a string` };
-    }
-    return null;
+    return checkStringType(value, fieldName);
   }
 
   /**
@@ -117,10 +120,7 @@ class InputValidator {
    * @returns {Object|null} - Error object if invalid, null if valid
    */
   static _validateArrayType(value, fieldName) {
-    if (!Array.isArray(value)) {
-      return { valid: false, error: `${fieldName} must be an array` };
-    }
-    return null;
+    return checkArrayType(value, fieldName);
   }
 
   /**
@@ -131,13 +131,7 @@ class InputValidator {
    * @returns {Object|null} - Error object if invalid, null if valid
    */
   static _validateStringLength(value, maxLength, fieldName) {
-    if (value.length > maxLength) {
-      return {
-        valid: false,
-        error: `${fieldName} too long. Maximum length is ${maxLength} characters`,
-      };
-    }
-    return null;
+    return checkMaxLength(value, maxLength, fieldName);
   }
 
   /**
@@ -147,10 +141,7 @@ class InputValidator {
    * @returns {Object|null} - Error object if invalid, null if valid
    */
   static _validateNotEmpty(value, fieldName) {
-    if (value.length === 0) {
-      return { valid: false, error: `${fieldName} cannot be empty` };
-    }
-    return null;
+    return checkNotEmpty(value, fieldName);
   }
   /**
    * Validate a Discord user ID
