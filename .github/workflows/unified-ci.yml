@@ -1,7 +1,9 @@
 name: Aszune AI Bot CI/CD
 
-# Updated CI workflow to use working npm scripts instead of problematic qlty CLI commands
-# This ensures reliable quality checks while maintaining all functionality
+# Optimized CI workflow with parallel test sharding and conditional coverage
+# - Tests run in 3 parallel shards for faster execution
+# - Coverage only collected on main branch to speed up PRs
+# - Quality and security checks run in parallel with tests
 
 on:
   push:
@@ -13,15 +15,13 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  # Quality and security checks (fast, runs in parallel with tests)
+  quality:
+    name: Quality & Security
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,14 +30,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Clear Jest cache
-        run: npx jest --clearCache
+        run: npm ci
 
       - name: Run quality checks
         run: npm run quality:check
-        continue-on-error: false
 
       - name: Run security scans
         run: npm run security:dependencies
@@ -45,45 +41,97 @@ jobs:
 
       - name: Security audit
         run: npm audit --audit-level=high --production
-        # Fail on high severity issues in production dependencies
-        # This is a required check for production deployments
 
-      - name: Run tests with coverage
-        run: npm run test:ci
+  # Parallel test shards (3x faster than sequential)
+  test:
+    name: Test (Shard ${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clear Jest cache
+        run: npx jest --clearCache
+
+      - name: Run tests (with coverage on main only)
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Running tests with coverage (main branch)"
+            npm test -- --shard=${{ matrix.shard }}/3 --coverage --coverageReporters=json --coverageReporters=lcov
+          else
+            echo "Running tests without coverage (feature branch/PR)"
+            npm test -- --shard=${{ matrix.shard }}/3 --no-coverage
+          fi
         env:
-          JEST_JUNIT_OUTPUT_DIR: ./test-results/
-          JEST_JUNIT_OUTPUT_NAME: junit.xml
-        
-      - name: Run additional quality metrics
-        run: npm run quality:metrics
-        continue-on-error: true
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload coverage artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-shard-${{ matrix.shard }}
+          path: coverage/
+          retention-days: 1
+
+  # Merge coverage from all shards and upload (main branch only)
+  coverage:
+    name: Merge Coverage
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-shard-*
+          merge-multiple: true
+          path: coverage/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage/lcov.info
+          directory: coverage/
           fail_ci_if_error: false
-          
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        continue-on-error: true
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./test-results/junit.xml
 
-# When ready to deploy the bot, you can uncomment and customize this job
-#  deploy:
-#    name: Deploy
-#    needs: build-and-test
-#    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#    runs-on: ubuntu-latest
-#    
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-#
-#      - name: Deploy to production
-#        run: echo "Add your deployment steps here"
+  # Final status check (ensures all jobs pass)
+  ci-status:
+    name: CI Status
+    needs: [quality, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI status
+        run: |
+          if [[ "${{ needs.quality.result }}" == "failure" || "${{ needs.test.result }}" == "failure" ]]; then
+            echo "❌ CI failed"
+            exit 1
+          fi
+          echo "✅ CI passed"
