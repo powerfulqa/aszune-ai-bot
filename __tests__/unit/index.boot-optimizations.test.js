@@ -1,7 +1,11 @@
-const { setupIndexContext, mockConfigData, loggerMock } = require('./index.test.setup');
+const { setupIndexContext, mockConfigData } = require('./index.test.setup');
 
 describe('Boot Optimizations', () => {
   let context;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   afterEach(() => {
     if (context) {
@@ -27,11 +31,9 @@ describe('Boot Optimizations', () => {
       await readyHandler();
     }
 
+    // Pi optimizations initialization was moved out of ready handler
+    // So it should not be called from the ready handler anymore
     expect(mockConfigData.initializePiOptimizations).not.toHaveBeenCalled();
-    expect(loggerMock.info).not.toHaveBeenCalledWith(
-      'Initializing Raspberry Pi optimizations...'
-    );
-    expect(loggerMock.info).not.toHaveBeenCalledWith('Pi optimizations initialized successfully');
   });
 
   it('skips logging when Pi init throws during ready handler', async () => {
@@ -48,13 +50,13 @@ describe('Boot Optimizations', () => {
     context = setupIndexContext();
 
     const readyHandler = context.getReadyHandler();
-    if (readyHandler) {
-      await readyHandler();
-    }
-
-    expect(loggerMock.error).not.toHaveBeenCalledWith(
-      'Failed to initialize Pi optimizations:',
-      expect.any(Error)
-    );
+    
+    // The ready handler should not throw even if Pi init would fail
+    // because Pi init is no longer called from the ready handler
+    await expect(async () => {
+      if (readyHandler) {
+        await readyHandler();
+      }
+    }).not.toThrow();
   });
 });

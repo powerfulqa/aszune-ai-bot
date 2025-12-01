@@ -1,4 +1,4 @@
-const { ErrorHandler } = require('../../utils/error-handler');
+const { ErrorHandler } = require('../../../utils/error-handler');
 
 function registerServiceRoutes(app, service) {
   app.get('/api/services', handleGetServices(service));

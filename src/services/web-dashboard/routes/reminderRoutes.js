@@ -1,4 +1,4 @@
-const { ErrorHandler } = require('../../utils/error-handler');
+const { ErrorHandler } = require('../../../utils/error-handler');
 
 function registerReminderRoutes(app, service) {
   app.get('/api/reminders', handleGetReminders(service));
