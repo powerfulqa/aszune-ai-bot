@@ -116,8 +116,30 @@ jobs:
       - name: Merge coverage reports
         run: |
           echo "Merging coverage from all shards..."
-          npx nyc merge coverage-shards coverage/coverage-final.json
-          npx nyc report --reporter=json-summary --reporter=lcov --reporter=text --temp-dir=. --report-dir=coverage
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read all coverage-final.json files from shard directories
+            const shardDirs = fs.readdirSync('coverage-shards');
+            const mergedCoverage = {};
+            
+            shardDirs.forEach(shardDir => {
+              const coverageFile = path.join('coverage-shards', shardDir, 'coverage-final.json');
+              if (fs.existsSync(coverageFile)) {
+                const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
+                Object.assign(mergedCoverage, coverage);
+              }
+            });
+            
+            // Write merged coverage
+            fs.mkdirSync('coverage', { recursive: true });
+            fs.writeFileSync('coverage/coverage-final.json', JSON.stringify(mergedCoverage, null, 2));
+            console.log(\`Merged coverage from \${shardDirs.length} shards\`);
+          "
+          
+          # Generate coverage summary from merged data
+          npx nyc report --reporter=json-summary --reporter=lcov --reporter=text --temp-dir=coverage --report-dir=coverage
 
       - name: Validate merged coverage thresholds
         run: |
