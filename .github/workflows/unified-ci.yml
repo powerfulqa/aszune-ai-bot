@@ -107,12 +107,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download coverage artifacts
+      - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: coverage-shard-*
-          merge-multiple: true
-          path: coverage/
+          path: coverage-shards/
+
+      - name: Merge coverage reports
+        run: |
+          echo "Merging coverage from all shards..."
+          npx nyc merge coverage-shards coverage/coverage-final.json
+          npx nyc report --reporter=json-summary --reporter=lcov --reporter=text --temp-dir=. --report-dir=coverage
 
       - name: Validate merged coverage thresholds
         run: |
