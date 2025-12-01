@@ -25,6 +25,23 @@
   },
   "overrides": [
     {
+      "files": ["dashboard/public/**/*.js", "dashboard/public/**/*.html"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "globals": {
+        "io": "readonly",
+        "Chart": "readonly"
+      },
+      "rules": {
+        "no-console": "off",
+        "max-lines-per-function": "off",
+        "max-statements": "off",
+        "complexity": "off"
+      }
+    },
+    {
       "files": ["**/__tests__/**/*.js", "**/*.test.js"],
       "rules": {
         "max-lines-per-function": [

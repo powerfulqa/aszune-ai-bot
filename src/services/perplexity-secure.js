@@ -12,12 +12,12 @@ const path = require('path');
 const crypto = require('crypto');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
+const { ErrorHandler } = require('../utils/error-handler');
 const { ApiClient } = require('./api-client');
 const { CacheManager } = require('./cache-manager');
 const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
-const { getCacheStatsErrorResponse, getEmptyCacheStats } = require('../utils/cache-stats-helper');
+const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
 const { buildRequestPayload, getPiSettings } = require('./perplexity-secure/helpers/requestBuilder');
 const { handleApiResponse, extractResponseContent, handleErrorResponse } = require('./perplexity-secure/helpers/responseValidator');
 

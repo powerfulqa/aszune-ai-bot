@@ -42,7 +42,9 @@ class Logger {
    * @returns {string} - Formatted log message
    */
   _logToConsole(method, ...args) {
+    // eslint-disable-next-line no-console
     if (console && typeof console[method] === 'function') {
+      // eslint-disable-next-line no-console
       console[method](...args);
     }
   }
