@@ -51,18 +51,14 @@ module.exports = {
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
   // Configure coverage thresholds - 64% accounts for Jest's threshold calculation difference
-  // Disabled during CI shard mode to prevent false failures - enforced after coverage merge
-  coverageThreshold:
-    process.env.JEST_SHARD_MODE === 'true'
-      ? undefined
-      : {
-          global: {
-            branches: 64,
-            functions: 64,
-            lines: 64,
-            statements: 64,
-          },
-        },
+  coverageThreshold: {
+    global: {
+      branches: 64,
+      functions: 64,
+      lines: 64,
+      statements: 64,
+    },
+  },
   // Output verbose coverage info
   verbose: true,
 };
