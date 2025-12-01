@@ -70,7 +70,7 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Running tests with coverage (main branch)"
-            npm test -- --shard=${{ matrix.shard }}/3 --coverage --coverageReporters=json --coverageReporters=lcov
+            npm test -- --shard=${{ matrix.shard }}/3 --coverage --coverageReporters=json --coverageReporters=lcov --coverageReporters=json-summary
           else
             echo "Running tests without coverage (feature branch/PR)"
             npm test -- --shard=${{ matrix.shard }}/3 --no-coverage
@@ -78,6 +78,7 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
+          JEST_SHARD_MODE: true
 
       - name: Upload coverage artifact
         if: github.ref == 'refs/heads/main'
@@ -112,6 +113,37 @@ jobs:
           pattern: coverage-shard-*
           merge-multiple: true
           path: coverage/
+
+      - name: Validate merged coverage thresholds
+        run: |
+          echo "Validating coverage thresholds after merging all shards..."
+          node -e "
+            const fs = require('fs');
+            const coverageSummary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const { statements, branches, functions, lines } = coverageSummary.total;
+            
+            console.log('Coverage Summary:');
+            console.log(\`  Statements: \${statements.pct}%\`);
+            console.log(\`  Branches:   \${branches.pct}%\`);
+            console.log(\`  Functions:  \${functions.pct}%\`);
+            console.log(\`  Lines:      \${lines.pct}%\`);
+            
+            const threshold = 64;
+            const failures = [];
+            
+            if (statements.pct < threshold) failures.push(\`Statements: \${statements.pct}% < \${threshold}%\`);
+            if (branches.pct < threshold) failures.push(\`Branches: \${branches.pct}% < \${threshold}%\`);
+            if (functions.pct < threshold) failures.push(\`Functions: \${functions.pct}% < \${threshold}%\`);
+            if (lines.pct < threshold) failures.push(\`Lines: \${lines.pct}% < \${threshold}%\`);
+            
+            if (failures.length > 0) {
+              console.error('\\n❌ Coverage thresholds not met:');
+              failures.forEach(f => console.error(\`  - \${f}\`));
+              process.exit(1);
+            }
+            
+            console.log('\\n✅ All coverage thresholds met!');
+          "
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
