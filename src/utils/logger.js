@@ -31,7 +31,7 @@ class Logger {
     try {
       await fs.mkdir(this.logDir, { recursive: true });
     } catch (error) {
-      console.error('Failed to create log directory:', error);
+      this._logToConsole('error', 'Failed to create log directory:', error);
     }
   }
 
@@ -41,27 +41,22 @@ class Logger {
    * @param {string} message - Message to log
    * @returns {string} - Formatted log message
    */
+  _logToConsole(method, ...args) {
+    if (console && typeof console[method] === 'function') {
+      console[method](...args);
+    }
+  }
+
+  _logDataArgs(method, dataArgs) {
+    for (const data of dataArgs) {
+      if (data === undefined || data === null) continue;
+      this._logToConsole(method, data);
+    }
+  }
+
   _formatMessage(level, message) {
     const timestamp = new Date().toISOString();
     return `[${timestamp}] [${level}] ${message}`;
-  }
-
-  _getConsoleMethod(level) {
-    switch (level) {
-      case 'WARN':
-        return console.warn;
-      case 'ERROR':
-        return console.error;
-      default:
-        return console.log;
-    }
-  }
-
-  _logToConsole(level, value) {
-    const loggerMethod = this._getConsoleMethod(level);
-    if (typeof loggerMethod === 'function') {
-      loggerMethod(value);
-    }
   }
 
   /**
@@ -82,7 +77,7 @@ class Logger {
       // Append to log file
       await fs.appendFile(this.logFile, formattedMessage + '\n');
     } catch (error) {
-      console.error('Failed to write to log file:', error);
+      this._logToConsole('error', 'Failed to write to log file:', error);
     }
   }
 
@@ -115,7 +110,7 @@ class Logger {
         }
       }
     } catch (error) {
-      // Silent failure - do not output to console in library code
+      this._logToConsole('error', 'Failed to rotate log file:', error);
     }
   }
 
@@ -135,21 +130,20 @@ class Logger {
    */
   debug(message, ...dataArgs) {
     if (this._getLogLevel() <= this.levels.DEBUG) {
-      const formattedMessage = this._formatMessage('DEBUG', message);
+      const formattedMessage = this._formatMessage('DEBUG', message || '');
 
-      this._logToConsole('DEBUG', formattedMessage);
       this._writeToFile(formattedMessage);
+      this._logToConsole('log', formattedMessage);
+
       dataArgs.forEach((data) => {
-        if (data !== undefined) {
-          this._logToConsole('DEBUG', data);
-          try {
-            this._writeToFile(JSON.stringify(data));
-          } catch (error) {
-            // Handle circular references
-            this._writeToFile('[Circular Reference]');
-          }
+        if (data === undefined || data === null) return;
+        try {
+          this._writeToFile(JSON.stringify(data));
+        } catch (error) {
+          this._writeToFile('[Circular Reference]');
         }
       });
+      this._logDataArgs('log', dataArgs);
     }
   }
 
@@ -160,13 +154,13 @@ class Logger {
    */
   info(message, data) {
     if (this._getLogLevel() <= this.levels.INFO) {
-      const formattedMessage = this._formatMessage('INFO', message);
+      const formattedMessage = this._formatMessage('INFO', message || '');
 
-      this._logToConsole('INFO', formattedMessage);
       this._writeToFile(formattedMessage);
-      if (data) {
-        this._logToConsole('INFO', data);
+      this._logToConsole('log', formattedMessage);
+      if (data !== undefined && data !== null) {
         this._writeToFile(JSON.stringify(data));
+        this._logToConsole('log', data);
       }
     }
   }
@@ -178,13 +172,13 @@ class Logger {
    */
   warn(message, data) {
     if (this._getLogLevel() <= this.levels.WARN) {
-      const formattedMessage = this._formatMessage('WARN', message);
+      const formattedMessage = this._formatMessage('WARN', message || '');
 
-      this._logToConsole('WARN', formattedMessage);
       this._writeToFile(formattedMessage);
-      if (data) {
-        this._logToConsole('WARN', data);
+      this._logToConsole('warn', formattedMessage);
+      if (data !== undefined && data !== null) {
         this._writeToFile(JSON.stringify(data));
+        this._logToConsole('warn', data);
       }
     }
   }
@@ -196,44 +190,45 @@ class Logger {
    */
   error(message, error) {
     if (this._getLogLevel() <= this.levels.ERROR) {
-      const formattedMessage = this._formatMessage('ERROR', message);
+      const formattedMessage = this._formatMessage('ERROR', message || '');
 
       // Write to file
-      this._logToConsole('ERROR', formattedMessage);
       this._writeToFile(formattedMessage);
+      this._logToConsole('error', formattedMessage);
 
       if (error) {
         if (error.response) {
-          const responseDetails = {
+          const errorDetails = {
             type: 'API Error Response',
             status: error.response.status,
             data: error.response.data,
           };
 
-          console.error('API Error Response:', responseDetails);
-          this._writeToFile(JSON.stringify(responseDetails, null, 2));
+          this._writeToFile(JSON.stringify(errorDetails, null, 2));
+          this._logToConsole('error', 'API Error Response:', errorDetails);
         } else if (error.request) {
-          console.error('No response received from API:', error.request);
-          const requestDetails = {
+          const errorContext = {
             type: 'No API Response',
             request: error.request,
           };
-          this._writeToFile(JSON.stringify(requestDetails, null, 2));
-        } else if (typeof error === 'object' && !error.message && !error.stack) {
-          console.error(error);
-          this._writeToFile(JSON.stringify(error, null, 2));
-        } else {
-          console.error('Error:', error.message || String(error));
-          if (error.stack) {
-            console.error('Stack:', error.stack);
-          }
 
-          const errorDetails = {
+          this._writeToFile(JSON.stringify(errorContext, null, 2));
+          this._logToConsole('error', 'No response received from API:', error.request);
+        } else if (typeof error === 'object' && !error.message && !error.stack) {
+          this._writeToFile(JSON.stringify(error, null, 2));
+          this._logToConsole('error', error);
+        } else {
+          const generalError = {
             type: 'General Error',
             message: error.message || String(error),
             stack: error.stack,
           };
-          this._writeToFile(JSON.stringify(errorDetails, null, 2));
+
+          this._writeToFile(JSON.stringify(generalError, null, 2));
+          this._logToConsole('error', 'Error:', generalError.message);
+          if (error.stack) {
+            this._logToConsole('error', 'Stack:', error.stack);
+          }
         }
       }
     }

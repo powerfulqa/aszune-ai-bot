@@ -7,6 +7,9 @@ try {
 }
 const path = require('path');
 const logger = require('../utils/logger');
+const schema = require('./database/schema');
+const reminderOperations = require('./database/reminder-operations');
+const userOperations = require('./database/user-operations');
 
 class DatabaseService {
   constructor() {
@@ -131,237 +134,21 @@ class DatabaseService {
 
     const db = this.getDb();
     try {
-      this._initializeAllTables(db);
-      this._createIndexes(db);
-      this._ensureTriggers(db);
-      this._runMigrations(db);
+      schema.initializeTables(db);
+      schema.createIndexes(db);
+      schema.ensureTriggers(db);
+      schema.runMigrations(db);
     } catch (error) {
       throw new Error(`Failed to initialize database tables: ${error.message}`);
     }
   }
 
-  /**
-   * Initialize all required database tables
-   * @param {Database} db - Database connection
-   * @private
-   */
-  _initializeAllTables(db) {
-    const tableCreators = [
-      this._createUserStatsTable.bind(this),
-      this._createConversationHistoryTable.bind(this),
-      this._createCommandUsageTable.bind(this),
-      this._createPerformanceMetricsTable.bind(this),
-      this._createErrorLogsTable.bind(this),
-      this._createServerAnalyticsTable.bind(this),
-      this._createBotUptimeTable.bind(this),
-      this._createUserMessagesTable.bind(this),
-      this._createRemindersTable.bind(this),
-    ];
-
-    tableCreators.forEach((creator) => creator(db));
-  }
-
-  _runMigrations(db) {
-    if (this.isDisabled) return;
-
-    try {
-      // Migration: Add username column to user_stats if it doesn't exist
-      const userStatsInfo = db.prepare('PRAGMA table_info(user_stats)').all();
-      const hasUsernameColumn = userStatsInfo.some((col) => col.name === 'username');
-
-      if (!hasUsernameColumn) {
-        logger.info('Running migration: Adding username column to user_stats table');
-        db.exec(`
-          ALTER TABLE user_stats ADD COLUMN username TEXT;
-        `);
-        logger.info('Migration completed: username column added to user_stats');
-      }
-    } catch (error) {
-      logger.warn(`Database migration warning (non-critical): ${error.message}`);
-      // Don't throw - migrations are non-critical
-    }
-  }
-
-  _createUserStatsTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS user_stats (
-        user_id TEXT PRIMARY KEY,
-        message_count INTEGER DEFAULT 0,
-        last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
-        first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-        total_summaries INTEGER DEFAULT 0,
-        total_commands INTEGER DEFAULT 0,
-        preferences TEXT DEFAULT '{}',
-        username TEXT
-      )
-    `);
-  }
-
-  _createConversationHistoryTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS conversation_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        message TEXT NOT NULL,
-        role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        message_length INTEGER DEFAULT 0,
-        response_time_ms INTEGER DEFAULT 0,
-        FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
-      );
-    `);
-  }
-
-  _createCommandUsageTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS command_usage (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        command_name TEXT NOT NULL,
-        server_id TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        success BOOLEAN DEFAULT 1,
-        response_time_ms INTEGER DEFAULT 0,
-        FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
-      )
-    `);
-  }
-
-  _createPerformanceMetricsTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS performance_metrics (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        metric_type TEXT NOT NULL,
-        value REAL NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        metadata TEXT DEFAULT '{}'
-      )
-    `);
-  }
-
-  _createErrorLogsTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS error_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        error_type TEXT NOT NULL,
-        error_message TEXT NOT NULL,
-        user_id TEXT,
-        command_name TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        stack_trace TEXT,
-        resolved BOOLEAN DEFAULT 0
-      )
-    `);
-  }
-
-  _createServerAnalyticsTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS server_analytics (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server_id TEXT NOT NULL,
-        metric_type TEXT NOT NULL,
-        value INTEGER NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        date_only TEXT GENERATED ALWAYS AS (DATE(timestamp)) STORED,
-        UNIQUE(server_id, metric_type, date_only)
-      )
-    `);
-  }
-
-  _createBotUptimeTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS bot_uptime (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        event_type TEXT NOT NULL CHECK(event_type IN ('start', 'stop', 'restart')),
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        uptime_seconds INTEGER DEFAULT 0,
-        reason TEXT
-      )
-    `);
-  }
-
-  _createUserMessagesTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS user_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        message TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
-      );
-    `);
-  }
-
-  _createRemindersTable(db) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS reminders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        message TEXT NOT NULL,
-        scheduled_time DATETIME NOT NULL,
-        timezone TEXT DEFAULT 'UTC',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        status TEXT DEFAULT 'active' CHECK(status IN ('active', 'completed', 'cancelled')),
-        channel_id TEXT,
-        server_id TEXT,
-        FOREIGN KEY (user_id) REFERENCES user_stats (user_id) ON DELETE CASCADE
-      );
-    `);
-  }
-
-  _createIndexes(db) {
-    db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp ON user_messages (user_id, timestamp);
-      CREATE INDEX IF NOT EXISTS idx_conversation_history_user_id ON conversation_history (user_id);
-      CREATE INDEX IF NOT EXISTS idx_command_usage_user_id_timestamp ON command_usage (user_id, timestamp);
-      CREATE INDEX IF NOT EXISTS idx_command_usage_command_name ON command_usage (command_name);
-      CREATE INDEX IF NOT EXISTS idx_performance_metrics_type_timestamp ON performance_metrics (metric_type, timestamp);
-      CREATE INDEX IF NOT EXISTS idx_error_logs_type_timestamp ON error_logs (error_type, timestamp);
-      CREATE INDEX IF NOT EXISTS idx_server_analytics_server_metric ON server_analytics (server_id, metric_type);
-      CREATE INDEX IF NOT EXISTS idx_bot_uptime_event_timestamp ON bot_uptime (event_type, timestamp);
-      CREATE INDEX IF NOT EXISTS idx_reminders_user_id_status ON reminders (user_id, status);
-      CREATE INDEX IF NOT EXISTS idx_reminders_scheduled_time ON reminders (scheduled_time);
-    `);
-  }
-
-  _ensureTriggers(db) {
-    if (this.isDisabled) return;
-
-    try {
-      // Ensure conversation_history trigger exists with correct limit
-      db.exec(`
-        DROP TRIGGER IF EXISTS limit_conversation_history;
-        CREATE TRIGGER limit_conversation_history
-        AFTER INSERT ON conversation_history
-        BEGIN
-          DELETE FROM conversation_history WHERE user_id = NEW.user_id AND id NOT IN (
-            SELECT id FROM conversation_history WHERE user_id = NEW.user_id ORDER BY timestamp DESC LIMIT 20
-          );
-        END;
-      `);
-
-      // Ensure user_messages trigger exists with correct limit
-      db.exec(`
-        DROP TRIGGER IF EXISTS limit_user_messages;
-        CREATE TRIGGER limit_user_messages
-        AFTER INSERT ON user_messages
-        BEGIN
-          DELETE FROM user_messages WHERE user_id = NEW.user_id AND id NOT IN (
-            SELECT id FROM user_messages WHERE user_id = NEW.user_id ORDER BY timestamp DESC LIMIT 20
-          );
-        END;
-      `);
-    } catch (error) {
-      throw new Error(`Failed to ensure triggers: ${error.message}`);
-    }
-  }
 
   // Stats methods
   getUserStats(userId) {
     return this._executeSqlStrict(
       (db) => {
-        const stmt = db.prepare('SELECT * FROM user_stats WHERE user_id = ?');
-        const stats = stmt.get(userId);
+        const stats = userOperations.getUserStats(db, userId);
         return stats || { ...this._getDefaultStats('user'), user_id: userId };
       },
       `Failed to get user stats for ${userId}`
@@ -499,50 +286,14 @@ class DatabaseService {
 
   // Enhanced user stats methods
   updateUserStats(userId, updates) {
-    try {
-      if (this.isDisabled) return;
-
-      const db = this.getDb();
-
-      // Atomic upsert to avoid race conditions
-      const upsertStmt = db.prepare(`
-        INSERT INTO user_stats (
-          user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET
-          message_count = COALESCE(user_stats.message_count, 0) + ?,
-          last_active = ?,
-          total_summaries = COALESCE(user_stats.total_summaries, 0) + ?,
-          total_commands = COALESCE(user_stats.total_commands, 0) + ?,
-          username = COALESCE(?, user_stats.username)
-      `);
-
-      upsertStmt.run(
-        userId,
-        updates.message_count || 0,
-        updates.last_active || new Date().toISOString(),
-        new Date().toISOString(),
-        updates.total_summaries || 0,
-        updates.total_commands || 0,
-        '{}',
-        updates.username || null,
-        // UPDATE parameters
-        updates.message_count || 0,
-        updates.last_active || new Date().toISOString(),
-        updates.total_summaries || 0,
-        updates.total_commands || 0,
-        updates.username || null
-      );
-    } catch (error) {
-      if (this.isDisabled) return;
-      throw new Error(`Failed to update user stats for ${userId}: ${error.message}`);
-    }
+    return this._executeSqlStrict(
+      (db) => userOperations.upsertUserStats(db, userId, updates),
+      `Failed to update user stats for ${userId}`
+    );
   }
 
   updateUsername(userId, username) {
-    return this._executeSql((db) => {
-      db.prepare('UPDATE user_stats SET username = ? WHERE user_id = ?').run(username, userId);
-    });
+    return this._executeSql((db) => userOperations.updateUsername(db, userId, username));
   }
 
   getUserMessages(userId, limit = 10) {
@@ -557,19 +308,17 @@ class DatabaseService {
 
   addUserMessage(userId, message, responseTimeMs = 0, username = null) {
     return this._executeSqlStrict((db) => {
-      this.ensureUserExists(userId, username);
-      if (username) this.updateUsername(userId, username);
-      db.prepare('INSERT INTO user_messages (user_id, message) VALUES (?, ?)').run(userId, message);
-      db.prepare('INSERT INTO conversation_history (user_id, message, role, message_length, response_time_ms) VALUES (?, ?, ?, ?, ?)').run(userId, message, 'user', message.length, responseTimeMs);
+      userOperations.ensureUserExists(db, userId, username);
+      if (username) userOperations.updateUsername(db, userId, username);
+      userOperations.addUserMessage(db, { userId, message, responseTimeMs });
       this.updateUserStats(userId, { message_count: 1 });
     }, `Failed to add user message for ${userId}`);
   }
 
   addBotResponse(userId, response, responseTimeMs = 0) {
     return this._executeSql((db) => {
-      this.ensureUserExists(userId);
-      db.prepare('INSERT INTO user_messages (user_id, message) VALUES (?, ?)').run(userId, `[BOT] ${response}`);
-      db.prepare('INSERT INTO conversation_history (user_id, message, role, message_length, response_time_ms) VALUES (?, ?, ?, ?, ?)').run(userId, response, 'assistant', response.length, responseTimeMs);
+      userOperations.ensureUserExists(db, userId);
+      userOperations.addBotResponse(db, { userId, response, responseTimeMs });
     });
   }
 
@@ -578,73 +327,17 @@ class DatabaseService {
       (db) => {
         const config = require('../config/config');
         const defaultLimit = limit || config.DATABASE_CONVERSATION_LIMIT || 20;
-        const rows = db.prepare(`
-          SELECT message, role, timestamp, message_length, response_time_ms FROM conversation_history
-          WHERE user_id = ? ORDER BY timestamp ASC LIMIT ?
-        `).all(userId, defaultLimit);
-        return rows.map((row) => ({ message: row.message, role: row.role, timestamp: row.timestamp, message_length: row.message_length, response_time_ms: row.response_time_ms }));
+        return userOperations.getConversationHistory(db, userId, defaultLimit);
       },
       []
     );
   }
 
   ensureUserExists(userId, username = null) {
-    try {
-      if (this.isDisabled) return;
+    if (this.isDisabled) return;
 
-      const db = this.getDb();
-
-      // Try different schema versions, starting with newest and falling back
-      const schemaAttempts = [
-        // Latest schema (v1.8.0) with username
-        {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username) VALUES (?, 0, ?, ?, 0, 0, \'{}\', ?)',
-          params: (now, username) => [userId, now, now, username],
-        },
-        // Previous schema (v1.7.0)
-        {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
-          params: (now) => [userId, now, now],
-        },
-        // Previous schema (missing first_seen)
-        {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
-          params: (now) => [userId, now],
-        },
-        // Basic schema (only core columns)
-        {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active) VALUES (?, 0, ?)',
-          params: (now) => [userId, now],
-        },
-        // Minimal schema (just user_id)
-        {
-          sql: 'INSERT OR IGNORE INTO user_stats (user_id) VALUES (?)',
-          params: () => [userId],
-        },
-      ];
-
-      const now = new Date().toISOString();
-      let success = false;
-
-      for (const attempt of schemaAttempts) {
-        try {
-          const stmt = db.prepare(attempt.sql);
-          stmt.run(...attempt.params(now, username));
-          success = true;
-          break;
-        } catch (columnError) {
-          // Continue to next schema attempt
-          continue;
-        }
-      }
-
-      if (!success) {
-        logger.warn(`All schema attempts failed for user ${userId}`);
-      }
-    } catch (error) {
-      if (this.isDisabled) return;
-      logger.warn(`Failed to ensure user exists ${userId}: ${error.message}`);
-    }
+    const db = this.getDb();
+    userOperations.ensureUserExists(db, userId, username);
   }
 
   // Data export functionality
@@ -738,203 +431,76 @@ class DatabaseService {
     channelId = null,
     serverId = null
   ) {
-    try {
-      if (this.isDisabled) return null;
-
-      const db = this.getDb();
-      this.ensureUserExists(userId);
-
-      const stmt = db.prepare(`
-        INSERT INTO reminders (user_id, message, scheduled_time, timezone, channel_id, server_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-      const result = stmt.run(
-        userId,
-        message,
-        scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
-        timezone,
-        channelId,
-        serverId
-      );
-
-      // Return the complete reminder object for test compatibility
-      const selectStmt = db.prepare('SELECT * FROM reminders WHERE id = ?');
-      return selectStmt.get(result.lastInsertRowid);
-    } catch (error) {
-      if (this.isDisabled) return null;
-      throw new Error(`Failed to create reminder for ${userId}: ${error.message}`);
-    }
+    return this._executeSqlStrict(
+      (db) => {
+        userOperations.ensureUserExists(db, userId);
+        return reminderOperations.createReminder(db, {
+          userId,
+          message,
+          scheduledTime,
+          timezone,
+          channelId,
+          serverId,
+        });
+      },
+      `Failed to create reminder for ${userId}`
+    );
   }
 
   getReminder(reminderId) {
-    try {
-      if (this.isDisabled) return null;
-
-      const db = this.getDb();
-      const stmt = db.prepare('SELECT * FROM reminders WHERE id = ?');
-      return stmt.get(reminderId);
-    } catch (error) {
-      if (this.isDisabled) return null;
-      logger.warn(`Failed to get reminder ${reminderId}: ${error.message}`);
-      return null;
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getReminder(db, reminderId),
+      null
+    );
   }
 
   getActiveReminders(userId = null) {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      let stmt;
-
-      if (userId) {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          WHERE user_id = ? AND status = 'active' AND datetime(scheduled_time) > datetime('now')
-          ORDER BY scheduled_time ASC
-        `);
-        return stmt.all(userId);
-      } else {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          WHERE status = 'active' AND datetime(scheduled_time) > datetime('now')
-          ORDER BY scheduled_time ASC
-        `);
-        return stmt.all();
-      }
-    } catch (error) {
-      if (this.isDisabled) return [];
-      logger.warn(`Failed to get active reminders: ${error.message}`);
-      return [];
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getActiveReminders(db, userId),
+      []
+    );
   }
 
   getAllReminders(userId = null) {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      let stmt;
-
-      if (userId) {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          WHERE user_id = ?
-          ORDER BY scheduled_time DESC
-        `);
-        return stmt.all(userId);
-      } else {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          ORDER BY scheduled_time DESC
-        `);
-        return stmt.all();
-      }
-    } catch (error) {
-      if (this.isDisabled) return [];
-      logger.warn(`Failed to get all reminders: ${error.message}`);
-      return [];
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getAllReminders(db, userId),
+      []
+    );
   }
 
   getDueReminders() {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        SELECT * FROM reminders
-        WHERE status = 'active' AND datetime(scheduled_time) <= datetime('now')
-        ORDER BY scheduled_time ASC
-      `);
-      return stmt.all();
-    } catch (error) {
-      if (this.isDisabled) return [];
-      logger.warn(`Failed to get due reminders: ${error.message}`);
-      return [];
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getDueReminders(db),
+      []
+    );
   }
 
   completeReminder(reminderId) {
-    try {
-      if (this.isDisabled) return false;
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        UPDATE reminders SET status = 'completed' WHERE id = ?
-      `);
-      const result = stmt.run(reminderId);
-      return result.changes > 0;
-    } catch (error) {
-      if (this.isDisabled) return false;
-      logger.warn(`Failed to complete reminder ${reminderId}: ${error.message}`);
-      return false;
-    }
+    return this._executeSql(
+      (db) => reminderOperations.completeReminder(db, reminderId),
+      false
+    );
   }
 
   cancelReminder(reminderId, userId) {
-    try {
-      if (this.isDisabled) return false;
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        UPDATE reminders SET status = 'cancelled'
-        WHERE id = ? AND user_id = ? AND status = 'active'
-      `);
-      const result = stmt.run(reminderId, userId);
-      return result.changes > 0;
-    } catch (error) {
-      if (this.isDisabled) return false;
-      logger.warn(`Failed to cancel reminder ${reminderId}: ${error.message}`);
-      return false;
-    }
+    return this._executeSql(
+      (db) => reminderOperations.cancelReminder(db, reminderId, userId),
+      false
+    );
   }
 
   getUserReminders(userId, includeCompleted = false) {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      let stmt;
-
-      if (includeCompleted) {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          WHERE user_id = ?
-          ORDER BY created_at DESC
-          LIMIT 50
-        `);
-      } else {
-        stmt = db.prepare(`
-          SELECT * FROM reminders
-          WHERE user_id = ? AND status = 'active'
-          ORDER BY datetime(scheduled_time) ASC
-        `);
-      }
-
-      return stmt.all(userId);
-    } catch (error) {
-      if (this.isDisabled) return [];
-      logger.warn(`Failed to get reminders for user ${userId}: ${error.message}`);
-      return [];
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getUserReminders(db, userId, includeCompleted),
+      []
+    );
   }
 
   deleteReminder(reminderId, userId) {
-    try {
-      if (this.isDisabled) return false;
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        DELETE FROM reminders WHERE id = ? AND user_id = ?
-      `);
-      const result = stmt.run(reminderId, userId);
-      return result.changes > 0;
-    } catch (error) {
-      if (this.isDisabled) return false;
-      logger.warn(`Failed to delete reminder ${reminderId}: ${error.message}`);
-      return false;
-    }
+    return this._executeSql(
+      (db) => reminderOperations.deleteReminder(db, reminderId, userId),
+      false
+    );
   }
 
   /**
@@ -943,22 +509,10 @@ class DatabaseService {
    * @returns {number} Number of active reminders for the user
    */
   getUserReminderCount(userId) {
-    try {
-      if (this.isDisabled) return 0;
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        SELECT COUNT(*) as count 
-        FROM reminders 
-        WHERE user_id = ? AND status = 'active'
-      `);
-      const result = stmt.get(userId);
-      return result ? result.count : 0;
-    } catch (error) {
-      if (this.isDisabled) return 0;
-      logger.warn(`Failed to get reminder count for user ${userId}: ${error.message}`);
-      return 0;
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getUserReminderCount(db, userId),
+      0
+    );
   }
 
   /**
@@ -966,70 +520,21 @@ class DatabaseService {
    * @returns {Object} Reminder statistics
    */
   getReminderStats() {
-    try {
-      if (this.isDisabled) return this._getDefaultReminderStats();
-
-      const db = this.getDb();
-
-      // Get total count
-      const totalStmt = db.prepare('SELECT COUNT(*) as count FROM reminders');
-      const total = totalStmt.get().count;
-
-      // Get status breakdown
-      const statusStmt = db.prepare(`
-        SELECT status, COUNT(*) as count
-        FROM reminders
-        GROUP BY status
-      `);
-      const statusResults = statusStmt.all();
-
-      const stats = {
-        totalReminders: total,
-        activeReminders: 0,
-        completedReminders: 0,
-        cancelledReminders: 0,
-      };
-
-      this._mapStatusCounts(statusResults, stats);
-      return stats;
-    } catch (error) {
-      if (this.isDisabled) return this._getDefaultReminderStats();
-      logger.warn(`Failed to get reminder stats: ${error.message}`);
-      return this._getDefaultReminderStats();
-    }
+    return this._executeSql(
+      (db) => reminderOperations.getReminderStats(db),
+      reminderOperations.getDefaultReminderStats()
+    );
   }
 
   /**
-   * Get default reminder stats object
-   * @returns {Object} Default stats object
+   * Expose default reminder stats for legacy tests
    */
   _getDefaultReminderStats() {
-    return {
-      totalReminders: 0,
-      activeReminders: 0,
-      completedReminders: 0,
-      cancelledReminders: 0,
-    };
+    return reminderOperations.getDefaultReminderStats();
   }
 
-  /**
-   * Map status results to stats object
-   * @param {Array} statusResults - Results from status query
-   * @param {Object} stats - Stats object to update
-   */
   _mapStatusCounts(statusResults, stats) {
-    const statusMap = {
-      active: 'activeReminders',
-      completed: 'completedReminders',
-      cancelled: 'cancelledReminders',
-    };
-
-    statusResults.forEach((row) => {
-      const statKey = statusMap[row.status];
-      if (statKey) {
-        stats[statKey] = row.count;
-      }
-    });
+    reminderOperations._test.mapStatusCounts(statusResults, stats);
   }
 
   /**

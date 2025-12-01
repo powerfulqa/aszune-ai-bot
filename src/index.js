@@ -5,6 +5,10 @@ require('dotenv').config();
  * A Discord bot that specializes in gaming lore, game logic, guides, and advice,
  * powered by the Perplexity API.
  */
+
+// Increase max listeners to prevent warnings during testing (multiple signal handlers)
+process.setMaxListeners(20);
+
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 let config;
 try {
@@ -340,10 +344,6 @@ function handleShutdownCompletion(errors) {
     }
   }
 }
-
-// Handle shutdown signals
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Handle unhandled promise rejections
 function unhandledRejectionHandler(reason, promise) {

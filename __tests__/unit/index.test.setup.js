@@ -22,6 +22,12 @@ const baseConfig = {
 };
 
 const mockConfigData = { ...baseConfig };
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 let mockClientReadyHandler;
 const mockClient = {
@@ -41,10 +47,13 @@ const originalProcessExit = process.exit;
 const originalEnv = { ...process.env };
 
 function resetConfig() {
+  const previousInitialize = mockConfigData.initializePiOptimizations;
   Object.keys(mockConfigData).forEach((key) => {
     delete mockConfigData[key];
   });
   Object.assign(mockConfigData, JSON.parse(JSON.stringify(baseConfig)));
+  mockConfigData.initializePiOptimizations =
+    previousInitialize || jest.fn().mockResolvedValue(mockConfigData);
 }
 
 function resetMockClient() {
@@ -60,13 +69,7 @@ function resetMockClient() {
   mockClient.destroy = jest.fn().mockResolvedValue();
 }
 
-jest.mock('../../src/utils/logger', () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-}));
-const loggerMock = require('../../src/utils/logger');
+jest.mock('../../src/utils/logger', () => mockLogger);
 jest.mock('../../src/config/config', () => mockConfigData);
 jest.mock('../../src/utils/enhanced-cache', () => {
   const mockInstance = {
@@ -132,6 +135,7 @@ const ConversationManager = require('../../src/utils/conversation');
 function setupIndexContext() {
   jest.resetModules();
   jest.clearAllMocks();
+  resetConfig();
   resetMockClient();
 
   const processHandlers = new Map();
@@ -145,7 +149,7 @@ function setupIndexContext() {
   conversationManager.destroy = jest.fn();
 
   const index = require('../../src/index');
-  index.__setLogger && index.__setLogger(loggerMock);
+  index.__setLogger && index.__setLogger(mockLogger);
   index.__setClient && index.__setClient(mockClient);
 
   return {
@@ -166,26 +170,20 @@ function setupIndexContext() {
       resetConfig();
       resetMockClient();
       const reloaded = require('../../src/index');
-      reloaded.__setLogger && reloaded.__setLogger(loggerMock);
+      reloaded.__setLogger && reloaded.__setLogger(mockLogger);
       reloaded.__setClient && reloaded.__setClient(mockClient);
       return reloaded;
     },
     resetConfig,
     mockConfigData,
-    loggerMock,
+    mockLogger,
+    loggerMock: mockLogger,
   };
 }
 
 module.exports = {
   setupIndexContext,
   mockConfigData,
-  loggerMock,
+  loggerMock: mockLogger,
+  mockLogger,
 };
-
-describe('Index test setup helper', () => {
-  it('provides context helpers', () => {
-    expect(typeof setupIndexContext).toBe('function');
-    expect(typeof mockConfigData).toBe('object');
-    expect(typeof loggerMock).toBe('object');
-  });
-});

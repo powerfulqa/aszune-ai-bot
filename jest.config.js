@@ -4,10 +4,10 @@ module.exports = {
   testEnvironment: 'node',
   // Increased timeout. Explicit coverageReporters fixes earlier CLI misuse ("clover,lcov,text" treated as one module)
   testTimeout: 30000,
-  // Force exit to prevent hanging on open handles in CI
-  // This is enabled because some tests/services leave open timers or sockets
-  forceExit: process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true',
-  // Detect open handles to help debug hanging tests locally
+  // Force exit to prevent hanging on open handles (timers, servers, sockets)
+  // This is needed because some tests/services leave open resources
+  forceExit: true,
+  // Detect open handles to help debug hanging tests (enable with DEBUG_JEST_HANDLES=true)
   detectOpenHandles: process.env.DEBUG_JEST_HANDLES === 'true',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   maxWorkers: 1,
@@ -20,10 +20,6 @@ module.exports = {
     '!**/data/**',
     '!ecosystem.config.js',
     '!jest.setup.js',
-    '!src/services/perplexity.js',
-    '!src/services/perplexity-improved.js',
-    '!src/utils/license-server.js',
-    '!src/utils/license-validator.js',
     '!src/utils/enhanced-conversation-context.js',
   ],
   // Define pattern for test files to exclude helper files
@@ -37,6 +33,7 @@ module.exports = {
     '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',
     '/bot-shutdown.test.js/',
+    '/__tests__/unit/.*\.test\.setup\.js',
   ],
   // Generate JUnit XML test report for CodeCov
   reporters: [

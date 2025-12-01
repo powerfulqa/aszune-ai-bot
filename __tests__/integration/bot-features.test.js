@@ -68,7 +68,6 @@ jest.mock('../../src/services/chat', () => ({
       await emojiManager.addReactionsToMessage(message);
     } catch (error) {
       // Handle errors gracefully - don't throw
-      console.error('Error in message handling:', error.message);
     }
   }),
 }));

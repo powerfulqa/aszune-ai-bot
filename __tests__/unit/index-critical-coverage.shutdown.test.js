@@ -17,12 +17,14 @@ describe('Shutdown Error Scenarios', () => {
   it('should handle conversation manager shutdown errors', async () => {
     context.mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conversation manager error'));
 
+    // Shutdown should complete without throwing even if conversation manager fails
     await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 
   it('should handle Discord client shutdown errors', async () => {
     context.mockClient.destroy.mockRejectedValueOnce(new Error('Client shutdown error'));
 
+    // Shutdown should complete without throwing even if Discord client fails
     await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 
@@ -37,6 +39,7 @@ describe('Shutdown Error Scenarios', () => {
     context.mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conv error'));
     context.mockClient.destroy.mockRejectedValueOnce(new Error('Client error'));
 
+    // Shutdown should complete without throwing even with multiple errors
     await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();
   });
 });

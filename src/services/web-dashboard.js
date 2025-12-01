@@ -9,6 +9,13 @@ const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
+const configRoutes = require('./web-dashboard/routes/configRoutes');
+const logRoutes = require('./web-dashboard/routes/logRoutes');
+const networkRoutes = require('./web-dashboard/routes/networkRoutes');
+const reminderRoutes = require('./web-dashboard/routes/reminderRoutes');
+const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
+const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
+const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 
 class WebDashboardService {
   constructor() {
@@ -434,13 +441,13 @@ class WebDashboardService {
 
     this.setupDatabaseRoutes();
     this.setupVersionRoutes();
-    this.setupLogViewerRoutes();
-    this.setupServiceManagementRoutes();
-    this.setupConfigEditorRoutes();
-    this.setupNetworkRoutes();
-    this.setupReminderRoutes();
-    this.setupRecommendationRoutes();
-    this.setupControlRoutes();
+    configRoutes.registerConfigRoutes(this.app, this);
+    logRoutes.registerLogRoutes(this.app, this);
+    networkRoutes.registerNetworkRoutes(this.app, this);
+    reminderRoutes.registerReminderRoutes(this.app, this);
+    serviceRoutes.registerServiceRoutes(this.app, this);
+    recommendationRoutes.registerRecommendationRoutes(this.app, this);
+    controlRoutes.registerControlRoutes(this.app, this);
 
     // Serve the main dashboard page
     this.app.get('/', (req, res) => {
@@ -496,76 +503,6 @@ class WebDashboardService {
   }
 
   /**
-   * Setup log viewer routes
-   * @private
-   */
-  setupLogViewerRoutes() {
-    this.setupGetLogsRoute();
-    this.setupExportLogsRoute();
-  }
-
-  /**
-   * Setup GET /api/logs route
-   * @private
-   */
-  setupGetLogsRoute() {
-    this.app.get('/api/logs', async (req, res) => {
-      try {
-        const { level = 'ALL', limit = 100, offset = 0, search } = req.query;
-
-        if (search) {
-          const results = this.searchLogs(search, parseInt(limit));
-          res.json({
-            logs: results,
-            total: results.length,
-            timestamp: new Date().toISOString(),
-          });
-        } else {
-          const logs = this.getFilteredLogs(level, parseInt(limit), parseInt(offset));
-          res.json({
-            logs,
-            total: this.allLogs.length,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting logs');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup GET /api/logs/export route
-   * @private
-   */
-  setupExportLogsRoute() {
-    this.app.get('/api/logs/export', async (req, res) => {
-      try {
-        const { format = 'json', level = 'ALL' } = req.query;
-        const logs = this.getFilteredLogs(level, this.maxAllLogs);
-
-        if (format === 'csv') {
-          this.exportLogsAsCSV(res, logs);
-        } else {
-          this.exportLogsAsJSON(res, logs);
-        }
-
-        res.end();
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'exporting logs');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
    * Export logs as CSV
    * @private
    */
@@ -589,100 +526,6 @@ class WebDashboardService {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename="logs.json"');
     res.write(JSON.stringify(logs, null, 2));
-  }
-
-  /**
-   * Setup service management routes
-   * @private
-   */
-  setupServiceManagementRoutes() {
-    this.setupGetServicesRoute();
-    this.setupManageServiceRoute();
-    this.setupGetServiceLogsRoute();
-  }
-
-  /**
-   * Setup GET /api/services route
-   * @private
-   */
-  setupGetServicesRoute() {
-    this.app.get('/api/services', async (req, res) => {
-      try {
-        const services = await this.getServiceStatus();
-        res.json({
-          services,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting service status');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup POST /api/services/:action route
-   * @private
-   */
-  setupManageServiceRoute() {
-    this.app.post('/api/services/:action', async (req, res) => {
-      try {
-        const { action } = req.params;
-        const { service } = req.body;
-
-        if (!['start', 'stop', 'restart'].includes(action)) {
-          return res.status(400).json({
-            error: 'Invalid action. Must be start, stop, or restart',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        if (!service) {
-          return res.status(400).json({
-            error: 'Service name is required',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        const result = await this.manageService(action, service);
-        res.json(result);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'managing service');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup GET /api/services/:service/logs route
-   * @private
-   */
-  setupGetServiceLogsRoute() {
-    this.app.get('/api/services/:service/logs', async (req, res) => {
-      try {
-        const { service } = req.params;
-        const { lines = 50 } = req.query;
-
-        const logs = await this.getServiceLogs(service, parseInt(lines));
-        res.json({
-          service,
-          logs,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting service logs');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
   }
 
   /**
@@ -905,98 +748,6 @@ class WebDashboardService {
   }
 
   /**
-   * Setup configuration editor routes
-   * @private
-   */
-  setupConfigEditorRoutes() {
-    this.setupGetConfigRoute();
-    this.setupUpdateConfigRoute();
-    this.setupValidateConfigRoute();
-  }
-
-  /**
-   * Setup GET /api/config route
-   * @private
-   */
-  setupGetConfigRoute() {
-    this.app.get('/api/config/:file', async (req, res) => {
-      try {
-        const { file } = req.params;
-        const content = await this.readConfigFile(file);
-        res.json({
-          file,
-          content,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'reading config file');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup POST /api/config/:file route
-   * @private
-   */
-  setupUpdateConfigRoute() {
-    this.app.post('/api/config/:file', async (req, res) => {
-      try {
-        const { file } = req.params;
-        const { content, createBackup = true } = req.body;
-
-        if (!content) {
-          return res.status(400).json({
-            error: 'Content is required',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        const result = await this.updateConfigFile(file, content, createBackup);
-        res.json(result);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'updating config file');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup POST /api/config/:file/validate route
-   * @private
-   */
-  setupValidateConfigRoute() {
-    this.app.post('/api/config/:file/validate', async (req, res) => {
-      try {
-        const { file } = req.params;
-        const { content } = req.body;
-
-        if (!content) {
-          return res.status(400).json({
-            error: 'Content is required for validation',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        const validation = await this.validateConfigFile(file, content);
-        res.json(validation);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'validating config file');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
    * Read configuration file with access control
    * @private
    */
@@ -1100,82 +851,6 @@ class WebDashboardService {
   }
 
   /**
-   * Setup network connectivity routes
-   * @private
-   */
-  setupNetworkRoutes() {
-    this.setupGetNetworkInterfacesRoute();
-    this.setupGetIPAddressesRoute();
-    this.setupGetNetworkStatusRoute();
-  }
-
-  /**
-   * Setup GET /api/network/interfaces route
-   * @private
-   */
-  setupGetNetworkInterfacesRoute() {
-    this.app.get('/api/network/interfaces', async (req, res) => {
-      try {
-        const interfaces = await this.getNetworkInterfaces();
-        res.json({
-          interfaces,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting network interfaces');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup GET /api/network/ip route
-   * @private
-   */
-  setupGetIPAddressesRoute() {
-    this.app.get('/api/network/ip', async (req, res) => {
-      try {
-        const ipInfo = await this.getIPAddresses();
-        res.json({
-          ipInfo,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting IP addresses');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup GET /api/network/status route
-   * @private
-   */
-  setupGetNetworkStatusRoute() {
-    this.app.get('/api/network/status', async (req, res) => {
-      try {
-        const status = await this.getNetworkStatus();
-        res.json({
-          status,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting network status');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
    * Get network interfaces information
    * @returns {Promise<Array>} Network interfaces with status
    * @private
@@ -1245,123 +920,6 @@ class WebDashboardService {
    */
   async getNetworkStatus() {
     return NetworkDetector.getNetworkStatus();
-  }
-
-  /**
-   * Setup reminder management routes
-   * @private
-   */
-  setupReminderRoutes() {
-    this.setupGetRemindersRoute();
-    this.setupCreateReminderRoute();
-    this.setupUpdateReminderRoute();
-    this.setupDeleteReminderRoute();
-  }
-
-  /**
-   * Setup GET /api/reminders route
-   * @private
-   */
-  setupGetRemindersRoute() {
-    this.app.get('/api/reminders', async (req, res) => {
-      try {
-        const { status = 'all' } = req.query;
-        const reminders = await this.getReminders(status);
-        res.json({
-          reminders,
-          total: reminders.length,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting reminders');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup POST /api/reminders route
-   * @private
-   */
-  setupCreateReminderRoute() {
-    this.app.post('/api/reminders', async (req, res) => {
-      try {
-        const { message, scheduledTime, userId, reminderType } = req.body;
-
-        if (!message || !scheduledTime || !userId) {
-          return res.status(400).json({
-            error: 'Message, scheduledTime, and userId are required',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        const reminder = await this.createReminder(message, scheduledTime, userId, reminderType);
-        res.status(201).json({
-          reminder,
-          message: 'Reminder created successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'creating reminder');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup PUT /api/reminders/:id route
-   * @private
-   */
-  setupUpdateReminderRoute() {
-    this.app.put('/api/reminders/:id', async (req, res) => {
-      try {
-        const { id } = req.params;
-        const { message, scheduledTime } = req.body;
-
-        const reminder = await this.updateReminder(id, message, scheduledTime);
-        res.json({
-          reminder,
-          message: 'Reminder updated successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'updating reminder');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup DELETE /api/reminders/:id route
-   * @private
-   */
-  setupDeleteReminderRoute() {
-    this.app.delete('/api/reminders/:id', async (req, res) => {
-      try {
-        const { id } = req.params;
-        await this.deleteReminder(id);
-
-        res.json({
-          message: 'Reminder deleted successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'deleting reminder');
-        res.status(400).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
   }
 
   /**
@@ -1438,39 +996,6 @@ class WebDashboardService {
       logger.warn('Failed to delete reminder:', error.message);
       throw error;
     }
-  }
-
-  /**
-   * Setup recommendation routes
-   * @private
-   */
-  setupRecommendationRoutes() {
-    this.app.get('/api/recommendations', async (req, res) => {
-      try {
-        const recommendations = await this.getDetailedRecommendations();
-        res.json(recommendations);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting recommendations');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-  }
-
-  /**
-   * Setup control routes for bot management
-   * @private
-   */
-  setupControlRoutes() {
-    this.app.post('/api/control/restart', (req, res) => {
-      this._handleRestartRequest(res);
-    });
-
-    this.app.post('/api/control/git-pull', (req, res) => {
-      this._handleGitPullRequest(res);
-    });
   }
 
   async _handleRestartRequest(res) {

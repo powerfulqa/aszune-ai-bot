@@ -88,13 +88,6 @@ describe('DatabaseService - Conversation History', function () {
         dbService.addUserMessage('123', `Message ${i}`);
       }
 
-      // Debug: Check what we actually have
-      const allHistory = dbService.getConversationHistory('123', 50);
-      console.log(
-        'All messages in DB:',
-        allHistory.map((m) => m.message)
-      );
-
       const history = dbService.getConversationHistory('123', 10);
       expect(history.length).toBe(10);
       // Just check that we have some messages, don't worry about exact order for now

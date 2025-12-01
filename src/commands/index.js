@@ -16,6 +16,14 @@ const reminderService = require('../services/reminder-service');
 const { getGuildMemberStats } = require('../utils/guild-member-stats');
 const os = require('os');
 
+// Embed builders (extracted for maintainability)
+const {
+  buildAnalyticsEmbed,
+  buildDashboardEmbed,
+  buildResourcesEmbed,
+  buildCacheEmbed,
+} = require('./embeds');
+
 const conversationManager = new ConversationManager();
 
 /**
@@ -37,127 +45,6 @@ function ensureUserMetadata(interaction) {
   } catch (error) {
     logger.debug(`Failed to update user metadata: ${error.message}`);
   }
-}
-
-function buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount) {
-  return {
-    color: 0x5865f2,
-    title: '📊 Discord Analytics Dashboard',
-    fields: [
-      {
-        name: '🏢 Server Overview',
-        value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
-        inline: true,
-      },
-      {
-        name: '📈 Performance',
-        value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
-        inline: true,
-      },
-      {
-        name: '🎯 Top Commands',
-        value:
-          analyticsData?.commandStats
-            ?.slice(0, 3)
-            .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
-            .join('\n') || 'No data yet',
-        inline: true,
-      },
-      {
-        name: '💡 Server Insights',
-        value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
-        inline: false,
-      },
-    ],
-    footer: { text: 'Aszai Bot Analytics' },
-    timestamp: new Date().toISOString(),
-  };
-}
-
-function buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers) {
-  return {
-    color:
-      dashboardData.overview.status === 'healthy'
-        ? 0x00ff00
-        : dashboardData.overview.status === 'warning'
-          ? 0xffa500
-          : 0xff0000,
-    title: '🖥️ Performance Dashboard',
-    fields: [
-      {
-        name: '🚦 System Status',
-        value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
-        inline: true,
-      },
-      {
-        name: '⚡ Performance',
-        value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
-        inline: true,
-      },
-      {
-        name: '📊 Activity',
-        value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
-        inline: true,
-      },
-      {
-        name: '🚨 Active Alerts',
-        value:
-          dashboardData.alerts && dashboardData.alerts.length > 0
-            ? dashboardData.alerts
-              .slice(0, 3)
-              .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
-              .join('\n')
-            : '✅ No active alerts',
-        inline: false,
-      },
-    ],
-    footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-    timestamp: new Date().toISOString(),
-  };
-}
-
-function buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations) {
-  return {
-    color:
-      resourceStatus.memory.status === 'good'
-        ? 0x00ff00
-        : resourceStatus.memory.status === 'warning'
-          ? 0xffa500
-          : 0xff0000,
-    title: '🔧 Resource Optimization',
-    description: '📊 Node.js process memory (heap) - see /cache for cached responses',
-    fields: [
-      {
-        name: '🖥️ System Info',
-        value: `Host: \`${hostname}\`\nPID: \`${process.pid}\`\nUser: \`${os.userInfo().username}\``,
-        inline: false,
-      },
-      {
-        name: '💾 Memory Status',
-        value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,
-        inline: true,
-      },
-      {
-        name: '⚙️ Performance',
-        value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
-        inline: true,
-      },
-      {
-        name: '📈 Optimization Tier',
-        value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}\nRecommended: Auto-scaling active`,
-        inline: true,
-      },
-      {
-        name: '💡 Recommendations',
-        value: recommendations.slice(0, 3).join('\n') || '✅ System performance is good - continue monitoring',
-        inline: false,
-      },
-    ],
-    footer: {
-      text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
-    },
-    timestamp: new Date().toISOString(),
-  };
 }
 
 // Command definitions
@@ -287,7 +174,7 @@ const commands = {
         const cacheStats = perplexityService.getCacheStats();
         const detailedInfo = perplexityService.getDetailedCacheInfo();
 
-        const embed = this._createCacheEmbed(cacheStats, detailedInfo);
+        const embed = buildCacheEmbed(cacheStats, detailedInfo);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'cache statistics retrieval', {
@@ -297,61 +184,6 @@ const commands = {
           `❌ Error retrieving cache statistics: ${errorResponse.message}`
         );
       }
-    },
-
-    _createCacheEmbed(cacheStats, detailedInfo) {
-      const embed = {
-        color: config.COLORS.PRIMARY,
-        title: 'Cache Statistics',
-        description:
-          cacheStats.entryCount === 0
-            ? '💡 Cache is currently empty - memory will increase as API responses are cached'
-            : null,
-        fields: [
-          {
-            name: 'Performance',
-            value: `Hit Rate: ${cacheStats.hitRate}%\nHits: ${cacheStats.hits}\nMisses: ${cacheStats.misses}`,
-            inline: true,
-          },
-          {
-            name: 'Operations',
-            value: `Sets: ${cacheStats.sets}\nDeletes: ${cacheStats.deletes}\nEvictions: ${cacheStats.evictions}`,
-            inline: true,
-          },
-          {
-            name: 'Cache Memory Usage',
-            value: `${cacheStats.memoryUsageFormatted} / ${cacheStats.maxMemoryFormatted}\nEntries: ${cacheStats.entryCount} / ${cacheStats.maxSize}`,
-            inline: true,
-          },
-          {
-            name: 'Configuration',
-            value: `Strategy: ${cacheStats.evictionStrategy}\nUptime: ${cacheStats.uptimeFormatted}`,
-            inline: true,
-          },
-        ],
-        footer: {
-          text: 'Cache memory tracks stored responses only - see /resources for total bot memory',
-        },
-        timestamp: new Date(),
-      };
-
-      // Add recent entries if available
-      const recentEntriesValue =
-        detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0
-          ? detailedInfo.recentEntries
-            .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
-            .join('\n')
-          : 'No recent entries';
-
-      const recentEntriesField = {
-        name: 'Recent Entries',
-        value: recentEntriesValue,
-        inline: false,
-      };
-
-      embed.fields.push(recentEntriesField);
-
-      return embed;
     },
 
     textCommand: '!cache',

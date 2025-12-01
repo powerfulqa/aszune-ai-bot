@@ -1,23 +1,5 @@
 /**
- * Perplexity Secure Service // Mock the lazy loader to control getCachePruner behavior
-jest.mock('../../../src/utils/lazy-loader', () => ({
-  lazyLoadModule: jest.fn((modulePath) => {
-    if (modulePath === '../utils/cache-pruner') {
-      return mockGetCachePruner;
-    }
-    // For other modules, return a function that returns the actual module
-    return () => require(modulePath);
-  }),
-}));
-
-const PerplexityService = require('../../../src/services/perplexity-secure');
-
-// Debug: check what's on PerplexityService
-console.log('PerplexityService keys:', Object.keys(PerplexityService));
-console.log('PerplexityService.getCachePruner:', typeof PerplexityService.getCachePruner);
-
-// Override getCachePruner for testing - directly on the imported module
-PerplexityService.getCachePruner = mockGetCachePruner;al Private Methods
+ * Perplexity Secure Service - Additional Private Methods
  * Tests for private methods to improve coverage for QLTY compliance
  */
 

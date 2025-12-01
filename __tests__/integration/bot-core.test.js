@@ -10,7 +10,6 @@ let mockGlobalConversationManager = null;
 jest.mock('axios');
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn().mockImplementation(async (message) => {
-    console.log('Command handler called with message:', message.content);
     // Mock implementation that simulates command handling
     if (!message.content.startsWith('!')) return null;
 
@@ -127,7 +126,6 @@ jest.mock('../../src/services/chat', () => {
       await emojiManager.addReactionsToMessage(message);
     } catch (error) {
       // Handle errors gracefully - don't throw
-      console.error('Error in message handling:', error.message);
     }
   });
 
@@ -242,11 +240,6 @@ jest.mock('../../src/utils/input-validator', () => ({
 jest.mock('../../src/utils/error-handler', () => ({
   ErrorHandler: {
     handleError: jest.fn().mockImplementation((error, context, additionalData) => {
-      console.log('ErrorHandler called with:', {
-        error: error.message || error,
-        context,
-        additionalData,
-      });
       return { message: 'Test error message' };
     }),
   },

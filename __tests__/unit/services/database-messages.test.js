@@ -124,34 +124,17 @@ describe('DatabaseService - Messages', function () {
 
   describe('addUserMessage', () => {
     it('should add message to database', () => {
-      console.log('TEST: Starting addUserMessage test');
-      console.log('TEST: Database path:', testDbPath);
-      console.log('TEST: Database file exists before:', fs.existsSync(testDbPath));
-
       const dbConn1 = dbService.getDb();
-      console.log('TEST: DB connection 1:', dbConn1);
 
       dbService.addUserMessage('123', 'Hello world');
-      console.log('TEST: addUserMessage completed');
 
       const dbConn2 = dbService.getDb();
-      console.log('TEST: DB connection 2:', dbConn2);
-      console.log('TEST: Same connection?', dbConn1 === dbConn2);
-
-      console.log('TEST: Database file exists after:', fs.existsSync(testDbPath));
-
-      if (fs.existsSync(testDbPath)) {
-        const stats = fs.statSync(testDbPath);
-        console.log('TEST: Database file size:', stats.size);
-      }
 
       const messages = dbService.getUserMessages('123');
-      console.log('TEST: Retrieved messages:', messages);
 
       // Try raw SQL query
       const dbConn = dbService.getDb();
       const rawResult = dbConn.prepare('SELECT * FROM user_messages WHERE user_id = ?').all('123');
-      console.log('TEST: Raw SQL result:', rawResult);
 
       expect(messages).toContain('Hello world');
     });

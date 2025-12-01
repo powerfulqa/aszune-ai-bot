@@ -18,6 +18,8 @@ const { CacheManager } = require('./cache-manager');
 const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
 const { getCacheStatsErrorResponse, getEmptyCacheStats } = require('../utils/cache-stats-helper');
+const { buildRequestPayload, getPiSettings } = require('./perplexity-secure/helpers/requestBuilder');
+const { handleApiResponse, extractResponseContent, handleErrorResponse } = require('./perplexity-secure/helpers/responseValidator');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -89,8 +91,8 @@ class PerplexityService {
   getCacheStats() {
     try {
       if (!this.cacheManager) {
-        logger.warn('Cache statistics requested before cache manager initialized');
-        return { ...getEmptyCacheStats(), error: 'Cache unavailable' };
+        logger.warn('Cache manager unavailable while retrieving cache stats');
+        return getCacheStatsErrorResponse('Cache manager unavailable');
       }
       return this.cacheManager.getStats();
     } catch (error) {
@@ -213,24 +215,6 @@ class PerplexityService {
   }
 
   /**
-   * Get PI optimization settings
-   * @returns {Object} PI optimization settings
-   * @private
-   */
-  _getPiSettings() {
-    const defaultSettings = { enabled: false, lowCpuMode: false };
-    try {
-      if (config && typeof config.PI_OPTIMIZATIONS === 'object' && config.PI_OPTIMIZATIONS !== null) {
-        return { enabled: Boolean(config.PI_OPTIMIZATIONS.ENABLED), lowCpuMode: Boolean(config.PI_OPTIMIZATIONS.LOW_CPU_MODE) };
-      }
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'accessing PI_OPTIMIZATIONS config');
-      logger.warn(`Config access error: ${errorResponse.message}`);
-    }
-    return defaultSettings;
-  }
-
-  /**
    * Create headers for API requests
    * @returns {Object} Headers object
    */
@@ -260,161 +244,23 @@ class PerplexityService {
    * @private
    */
   _buildRequestPayload(messages, options) {
-    const payload = {
-      model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
-      messages: messages,
-      max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
-      temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
-    };
-
-    // Get PI optimization settings
-    const piOptSettings = this._getPiOptimizationSettings();
-
-    // Enable streaming for supported environments if not in low CPU mode
-    if (options.stream && piOptSettings.enabled && !piOptSettings.lowCpuMode) {
-      payload.stream = true;
-    }
-
-    return payload;
+    return buildRequestPayload(messages, options);
   }
 
-  /**
-   * Get PI optimization settings from config
-   * @returns {Object} PI optimization settings
-   * @private
-   */
-  _getPiOptimizationSettings() {
-    return this._getPiSettings();
-  }
-
-  /**
-   * Handle API response
-   * @param {Object} response - The API response
-   * @returns {Promise<Object>} - The parsed response
-   * @private
-   */
   async _handleApiResponse(response) {
-    this._validateResponseExists(response);
-    const statusCode = response.statusCode || 500;
-    const body = response.body || null;
-
-    if (statusCode < 200 || statusCode >= 300) {
-      return this._handleErrorResponse(statusCode, body);
-    }
-
-    this._validateResponseBody(body);
-    const responseData = await this._parseResponseJson(body);
-    this._validateResponseStructure(responseData);
-
-    return responseData;
+    return handleApiResponse(response);
   }
 
-  /**
-   * Validate that response exists
-   * @param {Object} response - The API response
-   * @private
-   */
-  _validateResponseExists(response) {
-    if (!response) throw ErrorHandler.createError('Invalid response: response is null or undefined', ERROR_TYPES.API_ERROR);
+  _getPiOptimizationSettings() {
+    return getPiSettings();
   }
 
-  /**
-   * Validate response body
-   * @param {Object} body - Response body
-   * @private
-   */
-  _validateResponseBody(body) {
-    if (!body || typeof body.json !== 'function') throw ErrorHandler.createError('Invalid response: body is missing or does not have json method', ERROR_TYPES.API_ERROR);
-  }
-
-  /**
-   * Parse response as JSON
-   * @param {Object} body - Response body
-   * @returns {Promise<Object>} Parsed JSON
-   * @private
-   */
-  async _parseResponseJson(body) {
-    try {
-      const responseData = await body.json();
-      if (!responseData || typeof responseData !== 'object') throw ErrorHandler.createError('Invalid response: response is not a valid object', ERROR_TYPES.API_ERROR);
-      return responseData;
-    } catch (error) {
-      throw ErrorHandler.createError(`Failed to parse response as JSON: ${error.message}`, ERROR_TYPES.API_ERROR);
-    }
-  }
-
-  /**
-   * Validate response structure
-   * @param {Object} responseData - Parsed response data
-   * @private
-   */
-  _validateResponseStructure(responseData) {
-    if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) throw ErrorHandler.createError('Invalid response: missing or empty choices array', ERROR_TYPES.API_ERROR);
-    const firstChoice = responseData.choices[0];
-    if (!firstChoice || typeof firstChoice !== 'object') throw ErrorHandler.createError('Invalid response: invalid choice structure', ERROR_TYPES.API_ERROR);
-    if (!firstChoice.message || typeof firstChoice.message !== 'object') throw ErrorHandler.createError('Invalid response: choice missing required message field', ERROR_TYPES.API_ERROR);
-  }
-
-  /**
-   * Handle error response
-   * @param {number} statusCode - HTTP status code
-   * @param {Object} body - Response body
-   * @returns {Promise<never>} - Always throws an error
-   * @private
-   */
   async _handleErrorResponse(statusCode, body) {
-    let responseText = 'Could not read response body';
-    if (body && typeof body.text === 'function') {
-      try {
-        responseText = await body.text();
-      } catch (textError) {
-        responseText = `Error reading response body: ${textError.message}`;
-      }
-    }
-
-    // Create a descriptive error message with status code and response content
-    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(0, config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH)}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
-    const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
-    error.statusCode = statusCode;
-    throw error;
+    return handleErrorResponse(statusCode, body);
   }
 
-  /**
-   * Safely extract content from API response
-   * @param {Object} response - API response object
-   * @returns {string} - Extracted content or default message
-   * @private
-   */
   _extractResponseContent(response) {
-    try {
-      // Check if response exists
-      if (!response) {
-        throw new Error('Empty response received from the service.');
-      }
-
-      // Check for choices array
-      if (!response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
-        throw new Error('Empty response received from the service.');
-      }
-
-      // Get the first choice
-      const firstChoice = response.choices[0];
-
-      // Extract content based on structure
-      if (firstChoice.message && typeof firstChoice.message.content === 'string') {
-        return firstChoice.message.content;
-      }
-
-      if (typeof firstChoice.content === 'string') {
-        return firstChoice.content;
-      }
-
-      return 'Sorry, I could not extract content from the response.';
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'extracting response content');
-      logger.warn(`Response processing error: ${errorResponse.message}`);
-      throw error; // Re-throw the error for tests
-    }
+    return extractResponseContent(response);
   }
 
   /**
@@ -434,7 +280,7 @@ class PerplexityService {
 
     try {
       // Get PI optimization settings
-      const piOptSettings = this._getPiOptimizationSettings();
+      const piOptSettings = getPiSettings();
 
       let response;
       if (piOptSettings.enabled) {

@@ -1,9 +1,19 @@
+// Mock crypto BEFORE importing the setup which imports the service
+jest.mock('crypto', () => ({
+  createHash: jest.fn().mockReturnValue({
+    update: jest.fn().mockReturnThis(),
+    digest: jest.fn().mockReturnValue('mock-hash-123'),
+  }),
+}));
+
 const { preparePerplexitySecurePrivate } = require('./perplexity-secure-private.test.setup');
+const crypto = require('crypto');
 
 describe('_generateCacheKey helper', () => {
   let context;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     context = preparePerplexitySecurePrivate();
   });
 
@@ -15,7 +25,7 @@ describe('_generateCacheKey helper', () => {
 
     expect(key1).toBe(key2);
     expect(key1).toBe('mock-hash-123');
-    expect(context.crypto.createHash).toHaveBeenCalledWith('md5');
+    expect(crypto.createHash).toHaveBeenCalledWith('md5');
   });
 
   it('calls crypto for each distinct history', () => {
@@ -25,7 +35,7 @@ describe('_generateCacheKey helper', () => {
     context.PerplexityService._generateCacheKey(history1);
     context.PerplexityService._generateCacheKey(history2);
 
-    expect(context.crypto.createHash).toHaveBeenCalledTimes(2);
-    expect(context.crypto.createHash).toHaveBeenCalledWith('md5');
+    expect(crypto.createHash).toHaveBeenCalledTimes(2);
+    expect(crypto.createHash).toHaveBeenCalledWith('md5');
   });
 });
