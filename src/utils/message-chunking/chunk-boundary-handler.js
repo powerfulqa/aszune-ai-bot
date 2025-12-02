@@ -3,7 +3,10 @@
  * Handles intelligent chunking of messages to avoid breaking content at inappropriate boundaries
  */
 const logger = require('../logger');
-const { ErrorHandler } = require('../error-handler');
+const {
+  handleTextProcessingError,
+  handleChunkProcessingError,
+} = require('./error-helpers');
 
 /**
  * Process and fix message formatting issues before chunking
@@ -41,14 +44,7 @@ function preprocessMessage(message) {
 
     return processedMessage;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'preprocessing message', {
-      messageLength: message?.length || 0,
-    });
-    ErrorHandler.logError(errorResponse, {
-      operation: 'preprocessMessage',
-      messageLength: message?.length || 0,
-    });
-    return message; // Return original message if preprocessing fails
+    return handleTextProcessingError(error, 'preprocessing message', message);
   }
 }
 
@@ -68,16 +64,7 @@ function fixChunkBoundaries(chunks, safeMaxLength) {
 
     return chunks;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'fixing chunk boundaries', {
-      chunkCount: chunks?.length || 0,
-      safeMaxLength,
-    });
-    ErrorHandler.logError(errorResponse, {
-      operation: 'fixChunkBoundaries',
-      chunkCount: chunks?.length || 0,
-      safeMaxLength,
-    });
-    return chunks; // Return original chunks if fixing fails
+    return handleChunkProcessingError(error, 'fixing chunk boundaries', chunks, { safeMaxLength });
   }
 }
 
@@ -283,10 +270,7 @@ function validateChunkBoundaries(chunks) {
 
     return true;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'validating chunk boundaries', {
-      chunkCount: chunks?.length || 0,
-    });
-    logger.error(`Chunk boundary validation error: ${errorResponse.message}`);
+    handleTextProcessingError(error, 'validating chunk boundaries', null);
     return false;
   }
 }

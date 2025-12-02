@@ -119,8 +119,7 @@ describe('MessageFormatter - Coverage Improvements', () => {
     });
 
     it('should handle multiple source links with multiple URLs', () => {
-      const text =
-        'See (1) and (2) for details https://first.com https://second.com';
+      const text = 'See (1) and (2) for details https://first.com https://second.com';
       const result = messageFormatter.formatResponse(text);
       expect(result).toBeDefined();
     });
@@ -147,9 +146,7 @@ describe('MessageFormatter - Coverage Improvements', () => {
   describe('_breakLongParagraphs private method via formatResponse', () => {
     it('should break very long paragraphs at sentence boundaries', () => {
       const longParagraph =
-        'This is sentence one. This is sentence two. This is sentence three. '.repeat(
-          50
-        );
+        'This is sentence one. This is sentence two. This is sentence three. '.repeat(50);
       const result = messageFormatter.formatResponse(longParagraph);
       expect(result).toBeDefined();
       // Result should contain paragraph breaks
@@ -164,9 +161,7 @@ describe('MessageFormatter - Coverage Improvements', () => {
 
     it('should handle mixed length paragraphs', () => {
       const mixed =
-        'Short.\n\n' +
-        'This is a longer sentence that repeats. '.repeat(20) +
-        '\n\nAnother short.';
+        'Short.\n\n' + 'This is a longer sentence that repeats. '.repeat(20) + '\n\nAnother short.';
       const result = messageFormatter.formatResponse(mixed);
       expect(result).toBeDefined();
     });

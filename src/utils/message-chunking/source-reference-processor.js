@@ -2,8 +2,7 @@
  * Source Reference Processor
  * Handles collection and formatting of source references in messages
  */
-const logger = require('../logger');
-const { ErrorHandler } = require('../error-handler');
+const { handleTextProcessingError } = require('./error-helpers');
 
 /**
  * Process pattern 1 matches: (n) followed by URL
@@ -77,10 +76,7 @@ function collectSourceReferences(text) {
 
     return sources;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'collecting source references', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`Source reference collection error: ${errorResponse.message}`);
+    handleTextProcessingError(error, 'collecting source references', text);
     return {};
   }
 }
@@ -102,12 +98,7 @@ function formatSourceReferences(text, sourceMap) {
 
     result = performSourceReferenceFormatting(text, sourceMap);
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting source references', {
-      textLength: text?.length || 0,
-      sourceCount: Object.keys(sourceMap || {}).length,
-    });
-    logger.error(`Source reference formatting error: ${errorResponse.message}`);
-    // result remains as original text on error
+    return handleTextProcessingError(error, 'formatting source references', text);
   }
 
   return result;
@@ -292,11 +283,7 @@ function processSourceReferences(text) {
     // Second pass: Format each source reference with its URL
     return formatSourceReferences(text, sourceMap);
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'processing source references', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`Source reference processing error: ${errorResponse.message}`);
-    return text; // Return original text if processing fails
+    return handleTextProcessingError(error, 'processing source references', text);
   }
 }
 

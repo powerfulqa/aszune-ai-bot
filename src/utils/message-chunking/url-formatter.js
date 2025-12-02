@@ -25,8 +25,7 @@
  * @author
  * @version 1.0.0
  */
-const logger = require('../logger');
-const { ErrorHandler } = require('../error-handler');
+const { handleTextProcessingError } = require('./error-helpers');
 
 /**
  * Format social media links (Reddit, Imgur, GitHub, Twitter/X)
@@ -85,11 +84,7 @@ function formatSocialMediaLinks(text) {
 
     return formattedText;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting social media links', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`Social media formatting error: ${errorResponse.message}`);
-    return text;
+    return handleTextProcessingError(error, 'formatting social media links', text);
   }
 }
 
@@ -151,11 +146,7 @@ function formatYouTubeLinks(text) {
 
     return formattedText;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting YouTube links', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`YouTube formatting error: ${errorResponse.message}`);
-    return text;
+    return handleTextProcessingError(error, 'formatting YouTube links', text);
   }
 }
 
@@ -175,11 +166,7 @@ function formatStarsectorLinks(text) {
 
     result = performStarsectorLinkFormatting(text);
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting Starsector links', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`Starsector formatting error: ${errorResponse.message}`);
-    // result remains as original text on error
+    return handleTextProcessingError(error, 'formatting Starsector links', text);
   }
 
   return result;
@@ -398,11 +385,7 @@ function fixLinkFormatting(text) {
 
     return formattedText;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'fixing link formatting', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`Link formatting error: ${errorResponse.message}`);
-    return text;
+    return handleTextProcessingError(error, 'fixing link formatting', text);
   }
 }
 
@@ -425,11 +408,7 @@ function formatAllUrls(text) {
 
     return formattedText;
   } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting all URLs', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`URL formatting error: ${errorResponse.message}`);
-    return text;
+    return handleTextProcessingError(error, 'formatting all URLs', text);
   }
 }
 
