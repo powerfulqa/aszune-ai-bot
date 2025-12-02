@@ -40,9 +40,9 @@ function buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers) {
         value:
           dashboardData.alerts && dashboardData.alerts.length > 0
             ? dashboardData.alerts
-              .slice(0, 3)
-              .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
-              .join('\n')
+                .slice(0, 3)
+                .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
+                .join('\n')
             : '✅ No active alerts',
         inline: false,
       },

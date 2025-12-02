@@ -51,8 +51,8 @@ function buildCacheEmbed(cacheStats, detailedInfo) {
   const recentEntriesValue =
     detailedInfo && detailedInfo.recentEntries && detailedInfo.recentEntries.length > 0
       ? detailedInfo.recentEntries
-        .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
-        .join('\n')
+          .map((entry) => `• ${entry.key}: ${entry.value} (TTL: ${entry.ttl}s)`)
+          .join('\n')
       : 'No recent entries';
 
   const recentEntriesField = {

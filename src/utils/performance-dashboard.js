@@ -481,17 +481,17 @@ class PerformanceDashboard {
    */
   static exportDashboardData(dashboardData, format = 'json') {
     switch (format.toLowerCase()) {
-    case 'json':
-      return JSON.stringify(dashboardData, null, 2);
+      case 'json':
+        return JSON.stringify(dashboardData, null, 2);
 
-    case 'csv':
-      return this._exportToCSV(dashboardData);
+      case 'csv':
+        return this._exportToCSV(dashboardData);
 
-    case 'text':
-      return this._exportToText(dashboardData);
+      case 'text':
+        return this._exportToText(dashboardData);
 
-    default:
-      return JSON.stringify(dashboardData, null, 2);
+      default:
+        return JSON.stringify(dashboardData, null, 2);
     }
   }
 

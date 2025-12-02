@@ -113,7 +113,7 @@ describe('DatabaseService - Analytics', () => {
       // Verify table exists first
       const db = dbService.getDb();
       const tableCheck = db
-        .prepare('SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'performance_metrics\'')
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='performance_metrics'")
         .get();
       expect(tableCheck).toBeDefined();
 

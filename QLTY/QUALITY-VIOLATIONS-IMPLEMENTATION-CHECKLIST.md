@@ -326,6 +326,7 @@ Fixes commands error violations"
 1. [ ] Open test file
 2. [ ] Locate the main describe block
 3. [ ] Create nested describe blocks for each group:
+
    ```javascript
    describe('Main Suite', () => {
      // Shared beforeEach at top level
@@ -346,6 +347,7 @@ Fixes commands error violations"
      });
    });
    ```
+
 4. [ ] Move group-specific setup to nested beforeEach
 5. [ ] Keep shared setup at top level
 6. [ ] Extract repeated mock setup to helper function if needed

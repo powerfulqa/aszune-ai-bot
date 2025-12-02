@@ -493,10 +493,10 @@ class Dashboard {
         (row) => `
         <tr>
           ${columns
-    .map(
-      (col) => `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
-    )
-    .join('')}
+            .map(
+              (col) => `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
+            )
+            .join('')}
         </tr>
       `
       )
@@ -577,23 +577,23 @@ class Dashboard {
         </thead>
         <tbody>
           ${filtered
-    .map(
-      (row) => `
+            .map(
+              (row) => `
             <tr>
               ${columns
-    .map((col) => {
-      let value = row[col];
-      if (value === null || value === undefined) value = '-';
-      if (typeof value === 'string' && value.length > 100) {
-        value = value.substring(0, 100) + '...';
-      }
-      return `<td>${this.escapeHtml(String(value))}</td>`;
-    })
-    .join('')}
+                .map((col) => {
+                  let value = row[col];
+                  if (value === null || value === undefined) value = '-';
+                  if (typeof value === 'string' && value.length > 100) {
+                    value = value.substring(0, 100) + '...';
+                  }
+                  return `<td>${this.escapeHtml(String(value))}</td>`;
+                })
+                .join('')}
             </tr>
           `
-    )
-    .join('')}
+            )
+            .join('')}
         </tbody>
       </table>
     `;

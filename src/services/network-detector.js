@@ -113,7 +113,7 @@ class NetworkDetector {
 
   static _getGatewayCommand() {
     if (process.platform === 'linux' || process.platform === 'darwin') {
-      return 'ip route | grep default | awk \'{print $3}\' | head -1';
+      return "ip route | grep default | awk '{print $3}' | head -1";
     }
     if (process.platform === 'win32') {
       return 'route print | findstr /R "0.0.0.0.*0.0.0.0" | findstr /V "255.255.255.255"';

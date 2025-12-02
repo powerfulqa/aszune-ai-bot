@@ -1,7 +1,7 @@
 {
   "name": "aszuneai",
   "version": "1.9.0",
-  "description": "Aszune AI Bot - Discord bot with Perplexity AI integration",
+  "description": "A Discord bot specialized in gaming lore, game logic, guides, and advice using the Perplexity API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -43,7 +43,6 @@
   ],
   "author": "Chris Haycock <powerfulqa@users.noreply.github.com>",
   "license": "UNLICENSED",
-  "description": "A Discord bot specialized in gaming lore, game logic, guides, and advice using the Perplexity API",
   "repository": {
     "type": "git",
     "url": "https://github.com/powerfulqa/aszune-ai-bot.git"
@@ -57,7 +56,7 @@
     "chrono-node": "^2.9.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
-    "express": "^4.18.2",
+    "express": "^4.22.0",
     "socket.io": "^4.7.2",
     "undici": "^7.12.0"
   },

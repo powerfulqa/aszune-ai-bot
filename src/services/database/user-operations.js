@@ -2,15 +2,15 @@ const logger = require('../../utils/logger');
 
 const schemaAttempts = [
   {
-    sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username) VALUES (?, 0, ?, ?, 0, 0, \'{}\', ?)',
+    sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences, username) VALUES (?, 0, ?, ?, 0, 0, '{}', ?)",
     params: (userId, now, username) => [userId, now, now, username],
   },
   {
-    sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, \'{}\')',
+    sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, first_seen, total_summaries, total_commands, preferences) VALUES (?, 0, ?, ?, 0, 0, '{}')",
     params: (userId, now) => [userId, now, now],
   },
   {
-    sql: 'INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, \'{}\')',
+    sql: "INSERT OR IGNORE INTO user_stats (user_id, message_count, last_active, total_summaries, total_commands, preferences) VALUES (?, 0, ?, 0, 0, '{}')",
     params: (userId, now) => [userId, now],
   },
   {

@@ -113,9 +113,10 @@ http.Agent({ keepAlive: true, maxSockets: 5 }); const httpsAgent = new https.Age
 true, maxSockets: 5 });
 
 // Monitor startup resource usage function logSystemResources() { const mem = process.memoryUsage();
-logger.info('Memory usage', { heapUsed: ${Math.round(mem.heapUsed / 1024 / 1024)}MB, heapTotal:
-${Math.round(mem.heapTotal / 1024 / 1024)}MB, external: ${Math.round(mem.external / 1024 / 1024)}MB
-}); }
+logger.info('Memory usage', { heapUsed:
+${Math.round(mem.heapUsed / 1024 / 1024)}MB, heapTotal:
+${Math.round(mem.heapTotal / 1024 / 1024)}MB,
+external: ${Math.round(mem.external / 1024 / 1024)}MB }); }
 
 text
 
