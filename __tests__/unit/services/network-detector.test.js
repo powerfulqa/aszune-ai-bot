@@ -68,7 +68,7 @@ describe('NetworkDetector', () => {
   it('parses DNS servers from resolv.conf on Linux', async () => {
     setPlatform('linux');
     mockExecPromise.mockResolvedValueOnce({
-      stdout: 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n'
+      stdout: 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n',
     });
     const servers = await NetworkDetector.detectDnsServers();
     expect(servers).toEqual(['1.1.1.1', '8.8.8.8']);
@@ -76,9 +76,7 @@ describe('NetworkDetector', () => {
 
   it('detects DHCP from DietPi config', async () => {
     setPlatform('linux');
-    const dietSpy = jest
-      .spyOn(NetworkDetector, '_checkDietPiConfig')
-      .mockResolvedValue('DHCP');
+    const dietSpy = jest.spyOn(NetworkDetector, '_checkDietPiConfig').mockResolvedValue('DHCP');
 
     const result = await NetworkDetector.detectDhcpOrStatic();
     expect(result).toBe('DHCP');
@@ -119,12 +117,8 @@ describe('NetworkDetector', () => {
     const gatewaySpy = jest
       .spyOn(NetworkDetector, 'detectGateway')
       .mockResolvedValue({ gatewayIp: '1.2.3.4', reachable: true });
-    const dnsSpy = jest
-      .spyOn(NetworkDetector, 'detectDnsServers')
-      .mockResolvedValue(['8.8.8.8']);
-    const ipSpy = jest
-      .spyOn(NetworkDetector, 'detectDhcpOrStatic')
-      .mockResolvedValue('Static');
+    const dnsSpy = jest.spyOn(NetworkDetector, 'detectDnsServers').mockResolvedValue(['8.8.8.8']);
+    const ipSpy = jest.spyOn(NetworkDetector, 'detectDhcpOrStatic').mockResolvedValue('Static');
     const dnsTestSpy = jest.spyOn(NetworkDetector, '_testDns').mockResolvedValue(true);
     const internetSpy = jest.spyOn(NetworkDetector, '_testInternet').mockResolvedValue(false);
 

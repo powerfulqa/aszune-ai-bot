@@ -229,9 +229,7 @@ async function addInternetTests(results) {
   for (const target of targets) {
     try {
       const pingCmd =
-        process.platform === 'win32'
-          ? `ping -n 1 ${target.host}`
-          : `ping -c 1 ${target.host}`;
+        process.platform === 'win32' ? `ping -n 1 ${target.host}` : `ping -c 1 ${target.host}`;
       await execPromise(pingCmd, { timeout: 3000 });
       results.push(`✓ ${target.name} (${target.host}) is reachable`);
     } catch (error) {

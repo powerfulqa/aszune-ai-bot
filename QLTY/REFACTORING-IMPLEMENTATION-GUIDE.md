@@ -1,9 +1,10 @@
 # Dashboard Maintainability Refactoring - Implementation Guide
 
 ## Licensing Removal - COMPLETED ✅
+
 - Removed license-validator.js, license-server.js
 - Removed all license generation scripts
-- Removed LICENSE_* features from config.js
+- Removed LICENSE\_\* features from config.js
 - Removed license validation from index.js
 - Removed license documentation
 
@@ -12,6 +13,7 @@
 ## Web Dashboard Refactoring Strategy (Priority 1)
 
 ### Current Status
+
 - **Complexity**: 402
 - **Lines**: 3365
 - **File Maintainability**: F
@@ -21,39 +23,51 @@
 The web-dashboard.js file should be split into focused handler modules:
 
 #### 1. **Core Dashboard Service** (web-dashboard.js - reduced to ~500 lines)
+
 Keep only:
+
 - WebDashboardService class constructor and lifecycle
 - Server initialization and binding
 - Socket.IO setup
 - Route registration delegation
 
 #### 2. **Socket.IO Handlers** (dashboard-socket-handlers.js - ~200 lines)
+
 Extract:
+
 - Analytics requests
 - Metrics requests
 - Status requests
 - Service status requests
 
 #### 3. **Configuration Handlers** (dashboard-config-handlers.js - ~250 lines)
+
 Extract:
+
 - Config file operations (read/write/validate)
 - Config backup/restore
 - Config validation rules
 
 #### 4. **Service Control Handlers** (dashboard-service-handlers.js - ~200 lines)
+
 Extract:
+
 - Service start/stop/restart
 - Quick service actions
 - Service status queries
 
 #### 5. **Database Handlers** (dashboard-database-handlers.js - ~180 lines)
+
 Extract:
+
 - Database table queries
 - Database stats
 - Data export
 
 #### 6. **Network Handlers** (dashboard-network-handlers.js - ~200 lines)
+
 Extract:
+
 - Network interface queries
 - Network tests
 - IP address detection
@@ -90,6 +104,7 @@ class WebDashboardService {
 ## Dashboard.js Frontend Refactoring (Priority 2)
 
 ### Current Status
+
 - **Complexity**: 117
 - **Lines**: High in single class
 
@@ -127,7 +142,9 @@ class Dashboard {
 ## Code Deduplication Opportunities
 
 ### 1. Cache Stats Error Response (5 locations)
+
 Create shared utility:
+
 ```javascript
 // src/utils/cache-response-helper.js
 function getCacheStatsErrorResponse(error, context) {
@@ -153,7 +170,9 @@ function getCacheStatsErrorResponse(error, context) {
 ```
 
 ### 2. Database Query Pattern (18+ locations in database.js)
+
 Create helper:
+
 ```javascript
 // src/services/database-query-helper.js
 executeQueryWithErrorHandling(fn, errorMsg) {
@@ -167,7 +186,9 @@ executeQueryWithErrorHandling(fn, errorMsg) {
 ```
 
 ### 3. Error Response Pattern (12+ locations in web-dashboard)
+
 Create helper:
+
 ```javascript
 // src/utils/api-response-helper.js
 sendErrorResponse(res, statusCode, message) {
@@ -184,15 +205,15 @@ sendErrorResponse(res, statusCode, message) {
 
 ## Quality Metrics Expected After Refactoring
 
-| Metric | Before | After |
-|--------|--------|-------|
-| web-dashboard complexity | 402 | ~100 (split across modules) |
-| perplexity-secure complexity | 150 | ~80 |
-| index.js complexity | 49 | ~30 |
-| Code smells | 122 | <20 |
-| Duplication | High | Low |
-| Maintainability | F | A |
-| Coverage | 75.4% | >80% |
+| Metric                       | Before | After                       |
+| ---------------------------- | ------ | --------------------------- |
+| web-dashboard complexity     | 402    | ~100 (split across modules) |
+| perplexity-secure complexity | 150    | ~80                         |
+| index.js complexity          | 49     | ~30                         |
+| Code smells                  | 122    | <20                         |
+| Duplication                  | High   | Low                         |
+| Maintainability              | F      | A                           |
+| Coverage                     | 75.4%  | >80%                        |
 
 ## Testing Strategy
 
@@ -233,5 +254,4 @@ sendErrorResponse(res, statusCode, message) {
 ✅ Zero licensing code  
 ✅ All tests passing  
 ✅ Code coverage > 80%  
-✅ Reduced code duplication  
-
+✅ Reduced code duplication

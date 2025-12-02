@@ -24,27 +24,27 @@ Use this checklist to track progress through each refactoring phase.
 ## 🟢 Phase 1: Logger Refactoring (2 hours, ROI 2.0)
 
 **Target File**: `src/utils/logger.js`  
-**Target**: Remove 15 console violations  
+**Target**: Remove 15 console violations
 
 ### Violations to Fix
 
-| Line | Method | Issue | Status |
-|------|--------|-------|--------|
-| 34 | _ensureLogDirectory | console.error | ☐ |
-| 67 | _writeToFile | console.error | ☐ |
-| 101 | _rotateLogFileIfNeeded | console.error | ☐ |
-| 122 | debug | console.log | ☐ |
-| 126 | debug | console.log data | ☐ |
-| 152 | info | console.log | ☐ |
-| 153 | info | console.log data | ☐ |
-| 169 | warn | console.warn | ☐ |
-| 170 | warn | console.warn data | ☐ |
-| 186 | error | console.error | ☐ |
-| 201 | error | console.error API response | ☐ |
-| 208 | error | console.error no response | ☐ |
-| 211 | error | console.error object | ☐ |
-| 220 | error | console.error message | ☐ |
-| 221 | error | console.error stack | ☐ |
+| Line | Method                  | Issue                      | Status |
+| ---- | ----------------------- | -------------------------- | ------ |
+| 34   | \_ensureLogDirectory    | console.error              | ☐      |
+| 67   | \_writeToFile           | console.error              | ☐      |
+| 101  | \_rotateLogFileIfNeeded | console.error              | ☐      |
+| 122  | debug                   | console.log                | ☐      |
+| 126  | debug                   | console.log data           | ☐      |
+| 152  | info                    | console.log                | ☐      |
+| 153  | info                    | console.log data           | ☐      |
+| 169  | warn                    | console.warn               | ☐      |
+| 170  | warn                    | console.warn data          | ☐      |
+| 186  | error                   | console.error              | ☐      |
+| 201  | error                   | console.error API response | ☐      |
+| 208  | error                   | console.error no response  | ☐      |
+| 211  | error                   | console.error object       | ☐      |
+| 220  | error                   | console.error message      | ☐      |
+| 221  | error                   | console.error stack        | ☐      |
 
 ### Refactoring Steps
 
@@ -65,6 +65,7 @@ Use this checklist to track progress through each refactoring phase.
    ```
 5. [ ] Verify no test failures introduced
 6. [ ] Commit:
+
    ```bash
    git add src/utils/logger.js
    git commit -m "refactor(logger): remove console statements for silent library operation
@@ -73,7 +74,7 @@ Use this checklist to track progress through each refactoring phase.
    - Remove console output from private methods (_ensureLogDirectory, etc)
    - Keep file-based logging as primary output
    - Principle: Libraries should be silent utilities
-   
+
    Fixes 15 console violations"
    ```
 
@@ -89,7 +90,8 @@ Use this checklist to track progress through each refactoring phase.
 
 ## 🟡 Phase 2: Unused Variables Cleanup (1 hour)
 
-**Target Files**: 
+**Target Files**:
+
 - `__tests__/unit/index-uncovered-paths.test.js`
 - `__tests__/unit/index.test.js`
 - `src/services/web-dashboard.js`
@@ -98,18 +100,18 @@ Use this checklist to track progress through each refactoring phase.
 
 ### Violations to Fix
 
-| File | Line | Variable | Status |
-|------|------|----------|--------|
-| index-uncovered-paths.test.js | 1 | Client (import) | ☐ |
-| index-uncovered-paths.test.js | 1 | GatewayIntentBits (import) | ☐ |
-| index-uncovered-paths.test.js | 1 | REST (import) | ☐ |
-| index-uncovered-paths.test.js | 1 | Routes (import) | ☐ |
-| index.test.js | 400 | reminderServiceMock | ☐ |
-| index.test.js | 401 | localMockClientReadyHandler | ☐ |
-| index.test.js | 402 | testLoggerMock | ☐ |
-| web-dashboard.js | 1848 | stderr | ☐ |
-| web-dashboard.js | 2156 | gateway | ☐ |
-| web-dashboard.js | 2324 | name | ☐ |
+| File                          | Line | Variable                    | Status |
+| ----------------------------- | ---- | --------------------------- | ------ |
+| index-uncovered-paths.test.js | 1    | Client (import)             | ☐      |
+| index-uncovered-paths.test.js | 1    | GatewayIntentBits (import)  | ☐      |
+| index-uncovered-paths.test.js | 1    | REST (import)               | ☐      |
+| index-uncovered-paths.test.js | 1    | Routes (import)             | ☐      |
+| index.test.js                 | 400  | reminderServiceMock         | ☐      |
+| index.test.js                 | 401  | localMockClientReadyHandler | ☐      |
+| index.test.js                 | 402  | testLoggerMock              | ☐      |
+| web-dashboard.js              | 1848 | stderr                      | ☐      |
+| web-dashboard.js              | 2156 | gateway                     | ☐      |
+| web-dashboard.js              | 2324 | name                        | ☐      |
 
 ### Refactoring Steps
 
@@ -143,7 +145,9 @@ const { Client, GatewayIntentBits, REST, Routes } = require('discord.js'); // Al
 
 ```javascript
 // BEFORE: Test variables
-const reminderServiceMock = { /* ... */ }; // Unused
+const reminderServiceMock = {
+  /* ... */
+}; // Unused
 const localMockClientReadyHandler = jest.fn(); // Unused
 
 // AFTER: Remove entirely or prefix
@@ -155,7 +159,7 @@ const localMockClientReadyHandler = jest.fn(); // Unused
 // BEFORE: Web dashboard destructuring
 const { stderr, stdout } = spawn(...); // stderr unused
 
-// AFTER: 
+// AFTER:
 const { stdout } = spawn(...); // Remove unused stderr
 // Or: const { _stderr, stdout } = spawn(...); // Prefix if intentional
 ```
@@ -172,17 +176,17 @@ const { stdout } = spawn(...); // Remove unused stderr
 ## 🔵 Phase 3: Commands Refactoring (4 hours)
 
 **Target File**: `src/commands/index.js`  
-**Target**: Extract helper methods from 5 execute() functions  
+**Target**: Extract helper methods from 5 execute() functions
 
 ### Commands to Refactor
 
-| Command | Line | Current Lines | Target Lines | Status |
-|---------|------|---------------|--------------|--------|
-| analytics | 261 | 98 | 12 | ☐ |
-| dashboard | 385 | 87 | 10 | ☐ |
-| resources | 491 | 61 | 12 | ☐ |
-| cache | 580 | 55 | 10 | ☐ |
-| reminder | 650 | 48 | 9 | ☐ |
+| Command   | Line | Current Lines | Target Lines | Status |
+| --------- | ---- | ------------- | ------------ | ------ |
+| analytics | 261  | 98            | 12           | ☐      |
+| dashboard | 385  | 87            | 10           | ☐      |
+| resources | 491  | 61            | 12           | ☐      |
+| cache     | 580  | 55            | 10           | ☐      |
+| reminder  | 650  | 48            | 9            | ☐      |
 
 ### Refactoring Pattern (Repeat for each command)
 
@@ -279,6 +283,7 @@ Fixes commands error violations"
 ## 🟣 Phase 4: Test File Restructuring (6 hours)
 
 **Target Files** (Focus on these large files):
+
 1. `__tests__/unit/services/perplexity-secure-comprehensive.test.js` (681 lines)
 2. `__tests__/unit/services/database.test.js` (222 lines)
 3. `__tests__/unit/services/reminder-service.test.js` (308 lines)
@@ -295,7 +300,6 @@ Fixes commands error violations"
   ```bash
   grep -n "it('" __tests__/unit/services/perplexity-secure-comprehensive.test.js | head -20
   ```
-  
 - [ ] Group 1: `_safeGetHeader` tests (~8 tests, ~60 lines)
 - [ ] Group 2: Caching functionality (~15 tests, ~140 lines)
 - [ ] Group 3: Response processing (~12 tests, ~120 lines)
@@ -325,15 +329,19 @@ Fixes commands error violations"
    ```javascript
    describe('Main Suite', () => {
      // Shared beforeEach at top level
-     
+
      describe('Group 1 Name', () => {
-       beforeEach(() => { /* group setup */ });
+       beforeEach(() => {
+         /* group setup */
+       });
        it('test 1');
        it('test 2');
      });
-     
+
      describe('Group 2 Name', () => {
-       beforeEach(() => { /* group setup */ });
+       beforeEach(() => {
+         /* group setup */
+       });
        it('test 3');
      });
    });
@@ -353,15 +361,21 @@ Fixes commands error violations"
 For test files with repetitive setup:
 
 - [ ] Create test helper functions:
+
   ```javascript
   function createMockPerplexityService() {
-    return { /* setup */ };
+    return {
+      /* setup */
+    };
   }
-  
+
   function createMockResponse(type, status) {
-    return { /* mock response */ };
+    return {
+      /* mock response */
+    };
   }
   ```
+
 - [ ] Place helpers before main describe block
 - [ ] Call from within nested beforeEach
 
@@ -400,17 +414,17 @@ Fixes test file size violations"
 ## 🔴 Phase 5: Web Dashboard Refactoring (5 hours - MOST COMPLEX)
 
 **Target File**: `src/services/web-dashboard.js` (3,372 lines)  
-**Target**: Decompose 15 complex methods  
+**Target**: Decompose 15 complex methods
 
 ### Critical Methods (Do First)
 
-| Method | Line | Type | Priority | Status |
-|--------|------|------|----------|--------|
-| detectDhcpOrStatic | 1319 | **MAX-DEPTH** | 🔴 CRITICAL | ☐ |
-| handleNetworkTest | 2220 | **COMPLEXITY** | 🔴 CRITICAL | ☐ |
-| setupControlRoutes | 1739 | High lines | 🟠 HIGH | ☐ |
-| getMetrics | 2887 | High complexity | 🟠 HIGH | ☐ |
-| handleNetworkStatus | 2150 | Complex | 🟠 HIGH | ☐ |
+| Method              | Line | Type            | Priority    | Status |
+| ------------------- | ---- | --------------- | ----------- | ------ |
+| detectDhcpOrStatic  | 1319 | **MAX-DEPTH**   | 🔴 CRITICAL | ☐      |
+| handleNetworkTest   | 2220 | **COMPLEXITY**  | 🔴 CRITICAL | ☐      |
+| setupControlRoutes  | 1739 | High lines      | 🟠 HIGH     | ☐      |
+| getMetrics          | 2887 | High complexity | 🟠 HIGH     | ☐      |
+| handleNetworkStatus | 2150 | Complex         | 🟠 HIGH     | ☐      |
 
 ### Method 1: detectDhcpOrStatic (CRITICAL - Max Depth Violation)
 
@@ -538,27 +552,35 @@ Fixes max-depth CRITICAL violation"
 After all phases complete:
 
 - [ ] Run full test suite:
+
   ```bash
   npm test
   ```
+
   Expected: 1,228 tests passing
 
 - [ ] Run quality check:
+
   ```bash
   npm run quality:check
   ```
+
   Expected: 0 violations (all 64 fixed)
 
 - [ ] Run coverage:
+
   ```bash
   npm run coverage
   ```
+
   Expected: Coverage ≥ baseline
 
 - [ ] Lint check:
+
   ```bash
   npm run lint
   ```
+
   Expected: Clean ESLint output
 
 - [ ] Manual testing:
@@ -569,6 +591,7 @@ After all phases complete:
   - [ ] Verify log files written correctly
 
 - [ ] Review all commits:
+
   ```bash
   git log --oneline origin/main..HEAD
   ```
@@ -591,14 +614,14 @@ After all phases complete:
 
 ### Metrics Tracking
 
-| Phase | Before | Target | After | ✓ |
-|-------|--------|--------|-------|---|
-| Logger | 15 console calls | 0 | | ☐ |
-| Unused | 7 warnings | 0 | | ☐ |
-| Commands | 5 × 98 lines | 5 × 12 lines | | ☐ |
-| Tests | 9 × 200+ lines | 9 × organized | | ☐ |
-| Dashboard | 26 complexity | <15 | | ☐ |
-| Dashboard | depth 5 | ≤4 | | ☐ |
+| Phase     | Before           | Target        | After | ✓   |
+| --------- | ---------------- | ------------- | ----- | --- |
+| Logger    | 15 console calls | 0             |       | ☐   |
+| Unused    | 7 warnings       | 0             |       | ☐   |
+| Commands  | 5 × 98 lines     | 5 × 12 lines  |       | ☐   |
+| Tests     | 9 × 200+ lines   | 9 × organized |       | ☐   |
+| Dashboard | 26 complexity    | <15           |       | ☐   |
+| Dashboard | depth 5          | ≤4            |       | ☐   |
 
 ---
 
@@ -648,16 +671,16 @@ Use below to track decisions, blockers, or insights during refactoring:
 
 ```
 Decisions Made:
-- 
+-
 
 Blockers Encountered:
-- 
+-
 
 Insights:
-- 
+-
 
 Questions:
-- 
+-
 ```
 
 ---
@@ -665,4 +688,4 @@ Questions:
 **Document Created**: November 25, 2025  
 **Last Updated**: [Update as progress]  
 **Status**: Ready for Implementation  
-**Estimated Total Time**: 18 hours  
+**Estimated Total Time**: 18 hours

@@ -15,7 +15,9 @@ describe('Shutdown Error Scenarios', () => {
   });
 
   it('should handle conversation manager shutdown errors', async () => {
-    context.mockConversationManager.destroy.mockRejectedValueOnce(new Error('Conversation manager error'));
+    context.mockConversationManager.destroy.mockRejectedValueOnce(
+      new Error('Conversation manager error')
+    );
 
     // Shutdown should complete without throwing even if conversation manager fails
     await expect(context.index.shutdown('SIGINT')).resolves.not.toThrow();

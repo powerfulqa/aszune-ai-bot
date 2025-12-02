@@ -69,9 +69,7 @@ describe('Reminder command helpers', () => {
     );
     expect(message.reply).toHaveBeenCalledWith(
       expect.objectContaining({
-        embeds: expect.arrayContaining([
-          expect.objectContaining({ title: '✅ Reminder Set!' }),
-        ]),
+        embeds: expect.arrayContaining([expect.objectContaining({ title: '✅ Reminder Set!' })]),
       })
     );
   });
@@ -150,9 +148,7 @@ describe('Reminder command helpers', () => {
 
     expect(message.reply).toHaveBeenCalledWith(
       expect.objectContaining({
-        embeds: expect.arrayContaining([
-          expect.objectContaining({ title: 'Reminder Not Found' }),
-        ]),
+        embeds: expect.arrayContaining([expect.objectContaining({ title: 'Reminder Not Found' })]),
       })
     );
   });
@@ -182,8 +178,6 @@ describe('Reminder command helpers', () => {
   it('logs reminder due events without throwing', async () => {
     const reminder = { id: 42, user_id: 'user-1', message: 'Reminder' };
     await handleReminderDue(reminder);
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Reminder due: 42')
-    );
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Reminder due: 42'));
   });
 });

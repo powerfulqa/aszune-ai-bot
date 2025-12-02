@@ -27,7 +27,9 @@ describe('database schema helper', () => {
     schema.initializeTables(db);
 
     expect(db.exec).toHaveBeenCalledTimes(schema._test.tableCreators.length);
-    expect(db.exec.mock.calls.some((call) => call[0].includes('CREATE TABLE IF NOT EXISTS user_stats'))).toBe(true);
+    expect(
+      db.exec.mock.calls.some((call) => call[0].includes('CREATE TABLE IF NOT EXISTS user_stats'))
+    ).toBe(true);
   });
 
   it('builds indexes in a single execution context', () => {
@@ -36,7 +38,9 @@ describe('database schema helper', () => {
     schema.createIndexes(db);
 
     expect(db.exec).toHaveBeenCalledTimes(1);
-    expect(db.exec).toHaveBeenCalledWith(expect.stringContaining('CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp'));
+    expect(db.exec).toHaveBeenCalledWith(
+      expect.stringContaining('CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp')
+    );
   });
 
   it('deploys triggers for history and messages', () => {
@@ -56,7 +60,9 @@ describe('database schema helper', () => {
       schema.runMigrations(db);
 
       expect(db.exec).toHaveBeenCalledTimes(1);
-      expect(db.exec).toHaveBeenCalledWith(expect.stringContaining('ALTER TABLE user_stats ADD COLUMN username TEXT'));
+      expect(db.exec).toHaveBeenCalledWith(
+        expect.stringContaining('ALTER TABLE user_stats ADD COLUMN username TEXT')
+      );
     });
 
     it('is no-op when username already exists', () => {

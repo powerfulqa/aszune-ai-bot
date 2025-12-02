@@ -4,7 +4,10 @@ const config = require('../../../config/config');
 
 function _validateResponseExists(response) {
   if (!response) {
-    throw ErrorHandler.createError('Invalid response: response is null or undefined', ERROR_TYPES.API_ERROR);
+    throw ErrorHandler.createError(
+      'Invalid response: response is null or undefined',
+      ERROR_TYPES.API_ERROR
+    );
   }
 }
 
@@ -21,24 +24,43 @@ async function _parseResponseJson(body) {
   try {
     const responseData = await body.json();
     if (!responseData || typeof responseData !== 'object') {
-      throw ErrorHandler.createError('Invalid response: response is not a valid object', ERROR_TYPES.API_ERROR);
+      throw ErrorHandler.createError(
+        'Invalid response: response is not a valid object',
+        ERROR_TYPES.API_ERROR
+      );
     }
     return responseData;
   } catch (error) {
-    throw ErrorHandler.createError(`Failed to parse response as JSON: ${error.message}`, ERROR_TYPES.API_ERROR);
+    throw ErrorHandler.createError(
+      `Failed to parse response as JSON: ${error.message}`,
+      ERROR_TYPES.API_ERROR
+    );
   }
 }
 
 function _validateResponseStructure(responseData) {
-  if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
-    throw ErrorHandler.createError('Invalid response: missing or empty choices array', ERROR_TYPES.API_ERROR);
+  if (
+    !responseData.choices ||
+    !Array.isArray(responseData.choices) ||
+    responseData.choices.length === 0
+  ) {
+    throw ErrorHandler.createError(
+      'Invalid response: missing or empty choices array',
+      ERROR_TYPES.API_ERROR
+    );
   }
   const firstChoice = responseData.choices[0];
   if (!firstChoice || typeof firstChoice !== 'object') {
-    throw ErrorHandler.createError('Invalid response: invalid choice structure', ERROR_TYPES.API_ERROR);
+    throw ErrorHandler.createError(
+      'Invalid response: invalid choice structure',
+      ERROR_TYPES.API_ERROR
+    );
   }
   if (!firstChoice.message || typeof firstChoice.message !== 'object') {
-    throw ErrorHandler.createError('Invalid response: choice missing required message field', ERROR_TYPES.API_ERROR);
+    throw ErrorHandler.createError(
+      'Invalid response: choice missing required message field',
+      ERROR_TYPES.API_ERROR
+    );
   }
 }
 
@@ -76,7 +98,11 @@ function _extractResponseContent(response) {
     throw new Error('Empty response received from the service.');
   }
 
-  if (firstChoice.message && typeof firstChoice.message === 'object' && typeof firstChoice.message.content === 'string') {
+  if (
+    firstChoice.message &&
+    typeof firstChoice.message === 'object' &&
+    typeof firstChoice.message.content === 'string'
+  ) {
     return firstChoice.message.content;
   }
 

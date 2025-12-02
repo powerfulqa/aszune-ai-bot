@@ -217,7 +217,8 @@ const commands = {
         await interaction.deferReply();
         const serverId = interaction.guild?.id;
         const guild = interaction.guild;
-        const { onlineCount, botCount, _totalMembers, humanMembers } = await getGuildMemberStats(guild);
+        const { onlineCount, botCount, _totalMembers, humanMembers } =
+          await getGuildMemberStats(guild);
         const analyticsData = {
           summary: {
             totalServers: 1,
@@ -259,7 +260,8 @@ const commands = {
       try {
         await interaction.deferReply();
         const guild = interaction.guild;
-        const { _onlineCount, _botCount, _totalMembers, humanMembers } = await getGuildMemberStats(guild);
+        const { _onlineCount, _botCount, _totalMembers, humanMembers } =
+          await getGuildMemberStats(guild);
         const dashboardData = await PerformanceDashboard.generateDashboardReport();
         const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
         const embed = buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers);
@@ -289,7 +291,12 @@ const commands = {
         );
         const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
         const hostname = os.hostname();
-        const embed = buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations);
+        const embed = buildResourcesEmbed(
+          resourceStatus,
+          actualServerCount,
+          hostname,
+          recommendations
+        );
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching resource data:', error);

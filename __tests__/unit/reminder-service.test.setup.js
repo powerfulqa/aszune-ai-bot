@@ -12,16 +12,18 @@ function initializeReminderServiceTestDefaults() {
   reminderService.eventListeners = new Map();
 
   databaseService.getActiveReminders.mockReturnValue([]);
-  databaseService.createReminder.mockImplementation((userId, message, time, timezone, channelId, serverId) => ({
-    id: 1,
-    user_id: userId,
-    message,
-    scheduled_time: time,
-    timezone,
-    channel_id: channelId,
-    server_id: serverId,
-    status: 'pending',
-  }));
+  databaseService.createReminder.mockImplementation(
+    (userId, message, time, timezone, channelId, serverId) => ({
+      id: 1,
+      user_id: userId,
+      message,
+      scheduled_time: time,
+      timezone,
+      channel_id: channelId,
+      server_id: serverId,
+      status: 'pending',
+    })
+  );
   databaseService.completeReminder.mockReturnValue(true);
   databaseService.cancelReminder.mockReturnValue(true);
   databaseService.deleteReminder.mockReturnValue(true);

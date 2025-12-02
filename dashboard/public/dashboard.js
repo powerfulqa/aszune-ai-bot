@@ -186,14 +186,23 @@ class Dashboard {
   updateSystemMetrics(data) {
     // System metrics
     this._setText('system-uptime', data.system.uptimeFormatted);
-    this._setText('memory-usage', `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`);
-    this._setText('cpu-load', `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`);
+    this._setText(
+      'memory-usage',
+      `${data.system.memory.usagePercent}% (${data.system.memory.usedFormatted})`
+    );
+    this._setText(
+      'cpu-load',
+      `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`
+    );
     this._setText('platform', `${data.system.platform} ${data.system.arch}`);
 
     // Process Info
     this._setText('process-id', data.system.process.pid);
     this._setText('process-memory', data.system.process.rssFormatted);
-    this._setText('heap-usage', `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`);
+    this._setText(
+      'heap-usage',
+      `${data.system.process.heapUsedFormatted} / ${data.system.process.heapTotalFormatted}`
+    );
     this._setText('node-version-info', data.system.nodeVersion);
 
     // Cache Performance
@@ -205,7 +214,10 @@ class Dashboard {
     this._setText('db-users', data.database.userCount.toLocaleString());
     this._setText('db-messages', data.database.totalMessages.toLocaleString());
     this._setText('db-active-reminders', data.database.reminders.activeReminders.toLocaleString());
-    this._setText('db-completed-reminders', data.database.reminders.completedReminders.toLocaleString());
+    this._setText(
+      'db-completed-reminders',
+      data.database.reminders.completedReminders.toLocaleString()
+    );
 
     this._setText('bot-uptime', data.uptime);
 
@@ -292,8 +304,14 @@ class Dashboard {
     // /resources command output
     if (data.resources) {
       this._setText('cmd-resources-memory', (data.resources.memory.status || 'Good').toUpperCase());
-      this._setText('cmd-resources-usage', `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`);
-      this._setText('cmd-resources-perf', (data.resources.performance.status || 'Normal').toUpperCase());
+      this._setText(
+        'cmd-resources-usage',
+        `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`
+      );
+      this._setText(
+        'cmd-resources-perf',
+        (data.resources.performance.status || 'Normal').toUpperCase()
+      );
       this._setText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
     }
   }
@@ -303,7 +321,10 @@ class Dashboard {
 
     // Memory status
     const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
-    this._setText('resource-memory-status', (data.resources.memory.status || 'Unknown').toUpperCase());
+    this._setText(
+      'resource-memory-status',
+      (data.resources.memory.status || 'Unknown').toUpperCase()
+    );
     this._setClass('resource-memory-status', `value status-badge ${memStatus}`);
 
     this._setText('resource-memory-used', `${data.resources.memory.used}MB`);
@@ -312,7 +333,10 @@ class Dashboard {
 
     // Performance status
     const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
-    this._setText('resource-performance-status', (data.resources.performance.status || 'Unknown').toUpperCase());
+    this._setText(
+      'resource-performance-status',
+      (data.resources.performance.status || 'Unknown').toUpperCase()
+    );
     this._setClass('resource-performance-status', `value status-badge ${perfStatus}`);
 
     this._setText('resource-response-time', `${data.resources.performance.responseTime}ms`);
@@ -469,10 +493,10 @@ class Dashboard {
         (row) => `
         <tr>
           ${columns
-            .map(
-              (col) => `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
-            )
-            .join('')}
+    .map(
+      (col) => `<td>${this.escapeHtml(String(this._formatTableCell(row[col], col)))}</td>`
+    )
+    .join('')}
         </tr>
       `
       )
@@ -553,23 +577,23 @@ class Dashboard {
         </thead>
         <tbody>
           ${filtered
-            .map(
-              (row) => `
+    .map(
+      (row) => `
             <tr>
               ${columns
-                .map((col) => {
-                  let value = row[col];
-                  if (value === null || value === undefined) value = '-';
-                  if (typeof value === 'string' && value.length > 100) {
-                    value = value.substring(0, 100) + '...';
-                  }
-                  return `<td>${this.escapeHtml(String(value))}</td>`;
-                })
-                .join('')}
+    .map((col) => {
+      let value = row[col];
+      if (value === null || value === undefined) value = '-';
+      if (typeof value === 'string' && value.length > 100) {
+        value = value.substring(0, 100) + '...';
+      }
+      return `<td>${this.escapeHtml(String(value))}</td>`;
+    })
+    .join('')}
             </tr>
           `
-            )
-            .join('')}
+    )
+    .join('')}
         </tbody>
       </table>
     `;
@@ -619,7 +643,7 @@ class Dashboard {
     activityLog.scrollTop = activityLog.scrollHeight;
   }
 
-  async updateLeaderboard(data) {
+  async updateLeaderboard(_data) {
     try {
       const leaderboardContainer = document.getElementById('leaderboard');
       if (!leaderboardContainer) return;
@@ -710,14 +734,19 @@ class Dashboard {
 
   async handleRestartClick() {
     const btn = this._getElement('restart-btn');
-    if (!confirm('Are you sure you want to restart the bot? This will temporarily disconnect the bot.')) {
+    if (
+      !confirm(
+        'Are you sure you want to restart the bot? This will temporarily disconnect the bot.'
+      )
+    ) {
       return;
     }
 
     const originalText = btn?.innerHTML;
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-label">Restarting...</span>';
+      btn.innerHTML =
+        '<span class="btn-icon">⏳</span><span class="btn-label">Restarting...</span>';
     }
 
     try {

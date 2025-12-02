@@ -33,7 +33,7 @@ module.exports = {
     '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',
     '/bot-shutdown.test.js/',
-    '/__tests__/unit/.*\.test\.setup\.js',
+    '/__tests__/unit/.*[.]test[.]setup[.]js',
   ],
   // Generate JUnit XML test report for CodeCov
   reporters: [

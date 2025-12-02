@@ -1,4 +1,8 @@
-const { reminderService, logger, initializeReminderServiceTestDefaults } = require('./reminder-service.test.setup');
+const {
+  reminderService,
+  logger,
+  initializeReminderServiceTestDefaults,
+} = require('./reminder-service.test.setup');
 
 describe('ReminderService event emitter', () => {
   beforeEach(() => {

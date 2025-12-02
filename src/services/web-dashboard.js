@@ -1500,7 +1500,7 @@ class WebDashboardService {
   async handleNetworkTest(data, callback) {
     try {
       const results = ['=== NETWORK CONNECTIVITY TEST SUITE ===\n'];
-      
+
       await this._addGatewayTest(results);
       await this._addDnsTests(results);
       await this._addInternetTests(results);
@@ -2222,45 +2222,65 @@ class WebDashboardService {
     }
   }
 
+  // eslint-disable-next-line max-lines-per-function
   async _collectAllMetrics() {
     return Promise.all([
-      this._safeCollectMetric(
-        () => this.getCacheStats(),
-        'Cache stats',
-        { hits: 0, misses: 0, hitRate: 0, sets: 0, deletes: 0, evictions: 0, entryCount: 0, 
-          memoryUsage: 0, memoryUsageFormatted: '0 B', uptime: 0, uptimeFormatted: '0s' }
-      ),
-      this._safeCollectMetric(
-        () => this.getDatabaseStats(),
-        'Database stats',
-        { userCount: 0, totalMessages: 0, reminders: { totalReminders: 0, activeReminders: 0, 
-          completedReminders: 0, cancelledReminders: 0 } }
-      ),
-      this._safeCollectMetric(
-        () => this.getReminderStats(),
-        'Reminder stats',
-        { totalReminders: 0, activeReminders: 0, completedReminders: 0, cancelledReminders: 0 }
-      ),
-      this._safeCollectMetric(
-        () => this.getSystemInfo(),
-        'System info',
-        { platform: 'unknown', arch: 'unknown', nodeVersion: 'unknown', uptime: 0, 
-          uptimeFormatted: '0s', externalIp: 'Not available', memory: { usagePercent: 0 }, 
-          cpu: { loadPercent: 0, loadAverage: [0, 0, 0] } }
-      ),
-      this._safeCollectMetric(
-        () => this.getResourceData(),
-        'Resource data',
-        { memory: { status: 'unknown', used: 0, free: 0, percentage: 0 }, 
-          performance: { status: 'unknown', responseTime: 0, load: 'unknown' }, 
-          optimizationTier: 'unknown' }
-      ),
-      this._safeCollectMetric(
-        () => this.getAnalyticsData(),
-        'Analytics data',
-        { summary: { totalServers: 0, totalUsers: 0, successRate: 0, errorRate: 0, 
-          avgResponseTime: 0, totalCommands: 0 }, recentErrors: [], recommendations: [] }
-      ),
+      this._safeCollectMetric(() => this.getCacheStats(), 'Cache stats', {
+        hits: 0,
+        misses: 0,
+        hitRate: 0,
+        sets: 0,
+        deletes: 0,
+        evictions: 0,
+        entryCount: 0,
+        memoryUsage: 0,
+        memoryUsageFormatted: '0 B',
+        uptime: 0,
+        uptimeFormatted: '0s',
+      }),
+      this._safeCollectMetric(() => this.getDatabaseStats(), 'Database stats', {
+        userCount: 0,
+        totalMessages: 0,
+        reminders: {
+          totalReminders: 0,
+          activeReminders: 0,
+          completedReminders: 0,
+          cancelledReminders: 0,
+        },
+      }),
+      this._safeCollectMetric(() => this.getReminderStats(), 'Reminder stats', {
+        totalReminders: 0,
+        activeReminders: 0,
+        completedReminders: 0,
+        cancelledReminders: 0,
+      }),
+      this._safeCollectMetric(() => this.getSystemInfo(), 'System info', {
+        platform: 'unknown',
+        arch: 'unknown',
+        nodeVersion: 'unknown',
+        uptime: 0,
+        uptimeFormatted: '0s',
+        externalIp: 'Not available',
+        memory: { usagePercent: 0 },
+        cpu: { loadPercent: 0, loadAverage: [0, 0, 0] },
+      }),
+      this._safeCollectMetric(() => this.getResourceData(), 'Resource data', {
+        memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
+        performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
+        optimizationTier: 'unknown',
+      }),
+      this._safeCollectMetric(() => this.getAnalyticsData(), 'Analytics data', {
+        summary: {
+          totalServers: 0,
+          totalUsers: 0,
+          successRate: 0,
+          errorRate: 0,
+          avgResponseTime: 0,
+          totalCommands: 0,
+        },
+        recentErrors: [],
+        recommendations: [],
+      }),
     ]);
   }
 

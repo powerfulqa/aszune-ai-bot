@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 /**
  * Test script to verify Perplexity API connection
  * Run with: node test-perplexity-api.js

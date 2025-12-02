@@ -1,7 +1,9 @@
 /**
  * PerplexitySecure runtime coverage tests split for QLTY compliance.
  */
-const { setupPerplexityServiceTestContext } = require('./perplexity-secure-comprehensive.test.setup');
+const {
+  setupPerplexityServiceTestContext,
+} = require('./perplexity-secure-comprehensive.test.setup');
 
 const { PerplexityService, fs, request, mockSuccessResponse } = setupPerplexityServiceTestContext();
 

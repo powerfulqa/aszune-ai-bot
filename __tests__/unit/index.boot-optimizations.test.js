@@ -50,7 +50,7 @@ describe('Boot Optimizations', () => {
     context = setupIndexContext();
 
     const readyHandler = context.getReadyHandler();
-    
+
     // The ready handler should not throw even if Pi init would fail
     // because Pi init is no longer called from the ready handler
     await expect(async () => {

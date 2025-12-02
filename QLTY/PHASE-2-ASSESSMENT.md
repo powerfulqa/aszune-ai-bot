@@ -9,9 +9,11 @@
 
 ### Attempted Refactoring Approach: Helper Extraction
 
-After analyzing the 8 remaining test file violations, I attempted to apply helper extraction (the same pattern used successfully in production code):
+After analyzing the 8 remaining test file violations, I attempted to apply helper extraction (the
+same pattern used successfully in production code):
 
 **Results:**
+
 - `reminder-service.test.js`: 308 lines → 345 lines (+37 lines)
 - Helper functions actually **increased** line counts instead of reducing them
 - Pattern does NOT work for test files (unlike production code)
@@ -33,16 +35,16 @@ Test file violations are **structural**, not **stylistic**:
 
 ### Test File Violations Breakdown
 
-| File | Lines | Type | Fix Required |
-|------|-------|------|---|
-| perplexity-secure-comprehensive.test.js | 630 | Describe block (71 test cases) | Split into 2+ files |
-| reminder-service.test.js | 308 | Describe block (25 test cases) | Split describe or reduce cases |
-| logger-critical-coverage.test.js | 272 | Describe block | Split into 2 files |
-| error-handler-critical-coverage.test.js | 281 | Describe block | Split or reduce cases |
-| index-critical-coverage.test.js | 241 | Describe block | Split or reduce cases |
-| perplexity-secure-private-methods.test.js | 265 | Describe block | Split or reduce cases |
-| index.test.js | 224 | Describe block | Simplify or split |
-| database.test.js | 222 | Describe block | Simplify or split |
+| File                                      | Lines | Type                           | Fix Required                   |
+| ----------------------------------------- | ----- | ------------------------------ | ------------------------------ |
+| perplexity-secure-comprehensive.test.js   | 630   | Describe block (71 test cases) | Split into 2+ files            |
+| reminder-service.test.js                  | 308   | Describe block (25 test cases) | Split describe or reduce cases |
+| logger-critical-coverage.test.js          | 272   | Describe block                 | Split into 2 files             |
+| error-handler-critical-coverage.test.js   | 281   | Describe block                 | Split or reduce cases          |
+| index-critical-coverage.test.js           | 241   | Describe block                 | Split or reduce cases          |
+| perplexity-secure-private-methods.test.js | 265   | Describe block                 | Split or reduce cases          |
+| index.test.js                             | 224   | Describe block                 | Simplify or split              |
+| database.test.js                          | 222   | Describe block                 | Simplify or split              |
 
 ---
 
@@ -77,6 +79,7 @@ Test file violations are **structural**, not **stylistic**:
 ## Decision
 
 **Close Phase 2 with current state:**
+
 - ✅ **9 violations remaining** (all in test files)
 - ✅ **78% overall improvement** maintained
 - ✅ **Production code fully optimized**

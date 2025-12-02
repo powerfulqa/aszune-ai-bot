@@ -19,6 +19,7 @@ global.File = class File extends Blob {
 // Mock process.exit to prevent test termination
 jest.spyOn(process, 'exit').mockImplementation((code) => {
   // In test environment, just log the exit code instead of actually exiting
+  // eslint-disable-next-line no-console
   console.log(`process.exit(${code}) called in test environment - ignoring`);
   // Don't throw an error, just return undefined to prevent actual exit
   return undefined;

@@ -1,4 +1,7 @@
-const { reminderService, initializeReminderServiceTestDefaults } = require('./reminder-service.test.setup');
+const {
+  reminderService,
+  initializeReminderServiceTestDefaults,
+} = require('./reminder-service.test.setup');
 
 describe('ReminderService command parsing', () => {
   beforeEach(() => {

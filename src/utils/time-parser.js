@@ -222,10 +222,10 @@ class TimeParser {
   _formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays) {
     // Time unit definitions with thresholds and formatters
     const timeUnits = [
-      { max: 60, value: diffSeconds, format: (v) => v <= 1 ? 'in 1 second' : `in ${v} seconds` },
-      { max: 60, value: diffMinutes, format: (v) => v === 1 ? 'in 1 minute' : `in ${v} minutes` },
-      { max: 24, value: diffHours, format: (v) => v === 1 ? 'in 1 hour' : `in ${v} hours` },
-      { max: 7, value: diffDays, format: (v) => v === 1 ? 'tomorrow' : `in ${v} days` },
+      { max: 60, value: diffSeconds, format: (v) => (v <= 1 ? 'in 1 second' : `in ${v} seconds`) },
+      { max: 60, value: diffMinutes, format: (v) => (v === 1 ? 'in 1 minute' : `in ${v} minutes`) },
+      { max: 24, value: diffHours, format: (v) => (v === 1 ? 'in 1 hour' : `in ${v} hours`) },
+      { max: 7, value: diffDays, format: (v) => (v === 1 ? 'tomorrow' : `in ${v} days`) },
       { max: 30, value: diffDays, format: (v) => this._formatWeeks(v) },
       { max: 365, value: diffDays, format: (v) => this._formatMonths(v) },
     ];

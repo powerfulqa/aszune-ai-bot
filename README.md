@@ -55,13 +55,20 @@ functions
 
 ---
 
-🔄 **Phase 2 Test Refactor Progress:** Ongoing improvements to the test suite for enhanced reliability and maintainability.
+🔄 **Phase 2 Test Refactor Progress:** Ongoing improvements to the test suite for enhanced
+reliability and maintainability.
 
 ### Phase 2 Test Refactor Status
 
-- Split the large `index`, `logger-critical-coverage`, `reminder-service`, `services/database`, and `services/perplexity-secure-private-methods` suites into multiple focused files that share a centralized setup helper so every describe block stays under the ESLint `max-lines-per-function` limit.
-- Shared setup modules (`index.test.setup.js`, `logger-critical-coverage.test.setup.js`, `services/database.test.setup.js`, `services/perplexity-secure-private.test.setup.js`) keep mocks/config consistent across the smaller suites and reduce duplication.
-- Re-running `npm run lint` now passes with zero `max-lines-per-function` violations, confirming the Phase 2 splits are effective.
+- Split the large `index`, `logger-critical-coverage`, `reminder-service`, `services/database`, and
+  `services/perplexity-secure-private-methods` suites into multiple focused files that share a
+  centralized setup helper so every describe block stays under the ESLint `max-lines-per-function`
+  limit.
+- Shared setup modules (`index.test.setup.js`, `logger-critical-coverage.test.setup.js`,
+  `services/database.test.setup.js`, `services/perplexity-secure-private.test.setup.js`) keep
+  mocks/config consistent across the smaller suites and reduce duplication.
+- Re-running `npm run lint` now passes with zero `max-lines-per-function` violations, confirming the
+  Phase 2 splits are effective.
 
 ## Features
 

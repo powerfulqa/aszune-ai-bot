@@ -215,11 +215,7 @@ function validateArrayLength(value, minItems, maxItems, fieldName = 'Array') {
  * @returns {string} Sanitized string
  */
 function sanitizeString(value, options = {}) {
-  const {
-    trimWhitespace = true,
-    removeControlChars = true,
-    maxLength = null,
-  } = options;
+  const { trimWhitespace = true, removeControlChars = true, maxLength = null } = options;
 
   let result = String(value);
 

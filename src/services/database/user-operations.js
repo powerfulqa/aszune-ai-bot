@@ -90,7 +90,10 @@ function addUserMessage(db, { userId, message, responseTimeMs }) {
 }
 
 function addBotResponse(db, { userId, response, responseTimeMs }) {
-  db.prepare('INSERT INTO user_messages (user_id, message) VALUES (?, ?)').run(userId, `[BOT] ${response}`);
+  db.prepare('INSERT INTO user_messages (user_id, message) VALUES (?, ?)').run(
+    userId,
+    `[BOT] ${response}`
+  );
   db.prepare(
     'INSERT INTO conversation_history (user_id, message, role, message_length, response_time_ms) VALUES (?, ?, ?, ?, ?)'
   ).run(userId, response, 'assistant', response.length, responseTimeMs);

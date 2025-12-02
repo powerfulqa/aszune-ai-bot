@@ -169,10 +169,7 @@
               "statements": 18,
               "complexity": 8,
               "severity": "MEDIUM",
-              "issues": [
-                "Embed color logic",
-                "Multiple data sources coordination"
-              ]
+              "issues": ["Embed color logic", "Multiple data sources coordination"]
             }
           ]
         },
@@ -589,11 +586,11 @@
         "perplexitySecureComprehensive": {
           "totalLines": 681,
           "targetGroups": [
-            {"name": "_safeGetHeader method", "testCount": 8, "expectedLines": 90},
-            {"name": "caching functionality", "testCount": 15, "expectedLines": 140},
-            {"name": "response processing", "testCount": 12, "expectedLines": 120},
-            {"name": "error handling", "testCount": 10, "expectedLines": 100},
-            {"name": "private methods", "testCount": 15, "expectedLines": 150}
+            { "name": "_safeGetHeader method", "testCount": 8, "expectedLines": 90 },
+            { "name": "caching functionality", "testCount": 15, "expectedLines": 140 },
+            { "name": "response processing", "testCount": 12, "expectedLines": 120 },
+            { "name": "error handling", "testCount": 10, "expectedLines": 100 },
+            { "name": "private methods", "testCount": 15, "expectedLines": 150 }
           ],
           "extractedHelpers": [
             "createMockPerplexityService()",
@@ -605,20 +602,32 @@
         "databaseService": {
           "totalLines": 222,
           "targetGroups": [
-            {"name": "User management", "methods": ["ensureUserExists", "updateUserStats"], "expectedLines": 60},
-            {"name": "Message storage", "methods": ["addUserMessage", "addBotResponse"], "expectedLines": 50},
-            {"name": "Conversation history", "methods": ["getConversationHistory", "clearOldMessages"], "expectedLines": 60},
-            {"name": "Reminders (basic)", "methods": ["getActiveReminders"], "expectedLines": 40}
+            {
+              "name": "User management",
+              "methods": ["ensureUserExists", "updateUserStats"],
+              "expectedLines": 60
+            },
+            {
+              "name": "Message storage",
+              "methods": ["addUserMessage", "addBotResponse"],
+              "expectedLines": 50
+            },
+            {
+              "name": "Conversation history",
+              "methods": ["getConversationHistory", "clearOldMessages"],
+              "expectedLines": 60
+            },
+            { "name": "Reminders (basic)", "methods": ["getActiveReminders"], "expectedLines": 40 }
           ]
         },
         "reminderService": {
           "totalLines": 308,
           "targetGroups": [
-            {"name": "EventEmitter initialization", "expectedLines": 40},
-            {"name": "Timer management", "expectedLines": 80},
-            {"name": "Reminder scheduling", "expectedLines": 90},
-            {"name": "Event emission", "expectedLines": 60},
-            {"name": "Edge cases", "expectedLines": 38}
+            { "name": "EventEmitter initialization", "expectedLines": 40 },
+            { "name": "Timer management", "expectedLines": 80 },
+            { "name": "Reminder scheduling", "expectedLines": 90 },
+            { "name": "Event emission", "expectedLines": 60 },
+            { "name": "Edge cases", "expectedLines": 38 }
           ]
         }
       }
@@ -1021,11 +1030,11 @@
   "estimatedTimeline": {
     "total_hours": 18,
     "phase_breakdown": {
-      "phase4_logger": {"hours": 2, "start_day": 1, "end_day": 1},
-      "phase5_unused": {"hours": 1, "start_day": 1, "end_day": 1},
-      "phase2_commands": {"hours": 4, "start_day": 2, "end_day": 2},
-      "phase1_tests": {"hours": 6, "start_day": 3, "end_day": 5},
-      "phase3_dashboard": {"hours": 5, "start_day": 5, "end_day": 7}
+      "phase4_logger": { "hours": 2, "start_day": 1, "end_day": 1 },
+      "phase5_unused": { "hours": 1, "start_day": 1, "end_day": 1 },
+      "phase2_commands": { "hours": 4, "start_day": 2, "end_day": 2 },
+      "phase1_tests": { "hours": 6, "start_day": 3, "end_day": 5 },
+      "phase3_dashboard": { "hours": 5, "start_day": 5, "end_day": 7 }
     },
     "testing_buffer": "Days 7-8: Comprehensive testing & validation"
   },

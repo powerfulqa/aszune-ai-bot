@@ -134,9 +134,7 @@ class NetworkDetector {
       }
     });
 
-    logger.debug(
-      `Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`
-    );
+    logger.debug(`Detected ${dnsServers.length} DNS servers on Windows: ${dnsServers.join(', ')}`);
     return dnsServers.length > 0 ? dnsServers : ['8.8.8.8'];
   }
 
@@ -209,17 +207,11 @@ class NetworkDetector {
       const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
         timeout: 2000,
       });
-      if (
-        stdout.includes('iface eth0 inet static') ||
-        stdout.includes('iface wlan0 inet static')
-      ) {
+      if (stdout.includes('iface eth0 inet static') || stdout.includes('iface wlan0 inet static')) {
         logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
         return 'Static';
       }
-      if (
-        stdout.includes('iface eth0 inet dhcp') ||
-        stdout.includes('iface wlan0 inet dhcp')
-      ) {
+      if (stdout.includes('iface eth0 inet dhcp') || stdout.includes('iface wlan0 inet dhcp')) {
         logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
         return 'DHCP';
       }
@@ -298,8 +290,7 @@ class NetworkDetector {
 
   static async _testInternet() {
     try {
-      const pingCmd =
-        process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
+      const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
       await execPromise(pingCmd, { timeout: 5000 });
       return true;
     } catch (error) {

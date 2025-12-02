@@ -1,7 +1,9 @@
 /**
  * PerplexitySecure cache helpers split tests (QLTY-friendly).
  */
-const { setupPerplexityServiceTestContext } = require('./perplexity-secure-comprehensive.test.setup');
+const {
+  setupPerplexityServiceTestContext,
+} = require('./perplexity-secure-comprehensive.test.setup');
 
 const { PerplexityService, fs, crypto } = setupPerplexityServiceTestContext();
 

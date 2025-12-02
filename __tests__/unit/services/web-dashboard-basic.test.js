@@ -34,7 +34,7 @@ jest.mock('http', () => ({
 }));
 
 jest.mock('socket.io', () => {
-  const mockSocket = {
+  const _mockSocket = {
     id: 'test-socket-id',
     on: jest.fn(),
     emit: jest.fn(),
@@ -124,7 +124,7 @@ jest.mock('../../../src/services/web-dashboard/routes/controlRoutes', () => ({
 
 // Import the class (named export), not the singleton instance (default export)
 const { WebDashboardService } = require('../../../src/services/web-dashboard');
-const logger = require('../../../src/utils/logger');
+const _logger = require('../../../src/utils/logger');
 
 describe('WebDashboardService - Basic Operations', () => {
   let dashboardService;
@@ -200,14 +200,14 @@ describe('WebDashboardService - Basic Operations', () => {
   describe('start', () => {
     // Note: Full start/stop integration tests are in integration tests folder
     // These unit tests verify logic without actual server binding
-    
+
     it('should return early if already running', async () => {
       // Verify the guard behavior works - isRunning should prevent re-setup
       dashboardService.isRunning = true;
       const originalApp = dashboardService.app;
-      
+
       await dashboardService.start(); // Should return early without changes
-      
+
       // App should remain unchanged (null) because it returned early
       expect(dashboardService.app).toBe(originalApp);
     });
@@ -270,7 +270,11 @@ describe('WebDashboardService - Error Handling', () => {
     it('should buffer all logs up to maxAllLogs', () => {
       // Simulate adding logs
       for (let i = 0; i < 600; i++) {
-        dashboardService.allLogs.push({ level: 'INFO', message: `Log ${i}`, timestamp: Date.now() });
+        dashboardService.allLogs.push({
+          level: 'INFO',
+          message: `Log ${i}`,
+          timestamp: Date.now(),
+        });
         if (dashboardService.allLogs.length > dashboardService.maxAllLogs) {
           dashboardService.allLogs.shift();
         }

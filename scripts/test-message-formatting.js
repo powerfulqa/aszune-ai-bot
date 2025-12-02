@@ -1,3 +1,4 @@
+/* eslint-disable no-console, max-lines-per-function */
 /**
  * Test script to validate message formatting fix for Perplexity API
  * Run this to verify the fix before deploying to production

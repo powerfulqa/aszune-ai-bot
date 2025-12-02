@@ -46,7 +46,9 @@ function buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recomm
       },
       {
         name: '💡 Recommendations',
-        value: recommendations.slice(0, 3).join('\n') || '✅ System performance is good - continue monitoring',
+        value:
+          recommendations.slice(0, 3).join('\n') ||
+          '✅ System performance is good - continue monitoring',
         inline: false,
       },
     ],

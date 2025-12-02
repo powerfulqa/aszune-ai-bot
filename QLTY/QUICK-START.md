@@ -15,6 +15,7 @@ You're working on quality improvements for **Aszune AI Bot** - a Discord bot wit
 ## 🚀 Start Here (In Order)
 
 ### Step 1: Understand the Current State (5 min)
+
 ```bash
 cd /QLTY
 cat SESSION-1-FINAL-SUMMARY.md  # Read what was fixed
@@ -22,18 +23,21 @@ cat QLTY-FIXES-PROGRESS-SESSION-1.md  # See detailed work
 ```
 
 ### Step 2: Learn the Violations (10 min)
+
 ```bash
 cat QUALITY-VIOLATIONS-DELIVERY-SUMMARY.md  # See all violations by type
 cat QUALITY-VIOLATIONS-CODE-EXAMPLES.md  # See before/after code
 ```
 
 ### Step 3: Review Standards (5 min)
+
 ```bash
 cat QLTY-STANDARDS-APPLIED.md  # Understand thresholds
 cat QUALITY-VIOLATIONS-REFACTORING-README.md  # Learn patterns
 ```
 
 ### Step 4: Get Implementation Checklist (5 min)
+
 ```bash
 cat QUALITY-VIOLATIONS-IMPLEMENTATION-CHECKLIST.md  # Your roadmap
 ```
@@ -42,13 +46,13 @@ cat QUALITY-VIOLATIONS-IMPLEMENTATION-CHECKLIST.md  # Your roadmap
 
 ## 🎯 Current Task (30 violations left)
 
-| Priority | Type | Count | Effort | Status |
-|----------|------|-------|--------|--------|
-| 🔴 HIGH | Test functions >200 lines | 9 | 6h | Not started |
-| 🟠 HIGH | Command execute methods | 3 | 4h | Not started |
-| 🟠 HIGH | Web-dashboard complexity | 8 | 5h | Not started |
-| 🟡 MEDIUM | Unused variables | 2 | 1h | Not started |
-| 🟢 LOW | Minor indentation | 3 | 30m | Not started |
+| Priority  | Type                      | Count | Effort | Status      |
+| --------- | ------------------------- | ----- | ------ | ----------- |
+| 🔴 HIGH   | Test functions >200 lines | 9     | 6h     | Not started |
+| 🟠 HIGH   | Command execute methods   | 3     | 4h     | Not started |
+| 🟠 HIGH   | Web-dashboard complexity  | 8     | 5h     | Not started |
+| 🟡 MEDIUM | Unused variables          | 2     | 1h     | Not started |
+| 🟢 LOW    | Minor indentation         | 3     | 30m    | Not started |
 
 **Recommended Start**: Phase 1 quick wins (1 hour, 5 violations)
 
@@ -81,6 +85,7 @@ npm run quality:check
 ## 📋 Quick Refactoring Patterns
 
 ### Pattern 1: Extract Embed Builder
+
 ```javascript
 // Before: 66-line execute method
 async execute(interaction) {
@@ -98,17 +103,27 @@ async execute(interaction) {
 ```
 
 ### Pattern 2: Split Large Describe Block
+
 ```javascript
 // Before: 630-line describe block
-describe('Service', () => { /* 630 lines */ });
+describe('Service', () => {
+  /* 630 lines */
+});
 
 // After: Multiple focused blocks
-describe('Service - Private Methods', () => { /* 150 lines */ });
-describe('Service - Advanced', () => { /* 200 lines */ });
-describe('Service - Edge Cases', () => { /* 150 lines */ });
+describe('Service - Private Methods', () => {
+  /* 150 lines */
+});
+describe('Service - Advanced', () => {
+  /* 200 lines */
+});
+describe('Service - Edge Cases', () => {
+  /* 150 lines */
+});
 ```
 
 ### Pattern 3: Guard Clauses
+
 ```javascript
 // Before: Nested ifs
 if (config) {
@@ -155,12 +170,14 @@ return doSomething();
 ## ✅ Session 2 Roadmap
 
 ### Phase 1: Quick Wins (1 hour)
+
 - [ ] Fix 2 unused variables in commands/index.js
 - [ ] Fix 3 minor indentation issues
 - [ ] Run `npm run lint` to verify
 - **Violations: 30 → 25**
 
 ### Phase 2: Test Refactoring (6 hours)
+
 - [ ] Split reminder.test.js (225 lines)
 - [ ] Split error-handler test (281 lines)
 - [ ] Split index-critical-coverage test (241 lines)
@@ -169,6 +186,7 @@ return doSomething();
 - **Violations: 25 → 16**
 
 ### Phase 3: Command Refactoring (4 hours)
+
 - [ ] Extract helpers from analytics execute (66 lines)
 - [ ] Extract helpers from dashboard execute (55 lines)
 - [ ] Extract helpers from resources execute (61 lines)
@@ -177,6 +195,7 @@ return doSomething();
 - **Violations: 16 → 13**
 
 ### Phase 4: Web-Dashboard (5 hours)
+
 - [ ] Refactor handleNetworkStatus (complexity 19)
 - [ ] Refactor handleNetworkTest (complexity 20)
 - [ ] Extract from setupControlRoutes (134 lines)
@@ -189,21 +208,27 @@ return doSomething();
 ## 🆘 Common Issues & Solutions
 
 ### Issue: "Can't find violation in file"
+
 **Solution**: Line numbers change after edits. Always run `npm run lint` first to see current state.
 
 ### Issue: "Tests fail after refactoring"
-**Solution**: You may have changed behavior. 
+
+**Solution**: You may have changed behavior.
+
 1. Run `npm test` to identify failing test
 2. Compare your change against original
 3. Verify you only refactored, didn't change logic
 
 ### Issue: "Complexity still high after extraction"
+
 **Solution**: You may need smaller functions.
+
 1. Count decision points (if/for/while/&&/||)
 2. If >15 complexity, extract more helpers
 3. Example: Complex method → helper1() + helper2() + helper3()
 
 ### Issue: "ESLint showing new violations after fix"
+
 **Solution**: Might be style issues. Try: `npm run lint -- --fix`
 
 ---
@@ -247,6 +272,7 @@ When implementing fixes, reference these:
 ## 💡 Pro Tips
 
 ✅ **DO**:
+
 - Auto-fix style issues first (`eslint --fix`)
 - Focus on one category at a time
 - Run tests after each change
@@ -254,6 +280,7 @@ When implementing fixes, reference these:
 - Reference code examples for patterns
 
 ❌ **DON'T**:
+
 - Change behavior while refactoring
 - Mix style fixes with structural changes
 - Remove tests while refactoring

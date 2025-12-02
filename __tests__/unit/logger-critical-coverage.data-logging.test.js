@@ -57,8 +57,6 @@ describe('Data Logging', () => {
     await context.logger.debug('test message', circular);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[DEBUG] test message'));
-    expect(console.log).toHaveBeenCalledWith(
-      expect.objectContaining({ self: expect.anything() })
-    );
+    expect(console.log).toHaveBeenCalledWith(expect.objectContaining({ self: expect.anything() }));
   });
 });

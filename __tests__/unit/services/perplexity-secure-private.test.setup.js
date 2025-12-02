@@ -16,12 +16,10 @@ jest.mock('fs', () => ({
 }));
 
 const mockCrypto = {
-  createHash: jest
-    .fn()
-    .mockReturnValue({
-      update: jest.fn().mockReturnThis(),
-      digest: jest.fn().mockReturnValue('mock-hash-123'),
-    }),
+  createHash: jest.fn().mockReturnValue({
+    update: jest.fn().mockReturnThis(),
+    digest: jest.fn().mockReturnValue('mock-hash-123'),
+  }),
 };
 
 jest.mock('crypto', () => mockCrypto);

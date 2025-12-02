@@ -10,8 +10,6 @@ const {
   checkArrayType,
   checkMaxLength,
   checkNotEmpty,
-  invalidResult,
-  validResult,
 } = require('./validation-helpers');
 
 /**

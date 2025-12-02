@@ -9,6 +9,7 @@ This document provides specific before/after code examples for each violation ca
 ### Challenge: `perplexity-secure-comprehensive.test.js` (681 lines)
 
 #### BEFORE: Single Huge Describe Block
+
 ```javascript
 describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   let perplexityService;
@@ -28,33 +29,34 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
     const result = perplexityService._safeGetHeader(undefined, 'content-type');
     expect(result).toBe('');
   });
-  
+
   // ... 8 more _safeGetHeader tests ...
-  
+
   it('should cache responses correctly', () => {
     // Cache test 1
   });
-  
+
   // ... 14 more cache tests ...
-  
+
   it('should process API response', () => {
     // Response processing test
   });
-  
+
   // ... 100+ more tests ...
-  
 }); // ← Line 681: End of 681-line describe block
 ```
 
 **Problems:**
+
 - Hard to locate specific tests
 - Shared setup not clearly organized
-- Can't run just "_safeGetHeader" tests
+- Can't run just "\_safeGetHeader" tests
 - Error reporting unclear: "Should return empty string" - WHICH test?
 
 ---
 
 #### AFTER: Organized Nested Describe Blocks
+
 ```javascript
 describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== SHARED SETUP (Top level only) =====
@@ -66,7 +68,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== NESTED GROUP 1: _safeGetHeader method (lines 40-100, ~60 lines) =====
   describe('_safeGetHeader method', () => {
     let perplexityService;
-    
+
     beforeEach(() => {
       perplexityService = PerplexityService;
     });
@@ -129,7 +131,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== NESTED GROUP 2: Caching functionality (lines 100-240, ~140 lines) =====
   describe('Caching functionality', () => {
     let perplexityService;
-    
+
     beforeEach(() => {
       perplexityService = PerplexityService;
     });
@@ -148,7 +150,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== NESTED GROUP 3: Response processing (lines 240-360, ~120 lines) =====
   describe('Response processing', () => {
     let perplexityService;
-    
+
     beforeEach(() => {
       perplexityService = PerplexityService;
     });
@@ -163,7 +165,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== NESTED GROUP 4: Error handling (lines 360-460, ~100 lines) =====
   describe('Error handling', () => {
     let perplexityService;
-    
+
     beforeEach(() => {
       perplexityService = PerplexityService;
     });
@@ -178,7 +180,7 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
   // ===== NESTED GROUP 5: Private methods (lines 460-681, ~150 lines) =====
   describe('Private methods', () => {
     let perplexityService;
-    
+
     beforeEach(() => {
       perplexityService = PerplexityService;
     });
@@ -189,13 +191,14 @@ describe('PerplexitySecure Service - Comprehensive Coverage', () => {
 
     // ... 14 more private method tests ...
   }); // End Private methods: ~150 lines
-
 }); // ← End 681 lines, but now ORGANIZED INTO 5 GROUPS
 ```
 
 **Benefits:**
+
 - Clear hierarchical structure
-- Error reporting: "PerplexitySecure Service - Comprehensive Coverage > _safeGetHeader method > should return empty string..."
+- Error reporting: "PerplexitySecure Service - Comprehensive Coverage > \_safeGetHeader method >
+  should return empty string..."
 - Run specific tests: `jest --testNamePattern "_safeGetHeader"`
 - Each group has clear beforeEach setup
 - Total still 681 lines, but logically organized
@@ -248,7 +251,6 @@ describe('DatabaseService', () => {
       it('should return active reminders only');
     });
   }); // ~40 lines
-
 }); // Total organized, each group <60 lines
 ```
 
@@ -259,6 +261,7 @@ describe('DatabaseService', () => {
 ### Challenge: `analytics` command (Line 261, 98 lines)
 
 #### BEFORE: Monolithic execute()
+
 ```javascript
 analytics: {
   data: {
@@ -345,6 +348,7 @@ analytics: {
 ```
 
 **Problems:**
+
 - 98 lines mixed: data fetch + embed creation + error handling
 - Embed creation takes ~50 lines of the method
 - Hard to test individual parts
@@ -354,6 +358,7 @@ analytics: {
 ---
 
 #### AFTER: Extracted Helper Methods
+
 ```javascript
 analytics: {
   data: {
@@ -468,6 +473,7 @@ analytics: {
 ```
 
 **Benefits:**
+
 - `execute()`: Now 6 lines (clear orchestration)
 - `_fetchAnalyticsData()`: 20 lines (data concern only)
 - `_buildAnalyticsEmbed()`: 25 lines (embed concern only)
@@ -483,6 +489,7 @@ analytics: {
 ### Challenge: `detectDhcpOrStatic()` (Line 1319, 103 lines, depth 5, complexity 26)
 
 #### BEFORE: Excessive Nesting (Depth 5 Violation)
+
 ```javascript
 detectDhcpOrStatic() {
   let dhcpResult = null;
@@ -563,6 +570,7 @@ detectDhcpOrStatic() {
 ```
 
 **Problems:**
+
 - Depth 5 exceeds max allowed 4
 - Complexity 26 exceeds max allowed 15
 - Platform-specific logic duplicated
@@ -572,6 +580,7 @@ detectDhcpOrStatic() {
 ---
 
 #### AFTER: Reduced Nesting (Depth 2)
+
 ```javascript
 /**
  * Detect network configuration method (DHCP or Static)
@@ -718,6 +727,7 @@ _selectDetectionMethod(dhcpResult, staticResult) {
 ```
 
 **Metrics:**
+
 - **Before**: 103 lines, depth 5, complexity 26
 - **After**: Main method 6 lines + 5 helpers averaging 15 lines each
 - **Depth Reduction**: 5 → 2 (70% reduction)
@@ -731,6 +741,7 @@ _selectDetectionMethod(dhcpResult, staticResult) {
 ### Challenge: 15 console.log/warn/error in library code
 
 #### BEFORE: Mixed Console + File Logging
+
 ```javascript
 class Logger {
   // ... constructor and other methods ...
@@ -739,7 +750,7 @@ class Logger {
     if (this._getLogLevel() <= this.levels.DEBUG) {
       const formattedMessage = this._formatMessage('DEBUG', message);
       console.log(formattedMessage); // ❌ VIOLATION: Library shouldn't output to stdout
-      
+
       // Log each data argument
       dataArgs.forEach((data) => {
         if (data !== undefined) console.log(data); // ❌ VIOLATION
@@ -876,6 +887,7 @@ class Logger {
 ```
 
 **Problems:**
+
 - 15 console violations in library code
 - Libraries should NOT write to stdout (principle: silent utilities)
 - Debug information leaked to stdout
@@ -885,6 +897,7 @@ class Logger {
 ---
 
 #### AFTER: Silent File-Based Logging
+
 ```javascript
 class Logger {
   // ... constructor and other methods ...
@@ -1062,6 +1075,7 @@ class Logger {
 ```
 
 **Benefits:**
+
 - ✅ All console statements removed (0 violations)
 - ✅ Library is silent - no stdout pollution
 - ✅ File logging still maintained
@@ -1076,15 +1090,22 @@ class Logger {
 ### Challenge: 7 unused variable warnings
 
 #### BEFORE: Unused Imports/Variables
+
 ```javascript
 // __tests__/unit/index-uncovered-paths.test.js
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js'); // ❌ ALL UNUSED
 
 jest.mock('discord.js', () => ({
   Client: jest.fn(() => mockClient),
-  GatewayIntentBits: { /* ... */ },
-  REST: jest.fn(() => ({ /* ... */ })),
-  Routes: { /* ... */ }, // UNUSED
+  GatewayIntentBits: {
+    /* ... */
+  },
+  REST: jest.fn(() => ({
+    /* ... */
+  })),
+  Routes: {
+    /* ... */
+  }, // UNUSED
 }));
 
 describe('Bot Index Uncovered Paths', () => {
@@ -1095,10 +1116,14 @@ describe('Bot Index Uncovered Paths', () => {
 ```javascript
 // __tests__/unit/index.test.js - Line 400-402
 beforeEach(() => {
-  const reminderServiceMock = { /* mock */ }; // ❌ UNUSED
+  const reminderServiceMock = {
+    /* mock */
+  }; // ❌ UNUSED
   const localMockClientReadyHandler = jest.fn(); // ❌ UNUSED
-  const testLoggerMock = { /* mock */ }; // ❌ UNUSED
-  
+  const testLoggerMock = {
+    /* mock */
+  }; // ❌ UNUSED
+
   // Tests setup but don't use these variables
 });
 ```
@@ -1121,6 +1146,7 @@ _anotherMethod() {
 #### AFTER: Cleaned Up
 
 **Option 1: Remove Unused Imports**
+
 ```javascript
 // __tests__/unit/index-uncovered-paths.test.js
 // ✅ FIXED: Only import what's needed
@@ -1138,29 +1164,35 @@ describe('Bot Index Uncovered Paths', () => {
 ```
 
 **Option 2: Prefix with Underscore (Intentional Non-Use)**
+
 ```javascript
 // __tests__/unit/index.test.js - If vars might be needed later
 beforeEach(() => {
-  const _reminderServiceMock = { /* mock */ }; // Intentionally unused
+  const _reminderServiceMock = {
+    /* mock */
+  }; // Intentionally unused
   const _localMockClientReadyHandler = jest.fn(); // Intentionally unused
-  const _testLoggerMock = { /* mock */ }; // Intentionally unused
-  
+  const _testLoggerMock = {
+    /* mock */
+  }; // Intentionally unused
+
   // Tests setup
 });
 ```
 
 **Option 3: Remove Completely (Recommended)**
+
 ```javascript
 // __tests__/unit/index.test.js - Clean removal
 beforeEach(() => {
   // If variables aren't used, don't declare them
   // Only declare what's actually used in tests
-  
   // Tests use only what's necessary
 });
 ```
 
 **Option 4: Web Dashboard - Remove or Prefix**
+
 ```javascript
 // src/services/web-dashboard.js
 _someMethod() {
@@ -1181,13 +1213,13 @@ _someMethod() {
 
 ## Summary Table
 
-| Category | Before | After | Reduction |
-|----------|--------|-------|-----------|
-| Test describe blocks | 681 lines | 5 groups (≤150 each) | -85% lines/group |
-| Command execute() | 98 lines | 6 lines + 3 helpers | 94% reduction |
+| Category               | Before                  | After                  | Reduction                 |
+| ---------------------- | ----------------------- | ---------------------- | ------------------------- |
+| Test describe blocks   | 681 lines               | 5 groups (≤150 each)   | -85% lines/group          |
+| Command execute()      | 98 lines                | 6 lines + 3 helpers    | 94% reduction             |
 | Dashboard detectDhcp() | Depth 5 / Complexity 26 | Depth 2 / Complexity 6 | 75% depth, 77% complexity |
-| Logger console calls | 15 violations | 0 violations | 100% |
-| Unused variables | 7 warnings | 0 warnings | 100% |
+| Logger console calls   | 15 violations           | 0 violations           | 100%                      |
+| Unused variables       | 7 warnings              | 0 warnings             | 100%                      |
 
 ---
 

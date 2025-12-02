@@ -1,4 +1,8 @@
-const { reminderService, databaseService, initializeReminderServiceTestDefaults } = require('./reminder-service.test.setup');
+const {
+  reminderService,
+  databaseService,
+  initializeReminderServiceTestDefaults,
+} = require('./reminder-service.test.setup');
 
 describe('ReminderService creation', () => {
   beforeEach(() => {

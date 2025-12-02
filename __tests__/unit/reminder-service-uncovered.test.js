@@ -3,7 +3,12 @@
  * Tests for methods with low coverage: shutdown, getUserReminders, clearReminderTimer edge cases
  */
 
-const { reminderService, databaseService, logger, initializeReminderServiceTestDefaults } = require('./reminder-service.test.setup');
+const {
+  reminderService,
+  databaseService,
+  logger,
+  initializeReminderServiceTestDefaults,
+} = require('./reminder-service.test.setup');
 
 describe('ReminderService - Uncovered Paths', () => {
   beforeEach(() => {
@@ -130,7 +135,7 @@ describe('ReminderService - Uncovered Paths', () => {
 
     it('should do nothing for non-existent reminder', () => {
       expect(reminderService.activeTimers.has(999)).toBe(false);
-      
+
       reminderService.clearReminderTimer(999);
 
       expect(reminderService.activeTimers.has(999)).toBe(false);
@@ -238,9 +243,7 @@ describe('ReminderService - Uncovered Paths', () => {
       await reminderService.executeReminder(reminder);
 
       expect(emitSpy).toHaveBeenCalledWith('reminderDue', reminder);
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Executed reminder 1')
-      );
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Executed reminder 1'));
     });
 
     it('should handle errors during execution', async () => {

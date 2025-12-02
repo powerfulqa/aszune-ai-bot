@@ -20,7 +20,9 @@ describe('_isRetryableError helper', () => {
   });
 
   it('flags temporary service errors', () => {
-    const result = context.PerplexityService._isRetryableError({ message: 'Temporary service unavailable' });
+    const result = context.PerplexityService._isRetryableError({
+      message: 'Temporary service unavailable',
+    });
 
     expect(result).toBe(true);
   });
@@ -32,7 +34,9 @@ describe('_isRetryableError helper', () => {
   });
 
   it('flags 429 rate limit errors', () => {
-    const result = context.PerplexityService._isRetryableError({ message: 'Rate limit 429 exceeded' });
+    const result = context.PerplexityService._isRetryableError({
+      message: 'Rate limit 429 exceeded',
+    });
 
     expect(result).toBe(true);
   });
@@ -44,7 +48,9 @@ describe('_isRetryableError helper', () => {
   });
 
   it('ignores invalid request errors', () => {
-    const result = context.PerplexityService._isRetryableError({ message: 'Invalid request format' });
+    const result = context.PerplexityService._isRetryableError({
+      message: 'Invalid request format',
+    });
 
     expect(result).toBe(false);
   });

@@ -63,7 +63,13 @@ jest.mock('../../src/utils/resource-optimizer', () => ({
 
 jest.mock('../../src/utils/performance-dashboard', () => ({
   generateDashboardReport: jest.fn().mockResolvedValue({
-    overview: { status: 'healthy', memoryUsage: '50%', responseTime: '50ms', errorRate: '0%', optimizationTier: 'standard' },
+    overview: {
+      status: 'healthy',
+      memoryUsage: '50%',
+      responseTime: '50ms',
+      errorRate: '0%',
+      optimizationTier: 'standard',
+    },
     alerts: [],
   }),
   getRealTimeStatus: jest.fn().mockReturnValue({
@@ -157,9 +163,7 @@ describe('Text Command Handler - Branch Coverage', () => {
       mockMessage.content = '!stats';
       // Make reply throw an error initially, then succeed
       const errorOnce = new Error('Reply failed');
-      mockMessage.reply
-        .mockRejectedValueOnce(errorOnce)
-        .mockResolvedValue({});
+      mockMessage.reply.mockRejectedValueOnce(errorOnce).mockResolvedValue({});
 
       // This tests the catch block for reply errors
       await handleTextCommand(mockMessage);
@@ -182,7 +186,7 @@ describe('Text Command Handler - Branch Coverage', () => {
     it('should handle case-insensitive commands', async () => {
       mockMessage.content = '!HELP';
 
-      const result = await handleTextCommand(mockMessage);
+      await handleTextCommand(mockMessage);
 
       // Command prefix check uses toLowerCase()
       expect(mockMessage.reply).toHaveBeenCalled();

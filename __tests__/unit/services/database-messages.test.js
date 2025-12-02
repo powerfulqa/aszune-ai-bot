@@ -124,17 +124,17 @@ describe('DatabaseService - Messages', function () {
 
   describe('addUserMessage', () => {
     it('should add message to database', () => {
-      const dbConn1 = dbService.getDb();
+      const _dbConn1 = dbService.getDb();
 
       dbService.addUserMessage('123', 'Hello world');
 
-      const dbConn2 = dbService.getDb();
+      const _dbConn2 = dbService.getDb();
 
       const messages = dbService.getUserMessages('123');
 
       // Try raw SQL query
       const dbConn = dbService.getDb();
-      const rawResult = dbConn.prepare('SELECT * FROM user_messages WHERE user_id = ?').all('123');
+      const _rawResult = dbConn.prepare('SELECT * FROM user_messages WHERE user_id = ?').all('123');
 
       expect(messages).toContain('Hello world');
     });

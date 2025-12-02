@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /**
  * Reminder Command Extended Coverage Tests
  * Additional tests for reminder.js to improve branch and statement coverage
@@ -25,7 +26,6 @@ jest.mock('../../../src/utils/logger', () => ({
 
 const reminderService = require('../../../src/services/reminder-service');
 const timeParser = require('../../../src/utils/time-parser');
-const ErrorHandler = require('../../../src/utils/error-handler');
 const logger = require('../../../src/utils/logger');
 const { handleReminderCommand, handleReminderDue } = require('../../../src/commands/reminder');
 
@@ -335,10 +335,7 @@ describe('Reminder Command Extended Coverage', () => {
 
       await handleReminderCommand(message, ['list']);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error in reminder command:',
-        expect.any(Error)
-      );
+      expect(logger.error).toHaveBeenCalledWith('Error in reminder command:', expect.any(Error));
     });
   });
 
@@ -352,9 +349,7 @@ describe('Reminder Command Extended Coverage', () => {
 
       await handleReminderDue(reminder);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Reminder due: 42')
-      );
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Reminder due: 42'));
     });
 
     it('should handle errors during reminder due processing', async () => {

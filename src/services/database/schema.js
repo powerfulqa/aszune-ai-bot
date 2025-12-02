@@ -21,7 +21,9 @@ function runMigrations(db) {
     const userStatsInfo = db.prepare('PRAGMA table_info(user_stats)').all();
     // Safely check if userStatsInfo exists and has data before checking columns
     const hasUsernameColumn =
-      userStatsInfo && Array.isArray(userStatsInfo) && userStatsInfo.some((col) => col.name === 'username');
+      userStatsInfo &&
+      Array.isArray(userStatsInfo) &&
+      userStatsInfo.some((col) => col.name === 'username');
 
     if (!hasUsernameColumn) {
       logger.info('Running migration: Adding username column to user_stats table');

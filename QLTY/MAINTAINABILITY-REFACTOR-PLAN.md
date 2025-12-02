@@ -3,6 +3,7 @@
 ## Current Status: Dashboard-F, Quality-C
 
 ### Issues Identified
+
 - **web-dashboard.js**: 402 cyclomatic complexity (target: <100)
 - **perplexity-secure.js**: 150 complexity (target: <80)
 - **index.js**: 49 complexity (target: <30)
@@ -12,10 +13,11 @@
 ## Refactoring Strategy
 
 ### Phase 1: Web Dashboard Service Refactoring (Priority: Critical)
-**Current**: 402 complexity, 3365 lines
-**Target**: 100 complexity across multiple modules
+
+**Current**: 402 complexity, 3365 lines **Target**: 100 complexity across multiple modules
 
 #### Breakdown Plan:
+
 1. **SocketHandlers.js** (150 lines, 40 complexity)
    - `setupSocketConnection()`
    - `handleAnalyticsRequest()`
@@ -58,20 +60,22 @@
    - `getSystemLogs()`
 
 ### Phase 2: Frontend Dashboard Refactoring
-**Current**: 117 complexity in single class
-**Target**: <50 with modular components
+
+**Current**: 117 complexity in single class **Target**: <50 with modular components
 
 #### Components:
+
 - `MetricsDisplayManager` - Handle chart updates and metrics
 - `SocketManager` - WebSocket connection and event handling
 - `UIStateManager` - DOM updates and UI state
 - `DataProcessor` - Response formatting and data transformation
 
 ### Phase 3: Perplexity Service Refactoring
-**Current**: 150 complexity
-**Target**: <80
+
+**Current**: 150 complexity **Target**: <80
 
 #### Extract Into:
+
 1. **APIClient.js** - HTTP request handling (extract from perplexity-secure.js)
 2. **MessageProcessor.js** - Message formatting and validation
 3. **CacheHandler.js** - Cache-specific logic
@@ -80,17 +84,21 @@
 ### Phase 4: Code Duplication Elimination
 
 #### Duplicate Cache Stats Pattern (22 lines, 5 locations)
+
 - Create `CacheStatsHelper.js` with `getCacheStatsErrorResponse()`
 
 #### Duplicate Error Response Pattern (18+ locations)
+
 - Create `ErrorResponseHelper.js` with standardized patterns
 
 #### Database Query Duplication (18+ similar blocks)
+
 - Create `DatabaseQueryHelper.js` with `executeQuery()`, `executeQueryWithDefaults()`
 
 ## Testing Strategy
 
 After each refactoring phase:
+
 1. Run full test suite: `npm test`
 2. Check complexity: `npm run quality:check`
 3. Verify coverage thresholds met
@@ -99,11 +107,13 @@ After each refactoring phase:
 ## Expected Outcomes
 
 ### Before Refactoring:
+
 - Maintainability: F (122 code smells)
 - Coverage: 75.4%
 - High technical debt
 
 ### After Refactoring:
+
 - Maintainability: A (target <20 code smells)
 - Coverage: >80% (with additional tests)
 - Reduced cyclomatic complexity across all modules

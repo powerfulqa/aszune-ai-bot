@@ -47,7 +47,9 @@ describe('Discord Client Event Handlers', () => {
   });
 
   it('should handle interaction events', async () => {
-    const interactionHandler = context.mockClient.on.mock.calls.find((call) => call[0] === 'interactionCreate')[1];
+    const interactionHandler = context.mockClient.on.mock.calls.find(
+      (call) => call[0] === 'interactionCreate'
+    )[1];
     const mockInteraction = { isChatInputCommand: () => true };
 
     await interactionHandler(mockInteraction);
@@ -57,7 +59,9 @@ describe('Discord Client Event Handlers', () => {
   });
 
   it('should ignore non-slash interactions', async () => {
-    const interactionHandler = context.mockClient.on.mock.calls.find((call) => call[0] === 'interactionCreate')[1];
+    const interactionHandler = context.mockClient.on.mock.calls.find(
+      (call) => call[0] === 'interactionCreate'
+    )[1];
     const mockInteraction = { isChatInputCommand: () => false };
 
     await interactionHandler(mockInteraction);

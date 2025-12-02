@@ -239,7 +239,7 @@ jest.mock('../../src/utils/input-validator', () => ({
 
 jest.mock('../../src/utils/error-handler', () => ({
   ErrorHandler: {
-    handleError: jest.fn().mockImplementation((error, context, additionalData) => {
+    handleError: jest.fn().mockImplementation((_error, _context, _additionalData) => {
       return { message: 'Test error message' };
     }),
   },

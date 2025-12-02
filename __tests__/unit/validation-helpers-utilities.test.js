@@ -34,7 +34,9 @@ describe('Validation Helpers - Utilities', () => {
     });
 
     it('should not remove control chars when disabled', () => {
-      expect(sanitizeString('hello\x00world', { removeControlChars: false })).toBe('hello\x00world');
+      expect(sanitizeString('hello\x00world', { removeControlChars: false })).toBe(
+        'hello\x00world'
+      );
     });
 
     it('should truncate to maxLength', () => {

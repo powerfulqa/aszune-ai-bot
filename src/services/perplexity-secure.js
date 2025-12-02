@@ -18,8 +18,15 @@ const { CacheManager } = require('./cache-manager');
 const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
 const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
-const { buildRequestPayload, getPiSettings } = require('./perplexity-secure/helpers/requestBuilder');
-const { handleApiResponse, extractResponseContent, handleErrorResponse } = require('./perplexity-secure/helpers/responseValidator');
+const {
+  buildRequestPayload,
+  getPiSettings,
+} = require('./perplexity-secure/helpers/requestBuilder');
+const {
+  handleApiResponse,
+  extractResponseContent,
+  handleErrorResponse,
+} = require('./perplexity-secure/helpers/responseValidator');
 
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
@@ -348,7 +355,11 @@ class PerplexityService {
    * @param {boolean} cacheEnabled - Whether caching was enabled
    */
   async _trackCacheHitPerformance(responseTime, memoryDelta, historyLength, cacheEnabled) {
-    await this._trackMetric('api_cache_hit_time', responseTime, { historyLength, cacheEnabled, operation: 'cache_hit' });
+    await this._trackMetric('api_cache_hit_time', responseTime, {
+      historyLength,
+      cacheEnabled,
+      operation: 'cache_hit',
+    });
     await this._trackMetric('memory_usage_delta', memoryDelta, { operation: 'cache_hit' });
   }
 
@@ -361,10 +372,25 @@ class PerplexityService {
    * @param {boolean} cacheEnabled - Whether caching was enabled
    * @param {number} contentLength - Length of response content
    */
-  async _trackApiCallPerformance(totalTime, memoryDelta, finalMemoryUsage, historyLength, cacheEnabled, contentLength) {
-    await this._trackMetric('api_response_time', totalTime, { historyLength, cacheEnabled, cacheHit: false, contentLength, operation: 'api_call' });
+  async _trackApiCallPerformance(
+    totalTime,
+    memoryDelta,
+    finalMemoryUsage,
+    historyLength,
+    cacheEnabled,
+    contentLength
+  ) {
+    await this._trackMetric('api_response_time', totalTime, {
+      historyLength,
+      cacheEnabled,
+      cacheHit: false,
+      contentLength,
+      operation: 'api_call',
+    });
     await this._trackMetric('memory_usage_delta', memoryDelta, { operation: 'api_call' });
-    await this._trackMetric('memory_usage_current', finalMemoryUsage, { operation: 'api_call_end' });
+    await this._trackMetric('memory_usage_current', finalMemoryUsage, {
+      operation: 'api_call_end',
+    });
   }
 
   /**
@@ -375,7 +401,11 @@ class PerplexityService {
    * @param {string} errorMessage - Error message
    */
   async _trackApiErrorPerformance(errorTime, memoryDelta, historyLength, errorMessage) {
-    await this._trackMetric('api_error_time', errorTime, { historyLength, error: errorMessage, operation: 'api_error' });
+    await this._trackMetric('api_error_time', errorTime, {
+      historyLength,
+      error: errorMessage,
+      operation: 'api_error',
+    });
     await this._trackMetric('memory_usage_delta', memoryDelta, {
       operation: 'api_error',
     });

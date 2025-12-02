@@ -7,10 +7,10 @@ in `.github/workflows/unified-ci.yml` and runs automatically on push and pull re
 
 v1.8.0 introduced a dual test coverage enforcement model:
 
-| Layer           | Threshold       | Config                             | Purpose                                           |
-| --------------- | --------------- | ---------------------------------- | ------------------------------------------------- |
+| Layer           | Threshold       | Config                                    | Purpose                                           |
+| --------------- | --------------- | ----------------------------------------- | ------------------------------------------------- |
 | Critical files  | ≥80% statements | `config/jest.critical-coverage.config.js` | Early fail for core reliability paths             |
-| Global baseline | ≥65% statements | `jest.config.js`                   | Sustainable confidence without blocking iteration |
+| Global baseline | ≥65% statements | `jest.config.js`                          | Sustainable confidence without blocking iteration |
 
 Critical gate runs first; if it fails, the full suite is skipped to save CI minutes.
 

@@ -63,10 +63,7 @@ function createRemindInteraction(overrides = {}) {
     channelId: 'channel123',
     guildId: 'guild123',
     options: {
-      getString: jest
-        .fn()
-        .mockReturnValueOnce('in 5 minutes')
-        .mockReturnValueOnce('Test reminder'),
+      getString: jest.fn().mockReturnValueOnce('in 5 minutes').mockReturnValueOnce('Test reminder'),
     },
     deferReply: jest.fn(),
     editReply: jest.fn(),

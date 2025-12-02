@@ -1,9 +1,8 @@
+/* eslint-disable max-lines-per-function */
 /**
  * Web Dashboard Routes Tests
  * Tests for extracted route modules
  */
-
-const { ErrorHandler } = require('../../../src/utils/error-handler');
 
 // Mock error handler
 jest.mock('../../../src/utils/error-handler', () => ({
@@ -39,7 +38,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('configRoutes', () => {
-    const { registerConfigRoutes } = require('../../../src/services/web-dashboard/routes/configRoutes');
+    const {
+      registerConfigRoutes,
+    } = require('../../../src/services/web-dashboard/routes/configRoutes');
 
     describe('registerConfigRoutes', () => {
       it('should register config routes on app', () => {
@@ -53,7 +54,10 @@ describe('Web Dashboard Route Modules', () => {
 
         expect(mockApp.get).toHaveBeenCalledWith('/api/config/:file', expect.any(Function));
         expect(mockApp.post).toHaveBeenCalledWith('/api/config/:file', expect.any(Function));
-        expect(mockApp.post).toHaveBeenCalledWith('/api/config/:file/validate', expect.any(Function));
+        expect(mockApp.post).toHaveBeenCalledWith(
+          '/api/config/:file/validate',
+          expect.any(Function)
+        );
       });
     });
 
@@ -180,7 +184,10 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(mockService.validateConfigFile).toHaveBeenCalledWith('test.json', 'content to validate');
+        expect(mockService.validateConfigFile).toHaveBeenCalledWith(
+          'test.json',
+          'content to validate'
+        );
         expect(res.json).toHaveBeenCalledWith({ valid: true });
       });
 
@@ -205,7 +212,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('controlRoutes', () => {
-    const { registerControlRoutes } = require('../../../src/services/web-dashboard/routes/controlRoutes');
+    const {
+      registerControlRoutes,
+    } = require('../../../src/services/web-dashboard/routes/controlRoutes');
 
     it('should register control routes on app', () => {
       const mockApp = { post: jest.fn() };
@@ -396,7 +405,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('networkRoutes', () => {
-    const { registerNetworkRoutes } = require('../../../src/services/web-dashboard/routes/networkRoutes');
+    const {
+      registerNetworkRoutes,
+    } = require('../../../src/services/web-dashboard/routes/networkRoutes');
 
     it('should register network routes on app', () => {
       const mockApp = { get: jest.fn() };
@@ -525,7 +536,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('recommendationRoutes', () => {
-    const { registerRecommendationRoutes } = require('../../../src/services/web-dashboard/routes/recommendationRoutes');
+    const {
+      registerRecommendationRoutes,
+    } = require('../../../src/services/web-dashboard/routes/recommendationRoutes');
 
     it('should register recommendation routes on app', () => {
       const mockApp = { get: jest.fn() };
@@ -556,7 +569,9 @@ describe('Web Dashboard Route Modules', () => {
 
       it('should handle recommendations error', async () => {
         const mockService = {
-          getDetailedRecommendations: jest.fn().mockRejectedValue(new Error('Recommendation error')),
+          getDetailedRecommendations: jest
+            .fn()
+            .mockRejectedValue(new Error('Recommendation error')),
         };
         const mockApp = { get: jest.fn() };
         registerRecommendationRoutes(mockApp, mockService);
@@ -573,7 +588,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('reminderRoutes', () => {
-    const { registerReminderRoutes } = require('../../../src/services/web-dashboard/routes/reminderRoutes');
+    const {
+      registerReminderRoutes,
+    } = require('../../../src/services/web-dashboard/routes/reminderRoutes');
 
     it('should register reminder routes on app', () => {
       const mockApp = { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() };
@@ -717,7 +734,11 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(mockService.updateReminder).toHaveBeenCalledWith('1', 'Updated', '2025-12-01T12:00:00Z');
+        expect(mockService.updateReminder).toHaveBeenCalledWith(
+          '1',
+          'Updated',
+          '2025-12-01T12:00:00Z'
+        );
         expect(res.json).toHaveBeenCalledWith({
           reminder: mockReminder,
           message: 'Reminder updated successfully',
@@ -782,7 +803,9 @@ describe('Web Dashboard Route Modules', () => {
   });
 
   describe('serviceRoutes', () => {
-    const { registerServiceRoutes } = require('../../../src/services/web-dashboard/routes/serviceRoutes');
+    const {
+      registerServiceRoutes,
+    } = require('../../../src/services/web-dashboard/routes/serviceRoutes');
 
     it('should register service routes on app', () => {
       const mockApp = { get: jest.fn(), post: jest.fn() };

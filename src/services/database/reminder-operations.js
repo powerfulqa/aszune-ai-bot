@@ -5,14 +5,7 @@ function normalizeScheduledTime(value) {
   return value;
 }
 
-function createReminder(db, {
-  userId,
-  message,
-  scheduledTime,
-  timezone,
-  channelId,
-  serverId,
-}) {
+function createReminder(db, { userId, message, scheduledTime, timezone, channelId, serverId }) {
   const stmt = db.prepare(`
     INSERT INTO reminders (user_id, message, scheduled_time, timezone, channel_id, server_id)
     VALUES (?, ?, ?, ?, ?, ?)

@@ -12,9 +12,9 @@ describe('TimeParser - Parsing', () => {
       futureDate.setDate(futureDate.getDate() + 1);
       const dateStr = futureDate.toISOString().split('T')[0];
       const timeStr = '14:30';
-      
+
       const result = timeParser.parseBasicTimeExpression(`${dateStr} ${timeStr}`, 'UTC');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.timezone).toBe('UTC');
       expect(result.fallbackUsed).toBe(true);
@@ -22,7 +22,7 @@ describe('TimeParser - Parsing', () => {
 
     it('should parse "in X minutes" format', () => {
       const result = timeParser.parseBasicTimeExpression('in 30 minutes', 'UTC');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.scheduledTime.getTime()).toBeGreaterThan(Date.now());
       expect(result.fallbackUsed).toBe(true);
@@ -30,14 +30,14 @@ describe('TimeParser - Parsing', () => {
 
     it('should parse "in X minute" singular format', () => {
       const result = timeParser.parseBasicTimeExpression('in 1 minute', 'UTC');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.scheduledTime.getTime()).toBeGreaterThan(Date.now());
     });
 
     it('should parse "in X hours" format', () => {
       const result = timeParser.parseBasicTimeExpression('in 2 hours', 'UTC');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       const expectedTime = Date.now() + 2 * 60 * 60 * 1000;
       expect(Math.abs(result.scheduledTime.getTime() - expectedTime)).toBeLessThan(1000);
@@ -45,21 +45,21 @@ describe('TimeParser - Parsing', () => {
 
     it('should parse "in X hour" singular format', () => {
       const result = timeParser.parseBasicTimeExpression('in 1 hour', 'EST');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.timezone).toBe('EST');
     });
 
     it('should parse "in X days" format', () => {
       const result = timeParser.parseBasicTimeExpression('in 3 days', 'EST');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.timezone).toBe('EST');
     });
 
     it('should parse "in X day" singular format', () => {
       const result = timeParser.parseBasicTimeExpression('in 1 day', 'PST');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.timezone).toBe('PST');
     });
@@ -74,7 +74,7 @@ describe('TimeParser - Parsing', () => {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
       const dateStr = pastDate.toISOString().split('T')[0];
-      
+
       expect(() => {
         timeParser.parseBasicTimeExpression(`${dateStr} 12:00`, 'UTC');
       }).toThrow('Unable to parse time expression');
@@ -83,7 +83,7 @@ describe('TimeParser - Parsing', () => {
     it('should include originalExpression in result', () => {
       const expression = 'in 5 minutes';
       const result = timeParser.parseBasicTimeExpression(expression, 'UTC');
-      
+
       expect(result.originalExpression).toBe(expression);
       expect(result.parsedText).toBe(expression);
     });
@@ -92,7 +92,7 @@ describe('TimeParser - Parsing', () => {
   describe('parseTimeExpression', () => {
     it('should parse natural language time expressions', () => {
       const result = timeParser.parseTimeExpression('in 5 minutes', 'UTC');
-      
+
       expect(result.scheduledTime).toBeInstanceOf(Date);
       expect(result.timezone).toBe('UTC');
       expect(result.originalExpression).toBe('in 5 minutes');
@@ -100,19 +100,19 @@ describe('TimeParser - Parsing', () => {
 
     it('should detect timezone in expression', () => {
       const result = timeParser.parseTimeExpression('in 2 hours EST', 'UTC');
-      
+
       expect(result.timezone).toBe('EST');
     });
 
     it('should detect PST timezone in expression', () => {
       const result = timeParser.parseTimeExpression('in 3 hours PST', 'UTC');
-      
+
       expect(result.timezone).toBe('PST');
     });
 
     it('should detect GMT timezone in expression', () => {
       const result = timeParser.parseTimeExpression('in 1 hour GMT', 'EST');
-      
+
       expect(result.timezone).toBe('GMT');
     });
 
@@ -130,19 +130,19 @@ describe('TimeParser - Parsing', () => {
 
     it('should use user timezone as default', () => {
       const result = timeParser.parseTimeExpression('in 10 minutes', 'PST');
-      
+
       expect(result.timezone).toBe('PST');
     });
 
     it('should include parsedText in result', () => {
       const result = timeParser.parseTimeExpression('in 30 minutes', 'UTC');
-      
+
       expect(result.parsedText).toBeDefined();
     });
 
     it('should handle case-insensitive timezone detection', () => {
       const result = timeParser.parseTimeExpression('in 1 hour utc', 'EST');
-      
+
       expect(result.timezone).toBe('UTC');
     });
   });
