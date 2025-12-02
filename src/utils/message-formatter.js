@@ -53,46 +53,78 @@ class MessageFormatter {
    * @private
    */
   _formatSourceLinks(text) {
-    // Find patterns like (1) that refer to a URL somewhere in the text
-    const sourceRefRegex = /\((\d+)\)/g;
+    // Collect all URLs from the text
+    const urls = this._collectUrls(text);
+
+    // Early return if no URLs found
+    if (urls.length === 0) {
+      return text;
+    }
+
+    // Process the text: replace source refs, then clean up raw URLs
+    let result = this._replaceSourceReferences(text, urls);
+    result = this._cleanupRawUrls(result);
+
+    return result;
+  }
+
+  /**
+   * Collect all URLs from text
+   * @private
+   */
+  _collectUrls(text) {
     const urlRegex = /\(?(https?:\/\/[^\s)]+)\)?/g;
-
-    // Collect all URLs
     const urls = [];
-    let urlMatch;
-    while ((urlMatch = urlRegex.exec(text)) !== null) {
-      urls.push(urlMatch[1]);
+    let match;
+    while ((match = urlRegex.exec(text)) !== null) {
+      urls.push(match[1]);
     }
+    return urls;
+  }
 
-    // If we have URLs, attempt to associate them with source numbers
-    if (urls.length > 0) {
-      // Replace source references with markdown links
-      text = text.replace(sourceRefRegex, (match, sourceNum) => {
-        const sourceIndex = parseInt(sourceNum) - 1;
-        if (sourceIndex >= 0 && sourceIndex < urls.length) {
-          return `[(${sourceNum})](${urls[sourceIndex]})`;
-        }
+  /**
+   * Replace source references with markdown links
+   * @private
+   */
+  _replaceSourceReferences(text, urls) {
+    const sourceRefRegex = /\((\d+)\)/g;
+    return text.replace(sourceRefRegex, (match, sourceNum) => {
+      const sourceIndex = parseInt(sourceNum) - 1;
+      if (sourceIndex >= 0 && sourceIndex < urls.length) {
+        return `[(${sourceNum})](${urls[sourceIndex]})`;
+      }
+      return match;
+    });
+  }
+
+  /**
+   * Clean up raw URLs left in the text by converting to markdown links
+   * @private
+   */
+  _cleanupRawUrls(text) {
+    const urlRegex = /\(?(https?:\/\/[^\s)]+)\)?/g;
+    return text.replace(urlRegex, (match, url) => {
+      // If the URL is part of a markdown link already, leave it
+      const prevChar = text.charAt(text.indexOf(match) - 1);
+      if (prevChar === '(') {
         return match;
-      });
+      }
+      // Convert to domain-name link
+      return this._urlToDomainLink(url);
+    });
+  }
 
-      // Clean up any raw URLs left in the text
-      text = text.replace(urlRegex, (match, url) => {
-        // If the URL is part of a markdown link already, leave it
-        const prevChar = text.charAt(text.indexOf(match) - 1);
-        if (prevChar === '(') {
-          return match;
-        }
-        // Otherwise, hide it with a markdown link using the domain name
-        try {
-          const domain = new URL(url).hostname;
-          return `[${domain}](${url})`;
-        } catch (e) {
-          return match;
-        }
-      });
+  /**
+   * Convert URL to a markdown link using the domain name
+   * @private
+   */
+  _urlToDomainLink(url) {
+    try {
+      const domain = new URL(url).hostname;
+      return `[${domain}](${url})`;
+    } catch {
+      return url;
     }
-
-    return text;
   }
 
   /**

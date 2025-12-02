@@ -1,6 +1,6 @@
 /**
- * CacheManager Service Tests
- * Comprehensive coverage for cache-manager.js (64.2% -> target 85%+)
+ * CacheManager Service Tests - Core Operations
+ * Tests for constructor, configuration, cache key generation, and basic cache operations
  */
 
 // Set test environment
@@ -83,9 +83,8 @@ const { CacheManager } = require('../../../src/services/cache-manager');
 const config = require('../../../src/config/config');
 const logger = require('../../../src/utils/logger');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
-const { getCacheStatsErrorResponse } = require('../../../src/utils/cache-stats-helper');
 
-describe('CacheManager', () => {
+describe('CacheManager - Core Operations', () => {
   let cacheManager;
 
   beforeEach(() => {
@@ -101,13 +100,11 @@ describe('CacheManager', () => {
 
   describe('constructor', () => {
     it('should create cache instance with correct properties', () => {
-      // Verify the cache manager has the expected properties
       expect(cacheManager.cache).toBeDefined();
-      expect(cacheManager.cacheCleanupInterval).toBeNull(); // null in test env
+      expect(cacheManager.cacheCleanupInterval).toBeNull();
     });
 
     it('should initialize cacheCleanupInterval as null in test environment', () => {
-      // In test environment, setupCacheCleanup returns early
       expect(cacheManager.cacheCleanupInterval).toBeNull();
     });
   });
@@ -132,7 +129,6 @@ describe('CacheManager', () => {
         maxEntries: 200,
       });
 
-      // Reset
       config.PI_OPTIMIZATIONS.ENABLED = false;
     });
 
@@ -143,7 +139,6 @@ describe('CacheManager', () => {
       const result = cacheManager.getCacheConfiguration();
       expect(result.maxEntries).toBe(config.CACHE.DEFAULT_MAX_ENTRIES);
 
-      // Reset
       config.PI_OPTIMIZATIONS.ENABLED = false;
     });
 
@@ -164,7 +159,6 @@ describe('CacheManager', () => {
       expect(ErrorHandler.handleError).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalled();
 
-      // Restore
       Object.defineProperty(config, 'PI_OPTIMIZATIONS', {
         value: originalConfig,
         configurable: true,
@@ -196,7 +190,7 @@ describe('CacheManager', () => {
       const key1 = cacheManager.generateCacheKey(history);
       const key2 = cacheManager.generateCacheKey(history);
       expect(key1).toBe(key2);
-      expect(key1).toHaveLength(64); // SHA-256 hex string
+      expect(key1).toHaveLength(64);
     });
 
     it('should generate different hashes for different history', () => {
@@ -278,178 +272,6 @@ describe('CacheManager', () => {
 
       await cacheManager.trySaveToCache([{ role: 'user', content: 'Test' }], 'content', 100);
       expect(logger.warn).toHaveBeenCalled();
-    });
-  });
-
-  describe('ensureCacheSize', () => {
-    it('should evict entries when cache is full', async () => {
-      mockEnhancedCache.getStats.mockReturnValue({ totalEntries: 100 });
-
-      await cacheManager.ensureCacheSize(100);
-      // Should evict 10% = 10 entries
-      expect(mockEnhancedCache.evictOldest).toHaveBeenCalledTimes(10);
-    });
-
-    it('should not evict when cache is below limit', async () => {
-      mockEnhancedCache.getStats.mockReturnValue({ totalEntries: 50 });
-
-      await cacheManager.ensureCacheSize(100);
-      expect(mockEnhancedCache.evictOldest).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('cleanupCache', () => {
-    it('should call cache pruner when available', async () => {
-      // Mock successful cache pruner
-      const mockPruner = { pruneCache: jest.fn().mockResolvedValue(undefined) };
-      cacheManager.getCachePruner = jest.fn().mockResolvedValue(mockPruner);
-
-      await cacheManager.cleanupCache();
-      expect(mockPruner.pruneCache).toHaveBeenCalled();
-    });
-
-    it('should handle missing cache pruner gracefully', async () => {
-      cacheManager.getCachePruner = jest.fn().mockResolvedValue(null);
-
-      await expect(cacheManager.cleanupCache()).resolves.not.toThrow();
-    });
-
-    it('should handle cleanup errors gracefully', async () => {
-      cacheManager.getCachePruner = jest.fn().mockRejectedValue(new Error('Cleanup failed'));
-
-      await cacheManager.cleanupCache();
-      expect(logger.warn).toHaveBeenCalled();
-    });
-  });
-
-  describe('getCachePruner', () => {
-    it('should return null when cache-pruner module is not available', async () => {
-      // The mock doesn't provide CachePruner, so it should return null
-      const result = await cacheManager.getCachePruner();
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('loadCache', () => {
-    it('should load cache from file', async () => {
-      mockFsPromises.readFile.mockResolvedValue('{"key": "value"}');
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({ key: 'value' });
-      expect(mockFsPromises.mkdir).toHaveBeenCalled();
-    });
-
-    it('should return empty object when file does not exist', async () => {
-      const error = new Error('File not found');
-      error.code = 'ENOENT';
-      mockFsPromises.readFile.mockRejectedValue(error);
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({});
-    });
-
-    it('should handle other read errors gracefully', async () => {
-      mockFsPromises.readFile.mockRejectedValue(new Error('Read error'));
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({});
-      expect(logger.warn).toHaveBeenCalled();
-    });
-  });
-
-  describe('saveCache', () => {
-    it('should save cache to file with secure permissions', async () => {
-      const cache = { key: 'value' };
-
-      await cacheManager.saveCache(cache);
-      expect(mockFsPromises.mkdir).toHaveBeenCalled();
-      expect(mockFsPromises.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('question_cache.json'),
-        JSON.stringify(cache, null, 2),
-        { mode: 0o600 }
-      );
-    });
-
-    it('should handle save errors gracefully', async () => {
-      mockFsPromises.writeFile.mockRejectedValue(new Error('Write error'));
-
-      await cacheManager.saveCache({ key: 'value' });
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('getStats', () => {
-    it('should return cache statistics', () => {
-      mockEnhancedCache.getStats.mockReturnValue(mockCacheStats);
-
-      const result = cacheManager.getStats();
-      expect(result).toEqual(mockCacheStats);
-    });
-
-    it('should handle errors and return error response', () => {
-      mockEnhancedCache.getStats.mockImplementation(() => {
-        throw new Error('Stats error');
-      });
-
-      cacheManager.getStats();
-      expect(getCacheStatsErrorResponse).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('getDetailedInfo', () => {
-    it('should return detailed cache information', () => {
-      const detailedInfo = { stats: mockCacheStats, entries: ['entry1', 'entry2'] };
-      mockEnhancedCache.getDetailedInfo.mockReturnValue(detailedInfo);
-
-      const result = cacheManager.getDetailedInfo();
-      expect(result).toEqual(detailedInfo);
-    });
-
-    it('should handle errors and return error object', () => {
-      mockEnhancedCache.getDetailedInfo.mockImplementation(() => {
-        throw new Error('Detailed info error');
-      });
-
-      const result = cacheManager.getDetailedInfo();
-      expect(result).toHaveProperty('error');
-      expect(result).toHaveProperty('stats');
-      expect(result).toHaveProperty('entries');
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('invalidateByTag', () => {
-    it('should invalidate cache entries by tag', () => {
-      mockEnhancedCache.invalidateByTag.mockReturnValue(5);
-
-      const result = cacheManager.invalidateByTag('test-tag');
-      expect(result).toBe(5);
-      expect(mockEnhancedCache.invalidateByTag).toHaveBeenCalledWith('test-tag');
-    });
-
-    it('should handle errors and return 0', () => {
-      mockEnhancedCache.invalidateByTag.mockImplementation(() => {
-        throw new Error('Invalidation error');
-      });
-
-      const result = cacheManager.invalidateByTag('test-tag');
-      expect(result).toBe(0);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('shutdown', () => {
-    it('should clear cleanup interval when set', () => {
-      cacheManager.cacheCleanupInterval = setInterval(() => {}, 1000);
-
-      cacheManager.shutdown();
-      expect(cacheManager.cacheCleanupInterval).toBeNull();
-    });
-
-    it('should handle shutdown when interval is null', () => {
-      cacheManager.cacheCleanupInterval = null;
-      expect(() => cacheManager.shutdown()).not.toThrow();
     });
   });
 });

@@ -3,10 +3,7 @@
  * Handles intelligent chunking of messages to avoid breaking content at inappropriate boundaries
  */
 const logger = require('../logger');
-const {
-  handleTextProcessingError,
-  handleChunkProcessingError,
-} = require('./error-helpers');
+const { handleTextProcessingError, handleChunkProcessingError } = require('./error-helpers');
 
 /**
  * Process and fix message formatting issues before chunking

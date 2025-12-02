@@ -220,25 +220,51 @@ class TimeParser {
    * @private
    */
   _formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays) {
-    // Time unit definitions with thresholds and formatters
-    const timeUnits = [
-      { max: 60, value: diffSeconds, format: (v) => (v <= 1 ? 'in 1 second' : `in ${v} seconds`) },
-      { max: 60, value: diffMinutes, format: (v) => (v === 1 ? 'in 1 minute' : `in ${v} minutes`) },
-      { max: 24, value: diffHours, format: (v) => (v === 1 ? 'in 1 hour' : `in ${v} hours`) },
-      { max: 7, value: diffDays, format: (v) => (v === 1 ? 'tomorrow' : `in ${v} days`) },
-      { max: 30, value: diffDays, format: (v) => this._formatWeeks(v) },
-      { max: 365, value: diffDays, format: (v) => this._formatMonths(v) },
+    // Define time thresholds and their formatters
+    const thresholds = [
+      { check: () => diffSeconds < 60, format: () => this._formatSeconds(diffSeconds) },
+      { check: () => diffMinutes < 60, format: () => this._formatMinutes(diffMinutes) },
+      { check: () => diffHours < 24, format: () => this._formatHours(diffHours) },
+      { check: () => diffDays < 7, format: () => this._formatDays(diffDays) },
+      { check: () => diffDays < 30, format: () => this._formatWeeks(diffDays) },
+      { check: () => diffDays < 365, format: () => this._formatMonths(diffDays) },
     ];
 
-    // Check time units in order (seconds -> minutes -> hours -> days -> weeks -> months)
-    if (diffSeconds < 60) return timeUnits[0].format(diffSeconds);
-    if (diffMinutes < 60) return timeUnits[1].format(diffMinutes);
-    if (diffHours < 24) return timeUnits[2].format(diffHours);
-    if (diffDays < 7) return timeUnits[3].format(diffDays);
-    if (diffDays < 30) return timeUnits[4].format(diffDays);
-    if (diffDays < 365) return timeUnits[5].format(diffDays);
+    // Find and apply the first matching threshold
+    const match = thresholds.find((t) => t.check());
+    return match ? match.format() : this._formatYears(diffDays);
+  }
 
-    return this._formatYears(diffDays);
+  /**
+   * Format seconds into relative time string
+   * @private
+   */
+  _formatSeconds(seconds) {
+    return seconds <= 1 ? 'in 1 second' : `in ${seconds} seconds`;
+  }
+
+  /**
+   * Format minutes into relative time string
+   * @private
+   */
+  _formatMinutes(minutes) {
+    return minutes === 1 ? 'in 1 minute' : `in ${minutes} minutes`;
+  }
+
+  /**
+   * Format hours into relative time string
+   * @private
+   */
+  _formatHours(hours) {
+    return hours === 1 ? 'in 1 hour' : `in ${hours} hours`;
+  }
+
+  /**
+   * Format days into relative time string
+   * @private
+   */
+  _formatDays(days) {
+    return days === 1 ? 'tomorrow' : `in ${days} days`;
   }
 
   getRelativeTime(targetTime, referenceTime = new Date()) {
