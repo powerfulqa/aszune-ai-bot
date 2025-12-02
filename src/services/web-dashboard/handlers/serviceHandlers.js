@@ -273,15 +273,15 @@ async function handleQuickServiceAction(data, callback) {
  */
 function mapGroupToPm2Command(group) {
   switch (group) {
-    case 'restart-all':
-      return 'pm2 restart all';
-    case 'start-all':
-      return 'pm2 start all';
-    case 'stop-non-essential':
-      logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-      return 'pm2 restart all';
-    default:
-      throw new Error(`Unknown quick action group: ${group}`);
+  case 'restart-all':
+    return 'pm2 restart all';
+  case 'start-all':
+    return 'pm2 start all';
+  case 'stop-non-essential':
+    logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
+    return 'pm2 restart all';
+  default:
+    throw new Error(`Unknown quick action group: ${group}`);
   }
 }
 
