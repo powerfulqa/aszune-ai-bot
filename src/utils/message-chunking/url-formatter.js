@@ -25,7 +25,7 @@
  * @author
  * @version 1.0.0
  */
-const { handleTextProcessingError } = require('./error-helpers');
+const { handleTextProcessingError, isValidString } = require('./error-helpers');
 
 /**
  * Format social media links (Reddit, Imgur, GitHub, Twitter/X)
@@ -35,7 +35,7 @@ const { handleTextProcessingError } = require('./error-helpers');
 function formatSocialMediaLinks(text) {
   try {
     // Input validation
-    if (typeof text !== 'string') {
+    if (!isValidString(text)) {
       return text;
     }
 
@@ -96,7 +96,7 @@ function formatSocialMediaLinks(text) {
 function formatYouTubeLinks(text) {
   try {
     // Input validation
-    if (typeof text !== 'string') {
+    if (!isValidString(text)) {
       return text;
     }
 
@@ -160,7 +160,7 @@ function formatStarsectorLinks(text) {
 
   try {
     // Input validation - early exit if not a string
-    if (typeof text !== 'string') {
+    if (!isValidString(text)) {
       return result;
     }
 
@@ -339,7 +339,7 @@ function applyDirectUrlFixes(text) {
 function fixLinkFormatting(text) {
   try {
     // Input validation
-    if (typeof text !== 'string') {
+    if (!isValidString(text)) {
       return text;
     }
 

@@ -6,6 +6,15 @@ const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 
 /**
+ * Validate that input is a string and return early if not
+ * @param {*} text - The input to validate
+ * @returns {boolean} - True if text is a valid string, false otherwise
+ */
+function isValidString(text) {
+  return typeof text === 'string';
+}
+
+/**
  * Handle text processing errors with consistent logging
  * @param {Error} error - The error that occurred
  * @param {string} context - Description of the operation that failed
@@ -46,4 +55,5 @@ function handleChunkProcessingError(error, context, chunks, additionalContext = 
 module.exports = {
   handleTextProcessingError,
   handleChunkProcessingError,
+  isValidString,
 };

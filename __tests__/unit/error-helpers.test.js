@@ -14,6 +14,7 @@ jest.mock('../../src/utils/error-handler', () => ({
 const {
   handleTextProcessingError,
   handleChunkProcessingError,
+  isValidString,
 } = require('../../src/utils/message-chunking/error-helpers');
 const logger = require('../../src/utils/logger');
 const { ErrorHandler } = require('../../src/utils/error-handler');
@@ -124,6 +125,23 @@ describe('error-helpers', () => {
           operation: 'fixingchunkboundaries',
         })
       );
+    });
+  });
+
+  describe('isValidString', () => {
+    it('should return true for valid strings', () => {
+      expect(isValidString('hello')).toBe(true);
+      expect(isValidString('')).toBe(true);
+      expect(isValidString('a longer string with spaces')).toBe(true);
+    });
+
+    it('should return false for non-string types', () => {
+      expect(isValidString(null)).toBe(false);
+      expect(isValidString(undefined)).toBe(false);
+      expect(isValidString(123)).toBe(false);
+      expect(isValidString({})).toBe(false);
+      expect(isValidString([])).toBe(false);
+      expect(isValidString(true)).toBe(false);
     });
   });
 });
