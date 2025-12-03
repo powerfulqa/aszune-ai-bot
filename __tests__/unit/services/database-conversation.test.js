@@ -25,8 +25,6 @@ describe('DatabaseService - Conversation History', function () {
       }
     }
   });
-    }
-  });
 
   describe('getConversationHistory', () => {
     it('should return empty array for user with no conversation', () => {

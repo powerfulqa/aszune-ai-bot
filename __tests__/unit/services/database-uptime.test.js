@@ -25,8 +25,6 @@ describe('DatabaseService - Uptime', function () {
       }
     }
   });
-    }
-  });
 
   describe('logBotEvent', () => {
     it('should record uptime without throwing', () => {
