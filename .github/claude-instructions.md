@@ -310,6 +310,191 @@ text
 
 ---
 
+## QLTY Configuration Deep Dive
+
+### Understanding QLTY Architecture
+
+QLTY runs analysis in **Linux containers** in the cloud, which has important implications for local
+Windows development:
+
+1. **Config file discovery**: QLTY automatically discovers configs from `.qlty/configs/` directory
+   and copies them to the repository root during analysis
+2. **Line endings matter**: Use `"endOfLine": "auto"` in Prettier config for cross-platform
+   compatibility (not `crlf` which fails in Linux containers)
+3. **Root configs are authoritative**: Always keep root `.eslintrc.json`, `.prettierrc`, and
+   `.markdownlint.json` in sync with `.qlty/configs/` versions
+
+### QLTY TOML Configuration Syntax (CRITICAL)
+
+The `qlty.toml` file uses specific TOML syntax that differs from intuitive dot notation:
+
+```toml
+# ❌ WRONG - This syntax is INVALID and will be ignored
+[smells]
+identical_code.enabled = true
+identical_code.threshold = 50
+function_parameters.threshold = 6
+
+# ✅ CORRECT - Each smell type is its own TOML section
+[smells.identical_code]
+enabled = true
+threshold = 50
+
+[smells.similar_code]
+enabled = true
+threshold = 80
+
+[smells.function_parameters]
+enabled = true
+threshold = 6
+
+[smells.return_statements]
+enabled = true
+threshold = 7
+
+[smells.boolean_parameters]
+enabled = false
+
+[smells.nested_control_flow]
+enabled = true
+threshold = 4
+```
+
+### Plugin Configuration
+
+Plugins can have modes and ignore patterns:
+
+```toml
+[[plugin]]
+name = "eslint"
+# Mode options: disabled, monitor, comment, block
+# monitor = report but don't fail CI
+# block = fail CI on issues
+
+[[plugin]]
+name = "prettier"
+# Config files in .qlty/configs/ are auto-copied to root during analysis
+
+[[plugin]]
+name = "markdownlint"
+# Uses .markdownlint.json from root or .qlty/configs/
+```
+
+### ESLint Override Patterns for QLTY
+
+QLTY respects ESLint overrides, but HTML files need special handling:
+
+```json
+{
+  "ignorePatterns": ["dashboard/public/**/*.html"],
+  "overrides": [
+    {
+      "files": ["dashboard/public/**/*.js"],
+      "env": { "browser": true, "node": false },
+      "globals": { "io": "readonly", "Chart": "readonly" },
+      "rules": {
+        "no-console": "off",
+        "max-lines-per-function": "off"
+      }
+    },
+    {
+      "files": ["jest.setup.js"],
+      "rules": {
+        "no-console": "off",
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_|^code$" }]
+      }
+    },
+    {
+      "files": ["**/__tests__/**/*.js", "**/*.test.js"],
+      "rules": {
+        "max-lines-per-function": ["error", { "max": 200 }],
+        "no-console": "off"
+      }
+    }
+  ]
+}
+```
+
+### Markdownlint Rules to Disable
+
+These rules generate excessive false positives in documentation-heavy projects:
+
+```json
+{
+  "MD014": false,
+  "MD024": { "allow_different_nesting": true },
+  "MD026": false,
+  "MD031": false,
+  "MD033": false,
+  "MD036": false,
+  "MD040": false,
+  "MD041": false
+}
+```
+
+| Rule  | Description                    | Why Disable                          |
+| ----- | ------------------------------ | ------------------------------------ |
+| MD014 | Bare URL used                  | URLs in docs are intentional         |
+| MD031 | Fenced code block blank lines  | Formatting preference                |
+| MD036 | Emphasis used instead of heading | Valid for inline emphasis          |
+| MD040 | Code block language specified  | Not all blocks need language hints   |
+| MD041 | First line should be heading   | Multiple H1s are valid in some docs  |
+
+### Aligning Local and QLTY Results
+
+**Problem**: Local ESLint/Prettier passes but QLTY reports issues.
+
+**Root Causes**:
+1. Line ending differences (Windows CRLF vs Linux LF)
+2. Config files not synced between root and `.qlty/configs/`
+3. Wrong TOML syntax in `qlty.toml` (smells being ignored)
+4. ESLint trying to parse HTML files as JavaScript
+
+**Solution Checklist**:
+- [ ] Set Prettier `endOfLine: "auto"` (not `crlf`)
+- [ ] Add `ignorePatterns` for HTML files in ESLint
+- [ ] Use correct `[smells.xxx]` TOML section syntax
+- [ ] Keep `.qlty/configs/` files identical to root configs
+- [ ] Run `npx prettier --check .` and `npx eslint . --max-warnings=0` locally before push
+
+### QLTY Smell Thresholds Reference
+
+| Smell Type           | Default | Recommended | Description                        |
+| -------------------- | ------- | ----------- | ---------------------------------- |
+| file_complexity      | 10      | 15          | Total cognitive complexity per file |
+| function_complexity  | 5       | 10          | Cognitive complexity per function  |
+| function_parameters  | 4       | 6           | Max parameters before refactor     |
+| return_statements    | 4       | 7           | Max returns per function           |
+| nested_control_flow  | 3       | 4           | Max nesting depth                  |
+| identical_code       | 25      | 50          | Lines threshold for duplication    |
+| similar_code         | 50      | 80          | Mass threshold for similar blocks  |
+
+### Debugging QLTY Issues
+
+When QLTY reports don't match local results:
+
+1. **Check QLTY web UI** for specific file paths and line numbers
+2. **Verify config sync**: Compare root configs with `.qlty/configs/` versions
+3. **Test in clean environment**: `git stash && npm ci && npm run lint`
+4. **Check TOML syntax**: Use a TOML validator on `qlty.toml`
+5. **Review exclude patterns**: Ensure `node_modules`, `coverage`, etc. are excluded
+
+```toml
+# Essential exclude patterns in qlty.toml
+exclude_patterns = [
+  "node_modules/**",
+  "coverage/**",
+  "logs/**",
+  "data/**",
+  "test-results/**",
+  "__mocks__/**",
+  "*.log",
+  ".env*"
+]
+```
+
+---
+
 ## When to Ask for Help
 
 **Escalate to human review when:**
