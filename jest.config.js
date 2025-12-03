@@ -51,13 +51,13 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Configure coverage thresholds - 64% accounts for Jest's threshold calculation difference
+  // Configure coverage thresholds - 70% to prevent regression
   coverageThreshold: {
     global: {
-      branches: 64,
-      functions: 64,
-      lines: 64,
-      statements: 64,
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
     },
   },
   // Output verbose coverage info
