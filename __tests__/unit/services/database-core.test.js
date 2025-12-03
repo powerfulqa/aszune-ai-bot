@@ -1,32 +1,19 @@
-const fs = require('fs');
-const path = require('path');
-
-// Mock config
+// Mock config to use in-memory database
 jest.mock('../../../src/config/config', () => ({
-  DB_PATH: './test-data/bot.db',
+  DB_PATH: ':memory:',
 }));
 
 const { DatabaseService } = require('../../../src/services/database');
 
 describe('DatabaseService - Core', function () {
   let dbService;
-  const testDbPath = path.resolve('./test-data/bot.db');
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Ensure test data directory exists
-    const testDataDir = path.dirname(testDbPath);
-    if (!fs.existsSync(testDataDir)) {
-      fs.mkdirSync(testDataDir, { recursive: true });
-    }
-
-    // Clean up any existing test database
-    if (fs.existsSync(testDbPath)) {
-      fs.unlinkSync(testDbPath);
-    }
-
     dbService = new DatabaseService();
+    // Force re-initialization for each test
+    dbService.db = null;
+    dbService.dbPath = ':memory:';
   });
 
   afterEach(() => {
@@ -37,33 +24,11 @@ describe('DatabaseService - Core', function () {
         // Ignore errors during cleanup
       }
     }
-
-    // Clean up test database file and directory
-    if (fs.existsSync(testDbPath)) {
-      try {
-        fs.unlinkSync(testDbPath);
-      } catch (error) {
-        // Ignore errors during cleanup
-      }
-    }
-
-    // Clean up test directory if empty
-    const testDataDir = path.dirname(testDbPath);
-    try {
-      if (fs.existsSync(testDataDir)) {
-        const files = fs.readdirSync(testDataDir);
-        if (files.length === 0) {
-          fs.rmdirSync(testDataDir);
-        }
-      }
-    } catch (error) {
-      // Ignore errors during cleanup
-    }
   });
 
   describe('constructor', () => {
     it('should initialize without accessing config', () => {
-      expect(dbService.dbPath).toBeNull();
+      expect(dbService.dbPath).toBe(':memory:');
       expect(dbService.db).toBeNull();
       expect(dbService.isDisabled).toBe(false); // better-sqlite3 is now installed
     });
@@ -78,7 +43,6 @@ describe('DatabaseService - Core', function () {
       expect(db).toHaveProperty('exec');
       expect(db).toHaveProperty('close');
       expect(dbService.db).toBe(db);
-      expect(fs.existsSync(testDbPath)).toBe(true);
     });
 
     it('should return same db on subsequent calls', () => {

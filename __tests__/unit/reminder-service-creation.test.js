@@ -14,7 +14,10 @@ describe('ReminderService creation', () => {
       const futureTime = new Date(Date.now() + 10000).toISOString();
       const scheduleSpy = jest.spyOn(reminderService, 'scheduleReminder');
 
-      const result = await reminderService.createReminder('user1', 'test', futureTime);
+      const result = await reminderService.createReminder('user1', {
+        message: 'test',
+        scheduledTime: futureTime,
+      });
 
       expect(databaseService.createReminder).toHaveBeenCalled();
       expect(scheduleSpy).toHaveBeenCalledWith(result);
@@ -22,25 +25,34 @@ describe('ReminderService creation', () => {
     });
 
     it('should validate scheduled time format', async () => {
-      await expect(reminderService.createReminder('user1', 'test', 'invalid')).rejects.toThrow(
-        'Invalid scheduled time format'
-      );
+      await expect(
+        reminderService.createReminder('user1', {
+          message: 'test',
+          scheduledTime: 'invalid',
+        })
+      ).rejects.toThrow('Invalid scheduled time format');
     });
 
     it('should validate future time', async () => {
       const pastTime = new Date(Date.now() - 10000).toISOString();
-      await expect(reminderService.createReminder('user1', 'test', pastTime)).rejects.toThrow(
-        'Scheduled time must be in the future'
-      );
+      await expect(
+        reminderService.createReminder('user1', {
+          message: 'test',
+          scheduledTime: pastTime,
+        })
+      ).rejects.toThrow('Scheduled time must be in the future');
     });
 
     it('should handle database creation failure', async () => {
       databaseService.createReminder.mockReturnValue(null);
       const futureTime = new Date(Date.now() + 10000).toISOString();
 
-      await expect(reminderService.createReminder('user1', 'test', futureTime)).rejects.toThrow(
-        'Failed to create reminder in database'
-      );
+      await expect(
+        reminderService.createReminder('user1', {
+          message: 'test',
+          scheduledTime: futureTime,
+        })
+      ).rejects.toThrow('Failed to create reminder in database');
     });
 
     it('should handle errors', async () => {
@@ -50,9 +62,12 @@ describe('ReminderService creation', () => {
       });
       const futureTime = new Date(Date.now() + 10000).toISOString();
 
-      await expect(reminderService.createReminder('user1', 'test', futureTime)).rejects.toThrow(
-        error
-      );
+      await expect(
+        reminderService.createReminder('user1', {
+          message: 'test',
+          scheduledTime: futureTime,
+        })
+      ).rejects.toThrow(error);
     });
   });
 

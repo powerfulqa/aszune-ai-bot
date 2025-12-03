@@ -16,11 +16,13 @@ describe('ReminderService command parsing', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         'user1',
-        'test message',
-        expect.any(String),
-        expect.any(String),
-        null,
-        null
+        expect.objectContaining({
+          message: 'test message',
+          scheduledTime: expect.any(String),
+          timezone: expect.any(String),
+          channelId: null,
+          serverId: null,
+        })
       );
     });
 
@@ -31,11 +33,13 @@ describe('ReminderService command parsing', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         'user1',
-        'test message',
-        expect.any(String),
-        expect.any(String),
-        null,
-        null
+        expect.objectContaining({
+          message: 'test message',
+          scheduledTime: expect.any(String),
+          timezone: expect.any(String),
+          channelId: null,
+          serverId: null,
+        })
       );
     });
 
@@ -46,11 +50,13 @@ describe('ReminderService command parsing', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         'user1',
-        'test message',
-        expect.any(String),
-        expect.any(String),
-        null,
-        null
+        expect.objectContaining({
+          message: 'test message',
+          scheduledTime: expect.any(String),
+          timezone: expect.any(String),
+          channelId: null,
+          serverId: null,
+        })
       );
     });
 
