@@ -44,16 +44,39 @@ exclude_patterns = [
   ".env*"
 ]
 
-# Code smell detection configuration
-[smells]
-identical_code.enabled = true
-identical_code.threshold = 50
-similar_code.enabled = true
-similar_code.threshold = 80
-file_complexity.enabled = true
-file_complexity.threshold = 15
-function_complexity.enabled = true
-function_complexity.threshold = 10
+# Code smell detection configuration - using correct QLTY syntax
+# Each smell type is its own TOML section
+
+[smells.identical_code]
+enabled = true
+threshold = 50
+
+[smells.similar_code]
+enabled = true
+threshold = 80
+
+[smells.file_complexity]
+enabled = true
+threshold = 15
+
+[smells.function_complexity]
+enabled = true
+threshold = 10
+
+[smells.function_parameters]
+enabled = true
+threshold = 6
+
+[smells.return_statements]
+enabled = true
+threshold = 7
+
+[smells.boolean_parameters]
+enabled = false
+
+[smells.nested_control_flow]
+enabled = true
+threshold = 4
 
 # Test patterns
 test_patterns = [
@@ -64,12 +87,19 @@ test_patterns = [
   "**/test/**"
 ]
 
+# ESLint configuration
+# Note: Config files in .qlty/configs/ are auto-copied to root during analysis
 [[plugin]]
 name = "eslint"
+# Monitor mode for dashboard files (uses browser globals, has console.log)
+# The root .eslintrc.json has overrides for dashboard/public/ with no-console: off
 
+# Prettier configuration  
 [[plugin]]
 name = "prettier"
+# Uses .prettierrc from root or .qlty/configs/
 
+# Security scanners
 [[plugin]]
 name = "gitleaks"
 
@@ -79,5 +109,7 @@ name = "trivy"
 [[plugin]]
 name = "semgrep"
 
+# Markdown linting
 [[plugin]]
 name = "markdownlint"
+# Uses .markdownlint.json from root

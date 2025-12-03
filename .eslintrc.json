@@ -9,6 +9,7 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
+  "ignorePatterns": ["dashboard/public/**/*.html"],
   "rules": {
     "no-console": "warn",
     "complexity": ["error", { "max": 15 }],
@@ -22,7 +23,7 @@
   },
   "overrides": [
     {
-      "files": ["dashboard/public/**/*.js", "dashboard/public/**/*.html"],
+      "files": ["dashboard/public/**/*.js"],
       "env": {
         "browser": true,
         "node": false
@@ -36,6 +37,13 @@
         "max-lines-per-function": "off",
         "max-statements": "off",
         "complexity": "off"
+      }
+    },
+    {
+      "files": ["jest.setup.js"],
+      "rules": {
+        "no-console": "off",
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_|^code$", "varsIgnorePattern": "^_" }]
       }
     },
     {

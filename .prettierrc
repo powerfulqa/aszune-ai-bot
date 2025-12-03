@@ -6,5 +6,5 @@
   "bracketSpacing": true,
   "semi": true,
   "proseWrap": "always",
-  "endOfLine": "crlf"
+  "endOfLine": "auto"
 }
