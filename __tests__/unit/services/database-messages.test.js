@@ -25,8 +25,6 @@ describe('DatabaseService - Messages', function () {
       }
     }
   });
-    }
-  });
 
   describe('getUserMessages', () => {
     it('should return empty array for user with no messages', () => {

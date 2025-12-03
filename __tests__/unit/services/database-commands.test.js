@@ -25,8 +25,6 @@ describe('DatabaseService - Commands', function () {
       }
     }
   });
-    }
-  });
 
   describe('getCommandUsageStats', () => {
     it('should return default stats when no commands have been used', () => {
