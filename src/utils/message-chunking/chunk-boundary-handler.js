@@ -219,6 +219,34 @@ function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
 }
 
 /**
+ * Boundary validation rules - data-driven approach
+ * @private
+ */
+const BOUNDARY_VALIDATION_RULES = [
+  {
+    name: 'incomplete markdown link',
+    // Check for incomplete markdown links but exclude citation-style references
+    check: (chunk, _isLastChunk) => {
+      const incompleteLink =
+        /\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk);
+      const isCitationReference = /\[\d+\]$/.test(chunk);
+      return incompleteLink && !isCitationReference;
+    },
+    level: 'debug',
+  },
+  {
+    name: 'incomplete URL',
+    check: (chunk, isLastChunk) => /https?:\/\/[^\s]*$/.test(chunk) && !isLastChunk,
+    level: 'debug',
+  },
+  {
+    name: 'incomplete numbered list',
+    check: (chunk, isLastChunk) => /\d+\.\s*$/.test(chunk) && !isLastChunk,
+    level: 'warn',
+  },
+];
+
+/**
  * Validate chunk boundaries and ensure they don't break important content
  * @param {string[]} chunks - Array of message chunks
  * @returns {boolean} - True if boundaries are valid, false otherwise
@@ -227,26 +255,12 @@ function validateChunkBoundaries(chunks) {
   try {
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
+      const isLastChunk = i === chunks.length - 1;
 
-      // Check for incomplete markdown links (but exclude citation-style references like [1], [2], etc.)
-      const incompleteLink =
-        /\[[^\]]*$/.test(chunk) || /\][^(]*$/.test(chunk) || /\([^)]*$/.test(chunk);
-      const isCitationReference = /\[\d+\]$/.test(chunk); // Allow citation references like [1], [2], etc.
+      const failedRule = BOUNDARY_VALIDATION_RULES.find((rule) => rule.check(chunk, isLastChunk));
 
-      if (incompleteLink && !isCitationReference) {
-        logger.debug(`Chunk ${i + 1} has incomplete markdown link`);
-        return false;
-      }
-
-      // Check for incomplete URLs
-      if (/https?:\/\/[^\s]*$/.test(chunk) && i < chunks.length - 1) {
-        logger.debug(`Chunk ${i + 1} has incomplete URL`);
-        return false;
-      }
-
-      // Check for incomplete numbered lists
-      if (/\d+\.\s*$/.test(chunk) && i < chunks.length - 1) {
-        logger.warn(`Chunk ${i + 1} has incomplete numbered list`);
+      if (failedRule) {
+        logger[failedRule.level](`Chunk ${i + 1} has ${failedRule.name}`);
         return false;
       }
     }

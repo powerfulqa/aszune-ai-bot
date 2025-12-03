@@ -318,23 +318,41 @@ class PerplexityService {
    * @private
    */
   _generateErrorMessage(error, errorResponse) {
-    if (error.statusCode === 400) {
-      return 'The service is temporarily unavailable due to configuration issues. Please try again later.';
-    } else if (error.statusCode === 401) {
-      return 'Authentication error with the AI service. Please try again later.';
-    } else if (error.statusCode === 429) {
-      return 'Rate limit exceeded. Please try again later.';
-    } else if (error.statusCode >= 500) {
-      return 'The service is temporarily unavailable. Please try again later.';
-    } else if (error.message && error.message.includes('Network')) {
-      return 'Network connection issue. Please check your connection and try again.';
-    } else if (error.message && error.message.includes('Empty response')) {
-      return 'Empty response received from the service.';
-    } else if (error.message && error.message.includes('invalid')) {
-      return 'Unexpected response format received.';
-    }
+    // Error message mappings - ordered by specificity
+    const errorMappings = [
+      {
+        condition: () => error.statusCode === 400,
+        message:
+          'The service is temporarily unavailable due to configuration issues. Please try again later.',
+      },
+      {
+        condition: () => error.statusCode === 401,
+        message: 'Authentication error with the AI service. Please try again later.',
+      },
+      {
+        condition: () => error.statusCode === 429,
+        message: 'Rate limit exceeded. Please try again later.',
+      },
+      {
+        condition: () => error.statusCode >= 500,
+        message: 'The service is temporarily unavailable. Please try again later.',
+      },
+      {
+        condition: () => error.message?.includes('Network'),
+        message: 'Network connection issue. Please check your connection and try again.',
+      },
+      {
+        condition: () => error.message?.includes('Empty response'),
+        message: 'Empty response received from the service.',
+      },
+      {
+        condition: () => error.message?.includes('invalid'),
+        message: 'Unexpected response format received.',
+      },
+    ];
 
-    return errorResponse.message;
+    const matchedMapping = errorMappings.find((mapping) => mapping.condition());
+    return matchedMapping ? matchedMapping.message : errorResponse.message;
   }
 
   /**
