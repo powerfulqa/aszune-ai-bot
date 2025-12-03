@@ -1,8 +1,8 @@
 name: Aszune AI Bot CI/CD
 
-# Optimized CI workflow - single workflow handles all testing
-# - Tests run in parallel shards WITH coverage collection
-# - Coverage merged from all shards
+# Optimized CI workflow with parallel test sharding and separate coverage
+# - Tests run in 3 parallel shards for faster execution (NO coverage = speed)
+# - Coverage run separately as FULL suite (no sharding = accuracy)
 # - Quality and security checks run in parallel with tests
 
 on:
@@ -39,7 +39,7 @@ jobs:
         run: npm audit --audit-level=high --production
         continue-on-error: true
 
-  # Parallel test shards with coverage collection
+  # Parallel test shards (3x faster than sequential) - NO COVERAGE for speed
   test:
     name: Test (Shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
@@ -60,25 +60,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests with coverage
-        run: |
-          npm test -- --shard=${{ matrix.shard }}/3 --coverage --coverageReporters=json --maxWorkers=2
+      - name: Run tests (no coverage - speed optimized)
+        run: npm test -- --shard=${{ matrix.shard }}/3 --no-coverage --maxWorkers=2
         env:
           CI: true
           NODE_ENV: test
 
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-shard-${{ matrix.shard }}
-          path: coverage/coverage-final.json
-          retention-days: 1
-
-  # Merge coverage from all shards (main branch only)
+  # Full coverage run (main branch only, no sharding for accurate coverage)
   coverage:
-    name: Merge Coverage
+    name: Coverage
     runs-on: ubuntu-latest
-    needs: test
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
@@ -93,19 +84,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: coverage-shard-*
-          path: coverage-shards
-
-      - name: Merge coverage reports
-        run: |
-          mkdir -p coverage
-          # Merge all coverage JSON files
-          npx nyc merge coverage-shards coverage/coverage-final.json
-          # Generate reports
-          npx nyc report --reporter=json-summary --reporter=text --temp-dir=coverage
+      - name: Run full test suite with coverage
+        run: npm test -- --coverage --maxWorkers=2
+        env:
+          CI: true
+          NODE_ENV: test
 
       - name: Validate coverage thresholds
         run: |
