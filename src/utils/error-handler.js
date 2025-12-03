@@ -48,23 +48,21 @@ class ErrorHandler {
     const code = error.code || '';
     const statusCode = error.statusCode || error.status;
 
-    // Check each error category in order of specificity
-    const apiErrorType = this._categorizeApiError(statusCode, message);
-    if (apiErrorType) return apiErrorType;
+    // Chain of categorizers - returns first match or unknown
+    const categorizers = [
+      () => this._categorizeApiError(statusCode, message),
+      () => this._categorizeFileError(code),
+      () => this._categorizeMemoryError(message, code),
+      () => this._categorizeConfigError(message),
+      () => this._categorizeValidationError(message),
+    ];
 
-    const fileErrorType = this._categorizeFileError(code);
-    if (fileErrorType) return fileErrorType;
+    const errorType = categorizers.reduce(
+      (result, categorizer) => result || categorizer(),
+      null
+    );
 
-    const memoryErrorType = this._categorizeMemoryError(message, code);
-    if (memoryErrorType) return memoryErrorType;
-
-    const configErrorType = this._categorizeConfigError(message);
-    if (configErrorType) return configErrorType;
-
-    const validationErrorType = this._categorizeValidationError(message);
-    if (validationErrorType) return validationErrorType;
-
-    return ERROR_TYPES.UNKNOWN_ERROR;
+    return errorType || ERROR_TYPES.UNKNOWN_ERROR;
   }
 
   static _categorizeApiError(statusCode, message) {

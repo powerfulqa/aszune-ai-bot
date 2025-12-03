@@ -832,6 +832,25 @@ class PerplexityService {
   }
 
   /**
+   * Ensure cache directory exists with secure permissions
+   * @param {string} cacheDir - Directory path
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _ensureCacheDirectory(cacheDir) {
+    try {
+      await fs.mkdir(cacheDir, {
+        recursive: true,
+        mode: this.FILE_PERMISSIONS.DIRECTORY,
+      });
+    } catch (mkdirError) {
+      if (mkdirError.code !== 'EEXIST') {
+        throw mkdirError;
+      }
+    }
+  }
+
+  /**
    * Load the cache from disk
    * @returns {Promise<Object>} The loaded cache object
    */
@@ -840,18 +859,7 @@ class PerplexityService {
     const cachePath = path.join(cacheDir, 'question_cache.json');
 
     try {
-      // Ensure cache directory exists with secure permissions
-      try {
-        await fs.mkdir(cacheDir, {
-          recursive: true,
-          // Use secure directory permissions (read/write/execute for owner, read/execute for others)
-          mode: this.FILE_PERMISSIONS.DIRECTORY,
-        });
-      } catch (mkdirError) {
-        if (mkdirError.code !== 'EEXIST') {
-          throw mkdirError;
-        }
-      }
+      await this._ensureCacheDirectory(cacheDir);
 
       // Read and parse cache file
       try {
@@ -904,18 +912,7 @@ class PerplexityService {
     const cachePath = path.join(cacheDir, 'question_cache.json');
 
     try {
-      // Ensure cache directory exists with secure permissions
-      try {
-        await fs.mkdir(cacheDir, {
-          recursive: true,
-          // Use secure directory permissions (read/write/execute for owner, read/execute for others)
-          mode: this.FILE_PERMISSIONS.DIRECTORY,
-        });
-      } catch (mkdirError) {
-        if (mkdirError.code !== 'EEXIST') {
-          throw mkdirError;
-        }
-      }
+      await this._ensureCacheDirectory(cacheDir);
 
       // Format entries with timestamps if needed
       const timestamp = Date.now();

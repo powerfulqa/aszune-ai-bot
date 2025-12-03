@@ -5,6 +5,28 @@
 
 const logger = require('./logger');
 
+/**
+ * Count commands from activity history and return sorted popular commands
+ * @param {Array} activities - Activity history array
+ * @returns {Object} Command counts and sorted popular commands
+ * @private
+ */
+function _countCommands(activities) {
+  const commandCounts = {};
+
+  activities.forEach((activity) => {
+    if (activity.command) {
+      commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
+    }
+  });
+
+  const popularCommands = Object.entries(commandCounts)
+    .map(([command, count]) => ({ command, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return { commandCounts, popularCommands };
+}
+
 class DiscordAnalytics {
   constructor() {
     this.dailyStats = {
@@ -281,17 +303,7 @@ class DiscordAnalytics {
    * @private
    */
   static _generateCommandAnalysis(activityHistory) {
-    const commandCounts = {};
-
-    activityHistory.forEach((activity) => {
-      if (activity.command) {
-        commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
-      }
-    });
-
-    const popularCommands = Object.entries(commandCounts)
-      .map(([command, count]) => ({ command, count }))
-      .sort((a, b) => b.count - a.count);
+    const { commandCounts, popularCommands } = _countCommands(activityHistory);
 
     return {
       totalCommands: Object.values(commandCounts).reduce((sum, count) => sum + count, 0),
@@ -497,18 +509,7 @@ class DiscordAnalytics {
    * @private
    */
   static _analyzeServerCommands(serverActivities) {
-    const commandCounts = {};
-
-    serverActivities.forEach((activity) => {
-      if (activity.command) {
-        commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
-      }
-    });
-
-    const popularCommands = Object.entries(commandCounts)
-      .map(([command, count]) => ({ command, count }))
-      .sort((a, b) => b.count - a.count);
-
+    const { popularCommands } = _countCommands(serverActivities);
     return { popularCommands };
   }
 

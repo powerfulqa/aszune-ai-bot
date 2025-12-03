@@ -8,6 +8,17 @@ const { ErrorHandler } = require('./error-handler');
 const { InputValidator } = require('./input-validator');
 const databaseService = require('../services/database');
 
+/**
+ * Calculate cleanup interval based on Pi optimizations
+ * @returns {number} Cleanup interval in milliseconds
+ * @private
+ */
+function _getCleanupInterval() {
+  return config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
+    ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
+    : config.CACHE.CLEANUP_INTERVAL_MS;
+}
+
 class ConversationManager {
   constructor() {
     // Using Maps instead of plain objects for better performance
@@ -35,11 +46,10 @@ class ConversationManager {
       );
       this.activeIntervals.add(this.saveStatsInterval);
       // Set up cleanup interval - more frequently if Pi optimizations are enabled
-      const cleanupInterval =
-        config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
-          ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
-          : config.CACHE.CLEANUP_INTERVAL_MS;
-      this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
+      this.cleanupInterval = setInterval(
+        () => this.cleanupOldConversations(),
+        _getCleanupInterval()
+      );
       this.activeIntervals.add(this.cleanupInterval);
     }
   }
@@ -48,11 +58,10 @@ class ConversationManager {
    * Start cleanup interval (for testing)
    */
   startCleanupInterval() {
-    const cleanupInterval =
-      config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
-        ? config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES * 60 * 1000
-        : config.CACHE.CLEANUP_INTERVAL_MS;
-    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), cleanupInterval);
+    this.cleanupInterval = setInterval(
+      () => this.cleanupOldConversations(),
+      _getCleanupInterval()
+    );
     this.activeIntervals.add(this.cleanupInterval);
   }
 
