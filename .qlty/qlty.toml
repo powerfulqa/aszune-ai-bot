@@ -66,9 +66,11 @@ test_patterns = [
 
 [[plugin]]
 name = "eslint"
+config = ".qlty/configs/.eslintrc.json"
 
 [[plugin]]
 name = "prettier"
+config = ".qlty/configs/.prettierrc"
 
 [[plugin]]
 name = "gitleaks"
@@ -81,3 +83,4 @@ name = "semgrep"
 
 [[plugin]]
 name = "markdownlint"
+config = ".qlty/configs/.markdownlint.json"
