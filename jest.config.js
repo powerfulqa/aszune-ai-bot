@@ -10,7 +10,8 @@ module.exports = {
   // Detect open handles to help debug hanging tests (enable with DEBUG_JEST_HANDLES=true)
   detectOpenHandles: process.env.DEBUG_JEST_HANDLES === 'true',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
-  maxWorkers: 1,
+  // Use 50% of available CPUs for better parallelization (CI uses --maxWorkers override)
+  maxWorkers: '50%',
   collectCoverageFrom: [
     'src/**/*.js',
     '!**/node_modules/**',

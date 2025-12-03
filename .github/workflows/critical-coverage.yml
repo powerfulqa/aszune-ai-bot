@@ -1,10 +1,17 @@
 name: Critical Coverage CI
 
+# DISABLED - Coverage is now handled by unified-ci.yml with sharding
+# This workflow is kept for reference but no longer runs automatically
+# To re-enable, uncomment the 'on' triggers below
+
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   critical-coverage:
