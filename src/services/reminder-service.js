@@ -121,13 +121,7 @@ class ReminderService extends EventEmitter {
   }
 
   async createReminder(userId, options = {}) {
-    const {
-      message,
-      scheduledTime,
-      timezone = 'UTC',
-      channelId = null,
-      serverId = null,
-    } = options;
+    const { message, scheduledTime, timezone = 'UTC', channelId = null, serverId = null } = options;
 
     try {
       // Validate scheduled time

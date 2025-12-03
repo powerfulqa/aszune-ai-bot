@@ -146,44 +146,54 @@ class SecurityMonitor {
    * @returns {Object} - Threat analysis results
    * @private
    */
+  /**
+   * Threat pattern definitions with scores
+   * @private
+   */
+  static THREAT_CHECKS = [
+    {
+      name: 'xss_attempt',
+      score: 80,
+      check: (content) => SecurityMonitor._detectXSSPatterns(content),
+    },
+    {
+      name: 'sql_pattern',
+      score: 50,
+      check: (content) => /(\bselect\b.*\bfrom\b|\bwhere\b.*=)/i.test(content),
+    },
+    {
+      name: 'command_injection',
+      score: 70,
+      check: (content) => SecurityMonitor._detectCommandInjection(content),
+    },
+    {
+      name: 'excessive_mentions',
+      score: 20,
+      check: (content) => (content.match(SecurityMonitor.MENTION_REGEX) || []).length > 5,
+    },
+    {
+      name: 'spam_pattern',
+      score: 15,
+      check: (content) => /(.)\\1{30,}/.test(content),
+    },
+    {
+      name: 'excessive_length',
+      score: 10,
+      check: (content) => content.length > 3000,
+    },
+  ];
+
   static _analyzeThreatPatterns(content) {
-    let threatScore = 0;
-    const threats = [];
+    const result = { threats: [], score: 0 };
 
-    // Check for XSS attempts
-    if (SecurityMonitor._detectXSSPatterns(content)) {
-      threats.push('xss_attempt');
-      threatScore += 80;
+    for (const threatCheck of SecurityMonitor.THREAT_CHECKS) {
+      if (threatCheck.check(content)) {
+        result.threats.push(threatCheck.name);
+        result.score += threatCheck.score;
+      }
     }
 
-    // Check for SQL patterns (medium risk)
-    if (/(\bselect\b.*\bfrom\b|\bwhere\b.*=)/i.test(content)) {
-      threats.push('sql_pattern');
-      threatScore += 50;
-    }
-
-    // Check for command injection
-    if (SecurityMonitor._detectCommandInjection(content)) {
-      threats.push('command_injection');
-      threatScore += 70;
-    }
-
-    if ((content.match(SecurityMonitor.MENTION_REGEX) || []).length > 5) {
-      threats.push('excessive_mentions');
-      threatScore += 20;
-    }
-
-    if (/(.)\1{30,}/.test(content)) {
-      threats.push('spam_pattern');
-      threatScore += 15;
-    }
-
-    if (content.length > 3000) {
-      threats.push('excessive_length');
-      threatScore += 10;
-    }
-
-    return { threats, score: threatScore };
+    return result;
   }
 
   /**

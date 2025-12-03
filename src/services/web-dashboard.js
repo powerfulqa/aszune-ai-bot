@@ -236,32 +236,46 @@ class WebDashboardService {
    * @returns {Promise<string>} Discord username or null
    * @private
    */
+  /**
+   * Validates Discord user ID format
+   * @private
+   */
+  _isValidDiscordSnowflake(userId) {
+    return userId && typeof userId === 'string' && /^\d+$/.test(userId);
+  }
+
   async resolveDiscordUsername(userId) {
+    // Validate Discord snowflake format
+    if (!this._isValidDiscordSnowflake(userId)) {
+      logger.debug(`Skipping Discord username resolution for non-snowflake ID: ${userId}`);
+      return null;
+    }
+
+    // Check cache first
+    const cached = this.usernameCache.get(userId);
+    if (cached) {
+      return cached;
+    }
+
+    // Fetch from Discord API if client available
+    return this._fetchDiscordUsername(userId);
+  }
+
+  /**
+   * Fetches username from Discord API with error handling
+   * @private
+   */
+  async _fetchDiscordUsername(userId) {
+    if (!this.discordClient) {
+      return null;
+    }
+
     try {
-      // Validate that userId is a valid Discord snowflake (numeric string)
-      if (!userId || typeof userId !== 'string' || !/^\d+$/.test(userId)) {
-        logger.debug(`Skipping Discord username resolution for non-snowflake ID: ${userId}`);
-        return null;
-      }
-
-      // Check cache first
-      if (this.usernameCache.has(userId)) {
-        return this.usernameCache.get(userId);
-      }
-
-      // If no Discord client, return null
-      if (!this.discordClient) {
-        return null;
-      }
-
-      // Fetch from Discord API
       const user = await this.discordClient.users.fetch(userId, { cache: false });
-      if (user) {
-        const username = user.username;
-        this.usernameCache.set(userId, username);
-        return username;
+      if (user?.username) {
+        this.usernameCache.set(userId, user.username);
+        return user.username;
       }
-
       return null;
     } catch (error) {
       logger.debug(`Failed to resolve Discord username for ${userId}: ${error.message}`);

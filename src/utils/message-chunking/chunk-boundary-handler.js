@@ -127,20 +127,15 @@ function fixSentenceBoundary(chunks, index, safeMaxLength) {
  * @param {number} index - Current chunk index
  * @param {number} safeMaxLength - Safe maximum length
  * @param {RegExp} endPattern - Pattern that matches the end of current chunk
- * @param {RegExp} startPattern - Pattern that matches the start of next chunk (optional)
- * @param {RegExp} splitPattern - Pattern to split the current chunk
- * @param {string} separator - Separator to use when joining chunks
+ * @param {Object} options - Boundary fix options
+ * @param {RegExp} options.endPattern - Pattern that matches the end of current chunk
+ * @param {RegExp} [options.startPattern] - Pattern that matches the start of next chunk (optional)
+ * @param {RegExp} options.splitPattern - Pattern to split the current chunk
+ * @param {string} [options.separator=' '] - Separator to use when joining chunks
  * @returns {Object} - Result object with fixed flag and updated chunks
  */
-function fixGenericBoundary(
-  chunks,
-  index,
-  safeMaxLength,
-  endPattern,
-  startPattern,
-  splitPattern,
-  separator = ' '
-) {
+function fixGenericBoundary(chunks, index, safeMaxLength, options) {
+  const { endPattern, startPattern, splitPattern, separator = ' ' } = options;
   const currentChunk = chunks[index];
   const nextChunk = chunks[index + 1];
 
@@ -167,37 +162,28 @@ function fixGenericBoundary(
 }
 
 function fixUrlBoundary(chunks, index, safeMaxLength) {
-  return fixGenericBoundary(
-    chunks,
-    index,
-    safeMaxLength,
-    /https?:\/\/[^\s]*$/, // endPattern
-    /^[^\s]*/, // startPattern
-    /^(.*)(https?:\/\/[^\s]*)$/ // splitPattern
-  );
+  return fixGenericBoundary(chunks, index, safeMaxLength, {
+    endPattern: /https?:\/\/[^\s]*$/,
+    startPattern: /^[^\s]*/,
+    splitPattern: /^(.*)(https?:\/\/[^\s]*)$/,
+  });
 }
 
 function fixDomainBoundary(chunks, index, safeMaxLength) {
-  return fixGenericBoundary(
-    chunks,
-    index,
-    safeMaxLength,
-    /\.[^\s]*$/, // endPattern
-    /^(?:com|org|net|edu|gov|io|me)[/\s]/, // startPattern
-    /^(.*)(\.[^\s]*)$/, // splitPattern
-    '' // separator (no space for domains)
-  );
+  return fixGenericBoundary(chunks, index, safeMaxLength, {
+    endPattern: /\.[^\s]*$/,
+    startPattern: /^(?:com|org|net|edu|gov|io|me)[/\s]/,
+    splitPattern: /^(.*)(\.[^\s]*)$/,
+    separator: '',
+  });
 }
 
 function fixNumberedListBoundary(chunks, index, safeMaxLength) {
-  return fixGenericBoundary(
-    chunks,
-    index,
-    safeMaxLength,
-    /\d+\.\s*$/, // endPattern
-    null, // startPattern (not needed)
-    /^(.*?)(\d+\.\s*)$/ // splitPattern
-  );
+  return fixGenericBoundary(chunks, index, safeMaxLength, {
+    endPattern: /\d+\.\s*$/,
+    startPattern: null,
+    splitPattern: /^(.*?)(\d+\.\s*)$/,
+  });
 }
 
 function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {

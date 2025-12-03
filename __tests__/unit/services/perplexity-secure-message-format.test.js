@@ -95,13 +95,13 @@ describe('PerplexitySecure - Message Formatting', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = perplexityService;  // Use the singleton instance
+    service = perplexityService; // Use the singleton instance
   });
 
   describe('_formatMessagesForAPI', () => {
     it('should return default messages for empty history', () => {
       const result = service._formatMessagesForAPI([]);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].role).toBe('system');
       expect(result[1].role).toBe('user');
@@ -110,14 +110,14 @@ describe('PerplexitySecure - Message Formatting', () => {
 
     it('should return default messages for null history', () => {
       const result = service._formatMessagesForAPI(null);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].role).toBe('system');
     });
 
     it('should return default messages for undefined history', () => {
       const result = service._formatMessagesForAPI(undefined);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].role).toBe('system');
     });
@@ -127,18 +127,18 @@ describe('PerplexitySecure - Message Formatting', () => {
         { role: 'user', content: 'Hello' },
         { role: 'assistant', content: 'Hi there!' },
       ];
-      
+
       const result = service._formatMessagesForAPI(history);
-      
+
       expect(result[0].role).toBe('system');
       expect(result[0].content).toBe('You are a helpful assistant.');
     });
 
     it('should process single user message', () => {
       const history = [{ role: 'user', content: 'Test message' }];
-      
+
       const result = service._formatMessagesForAPI(history);
-      
+
       expect(result).toContainEqual(expect.objectContaining({ role: 'user' }));
     });
   });
@@ -163,7 +163,7 @@ describe('PerplexitySecure - Message Formatting', () => {
       const headers = {
         get: jest.fn().mockReturnValue('application/json'),
       };
-      
+
       const result = service._safeGetHeader(headers, 'Content-Type');
       expect(result).toBe('application/json');
       expect(headers.get).toHaveBeenCalledWith('Content-Type');
@@ -171,21 +171,21 @@ describe('PerplexitySecure - Message Formatting', () => {
 
     it('should fallback to direct property access', () => {
       const headers = { 'Content-Type': 'application/json' };
-      
+
       const result = service._safeGetHeader(headers, 'Content-Type');
       expect(result).toBe('application/json');
     });
 
     it('should handle case-insensitive lookups', () => {
       const headers = { 'content-type': 'application/json' };
-      
+
       const result = service._safeGetHeader(headers, 'Content-Type');
       expect(result).toBe('application/json');
     });
 
     it('should handle uppercase fallback', () => {
       const headers = { 'CONTENT-TYPE': 'application/json' };
-      
+
       const result = service._safeGetHeader(headers, 'content-type');
       expect(result).toBe('application/json');
     });
@@ -197,14 +197,14 @@ describe('PerplexitySecure - Message Formatting', () => {
         }),
         'Content-Type': 'application/json',
       };
-      
+
       const result = service._safeGetHeader(headers, 'Content-Type');
       expect(result).toBe('application/json');
     });
 
     it('should return empty string when key not found', () => {
       const headers = { 'Other-Header': 'value' };
-      
+
       const result = service._safeGetHeader(headers, 'Content-Type');
       expect(result).toBe('');
     });
@@ -213,7 +213,7 @@ describe('PerplexitySecure - Message Formatting', () => {
   describe('_extractHeader', () => {
     it('should delegate to _safeGetHeader', () => {
       const headers = { 'Content-Type': 'text/plain' };
-      
+
       const result = service._extractHeader(headers, 'Content-Type');
       expect(result).toBe('text/plain');
     });
@@ -222,7 +222,7 @@ describe('PerplexitySecure - Message Formatting', () => {
   describe('_getHeaders', () => {
     it('should return authorization and content-type headers', () => {
       const result = service._getHeaders();
-      
+
       expect(result).toHaveProperty('Authorization');
       expect(result.Authorization).toContain('Bearer');
       expect(result['Content-Type']).toBe('application/json');
@@ -250,7 +250,7 @@ describe('PerplexitySecure - Message Formatting', () => {
   describe('_executeWithErrorHandling', () => {
     it('should return operation result on success', () => {
       const operation = () => 'success';
-      
+
       const result = service._executeWithErrorHandling(operation, 'test');
       expect(result).toBe('success');
     });
@@ -259,7 +259,7 @@ describe('PerplexitySecure - Message Formatting', () => {
       const operation = () => {
         throw new Error('Test error');
       };
-      
+
       const result = service._executeWithErrorHandling(operation, 'test', 'default');
       expect(result).toBe('default');
       expect(logger.warn).toHaveBeenCalled();
@@ -269,7 +269,7 @@ describe('PerplexitySecure - Message Formatting', () => {
       const operation = () => {
         throw new Error('Test error');
       };
-      
+
       const result = service._executeWithErrorHandling(operation, 'test');
       expect(result).toBeNull();
     });
@@ -282,9 +282,9 @@ describe('PerplexitySecure - Message Formatting', () => {
       const interval2 = setInterval(() => {}, 1000);
       service.activeIntervals.add(interval1);
       service.activeIntervals.add(interval2);
-      
+
       service.shutdown();
-      
+
       expect(service.activeIntervals.size).toBe(0);
       clearInterval(interval1);
       clearInterval(interval2);
@@ -292,32 +292,27 @@ describe('PerplexitySecure - Message Formatting', () => {
 
     it('should log final cache statistics', () => {
       service.shutdown();
-      
-      expect(logger.info).toHaveBeenCalledWith(
-        'Final cache statistics:',
-        expect.any(Object)
-      );
+
+      expect(logger.info).toHaveBeenCalledWith('Final cache statistics:', expect.any(Object));
     });
   });
 
   describe('_trackMetric', () => {
     it('should log performance metric', async () => {
       await service._trackMetric('test_metric', 100, { key: 'value' });
-      
+
       const databaseService = require('../../../src/services/database');
-      expect(databaseService.logPerformanceMetric).toHaveBeenCalledWith(
-        'test_metric',
-        100,
-        { key: 'value' }
-      );
+      expect(databaseService.logPerformanceMetric).toHaveBeenCalledWith('test_metric', 100, {
+        key: 'value',
+      });
     });
 
     it('should handle database errors gracefully', async () => {
       const databaseService = require('../../../src/services/database');
       databaseService.logPerformanceMetric.mockRejectedValueOnce(new Error('DB error'));
-      
+
       await service._trackMetric('test_metric', 100);
-      
+
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Failed to log test_metric')
       );
