@@ -93,7 +93,9 @@ function handleCreateReminder(data, callback) {
       return;
     }
 
-    const reminder = databaseService.createReminder(userId, message, scheduledTime, channelId);
+    const reminder = databaseService.createReminder(userId, message, scheduledTime, {
+      channelId,
+    });
 
     if (callback) {
       callback({

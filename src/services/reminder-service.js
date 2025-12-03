@@ -135,14 +135,11 @@ class ReminderService extends EventEmitter {
       }
 
       // Create reminder in database
-      const reminder = databaseService.createReminder(
-        userId,
-        message,
-        scheduledTime,
+      const reminder = databaseService.createReminder(userId, message, scheduledTime, {
         timezone,
         channelId,
-        serverId
-      );
+        serverId,
+      });
 
       if (!reminder) {
         throw new Error('Failed to create reminder in database');

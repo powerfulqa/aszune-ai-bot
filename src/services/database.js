@@ -489,14 +489,19 @@ class DatabaseService {
   }
 
   // Reminder management methods
-  createReminder(
-    userId,
-    message,
-    scheduledTime,
-    timezone = 'UTC',
-    channelId = null,
-    serverId = null
-  ) {
+  /**
+   * Create a reminder
+   * @param {string} userId - User ID
+   * @param {string} message - Reminder message
+   * @param {Date|string} scheduledTime - When to trigger the reminder
+   * @param {Object} [options={}] - Additional options
+   * @param {string} [options.timezone='UTC'] - Timezone
+   * @param {string} [options.channelId=null] - Channel ID
+   * @param {string} [options.serverId=null] - Server ID
+   * @returns {Object} Created reminder
+   */
+  createReminder(userId, message, scheduledTime, options = {}) {
+    const { timezone = 'UTC', channelId = null, serverId = null } = options;
     return this._executeSqlStrict((db) => {
       userOperations.ensureUserExists(db, userId);
       return reminderOperations.createReminder(db, {
