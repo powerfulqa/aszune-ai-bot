@@ -16,6 +16,14 @@ jest.mock('../../src/utils/pi-detector', () => ({
 
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
+// Mock web-dashboard to prevent Socket.IO from starting during tests
+jest.mock('../../src/services/web-dashboard', () => ({
+  start: jest.fn().mockResolvedValue(undefined),
+  stop: jest.fn().mockResolvedValue(undefined),
+  getMetrics: jest.fn().mockReturnValue({}),
+  isRunning: jest.fn().mockReturnValue(false),
+}));
+
 // Mock the enhanced cache module to avoid config dependency issues
 jest.mock('../../src/utils/enhanced-cache', () => {
   const mockInstance = {
