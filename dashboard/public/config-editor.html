@@ -1,746 +1,826 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aszune AI Bot Dashboard - Configuration Editor</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <style>
-        .demo-warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-        }
+      .demo-warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        color: #856404;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
 
-        .config-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
+      .config-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
 
-        .config-section h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
+      .config-section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
 
-        .file-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+      .file-selector {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
 
-        .file-btn {
-            padding: 8px 16px;
-            border: 2px solid #d0d0d0;
-            background: #f5f5f5;
-            color: #2c3e50;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
+      .file-btn {
+        padding: 8px 16px;
+        border: 2px solid #d0d0d0;
+        background: #f5f5f5;
+        color: #2c3e50;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+      }
 
-        .file-btn:hover {
-            border-color: #bbb;
-            background: #efefef;
-        }
+      .file-btn:hover {
+        border-color: #bbb;
+        background: #efefef;
+      }
 
-        .file-btn.active {
-            border-color: #667eea;
-            background: #667eea;
-            color: #ffffff;
-        }
+      .file-btn.active {
+        border-color: #667eea;
+        background: #667eea;
+        color: #ffffff;
+      }
 
-        .editor-container {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-        }
+      .editor-container {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+      }
 
-        .editor-pane {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+      .editor-pane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
 
-        .editor-pane h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
+      .editor-pane h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
 
-        .editor-label {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
+      .editor-label {
+        font-size: 11px;
+        color: #666;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
 
-        textarea {
-            width: 100%;
-            height: 430px;
-            background: #f5f5f5;
-            border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            color: #2c3e50;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            padding: 12px;
-            box-sizing: border-box;
-            resize: none;
-            line-height: 1.5;
-        }
+      textarea {
+        width: 100%;
+        height: 430px;
+        background: #f5f5f5;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        color: #2c3e50;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+        resize: none;
+        line-height: 1.5;
+      }
 
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-        }
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+      }
 
-        .editor-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
+      .editor-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
 
-        .action-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
+      .action-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
 
-        .btn-save {
-            background: #2e7d32;
-            color: #ffffff;
-            border: 1px solid #2e7d32;
-        }
+      .btn-save {
+        background: #2e7d32;
+        color: #ffffff;
+        border: 1px solid #2e7d32;
+      }
 
-        .btn-save:hover {
-            background: #1b5e20;
-        }
+      .btn-save:hover {
+        background: #1b5e20;
+      }
 
-        .btn-validate {
-            background: #1565c0;
-            color: #ffffff;
-            border: 1px solid #1565c0;
-        }
+      .btn-validate {
+        background: #1565c0;
+        color: #ffffff;
+        border: 1px solid #1565c0;
+      }
 
-        .btn-validate:hover {
-            background: #0d47a1;
-        }
+      .btn-validate:hover {
+        background: #0d47a1;
+      }
 
-        .btn-revert {
-            background: #f57c00;
-            color: #ffffff;
-            border: 1px solid #f57c00;
-        }
+      .btn-revert {
+        background: #f57c00;
+        color: #ffffff;
+        border: 1px solid #f57c00;
+      }
 
-        .btn-revert:hover {
-            background: #e65100;
-        }
+      .btn-revert:hover {
+        background: #e65100;
+      }
 
-        .btn-export {
-            background: #e65100;
-            color: #ffffff;
-            border: 1px solid #e65100;
-        }
+      .btn-export {
+        background: #e65100;
+        color: #ffffff;
+        border: 1px solid #e65100;
+      }
 
-        .btn-export:hover {
-            background: #d84315;
-        }
+      .btn-export:hover {
+        background: #d84315;
+      }
 
-        .validation-panel {
-            flex: 0 0 280px;
-            display: flex;
-            flex-direction: column;
-        }
+      .validation-panel {
+        flex: 0 0 280px;
+        display: flex;
+        flex-direction: column;
+      }
 
-        .validation-panel > h4 {
-            margin-top: 0;
-            margin-bottom: 5px;
-            color: #2c3e50;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+      .validation-panel > h4 {
+        margin-top: 0;
+        margin-bottom: 5px;
+        color: #2c3e50;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
 
-        .validation-box {
-            background: #f5f5f5;
-            border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            padding: 12px;
-            overflow-y: auto;
-            height: 430px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
+      .validation-box {
+        background: #f5f5f5;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        padding: 12px;
+        overflow-y: auto;
+        height: 430px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
 
-        .validation-box h4 {
-            margin: 0 0 8px 0;
-            color: #2c3e50;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+      .validation-box h4 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
 
-        .validation-box h4:not(:first-child) {
-            margin-top: 12px;
-        }
+      .validation-box h4:not(:first-child) {
+        margin-top: 12px;
+      }
 
-        .validation-box h4 {
-            margin: 0 0 10px 0;
-            color: #2c3e50;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
+      .validation-box h4 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
 
-        .validation-item {
-            padding: 8px;
-            margin-bottom: 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            line-height: 1.4;
-        }
+      .validation-item {
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        line-height: 1.4;
+      }
 
-        .validation-error {
-            background: rgba(211, 47, 47, 0.05);
-            color: #d32f2f;
-            border-left: 3px solid #d32f2f;
-        }
+      .validation-error {
+        background: rgba(211, 47, 47, 0.05);
+        color: #d32f2f;
+        border-left: 3px solid #d32f2f;
+      }
 
-        .validation-warning {
-            background: rgba(245, 124, 0, 0.05);
-            color: #f57c00;
-            border-left: 3px solid #f57c00;
-        }
+      .validation-warning {
+        background: rgba(245, 124, 0, 0.05);
+        color: #f57c00;
+        border-left: 3px solid #f57c00;
+      }
 
-        .validation-success {
-            background: rgba(46, 125, 50, 0.05);
-            color: #2e7d32;
-            border-left: 3px solid #2e7d32;
-        }
+      .validation-success {
+        background: rgba(46, 125, 50, 0.05);
+        color: #2e7d32;
+        border-left: 3px solid #2e7d32;
+      }
 
-        .validation-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px;
-            background: rgba(76, 175, 80, 0.1);
-            border-radius: 4px;
-            margin-bottom: 12px;
-        }
+      .validation-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        background: rgba(76, 175, 80, 0.1);
+        border-radius: 4px;
+        margin-bottom: 12px;
+      }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: #1b5e20;
-            color: #4caf50;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
-        }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: #1b5e20;
+        color: #4caf50;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+      }
 
-        .status-badge.error {
-            background: #4a235a;
-            color: #ce93d8;
-        }
+      .status-badge.error {
+        background: #4a235a;
+        color: #ce93d8;
+      }
 
-        .file-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            font-size: 11px;
-            color: #2c3e50;
-        }
+      .file-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 11px;
+        color: #2c3e50;
+      }
 
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
 
-        .info-label {
-            color: #888;
-            text-transform: uppercase;
-            font-size: 10px;
-        }
+      .info-label {
+        color: #888;
+        text-transform: uppercase;
+        font-size: 10px;
+      }
 
-        .info-value {
-            color: #2c3e50;
-            font-weight: 500;
-        }
+      .info-value {
+        color: #2c3e50;
+        font-weight: 500;
+      }
 
-        .backup-info {
-            padding: 10px;
-            background: rgba(33, 150, 243, 0.1);
-            border-left: 3px solid #2196f3;
-            border-radius: 3px;
-            font-size: 11px;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
+      .backup-info {
+        padding: 10px;
+        background: rgba(33, 150, 243, 0.1);
+        border-left: 3px solid #2196f3;
+        border-radius: 3px;
+        font-size: 11px;
+        color: #2c3e50;
+        margin-bottom: 12px;
+      }
 
-        .syntax-highlight {
-            display: grid;
-            gap: 0;
-        }
+      .syntax-highlight {
+        display: grid;
+        gap: 0;
+      }
 
-        .line-number {
-            display: inline-block;
-            width: 30px;
-            text-align: right;
-            color: #666;
-            margin-right: 10px;
-        }
+      .line-number {
+        display: inline-block;
+        width: 30px;
+        text-align: right;
+        color: #666;
+        margin-right: 10px;
+      }
 
-        .diff-view {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
+      .diff-view {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+      }
 
-        .diff-pane {
-            display: flex;
-            flex-direction: column;
-        }
+      .diff-pane {
+        display: flex;
+        flex-direction: column;
+      }
 
-        .diff-label {
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
+      .diff-label {
+        font-size: 11px;
+        color: #888;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
 
-        .diff-content {
-            background: #f5f5f5;
-            border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-height: 200px;
-            overflow-y: auto;
-            line-height: 1.5;
-            color: #2c3e50;
-        }
+      .diff-content {
+        background: #f5f5f5;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        padding: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        max-height: 200px;
+        overflow-y: auto;
+        line-height: 1.5;
+        color: #2c3e50;
+      }
 
-        .diff-added {
-            color: #2e7d32;
-        }
+      .diff-added {
+        color: #2e7d32;
+      }
 
-        .diff-removed {
-            color: #d32f2f;
-        }
+      .diff-removed {
+        color: #d32f2f;
+      }
 
-        .legend {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
+      .legend {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
 
-        .legend-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
+      .legend-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
 
-        .legend-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            font-size: 12px;
-        }
+      .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        font-size: 12px;
+      }
 
-        .legend-item {
-            display: flex;
-            gap: 8px;
-        }
+      .legend-item {
+        display: flex;
+        gap: 8px;
+      }
 
-        .legend-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
+      .legend-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="dashboard">
-        <!-- Header -->
-        <header class="dashboard-header">
-            <div class="header-left">
-                <h1>Aszune AI Bot Dashboard</h1>
-                <div class="version-info">
-                    <span class="version-badge" id="version-badge">
-                        <span class="version-text">v<span id="version-number">1.8.0</span></span>
-                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
-                    </span>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="control-buttons">
-                    <button id="git-pull-btn" class="control-btn git-pull-btn" title="Pull latest changes from GitHub">
-                        <span class="btn-icon">⬇️</span>
-                        <span class="btn-label">Git Pull</span>
-                    </button>
-                    <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
-                        <span class="btn-icon">🔄</span>
-                        <span class="btn-label">Restart</span>
-                    </button>
-                </div>
-                <div class="status-indicator">
-                    <span class="status-dot connecting" id="status-dot"></span>
-                    <span id="status-text">Connecting...</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Top Navigation Bar for Features -->
-        <nav class="dashboard-navbar">
-            <div class="navbar-content">
-                <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
-                    <span class="navbar-icon">📊</span>
-                    <span class="navbar-label">Dashboard</span>
-                </a>
-                <a href="logs-viewer.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
-                    <span class="navbar-icon">📋</span>
-                    <span class="navbar-label">Logs</span>
-                </a>
-                <a href="service-management.html" class="navbar-item navbar-item-2" title="Service Status & Management">
-                    <span class="navbar-icon">🔧</span>
-                    <span class="navbar-label">Services</span>
-                </a>
-                <a href="config-editor.html" class="navbar-item navbar-item-3" title="Configuration Editor">
-                    <span class="navbar-icon">⚙️</span>
-                    <span class="navbar-label">Config</span>
-                </a>
-                <a href="network-status.html" class="navbar-item navbar-item-5" title="Network & Connectivity Status">
-                    <span class="navbar-icon">🌐</span>
-                    <span class="navbar-label">Network</span>
-                </a>
-                <a href="reminder-management.html" class="navbar-item navbar-item-7" title="Reminder Management Interface">
-                    <span class="navbar-icon">⏰</span>
-                    <span class="navbar-label">Reminders</span>
-                </a>
-                <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
-                    <span class="navbar-icon">💾</span>
-                    <span class="navbar-label">Database</span>
-                </a>
-                <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
-                    <span class="navbar-icon">⚠️</span>
-                    <span class="navbar-label">Errors</span>
-                </a>
-            </div>
-        </nav>
-
-        <!-- Configuration Editor Section -->
-        <div class="config-section">
-            <h2>⚙️ Configuration Editor</h2>
-            
-            <!-- File Selector -->
-            <div class="file-selector">
-                <button class="file-btn active" onclick="switchFile('.env')">📄 .env</button>
-                <button class="file-btn" onclick="switchFile('.env.example')">📄 .env.example</button>
-            </div>
-
-            <!-- File Info & Status -->
-            <div class="file-info">
-                <div class="info-item">
-                    <span class="info-label">Current File</span>
-                    <span class="info-value" id="current-file">.env</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Last Modified</span>
-                    <span class="info-value" id="last-modified">Loading...</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">File Size</span>
-                    <span class="info-value" id="file-size">Loading...</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Status</span>
-                    <span class="info-value">
-                        <span class="status-badge">⏳ Loading...</span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Backup Notification -->
-            <div class="backup-info" id="backup-info">
-                ⏳ Connecting to server...
-            </div>
-
-            <!-- Editor -->
-            <div class="editor-container">
-                <div class="editor-pane">
-                    <div class="editor-label">Configuration Content</div>
-                    <textarea id="editor-content" spellcheck="false">Loading configuration...</textarea>
-
-                    <div class="editor-actions">
-                        <button class="action-btn btn-save" onclick="saveConfig()">💾 Save Changes</button>
-                        <button class="action-btn btn-validate" onclick="validateConfig()">✓ Validate</button>
-                        <button class="action-btn btn-revert" onclick="revertChanges()">↶ Revert</button>
-                        <button class="action-btn btn-export" onclick="exportConfig()">⬇ Export</button>
-                    </div>
-                </div>
-
-                <!-- Validation Panel -->
-                <div class="validation-panel">
-                    <div class="editor-label">Validation Results</div>
-                    <div class="validation-box">
-                        <div class="validation-status">
-                            <span class="status-badge">⏳ Waiting for data...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Diff Viewer -->
-            <div style="margin-top: 20px;">
-                <h3 style="color: #87ceeb; margin-bottom: 15px;">📊 Change Diff Preview</h3>
-                <div id="diff-view" class="diff-view" style="min-height: 100px; display: flex; align-items: center; justify-content: center; color: #999; background: #f5f5f5; border-radius: 6px;">
-                    <p>No unsaved changes</p>
-                </div>
-            </div>
-
-            <!-- Legend -->
-            <div class="legend" style="margin-top: 20px;">
-                <div class="legend-title">Configuration Editor Features</div>
-                <div class="legend-items">
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #1b5e20;"></div>
-                        <span>Syntax validation for .env format</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #1565c0;"></div>
-                        <span>Real-time validation feedback</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #e65100;"></div>
-                        <span>Automatic timestamped backups</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #4a235a;"></div>
-                        <span>Change diff viewer</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #2d6a4f;"></div>
-                        <span>Safe file access whitelist</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #4a235a;"></div>
-                        <span>Revert to previous version</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Allowed Files Notice -->
-            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-                <h3 style="margin-top: 0; color: #2c3e50;">🔒 Security Features</h3>
-                <ul style="margin: 10px 0; padding-left: 20px; color: #2c3e50;">
-                    <li><strong>Path Traversal Prevention:</strong> Automatic detection and blocking of ../ attempts</li>
-                    <li><strong>Syntax Validation:</strong> Pre-save validation prevents breaking changes for .env and .js files</li>
-                    <li><strong>Safe Editing:</strong> Changes only apply after explicit save - no auto-save</li>
-                </ul>
-                <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                    <strong>⚠️ Warning:</strong> Editing configuration files can break the bot. Always verify changes before saving and keep backups of working configurations.
-                </div>
-            </div>
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <h1>Aszune AI Bot Dashboard</h1>
+          <div class="version-info">
+            <span class="version-badge" id="version-badge">
+              <span class="version-text">v<span id="version-number">1.8.0</span></span>
+              <span class="commit-text"
+                >Commit:
+                <a id="commit-link" href="#" target="_blank"
+                  ><span id="commit-sha">unknown</span></a
+                ></span
+              >
+            </span>
+          </div>
         </div>
+        <div class="header-right">
+          <div class="control-buttons">
+            <button
+              id="git-pull-btn"
+              class="control-btn git-pull-btn"
+              title="Pull latest changes from GitHub"
+            >
+              <span class="btn-icon">⬇️</span>
+              <span class="btn-label">Git Pull</span>
+            </button>
+            <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-label">Restart</span>
+            </button>
+          </div>
+          <div class="status-indicator">
+            <span class="status-dot connecting" id="status-dot"></span>
+            <span id="status-text">Connecting...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Top Navigation Bar for Features -->
+      <nav class="dashboard-navbar">
+        <div class="navbar-content">
+          <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
+            <span class="navbar-icon">📊</span>
+            <span class="navbar-label">Dashboard</span>
+          </a>
+          <a href="logs-viewer.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
+            <span class="navbar-icon">📋</span>
+            <span class="navbar-label">Logs</span>
+          </a>
+          <a
+            href="service-management.html"
+            class="navbar-item navbar-item-2"
+            title="Service Status & Management"
+          >
+            <span class="navbar-icon">🔧</span>
+            <span class="navbar-label">Services</span>
+          </a>
+          <a
+            href="config-editor.html"
+            class="navbar-item navbar-item-3"
+            title="Configuration Editor"
+          >
+            <span class="navbar-icon">⚙️</span>
+            <span class="navbar-label">Config</span>
+          </a>
+          <a
+            href="network-status.html"
+            class="navbar-item navbar-item-5"
+            title="Network & Connectivity Status"
+          >
+            <span class="navbar-icon">🌐</span>
+            <span class="navbar-label">Network</span>
+          </a>
+          <a
+            href="reminder-management.html"
+            class="navbar-item navbar-item-7"
+            title="Reminder Management Interface"
+          >
+            <span class="navbar-icon">⏰</span>
+            <span class="navbar-label">Reminders</span>
+          </a>
+          <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
+            <span class="navbar-icon">💾</span>
+            <span class="navbar-label">Database</span>
+          </a>
+          <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
+            <span class="navbar-icon">⚠️</span>
+            <span class="navbar-label">Errors</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Configuration Editor Section -->
+      <div class="config-section">
+        <h2>⚙️ Configuration Editor</h2>
+
+        <!-- File Selector -->
+        <div class="file-selector">
+          <button class="file-btn active" onclick="switchFile('.env')">📄 .env</button>
+          <button class="file-btn" onclick="switchFile('.env.example')">📄 .env.example</button>
+        </div>
+
+        <!-- File Info & Status -->
+        <div class="file-info">
+          <div class="info-item">
+            <span class="info-label">Current File</span>
+            <span class="info-value" id="current-file">.env</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Modified</span>
+            <span class="info-value" id="last-modified">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">File Size</span>
+            <span class="info-value" id="file-size">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+              <span class="status-badge">⏳ Loading...</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Backup Notification -->
+        <div class="backup-info" id="backup-info">⏳ Connecting to server...</div>
+
+        <!-- Editor -->
+        <div class="editor-container">
+          <div class="editor-pane">
+            <div class="editor-label">Configuration Content</div>
+            <textarea id="editor-content" spellcheck="false">Loading configuration...</textarea>
+
+            <div class="editor-actions">
+              <button class="action-btn btn-save" onclick="saveConfig()">💾 Save Changes</button>
+              <button class="action-btn btn-validate" onclick="validateConfig()">✓ Validate</button>
+              <button class="action-btn btn-revert" onclick="revertChanges()">↶ Revert</button>
+              <button class="action-btn btn-export" onclick="exportConfig()">⬇ Export</button>
+            </div>
+          </div>
+
+          <!-- Validation Panel -->
+          <div class="validation-panel">
+            <div class="editor-label">Validation Results</div>
+            <div class="validation-box">
+              <div class="validation-status">
+                <span class="status-badge">⏳ Waiting for data...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diff Viewer -->
+        <div style="margin-top: 20px">
+          <h3 style="color: #87ceeb; margin-bottom: 15px">📊 Change Diff Preview</h3>
+          <div
+            id="diff-view"
+            class="diff-view"
+            style="
+              min-height: 100px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #999;
+              background: #f5f5f5;
+              border-radius: 6px;
+            "
+          >
+            <p>No unsaved changes</p>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend" style="margin-top: 20px">
+          <div class="legend-title">Configuration Editor Features</div>
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #1b5e20"></div>
+              <span>Syntax validation for .env format</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #1565c0"></div>
+              <span>Real-time validation feedback</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #e65100"></div>
+              <span>Automatic timestamped backups</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #4a235a"></div>
+              <span>Change diff viewer</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #2d6a4f"></div>
+              <span>Safe file access whitelist</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #4a235a"></div>
+              <span>Revert to previous version</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Allowed Files Notice -->
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px">
+          <h3 style="margin-top: 0; color: #2c3e50">🔒 Security Features</h3>
+          <ul style="margin: 10px 0; padding-left: 20px; color: #2c3e50">
+            <li>
+              <strong>Path Traversal Prevention:</strong> Automatic detection and blocking of ../
+              attempts
+            </li>
+            <li>
+              <strong>Syntax Validation:</strong> Pre-save validation prevents breaking changes for
+              .env and .js files
+            </li>
+            <li>
+              <strong>Safe Editing:</strong> Changes only apply after explicit save - no auto-save
+            </li>
+          </ul>
+          <div
+            style="
+              margin-top: 15px;
+              padding: 12px;
+              background: #fff3cd;
+              border-left: 4px solid #ffc107;
+              border-radius: 4px;
+            "
+          >
+            <strong>⚠️ Warning:</strong> Editing configuration files can break the bot. Always
+            verify changes before saving and keep backups of working configurations.
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="dashboard.js"></script>
     <script>
-        let originalContent = '';
-        let currentFile = '.env';
+      let originalContent = '';
+      let currentFile = '.env';
 
-        // Load configuration from server via Socket.IO
-        function loadConfigFromServer() {
-            const dashboardSocket = window.dashboard?.socket;
-            if (!dashboardSocket) {
-                console.error('Dashboard socket not available');
-                document.getElementById('backup-info').innerHTML = '⚠️ Dashboard not connected';
-                document.querySelector('.validation-status').innerHTML = '<span class="status-badge error">⚠ Connection failed</span>';
-                return;
-            }
-            
-            // Show loading state
-            document.getElementById('backup-info').innerHTML = '⏳ Loading configuration...';
-            document.getElementById('editor-content').value = 'Loading configuration...';
-            
-            dashboardSocket.emit('request_config', { filename: currentFile }, (response) => {
-                console.log('Config response:', response);
-                if (response && response.content) {
-                    // Update editor content
-                    document.getElementById('editor-content').value = response.content;
-                    originalContent = response.content;
-                    
-                    // Update file info
-                    if (response.lastModified) {
-                        const date = new Date(response.lastModified);
-                        document.getElementById('last-modified').textContent = date.toLocaleString();
-                    }
-                    if (response.size) {
-                        document.getElementById('file-size').textContent = (response.size / 1024).toFixed(2) + ' KB';
-                    }
-                    
-                    // Update status badges
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge">✓ Loaded successfully</span>';
-                    document.querySelector('.info-value .status-badge').innerHTML = '✓ Ready';
-                    document.getElementById('backup-info').innerHTML = '✓ Configuration loaded. All changes are automatically backed up before saving.';
-                } else {
-                    // Handle error
-                    const errorMsg = response?.error || 'Unknown error';
-                    document.getElementById('editor-content').value = `// Failed to load ${currentFile}\n// Error: ${errorMsg}`;
-                    document.querySelector('.validation-status').innerHTML = '<span class="status-badge error">⚠ Failed to load</span>';
-                    document.getElementById('backup-info').innerHTML = `⚠️ Failed to load ${currentFile}: ${errorMsg}`;
-                }
-            });
+      // Load configuration from server via Socket.IO
+      function loadConfigFromServer() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.error('Dashboard socket not available');
+          document.getElementById('backup-info').innerHTML = '⚠️ Dashboard not connected';
+          document.querySelector('.validation-status').innerHTML =
+            '<span class="status-badge error">⚠ Connection failed</span>';
+          return;
         }
 
-        function switchFile(filename) {
-            document.querySelectorAll('.file-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('current-file').textContent = filename;
-            currentFile = filename;
-            
-            // Load content from server
-            loadConfigFromServer();
+        // Show loading state
+        document.getElementById('backup-info').innerHTML = '⏳ Loading configuration...';
+        document.getElementById('editor-content').value = 'Loading configuration...';
+
+        dashboardSocket.emit('request_config', { filename: currentFile }, (response) => {
+          console.log('Config response:', response);
+          if (response && response.content) {
+            // Update editor content
+            document.getElementById('editor-content').value = response.content;
+            originalContent = response.content;
+
+            // Update file info
+            if (response.lastModified) {
+              const date = new Date(response.lastModified);
+              document.getElementById('last-modified').textContent = date.toLocaleString();
+            }
+            if (response.size) {
+              document.getElementById('file-size').textContent =
+                (response.size / 1024).toFixed(2) + ' KB';
+            }
+
+            // Update status badges
+            document.querySelector('.validation-status').innerHTML =
+              '<span class="status-badge">✓ Loaded successfully</span>';
+            document.querySelector('.info-value .status-badge').innerHTML = '✓ Ready';
+            document.getElementById('backup-info').innerHTML =
+              '✓ Configuration loaded. All changes are automatically backed up before saving.';
+          } else {
+            // Handle error
+            const errorMsg = response?.error || 'Unknown error';
+            document.getElementById('editor-content').value =
+              `// Failed to load ${currentFile}\n// Error: ${errorMsg}`;
+            document.querySelector('.validation-status').innerHTML =
+              '<span class="status-badge error">⚠ Failed to load</span>';
+            document.getElementById('backup-info').innerHTML =
+              `⚠️ Failed to load ${currentFile}: ${errorMsg}`;
+          }
+        });
+      }
+
+      function switchFile(filename) {
+        document.querySelectorAll('.file-btn').forEach((btn) => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('current-file').textContent = filename;
+        currentFile = filename;
+
+        // Load content from server
+        loadConfigFromServer();
+      }
+
+      function saveConfig() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.error('Dashboard socket not available');
+          return;
         }
 
-        function saveConfig() {
-            const dashboardSocket = window.dashboard?.socket;
-            if (!dashboardSocket) {
-                console.error('Dashboard socket not available');
-                return;
+        const content = document.getElementById('editor-content').value;
+        dashboardSocket.emit(
+          'save_config',
+          { filename: currentFile, content: content },
+          (response) => {
+            console.log('Save response:', response);
+            if (response && response.saved) {
+              alert('Configuration saved successfully');
+              originalContent = content;
+              loadConfigFromServer();
+            } else {
+              alert('Failed to save configuration: ' + (response?.error || 'Unknown error'));
             }
-            
-            const content = document.getElementById('editor-content').value;
-            dashboardSocket.emit('save_config', { filename: currentFile, content: content }, (response) => {
-                console.log('Save response:', response);
-                if (response && response.saved) {
-                    alert('Configuration saved successfully');
-                    originalContent = content;
-                    loadConfigFromServer();
-                } else {
-                    alert('Failed to save configuration: ' + (response?.error || 'Unknown error'));
-                }
-            });
+          }
+        );
+      }
+
+      function validateConfig() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.error('Dashboard socket not available');
+          return;
         }
 
-        function validateConfig() {
-            const dashboardSocket = window.dashboard?.socket;
-            if (!dashboardSocket) {
-                console.error('Dashboard socket not available');
-                return;
-            }
-            
-            const content = document.getElementById('editor-content').value;
-            const fileType = currentFile.endsWith('.env') || currentFile.endsWith('.example') ? 'env' : 'js';
-            
-            dashboardSocket.emit('validate_config', { content: content, fileType: fileType }, (response) => {
-                console.log('Validation response:', response);
-                
-                if (response && response.valid) {
-                    const warningsHtml = response.warnings && response.warnings.length > 0 
-                        ? `<div style="margin-top: 10px; padding: 10px; background: rgba(245, 124, 0, 0.1); border-left: 3px solid #f57c00; border-radius: 4px;">
+        const content = document.getElementById('editor-content').value;
+        const fileType =
+          currentFile.endsWith('.env') || currentFile.endsWith('.example') ? 'env' : 'js';
+
+        dashboardSocket.emit(
+          'validate_config',
+          { content: content, fileType: fileType },
+          (response) => {
+            console.log('Validation response:', response);
+
+            if (response && response.valid) {
+              const warningsHtml =
+                response.warnings && response.warnings.length > 0
+                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(245, 124, 0, 0.1); border-left: 3px solid #f57c00; border-radius: 4px;">
                              <strong>Warnings:</strong><br>${response.warnings.join('<br>')}</div>`
-                        : '';
-                    
-                    document.querySelector('.validation-box').innerHTML = `
+                  : '';
+
+              document.querySelector('.validation-box').innerHTML = `
                         <div class="validation-status">
                             <span class="status-badge">✓ Valid</span>
                         </div>
                         ${warningsHtml}
                     `;
-                    alert('Configuration is valid' + (response.warnings?.length ? ' (with warnings)' : ''));
-                } else {
-                    const errorsHtml = response.errors && response.errors.length > 0
-                        ? `<div style="margin-top: 10px; padding: 10px; background: rgba(211, 47, 47, 0.1); border-left: 3px solid #d32f2f; border-radius: 4px;">
+              alert(
+                'Configuration is valid' + (response.warnings?.length ? ' (with warnings)' : '')
+              );
+            } else {
+              const errorsHtml =
+                response.errors && response.errors.length > 0
+                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(211, 47, 47, 0.1); border-left: 3px solid #d32f2f; border-radius: 4px;">
                              <strong>Errors:</strong><br>${response.errors.join('<br>')}</div>`
-                        : '';
-                    
-                    document.querySelector('.validation-box').innerHTML = `
+                  : '';
+
+              document.querySelector('.validation-box').innerHTML = `
                         <div class="validation-status">
                             <span class="status-badge error">⚠ Invalid</span>
                         </div>
                         ${errorsHtml}
                     `;
-                    
-                    const errorMsg = response?.errors?.join('\n') || response?.error || 'Unknown error';
-                    alert('Configuration has errors:\n\n' + errorMsg);
-                }
-            });
-        }
 
-        function revertChanges() {
-            document.getElementById('editor-content').value = originalContent;
-            alert('Changes reverted to last saved version');
-        }
+              const errorMsg = response?.errors?.join('\n') || response?.error || 'Unknown error';
+              alert('Configuration has errors:\n\n' + errorMsg);
+            }
+          }
+        );
+      }
 
-        function exportConfig() {
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(document.getElementById('editor-content').value));
-            element.setAttribute('download', currentFile);
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-        }
+      function revertChanges() {
+        document.getElementById('editor-content').value = originalContent;
+        alert('Changes reverted to last saved version');
+      }
 
-        // Mark the current active nav item
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentPagePath = window.location.pathname;
-            const currentPageName = currentPagePath.split('/').pop() || 'index.html';
-            const navLinks = document.querySelectorAll('.navbar-item');
-            navLinks.forEach(link => {
-                const linkHref = link.getAttribute('href');
-                if (linkHref === currentPageName || linkHref === currentPagePath.substring(1) || linkHref.includes(currentPageName)) {
-                    link.classList.add('active');
-                }
-            });
+      function exportConfig() {
+        const element = document.createElement('a');
+        element.setAttribute(
+          'href',
+          'data:text/plain;charset=utf-8,' +
+            encodeURIComponent(document.getElementById('editor-content').value)
+        );
+        element.setAttribute('download', currentFile);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      }
 
-            // Wait for dashboard to initialize, then load config
-            const initConfig = () => {
-                if (window.dashboard && window.dashboard.socket) {
-                    console.log('Dashboard ready, loading config');
-                    loadConfigFromServer();
-                } else {
-                    setTimeout(initConfig, 100);
-                }
-            };
-            
-            initConfig();
+      // Mark the current active nav item
+      document.addEventListener('DOMContentLoaded', () => {
+        const currentPagePath = window.location.pathname;
+        const currentPageName = currentPagePath.split('/').pop() || 'index.html';
+        const navLinks = document.querySelectorAll('.navbar-item');
+        navLinks.forEach((link) => {
+          const linkHref = link.getAttribute('href');
+          if (
+            linkHref === currentPageName ||
+            linkHref === currentPagePath.substring(1) ||
+            linkHref.includes(currentPageName)
+          ) {
+            link.classList.add('active');
+          }
         });
+
+        // Wait for dashboard to initialize, then load config
+        const initConfig = () => {
+          if (window.dashboard && window.dashboard.socket) {
+            console.log('Dashboard ready, loading config');
+            loadConfigFromServer();
+          } else {
+            setTimeout(initConfig, 100);
+          }
+        };
+
+        initConfig();
+      });
     </script>
-</body>
+  </body>
 </html>

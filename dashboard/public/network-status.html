@@ -1,698 +1,759 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aszune AI Bot Dashboard - Network Status</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <style>
-        .demo-warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-        }
+      .demo-warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        color: #856404;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
 
-        .network-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
+      .network-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
 
-        .network-section h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
+      .network-section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
 
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
 
-        .status-card {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            transition: border-color 0.3s;
-        }
+      .status-card {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        transition: border-color 0.3s;
+      }
 
-        .status-card:hover {
-            border-color: #667eea;
-        }
+      .status-card:hover {
+        border-color: #667eea;
+      }
 
-        .status-card h3 {
-            margin: 0 0 15px 0;
-            color: #2c3e50;
-            font-size: 14px;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+      .status-card h3 {
+        margin: 0 0 15px 0;
+        color: #2c3e50;
+        font-size: 14px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
 
-        .badge-connected {
-            background: rgba(46, 125, 50, 0.1);
-            color: #2e7d32;
-        }
+      .badge-connected {
+        background: rgba(46, 125, 50, 0.1);
+        color: #2e7d32;
+      }
 
-        .badge-connected::before {
-            content: '●';
-            animation: pulse 1s infinite;
-        }
+      .badge-connected::before {
+        content: '●';
+        animation: pulse 1s infinite;
+      }
 
-        .badge-disconnected {
-            background: rgba(211, 47, 47, 0.1);
-            color: #d32f2f;
-        }
+      .badge-disconnected {
+        background: rgba(211, 47, 47, 0.1);
+        color: #d32f2f;
+      }
 
-        .badge-disconnected::before {
-            content: '○';
-        }
+      .badge-disconnected::before {
+        content: '○';
+      }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
         }
+        50% {
+          opacity: 0.6;
+        }
+      }
 
-        .info-item {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
+      .info-item {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #e0e0e0;
+      }
 
-        .info-item:last-child {
-            border-bottom: none;
-        }
+      .info-item:last-child {
+        border-bottom: none;
+      }
 
-        .info-label {
-            color: #666;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+      .info-label {
+        color: #666;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
 
-        .info-value {
-            color: #2c3e50;
-            font-weight: 500;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-        }
+      .info-value {
+        color: #2c3e50;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+      }
 
-        .connectivity-label {
-            color: #2c3e50;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.4px;
-        }
+      .connectivity-label {
+        color: #2c3e50;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+      }
 
-        .interfaces-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            background: #ffffff;
-            border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
+      .interfaces-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: #ffffff;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
 
-        .interfaces-table th,
-        .interfaces-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 12px;
-        }
+      .interfaces-table th,
+      .interfaces-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 12px;
+      }
 
-        .interfaces-table th {
-            background: #f5f5f5;
-            color: #2c3e50;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-        }
+      .interfaces-table th {
+        background: #f5f5f5;
+        color: #2c3e50;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
 
-        .interfaces-table tr:hover {
-            background: #fafafa;
-        }
+      .interfaces-table tr:hover {
+        background: #fafafa;
+      }
 
-        .interfaces-table tr:last-child td {
-            border-bottom: none;
-        }
+      .interfaces-table tr:last-child td {
+        border-bottom: none;
+      }
 
-        .interface-name {
-            color: #2c3e50;
-            font-weight: 600;
-        }
+      .interface-name {
+        color: #2c3e50;
+        font-weight: 600;
+      }
 
-        .interface-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 2px 6px;
-            background: #1b5e20;
-            color: #4caf50;
-            border-radius: 3px;
-            font-size: 10px;
-        }
+      .interface-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 6px;
+        background: #1b5e20;
+        color: #4caf50;
+        border-radius: 3px;
+        font-size: 10px;
+      }
 
-        .interface-status.loopback {
-            background: #e0e0e0;
-            color: #666;
-        }
+      .interface-status.loopback {
+        background: #e0e0e0;
+        color: #666;
+      }
 
-        .connectivity-checks {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+      .connectivity-checks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
 
-        .check-item {
-            background: #f8f9fa;
-            border-left: 3px solid #2e7d32;
-            padding: 15px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      .check-item {
+        background: #f8f9fa;
+        border-left: 3px solid #2e7d32;
+        padding: 15px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        .check-item.failing {
-            border-left-color: #ce93d8;
-        }
+      .check-item.failing {
+        border-left-color: #ce93d8;
+      }
 
-        .check-icon {
-            font-size: 20px;
-        }
+      .check-icon {
+        font-size: 20px;
+      }
 
-        .check-content {
-            flex: 1;
-        }
+      .check-content {
+        flex: 1;
+      }
 
-        .check-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 12px;
-        }
+      .check-name {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 12px;
+      }
 
-        .check-status {
-            font-size: 11px;
-            color: #888;
-            margin-top: 3px;
-        }
+      .check-status {
+        font-size: 11px;
+        color: #888;
+        margin-top: 3px;
+      }
 
-        .bandwidth-chart {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+      .bandwidth-chart {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
 
-        .chart-item {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 15px;
-        }
+      .chart-item {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 15px;
+      }
 
-        .chart-title {
-            color: #2c3e50;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
+      .chart-title {
+        color: #2c3e50;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
 
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #2e7d32, #f57c00);
-            border-radius: 4px;
-            transition: width 0.3s;
-        }
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2e7d32, #f57c00);
+        border-radius: 4px;
+        transition: width 0.3s;
+      }
 
-        .chart-value {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #2c3e50;
-        }
+      .chart-value {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #2c3e50;
+      }
 
-        .legend {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
+      .legend {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
 
-        .legend-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
+      .legend-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
 
-        .legend-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            font-size: 12px;
-        }
+      .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        font-size: 12px;
+      }
 
-        .legend-item {
-            display: flex;
-            gap: 8px;
-        }
+      .legend-item {
+        display: flex;
+        gap: 8px;
+      }
 
-        .legend-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
+      .legend-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
 
-        .quick-test {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
+      .quick-test {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
 
-        .test-btn {
-            padding: 8px 16px;
-            border: 1px solid #667eea;
-            background: #667eea;
-            color: #ffffff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
+      .test-btn {
+        padding: 8px 16px;
+        border: 1px solid #667eea;
+        background: #667eea;
+        color: #ffffff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
 
-        .test-btn:hover {
-            background: #1976d2;
-        }
+      .test-btn:hover {
+        background: #1976d2;
+      }
 
-        .test-result {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            color: #2e7d32;
-            max-height: 100px;
-            overflow-y: auto;
-        }
+      .test-result {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        color: #2e7d32;
+        max-height: 100px;
+        overflow-y: auto;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="dashboard">
-        <!-- Header -->
-        <header class="dashboard-header">
-            <div class="header-left">
-                <h1>Aszune AI Bot Dashboard</h1>
-                <div class="version-info">
-                    <span class="version-badge" id="version-badge">
-                        <span class="version-text">v<span id="version-number">1.8.0</span></span>
-                        <span class="commit-text">Commit: <a id="commit-link" href="#" target="_blank"><span id="commit-sha">unknown</span></a></span>
-                    </span>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="control-buttons">
-                    <button id="git-pull-btn" class="control-btn git-pull-btn" title="Pull latest changes from GitHub">
-                        <span class="btn-icon">⬇️</span>
-                        <span class="btn-label">Git Pull</span>
-                    </button>
-                    <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
-                        <span class="btn-icon">🔄</span>
-                        <span class="btn-label">Restart</span>
-                    </button>
-                </div>
-                <div class="status-indicator">
-                    <span class="status-dot connecting" id="status-dot"></span>
-                    <span id="status-text">Connecting...</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Top Navigation Bar for Features -->
-        <nav class="dashboard-navbar">
-            <div class="navbar-content">
-                <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
-                    <span class="navbar-icon">📊</span>
-                    <span class="navbar-label">Dashboard</span>
-                </a>
-                <a href="logs-viewer.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
-                    <span class="navbar-icon">📋</span>
-                    <span class="navbar-label">Logs</span>
-                </a>
-                <a href="service-management.html" class="navbar-item navbar-item-2" title="Service Status & Management">
-                    <span class="navbar-icon">🔧</span>
-                    <span class="navbar-label">Services</span>
-                </a>
-                <a href="config-editor.html" class="navbar-item navbar-item-3" title="Configuration Editor">
-                    <span class="navbar-icon">⚙️</span>
-                    <span class="navbar-label">Config</span>
-                </a>
-                <a href="network-status.html" class="navbar-item navbar-item-5" title="Network & Connectivity Status">
-                    <span class="navbar-icon">🌐</span>
-                    <span class="navbar-label">Network</span>
-                </a>
-                <a href="reminder-management.html" class="navbar-item navbar-item-7" title="Reminder Management Interface">
-                    <span class="navbar-icon">⏰</span>
-                    <span class="navbar-label">Reminders</span>
-                </a>
-                <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
-                    <span class="navbar-icon">💾</span>
-                    <span class="navbar-label">Database</span>
-                </a>
-                <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
-                    <span class="navbar-icon">⚠️</span>
-                    <span class="navbar-label">Errors</span>
-                </a>
-            </div>
-        </nav>
-
-        <!-- Network Status Section -->
-        <div class="network-section">
-            <h2>🌐 Network & Connectivity Status</h2>
-
-            <!-- IP Address Information -->
-            <div class="status-grid">
-                <div class="status-card">
-                    <h3>📍 IP Addresses</h3>
-                    <div class="info-item">
-                        <span class="info-label">Hostname</span>
-                        <span class="info-value" id="hostname">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Local IP</span>
-                        <span class="info-value" id="local-ip">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">External IP</span>
-                        <span class="info-value" id="external-ip">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Gateway</span>
-                        <span class="info-value" id="gateway">Loading...</span>
-                    </div>
-                </div>
-
-                <!-- Connectivity Status -->
-                <div class="status-card">
-                    <h3>🔗 Connectivity</h3>
-                    <div id="connectivity-status" style="display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="connectivity-label">Status</span>
-                            <span class="status-badge" id="connectivity-status-badge">⏳ Loading...</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="connectivity-label">Gateway</span>
-                            <span class="status-badge" id="gateway-status">⏳ Loading...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Network Statistics -->
-                <div class="status-card">
-                    <h3>📊 Statistics</h3>
-                    <div class="info-item">
-                        <span class="info-label">Total Interfaces</span>
-                        <span class="info-value" id="stat-total-interfaces">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Active Interfaces</span>
-                        <span class="info-value" id="stat-active-interfaces">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">IPv4 Addresses</span>
-                        <span class="info-value" id="stat-ipv4-count">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">IPv6 Addresses</span>
-                        <span class="info-value" id="stat-ipv6-count">-</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- DNS and DHCP Information Row -->
-            <div class="status-grid" style="margin-top: 20px;">
-                <div class="status-card">
-                    <h3>🌐 DNS Configuration</h3>
-                    <div class="info-item">
-                        <span class="info-label">Primary DNS</span>
-                        <span class="info-value" id="dns-primary">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Secondary DNS</span>
-                        <span class="info-value" id="dns-secondary">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">DNS Status</span>
-                        <span class="info-value" id="dns-status-text">Checking...</span>
-                    </div>
-                </div>
-
-                <div class="status-card">
-                    <h3>⚙️ IP Configuration</h3>
-                    <div class="info-item">
-                        <span class="info-label">Assignment Type</span>
-                        <span class="info-value" id="ip-assignment">Loading...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Configuration</span>
-                        <span class="info-value" id="ip-config-details">-</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Network Interfaces -->
-            <div style="margin-top: 30px;">
-                <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">🔌 Network Interfaces</h3>
-                <table class="interfaces-table">
-                    <thead>
-                        <tr>
-                            <th>Interface</th>
-                            <th>Status</th>
-                            <th>IPv4</th>
-                            <th>IPv6</th>
-                            <th>MAC Address</th>
-                        </tr>
-                    </thead>
-                    <tbody id="network-interfaces">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #999;">Loading interfaces...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Connectivity Checks -->
-            <div style="margin-top: 30px;">
-                <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">✓ Connectivity Checks</h3>
-                <div class="connectivity-checks" id="connectivity-checks">
-                    <p style="text-align: center; color: #999;">Network connectivity data will be shown here when available.</p>
-                </div>
-            </div>
-
-            <!-- Quick Connectivity Test -->
-            <div class="quick-test">
-                <h3 style="color: #2c3e50; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 600;">🧪 Quick Connectivity Test</h3>
-                <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
-                <div class="test-result" id="test-result" style="display: none; margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; color: #2c3e50;"></div>
-            </div>
-
-            <!-- Legend -->
-            <div class="legend">
-                <div class="legend-title">Network Status Legend</div>
-                <div class="legend-items">
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #1b5e20;"></div>
-                        <span>Active / Reachable</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #4a235a;"></div>
-                        <span>Inactive / Unreachable</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #e0e0e0;"></div>
-                        <span>Loopback Interface</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-icon" style="background: #667eea;"></div>
-                        <span>Performance Metric</span>
-                    </div>
-                </div>
-            </div>
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <h1>Aszune AI Bot Dashboard</h1>
+          <div class="version-info">
+            <span class="version-badge" id="version-badge">
+              <span class="version-text">v<span id="version-number">1.8.0</span></span>
+              <span class="commit-text"
+                >Commit:
+                <a id="commit-link" href="#" target="_blank"
+                  ><span id="commit-sha">unknown</span></a
+                ></span
+              >
+            </span>
+          </div>
         </div>
+        <div class="header-right">
+          <div class="control-buttons">
+            <button
+              id="git-pull-btn"
+              class="control-btn git-pull-btn"
+              title="Pull latest changes from GitHub"
+            >
+              <span class="btn-icon">⬇️</span>
+              <span class="btn-label">Git Pull</span>
+            </button>
+            <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-label">Restart</span>
+            </button>
+          </div>
+          <div class="status-indicator">
+            <span class="status-dot connecting" id="status-dot"></span>
+            <span id="status-text">Connecting...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Top Navigation Bar for Features -->
+      <nav class="dashboard-navbar">
+        <div class="navbar-content">
+          <a href="index.html" class="navbar-item navbar-home" title="System Dashboard">
+            <span class="navbar-icon">📊</span>
+            <span class="navbar-label">Dashboard</span>
+          </a>
+          <a href="logs-viewer.html" class="navbar-item navbar-item-1" title="Real-Time Log Viewer">
+            <span class="navbar-icon">📋</span>
+            <span class="navbar-label">Logs</span>
+          </a>
+          <a
+            href="service-management.html"
+            class="navbar-item navbar-item-2"
+            title="Service Status & Management"
+          >
+            <span class="navbar-icon">🔧</span>
+            <span class="navbar-label">Services</span>
+          </a>
+          <a
+            href="config-editor.html"
+            class="navbar-item navbar-item-3"
+            title="Configuration Editor"
+          >
+            <span class="navbar-icon">⚙️</span>
+            <span class="navbar-label">Config</span>
+          </a>
+          <a
+            href="network-status.html"
+            class="navbar-item navbar-item-5"
+            title="Network & Connectivity Status"
+          >
+            <span class="navbar-icon">🌐</span>
+            <span class="navbar-label">Network</span>
+          </a>
+          <a
+            href="reminder-management.html"
+            class="navbar-item navbar-item-7"
+            title="Reminder Management Interface"
+          >
+            <span class="navbar-icon">⏰</span>
+            <span class="navbar-label">Reminders</span>
+          </a>
+          <a href="database.html" class="navbar-item navbar-link" title="View Database Contents">
+            <span class="navbar-icon">💾</span>
+            <span class="navbar-label">Database</span>
+          </a>
+          <a href="error-logs.html" class="navbar-item navbar-link" title="View Error Logs">
+            <span class="navbar-icon">⚠️</span>
+            <span class="navbar-label">Errors</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Network Status Section -->
+      <div class="network-section">
+        <h2>🌐 Network & Connectivity Status</h2>
+
+        <!-- IP Address Information -->
+        <div class="status-grid">
+          <div class="status-card">
+            <h3>📍 IP Addresses</h3>
+            <div class="info-item">
+              <span class="info-label">Hostname</span>
+              <span class="info-value" id="hostname">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Local IP</span>
+              <span class="info-value" id="local-ip">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">External IP</span>
+              <span class="info-value" id="external-ip">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Gateway</span>
+              <span class="info-value" id="gateway">Loading...</span>
+            </div>
+          </div>
+
+          <!-- Connectivity Status -->
+          <div class="status-card">
+            <h3>🔗 Connectivity</h3>
+            <div id="connectivity-status" style="display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span class="connectivity-label">Status</span>
+                <span class="status-badge" id="connectivity-status-badge">⏳ Loading...</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span class="connectivity-label">Gateway</span>
+                <span class="status-badge" id="gateway-status">⏳ Loading...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network Statistics -->
+          <div class="status-card">
+            <h3>📊 Statistics</h3>
+            <div class="info-item">
+              <span class="info-label">Total Interfaces</span>
+              <span class="info-value" id="stat-total-interfaces">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Active Interfaces</span>
+              <span class="info-value" id="stat-active-interfaces">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">IPv4 Addresses</span>
+              <span class="info-value" id="stat-ipv4-count">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">IPv6 Addresses</span>
+              <span class="info-value" id="stat-ipv6-count">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DNS and DHCP Information Row -->
+        <div class="status-grid" style="margin-top: 20px">
+          <div class="status-card">
+            <h3>🌐 DNS Configuration</h3>
+            <div class="info-item">
+              <span class="info-label">Primary DNS</span>
+              <span class="info-value" id="dns-primary">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Secondary DNS</span>
+              <span class="info-value" id="dns-secondary">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">DNS Status</span>
+              <span class="info-value" id="dns-status-text">Checking...</span>
+            </div>
+          </div>
+
+          <div class="status-card">
+            <h3>⚙️ IP Configuration</h3>
+            <div class="info-item">
+              <span class="info-label">Assignment Type</span>
+              <span class="info-value" id="ip-assignment">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Configuration</span>
+              <span class="info-value" id="ip-config-details">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Network Interfaces -->
+        <div style="margin-top: 30px">
+          <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
+            🔌 Network Interfaces
+          </h3>
+          <table class="interfaces-table">
+            <thead>
+              <tr>
+                <th>Interface</th>
+                <th>Status</th>
+                <th>IPv4</th>
+                <th>IPv6</th>
+                <th>MAC Address</th>
+              </tr>
+            </thead>
+            <tbody id="network-interfaces">
+              <tr>
+                <td colspan="5" style="text-align: center; color: #999">Loading interfaces...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Connectivity Checks -->
+        <div style="margin-top: 30px">
+          <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
+            ✓ Connectivity Checks
+          </h3>
+          <div class="connectivity-checks" id="connectivity-checks">
+            <p style="text-align: center; color: #999">
+              Network connectivity data will be shown here when available.
+            </p>
+          </div>
+        </div>
+
+        <!-- Quick Connectivity Test -->
+        <div class="quick-test">
+          <h3 style="color: #2c3e50; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 600">
+            🧪 Quick Connectivity Test
+          </h3>
+          <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
+          <div
+            class="test-result"
+            id="test-result"
+            style="
+              display: none;
+              margin-top: 10px;
+              padding: 10px;
+              background: #f5f5f5;
+              border-radius: 4px;
+              color: #2c3e50;
+            "
+          ></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-title">Network Status Legend</div>
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #1b5e20"></div>
+              <span>Active / Reachable</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #4a235a"></div>
+              <span>Inactive / Unreachable</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #e0e0e0"></div>
+              <span>Loopback Interface</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-icon" style="background: #667eea"></div>
+              <span>Performance Metric</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="dashboard.js"></script>
     <script>
-        function runTest() {
-            const dashboardSocket = window.dashboard?.socket;
-            if (!dashboardSocket) {
-                console.error('Dashboard socket not available');
-                return;
-            }
-            
-            const resultDiv = document.getElementById('test-result');
-            resultDiv.textContent = 'Running connectivity tests...';
-            resultDiv.style.display = 'block';
-            
-            dashboardSocket.emit('request_network_test', {}, (response) => {
-                if (response && response.result) {
-                    resultDiv.innerHTML = '<pre>' + response.result + '</pre>';
-                } else {
-                    resultDiv.textContent = 'Test request sent to server.';
-                }
-                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            });
+      function runTest() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.error('Dashboard socket not available');
+          return;
         }
 
-        function loadNetworkStatus() {
-            const dashboardSocket = window.dashboard?.socket;
-            if (!dashboardSocket) {
-                console.error('Dashboard socket not available');
-                return;
+        const resultDiv = document.getElementById('test-result');
+        resultDiv.textContent = 'Running connectivity tests...';
+        resultDiv.style.display = 'block';
+
+        dashboardSocket.emit('request_network_test', {}, (response) => {
+          if (response && response.result) {
+            resultDiv.innerHTML = '<pre>' + response.result + '</pre>';
+          } else {
+            resultDiv.textContent = 'Test request sent to server.';
+          }
+          resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      }
+
+      function loadNetworkStatus() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.error('Dashboard socket not available');
+          return;
+        }
+
+        dashboardSocket.emit('request_network_status', {}, (response) => {
+          console.log('Network status response:', response);
+          console.log('Connectivity object:', response?.connectivity);
+          if (response) {
+            // Update IP information
+            if (response.hostname) {
+              document.getElementById('hostname').textContent = response.hostname;
             }
-            
-            dashboardSocket.emit('request_network_status', {}, (response) => {
-                console.log('Network status response:', response);
-                console.log('Connectivity object:', response?.connectivity);
-                if (response) {
-                    // Update IP information
-                    if (response.hostname) {
-                        document.getElementById('hostname').textContent = response.hostname;
-                    }
-                    if (response.localIp) {
-                        document.getElementById('local-ip').textContent = response.localIp;
-                    }
-                    
-                    // Show external IP status
-                    if (response.externalIp) {
-                        document.getElementById('external-ip').textContent = response.externalIp;
-                    } else {
-                        document.getElementById('external-ip').textContent = 'Not available';
-                    }
-                    
-                    // Show gateway if available
-                    if (response.gateway) {
-                        document.getElementById('gateway').textContent = response.gateway;
-                        document.getElementById('gateway-status').className = 'status-badge badge-connected';
-                        document.getElementById('gateway-status').textContent = '✓ ' + response.gateway;
-                    } else {
-                        document.getElementById('gateway').textContent = 'Not detected';
-                        document.getElementById('gateway-status').className = 'status-badge badge-disconnected';
-                        document.getElementById('gateway-status').textContent = '✗ Not available';
-                    }
-                    
-                    // Update connectivity status
-                    const activeCount = response.interfaces?.filter(i => !i.internal).length || 0;
-                    if (activeCount > 0) {
-                        document.getElementById('connectivity-status-badge').className = 'status-badge badge-connected';
-                        document.getElementById('connectivity-status-badge').textContent = '✓ Connected';
-                    } else {
-                        document.getElementById('connectivity-status-badge').className = 'status-badge badge-disconnected';
-                        document.getElementById('connectivity-status-badge').textContent = '✗ No active interfaces';
-                    }
-                    
-                    // Update network statistics
-                    const ipv4Count = response.interfaces?.filter(i => i.ipv4).length || 0;
-                    const ipv6Count = response.interfaces?.filter(i => i.ipv6).length || 0;
-                    document.getElementById('stat-total-interfaces').textContent = response.interfaces?.length.toString() || '0';
-                    document.getElementById('stat-active-interfaces').textContent = activeCount.toString();
-                    document.getElementById('stat-ipv4-count').textContent = ipv4Count.toString();
-                    document.getElementById('stat-ipv6-count').textContent = ipv6Count.toString();
-                    
-                    // Update DNS information
-                    console.log('DNS Info:', response.connectivity?.dnsServers, 'DNS Reachable:', response.connectivity?.dnsReachable);
-                    if (response.connectivity?.dnsServers && response.connectivity.dnsServers.length > 0) {
-                        document.getElementById('dns-primary').textContent = response.connectivity.dnsServers[0];
-                        if (response.connectivity.dnsServers.length > 1) {
-                            document.getElementById('dns-secondary').textContent = response.connectivity.dnsServers.slice(1).join(', ');
-                        } else {
-                            document.getElementById('dns-secondary').textContent = 'Not configured';
-                        }
-                        
-                        // Update DNS status text
-                        if (response.connectivity.dnsReachable) {
-                            document.getElementById('dns-status-text').textContent = '✓ Working';
-                            document.getElementById('dns-status-text').style.color = '#4caf50';
-                        } else {
-                            document.getElementById('dns-status-text').textContent = '✗ Not reachable';
-                            document.getElementById('dns-status-text').style.color = '#f44336';
-                        }
-                    } else {
-                        console.warn('No DNS servers detected in response');
-                        document.getElementById('dns-primary').textContent = 'Not detected';
-                        document.getElementById('dns-secondary').textContent = '-';
-                        document.getElementById('dns-status-text').textContent = 'Unknown';
-                    }
-                    
-                    // Update IP assignment information
-                    if (response.connectivity?.ipAssignment) {
-                        const ipAssignment = response.connectivity.ipAssignment;
-                        document.getElementById('ip-assignment').textContent = ipAssignment;
-                        
-                        if (ipAssignment === 'DHCP') {
-                            document.getElementById('ip-config-details').textContent = 'IP address assigned automatically';
-                            document.getElementById('ip-assignment').style.color = '#2196f3';
-                        } else if (ipAssignment === 'Static') {
-                            document.getElementById('ip-config-details').textContent = 'IP address manually configured';
-                            document.getElementById('ip-assignment').style.color = '#ff9800';
-                        } else {
-                            document.getElementById('ip-config-details').textContent = 'Unable to determine';
-                            document.getElementById('ip-assignment').style.color = '#999';
-                        }
-                    } else {
-                        document.getElementById('ip-assignment').textContent = 'Unknown';
-                        document.getElementById('ip-config-details').textContent = '-';
-                    }
-                    
-                    // Display connectivity checks from actual network status
-                    const connectivityDiv = document.getElementById('connectivity-checks');
-                    if (response.connectivity) {
-                        const checks = response.connectivity;
-                        connectivityDiv.innerHTML = `
+            if (response.localIp) {
+              document.getElementById('local-ip').textContent = response.localIp;
+            }
+
+            // Show external IP status
+            if (response.externalIp) {
+              document.getElementById('external-ip').textContent = response.externalIp;
+            } else {
+              document.getElementById('external-ip').textContent = 'Not available';
+            }
+
+            // Show gateway if available
+            if (response.gateway) {
+              document.getElementById('gateway').textContent = response.gateway;
+              document.getElementById('gateway-status').className = 'status-badge badge-connected';
+              document.getElementById('gateway-status').textContent = '✓ ' + response.gateway;
+            } else {
+              document.getElementById('gateway').textContent = 'Not detected';
+              document.getElementById('gateway-status').className =
+                'status-badge badge-disconnected';
+              document.getElementById('gateway-status').textContent = '✗ Not available';
+            }
+
+            // Update connectivity status
+            const activeCount = response.interfaces?.filter((i) => !i.internal).length || 0;
+            if (activeCount > 0) {
+              document.getElementById('connectivity-status-badge').className =
+                'status-badge badge-connected';
+              document.getElementById('connectivity-status-badge').textContent = '✓ Connected';
+            } else {
+              document.getElementById('connectivity-status-badge').className =
+                'status-badge badge-disconnected';
+              document.getElementById('connectivity-status-badge').textContent =
+                '✗ No active interfaces';
+            }
+
+            // Update network statistics
+            const ipv4Count = response.interfaces?.filter((i) => i.ipv4).length || 0;
+            const ipv6Count = response.interfaces?.filter((i) => i.ipv6).length || 0;
+            document.getElementById('stat-total-interfaces').textContent =
+              response.interfaces?.length.toString() || '0';
+            document.getElementById('stat-active-interfaces').textContent = activeCount.toString();
+            document.getElementById('stat-ipv4-count').textContent = ipv4Count.toString();
+            document.getElementById('stat-ipv6-count').textContent = ipv6Count.toString();
+
+            // Update DNS information
+            console.log(
+              'DNS Info:',
+              response.connectivity?.dnsServers,
+              'DNS Reachable:',
+              response.connectivity?.dnsReachable
+            );
+            if (response.connectivity?.dnsServers && response.connectivity.dnsServers.length > 0) {
+              document.getElementById('dns-primary').textContent =
+                response.connectivity.dnsServers[0];
+              if (response.connectivity.dnsServers.length > 1) {
+                document.getElementById('dns-secondary').textContent =
+                  response.connectivity.dnsServers.slice(1).join(', ');
+              } else {
+                document.getElementById('dns-secondary').textContent = 'Not configured';
+              }
+
+              // Update DNS status text
+              if (response.connectivity.dnsReachable) {
+                document.getElementById('dns-status-text').textContent = '✓ Working';
+                document.getElementById('dns-status-text').style.color = '#4caf50';
+              } else {
+                document.getElementById('dns-status-text').textContent = '✗ Not reachable';
+                document.getElementById('dns-status-text').style.color = '#f44336';
+              }
+            } else {
+              console.warn('No DNS servers detected in response');
+              document.getElementById('dns-primary').textContent = 'Not detected';
+              document.getElementById('dns-secondary').textContent = '-';
+              document.getElementById('dns-status-text').textContent = 'Unknown';
+            }
+
+            // Update IP assignment information
+            if (response.connectivity?.ipAssignment) {
+              const ipAssignment = response.connectivity.ipAssignment;
+              document.getElementById('ip-assignment').textContent = ipAssignment;
+
+              if (ipAssignment === 'DHCP') {
+                document.getElementById('ip-config-details').textContent =
+                  'IP address assigned automatically';
+                document.getElementById('ip-assignment').style.color = '#2196f3';
+              } else if (ipAssignment === 'Static') {
+                document.getElementById('ip-config-details').textContent =
+                  'IP address manually configured';
+                document.getElementById('ip-assignment').style.color = '#ff9800';
+              } else {
+                document.getElementById('ip-config-details').textContent = 'Unable to determine';
+                document.getElementById('ip-assignment').style.color = '#999';
+              }
+            } else {
+              document.getElementById('ip-assignment').textContent = 'Unknown';
+              document.getElementById('ip-config-details').textContent = '-';
+            }
+
+            // Display connectivity checks from actual network status
+            const connectivityDiv = document.getElementById('connectivity-checks');
+            if (response.connectivity) {
+              const checks = response.connectivity;
+              connectivityDiv.innerHTML = `
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                                 <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.internetReachable ? '#4caf50' : '#f44336'};">
                                     <div style="font-weight: 600; margin-bottom: 5px;">Internet Reachable</div>
@@ -720,12 +781,14 @@
                                 </div>
                             </div>
                         `;
-                    }
-                    
-                    // Update interfaces table
-                    if (response.interfaces && response.interfaces.length > 0) {
-                        const tbody = document.getElementById('network-interfaces');
-                        tbody.innerHTML = response.interfaces.map(iface => `
+            }
+
+            // Update interfaces table
+            if (response.interfaces && response.interfaces.length > 0) {
+              const tbody = document.getElementById('network-interfaces');
+              tbody.innerHTML = response.interfaces
+                .map(
+                  (iface) => `
                             <tr>
                                 <td class="interface-name">${iface.name}</td>
                                 <td><span class="interface-status" style="background: ${iface.internal ? '#e0e0e0' : '#4caf50'};">${iface.status}</span></td>
@@ -733,36 +796,42 @@
                                 <td>${iface.ipv6 || '-'}</td>
                                 <td>${iface.mac || '-'}</td>
                             </tr>
-                        `).join('');
-                    }
-                }
-            });
-        }
-
-        // Mark the current active nav item
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentPagePath = window.location.pathname;
-            const currentPageName = currentPagePath.split('/').pop() || 'index.html';
-            const navLinks = document.querySelectorAll('.navbar-item');
-            navLinks.forEach(link => {
-                const linkHref = link.getAttribute('href');
-                if (linkHref === currentPageName || linkHref === currentPagePath.substring(1) || linkHref.includes(currentPageName)) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // Wait for dashboard to initialize, then load network status
-            const initNetwork = () => {
-                if (window.dashboard && window.dashboard.socket) {
-                    console.log('Dashboard ready, loading network status');
-                    loadNetworkStatus();
-                } else {
-                    setTimeout(initNetwork, 100);
-                }
-            };
-            
-            initNetwork();
+                        `
+                )
+                .join('');
+            }
+          }
         });
+      }
+
+      // Mark the current active nav item
+      document.addEventListener('DOMContentLoaded', () => {
+        const currentPagePath = window.location.pathname;
+        const currentPageName = currentPagePath.split('/').pop() || 'index.html';
+        const navLinks = document.querySelectorAll('.navbar-item');
+        navLinks.forEach((link) => {
+          const linkHref = link.getAttribute('href');
+          if (
+            linkHref === currentPageName ||
+            linkHref === currentPagePath.substring(1) ||
+            linkHref.includes(currentPageName)
+          ) {
+            link.classList.add('active');
+          }
+        });
+
+        // Wait for dashboard to initialize, then load network status
+        const initNetwork = () => {
+          if (window.dashboard && window.dashboard.socket) {
+            console.log('Dashboard ready, loading network status');
+            loadNetworkStatus();
+          } else {
+            setTimeout(initNetwork, 100);
+          }
+        };
+
+        initNetwork();
+      });
     </script>
-</body>
+  </body>
 </html>
