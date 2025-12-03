@@ -6,6 +6,13 @@
 
 const logger = require('../../../utils/logger');
 const databaseService = require('../../database');
+const {
+  sendError,
+  sendCreateError,
+  sendUpdateError,
+  sendDeleteError,
+  sendErrorWithEmptyArray,
+} = require('./callbackHelpers');
 
 /**
  * Register reminder-related socket event handlers
@@ -67,7 +74,7 @@ function handleRequestReminders(data, callback) {
     logger.debug(`Reminders requested: ${reminders?.length || 0} found`);
   } catch (error) {
     logger.error('Error retrieving reminders:', error);
-    if (callback) callback({ error: error.message, reminders: [], stats: {} });
+    sendError(callback, error.message, { reminders: [], stats: {} });
   }
 }
 
@@ -82,7 +89,7 @@ function handleCreateReminder(data, callback) {
 
     if (!userId || !message || !scheduledTime) {
       const error = new Error('Missing required fields: userId, message, scheduledTime');
-      if (callback) callback({ error: error.message, created: false });
+      sendCreateError(callback, error.message);
       return;
     }
 
@@ -99,7 +106,7 @@ function handleCreateReminder(data, callback) {
     logger.info(`Reminder created: ${reminder.id} for user ${userId}`);
   } catch (error) {
     logger.error('Error creating reminder:', error);
-    if (callback) callback({ error: error.message, created: false });
+    sendCreateError(callback, error.message);
   }
 }
 
@@ -114,7 +121,7 @@ function handleEditReminder(data, callback) {
 
     if (!reminderId || !userId) {
       const error = new Error('Missing required fields: reminderId, userId');
-      if (callback) callback({ error: error.message, updated: false });
+      sendUpdateError(callback, error.message);
       return;
     }
 
@@ -123,7 +130,7 @@ function handleEditReminder(data, callback) {
 
     if (!reminder) {
       const error = new Error(`Reminder not found: ${reminderId}`);
-      if (callback) callback({ error: error.message, updated: false });
+      sendUpdateError(callback, error.message);
       return;
     }
 
@@ -141,7 +148,7 @@ function handleEditReminder(data, callback) {
     }
   } catch (error) {
     logger.error('Error editing reminder:', error);
-    if (callback) callback({ error: error.message, updated: false });
+    sendUpdateError(callback, error.message);
   }
 }
 
@@ -156,7 +163,7 @@ function handleDeleteReminder(data, callback) {
 
     if (!reminderId || !userId) {
       const error = new Error('Missing required fields: reminderId, userId');
-      if (callback) callback({ error: error.message, deleted: false });
+      sendDeleteError(callback, error.message);
       return;
     }
 
@@ -164,7 +171,7 @@ function handleDeleteReminder(data, callback) {
 
     if (!deleted) {
       const error = new Error(`Reminder not found or already deleted: ${reminderId}`);
-      if (callback) callback({ error: error.message, deleted: false });
+      sendDeleteError(callback, error.message);
       return;
     }
 
@@ -179,7 +186,7 @@ function handleDeleteReminder(data, callback) {
     }
   } catch (error) {
     logger.error('Error deleting reminder:', error);
-    if (callback) callback({ error: error.message, deleted: false });
+    sendDeleteError(callback, error.message);
   }
 }
 
@@ -215,7 +222,7 @@ function handleFilterReminders(data, callback) {
     logger.debug(`Reminders filtered: ${reminders?.length || 0} results`);
   } catch (error) {
     logger.error('Error filtering reminders:', error);
-    if (callback) callback({ error: error.message, reminders: [] });
+    sendErrorWithEmptyArray(callback, error.message, 'reminders');
   }
 }
 

@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const logger = require('../../../utils/logger');
+const { sendError, sendSaveError, sendValidationError } = require('./callbackHelpers');
 
 /**
  * Register config-related socket event handlers
@@ -41,7 +42,7 @@ function handleRequestConfig(data, callback) {
     if (!configPath.startsWith(process.cwd())) {
       const error = new Error('Access denied: Cannot access files outside project directory');
       logger.warn(`Security: Attempted directory traversal access to ${filename}`);
-      if (callback) callback({ error: error.message });
+      sendError(callback, error.message);
       return;
     }
 
@@ -49,7 +50,7 @@ function handleRequestConfig(data, callback) {
     if (!fs.existsSync(configPath)) {
       const error = new Error(`File not found: ${filename}`);
       logger.warn(`Config file not found: ${configPath}`);
-      if (callback) callback({ error: error.message, content: '' });
+      sendError(callback, error.message, { content: '' });
       return;
     }
 
@@ -70,7 +71,7 @@ function handleRequestConfig(data, callback) {
     logger.debug(`Config loaded: ${filename}`);
   } catch (error) {
     logger.error('Error loading config:', error);
-    if (callback) callback({ error: error.message });
+    sendError(callback, error.message);
   }
 }
 
@@ -83,7 +84,7 @@ function handleSaveConfig(data, callback) {
   try {
     const validationError = validateConfigSaveInput(data);
     if (validationError) {
-      if (callback) callback({ error: validationError, saved: false });
+      sendSaveError(callback, validationError);
       return;
     }
 
@@ -93,7 +94,7 @@ function handleSaveConfig(data, callback) {
     // Security: prevent directory traversal
     const pathError = validatePathSafety(configPath, filename);
     if (pathError) {
-      if (callback) callback({ error: pathError, saved: false });
+      sendSaveError(callback, pathError);
       return;
     }
 
@@ -118,7 +119,7 @@ function handleSaveConfig(data, callback) {
     logger.info(`Config saved: ${filename}`);
   } catch (error) {
     logger.error('Error saving config:', error);
-    if (callback) callback({ error: error.message, saved: false });
+    sendSaveError(callback, error.message);
   }
 }
 
@@ -169,7 +170,7 @@ function handleValidateConfig(data, callback) {
     logger.debug(`Config validation complete: ${validationResult.valid ? 'valid' : 'invalid'}`);
   } catch (error) {
     logger.error('Error validating config:', error);
-    if (callback) callback({ error: error.message, valid: false });
+    sendValidationError(callback, error.message);
   }
 }
 

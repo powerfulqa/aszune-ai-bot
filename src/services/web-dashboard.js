@@ -16,6 +16,7 @@ const reminderRoutes = require('./web-dashboard/routes/reminderRoutes');
 const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
+const { getBootEnabledStatus } = require('./web-dashboard/handlers/serviceHandlers');
 
 class WebDashboardService {
   constructor() {
@@ -1829,46 +1830,8 @@ class WebDashboardService {
 
   /**
    * Service management page handlers
+   * Note: getBootEnabledStatus is imported from ./web-dashboard/handlers/serviceHandlers
    */
-  async getBootEnabledStatus(serviceName) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    try {
-      if (process.platform === 'linux' || process.platform === 'darwin') {
-        // Check if running under PM2
-        if (process.env.pm_id !== undefined) {
-          return true;
-        }
-
-        // Fallback: Check systemd
-        try {
-          const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, {
-            timeout: 5000,
-          });
-          return stdout.trim() === 'enabled';
-        } catch (error) {
-          return false;
-        }
-      } else if (process.platform === 'win32') {
-        // Windows: check if service is enabled in registry/services
-        try {
-          const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
-            timeout: 5000,
-          });
-          return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT')) ? true : false;
-        } catch (error) {
-          logger.debug(`Windows service check failed: ${error.message}`);
-          return false;
-        }
-      }
-    } catch (error) {
-      logger.debug(`Failed to get boot enabled status for ${serviceName}: ${error.message}`);
-    }
-
-    return false;
-  }
 
   /**
    * Build service object with system info
@@ -1897,7 +1860,7 @@ class WebDashboardService {
     // Handle request_services event
     socket.on('request_services', (data, callback) => {
       try {
-        this.getBootEnabledStatus('aszune-bot')
+        getBootEnabledStatus('aszune-bot')
           .then((bootEnabled) => {
             const services = [this._buildServiceObject(bootEnabled)];
             if (callback) {
@@ -2091,16 +2054,16 @@ class WebDashboardService {
    */
   _mapGroupToPm2Command(group) {
     switch (group) {
-    case 'restart-all':
-      return 'pm2 restart all';
-    case 'start-all':
-      return 'pm2 start all';
-    case 'stop-non-essential':
-      // This would stop the bot itself, which would kill the dashboard
-      logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-      return 'pm2 restart all';
-    default:
-      throw new Error(`Unknown quick action group: ${group}`);
+      case 'restart-all':
+        return 'pm2 restart all';
+      case 'start-all':
+        return 'pm2 start all';
+      case 'stop-non-essential':
+        // This would stop the bot itself, which would kill the dashboard
+        logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
+        return 'pm2 restart all';
+      default:
+        throw new Error(`Unknown quick action group: ${group}`);
     }
   }
 

@@ -9,8 +9,12 @@ const logsHandlers = require('./logsHandlers');
 const reminderHandlers = require('./reminderHandlers');
 const serviceHandlers = require('./serviceHandlers');
 const configHandlers = require('./configHandlers');
+const callbackHelpers = require('./callbackHelpers');
 
 module.exports = {
+  // Callback helpers (for reducing duplication)
+  ...callbackHelpers,
+
   // Network handlers
   registerNetworkHandlers: networkHandlers.registerNetworkHandlers,
   handleNetworkStatus: networkHandlers.handleNetworkStatus,

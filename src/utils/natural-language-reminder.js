@@ -355,14 +355,13 @@ class NaturalLanguageReminderProcessor {
       await reminderService.initialize();
     }
 
-    const reminder = await reminderService.createReminder(
-      userId,
-      `Release of ${event}`,
-      date.toISOString(),
-      'UTC',
+    const reminder = await reminderService.createReminder(userId, {
+      message: `Release of ${event}`,
+      scheduledTime: date.toISOString(),
+      timezone: 'UTC',
       channelId,
-      serverId
-    );
+      serverId,
+    });
 
     logger.info(`Set reminder for ${event} on ${date.toISOString()} (ID: ${reminder.id})`);
 

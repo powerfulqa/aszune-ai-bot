@@ -5,6 +5,11 @@
  */
 
 const logger = require('../../../utils/logger');
+const {
+  sendOperationError,
+  sendErrorWithEmptyArray,
+  sendConnectionError,
+} = require('./callbackHelpers');
 
 /**
  * Register service-related socket event handlers
@@ -49,7 +54,56 @@ async function handleRequestServices(dashboard, callback) {
     logger.debug(`Services retrieved: ${services.length}`);
   } catch (error) {
     logger.error('Error retrieving services:', error);
-    if (callback) callback({ error: error.message, services: [] });
+    sendErrorWithEmptyArray(callback, error.message, 'services');
+  }
+}
+
+/**
+ * Check if running under PM2 process manager
+ * @returns {boolean} True if running under PM2
+ */
+function isRunningUnderPm2() {
+  return process.env.pm_id !== undefined;
+}
+
+/**
+ * Check Linux/macOS boot status via systemd
+ * @param {string} serviceName - Name of the service
+ * @returns {Promise<boolean>} Whether service is enabled on boot
+ */
+async function checkUnixBootStatus(serviceName) {
+  if (isRunningUnderPm2()) return true;
+
+  const { exec } = require('child_process');
+  const util = require('util');
+  const execPromise = util.promisify(exec);
+
+  try {
+    const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, { timeout: 5000 });
+    return stdout.trim() === 'enabled';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check Windows boot status via sc command
+ * @param {string} serviceName - Name of the service
+ * @returns {Promise<boolean>} Whether service is enabled on boot
+ */
+async function checkWindowsBootStatus(serviceName) {
+  const { exec } = require('child_process');
+  const util = require('util');
+  const execPromise = util.promisify(exec);
+
+  try {
+    const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
+      timeout: 5000,
+    });
+    return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT'));
+  } catch (error) {
+    logger.debug(`Windows service check failed: ${error.message}`);
+    return false;
   }
 }
 
@@ -59,39 +113,14 @@ async function handleRequestServices(dashboard, callback) {
  * @returns {Promise<boolean>} Whether service is enabled on boot
  */
 async function getBootEnabledStatus(serviceName) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
+  const platform = process.platform;
 
-  try {
-    if (process.platform === 'linux' || process.platform === 'darwin') {
-      // Check if running under PM2
-      if (process.env.pm_id !== undefined) {
-        return true;
-      }
+  if (platform === 'linux' || platform === 'darwin') {
+    return checkUnixBootStatus(serviceName);
+  }
 
-      // Fallback: Check systemd
-      try {
-        const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, {
-          timeout: 5000,
-        });
-        return stdout.trim() === 'enabled';
-      } catch (error) {
-        return false;
-      }
-    } else if (process.platform === 'win32') {
-      try {
-        const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
-          timeout: 5000,
-        });
-        return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT'));
-      } catch (error) {
-        logger.debug(`Windows service check failed: ${error.message}`);
-        return false;
-      }
-    }
-  } catch (error) {
-    logger.debug(`Failed to get boot enabled status for ${serviceName}: ${error.message}`);
+  if (platform === 'win32') {
+    return checkWindowsBootStatus(serviceName);
   }
 
   return false;
@@ -131,7 +160,7 @@ async function handleServiceAction(dashboard, data, callback) {
   try {
     const validationError = validateServiceActionInput(data);
     if (validationError) {
-      if (callback) callback({ error: validationError, success: false });
+      sendOperationError(callback, validationError);
       return;
     }
 
@@ -153,16 +182,11 @@ async function handleServiceAction(dashboard, data, callback) {
       }
     } catch (execError) {
       logger.error(`PM2 command failed: ${execError.message}`);
-      if (callback) {
-        callback({
-          error: `Failed to ${action} service: ${execError.message}`,
-          success: false,
-        });
-      }
+      sendOperationError(callback, `Failed to ${action} service: ${execError.message}`);
     }
   } catch (error) {
     logger.error('Error performing service action:', error);
-    if (callback) callback({ error: error.message, success: false });
+    sendOperationError(callback, error.message);
   }
 }
 
@@ -221,7 +245,7 @@ async function handleQuickServiceAction(data, callback) {
     const { group } = data;
 
     if (!group) {
-      if (callback) callback({ error: 'Missing required field: group', success: false });
+      sendOperationError(callback, 'Missing required field: group');
       return;
     }
 
@@ -253,16 +277,11 @@ async function handleQuickServiceAction(data, callback) {
       }
     } catch (execError) {
       logger.error(`PM2 quick action failed: ${execError.message}`);
-      if (callback) {
-        callback({
-          error: `Failed to execute quick action: ${execError.message}`,
-          success: false,
-        });
-      }
+      sendOperationError(callback, `Failed to execute quick action: ${execError.message}`);
     }
   } catch (error) {
     logger.error('Error performing batch service action:', error);
-    if (callback) callback({ error: error.message, success: false });
+    sendOperationError(callback, error.message);
   }
 }
 
@@ -273,15 +292,15 @@ async function handleQuickServiceAction(data, callback) {
  */
 function mapGroupToPm2Command(group) {
   switch (group) {
-  case 'restart-all':
-    return 'pm2 restart all';
-  case 'start-all':
-    return 'pm2 start all';
-  case 'stop-non-essential':
-    logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-    return 'pm2 restart all';
-  default:
-    throw new Error(`Unknown quick action group: ${group}`);
+    case 'restart-all':
+      return 'pm2 restart all';
+    case 'start-all':
+      return 'pm2 start all';
+    case 'stop-non-essential':
+      logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
+      return 'pm2 restart all';
+    default:
+      throw new Error(`Unknown quick action group: ${group}`);
   }
 }
 
@@ -293,7 +312,7 @@ function mapGroupToPm2Command(group) {
 async function handleDiscordStatus(dashboard, callback) {
   try {
     if (!dashboard.discordClient) {
-      if (callback) callback({ connected: false, error: 'Discord client not initialized' });
+      sendConnectionError(callback, 'Discord client not initialized');
       return;
     }
 
@@ -311,18 +330,13 @@ async function handleDiscordStatus(dashboard, callback) {
         });
       }
     } else {
-      if (callback) {
-        callback({
-          connected: false,
-          error: 'Discord bot is not connected',
-        });
-      }
+      sendConnectionError(callback, 'Discord bot is not connected');
     }
 
     logger.debug(`Discord status: ${isReady ? 'Connected' : 'Disconnected'}`);
   } catch (error) {
     logger.error('Error retrieving Discord status:', error);
-    if (callback) callback({ connected: false, error: error.message });
+    sendConnectionError(callback, error.message);
   }
 }
 
@@ -356,4 +370,8 @@ module.exports = {
   executePm2Command,
   mapGroupToPm2Command,
   formatUptime,
+  // Exported for testing
+  isRunningUnderPm2,
+  checkUnixBootStatus,
+  checkWindowsBootStatus,
 };

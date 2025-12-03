@@ -5,6 +5,7 @@
  */
 
 const logger = require('../../../utils/logger');
+const { sendErrorWithEmptyArray, sendClearError } = require('./callbackHelpers');
 
 /**
  * Register log-related socket event handlers
@@ -49,7 +50,7 @@ function handleRequestLogs(dashboard, data, callback) {
     }
   } catch (error) {
     logger.error('Error retrieving logs:', error);
-    if (callback) callback({ error: error.message, logs: [] });
+    sendErrorWithEmptyArray(callback, error.message, 'logs');
   }
 }
 
@@ -77,7 +78,7 @@ function handleClearLogs(dashboard, callback) {
     dashboard.io.emit('logs_cleared', { count, timestamp: new Date().toISOString() });
   } catch (error) {
     logger.error('Error clearing logs:', error);
-    if (callback) callback({ error: error.message, cleared: false });
+    sendClearError(callback, error.message);
   }
 }
 

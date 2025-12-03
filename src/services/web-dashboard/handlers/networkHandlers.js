@@ -6,6 +6,7 @@
 
 const os = require('os');
 const logger = require('../../../utils/logger');
+const { sendError } = require('./callbackHelpers');
 
 /**
  * Register network-related socket event handlers
@@ -51,7 +52,7 @@ async function handleNetworkStatus(dashboard, callback) {
     logger.debug(`Network status retrieved for hostname: ${hostname}`);
   } catch (error) {
     logger.error('Error retrieving network status:', error);
-    if (callback) callback({ error: error.message });
+    sendError(callback, error.message);
   }
 }
 

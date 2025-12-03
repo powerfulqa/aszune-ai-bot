@@ -120,14 +120,15 @@ class ReminderService extends EventEmitter {
     }
   }
 
-  async createReminder(
-    userId,
-    message,
-    scheduledTime,
-    timezone = 'UTC',
-    channelId = null,
-    serverId = null
-  ) {
+  async createReminder(userId, options = {}) {
+    const {
+      message,
+      scheduledTime,
+      timezone = 'UTC',
+      channelId = null,
+      serverId = null,
+    } = options;
+
     try {
       // Validate scheduled time
       const scheduledDate = new Date(scheduledTime);
@@ -203,14 +204,13 @@ class ReminderService extends EventEmitter {
         throw new Error('Reminder time must be in the future.');
       }
 
-      const reminder = await this.createReminder(
-        userId,
+      const reminder = await this.createReminder(userId, {
         message,
-        parsedDate.toISOString(),
-        'UTC',
+        scheduledTime: parsedDate.toISOString(),
+        timezone: 'UTC',
         channelId,
-        serverId
-      );
+        serverId,
+      });
       return reminder;
     } catch (error) {
       logger.error(`Failed to set reminder for user ${userId}:`, error);
