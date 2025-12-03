@@ -517,30 +517,37 @@ class PerformanceDashboard {
    * @private
    */
   static _collectSystemIssues(analytics, performance, resources) {
-    const issues = [];
+    // Issue detection rules - data-driven approach
+    const issueChecks = [
+      // Analytics checks
+      {
+        condition: () => analytics?.summary?.errorRate > 10,
+        issue: 'high_error_rate',
+      },
+      // Performance checks
+      {
+        condition: () => performance?.averageResponseTime > 5000,
+        issue: 'slow_performance',
+      },
+      {
+        condition: () =>
+          performance?.slowOperations > performance?.totalOperations * 0.2,
+        issue: 'many_slow_ops',
+      },
+      // Resource checks
+      {
+        condition: () => resources?.memory?.status === 'critical',
+        issue: 'memory_critical',
+      },
+      {
+        condition: () => resources?.performance?.status === 'poor',
+        issue: 'performance_poor',
+      },
+    ];
 
-    // Check analytics
-    if (analytics && analytics.summary) {
-      if (analytics.summary.errorRate > 10) issues.push('high_error_rate');
-      // Removed: totalCommands === 0 check - this is normal for quiet periods
-    }
-
-    // Check performance
-    if (performance) {
-      if (performance.averageResponseTime > 5000) issues.push('slow_performance');
-      if (performance.slowOperations > performance.totalOperations * 0.2)
-        issues.push('many_slow_ops');
-    }
-
-    // Check resources
-    if (resources) {
-      if (resources.memory && resources.memory.status === 'critical')
-        issues.push('memory_critical');
-      if (resources.performance && resources.performance.status === 'poor')
-        issues.push('performance_poor');
-    }
-
-    return issues;
+    return issueChecks
+      .filter((check) => check.condition())
+      .map((check) => check.issue);
   }
 
   /**

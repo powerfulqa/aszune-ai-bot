@@ -798,38 +798,61 @@ class PerplexityService {
    */
   async generateSummary(history, isText = false) {
     try {
-      if (isText) {
-        // Extract text content from the message array
-        const textToSummarize =
-          Array.isArray(history) && history[0]?.content ? history[0].content : history;
-        return await this.generateTextSummary(textToSummarize);
-      }
+      const textToSummarize = isText
+        ? this._extractTextContent(history)
+        : this._formatConversationForSummary(history);
 
-      // Format the conversation in a summarizable way
-      const conversationText = history
-        .map((msg) => {
-          const role = msg.role.toUpperCase();
-          return `${role}: ${msg.content}`;
-        })
-        .join('\n\n');
-
-      return await this.generateTextSummary(conversationText);
+      return await this.generateTextSummary(textToSummarize);
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'generate summary', {
-        historyLength: history?.length || 0,
-        isText: isText,
-      });
-      logger.error(`Failed to generate summary: ${errorResponse.message}`);
-
-      // Return specific error messages based on error type
-      if (history.length === 0) {
-        return 'No conversation history provided to summarize.';
-      } else if (error.message && error.message.includes('Summary generation failed')) {
-        return 'Unable to generate summary at this time.';
-      }
-
-      return errorResponse.message;
+      return this._handleSummaryError(error, history, isText);
     }
+  }
+
+  /**
+   * Extract text content from history array or string
+   * @param {Array|string} history - History to extract from
+   * @returns {string} - Extracted text
+   * @private
+   */
+  _extractTextContent(history) {
+    return Array.isArray(history) && history[0]?.content ? history[0].content : history;
+  }
+
+  /**
+   * Format conversation history for summarization
+   * @param {Array} history - Conversation history
+   * @returns {string} - Formatted conversation text
+   * @private
+   */
+  _formatConversationForSummary(history) {
+    return history
+      .map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`)
+      .join('\n\n');
+  }
+
+  /**
+   * Handle summary generation errors
+   * @param {Error} error - The error
+   * @param {Array} history - Original history
+   * @param {boolean} isText - Whether text mode
+   * @returns {string} - Error message
+   * @private
+   */
+  _handleSummaryError(error, history, isText) {
+    const errorResponse = ErrorHandler.handleError(error, 'generate summary', {
+      historyLength: history?.length || 0,
+      isText: isText,
+    });
+    logger.error(`Failed to generate summary: ${errorResponse.message}`);
+
+    // Error message mapping
+    const errorMessages = [
+      { condition: () => history.length === 0, message: 'No conversation history provided to summarize.' },
+      { condition: () => error.message?.includes('Summary generation failed'), message: 'Unable to generate summary at this time.' },
+    ];
+
+    const matchedError = errorMessages.find((e) => e.condition());
+    return matchedError ? matchedError.message : errorResponse.message;
   }
 
   /**
