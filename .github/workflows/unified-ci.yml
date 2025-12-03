@@ -61,10 +61,11 @@ jobs:
         run: npm ci
 
       - name: Run tests (no coverage - speed optimized)
-        run: npm test -- --shard=${{ matrix.shard }}/3 --no-coverage --maxWorkers=2
+        run: npm test -- --shard=${{ matrix.shard }}/3 --no-coverage --maxWorkers=2 --colors
         env:
           CI: true
           NODE_ENV: test
+          FORCE_COLOR: '1'
 
   # Full coverage run (main branch only, no sharding for accurate coverage)
   coverage:
@@ -85,10 +86,11 @@ jobs:
         run: npm ci
 
       - name: Run full test suite with coverage
-        run: npm test -- --coverage --maxWorkers=2
+        run: npm test -- --coverage --maxWorkers=2 --colors
         env:
           CI: true
           NODE_ENV: test
+          FORCE_COLOR: '1'
 
       - name: Validate coverage thresholds
         run: |
