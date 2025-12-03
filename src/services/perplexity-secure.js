@@ -367,19 +367,17 @@ class PerplexityService {
    * Track API call performance
    * @param {number} totalTime - Total time for API call
    * @param {number} memoryDelta - Memory usage change
-   * @param {number} finalMemoryUsage - Final memory usage
-   * @param {number} historyLength - Length of conversation history
-   * @param {boolean} cacheEnabled - Whether caching was enabled
-   * @param {number} contentLength - Length of response content
+   * @param {Object} metrics - Performance metrics
+   * @param {number} metrics.totalTime - Total response time
+   * @param {number} metrics.memoryDelta - Memory usage change
+   * @param {number} metrics.finalMemoryUsage - Final memory usage
+   * @param {number} metrics.historyLength - Length of conversation history
+   * @param {boolean} metrics.cacheEnabled - Whether caching was enabled
+   * @param {number} metrics.contentLength - Length of response content
    */
-  async _trackApiCallPerformance(
-    totalTime,
-    memoryDelta,
-    finalMemoryUsage,
-    historyLength,
-    cacheEnabled,
-    contentLength
-  ) {
+  async _trackApiCallPerformance(metrics) {
+    const { totalTime, memoryDelta, finalMemoryUsage, historyLength, cacheEnabled, contentLength } =
+      metrics;
     await this._trackMetric('api_response_time', totalTime, {
       historyLength,
       cacheEnabled,
@@ -555,14 +553,14 @@ class PerplexityService {
         shouldUseCache
       );
     } else {
-      await this._trackApiCallPerformance(
-        responseTime,
+      await this._trackApiCallPerformance({
+        totalTime: responseTime,
         memoryDelta,
         finalMemoryUsage,
         historyLength,
-        shouldUseCache,
-        content?.length || 0
-      );
+        cacheEnabled: shouldUseCache,
+        contentLength: content?.length || 0,
+      });
     }
   }
 

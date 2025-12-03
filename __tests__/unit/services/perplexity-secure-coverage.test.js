@@ -207,7 +207,14 @@ describe('PerplexitySecure Service - Additional Private Methods', () => {
 
     describe('_trackApiCallPerformance method', () => {
       it('should track API call performance metrics', async () => {
-        await perplexityService._trackApiCallPerformance(200, 2048, 1048576, 3, false, 150);
+        await perplexityService._trackApiCallPerformance({
+          totalTime: 200,
+          memoryDelta: 2048,
+          finalMemoryUsage: 1048576,
+          historyLength: 3,
+          cacheEnabled: false,
+          contentLength: 150,
+        });
 
         expect(mockDatabaseService.logPerformanceMetric).toHaveBeenCalledTimes(3);
         expect(mockDatabaseService.logPerformanceMetric).toHaveBeenCalledWith(
