@@ -522,7 +522,6 @@ function chunkMessage(message, maxLength = 2000) {
   let currentChunk = '';
 
   // Account for chunk numbering prefix (e.g., "[1/2] ") in the max length calculation
-  // Assuming a maximum of 99 chunks (adjust if needed)
   const prefixBuffer = 7; // "[xx/xx] "
   const effectiveMaxLength = maxLength - prefixBuffer;
 
@@ -545,37 +544,46 @@ function chunkMessage(message, maxLength = 2000) {
     chunks.push(currentChunk.trim());
   }
 
-  // BUGFIX: Check for word breaks at chunk boundaries and ensure proper spacing
-  // This prevents cases where words might be merged when chunks are joined (e.g., "an" + "officer" → "anofficer")
-  // Without this fix, words split across chunk boundaries would lose spaces and become merged
+  // Fix word breaks at chunk boundaries
+  fixChunkBoundarySpacing(chunks);
+
+  // Add numbering to chunks for better user experience
+  return chunks.map((chunk, index) => `[${index + 1}/${chunks.length}] ${chunk}`);
+}
+
+/**
+ * Fix word breaks at chunk boundaries to prevent merged words
+ * Modifies the chunks array in place
+ * @param {string[]} chunks - Array of chunks to fix
+ */
+function fixChunkBoundarySpacing(chunks) {
   for (let i = 0; i < chunks.length - 1; i++) {
     const currentChunk = chunks[i];
     const nextChunk = chunks[i + 1];
 
-    // If current chunk ends with a word and next chunk starts with a word (no space between)
-    // Add a space to the end of the current chunk to prevent words merging
+    // If current chunk ends with a word char and next starts with one
     if (/\w$/.test(currentChunk) && /^\w/.test(nextChunk)) {
-      // Check if this looks like a word that was split across chunks
-      // by looking for patterns that suggest the chunks are parts of the same word/URL
-
-      // Check if this looks like a split word/URL by examining the content
-      const combinedText = currentChunk + nextChunk;
-      const looksLikeSplitWord =
-        /^https?:\/\//.test(combinedText) || // URL
-        /^\w+$/.test(combinedText.replace(/\s+/g, '')) || // Single word
-        (currentChunk.length <= 3 && nextChunk.length <= 3); // Very short chunks (likely split word)
-
       // Don't add space if this looks like a split word/URL
-      if (!looksLikeSplitWord) {
+      if (!looksLikeSplitContent(currentChunk, nextChunk)) {
         chunks[i] = currentChunk + ' ';
       }
     }
   }
+}
 
-  // Add numbering to chunks for better user experience
-  const numberedChunks = chunks.map((chunk, index) => `[${index + 1}/${chunks.length}] ${chunk}`);
-
-  return numberedChunks;
+/**
+ * Check if two chunks look like they were split from the same word/URL
+ * @param {string} currentChunk - Current chunk text
+ * @param {string} nextChunk - Next chunk text
+ * @returns {boolean} True if content looks like it was split
+ */
+function looksLikeSplitContent(currentChunk, nextChunk) {
+  const combinedText = currentChunk + nextChunk;
+  return (
+    /^https?:\/\//.test(combinedText) || // URL
+    /^\w+$/.test(combinedText.replace(/\s+/g, '')) || // Single word
+    (currentChunk.length <= 3 && nextChunk.length <= 3) // Very short chunks
+  );
 }
 
 module.exports = {

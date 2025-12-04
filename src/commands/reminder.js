@@ -3,18 +3,18 @@ const timeParser = require('../utils/time-parser');
 const ErrorHandler = require('../utils/error-handler');
 const logger = require('../utils/logger');
 
-async function handleCommandAliases(message, args, originalCommand) {
-  if (originalCommand === '!remind') {
-    // !remind should directly set a reminder
+/**
+ * Command alias handlers mapped by command name
+ */
+const COMMAND_ALIAS_HANDLERS = {
+  '!remind': async (message, args) => {
     if (args.length < 2) {
       return await handleReminderHelp(message);
     }
     return await handleSetReminder(message, args);
-  } else if (originalCommand === '!reminders') {
-    // !reminders should list reminders
-    return await handleListReminders(message);
-  } else if (originalCommand === '!cancelreminder') {
-    // !cancelreminder should cancel a reminder
+  },
+  '!reminders': async (message) => await handleListReminders(message),
+  '!cancelreminder': async (message, args) => {
     if (args.length === 0) {
       return message.reply({
         embeds: [
@@ -29,8 +29,12 @@ async function handleCommandAliases(message, args, originalCommand) {
       });
     }
     return await handleCancelReminder(message, args);
-  }
-  return null; // No alias match, continue to subcommands
+  },
+};
+
+async function handleCommandAliases(message, args, originalCommand) {
+  const handler = COMMAND_ALIAS_HANDLERS[originalCommand];
+  return handler ? await handler(message, args) : null;
 }
 
 async function handleReminderSubcommands(message, args) {
