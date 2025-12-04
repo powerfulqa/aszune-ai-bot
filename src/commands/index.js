@@ -47,6 +47,41 @@ function ensureUserMetadata(interaction) {
   }
 }
 
+/**
+ * Validate user ID and conversation history, prepare clean history for summarization
+ * @param {string} userId - User ID to validate
+ * @returns {{valid: boolean, error?: string, cleanHistory?: Array}} Validation result
+ */
+function validateAndPrepareHistory(userId) {
+  const userIdValidation = InputValidator.validateUserId(userId);
+  if (!userIdValidation.valid) {
+    return { valid: false, error: `❌ Invalid user ID: ${userIdValidation.error}` };
+  }
+
+  const history = conversationManager.getHistory(userId);
+
+  const historyValidation = InputValidator.validateConversationHistory(history);
+  if (!historyValidation.valid) {
+    return { valid: false, error: `❌ Invalid conversation history: ${historyValidation.error}` };
+  }
+
+  if (!history || history.length === 0) {
+    return { valid: false, error: 'No conversation history to summarize.' };
+  }
+
+  // Keep removing assistant messages from end until non-assistant found
+  const trimmedHistory = [...history];
+  while (trimmedHistory.length > 0 && trimmedHistory[trimmedHistory.length - 1].role === 'assistant') {
+    trimmedHistory.pop();
+  }
+
+  if (trimmedHistory.length === 0) {
+    return { valid: false, error: 'No conversation history to summarize.' };
+  }
+
+  return { valid: true, cleanHistory: trimmedHistory };
+}
+
 // Command definitions
 const commands = {
   help: {
@@ -98,41 +133,16 @@ const commands = {
     async execute(interaction) {
       const userId = interaction.user.id;
 
-      // Validate user ID
-      const userIdValidation = InputValidator.validateUserId(userId);
-      if (!userIdValidation.valid) {
-        return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
-      }
-
-      const history = conversationManager.getHistory(userId);
-
-      // Validate conversation history
-      const historyValidation = InputValidator.validateConversationHistory(history);
-      if (!historyValidation.valid) {
-        return interaction.reply(`❌ Invalid conversation history: ${historyValidation.error}`);
-      }
-
-      if (!history || history.length === 0) {
-        return interaction.reply('No conversation history to summarize.');
-      }
-
-      // Ensure last message is from user or tool
-      let cleanHistory = [...history];
-      while (
-        cleanHistory.length > 0 &&
-        cleanHistory[cleanHistory.length - 1].role === 'assistant'
-      ) {
-        cleanHistory.pop();
-      }
-
-      if (cleanHistory.length === 0) {
-        return interaction.reply('No conversation history to summarize.');
+      // Validate and get clean history
+      const historyResult = validateAndPrepareHistory(userId);
+      if (!historyResult.valid) {
+        return interaction.reply(historyResult.error);
       }
 
       await interaction.deferReply();
 
       try {
-        const summary = await perplexityService.generateSummary(cleanHistory);
+        const summary = await perplexityService.generateSummary(historyResult.cleanHistory);
         conversationManager.updateUserStats(userId, 'summaries');
         return interaction.editReply({
           embeds: [
@@ -147,7 +157,7 @@ const commands = {
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'summary generation', {
           userId: userId,
-          historyLength: history?.length || 0,
+          historyLength: historyResult.cleanHistory?.length || 0,
         });
         return interaction.editReply(errorResponse.message);
       }

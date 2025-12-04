@@ -437,25 +437,51 @@ class EnhancedCache {
   evictBySize() {
     const targetMemory = this.maxMemory * 0.8; // Reduce to 80% of max
 
-    while (this.metrics.totalMemory > targetMemory && this.entries.size > 0) {
-      // Find largest entry
-      let largestKey = null;
-      let largestSize = 0;
+    while (this._shouldContinueEviction(targetMemory)) {
+      const evicted = this._evictLargestEntry();
+      if (!evicted) break; // Prevent infinite loop
+    }
+  }
 
-      for (const [key, entry] of this.entries.entries()) {
-        if (entry.size > largestSize) {
-          largestSize = entry.size;
-          largestKey = key;
-        }
-      }
+  /**
+   * Check if eviction should continue
+   * @private
+   */
+  _shouldContinueEviction(targetMemory) {
+    return this.metrics.totalMemory > targetMemory && this.entries.size > 0;
+  }
 
-      if (largestKey) {
-        this.delete(largestKey);
-        this.metrics.evictions++;
-      } else {
-        break; // Prevent infinite loop
+  /**
+   * Find and evict the largest cache entry
+   * @returns {boolean} True if an entry was evicted
+   * @private
+   */
+  _evictLargestEntry() {
+    const largestKey = this._findLargestEntryKey();
+    if (!largestKey) return false;
+
+    this.delete(largestKey);
+    this.metrics.evictions++;
+    return true;
+  }
+
+  /**
+   * Find the key of the largest entry in the cache
+   * @returns {string|null} The key of the largest entry, or null
+   * @private
+   */
+  _findLargestEntryKey() {
+    let largestKey = null;
+    let largestSize = 0;
+
+    for (const [key, entry] of this.entries.entries()) {
+      if (entry.size > largestSize) {
+        largestSize = entry.size;
+        largestKey = key;
       }
     }
+
+    return largestKey;
   }
 
   /**
