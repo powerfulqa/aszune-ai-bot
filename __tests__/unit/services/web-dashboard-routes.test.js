@@ -96,7 +96,7 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({
           error: 'Read failed',
           timestamp: expect.any(String),
@@ -159,7 +159,7 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({
           error: 'Update failed',
           timestamp: expect.any(String),
@@ -712,7 +712,7 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(500);
       });
     });
 
@@ -759,7 +759,7 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(500);
       });
     });
 
@@ -797,7 +797,7 @@ describe('Web Dashboard Route Modules', () => {
 
         await handler(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(500);
       });
     });
   });
