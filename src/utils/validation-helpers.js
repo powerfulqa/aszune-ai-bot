@@ -250,6 +250,27 @@ function runChecks(...checks) {
   return null;
 }
 
+/**
+ * Wrap a validation function with error handling
+ * Eliminates repetitive try-catch patterns across validators
+ * @param {Function} validationFn - The validation function to execute
+ * @param {string} operationName - Name of the operation for error logging
+ * @param {Object} errorContext - Additional context for error logging
+ * @param {Function} errorHandler - Error handler function (defaults to basic handler)
+ * @returns {Object} Validation result
+ */
+function wrapValidation(validationFn, operationName, errorContext = {}, errorHandler = null) {
+  try {
+    return validationFn();
+  } catch (error) {
+    if (errorHandler && typeof errorHandler.handleError === 'function') {
+      const errorResponse = errorHandler.handleError(error, operationName, errorContext);
+      return invalidResult(errorResponse.message);
+    }
+    return invalidResult(error.message || 'Validation failed');
+  }
+}
+
 module.exports = {
   // Result creators
   createValidationResult,
@@ -273,4 +294,5 @@ module.exports = {
   // Utilities
   sanitizeString,
   runChecks,
+  wrapValidation,
 };

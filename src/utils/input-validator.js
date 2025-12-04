@@ -10,6 +10,7 @@ const {
   checkArrayType,
   checkMaxLength,
   checkNotEmpty,
+  wrapValidation,
 } = require('./validation-helpers');
 
 /**
@@ -83,8 +84,32 @@ const DANGEROUS_PATTERNS = [
   /vbscript:/gi,
   /on\w+\s*=/gi,
   /(union|select|insert|update|delete|drop|create|alter|exec|execute)/gi,
-  /\.\.\/|\.\.\\|\.\.%2f|\.\.%5c/gi,
+  /\.\.\/|\.\.\\/gi,
   /<iframe|<object|<embed|<link|<meta|<style/gi,
+];
+
+/**
+ * Security patterns for input validation (shared across multiple validators)
+ * These patterns detect common XSS and injection attempts
+ */
+const DANGEROUS_SECURITY_PATTERNS = [
+  /<script[^>]*>.*?<\/script>/gi,
+  /javascript:/gi,
+  /data:/gi,
+  /vbscript:/gi,
+  /on\w+\s*=/gi,
+];
+
+/**
+ * Extended security patterns for JavaScript execution detection
+ * Used for stricter text input validation
+ */
+const DANGEROUS_JS_EXECUTION_PATTERNS = [
+  ...DANGEROUS_SECURITY_PATTERNS,
+  /eval\s*\(/gi,
+  /expression\s*\(/gi,
+  /setTimeout\s*\(/gi,
+  /setInterval\s*\(/gi,
 ];
 
 /**
@@ -174,20 +199,12 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateMessageContent(content) {
-    let result = { valid: false, error: 'Unknown validation error' };
-
-    try {
-      // Perform all validation checks
-      const validationResult = this._performMessageContentValidation(content);
-      result = validationResult;
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'validating message content', {
-        contentLength: content?.length || 0,
-      });
-      result = { valid: false, error: errorResponse.message };
-    }
-
-    return result;
+    return wrapValidation(
+      () => this._performMessageContentValidation(content),
+      'validating message content',
+      { contentLength: content?.length || 0 },
+      ErrorHandler
+    );
   }
 
   /**
@@ -259,20 +276,12 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateCommand(command) {
-    let result = { valid: false, error: 'Unknown validation error' };
-
-    try {
-      // Perform all validation checks
-      const validationResult = this._performCommandValidation(command);
-      result = validationResult;
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'validating command', {
-        commandLength: command?.length || 0,
-      });
-      result = { valid: false, error: errorResponse.message };
-    }
-
-    return result;
+    return wrapValidation(
+      () => this._performCommandValidation(command),
+      'validating command',
+      { commandLength: command?.length || 0 },
+      ErrorHandler
+    );
   }
 
   /**
@@ -413,20 +422,12 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static validateUrl(url) {
-    let result = { valid: false, error: 'Unknown validation error' };
-
-    try {
-      // Perform all validation checks
-      const validationResult = this._performUrlValidation(url);
-      result = validationResult;
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'validating URL', {
-        urlLength: url?.length || 0,
-      });
-      result = { valid: false, error: errorResponse.message };
-    }
-
-    return result;
+    return wrapValidation(
+      () => this._performUrlValidation(url),
+      'validating URL',
+      { urlLength: url?.length || 0 },
+      ErrorHandler
+    );
   }
 
   /**
@@ -694,21 +695,8 @@ class InputValidator {
       };
     }
 
-    // Check for dangerous patterns first (before sanitization)
-    const dangerousPatterns = [
-      /<script[^>]*>.*?<\/script>/gi,
-      /javascript:/gi,
-      /data:/gi,
-      /vbscript:/gi,
-      /on\w+\s*=/gi,
-      /eval\s*\(/gi,
-      /expression\s*\(/gi,
-      /setTimeout\s*\(/gi,
-      /setInterval\s*\(/gi,
-    ];
-
-    const hasDangerousContent = dangerousPatterns.some((pattern) => pattern.test(input));
-    if (hasDangerousContent) {
+    // Check for dangerous patterns (including JS execution patterns)
+    if (this._containsJsExecutionPatterns(input)) {
       return {
         valid: false,
         error: 'Input contains potentially unsafe content',
@@ -747,16 +735,8 @@ class InputValidator {
       return { valid: false, error: 'Time string is too long' };
     }
 
-    // Basic safety check
-    const dangerousPatterns = [
-      /<script[^>]*>.*?<\/script>/gi,
-      /javascript:/gi,
-      /data:/gi,
-      /vbscript:/gi,
-      /on\w+\s*=/gi,
-    ];
-
-    if (dangerousPatterns.some((pattern) => pattern.test(timeString))) {
+    // Basic safety check using shared security patterns
+    if (this._containsDangerousContent(timeString)) {
       return { valid: false, error: 'Time string contains unsafe content' };
     }
 
@@ -777,20 +757,38 @@ class InputValidator {
       return { valid: false, error: 'Message is too long' };
     }
 
-    // Basic safety check
-    const dangerousPatterns = [
-      /<script[^>]*>.*?<\/script>/gi,
-      /javascript:/gi,
-      /data:/gi,
-      /vbscript:/gi,
-      /on\w+\s*=/gi,
-    ];
-
-    if (dangerousPatterns.some((pattern) => pattern.test(message))) {
+    // Basic safety check using shared security patterns
+    if (this._containsDangerousContent(message)) {
       return { valid: false, error: 'Message contains unsafe content' };
     }
 
     return { valid: true };
+  }
+
+  /**
+   * Check if content contains dangerous security patterns
+   * @param {string} content - Content to check
+   * @returns {boolean} True if dangerous content detected
+   * @private
+   */
+  static _containsDangerousContent(content) {
+    if (!content || typeof content !== 'string') {
+      return false;
+    }
+    return DANGEROUS_SECURITY_PATTERNS.some((pattern) => pattern.test(content));
+  }
+
+  /**
+   * Check if content contains JavaScript execution patterns
+   * @param {string} content - Content to check
+   * @returns {boolean} True if JS execution patterns detected
+   * @private
+   */
+  static _containsJsExecutionPatterns(content) {
+    if (!content || typeof content !== 'string') {
+      return false;
+    }
+    return DANGEROUS_JS_EXECUTION_PATTERNS.some((pattern) => pattern.test(content));
   }
 
   static _validateEmailType(input) {
@@ -831,4 +829,6 @@ module.exports = {
   VALIDATION_PATTERNS,
   VALIDATION_LIMITS,
   DANGEROUS_PATTERNS,
+  DANGEROUS_SECURITY_PATTERNS,
+  DANGEROUS_JS_EXECUTION_PATTERNS,
 };
