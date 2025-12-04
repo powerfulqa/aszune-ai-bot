@@ -1,4 +1,8 @@
-const { ErrorHandler } = require('../../../utils/error-handler');
+const {
+  createSimpleGetHandler,
+  wrapAsyncHandler,
+  sendValidationError,
+} = require('./routeHelper');
 
 function registerServiceRoutes(app, service) {
   app.get('/api/services', handleGetServices(service));
@@ -7,76 +11,36 @@ function registerServiceRoutes(app, service) {
 }
 
 function handleGetServices(service) {
-  return async (req, res) => {
-    try {
-      const services = await service.getServiceStatus();
-      res.json({
-        services,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting service status');
-      res.status(500).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return createSimpleGetHandler(service, 'getServiceStatus', 'services', 'getting service status');
 }
 
 function handleManageService(service) {
-  return async (req, res) => {
-    try {
-      const { action } = req.params;
-      const { service: serviceName } = req.body;
+  return wrapAsyncHandler(async (req, res) => {
+    const { action } = req.params;
+    const { service: serviceName } = req.body;
 
-      if (!['start', 'stop', 'restart'].includes(action)) {
-        res.status(400).json({
-          error: 'Invalid action. Must be start, stop, or restart',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      if (!serviceName) {
-        res.status(400).json({
-          error: 'Service name is required',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      const result = await service.manageService(action, serviceName);
-      res.json(result);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'managing service');
-      res.status(500).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
+    if (!['start', 'stop', 'restart'].includes(action)) {
+      sendValidationError(res, 'Invalid action. Must be start, stop, or restart');
+      return;
     }
-  };
+
+    if (!serviceName) {
+      sendValidationError(res, 'Service name is required');
+      return;
+    }
+
+    const result = await service.manageService(action, serviceName);
+    res.json(result);
+  }, 'managing service');
 }
 
 function handleServiceLogs(service) {
-  return async (req, res) => {
-    try {
-      const { service: serviceName } = req.params;
-      const { lines = 50 } = req.query;
-      const logs = await service.getServiceLogs(serviceName, parseInt(lines, 10));
-      res.json({
-        service: serviceName,
-        logs,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting service logs');
-      res.status(500).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return wrapAsyncHandler(async (req) => {
+    const { service: serviceName } = req.params;
+    const { lines = 50 } = req.query;
+    const logs = await service.getServiceLogs(serviceName, parseInt(lines, 10));
+    return { service: serviceName, logs };
+  }, 'getting service logs');
 }
 
 module.exports = { registerServiceRoutes };

@@ -825,9 +825,7 @@ class PerplexityService {
    * @private
    */
   _formatConversationForSummary(history) {
-    return history
-      .map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`)
-      .join('\n\n');
+    return history.map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n\n');
   }
 
   /**
@@ -847,8 +845,14 @@ class PerplexityService {
 
     // Error message mapping
     const errorMessages = [
-      { condition: () => history.length === 0, message: 'No conversation history provided to summarize.' },
-      { condition: () => error.message?.includes('Summary generation failed'), message: 'Unable to generate summary at this time.' },
+      {
+        condition: () => history.length === 0,
+        message: 'No conversation history provided to summarize.',
+      },
+      {
+        condition: () => error.message?.includes('Summary generation failed'),
+        message: 'Unable to generate summary at this time.',
+      },
     ];
 
     const matchedError = errorMessages.find((e) => e.condition());

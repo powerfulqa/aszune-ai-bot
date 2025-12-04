@@ -432,25 +432,27 @@ These rules generate excessive false positives in documentation-heavy projects:
 }
 ```
 
-| Rule  | Description                    | Why Disable                          |
-| ----- | ------------------------------ | ------------------------------------ |
-| MD014 | Bare URL used                  | URLs in docs are intentional         |
-| MD031 | Fenced code block blank lines  | Formatting preference                |
-| MD036 | Emphasis used instead of heading | Valid for inline emphasis          |
-| MD040 | Code block language specified  | Not all blocks need language hints   |
-| MD041 | First line should be heading   | Multiple H1s are valid in some docs  |
+| Rule  | Description                      | Why Disable                         |
+| ----- | -------------------------------- | ----------------------------------- |
+| MD014 | Bare URL used                    | URLs in docs are intentional        |
+| MD031 | Fenced code block blank lines    | Formatting preference               |
+| MD036 | Emphasis used instead of heading | Valid for inline emphasis           |
+| MD040 | Code block language specified    | Not all blocks need language hints  |
+| MD041 | First line should be heading     | Multiple H1s are valid in some docs |
 
 ### Aligning Local and QLTY Results
 
 **Problem**: Local ESLint/Prettier passes but QLTY reports issues.
 
 **Root Causes**:
+
 1. Line ending differences (Windows CRLF vs Linux LF)
 2. Config files not synced between root and `.qlty/configs/`
 3. Wrong TOML syntax in `qlty.toml` (smells being ignored)
 4. ESLint trying to parse HTML files as JavaScript
 
 **Solution Checklist**:
+
 - [ ] Set Prettier `endOfLine: "auto"` (not `crlf`)
 - [ ] Add `ignorePatterns` for HTML files in ESLint
 - [ ] Use correct `[smells.xxx]` TOML section syntax
@@ -459,15 +461,15 @@ These rules generate excessive false positives in documentation-heavy projects:
 
 ### QLTY Smell Thresholds Reference
 
-| Smell Type           | Default | Recommended | Description                        |
-| -------------------- | ------- | ----------- | ---------------------------------- |
-| file_complexity      | 10      | 15          | Total cognitive complexity per file |
-| function_complexity  | 5       | 10          | Cognitive complexity per function  |
-| function_parameters  | 4       | 6           | Max parameters before refactor     |
-| return_statements    | 4       | 7           | Max returns per function           |
-| nested_control_flow  | 3       | 4           | Max nesting depth                  |
-| identical_code       | 25      | 50          | Lines threshold for duplication    |
-| similar_code         | 50      | 80          | Mass threshold for similar blocks  |
+| Smell Type          | Default | Recommended | Description                         |
+| ------------------- | ------- | ----------- | ----------------------------------- |
+| file_complexity     | 10      | 15          | Total cognitive complexity per file |
+| function_complexity | 5       | 10          | Cognitive complexity per function   |
+| function_parameters | 4       | 6           | Max parameters before refactor      |
+| return_statements   | 4       | 7           | Max returns per function            |
+| nested_control_flow | 3       | 4           | Max nesting depth                   |
+| identical_code      | 25      | 50          | Lines threshold for duplication     |
+| similar_code        | 50      | 80          | Mass threshold for similar blocks   |
 
 ### Debugging QLTY Issues
 

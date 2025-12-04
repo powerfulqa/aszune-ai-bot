@@ -74,37 +74,60 @@ function shouldIgnoreMessage(message) {
  * @returns {Promise<Object|null>} processedData or null if early return
  */
 async function processUserMessage(message) {
-  // Early validation checks
-  if (message.author.bot || !message.content) return null;
-
-  // Ignore Discord system commands and mentions not directed at the bot
-  if (shouldIgnoreMessage(message)) return null;
+  // Early validation - consolidate initial checks
+  const validationResult = validateMessageBasics(message);
+  if (!validationResult.valid) return null;
 
   const userId = message.author.id;
 
+  // Run validation pipeline
+  const pipelineResult = await runValidationPipeline(message, userId);
+  if (!pipelineResult.success) return null;
+
+  // Add sanitized message to history
+  conversationManager.addMessage(userId, 'user', pipelineResult.sanitizedContent);
+
+  return { userId, sanitizedContent: pipelineResult.sanitizedContent };
+}
+
+/**
+ * Validate basic message requirements
+ * @param {Object} message - Discord.js message object
+ * @returns {{valid: boolean}} Validation result
+ */
+function validateMessageBasics(message) {
+  if (message.author.bot || !message.content) return { valid: false };
+  if (shouldIgnoreMessage(message)) return { valid: false };
+  return { valid: true };
+}
+
+/**
+ * Run validation pipeline for message processing
+ * @param {Object} message - Discord.js message object
+ * @param {string} userId - User ID
+ * @returns {Promise<{success: boolean, sanitizedContent?: string}>} Pipeline result
+ */
+async function runValidationPipeline(message, userId) {
   // Validate user ID
   const userIdValidation = InputValidator.validateUserId(userId);
   if (!userIdValidation.valid) {
     logger.warn(`Invalid user ID: ${userIdValidation.error}`);
-    return null;
+    return { success: false };
   }
 
   // Process message content and handle validation
   const contentResult = await processMessageContent(message, userId);
-  if (!contentResult.success) return null;
+  if (!contentResult.success) return { success: false };
 
   // Handle rate limiting
   const rateLimitResult = await handleRateLimiting(message, userId);
-  if (!rateLimitResult.success) return null;
+  if (!rateLimitResult.success) return { success: false };
 
   // Handle commands
   const commandResult = await handleCommandCheck(message, contentResult.sanitizedContent);
-  if (!commandResult.success) return null;
+  if (!commandResult.success) return { success: false };
 
-  // Add sanitized message to history
-  conversationManager.addMessage(userId, 'user', contentResult.sanitizedContent);
-
-  return { userId, sanitizedContent: contentResult.sanitizedContent };
+  return { success: true, sanitizedContent: contentResult.sanitizedContent };
 }
 
 async function processMessageContent(message, userId) {

@@ -530,8 +530,7 @@ class PerformanceDashboard {
         issue: 'slow_performance',
       },
       {
-        condition: () =>
-          performance?.slowOperations > performance?.totalOperations * 0.2,
+        condition: () => performance?.slowOperations > performance?.totalOperations * 0.2,
         issue: 'many_slow_ops',
       },
       // Resource checks
@@ -545,9 +544,7 @@ class PerformanceDashboard {
       },
     ];
 
-    return issueChecks
-      .filter((check) => check.condition())
-      .map((check) => check.issue);
+    return issueChecks.filter((check) => check.condition()).map((check) => check.issue);
   }
 
   /**

@@ -186,36 +186,56 @@ function fixNumberedListBoundary(chunks, index, safeMaxLength) {
   });
 }
 
+/**
+ * Check if chunk has incomplete markdown link (excluding citation references)
+ * @param {string} chunk - The chunk to check
+ * @returns {boolean} - True if has incomplete link
+ */
+function hasIncompleteMarkdownLink(chunk) {
+  const incompletePatterns = [/\[[^\]]*$/, /\][^(]*$/, /\([^)]*$/];
+  const hasIncomplete = incompletePatterns.some((pattern) => pattern.test(chunk));
+  const isCitation = /\[\d+\]?$/.test(chunk);
+  return hasIncomplete && !isCitation;
+}
+
+/**
+ * Find the split point for a broken markdown link
+ * @param {string} chunk - The chunk to analyze
+ * @returns {RegExpExecArray|null} - Match result or null
+ */
+function findMarkdownSplitPoint(chunk) {
+  const splitPatterns = [/^(.*)\[[^\]]*$/, /^(.*)\][^(]*$/, /^(.*)\([^)]*$/];
+  for (const pattern of splitPatterns) {
+    const match = pattern.exec(chunk);
+    if (match) return match;
+  }
+  return null;
+}
+
 function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
   const currentChunk = chunks[index];
   const nextChunk = chunks[index + 1];
 
-  // Check for Markdown link being split across chunks (but exclude citation-style references)
-  const hasIncompleteLink =
-    /\[[^\]]*$/.test(currentChunk) ||
-    /\][^(]*$/.test(currentChunk) ||
-    /\([^)]*$/.test(currentChunk);
-  const isCitationReference = /\[\d+\]?$/.test(currentChunk); // Allow citation references like [1], [2], etc.
-
-  if (hasIncompleteLink && !isCitationReference) {
-    const brokenMarkdownMatch =
-      /^(.*)\[[^\]]*$/.exec(currentChunk) ||
-      /^(.*)\][^(]*$/.exec(currentChunk) ||
-      /^(.*)\([^)]*$/.exec(currentChunk);
-
-    if (brokenMarkdownMatch) {
-      const textBeforeLink = brokenMarkdownMatch[1];
-      const partialLink = currentChunk.substring(textBeforeLink.length);
-
-      if (textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength) {
-        chunks[index] = textBeforeLink.trim();
-        chunks[index + 1] = partialLink + ' ' + nextChunk;
-        return { fixed: true, chunks };
-      }
-    }
+  if (!hasIncompleteMarkdownLink(currentChunk)) {
+    return { fixed: false, chunks };
   }
 
-  return { fixed: false, chunks };
+  const match = findMarkdownSplitPoint(currentChunk);
+  if (!match) {
+    return { fixed: false, chunks };
+  }
+
+  const textBeforeLink = match[1];
+  const partialLink = currentChunk.substring(textBeforeLink.length);
+  const canMerge = textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength;
+
+  if (!canMerge) {
+    return { fixed: false, chunks };
+  }
+
+  chunks[index] = textBeforeLink.trim();
+  chunks[index + 1] = partialLink + ' ' + nextChunk;
+  return { fixed: true, chunks };
 }
 
 /**

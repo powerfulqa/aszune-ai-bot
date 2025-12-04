@@ -58,10 +58,7 @@ class ConversationManager {
    * Start cleanup interval (for testing)
    */
   startCleanupInterval() {
-    this.cleanupInterval = setInterval(
-      () => this.cleanupOldConversations(),
-      _getCleanupInterval()
-    );
+    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), _getCleanupInterval());
     this.activeIntervals.add(this.cleanupInterval);
   }
 

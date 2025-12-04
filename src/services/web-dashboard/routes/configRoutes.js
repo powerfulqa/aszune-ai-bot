@@ -1,4 +1,4 @@
-const { ErrorHandler } = require('../../../utils/error-handler');
+const { wrapAsyncHandler, sendValidationError } = require('./routeHelper');
 
 function registerConfigRoutes(app, service) {
   app.get('/api/config/:file', handleGetConfig(service));
@@ -7,75 +7,41 @@ function registerConfigRoutes(app, service) {
 }
 
 function handleGetConfig(service) {
-  return async (req, res) => {
-    try {
-      const { file } = req.params;
-      const content = await service.readConfigFile(file);
-      res.json({
-        file,
-        content,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'reading config file');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return wrapAsyncHandler(async (req) => {
+    const { file } = req.params;
+    const content = await service.readConfigFile(file);
+    return { file, content };
+  }, 'reading config file');
 }
 
 function handleUpdateConfig(service) {
-  return async (req, res) => {
-    try {
-      const { file } = req.params;
-      const { content, createBackup = true } = req.body;
+  return wrapAsyncHandler(async (req, res) => {
+    const { file } = req.params;
+    const { content, createBackup = true } = req.body;
 
-      if (!content) {
-        res.status(400).json({
-          error: 'Content is required',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      const result = await service.updateConfigFile(file, content, createBackup);
-      res.json(result);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'updating config file');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
+    if (!content) {
+      sendValidationError(res, 'Content is required');
+      return;
     }
-  };
+
+    const result = await service.updateConfigFile(file, content, createBackup);
+    res.json(result);
+  }, 'updating config file');
 }
 
 function handleValidateConfig(service) {
-  return async (req, res) => {
-    try {
-      const { file } = req.params;
-      const { content } = req.body;
+  return wrapAsyncHandler(async (req, res) => {
+    const { file } = req.params;
+    const { content } = req.body;
 
-      if (!content) {
-        res.status(400).json({
-          error: 'Content is required for validation',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      const validation = await service.validateConfigFile(file, content);
-      res.json(validation);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'validating config file');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
+    if (!content) {
+      sendValidationError(res, 'Content is required for validation');
+      return;
     }
-  };
+
+    const validation = await service.validateConfigFile(file, content);
+    res.json(validation);
+  }, 'validating config file');
 }
 
 module.exports = { registerConfigRoutes };

@@ -57,10 +57,7 @@ class ErrorHandler {
       () => this._categorizeValidationError(message),
     ];
 
-    const errorType = categorizers.reduce(
-      (result, categorizer) => result || categorizer(),
-      null
-    );
+    const errorType = categorizers.reduce((result, categorizer) => result || categorizer(), null);
 
     return errorType || ERROR_TYPES.UNKNOWN_ERROR;
   }
