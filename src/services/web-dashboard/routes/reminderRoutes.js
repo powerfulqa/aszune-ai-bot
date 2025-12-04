@@ -1,4 +1,4 @@
-const { ErrorHandler } = require('../../../utils/error-handler');
+const { wrapAsyncHandler, sendValidationError, createApiResponse } = require('./routeHelper');
 
 function registerReminderRoutes(app, service) {
   app.get('/api/reminders', handleGetReminders(service));
@@ -8,92 +8,42 @@ function registerReminderRoutes(app, service) {
 }
 
 function handleGetReminders(service) {
-  return async (req, res) => {
-    try {
-      const { status = 'all' } = req.query;
-      const reminders = await service.getReminders(status);
-      res.json({
-        reminders,
-        total: reminders.length,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'getting reminders');
-      res.status(500).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return wrapAsyncHandler(async (req) => {
+    const { status = 'all' } = req.query;
+    const reminders = await service.getReminders(status);
+    return { reminders, total: reminders.length };
+  }, 'getting reminders');
 }
 
 function handleCreateReminder(service) {
-  return async (req, res) => {
-    try {
-      const { message, scheduledTime, userId, reminderType } = req.body;
+  return wrapAsyncHandler(async (req, res) => {
+    const { message, scheduledTime, userId, reminderType } = req.body;
 
-      if (!message || !scheduledTime || !userId) {
-        res.status(400).json({
-          error: 'Message, scheduledTime, and userId are required',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      const reminder = await service.createReminder(message, scheduledTime, userId, reminderType);
-      res.status(201).json({
-        reminder,
-        message: 'Reminder created successfully',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'creating reminder');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
+    if (!message || !scheduledTime || !userId) {
+      sendValidationError(res, 'Message, scheduledTime, and userId are required');
+      return;
     }
-  };
+
+    const reminder = await service.createReminder(message, scheduledTime, userId, reminderType);
+    res.status(201).json(createApiResponse({ reminder, message: 'Reminder created successfully' }));
+  }, 'creating reminder');
 }
 
 function handleUpdateReminder(service) {
-  return async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { message, scheduledTime } = req.body;
-      const reminder = await service.updateReminder(id, message, scheduledTime);
-      res.json({
-        reminder,
-        message: 'Reminder updated successfully',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'updating reminder');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return wrapAsyncHandler(async (req) => {
+    const { id } = req.params;
+    const { message, scheduledTime } = req.body;
+    const reminder = await service.updateReminder(id, message, scheduledTime);
+    return { reminder, message: 'Reminder updated successfully' };
+  }, 'updating reminder');
 }
 
 function handleDeleteReminder(service) {
-  return async (req, res) => {
-    try {
-      const { id } = req.params;
-      await service.deleteReminder(id);
-      res.json({
-        message: 'Reminder deleted successfully',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'deleting reminder');
-      res.status(400).json({
-        error: errorResponse.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  };
+  return wrapAsyncHandler(async (req) => {
+    const { id } = req.params;
+    await service.deleteReminder(id);
+    return { message: 'Reminder deleted successfully' };
+  }, 'deleting reminder');
 }
 
 module.exports = { registerReminderRoutes };

@@ -1,8 +1,4 @@
-const {
-  createSimpleGetHandler,
-  wrapAsyncHandler,
-  sendValidationError,
-} = require('./routeHelper');
+const { createSimpleGetHandler, wrapAsyncHandler, sendValidationError } = require('./routeHelper');
 
 function registerServiceRoutes(app, service) {
   app.get('/api/services', handleGetServices(service));

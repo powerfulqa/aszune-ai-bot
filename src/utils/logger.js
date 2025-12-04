@@ -191,49 +191,73 @@ class Logger {
    * @param {Error} error - Error object
    */
   error(message, error) {
-    if (this._getLogLevel() <= this.levels.ERROR) {
-      const formattedMessage = this._formatMessage('ERROR', message || '');
+    if (this._getLogLevel() > this.levels.ERROR) return;
 
-      // Write to file
-      this._writeToFile(formattedMessage);
-      this._logToConsole('error', formattedMessage);
+    const formattedMessage = this._formatMessage('ERROR', message || '');
+    this._writeToFile(formattedMessage);
+    this._logToConsole('error', formattedMessage);
 
-      if (error) {
-        if (error.response) {
-          const errorDetails = {
-            type: 'API Error Response',
-            status: error.response.status,
-            data: error.response.data,
-          };
+    if (!error) return;
 
-          this._writeToFile(JSON.stringify(errorDetails, null, 2));
-          this._logToConsole('error', 'API Error Response:', errorDetails);
-        } else if (error.request) {
-          const errorContext = {
-            type: 'No API Response',
-            request: error.request,
-          };
+    const errorDetails = this._formatErrorDetails(error);
+    this._writeToFile(JSON.stringify(errorDetails, null, 2));
+    this._logErrorToConsole(errorDetails);
+  }
 
-          this._writeToFile(JSON.stringify(errorContext, null, 2));
-          this._logToConsole('error', 'No response received from API:', error.request);
-        } else if (typeof error === 'object' && !error.message && !error.stack) {
-          this._writeToFile(JSON.stringify(error, null, 2));
-          this._logToConsole('error', error);
-        } else {
-          const generalError = {
-            type: 'General Error',
-            message: error.message || String(error),
-            stack: error.stack,
-          };
-
-          this._writeToFile(JSON.stringify(generalError, null, 2));
-          this._logToConsole('error', 'Error:', generalError.message);
-          if (error.stack) {
-            this._logToConsole('error', 'Stack:', error.stack);
-          }
-        }
-      }
+  /**
+   * Format error details based on error type
+   * @param {Error|Object} error - Error to format
+   * @returns {Object} Formatted error details
+   * @private
+   */
+  _formatErrorDetails(error) {
+    if (error.response) {
+      return {
+        type: 'API Error Response',
+        status: error.response.status,
+        data: error.response.data,
+      };
     }
+
+    if (error.request) {
+      return {
+        type: 'No API Response',
+        request: error.request,
+      };
+    }
+
+    if (typeof error === 'object' && !error.message && !error.stack) {
+      return { type: 'Object Error', data: error };
+    }
+
+    return {
+      type: 'General Error',
+      message: error.message || String(error),
+      stack: error.stack,
+    };
+  }
+
+  /**
+   * Log formatted error details to console
+   * @param {Object} errorDetails - Formatted error details
+   * @private
+   */
+  _logErrorToConsole(errorDetails) {
+    const consoleMessages = {
+      'API Error Response': () => this._logToConsole('error', 'API Error Response:', errorDetails),
+      'No API Response': () =>
+        this._logToConsole('error', 'No response received from API:', errorDetails.request),
+      'Object Error': () => this._logToConsole('error', errorDetails.data),
+      'General Error': () => {
+        this._logToConsole('error', 'Error:', errorDetails.message);
+        if (errorDetails.stack) {
+          this._logToConsole('error', 'Stack:', errorDetails.stack);
+        }
+      },
+    };
+
+    const logFn = consoleMessages[errorDetails.type];
+    if (logFn) logFn();
   }
 
   /**

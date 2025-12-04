@@ -227,7 +227,8 @@ function fixMarkdownLinkBoundary(chunks, index, safeMaxLength) {
 
   const textBeforeLink = match[1];
   const partialLink = currentChunk.substring(textBeforeLink.length);
-  const canMerge = textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength;
+  const canMerge =
+    textBeforeLink.length > 0 && nextChunk.length + partialLink.length <= safeMaxLength;
 
   if (!canMerge) {
     return { fixed: false, chunks };

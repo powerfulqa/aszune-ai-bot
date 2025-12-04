@@ -182,23 +182,32 @@ class PerplexityService {
     if (!headers || !key) return '';
 
     // Try Headers.get() method first (for Fetch API Headers)
-    if (typeof headers.get === 'function') {
-      try {
-        const result = headers.get(key);
-        if (result) return result;
-      } catch (e) {
-        // Fall through to object access
-      }
+    const getMethodResult = this._tryHeadersGetMethod(headers, key);
+    if (getMethodResult) return getMethodResult;
+
+    // Try object property access with case variations
+    return this._tryHeaderPropertyAccess(headers, key);
+  }
+
+  /**
+   * Try to get header using Headers.get() method
+   * @private
+   */
+  _tryHeadersGetMethod(headers, key) {
+    if (typeof headers.get !== 'function') return '';
+    try {
+      return headers.get(key) || '';
+    } catch (_e) {
+      return '';
     }
+  }
 
-    // Try direct object property access
-    if (headers[key]) return headers[key];
-
-    // Try case-insensitive lookups
-    if (headers[key.toLowerCase()]) return headers[key.toLowerCase()];
-    if (headers[key.toUpperCase()]) return headers[key.toUpperCase()];
-
-    return '';
+  /**
+   * Try to get header via direct property access with case variations
+   * @private
+   */
+  _tryHeaderPropertyAccess(headers, key) {
+    return headers[key] || headers[key.toLowerCase()] || headers[key.toUpperCase()] || '';
   }
 
   _extractHeader(headers, key) {

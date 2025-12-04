@@ -7,7 +7,12 @@ function registerNetworkRoutes(app, service) {
 }
 
 function handleNetworkInterfaces(service) {
-  return createSimpleGetHandler(service, 'getNetworkInterfaces', 'interfaces', 'getting network interfaces');
+  return createSimpleGetHandler(
+    service,
+    'getNetworkInterfaces',
+    'interfaces',
+    'getting network interfaces'
+  );
 }
 
 function handleIpAddresses(service) {
