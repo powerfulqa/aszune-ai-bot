@@ -1,3 +1,5 @@
+const { getRemindersWithFilter } = require('../../utils/db-query-helpers');
+
 function normalizeScheduledTime(value) {
   if (value instanceof Date) {
     return value.toISOString();
@@ -29,38 +31,16 @@ function getReminder(db, reminderId) {
 }
 
 function getActiveReminders(db, userId = null) {
-  if (userId) {
-    const stmt = db.prepare(`
-      SELECT * FROM reminders
-      WHERE user_id = ? AND status = 'active' AND datetime(scheduled_time) > datetime('now')
-      ORDER BY scheduled_time ASC
-    `);
-    return stmt.all(userId);
-  }
-
-  const stmt = db.prepare(`
-    SELECT * FROM reminders
-    WHERE status = 'active' AND datetime(scheduled_time) > datetime('now')
-    ORDER BY scheduled_time ASC
-  `);
-  return stmt.all();
+  return getRemindersWithFilter(
+    db,
+    userId,
+    "status = 'active' AND datetime(scheduled_time) > datetime('now')",
+    'scheduled_time ASC'
+  );
 }
 
 function getAllReminders(db, userId = null) {
-  if (userId) {
-    const stmt = db.prepare(`
-      SELECT * FROM reminders
-      WHERE user_id = ?
-      ORDER BY scheduled_time DESC
-    `);
-    return stmt.all(userId);
-  }
-
-  const stmt = db.prepare(`
-    SELECT * FROM reminders
-    ORDER BY scheduled_time DESC
-  `);
-  return stmt.all();
+  return getRemindersWithFilter(db, userId, '', 'scheduled_time DESC');
 }
 
 function getDueReminders(db) {

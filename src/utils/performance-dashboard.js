@@ -7,6 +7,11 @@ const DiscordAnalytics = require('./discord-analytics');
 const ResourceOptimizer = require('./resource-optimizer');
 const PerformanceTracker = require('./performance-tracker');
 const logger = require('./logger');
+const {
+  checkMemoryAlerts,
+  checkPerformanceAlerts,
+  checkReliabilityAlerts,
+} = require('./alert-factory');
 
 class PerformanceDashboard {
   constructor() {
@@ -347,130 +352,33 @@ class PerformanceDashboard {
 
   /**
    * Generates alerts based on current metrics
+   * Uses shared alert-factory utilities for threshold checking
    * @param {Object} currentMetrics - Current system metrics
    * @returns {Array} - Active alerts
    */
   static generateAlerts(currentMetrics) {
-    const alerts = [];
     const timestamp = new Date().toISOString();
 
-    // Collect all alert types
-    alerts.push(...this._checkMemoryAlerts(currentMetrics, timestamp));
-    alerts.push(...this._checkPerformanceResponseAlerts(currentMetrics, timestamp));
-    alerts.push(...this._checkReliabilityAlerts(currentMetrics, timestamp));
-
-    return alerts;
+    // Collect all alert types using shared utilities
+    return [
+      ...checkMemoryAlerts(currentMetrics, timestamp),
+      ...checkPerformanceAlerts(currentMetrics, timestamp),
+      ...checkReliabilityAlerts(currentMetrics, timestamp),
+    ];
   }
 
-  /**
-   * Checks memory-related alerts
-   * @param {Object} currentMetrics - Current metrics
-   * @param {string} timestamp - Alert timestamp
-   * @returns {Array} - Memory alerts
-   * @private
-   */
+  // Alert helper methods now delegate to shared alert-factory utility
+  // Keeping private methods for backwards compatibility with any internal calls
   static _checkMemoryAlerts(currentMetrics, timestamp) {
-    const alerts = [];
-
-    if (!currentMetrics || currentMetrics.memoryUsage === undefined) {
-      return alerts;
-    }
-
-    if (currentMetrics.memoryUsage > 400) {
-      alerts.push({
-        type: 'memory',
-        severity: 'critical',
-        message: 'Memory usage is critically high',
-        value: `${currentMetrics.memoryUsage}MB`,
-        threshold: '400MB',
-        timestamp,
-      });
-    } else if (currentMetrics.memoryUsage > 200) {
-      alerts.push({
-        type: 'memory',
-        severity: 'warning',
-        message: 'Memory usage is elevated',
-        value: `${currentMetrics.memoryUsage}MB`,
-        threshold: '200MB',
-        timestamp,
-      });
-    }
-
-    return alerts;
+    return checkMemoryAlerts(currentMetrics, timestamp);
   }
 
-  /**
-   * Checks performance-related alerts
-   * @param {Object} currentMetrics - Current metrics
-   * @param {string} timestamp - Alert timestamp
-   * @returns {Array} - Performance alerts
-   * @private
-   */
   static _checkPerformanceResponseAlerts(currentMetrics, timestamp) {
-    const alerts = [];
-
-    if (!currentMetrics || currentMetrics.avgResponseTime === undefined) {
-      return alerts;
-    }
-
-    if (currentMetrics.avgResponseTime > 5000) {
-      alerts.push({
-        type: 'performance',
-        severity: 'critical',
-        message: 'Response time is very slow',
-        value: `${currentMetrics.avgResponseTime}ms`,
-        threshold: '5000ms',
-        timestamp,
-      });
-    } else if (currentMetrics.avgResponseTime > 3000) {
-      alerts.push({
-        type: 'performance',
-        severity: 'warning',
-        message: 'Response time is slower than expected',
-        value: `${currentMetrics.avgResponseTime}ms`,
-        threshold: '3000ms',
-        timestamp,
-      });
-    }
-
-    return alerts;
+    return checkPerformanceAlerts(currentMetrics, timestamp);
   }
 
-  /**
-   * Checks reliability-related alerts
-   * @param {Object} currentMetrics - Current metrics
-   * @param {string} timestamp - Alert timestamp
-   * @returns {Array} - Reliability alerts
-   * @private
-   */
   static _checkReliabilityAlerts(currentMetrics, timestamp) {
-    const alerts = [];
-
-    if (!currentMetrics || currentMetrics.errorRate === undefined) {
-      return alerts;
-    }
-
-    if (currentMetrics.errorRate > 10) {
-      alerts.push({
-        type: 'reliability',
-        severity: 'critical',
-        message: 'Error rate is critically high',
-        value: `${currentMetrics.errorRate}%`,
-        threshold: '10%',
-        timestamp,
-      });
-    } else if (currentMetrics.errorRate > 5) {
-      alerts.push({
-        type: 'reliability',
-        severity: 'warning',
-        message: 'Error rate is elevated',
-        value: `${currentMetrics.errorRate}%`,
-        threshold: '5%',
-        timestamp,
-      });
-    }
-
-    return alerts;
+    return checkReliabilityAlerts(currentMetrics, timestamp);
   }
 
   /**

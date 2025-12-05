@@ -7,6 +7,7 @@
 const os = require('os');
 const logger = require('../../../utils/logger');
 const { sendError } = require('./callbackHelpers');
+const { buildNetworkInterfaces } = require('../../../utils/system-info');
 
 /**
  * Register network-related socket event handlers
@@ -56,34 +57,7 @@ async function handleNetworkStatus(dashboard, callback) {
   }
 }
 
-/**
- * Build network interfaces information
- * @returns {Promise<Array>} Network interfaces array
- */
-async function buildNetworkInterfaces() {
-  const networkInterfaces = os.networkInterfaces();
-  const interfaces = [];
-
-  for (const [name, addrs] of Object.entries(networkInterfaces)) {
-    const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
-    const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
-
-    if (ipv4 || ipv6) {
-      const isInternal = ipv4?.internal || ipv6?.internal || false;
-      const isLoopback = name.toLowerCase().includes('lo') || isInternal;
-
-      interfaces.push({
-        name,
-        ipv4: ipv4?.address || null,
-        ipv6: ipv6?.address || null,
-        mac: ipv4?.mac || ipv6?.mac || null,
-        internal: isInternal,
-        status: isLoopback ? 'LOOPBACK' : 'UP',
-      });
-    }
-  }
-  return interfaces;
-}
+// buildNetworkInterfaces is now imported from shared utility: ../../../utils/system-info
 
 /**
  * Safely get external IP address

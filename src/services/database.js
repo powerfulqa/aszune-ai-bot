@@ -10,6 +10,7 @@ const logger = require('../utils/logger');
 const schema = require('./database/schema');
 const reminderOperations = require('./database/reminder-operations');
 const userOperations = require('./database/user-operations');
+const { getUserHistory } = require('../utils/db-query-helpers');
 
 class DatabaseService {
   constructor() {
@@ -412,41 +413,25 @@ class DatabaseService {
   }
 
   _getUserCommandHistory(userId, limit = 100) {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        SELECT command_name, server_id, timestamp, success, response_time_ms
-        FROM command_usage
-        WHERE user_id = ?
-        ORDER BY timestamp DESC
-        LIMIT ?
-      `);
-      return stmt.all(userId, limit);
-    } catch (error) {
-      if (this.isDisabled) return [];
-      return [];
-    }
+    return getUserHistory(
+      () => this.getDb(),
+      this.isDisabled,
+      'command_usage',
+      'command_name, server_id, timestamp, success, response_time_ms',
+      userId,
+      limit
+    );
   }
 
   _getUserErrorHistory(userId, limit = 50) {
-    try {
-      if (this.isDisabled) return [];
-
-      const db = this.getDb();
-      const stmt = db.prepare(`
-        SELECT error_type, error_message, command_name, timestamp
-        FROM error_logs
-        WHERE user_id = ?
-        ORDER BY timestamp DESC
-        LIMIT ?
-      `);
-      return stmt.all(userId, limit);
-    } catch (error) {
-      if (this.isDisabled) return [];
-      return [];
-    }
+    return getUserHistory(
+      () => this.getDb(),
+      this.isDisabled,
+      'error_logs',
+      'error_type, error_message, command_name, timestamp',
+      userId,
+      limit
+    );
   }
 
   clearUserData(userId) {

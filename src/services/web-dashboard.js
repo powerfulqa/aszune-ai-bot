@@ -17,6 +17,9 @@ const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 const { getBootEnabledStatus } = require('./web-dashboard/handlers/serviceHandlers');
+const { buildServiceObject, buildNetworkInterfaces } = require('../utils/system-info');
+const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
+const { filterByStatus, filterBySearchText } = require('../utils/reminder-filters');
 
 class WebDashboardService {
   constructor() {
@@ -1358,29 +1361,17 @@ class WebDashboardService {
   }
 
   validateEnvFile(content, result) {
-    const lines = content.split('\n');
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      if (!trimmedLine || trimmedLine.startsWith('#')) return;
-
-      if (!trimmedLine.includes('=')) {
-        result.errors.push(`Line ${index + 1}: Invalid format (missing '=')`);
-      }
-
-      const [key] = trimmedLine.split('=');
-      if (!key.match(/^[A-Z_][A-Z0-9_]*$/)) {
-        result.warnings.push(`Line ${index + 1}: Key '${key}' doesn't follow convention`);
-      }
-    });
+    const validation = validateEnvContent(content);
+    result.errors.push(...validation.errors);
+    result.warnings.push(...validation.warnings);
+    if (!validation.valid) result.valid = false;
   }
 
   validateJsFile(content, result) {
-    try {
-      new Function(content);
-    } catch (error) {
-      result.valid = false;
-      result.errors.push(`Syntax error: ${error.message}`);
-    }
+    const validation = validateJsContent(content);
+    result.errors.push(...validation.errors);
+    result.warnings.push(...validation.warnings);
+    if (!validation.valid) result.valid = false;
   }
 
   /**
@@ -1479,28 +1470,7 @@ class WebDashboardService {
   }
 
   async _buildNetworkInterfaces() {
-    const networkInterfaces = os.networkInterfaces();
-    const interfaces = [];
-
-    for (const [name, addrs] of Object.entries(networkInterfaces)) {
-      const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
-      const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
-
-      if (ipv4 || ipv6) {
-        const isInternal = ipv4?.internal || ipv6?.internal || false;
-        const isLoopback = name.toLowerCase().includes('lo') || isInternal;
-
-        interfaces.push({
-          name,
-          ipv4: ipv4?.address || null,
-          ipv6: ipv6?.address || null,
-          mac: ipv4?.mac || ipv6?.mac || null,
-          internal: isInternal,
-          status: isLoopback ? 'LOOPBACK' : 'UP',
-        });
-      }
-    }
-    return interfaces;
+    return buildNetworkInterfaces();
   }
 
   async _safeGetExternalIp() {
@@ -1672,12 +1642,8 @@ class WebDashboardService {
         // Get ALL reminders from database (not just future active ones)
         let reminders = databaseService.getAllReminders(userId);
 
-        // Apply status filter if requested
-        if (status === 'completed') {
-          reminders = reminders.filter((r) => r.status === 'completed');
-        } else if (status === 'active') {
-          reminders = reminders.filter((r) => r.status === 'active' || r.status === 'pending');
-        }
+        // Apply status filter if requested using shared utility
+        reminders = filterByStatus(reminders, status);
 
         const stats = databaseService.getReminderStats();
 
@@ -1819,14 +1785,9 @@ class WebDashboardService {
 
       let reminders = databaseService.getActiveReminders(userId);
 
-      if (status) {
-        reminders = reminders.filter((r) => r.status === status);
-      }
-
-      if (searchText) {
-        const searchLower = searchText.toLowerCase();
-        reminders = reminders.filter((r) => r.message.toLowerCase().includes(searchLower));
-      }
+      // Use shared filter utilities
+      reminders = filterByStatus(reminders, status);
+      reminders = filterBySearchText(reminders, searchText);
 
       if (callback) {
         callback({
@@ -1854,22 +1815,7 @@ class WebDashboardService {
    * @private
    */
   _buildServiceObject(bootEnabled) {
-    const uptimeSeconds = Math.floor(process.uptime());
-    const hours = Math.floor(uptimeSeconds / 3600);
-    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-    const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-
-    return {
-      id: 'aszune-ai-bot',
-      name: 'Aszune AI Bot',
-      icon: '🤖',
-      status: 'Running',
-      enabledOnBoot: bootEnabled,
-      uptime: `${hours}h ${minutes}m`,
-      pid: process.pid,
-      memory: `${memoryMB} MB`,
-      port: '3000 (Dashboard)',
-    };
+    return buildServiceObject(bootEnabled);
   }
 
   setupServiceHandlers(socket) {

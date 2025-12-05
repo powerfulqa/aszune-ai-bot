@@ -166,6 +166,27 @@ class InputValidator {
   static _validateNotEmpty(value, fieldName) {
     return checkNotEmpty(value, fieldName);
   }
+
+  /**
+   * Generic basic input validation helper
+   * Consolidates common pattern: required + string type + max length checks
+   * @param {any} value - Value to validate
+   * @param {string} fieldName - Name of the field for error messages
+   * @param {number} maxLength - Maximum allowed length
+   * @returns {Object} - Validation result {valid: boolean, error?: string}
+   */
+  static _validateBasicInput(value, fieldName, maxLength) {
+    const requiredCheck = this._validateRequired(value, fieldName);
+    if (requiredCheck) return requiredCheck;
+
+    const stringCheck = this._validateStringType(value, fieldName);
+    if (stringCheck) return stringCheck;
+
+    const lengthCheck = this._validateStringLength(value, maxLength, fieldName);
+    if (lengthCheck) return lengthCheck;
+
+    return { valid: true };
+  }
   /**
    * Validate a Discord user ID
    * @param {string} userId - User ID to validate
@@ -306,24 +327,10 @@ class InputValidator {
   }
 
   /**
-   * Validate basic command properties
+   * Validate basic command properties using generic helper
    */
   static _validateBasicCommand(command) {
-    // Use common validation helpers
-    const requiredCheck = this._validateRequired(command, 'Command');
-    if (requiredCheck) return requiredCheck;
-
-    const stringCheck = this._validateStringType(command, 'Command');
-    if (stringCheck) return stringCheck;
-
-    const lengthCheck = this._validateStringLength(
-      command,
-      VALIDATION_LIMITS.MAX_COMMAND_LENGTH,
-      'Command'
-    );
-    if (lengthCheck) return lengthCheck;
-
-    return { valid: true };
+    return this._validateBasicInput(command, 'Command', VALIDATION_LIMITS.MAX_COMMAND_LENGTH);
   }
 
   static _validateCommandStructure(command) {
@@ -452,20 +459,10 @@ class InputValidator {
   }
 
   /**
-   * Validate basic URL properties
+   * Validate basic URL properties using generic helper
    */
   static _validateBasicUrl(url) {
-    // Use common validation helpers
-    const requiredCheck = this._validateRequired(url, 'URL');
-    if (requiredCheck) return requiredCheck;
-
-    const stringCheck = this._validateStringType(url, 'URL');
-    if (stringCheck) return stringCheck;
-
-    const lengthCheck = this._validateStringLength(url, VALIDATION_LIMITS.MAX_URL_LENGTH, 'URL');
-    if (lengthCheck) return lengthCheck;
-
-    return { valid: true };
+    return this._validateBasicInput(url, 'URL', VALIDATION_LIMITS.MAX_URL_LENGTH);
   }
 
   static _validateUrlFormatAndSafety(url) {

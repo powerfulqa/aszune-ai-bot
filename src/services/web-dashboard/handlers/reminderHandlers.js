@@ -13,6 +13,7 @@ const {
   sendDeleteError,
   sendErrorWithEmptyArray,
 } = require('./callbackHelpers');
+const { filterByStatus, filterBySearchText } = require('../../../utils/reminder-filters');
 
 /**
  * Register reminder-related socket event handlers
@@ -53,12 +54,8 @@ function handleRequestReminders(data, callback) {
     // Get ALL reminders from database (not just future active ones)
     let reminders = databaseService.getAllReminders(userId);
 
-    // Apply status filter if requested
-    if (status === 'completed') {
-      reminders = reminders.filter((r) => r.status === 'completed');
-    } else if (status === 'active') {
-      reminders = reminders.filter((r) => r.status === 'active' || r.status === 'pending');
-    }
+    // Apply status filter if requested using shared utility
+    reminders = filterByStatus(reminders, status);
 
     const stats = databaseService.getReminderStats();
 
@@ -203,14 +200,9 @@ function handleFilterReminders(data, callback) {
 
     let reminders = databaseService.getActiveReminders(userId);
 
-    if (status) {
-      reminders = reminders.filter((r) => r.status === status);
-    }
-
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      reminders = reminders.filter((r) => r.message.toLowerCase().includes(searchLower));
-    }
+    // Use shared filter utilities
+    reminders = filterByStatus(reminders, status);
+    reminders = filterBySearchText(reminders, searchText);
 
     if (callback) {
       callback({

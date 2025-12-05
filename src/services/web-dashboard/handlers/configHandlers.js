@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../../../utils/logger');
 const { sendError, sendSaveError, sendValidationError } = require('./callbackHelpers');
+const { validateEnvContent, validateJsContent } = require('../../../utils/config-validators');
 
 /**
  * Register config-related socket event handlers
@@ -189,39 +190,27 @@ function performFileValidation(fileType, content, result) {
 }
 
 /**
- * Validate .env file content
+ * Validate .env file content using shared utility
  * @param {string} content - File content
  * @param {Object} result - Result object to populate
  */
 function validateEnvFile(content, result) {
-  const lines = content.split('\n');
-  lines.forEach((line, index) => {
-    const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith('#')) return;
-
-    if (!trimmedLine.includes('=')) {
-      result.errors.push(`Line ${index + 1}: Invalid format (missing '=')`);
-    }
-
-    const [key] = trimmedLine.split('=');
-    if (!key.match(/^[A-Z_][A-Z0-9_]*$/)) {
-      result.warnings.push(`Line ${index + 1}: Key '${key}' doesn't follow convention`);
-    }
-  });
+  const validation = validateEnvContent(content);
+  result.errors.push(...validation.errors);
+  result.warnings.push(...validation.warnings);
+  if (!validation.valid) result.valid = false;
 }
 
 /**
- * Validate JavaScript file content
+ * Validate JavaScript file content using shared utility
  * @param {string} content - File content
  * @param {Object} result - Result object to populate
  */
 function validateJsFile(content, result) {
-  try {
-    new Function(content);
-  } catch (error) {
-    result.valid = false;
-    result.errors.push(`Syntax error: ${error.message}`);
-  }
+  const validation = validateJsContent(content);
+  result.errors.push(...validation.errors);
+  result.warnings.push(...validation.warnings);
+  if (!validation.valid) result.valid = false;
 }
 
 module.exports = {

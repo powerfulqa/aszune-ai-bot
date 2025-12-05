@@ -10,6 +10,7 @@ const {
   sendErrorWithEmptyArray,
   sendConnectionError,
 } = require('./callbackHelpers');
+const { buildServiceObject } = require('../../../utils/system-info');
 
 /**
  * Register service-related socket event handlers
@@ -126,29 +127,7 @@ async function getBootEnabledStatus(serviceName) {
   return false;
 }
 
-/**
- * Build service object with system info
- * @param {boolean} bootEnabled - Whether service is enabled on boot
- * @returns {Object} Service info object
- */
-function buildServiceObject(bootEnabled) {
-  const uptimeSeconds = Math.floor(process.uptime());
-  const hours = Math.floor(uptimeSeconds / 3600);
-  const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-  const memoryMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-
-  return {
-    id: 'aszune-ai-bot',
-    name: 'Aszune AI Bot',
-    icon: '🤖',
-    status: 'Running',
-    enabledOnBoot: bootEnabled,
-    uptime: `${hours}h ${minutes}m`,
-    pid: process.pid,
-    memory: `${memoryMB} MB`,
-    port: '3000 (Dashboard)',
-  };
-}
+// buildServiceObject imported from shared utility: ../../../utils/system-info
 
 /**
  * Handle service action request (start/stop/restart)

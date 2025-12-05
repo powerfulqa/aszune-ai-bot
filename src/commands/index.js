@@ -71,7 +71,10 @@ function validateAndPrepareHistory(userId) {
 
   // Keep removing assistant messages from end until non-assistant found
   const trimmedHistory = [...history];
-  while (trimmedHistory.length > 0 && trimmedHistory[trimmedHistory.length - 1].role === 'assistant') {
+  while (
+    trimmedHistory.length > 0 &&
+    trimmedHistory[trimmedHistory.length - 1].role === 'assistant'
+  ) {
     trimmedHistory.pop();
   }
 
