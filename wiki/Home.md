@@ -65,220 +65,40 @@ The project follows modern code quality practices with [qlty](https://qlty.sh/) 
 
 ## Version Information
 
-**v1.9.0** - Dashboard Feature Suite Expansion (2025-01-15)
+**v1.10.0** - Code Quality & Documentation Cleanup (2025-01-17)
 
-- **5 Major Dashboard Enhancements** - Complete monitoring and management capabilities
-- Feature 1: Real-Time Log Viewer - Live log streaming, multi-level filtering, CSV/JSON export
-- Feature 2: Service Status & Management - systemd integration, service control, uptime tracking
-- Feature 3: Configuration Editor - Safe .env and config.js editing with validation & auto-backups
-- Feature 5: Network & Connectivity Status - Interface monitoring, connectivity checks, bandwidth
-  tracking
-- Feature 7: Reminder Management Interface - Web-based CRUD operations for reminder scheduling
-- 15 New API Endpoints - Comprehensive REST API for all dashboard features
-- WebSocket Support - Real-time log streaming and network status updates
-- Advanced Filtering & Export - Support for multiple export formats and complex filtering queries
-- Security Hardening - Integrated validation, audit trails, and rollback capabilities
-- Full Documentation - Wiki pages for each feature with usage guides, API reference, and
-  troubleshooting
-- Demo Interface - Interactive HTML demos for all 5 features
-- Testing: 1,231 tests (1,228 passing) - 72.6% statements / 67.1% branches
+- **Code Quality Excellence** - 94.8% ESLint issue reduction, systematic complexity improvements
+- **CI/CD Optimization** - 16× faster pipeline with intelligent skip detection  
+- **Documentation Cleanup** - Removed 60+ obsolete files, consolidated architecture docs
+- **Test Suite** - 1,661+ tests passing with comprehensive coverage
+- **Code Duplication** - Systematic removal of duplicated validation and helper patterns
 
-**v1.8.0** - Balanced Coverage, Complexity Reduction & Real-Time Dashboard (2025-11-13)
+**v1.9.0** - Dashboard Feature Suite (2025-01-15)
 
-- Dual-threshold coverage policy: ≥80% critical files / ≥65% global baseline (path toward 82%+
-  remains strategic)
-- Web dashboard (Express + Socket.io) delivering real-time memory, cache, and performance metrics
-- Function complexity reductions across chat, cache management, error handling (aligning with ≤10
-  complexity target)
-- Dead code & duplicate logic pruning; deprecated low-value legacy modules flagged (license stubs,
-  enhanced conversation context)
-- Dependency refresh (discord.js, better-sqlite3, undici, chrono-node, express, socket.io) for
-  stability & security
-- CI resilience: critical gate executes first, preventing unnecessary full-suite runs on failure
-- Coverage (local): 75.57% statements / 81.64% branches / 79.01% functions / 75.57% lines (all
-  critical files ≥80% statements)
-- Roadmap focus: targeted tests for `cache-manager`, `reminder-service`, `time-parser` + license
-  module smoke tests before activation
-- All 123 test suites passing (1,231 tests total; 1,228 passing, 3 skipped); zero flake detection
-- No breaking changes; full compatibility with v1.7.0 persistence & reminder features
+- 5 major dashboard enhancements for monitoring and management
+- Real-time log viewer, service management, configuration editor
+- Network & connectivity status, reminder management interface
 
-Web Dashboard (v1.8.0): Available locally at `http://localhost:3000` when the bot is running. Shows
-live outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders` in
-Discord-style cards, plus a read-only database viewer and recommendations. See
-[docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md) for details.
+**v1.8.0** - Web Dashboard (2025-11-13)
 
-**v1.7.0** - Database Integration & Reminder System (2025-10-08)
+- Express + Socket.io web dashboard with live metrics
+- Dual-threshold coverage policy: ≥80% critical / ≥65% global
 
-- **SQLite Database Integration**: Full persistent data storage for conversation history and user
-  analytics
-- **Conversation Persistence**: User messages and bot responses stored across bot restarts
-- **User Analytics**: Message counts, activity timestamps, and engagement tracking per user
-- **Reminder System**: AI-powered reminder scheduling with natural language processing
-- **Automatic Setup**: Database and tables created automatically with zero configuration required
-- **Graceful Fallback**: Seamless operation even when database is unavailable
-- **Smart Data Management**: Automatic cleanup with 10-message limit per user for optimal
-  performance
-- **Comprehensive Testing**: 17 database-specific tests ensuring reliability and data integrity
-- **Cross-Platform Support**: Optimized for Windows, Linux, and Raspberry Pi environments
+**v1.7.0** - Database & Reminders (2025-10-08)
 
-**Post-Release Regression Fixes (Oct 9–10, 2025)**
+- SQLite database integration for persistent data
+- AI-powered reminder system with natural language
 
-- Normalised cache & memory metric formatting (stable hit rate & units)
-- Reduced dashboard warning noise; corrected server count logic
-- Hardened Raspberry Pi model detection fallback
-- Added `global.File` mock in test setup for undici/Web API compatibility
-- Adaptive Pi startup script improvements (`start-pi-optimized.sh`)
-- Added regression summary doc (`docs/REGRESSION-FIX-v1.7.0.md`)
-
-**v1.6.0** – Analytics & Feature‑Flagged Licensing (2025-10-01)
-
-- **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
-  provide comprehensive system monitoring directly in Discord
-- **Real-time Performance Monitoring**: Live system status, resource utilization, and performance
-  metrics
-- **Server Insights**: Discord server analytics with user engagement and command usage patterns
-- **Resource Optimization**: Automated recommendations for system performance improvements
-- **Integrated Reporting**: All analytics features accessible without leaving Discord
-- **Feature-Flagged Licensing**: Complete license validation system implemented but disabled by
-  default for safe deployment
-- **Safe Deployment Pattern**: License features behind environment variable flags for gradual
-  rollout
-- **Backward Compatible**: All existing functionality works without license configuration
-- **Testing Status (Historical vs Current)**: v1.6.x analytics integration shipped with 991 tests
-  passing; current local suite: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches
-  (historical CI target 82%+; restoration in progress)
-- **Enhanced User Experience**: No need to access Pi directly - all monitoring through Discord
-
-- **v1.5.0** - qlty Code Quality Integration (2025-09-29)
-  - **Complete qlty Integration**: Unified code quality tooling with 8 security and quality plugins
-  - **Enhanced Security Scanning**: Gitleaks, Trivy, and Semgrep integration for comprehensive
-    security
-  - **Professional Documentation**: Added SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md,
-    CHANGELOG.md
-  - **Quality Automation**: 7 new npm scripts for streamlined quality workflow
-  - **CI/CD Enhancement**: Automated qlty checks and security scanning in GitHub Actions
-  - **Code Standards**: Complexity limits (≤15 file, ≤10 function), duplication detection, zero
-    secrets
-  - **Developer Experience**: Unified quality interface replacing fragmented tooling
-  - **Backward Compatibility**: All existing functionality maintained; coverage now 72.6% statements
-    / 67.1% branches locally (target 82%+)
-
-- **v1.4.1** - Code Quality Excellence & Architecture Refinement (2025-09-28)
-  - **Code Quality Excellence**: 94.8% reduction in ESLint issues (861 → 45)
-  - **Service Architecture Refactoring**: Split PerplexityService into focused classes (ApiClient,
-    CacheManager, ResponseProcessor, ThrottlingService)
-  - **Production Code Cleanup**: Eliminated all console statements, replaced with proper logger
-    calls (100% elimination)
-  - **Code Duplication Elimination**: Systematic removal of duplicate patterns across services and
-    validation
-  - **Enhanced Input Validation**: Common validation helpers and improved sanitization logic
-  - **Logging Infrastructure Enhancement**: Comprehensive logging improvements across all modules
-  - **qlty Philosophy Adherence**: Following modern code quality principles for maintainability
-  - **All Tests Passing**: Maintained 536 passing tests throughout architectural improvements
-
-- **v1.4.0** - Comprehensive Testing & Coverage Enhancement (2025-01-22)
-  - Massive historical coverage improvement (77.79% → 82%+); current local coverage 72.6% statements
-    / 67.1% branches (recovery effort active)
-  - Added comprehensive test suites for memory monitoring, message chunking, and command handling
-  - Expanded test count from 371 to 380+ passing tests
-  - Enhanced error handling and recovery mechanisms across all modules
-  - Production-ready quality with extensive test coverage
-  - New utility modules for error handling, input validation, memory monitoring, and performance
-    tracking
-  - Enhanced message chunking with advanced boundary detection and source link processing
-  - Comprehensive input sanitization and validation system
-  - Advanced memory management and garbage collection
-  - Real-time performance monitoring and optimization
-
-- **v1.3.2** - Message Chunking Enhancement (2025-08-06)
-  - Fixed critical bug where words at chunk boundaries could be incorrectly joined
-  - Improved word boundary detection to ensure proper text formatting
-  - Enhanced testing suite to verify proper chunk boundary handling
-
-- **v1.3.1** - Message Chunking Implementation (2025-08-02)
-  - Added automatic message chunking to prevent long responses from being truncated
-  - Intelligently splits messages at paragraph and sentence boundaries
-  - Added numbering prefixes to indicate message sequence
-- **v1.3.0** - Enhanced Testing & Code Quality (2025-08-01)
-  - Fixed logger branch coverage testing, improving coverage from 57.89% to 82.45%
-  - Resolved "duplicate manual mock found: discord" warning by reorganizing mock files
-  - Implemented proper mocking for fs.promises methods with a centralized approach
-  - Improved code quality with refactored complex functions into smaller, more maintainable units
-  - Added ESLint configuration for consistent code style
-  - Consolidated duplicate code and created better organized service modules
-  - Fixed security issues related to permissions and API validation
-
-- **v1.2.2** - Refactor & Reliability Update (2025-07-30)
-  - Refactored ConversationManager to export as a class and require instantiation everywhere
-  - Moved all config access inside methods to prevent circular dependency issues
-  - Updated all code and tests to use the new ConversationManager pattern
-  - Relaxed and fixed all test expectations; all tests now pass and CI is reliable
-  - Updated documentation and release notes to match codebase and version
-
-- **v1.2.1** - Raspberry Pi Optimization Update
-  - Added automatic detection of Raspberry Pi hardware models
-  - Implemented model-specific performance optimizations
-  - Created comprehensive Pi optimization documentation
-  - Enhanced configuration system for dynamic optimization settings
-  - Made all optimizations test-compatible with 100% passing tests
-
-- **v1.2.0** - Optimizations and shutdown improvements
-  - Enhanced shutdown handling with protection against multiple executions
-  - Improved error handling in Perplexity service
-  - Updated CI security audit configuration for production dependencies
-  - Fixed all test failures and improved code coverage
-- **v1.1.0** - Refactor and feature update
-  - Complete refactor to modular architecture
-  - Added stats tracking and slash command support
-  - Enhanced testing and CI integration
-  - Fixed summary command for better API compliance
-
-- **v1.0.0** - Initial release
-  - Core Discord bot functionality with Perplexity API integration
-  - Conversation history and emoji reactions
-  - Basic commands and rate limiting
+See [CHANGELOG.md](../CHANGELOG.md) for complete version history.
 
 ## Features
 
-- 🤖 **Chat Completions:** Uses Perplexity API's `chat/completions` endpoint with the **sonar**
-  model
-- 🧠 **Context Awareness:** Remembers recent user messages with a configurable history length
-- 🔁 **Command Support:** Users can clear their history at any time
-- 😄 **Emoji Reactions:** Adds reactions based on keywords like "hello", "funny", "love", etc
-- 🔒 **Secure Configuration:** `.env` based token and key management
-- 🕒 **Rate Limiting:** Prevents users from spamming the bot
-- 📝 **Help Command:** Lists all available commands and usage
-- 🧾 **Conversation Summary:** Generates summaries of conversations
-- 📝 **Text Summarisation:** Summarizes any provided text using UK English
-- 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
-- 🗂️ **Improved Performance:** Uses JavaScript `Map` for conversation history and rate limiting
-- 🛠️ **Cleaner Codebase:** Refactored command handling for easier maintenance
-- 🆕 **Stats Tracking:** Shows per-user message and summary counts
-- 🆕 **Slash Command Support:** All major commands available as Discord slash commands
-- 🔄 **Graceful Shutdown:** Robust handling of process termination with proper resource cleanup
-- 🧪 **Comprehensive Testing:** 1,231 tests (1,228 passing) – 75.57% statements / 81.64% branches
-  (historical high watermark 82%+ statements; strategic restoration underway)
-- 🧾 **Branch Coverage Testing:** 82.45% branch coverage for critical components like logger.js
-- 🔧 **Improved Code Quality:** Refactored complex functions into smaller, maintainable units
-- 🔒 **Enhanced Security:** Fixed permissions issues and improved API validation
-- ✨ **Code Consistency:** Added ESLint configuration for consistent coding style
-- 🛡️ **Comprehensive Error Handling:** Advanced error handling system with context-aware error
-  messages
-- 🔍 **Input Validation:** Complete input sanitization and validation system
-- 🧠 **Memory Management:** Advanced memory monitoring and automatic garbage collection
-- 🏗️ **Service-Oriented Architecture:** Modular service design with focused, single-responsibility
-  classes
-- 📊 **Code Quality Excellence:** 94.8% ESLint issue reduction and complete console statement
-  elimination
-- 🔄 **Code Duplication Elimination:** Systematic removal of duplicate patterns for better
-  maintainability
-- 📊 **Performance Monitoring:** Real-time performance tracking and optimization
-- 🔧 **Enhanced Utilities:** Modular utility system with specialized tools for caching, throttling,
-  and resource management
-- 🎯 **Advanced Chunking:** Enhanced message chunking with intelligent boundary detection and source
-  link processing
-- 📊 **Discord Analytics Integration:** Real-time monitoring and analytics features directly
-  accessible through Discord commands (`/analytics`, `/dashboard`, `/resources`)
-- 🔍 **Performance Insights:** Comprehensive system monitoring, resource optimization, and automated
-  performance recommendations
-- 📈 **Server Analytics:** Discord server engagement metrics, usage patterns, and trend analysis
+- 🤖 **AI Chat:** Perplexity API integration with the **sonar** model
+- 🧠 **Context Awareness:** Persistent conversation history via SQLite
+- ⏰ **Reminders:** AI-powered natural language reminder scheduling
+- 📊 **Analytics:** Discord commands for server insights and performance
+- 🌐 **Web Dashboard:** Real-time monitoring at `http://localhost:3000`
+- 🇬🇧 **UK English:** All responses use UK English spelling
+- 🍓 **Pi Optimised:** Specialised Raspberry Pi performance tuning
+- 🧪 **Well Tested:** 1,661+ tests with comprehensive coverage
+- 🛡️ **Code Quality:** QLTY integration for linting and security

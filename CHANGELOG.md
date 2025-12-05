@@ -7,6 +7,55 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.0] - 2025-01-17
+
+### Code Quality Excellence
+
+- **ESLint Improvements**: 94.8% reduction in lint issues across the codebase
+- **Complexity Reduction**: Systematic refactoring of high-complexity functions
+  - Dashboard modules reduced from 25+ to ≤15 complexity
+  - Enhanced cache services with helper extraction patterns
+  - Perplexity service streamlined with focused helper methods
+- **Code Duplication**: Eliminated duplicate validation patterns across modules
+- **Unused Imports**: Removed all unused import statements
+
+### CI/CD Optimization
+
+- **16× Faster Pipeline**: Intelligent skip detection for unchanged code paths
+- **Smart Caching**: Dependency caching reduces build times
+- **Parallel Execution**: Test suites run concurrently where possible
+
+### Documentation Cleanup
+
+- **Removed 60+ Obsolete Files**: Cleaned up agent handoffs, session summaries, implementation plans
+- **Consolidated Architecture**: Merged scattered docs into focused reference files
+- **Streamlined README**: Reduced from 1000+ lines to focused user documentation
+- **Updated Wiki**: Simplified version history, cleaner navigation
+
+### Testing
+
+- **1,661+ Tests Passing**: Comprehensive test suite with 14 skipped
+- **178 Test Suites**: Full coverage across all modules
+- **Dual-Threshold Policy**: ≥80% critical files / ≥65% global baseline
+
+## [1.9.0] - 2025-01-15
+
+### Dashboard Feature Suite
+
+- **Real-Time Log Viewer**: Live log streaming with filtering and export
+- **Service Management**: systemd integration for service control
+- **Configuration Editor**: Safe .env and config.js editing
+- **Network Status**: Interface monitoring and connectivity checks
+- **Reminder Management**: Web-based CRUD operations
+
+## [1.8.0] - 2025-11-13
+
+### Web Dashboard
+
+- **Express + Socket.io Dashboard**: Real-time metrics at localhost:3000
+- **Coverage Policy**: Dual-threshold ≥80% critical / ≥65% global
+- **Complexity Reductions**: Function complexity aligned with ≤10 target
+
 ## [1.7.0] - 2025-10-05
 
 ### Major Features

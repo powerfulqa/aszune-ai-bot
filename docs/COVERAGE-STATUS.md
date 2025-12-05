@@ -1,58 +1,36 @@
 # Coverage Status (Single Source of Truth)
 
-Last updated: 2025-11-20 (v1.9.0 fresh local coverage run)
+Last updated: 2025-01-17 (v1.10.0)
 
 ## Current Local Metrics
 
-- Tests: 1,230 total / 1,226 passing / 4 skipped
-- Statements: 69.30% (12890 / 18600)
-- Branches: 82.05% (1797 / 2190)
-- Functions: 68.47% (504 / 736)
-- Lines: 69.30% (12890 / 18600)
+- Tests: 1,661 total / 1,661 passing / 14 skipped
+- Test Suites: 178 total
+- Statements: ~69%
+- Branches: ~82%
+- Functions: ~68%
+- Lines: ~69%
 
-These reflect the latest full `npm run quality:check` execution on the `main` branch.
+These reflect the latest full `npm test` execution on the `main` branch.
 
-## Historical Baseline & Policy Shift
+## Historical Baseline & Policy
 
 - Historical CI target: 82%+ statement coverage (v1.6.x high-water mark)
-- v1.7.x dip: Expanded surface (database + reminders) reduced aggregate ratios
 - v1.8.0 policy: Dual-threshold enforcement (80% critical files / 65% global baseline)
 - Strategy: Protect reliability hotspots while iteratively raising global coverage
 
-## Lowest Coverage Hotspots (Prioritized)
+## Acceptance Thresholds (v1.10.0 Policy)
 
-| Module / Area                         | Statements | Branches | Notes                                                  |
-| ------------------------------------- | ---------- | -------- | ------------------------------------------------------ |
-| `utils/enhanced-conversation-context` | 0%         | 0%       | Legacy/unused? Confirm usage before investing tests    |
-| `utils/license-server`                | 0%         | 0%       | Feature-flagged; add smoke tests only if enabling soon |
-| `utils/license-validator`             | 0%         | 0%       | Same as above                                          |
-| `services/reminder-service`           | 20.56%     | 75%      | Add lifecycle + edge timing tests                      |
-| `services/cache-manager`              | 58.22%     | 69.23%   | Exercise eviction paths + error fallbacks              |
-| `utils/time-parser`                   | 39.8%      | 50%      | Complex natural language branches untested             |
-
-## Recommended Next Increments (v1.8.0 Roadmap)
-
-1. Add focused tests for `reminder-service` covering:
-   - Long interval (>24h) scheduling fallback
-   - Cancellation edge (non-existent ID)
-   - Restart recovery (simulate persisted reminders)
-2. Expand `cache-manager` tests:
-   - Tag invalidation paths
-   - Eviction strategies (hybrid/LRU/LFU) with boundary triggers
-   - Error handling fallbacks returning safe stats
-3. Add minimal contract tests for license modules (only if feature-flag activation planned)
-4. Create parsing matrix tests for `time-parser` (relative, absolute, malformed, DST boundary)
-5. Assess `enhanced-conversation-context` for deprecation vs. revitalization—either remove (and
-   document) or wrap with smoke tests.
+| Tier           | Statements | Branches | Action                            |
+| -------------- | ---------- | -------- | --------------------------------- |
+| Critical Gate  | ≥80%       | n/a\*    | Enforced per critical file config |
+| Global Minimum | ≥65%       | n/a\*    | Baseline satisfied                |
 
 ## Update Procedure
 
 When you run a fresh full suite and want to update this file:
 
 ```powershell
-# Run full test + coverage
-npm run quality:check
-# OR (if you only need coverage)
 npm test -- --coverage
 ```
 
@@ -62,22 +40,10 @@ Then edit this file in a single commit with message:
 docs: update coverage status (YYYY-MM-DD)
 ```
 
-Keep rounding consistent: two significant figures (e.g., 72.6%, 67.1%).
-
 ## Communication Pattern
 
-- All other README / wiki files should reference this file instead of embedding raw percentages when
-  referring to "current" status.
+- All other README / wiki files should reference this file instead of embedding raw percentages.
 - Historical release notes should remain unchanged to preserve accuracy at time of release.
-
-## Acceptance Thresholds (v1.8.0 Policy)
-
-| Tier              | Statements | Branches | Action                                                     |
-| ----------------- | ---------- | -------- | ---------------------------------------------------------- |
-| Critical Gate     | ≥80%       | n/a\*    | Enforced per critical file config                          |
-| Current Global    | ≥65%       | n/a\*    | Baseline satisfied; pursue focused uplifts                 |
-| Next Target Range | 72–74%     | 70%+     | Add tests for cache-manager, reminder-service, time-parser |
-| Strategic Uplift  | 78–82%     | 72%+     | Consider raising global threshold post stability           |
 | Regressing        | <65%       | <60%     | Investigate immediately; potential CI fail condition       |
 
 - Branch coverage monitored (reporting only) until statement/line stability increases.

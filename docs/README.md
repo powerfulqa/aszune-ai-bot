@@ -2,52 +2,37 @@
 
 This directory contains project documentation and release notes for the Aszune AI Bot.
 
+## Current Release
+
+- **[v1.10.0 Release Notes](./RELEASE-NOTES-v1.10.0.md)** - Code Quality & Documentation Cleanup (LATEST)
+
 ## Code Quality & Standards
 
-- **[qlty Integration Guide](./QLTY_INTEGRATION.md)** - Comprehensive guide to using qlty for code
-  quality
-- **[Implementation Summary](./QLTY_IMPLEMENTATION_SUMMARY.md)** - Complete overview of qlty
-  integration
+- **[Coverage Status](./COVERAGE-STATUS.md)** - Single source of truth for test coverage metrics
+- **[Database Integration](./DATABASE-INTEGRATION.md)** - SQLite database integration guide
 
-## Development Documentation
+## Cache Service Documentation
 
-- **[Database Integration](./DATABASE-INTEGRATION.md)** - Comprehensive SQLite database integration
-  guide
-- **[Critical Coverage CI Integration](./CRITICAL-COVERAGE-CI-INTEGRATION.md)** - CI integration for
-  critical test coverage
-- **[Critical Coverage Success Summary](./CRITICAL-COVERAGE-SUCCESS-SUMMARY.md)** - Summary of
-  critical coverage implementation
-- **[PR Description Template](./PR-DESCRIPTION.md)** - Template for pull request descriptions
-- **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Real-time web dashboard overview
-  and implementation details
+- **[Cache Service Architecture](./CACHE-SERVICE-ARCHITECTURE.md)** - Cache system design
+- **[Cache Service Testing](./CACHE-SERVICE-TESTING.md)** - Cache testing guide
+
+## Dashboard Documentation
+
+- **[Dashboard API Reference v1.9.0](./DASHBOARD-API-REFERENCE-v1.9.0.md)** - Complete API documentation
+- **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Initial dashboard release notes
 
 ## Release Notes Archive
 
-- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Balanced Coverage, Complexity Reduction & Real-Time
-  Dashboard (LATEST)
-- [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Persistence
-- [v1.6.3](./RELEASE-NOTES-v1.6.3.md) - Perplexity API Model Compatibility Fix
-- [v1.6.2](./RELEASE-NOTES-v1.6.2.md) - Summarise Command API Fix
-- [v1.6.1](./RELEASE-NOTES-v1.6.1.md) - Analytics Data Integration & Documentation Updates
-- [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Analytics Integration & Discord Monitoring
-- [v1.5.0](./RELEASE-NOTES-v1.5.0.md) - qlty Code Quality Integration & Professional Standards
-- [v1.4.1](./v1.4.1.md) - Code Quality Excellence & Architecture Refinement
-- [v1.4.0](./v1.4.0.md) - Comprehensive Testing & Coverage Enhancement
-- [v1.3.6](./RELEASE-NOTES-v1.3.6.md) - Version 1.3.6 Release
-- [v1.3.5](./RELEASE-NOTES-v1.3.5.md) - Version 1.3.5 Release
-- [v1.3.4](./RELEASE-NOTES-v1.3.4.md) - Version 1.3.4 Release
-- [v1.3.3](./RELEASE-NOTES-v1.3.3.md) - Version 1.3.3 Release
-- [v1.3.2](./v1.3.2.md) - Message Chunking Enhancement
-- [v1.3.1](./v1.3.1.md) - Message Chunking Feature
-- [v1.3.0](./v1.3.0.md) - Initial Versioned Release
+- [v1.10.0](./RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup (LATEST)
+- [v1.9.0](./RELEASE-NOTES-v1.9.0.md) - Dashboard Feature Suite
+- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Web Dashboard & Coverage Policy
+- [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Reminders
+- [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Analytics Integration
+- [v1.5.0](./RELEASE-NOTES-v1.5.0.md) - QLTY Integration
 
 ## Project Documentation
 
-For complete project information:
-
-- **[Main Release Notes](./RELEASE-NOTES.md)** - Complete release history
-- **[Changelog](../CHANGELOG.md)** - Standardized project changelog
-- **[Security Policy](../SECURITY.md)** - Security guidelines and vulnerability reporting
-- **[Contributing Guidelines](../CONTRIBUTING.md)** - Enhanced contribution standards
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Changelog](../CHANGELOG.md)** - Complete version history
+- **[Security Policy](../SECURITY.md)** - Security guidelines
+- **[Contributing Guidelines](../CONTRIBUTING.md)** - Contribution standards
 - **[Wiki Documentation](../wiki/Home.md)** - Comprehensive project wiki
