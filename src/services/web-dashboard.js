@@ -1060,63 +1060,57 @@ class WebDashboardService {
     return this._fallbackRestart();
   }
 
-  async _tryPm2Restart(pm2AppName) {
+  /**
+   * Generic restart command executor to reduce duplication
+   * @private
+   */
+  async _executeRestartCommand(command, logPrefix, successMessage, logLevel = 'info') {
     try {
       const { exec } = require('child_process');
       const util = require('util');
       const execPromise = util.promisify(exec);
-      const pm2Command = `pm2 restart ${pm2AppName}`;
-      logger.info(`Attempting PM2 restart: ${pm2Command}`);
-      await execPromise(pm2Command, { timeout: 10000 });
-      logger.info(`Bot restart initiated via PM2 (${pm2AppName})`);
+      logger.info(`Attempting ${logPrefix}: ${command}`);
+      await execPromise(command, { timeout: 10000 });
+      logger.info(successMessage);
       return {
         success: true,
-        message: `Bot restart initiated via PM2 ${pm2AppName}`,
+        message: successMessage,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      logger.debug(`PM2 restart failed (may not be using PM2): ${error.message}`);
+      logger[logLevel](`${logPrefix} failed: ${error.message}`);
       return null;
     }
+  }
+
+  async _tryPm2Restart(pm2AppName) {
+    return this._executeRestartCommand(
+      `pm2 restart ${pm2AppName}`,
+      'PM2 restart',
+      `Bot restart initiated via PM2 ${pm2AppName}`,
+      'debug'
+    );
   }
 
   async _trySystemctlRestart(serviceName) {
-    try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
-      const restartCmd = `systemctl restart ${serviceName}`;
-      logger.info(`Attempting restart with: ${restartCmd}`);
-      await execPromise(restartCmd, { timeout: 10000 });
-      logger.info(`Bot restart initiated via systemctl (${serviceName})`);
-      return {
-        success: true,
-        message: `Bot restart initiated via systemctl ${serviceName}`,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.warn(`Systemctl restart failed: ${error.message}`);
-      return null;
-    }
+    return this._executeRestartCommand(
+      `systemctl restart ${serviceName}`,
+      'restart with systemctl',
+      `Bot restart initiated via systemctl ${serviceName}`,
+      'warn'
+    );
   }
 
   async _trySystemctlWithSudo(serviceName) {
-    try {
-      logger.info('Attempting with sudo...');
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
-      await execPromise(`sudo systemctl restart ${serviceName}`, { timeout: 10000 });
-      logger.info('Bot restart succeeded with sudo');
-      return {
-        success: true,
-        message: 'Bot restart initiated via systemctl (with sudo)',
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.warn(`Systemctl with sudo also failed: ${error.message}`);
-      return null;
-    }
+    logger.info('Attempting with sudo...');
+    const result = await this._executeRestartCommand(
+      `sudo systemctl restart ${serviceName}`,
+      'systemctl with sudo',
+      'Bot restart initiated via systemctl (with sudo)',
+      'warn'
+    );
+    if (result) logger.info('Bot restart succeeded with sudo');
+    return result;
   }
 
   _fallbackRestart() {

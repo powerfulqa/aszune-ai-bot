@@ -42,18 +42,25 @@ function executeParameterizedQuery(db, sql, params, single = false) {
 }
 
 /**
+ * User history query options
+ * @typedef {Object} UserHistoryOptions
+ * @property {Function} getDb - Function that returns the database instance
+ * @property {boolean} isDisabled - Whether the database is disabled
+ * @property {string} tableName - Table name to query
+ * @property {string} columns - Columns to select
+ * @property {string} userId - User ID to filter by
+ * @property {number} limit - Maximum records to return
+ * @property {string} [orderBy='timestamp'] - Column to order by (DESC)
+ */
+
+/**
  * Get user history records with configurable query
  * Used for command history, error history, etc.
- * @param {Function} getDb - Function that returns the database instance
- * @param {boolean} isDisabled - Whether the database is disabled
- * @param {string} tableName - Table name to query
- * @param {string} columns - Columns to select
- * @param {string} userId - User ID to filter by
- * @param {number} limit - Maximum records to return
- * @param {string} orderBy - Column to order by (DESC)
+ * @param {UserHistoryOptions} options - Query configuration options
  * @returns {Array} History records
  */
-function getUserHistory(getDb, isDisabled, tableName, columns, userId, limit, orderBy = 'timestamp') {
+function getUserHistory(options) {
+  const { getDb, isDisabled, tableName, columns, userId, limit, orderBy = 'timestamp' } = options;
   return executeSafeQuery(
     getDb,
     isDisabled,

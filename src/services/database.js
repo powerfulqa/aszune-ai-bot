@@ -413,25 +413,25 @@ class DatabaseService {
   }
 
   _getUserCommandHistory(userId, limit = 100) {
-    return getUserHistory(
-      () => this.getDb(),
-      this.isDisabled,
-      'command_usage',
-      'command_name, server_id, timestamp, success, response_time_ms',
+    return getUserHistory({
+      getDb: () => this.getDb(),
+      isDisabled: this.isDisabled,
+      tableName: 'command_usage',
+      columns: 'command_name, server_id, timestamp, success, response_time_ms',
       userId,
-      limit
-    );
+      limit,
+    });
   }
 
   _getUserErrorHistory(userId, limit = 50) {
-    return getUserHistory(
-      () => this.getDb(),
-      this.isDisabled,
-      'error_logs',
-      'error_type, error_message, command_name, timestamp',
+    return getUserHistory({
+      getDb: () => this.getDb(),
+      isDisabled: this.isDisabled,
+      tableName: 'error_logs',
+      columns: 'error_type, error_message, command_name, timestamp',
       userId,
-      limit
-    );
+      limit,
+    });
   }
 
   clearUserData(userId) {

@@ -16,16 +16,23 @@
  */
 
 /**
+ * Alert options for creating an alert
+ * @typedef {Object} AlertOptions
+ * @property {string} type - Alert type (memory, performance, reliability)
+ * @property {string} severity - Alert severity (critical, warning)
+ * @property {string} message - Alert message
+ * @property {*} value - Current value
+ * @property {string} threshold - Threshold value as string
+ * @property {string} timestamp - Alert timestamp
+ */
+
+/**
  * Create an alert object
- * @param {string} type - Alert type (memory, performance, reliability)
- * @param {string} severity - Alert severity (critical, warning)
- * @param {string} message - Alert message
- * @param {*} value - Current value
- * @param {string} threshold - Threshold value as string
- * @param {string} timestamp - Alert timestamp
+ * @param {AlertOptions} options - Alert configuration options
  * @returns {Object} Alert object
  */
-function createAlert(type, severity, message, value, threshold, timestamp) {
+function createAlert(options) {
+  const { type, severity, message, value, threshold, timestamp } = options;
   return {
     type,
     severity,
@@ -62,25 +69,25 @@ function checkMetricAlerts(currentMetrics, metricKey, alertType, config, timesta
 
   if (value > critical) {
     alerts.push(
-      createAlert(
-        alertType,
-        'critical',
-        criticalMsg,
-        `${value}${unit}`,
-        `${critical}${unit}`,
-        timestamp
-      )
+      createAlert({
+        type: alertType,
+        severity: 'critical',
+        message: criticalMsg,
+        value: `${value}${unit}`,
+        threshold: `${critical}${unit}`,
+        timestamp,
+      })
     );
   } else if (value > warning) {
     alerts.push(
-      createAlert(
-        alertType,
-        'warning',
-        warningMsg,
-        `${value}${unit}`,
-        `${warning}${unit}`,
-        timestamp
-      )
+      createAlert({
+        type: alertType,
+        severity: 'warning',
+        message: warningMsg,
+        value: `${value}${unit}`,
+        threshold: `${warning}${unit}`,
+        timestamp,
+      })
     );
   }
 

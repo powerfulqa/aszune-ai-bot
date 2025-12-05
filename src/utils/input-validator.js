@@ -306,24 +306,30 @@ class InputValidator {
   }
 
   /**
+   * Generic validation pipeline helper
+   * Runs a series of validation functions and returns first failure or success
+   * @param {Array<Function>} validators - Array of validation functions
+   * @returns {Object} - Validation result
+   * @private
+   */
+  static _runValidationPipeline(validators) {
+    for (const validator of validators) {
+      const result = validator();
+      if (!result.valid) return result;
+    }
+    return { valid: true };
+  }
+
+  /**
    * Perform the actual command validation logic
    * @param {string} command - Command to validate
    * @returns {Object} - Validation result
    */
   static _performCommandValidation(command) {
-    // Basic validation checks
-    const basicValidation = this._validateBasicCommand(command);
-    if (!basicValidation.valid) {
-      return basicValidation;
-    }
-
-    // Structure validation
-    const structureValidation = this._validateCommandStructure(command);
-    if (!structureValidation.valid) {
-      return structureValidation;
-    }
-
-    return { valid: true };
+    return this._runValidationPipeline([
+      () => this._validateBasicCommand(command),
+      () => this._validateCommandStructure(command),
+    ]);
   }
 
   /**
@@ -443,19 +449,10 @@ class InputValidator {
    * @returns {Object} - Validation result
    */
   static _performUrlValidation(url) {
-    // Basic validation checks
-    const basicValidation = this._validateBasicUrl(url);
-    if (!basicValidation.valid) {
-      return basicValidation;
-    }
-
-    // Format and safety validation
-    const formatValidation = this._validateUrlFormatAndSafety(url);
-    if (!formatValidation.valid) {
-      return formatValidation;
-    }
-
-    return { valid: true };
+    return this._runValidationPipeline([
+      () => this._validateBasicUrl(url),
+      () => this._validateUrlFormatAndSafety(url),
+    ]);
   }
 
   /**
