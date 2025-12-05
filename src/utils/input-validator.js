@@ -582,7 +582,7 @@ class InputValidator {
       } = options;
 
       // Early validation checks
-      const basicValidation = this._validateBasicInput(input, maxLength);
+      const basicValidation = this._validateBasicSanitizeInput(input, maxLength);
       if (!basicValidation.valid) {
         return basicValidation;
       }
@@ -624,7 +624,12 @@ class InputValidator {
     }
   }
 
-  static _validateBasicInput(input, maxLength) {
+  /**
+   * Basic validation for sanitization flow
+   * Returns sanitization-compatible result format
+   * @private
+   */
+  static _validateBasicSanitizeInput(input, maxLength) {
     if (input === null || input === undefined) {
       return {
         valid: false,

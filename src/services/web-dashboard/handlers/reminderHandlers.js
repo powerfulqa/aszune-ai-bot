@@ -13,7 +13,10 @@ const {
   sendDeleteError,
   sendErrorWithEmptyArray,
 } = require('./callbackHelpers');
-const { filterByStatus, filterBySearchText } = require('../../../utils/reminder-filters');
+const {
+  processReminderRequest,
+  processFilterReminders,
+} = require('../../../utils/reminder-filters');
 
 /**
  * Register reminder-related socket event handlers
@@ -49,26 +52,9 @@ function registerReminderHandlers(socket, _dashboard) {
  */
 function handleRequestReminders(data, callback) {
   try {
-    const { userId = null, status = null } = data || {};
-
-    // Get ALL reminders from database (not just future active ones)
-    let reminders = databaseService.getAllReminders(userId);
-
-    // Apply status filter if requested using shared utility
-    reminders = filterByStatus(reminders, status);
-
-    const stats = databaseService.getReminderStats();
-
-    if (callback) {
-      callback({
-        reminders: reminders || [],
-        stats,
-        total: reminders?.length || 0,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    logger.debug(`Reminders requested: ${reminders?.length || 0} found`);
+    const result = processReminderRequest(databaseService, data);
+    if (callback) callback(result);
+    logger.debug(`Reminders requested: ${result.total} found`);
   } catch (error) {
     logger.error('Error retrieving reminders:', error);
     sendError(callback, error.message, { reminders: [], stats: {} });
@@ -196,24 +182,9 @@ function handleDeleteReminder(data, callback) {
  */
 function handleFilterReminders(data, callback) {
   try {
-    const { userId = null, status = null, searchText = null } = data || {};
-
-    let reminders = databaseService.getActiveReminders(userId);
-
-    // Use shared filter utilities
-    reminders = filterByStatus(reminders, status);
-    reminders = filterBySearchText(reminders, searchText);
-
-    if (callback) {
-      callback({
-        reminders: reminders || [],
-        total: reminders?.length || 0,
-        filters: { userId, status, searchText },
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    logger.debug(`Reminders filtered: ${reminders?.length || 0} results`);
+    const result = processFilterReminders(databaseService, data);
+    if (callback) callback(result);
+    logger.debug(`Reminders filtered: ${result.total} results`);
   } catch (error) {
     logger.error('Error filtering reminders:', error);
     sendErrorWithEmptyArray(callback, error.message, 'reminders');

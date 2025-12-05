@@ -6,6 +6,35 @@ const dns = require('dns').promises;
 const execPromise = promisify(exec);
 
 /**
+ * Execute command and detect IP assignment based on output patterns
+ * @param {string} command - Shell command to execute
+ * @param {number} timeout - Command timeout in ms
+ * @param {Object} patterns - Detection patterns { static: string|string[], dhcp: string|string[] }
+ * @param {string} source - Source name for logging
+ * @returns {Promise<string|null>} 'Static', 'DHCP', or null
+ * @private
+ */
+async function detectIpAssignmentFromCommand(command, timeout, patterns, source) {
+  try {
+    const { stdout } = await execPromise(command, { timeout });
+    const staticPatterns = Array.isArray(patterns.static) ? patterns.static : [patterns.static];
+    const dhcpPatterns = Array.isArray(patterns.dhcp) ? patterns.dhcp : [patterns.dhcp];
+
+    if (staticPatterns.some((p) => stdout.includes(p))) {
+      logger.debug(`Detected IP assignment from ${source}: Static`);
+      return 'Static';
+    }
+    if (dhcpPatterns.some((p) => stdout.includes(p))) {
+      logger.debug(`Detected IP assignment from ${source}: DHCP`);
+      return 'DHCP';
+    }
+  } catch {
+    // Source not available
+  }
+  return null;
+}
+
+/**
  * Network detection service - handles DNS, gateway, DHCP detection
  * Extracted to reduce WebDashboardService complexity
  */
@@ -203,42 +232,24 @@ class NetworkDetector {
   }
 
   static async _checkNetworkInterfaces() {
-    try {
-      const { stdout } = await execPromise('cat /etc/network/interfaces 2>/dev/null', {
-        timeout: 2000,
-      });
-      if (stdout.includes('iface eth0 inet static') || stdout.includes('iface wlan0 inet static')) {
-        logger.debug('Detected IP assignment from /etc/network/interfaces: Static');
-        return 'Static';
-      }
-      if (stdout.includes('iface eth0 inet dhcp') || stdout.includes('iface wlan0 inet dhcp')) {
-        logger.debug('Detected IP assignment from /etc/network/interfaces: DHCP');
-        return 'DHCP';
-      }
-    } catch {
-      // interfaces file not found
-    }
-    return null;
+    return detectIpAssignmentFromCommand(
+      'cat /etc/network/interfaces 2>/dev/null',
+      2000,
+      {
+        static: ['iface eth0 inet static', 'iface wlan0 inet static'],
+        dhcp: ['iface eth0 inet dhcp', 'iface wlan0 inet dhcp'],
+      },
+      '/etc/network/interfaces'
+    );
   }
 
   static async _checkNetworkManager() {
-    try {
-      const { stdout } = await execPromise(
-        'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
-        { timeout: 3000 }
-      );
-      if (stdout.includes('manual')) {
-        logger.debug('Detected IP assignment via NetworkManager: Static');
-        return 'Static';
-      }
-      if (stdout.includes('auto') || stdout.includes('dhcp')) {
-        logger.debug('Detected IP assignment via NetworkManager: DHCP');
-        return 'DHCP';
-      }
-    } catch {
-      // NetworkManager not available
-    }
-    return null;
+    return detectIpAssignmentFromCommand(
+      'nmcli -t -f DEVICE,IP4.METHOD dev show 2>/dev/null | grep -v lo',
+      3000,
+      { static: 'manual', dhcp: ['auto', 'dhcp'] },
+      'NetworkManager'
+    );
   }
 
   static async _checkSystemdNetworkd() {
@@ -251,6 +262,7 @@ class NetworkDetector {
         logger.debug('Detected IP assignment via systemd-networkd: DHCP');
         return 'DHCP';
       }
+      // For static, both DHCP4 and DHCP6 must be 'no'
       if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
         logger.debug('Detected IP assignment via systemd-networkd: Static');
         return 'Static';

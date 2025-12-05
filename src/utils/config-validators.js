@@ -70,7 +70,7 @@ function validateConfigContent(fileType, content) {
   } else if (fileType === 'js') {
     return validateJsContent(content);
   }
-  
+
   return { valid: true, errors: [], warnings: [] };
 }
 

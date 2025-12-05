@@ -91,13 +91,13 @@ function getRemindersWithFilter(db, userId, whereClause = '', orderBy = 'schedul
   const hasUserId = userId !== null && userId !== undefined;
   const userClause = hasUserId ? 'user_id = ?' : '1=1';
   const fullWhereClause = whereClause ? `${userClause} AND ${whereClause}` : userClause;
-  
+
   const sql = `
     SELECT * FROM reminders
     WHERE ${fullWhereClause}
     ORDER BY ${orderBy}
   `;
-  
+
   const stmt = db.prepare(sql);
   return hasUserId ? stmt.all(userId) : stmt.all();
 }

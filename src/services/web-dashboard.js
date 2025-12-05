@@ -19,7 +19,12 @@ const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 const { getBootEnabledStatus } = require('./web-dashboard/handlers/serviceHandlers');
 const { buildServiceObject, buildNetworkInterfaces } = require('../utils/system-info');
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
-const { filterByStatus, filterBySearchText } = require('../utils/reminder-filters');
+const {
+  filterByStatus,
+  filterBySearchText,
+  processReminderRequest,
+  processFilterReminders,
+} = require('../utils/reminder-filters');
 
 class WebDashboardService {
   constructor() {
@@ -1631,26 +1636,9 @@ class WebDashboardService {
   setupReminderHandlers(socket) {
     socket.on('request_reminders', (data, callback) => {
       try {
-        const { userId = null, status = null } = data || {};
-
-        // Get ALL reminders from database (not just future active ones)
-        let reminders = databaseService.getAllReminders(userId);
-
-        // Apply status filter if requested using shared utility
-        reminders = filterByStatus(reminders, status);
-
-        const stats = databaseService.getReminderStats();
-
-        if (callback) {
-          callback({
-            reminders: reminders || [],
-            stats,
-            total: reminders?.length || 0,
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        logger.debug(`Reminders requested: ${reminders?.length || 0} found`);
+        const result = processReminderRequest(databaseService, data);
+        if (callback) callback(result);
+        logger.debug(`Reminders requested: ${result.total} found`);
       } catch (error) {
         logger.error('Error retrieving reminders:', error);
         if (callback) callback({ error: error.message, reminders: [], stats: {} });
@@ -1775,24 +1763,9 @@ class WebDashboardService {
 
   handleFilterReminders(data, callback) {
     try {
-      const { userId = null, status = null, searchText = null } = data || {};
-
-      let reminders = databaseService.getActiveReminders(userId);
-
-      // Use shared filter utilities
-      reminders = filterByStatus(reminders, status);
-      reminders = filterBySearchText(reminders, searchText);
-
-      if (callback) {
-        callback({
-          reminders: reminders || [],
-          total: reminders?.length || 0,
-          filters: { userId, status, searchText },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      logger.debug(`Reminders filtered: ${reminders?.length || 0} results`);
+      const result = processFilterReminders(databaseService, data);
+      if (callback) callback(result);
+      logger.debug(`Reminders filtered: ${result.total} results`);
     } catch (error) {
       logger.error('Error filtering reminders:', error);
       if (callback) callback({ error: error.message, reminders: [] });

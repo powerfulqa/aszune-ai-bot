@@ -128,7 +128,13 @@ const ALERT_CONFIGS = {
  * @returns {Array} Memory alerts
  */
 function checkMemoryAlerts(currentMetrics, timestamp) {
-  return checkMetricAlerts(currentMetrics, 'memoryUsage', 'memory', ALERT_CONFIGS.memory, timestamp);
+  return checkMetricAlerts(
+    currentMetrics,
+    'memoryUsage',
+    'memory',
+    ALERT_CONFIGS.memory,
+    timestamp
+  );
 }
 
 /**

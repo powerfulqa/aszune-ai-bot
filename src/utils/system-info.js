@@ -16,7 +16,7 @@ function formatUptime(uptimeSeconds) {
   const hours = Math.floor(uptimeSeconds / 3600);
   const minutes = Math.floor((uptimeSeconds % 3600) / 60);
   const seconds = Math.floor(uptimeSeconds % 60);
-  
+
   return {
     hours,
     minutes,
@@ -53,7 +53,7 @@ function buildServiceObject(bootEnabled, options = {}) {
     icon = '🤖',
     port = '3000 (Dashboard)',
   } = options;
-  
+
   const uptimeSeconds = Math.floor(process.uptime());
   const { formatted: uptime } = formatUptime(uptimeSeconds);
   const memoryMB = getMemoryUsageMB(2);
