@@ -9,7 +9,7 @@ const execPromise = promisify(exec);
  * Execute command and detect IP assignment based on output patterns
  * @param {string} command - Shell command to execute
  * @param {number} timeout - Command timeout in ms
- * @param {Object} patterns - Detection patterns { static: string|string[], dhcp: string|string[] }
+ * @param {Object} patterns - Detection patterns { static: string|string[], dhcp: string|string[], staticAll?: boolean }
  * @param {string} source - Source name for logging
  * @returns {Promise<string|null>} 'Static', 'DHCP', or null
  * @private
@@ -20,13 +20,18 @@ async function detectIpAssignmentFromCommand(command, timeout, patterns, source)
     const staticPatterns = Array.isArray(patterns.static) ? patterns.static : [patterns.static];
     const dhcpPatterns = Array.isArray(patterns.dhcp) ? patterns.dhcp : [patterns.dhcp];
 
-    if (staticPatterns.some((p) => stdout.includes(p))) {
-      logger.debug(`Detected IP assignment from ${source}: Static`);
-      return 'Static';
-    }
+    // DHCP check first (takes precedence)
     if (dhcpPatterns.some((p) => stdout.includes(p))) {
       logger.debug(`Detected IP assignment from ${source}: DHCP`);
       return 'DHCP';
+    }
+    // Static check: use AND logic if staticAll is true, otherwise OR logic
+    const staticMatch = patterns.staticAll
+      ? staticPatterns.every((p) => stdout.includes(p))
+      : staticPatterns.some((p) => stdout.includes(p));
+    if (staticMatch) {
+      logger.debug(`Detected IP assignment from ${source}: Static`);
+      return 'Static';
     }
   } catch {
     // Source not available
@@ -253,24 +258,16 @@ class NetworkDetector {
   }
 
   static async _checkSystemdNetworkd() {
-    try {
-      const { stdout } = await execPromise(
-        'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
-        { timeout: 2000 }
-      );
-      if (stdout.includes('DHCP4: yes') || stdout.includes('DHCP6: yes')) {
-        logger.debug('Detected IP assignment via systemd-networkd: DHCP');
-        return 'DHCP';
-      }
-      // For static, both DHCP4 and DHCP6 must be 'no'
-      if (stdout.includes('DHCP4: no') && stdout.includes('DHCP6: no')) {
-        logger.debug('Detected IP assignment via systemd-networkd: Static');
-        return 'Static';
-      }
-    } catch {
-      // systemd-networkd not available
-    }
-    return null;
+    return detectIpAssignmentFromCommand(
+      'networkctl status 2>/dev/null | grep -E "Address|DHCP"',
+      2000,
+      {
+        static: ['DHCP4: no', 'DHCP6: no'],
+        staticAll: true, // Both must match for static
+        dhcp: ['DHCP4: yes', 'DHCP6: yes'],
+      },
+      'systemd-networkd'
+    );
   }
 
   static async _checkDhclientProcess() {
