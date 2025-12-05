@@ -93,11 +93,6 @@ module.exports = {
 
   // Feature Flags (for development and gradual rollout)
   FEATURES: {
-    // License System Features (disabled by default for safe deployment)
-    LICENSE_VALIDATION: false,
-    LICENSE_SERVER: false,
-    LICENSE_ENFORCEMENT: false,
-
     // Development mode detection (enables all features for testing)
     DEVELOPMENT_MODE: false,
   },

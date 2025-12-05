@@ -183,15 +183,15 @@ expect(result).toContain('error');
 ```javascript
 // ❌ DEADLY - Module-level config access
 const config = require('../config/config');
-const value = config.FEATURES?.LICENSE_VALIDATION; // CIRCULAR DEPENDENCY!
+const value = config.SOME_VALUE; // CIRCULAR DEPENDENCY!
 
 // ✅ ALWAYS access inside functions
 function someFunction() {
   const config = require('../config/config');
   if (!config.FEATURES) {
-    config.FEATURES = { LICENSE_VALIDATION: false };
+    config.FEATURES = { DEVELOPMENT_MODE: false };
   }
-  return config.FEATURES.LICENSE_VALIDATION;
+  return config.SOME_VALUE;
 }
 ```
 
@@ -276,57 +276,6 @@ reminderService.on('reminderDue', async (reminder) => {
 npm run quality:check        # Quality check
 npm run quality:fix          # Auto-fix
 npm run security:all         # Security audit
-```
-
-## ⚠️ Feature Flag System
-
-### License System Feature Flags
-
-The license validation and enforcement system is implemented but **disabled by default** for safe
-deployment:
-
-```javascript
-// config/config.js - Feature flag configuration
-FEATURES: {
-  LICENSE_VALIDATION: process.env.ENABLE_LICENSE_VALIDATION === 'true' || false,
-  LICENSE_SERVER: process.env.ENABLE_LICENSE_SERVER === 'true' || false,
-  LICENSE_ENFORCEMENT: process.env.ENABLE_LICENSE_ENFORCEMENT === 'true' || false,
-  DEVELOPMENT_MODE: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
-},
-```
-
-### Usage Patterns (CRITICAL - Follow Exactly)
-
-```javascript
-// ✅ CORRECT - Check feature flags inside methods to avoid circular dependencies
-function validateLicense() {
-  const config = require('../config/config');
-
-  // ALWAYS check if FEATURES exists for backward compatibility
-  if (!config.FEATURES) {
-    return {
-      isValid: true,
-      message: 'License validation disabled (no FEATURES config)',
-      skipValidation: true,
-    };
-  }
-
-  if (!config.FEATURES.LICENSE_VALIDATION && !config.FEATURES.DEVELOPMENT_MODE) {
-    return {
-      isValid: true,
-      message: 'License validation disabled via feature flag',
-      skipValidation: true,
-    };
-  }
-
-  // License validation logic...
-}
-
-// ❌ DEADLY MISTAKE - Module-level feature checks (causes circular dependencies)
-const config = require('../config/config');
-if (config.FEATURES.LICENSE_VALIDATION) {
-  // This WILL break the entire application!
-}
 ```
 
 ## 📝 Command Handling Patterns
@@ -425,7 +374,6 @@ it('should handle shutdown', () => {
 // ❌ DEADLY MISTAKE - Will break entire app
 const config = require('../config/config');
 const someValue = config.SOME_VALUE; // Module level access = circular dependency
-const licenseEnabled = config.FEATURES?.LICENSE_VALIDATION; // Also breaks app!
 
 // ✅ ALWAYS ACCESS CONFIG INSIDE FUNCTIONS
 function someFunction() {
@@ -433,7 +381,7 @@ function someFunction() {
 
   // Always check FEATURES exists for backward compatibility
   if (!config.FEATURES) {
-    config.FEATURES = { LICENSE_VALIDATION: false }; // Safe fallback
+    config.FEATURES = { DEVELOPMENT_MODE: false }; // Safe fallback
   }
 
   return config.SOME_VALUE;

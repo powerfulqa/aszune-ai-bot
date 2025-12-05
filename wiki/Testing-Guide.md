@@ -102,7 +102,7 @@ Critical files: `src/index.js`, `src/config/config.js`, `src/services/chat.js`, 
 | ----- | ------ | ------------- |
 | Current | 65% baseline | Stability ensured |
 | Short-term | 72–74% | cache-manager, reminder-service, time-parser |
-| Mid-term | 78%+ | license modules (smoke tests), advanced time parsing |
+| Mid-term | 78%+ | advanced time parsing, edge-case scenarios |
 | Long-term | 82% re-evaluation | Broader scenario/performance tests |
 
 ## Branch Coverage Testing (Historical + Current Context)

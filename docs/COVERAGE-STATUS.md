@@ -63,16 +63,6 @@ No current flakes detected in last run (0 retries, no transient failures). If fl
 2. Isolate timing or environment dependencies (fake timers, deterministic seeds)
 3. Update this section with remediation notes
 
-## License & Feature Flags Note
-
-The 0% license-related module coverage is acceptable while license enforcement remains disabled by
-default. Before enabling any license feature flags in production, raise those modules to at least
-minimal (≥50%) statement coverage with:
-
-- Validation path test (valid key)
-- Failure path test (invalid key)
-- Timing-safe comparison test
-
 ## FAQ
 
 **Why dual thresholds?** Prevents brittle CI failures while guaranteeing high confidence in core

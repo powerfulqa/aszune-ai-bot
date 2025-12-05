@@ -79,9 +79,6 @@ if not exist .env (
         echo DB_PATH=./data/bot.db
         echo.
         echo # Optional Features
-        echo ENABLE_LICENSE_VALIDATION=false
-        echo ENABLE_LICENSE_SERVER=false
-        echo ENABLE_LICENSE_ENFORCEMENT=false
     ) > .env
     echo ❌ Please edit .env file with your tokens before starting the bot
 )

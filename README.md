@@ -113,29 +113,6 @@ For detailed API reference and technical specifications, see [RELEASE-NOTES-v1.9
    - **Location:** `./data/bot.db` (configurable via `DB_PATH`)
    - **No manual setup required:** The bot handles all database initialization
 
-5. **Optional: License System (Feature Flagged)**
-
-   The license validation system is currently **disabled by default**. You can:
-   - **Use without license**: Bot works normally with all v1.6.2 analytics features
-   - **Enable license features**: Set environment variables to test license functionality
-   - **Development mode**: Set `NODE_ENV=development` to enable all license features
-
-   ```env
-   # Optional License Configuration (disabled by default)
-   ASZUNE_LICENSE_KEY=your_license_key_here
-
-   # Enable specific license features for testing
-   ENABLE_LICENSE_VALIDATION=true
-   ENABLE_LICENSE_SERVER=true
-   ENABLE_LICENSE_ENFORCEMENT=true
-
-   # OR enable everything for development
-   NODE_ENV=development
-   ```
-
-   **License Registration** (when enabled):
-   [Create License Registration](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
-
 ---
 
 ## Usage
@@ -279,16 +256,6 @@ Version 1.6.0 introduces comprehensive analytics accessible directly within Disc
 - **Operations Tracking**: Sets, deletes, evictions statistics
 - **Complete Field Coverage**: All statistics display proper values (no more "undefined")
 
-### 🔧 License Monitoring System
-
-Built-in license validation and monitoring:
-
-- **Automatic Validation**: License checked every 24 hours
-- **Violation Detection**: Unauthorized usage automatically reported
-- **Grace Period**: 7-day grace period for new installations
-- **Remote Monitoring**: Optional license server for centralized tracking
-- **Raspberry Pi Integration**: Specialized setup for Pi-based monitoring
-
 ### 📈 Benefits
 
 - **No External Tools Required**: All monitoring accessible within Discord
@@ -332,8 +299,6 @@ aszune-ai-bot/
 │       ├── error-handler.js       # Error handling utilities
 │       ├── input-validator.js     # Input validation and sanitization
 │       ├── lazy-loader.js         # Lazy loading utilities
-│       ├── license-server.js      # License server utilities
-│       ├── license-validator.js   # License validation
 │       ├── logger.js              # Logging utilities
 │       ├── memory-monitor.js      # Memory monitoring and GC
 │       ├── message-chunker.js     # Message chunking
@@ -363,8 +328,6 @@ aszune-ai-bot/
 │   ├── fix-line-endings.ps1       # Line ending normalization
 │   ├── fix-production.bat         # Production fix utilities
 │   ├── format-code.ps1            # Code formatting scripts
-│   ├── generate-license.*         # License generation tools
-│   ├── pi-license-setup.sh        # Raspberry Pi license setup
 │   ├── run-tests.bat              # Test execution scripts
 │   ├── start-test.bat             # Test environment setup
 │   └── README.md                  # Scripts documentation
@@ -494,75 +457,9 @@ Pull requests and ideas are always welcome! Please:
 
 ---
 
-## License & Usage
+## License
 
-**🔐 PROPRIETARY SOFTWARE** — Licensed usage only
-
-> **⚠️ FEATURE FLAGGED**: The license validation system is currently **disabled by default** for
-> safe deployment. All analytics and bot features work normally without licensing.
-
-### 📋 License Options
-
-| License Type   | Price      | Usage                         | Servers   | Support          |
-| -------------- | ---------- | ----------------------------- | --------- | ---------------- |
-| **Personal**   | FREE       | Personal Discord servers      | 1         | Community        |
-| **Community**  | $29/month  | Non-profit gaming communities | 3         | Email            |
-| **Commercial** | $299/month | Commercial Discord servers    | Unlimited | Priority         |
-| **Enterprise** | Custom     | White-label + source access   | Unlimited | Professional SLA |
-
-### 🚀 Quick Start (No License Required Currently)
-
-```bash
-# 1. Install and run (no license needed)
-npm install
-npm start
-
-# 2. Optional: Enable license features for testing
-ENABLE_LICENSE_VALIDATION=true npm start
-```
-
-### 🔧 License Feature Flags
-
-License functionality is behind feature flags for gradual rollout:
-
-```bash
-# Default: License features disabled
-npm start
-
-# Enable license validation only
-ENABLE_LICENSE_VALIDATION=true npm start
-
-# Enable license server
-ENABLE_LICENSE_SERVER=true npm start
-
-# Enable enforcement (requires validation)
-ENABLE_LICENSE_ENFORCEMENT=true npm start
-
-# Development mode: Enable all features
-NODE_ENV=development npm start
-```
-
-### 🛡️ License Enforcement (When Enabled)
-
-- ✅ **Built-in validation** - Software validates license on startup
-- ✅ **Grace period** - 7 days for new users to register
-- ✅ **Usage tracking** - Monitors compliance automatically
-- ❌ **Unauthorized use** - Terminates after grace period
-
-### 🚀 Getting Your License (For Future Use)
-
-1. **Personal License (Free)**:
-   [Create License Registration Issue](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
-2. **Commercial License**:
-   [Create Commercial License Request](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
-3. **Enterprise License**: Create a GitHub issue
-
-### 📧 Questions?
-
-- **License Issues**: Create a GitHub issue
-- **Technical Support**: Included with paid licenses
-
-**[📄 View Full License Terms](./LICENSE)**
+This project is open source. See [LICENSE](./LICENSE) for details.
 
 ---
 

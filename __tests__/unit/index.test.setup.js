@@ -8,9 +8,6 @@ const baseConfig = {
   },
   PI_OPTIMIZATIONS: { ENABLED: false },
   FEATURES: {
-    LICENSE_VALIDATION: false,
-    LICENSE_SERVER: false,
-    LICENSE_ENFORCEMENT: false,
     DEVELOPMENT_MODE: false,
   },
   COLORS: { PRIMARY: '#5865F2' },

@@ -69,7 +69,6 @@ All metrics exceed the **global baseline**; most critical files exceed or are ne
 - `services/cache-manager.js` – exercise eviction/error fallback paths
 - `services/reminder-service.js` – lifecycle + recovery scenarios
 - `utils/time-parser.js` – complex natural language branches
-- License-related modules (0%) – add smoke tests prior to enabling feature flags
 
 ### 82% Target Context
 
@@ -111,8 +110,8 @@ The dashboard complements in-Discord analytics by providing continuous real-time
 ## 🧹 Dead Code & Structural Cleanup
 
 - Removed or consolidated redundant internal logging/test-only branches
-- Flagged `enhanced-conversation-context` and license modules as deprecated (retained for future
-  feature-flag activation)
+- Flagged `enhanced-conversation-context` module as deprecated (retained for future feature-flag
+  activation)
 - Reduced unused error classification fallbacks; streamlined duplication in performance trackers
 - Outcome: Lower cognitive load; simpler maintenance path for upcoming v1.8.x test additions
 
@@ -168,7 +167,7 @@ Updated across `/docs` and `/wiki`:
 | Phase      | Target                          | Actions                                           |
 | ---------- | ------------------------------- | ------------------------------------------------- |
 | Short-term | Raise critical laggards to ≥80% | Add focused reminder + cache-manager tests        |
-| Mid-term   | Global ≥72–74%                  | Time-parser matrix, license smoke tests           |
+| Mid-term   | Global ≥72–74%                  | Time-parser matrix, edge-case scenarios           |
 | Long-term  | Revisit 78–82% global           | Expand analytical/performance edge-case scenarios |
 
 Global threshold will only rise once added surface stabilises (avoid churn-driven regressions).

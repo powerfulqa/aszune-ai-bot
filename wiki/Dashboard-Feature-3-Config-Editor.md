@@ -32,7 +32,6 @@ logged for audit trails.
 Discord Bot Token: DISCORD_BOT_TOKEN=your_discord_bot_token_here
 Perplexity API Key: PERPLEXITY_API_KEY=your_perplexity_api_key_here
 Database Path: DB_PATH=./data/bot.db
-License Key: ASZUNE_LICENSE_KEY=xxx
 Port: PORT=3000
 Debug Mode: DEBUG=true|false
 ```
@@ -53,11 +52,6 @@ CACHE.EVICTION_STRATEGY;
 PERFORMANCE.TIMEOUT;
 PERFORMANCE.MAX_RETRIES;
 PERFORMANCE.THROTTLE_RATE;
-
-// Feature flags
-FEATURES.LICENSE_VALIDATION;
-FEATURES.LICENSE_SERVER;
-FEATURES.LICENSE_ENFORCEMENT;
 ```
 
 ### Validation System
@@ -186,11 +180,6 @@ Performance Tuning
 ├── Timeout (ms)
 ├── Max Retries
 └── Throttle Rate
-
-Feature Flags
-├── License Validation
-├── License Server
-└── License Enforcement
 ```
 
 ### Viewing Change History
@@ -424,7 +413,6 @@ GET /api/config/history?limit=50&startDate=2024-01-14&endDate=2024-01-15
 | CACHE.MAX_SIZE              | Number  | 10-1024 MB    | 512     |
 | CACHE.TTL                   | Number  | 300-86400 sec | 3600    |
 | API.TIMEOUT                 | Number  | 1000-30000 ms | 5000    |
-| FEATURES.LICENSE_VALIDATION | Boolean | true/false    | false   |
 
 ## Troubleshooting
 

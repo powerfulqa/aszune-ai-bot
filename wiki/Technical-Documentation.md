@@ -840,7 +840,6 @@ async function shutdown(signal) {
 ### v1.6.0 Security Enhancements
 
 - **Timing Attack Prevention**: Implemented `crypto.timingSafeEqual()` for secure API key comparison
-  in license server
 - **Enhanced Input Validation**: Improved null safety and error boundary handling across all modules
 - **Authentication Security**: Eliminated timing-based attack vectors in authentication systems
 - **Code Quality Security**: Systematic removal of undefined variable access and circular

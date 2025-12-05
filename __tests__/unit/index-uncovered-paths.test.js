@@ -36,8 +36,6 @@ describe('Index Uncovered Paths', () => {
     mockConfig = {
       DISCORD_BOT_TOKEN: 'test-token',
       FEATURES: {
-        LICENSE_VALIDATION: false,
-        LICENSE_SERVER: false,
         DEVELOPMENT_MODE: false,
       },
       PI_OPTIMIZATIONS: {
