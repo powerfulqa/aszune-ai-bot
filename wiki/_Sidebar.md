@@ -36,6 +36,6 @@
 
 ### External Links
 
-- [GitHub Repository](https://github.com/chrishaycock/aszune-ai-bot)
+- [GitHub Repository](https://github.com/powerfulqa/aszune-ai-bot)
 - [Discord.js Docs](https://discord.js.org/)
 - [Perplexity API Docs](https://docs.perplexity.ai/)

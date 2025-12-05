@@ -124,5 +124,5 @@ maintainability improvements.
 
 ## Full Changelog
 
-See the [commit history](https://github.com/chrishaycock/aszune-ai-bot/compare/v1.9.0...v1.10.0) for
+See the [commit history](https://github.com/powerfulqa/aszune-ai-bot/compare/v1.9.0...v1.10.0) for
 the complete list of changes.

@@ -78,7 +78,7 @@ run: npm test
 
 The current status of the CI pipeline is displayed on the README:
 
-![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
+![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)
 
 ## Benefits
 

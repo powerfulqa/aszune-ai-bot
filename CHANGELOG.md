@@ -450,18 +450,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - JavaScript `Map` objects for conversation history and rate limiting
 - Enhanced error handling and environment variable validation
 
-[Unreleased]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.5.0...HEAD
-[1.5.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.4.1...v1.5.0
-[1.4.1]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.4.0...v1.4.1
-[1.4.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.6...v1.4.0
-[1.3.6]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.5...v1.3.6
-[1.3.5]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.4...v1.3.5
-[1.3.4]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.3...v1.3.4
-[1.3.3]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.2...v1.3.3
-[1.3.2]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.1...v1.3.2
-[1.3.1]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.3.0...v1.3.1
-[1.3.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.2.2...v1.3.0
-[1.2.2]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.2.1...v1.2.2
-[1.2.1]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.2.0...v1.2.1
-[1.2.0]: https://github.com/chrishaycock/aszune-ai-bot/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/chrishaycock/aszune-ai-bot/releases/tag/v1.1.0
+[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.6...v1.4.0
+[1.3.6]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.5...v1.3.6
+[1.3.5]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.4...v1.3.5
+[1.3.4]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.3...v1.3.4
+[1.3.3]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/powerfulqa/aszune-ai-bot/releases/tag/v1.1.0

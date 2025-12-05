@@ -1,8 +1,8 @@
 # Aszune AI Bot (v1.10.0)
 
-[![CI/CD](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/chrishaycock/aszune-ai-bot/actions/workflows/unified-ci.yml)
-[![Codecov](https://codecov.io/gh/chrishaycock/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/chrishaycock/aszune-ai-bot)
-[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/chrishaycock/projects/aszune-ai-bot)
+[![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
+[![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
+[![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-1661%20Passing-brightgreen.svg)](#testing--coverage)
 
@@ -89,7 +89,7 @@ For detailed API reference and technical specifications, see [RELEASE-NOTES-v1.9
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/chrishaycock/aszune-ai-bot.git
+   git clone https://github.com/powerfulqa/aszune-ai-bot.git
    cd aszune-ai-bot
    ```
 
@@ -134,7 +134,7 @@ For detailed API reference and technical specifications, see [RELEASE-NOTES-v1.9
    ```
 
    **License Registration** (when enabled):
-   [Create License Registration](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+   [Create License Registration](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 
 ---
 
@@ -552,9 +552,9 @@ NODE_ENV=development npm start
 ### 🚀 Getting Your License (For Future Use)
 
 1. **Personal License (Free)**:
-   [Create License Registration Issue](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
+   [Create License Registration Issue](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=license-registration&template=license-registration.md&title=Personal%20License%20Request)
 2. **Commercial License**:
-   [Create Commercial License Request](https://github.com/chrishaycock/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
+   [Create Commercial License Request](https://github.com/powerfulqa/aszune-ai-bot/issues/new?labels=commercial-license&template=commercial-license.md&title=Commercial%20License%20Request)
 3. **Enterprise License**: Create a GitHub issue
 
 ### 📧 Questions?

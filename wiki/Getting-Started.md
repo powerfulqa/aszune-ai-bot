@@ -18,7 +18,7 @@ Follow these steps to set up the Aszune AI Bot:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/chrishaycock/aszune-ai-bot.git
+   git clone https://github.com/powerfulqa/aszune-ai-bot.git
    cd aszune-ai-bot
    ```
 

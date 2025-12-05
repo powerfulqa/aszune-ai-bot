@@ -2504,13 +2504,13 @@ class WebDashboardService {
 
       try {
         commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-        commitUrl = `https://github.com/chrishaycock/aszune-ai-bot/commit/${commitSha}`;
+        commitUrl = `https://github.com/powerfulqa/aszune-ai-bot/commit/${commitSha}`;
       } catch (e) {
         // Git not available
       }
 
       const version = packageJson.version || '1.8.0';
-      releaseUrl = `https://github.com/chrishaycock/aszune-ai-bot/releases/tag/v${version}`;
+      releaseUrl = `https://github.com/powerfulqa/aszune-ai-bot/releases/tag/v${version}`;
 
       return {
         version,
@@ -2526,7 +2526,7 @@ class WebDashboardService {
         version: '1.8.0',
         commit: 'unknown',
         commitUrl: '',
-        releaseUrl: 'https://github.com/chrishaycock/aszune-ai-bot/releases',
+        releaseUrl: 'https://github.com/powerfulqa/aszune-ai-bot/releases',
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
       };
