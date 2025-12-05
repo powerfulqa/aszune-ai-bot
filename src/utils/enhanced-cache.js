@@ -345,43 +345,38 @@ class EnhancedCache {
   }
 
   /**
+   * Check if cache is under limits
+   * @private
+   */
+  _isUnderLimits(newEntrySize) {
+    return (
+      this.entries.size < this.maxEntries &&
+      this.metrics.totalMemory + newEntrySize <= this.maxMemory
+    );
+  }
+
+  /**
+   * Execute eviction based on current strategy
+   * @private
+   */
+  _executeEviction() {
+    const evictionMethods = {
+      [EVICTION_STRATEGIES.LRU]: () => this.evictLRU(),
+      [EVICTION_STRATEGIES.LFU]: () => this.evictLFU(),
+      [EVICTION_STRATEGIES.TTL]: () => this.evictExpired(),
+      [EVICTION_STRATEGIES.SIZE_BASED]: () => this.evictBySize(),
+    };
+    const method = evictionMethods[this.evictionStrategy] || (() => this.evictHybrid());
+    method();
+  }
+
+  /**
    * Ensure there's space for a new entry
    * @param {CacheEntry} newEntry - New entry to add
    */
   ensureSpace(newEntry) {
-    // Check if we're under limits
-    if (
-      this.entries.size < this.maxEntries &&
-      this.metrics.totalMemory + newEntry.size <= this.maxMemory
-    ) {
-      return; // No eviction needed
-    }
-
-    // If we're at or will exceed the limit, evict before adding
-    if (
-      this.entries.size >= this.maxEntries ||
-      this.metrics.totalMemory + newEntry.size > this.maxMemory
-    ) {
-      // Perform eviction based on strategy
-      switch (this.evictionStrategy) {
-        case EVICTION_STRATEGIES.LRU:
-          this.evictLRU();
-          break;
-        case EVICTION_STRATEGIES.LFU:
-          this.evictLFU();
-          break;
-        case EVICTION_STRATEGIES.TTL:
-          this.evictExpired();
-          break;
-        case EVICTION_STRATEGIES.SIZE_BASED:
-          this.evictBySize();
-          break;
-        case EVICTION_STRATEGIES.HYBRID:
-        default:
-          this.evictHybrid();
-          break;
-      }
-    }
+    if (this._isUnderLimits(newEntry.size)) return;
+    this._executeEviction();
   }
 
   /**

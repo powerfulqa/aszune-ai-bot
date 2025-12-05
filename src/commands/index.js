@@ -625,47 +625,58 @@ const commands = {
 };
 
 /**
+ * Check if command text matches a command's trigger
+ * @param {string} commandPrefix - The command prefix from message
+ * @param {Object} command - Command object to check
+ * @returns {boolean} Whether command matches
+ */
+function isCommandMatch(commandPrefix, command) {
+  const isMainCommand = commandPrefix === command.textCommand;
+  const hasAliases = command.aliases && Array.isArray(command.aliases);
+  return isMainCommand || (hasAliases && command.aliases.includes(commandPrefix));
+}
+
+/**
+ * Create mock interaction for text commands
+ * @param {Object} message - Discord message object
+ * @returns {Object} Mock interaction object
+ */
+function createMockInteraction(message) {
+  return {
+    user: message.author,
+    channel: message.channel,
+    content: message.content,
+    reply: (content) => message.reply(content),
+    deferReply: async () => message.channel.sendTyping(),
+    editReply: (content) => message.reply(content),
+  };
+}
+
+/**
  * Handle text commands from messages
  * @param {Object} message - Discord.js message object
  * @returns {Promise<Object|null>} - Command result or null if no command matched
  */
 async function handleTextCommand(message) {
   const commandText = message.content.trim();
+  const commandPrefix = commandText.split(/\s+/)[0].toLowerCase();
 
   for (const [name, command] of Object.entries(commands)) {
-    // Check if the command text starts with the main command or any aliases
-    const commandPrefix = commandText.split(/\s+/)[0].toLowerCase(); // Get just the command part
-    const isMainCommand = commandPrefix === command.textCommand;
-    const hasAliases = command.aliases && Array.isArray(command.aliases);
-    const isAliasCommand = hasAliases && command.aliases.includes(commandPrefix);
+    if (!isCommandMatch(commandPrefix, command)) continue;
 
-    if (isMainCommand || isAliasCommand) {
+    try {
+      return await command.execute(createMockInteraction(message));
+    } catch (error) {
+      const errorResponse = ErrorHandler.handleError(error, `text command ${name}`, {
+        userId: message.author.id,
+        command: name,
+        content: message.content,
+      });
+      logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
       try {
-        // Create a mock interaction object for text commands
-        const mockInteraction = {
-          user: message.author,
-          channel: message.channel,
-          content: message.content, // Pass the content for text command parsing
-          reply: (content) => message.reply(content),
-          deferReply: async () => message.channel.sendTyping(),
-          editReply: (content) => message.reply(content),
-        };
-
-        return await command.execute(mockInteraction);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, `text command ${name}`, {
-          userId: message.author.id,
-          command: name,
-          content: message.content,
-        });
-        logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
-        try {
-          return await message.reply(errorResponse.message);
-        } catch (replyError) {
-          logger.error(
-            `Failed to send error reply for text command ${name}: ${replyError.message}`
-          );
-        }
+        return await message.reply(errorResponse.message);
+      } catch (replyError) {
+        logger.error(`Failed to send error reply for text command ${name}: ${replyError.message}`);
       }
     }
   }

@@ -28,6 +28,21 @@ const {
   handleErrorResponse,
 } = require('./perplexity-secure/helpers/responseValidator');
 
+// Test mock definitions for lazy loading
+const TEST_MOCKS = {
+  '../utils/connection-throttler': { executeRequest: async (fn) => await fn() },
+  '../utils/cache-pruner': { pruneCache: () => {} },
+};
+
+/**
+ * Get test mock for import path if in test environment
+ * @param {string} importPath - Module path
+ * @returns {Object|null} Mock object or null
+ */
+function getTestMock(importPath) {
+  return process.env.NODE_ENV === 'test' ? TEST_MOCKS[importPath] || null : null;
+}
+
 // Simplified lazy loader for tests
 const lazyLoadModule = (importPath) => {
   let module;
@@ -36,15 +51,8 @@ const lazyLoadModule = (importPath) => {
       try {
         module = require(importPath);
       } catch (e) {
-        // In test environment, return mock objects if module doesn't exist
-        if (process.env.NODE_ENV === 'test') {
-          if (importPath === '../utils/connection-throttler') {
-            return { executeRequest: async (fn) => await fn() };
-          }
-          if (importPath === '../utils/cache-pruner') {
-            return { pruneCache: () => {} };
-          }
-        }
+        const mock = getTestMock(importPath);
+        if (mock) return mock;
         throw e;
       }
     }
