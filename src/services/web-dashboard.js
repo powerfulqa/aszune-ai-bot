@@ -19,12 +19,7 @@ const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 const { getBootEnabledStatus } = require('./web-dashboard/handlers/serviceHandlers');
 const { buildServiceObject, buildNetworkInterfaces } = require('../utils/system-info');
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
-const {
-  filterByStatus,
-  filterBySearchText,
-  processReminderRequest,
-  processFilterReminders,
-} = require('../utils/reminder-filters');
+const { processReminderRequest, processFilterReminders } = require('../utils/reminder-filters');
 
 class WebDashboardService {
   constructor() {
