@@ -225,28 +225,29 @@ class Dashboard {
     this.updateDiscordStatus();
   }
 
+  /**
+   * Get Discord status text based on error message
+   * @param {string} errorMsg - Error message from response
+   * @returns {string} Status text to display
+   * @private
+   */
+  _getDiscordStatusText(errorMsg) {
+    if (errorMsg.includes('rate limit')) return '⚠ Rate Limited';
+    if (errorMsg.includes('not initialized')) return '– Not Started';
+    return '✗ Disconnected';
+  }
+
   updateDiscordStatus() {
     if (!this.socket) return;
 
     this.socket.emit('request_discord_status', {}, (response) => {
-      const statusEl = document.getElementById('discord-connection-status');
-      const uptimeEl = document.getElementById('discord-uptime');
-
       if (response && response.connected) {
-        if (statusEl) statusEl.textContent = '✓ Connected';
-        if (uptimeEl) uptimeEl.textContent = response.uptime || '-';
+        this._setText('discord-connection-status', '✓ Connected');
+        this._setText('discord-uptime', response.uptime || '-');
       } else {
-        if (statusEl) {
-          const errorMsg = response?.error || 'Disconnected';
-          if (errorMsg.includes('rate limit')) {
-            statusEl.textContent = '⚠ Rate Limited';
-          } else if (errorMsg.includes('not initialized')) {
-            statusEl.textContent = '– Not Started';
-          } else {
-            statusEl.textContent = '✗ Disconnected';
-          }
-        }
-        if (uptimeEl) uptimeEl.textContent = '-';
+        const errorMsg = response?.error || 'Disconnected';
+        this._setText('discord-connection-status', this._getDiscordStatusText(errorMsg));
+        this._setText('discord-uptime', '-');
       }
     });
   }
@@ -798,22 +799,32 @@ class Dashboard {
     }
   }
 
+  /**
+   * Handle successful Git pull response
+   * @param {Object} data - Response data
+   * @private
+   */
+  _handleGitPullSuccess(data) {
+    this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
+    this.addActivityItem(data.output || data.message || 'Pull successful', 'info', true);
+  }
+
+  /**
+   * Handle failed Git pull response
+   * @param {Object} data - Response data
+   * @private
+   */
+  _handleGitPullFailure(data) {
+    this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
+    if (data.details) this.addActivityItem(data.details, 'error', true);
+    if (data.output) this.addActivityItem(data.output, 'error', true);
+  }
+
   handleGitPullResponse(data) {
     if (data.success) {
-      this.addActivityItem('✓ Git pull completed - changes loaded', 'info');
-      if (data.output) {
-        this.addActivityItem(data.output, 'info', true);
-      } else {
-        this.addActivityItem(data.message || 'Pull successful', 'info');
-      }
+      this._handleGitPullSuccess(data);
     } else {
-      this.addActivityItem(`✗ Git pull failed: ${data.error || 'Unknown error'}`, 'error');
-      if (data.details) {
-        this.addActivityItem(data.details, 'error', true);
-      }
-      if (data.output) {
-        this.addActivityItem(data.output, 'error', true);
-      }
+      this._handleGitPullFailure(data);
     }
   }
 }

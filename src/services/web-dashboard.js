@@ -1686,22 +1686,39 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Validate reminder edit/delete input has required fields
+   * @private
+   */
+  _validateReminderInput(data, requiredFields) {
+    for (const field of requiredFields) {
+      if (!data[field]) return `Missing required fields: ${requiredFields.join(', ')}`;
+    }
+    return null;
+  }
+
+  /**
+   * Find reminder by ID from active reminders
+   * @private
+   */
+  _findReminder(userId, reminderId) {
+    const allReminders = databaseService.getActiveReminders(userId);
+    return allReminders?.find((r) => r.id === reminderId);
+  }
+
   handleEditReminder(data, callback) {
     try {
-      const { reminderId, userId, message, scheduledTime } = data;
-
-      if (!reminderId || !userId) {
-        const error = new Error('Missing required fields: reminderId, userId');
-        if (callback) callback({ error: error.message, updated: false });
+      const validationError = this._validateReminderInput(data, ['reminderId', 'userId']);
+      if (validationError) {
+        if (callback) callback({ error: validationError, updated: false });
         return;
       }
 
-      const allReminders = databaseService.getActiveReminders(userId);
-      const reminder = allReminders?.find((r) => r.id === reminderId);
+      const { reminderId, userId, message, scheduledTime } = data;
+      const reminder = this._findReminder(userId, reminderId);
 
       if (!reminder) {
-        const error = new Error(`Reminder not found: ${reminderId}`);
-        if (callback) callback({ error: error.message, updated: false });
+        if (callback) callback({ error: `Reminder not found: ${reminderId}`, updated: false });
         return;
       }
 
@@ -1709,14 +1726,7 @@ class WebDashboardService {
       if (scheduledTime) reminder.scheduled_time = scheduledTime;
 
       logger.info(`Reminder ${reminderId} updated`);
-
-      if (callback) {
-        callback({
-          updated: true,
-          reminder,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      if (callback) callback({ updated: true, reminder, timestamp: new Date().toISOString() });
     } catch (error) {
       logger.error('Error editing reminder:', error);
       if (callback) callback({ error: error.message, updated: false });
@@ -1725,31 +1735,26 @@ class WebDashboardService {
 
   handleDeleteReminder(data, callback) {
     try {
-      const { reminderId, userId } = data;
-
-      if (!reminderId || !userId) {
-        const error = new Error('Missing required fields: reminderId, userId');
-        if (callback) callback({ error: error.message, deleted: false });
+      const validationError = this._validateReminderInput(data, ['reminderId', 'userId']);
+      if (validationError) {
+        if (callback) callback({ error: validationError, deleted: false });
         return;
       }
 
+      const { reminderId, userId } = data;
       const deleted = databaseService.deleteReminder(reminderId, userId);
 
       if (!deleted) {
-        const error = new Error(`Reminder not found or already deleted: ${reminderId}`);
-        if (callback) callback({ error: error.message, deleted: false });
+        if (callback)
+          callback({
+            error: `Reminder not found or already deleted: ${reminderId}`,
+            deleted: false,
+          });
         return;
       }
 
       logger.info(`Reminder deleted: ${reminderId}`);
-
-      if (callback) {
-        callback({
-          deleted: true,
-          reminderId,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      if (callback) callback({ deleted: true, reminderId, timestamp: new Date().toISOString() });
     } catch (error) {
       logger.error('Error deleting reminder:', error);
       if (callback) callback({ error: error.message, deleted: false });
@@ -1846,6 +1851,22 @@ class WebDashboardService {
     return result.trim();
   }
 
+  /**
+   * Build Discord connected status response
+   * @private
+   */
+  _buildDiscordConnectedResponse() {
+    const uptime = this._formatUptime(this.discordClient.uptime || 0);
+    return {
+      connected: true,
+      username: this.discordClient.user.tag,
+      id: this.discordClient.user.id,
+      uptime,
+      guilds: this.discordClient.guilds.cache.size,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   async handleDiscordStatus(callback) {
     try {
       if (!this.discordClient) {
@@ -1855,24 +1876,9 @@ class WebDashboardService {
 
       const isReady = this.discordClient.isReady();
       if (isReady && this.discordClient.user) {
-        const uptime = this._formatUptime(this.discordClient.uptime || 0);
-        if (callback) {
-          callback({
-            connected: true,
-            username: this.discordClient.user.tag,
-            id: this.discordClient.user.id,
-            uptime,
-            guilds: this.discordClient.guilds.cache.size,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        if (callback) callback(this._buildDiscordConnectedResponse());
       } else {
-        if (callback) {
-          callback({
-            connected: false,
-            error: 'Discord bot is not connected',
-          });
-        }
+        if (callback) callback({ connected: false, error: 'Discord bot is not connected' });
       }
 
       logger.debug(`Discord status: ${isReady ? 'Connected' : 'Disconnected'}`);
@@ -1912,6 +1918,30 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Get action verb for service action message
+   * @private
+   */
+  _getActionVerb(action) {
+    const verbs = { stop: 'stopped', start: 'started', restart: 'restarted' };
+    return verbs[action] || action;
+  }
+
+  /**
+   * Build service action success response
+   * @private
+   */
+  _buildServiceActionResponse(serviceName, action, output) {
+    return {
+      success: true,
+      serviceName,
+      action,
+      message: `Successfully ${this._getActionVerb(action)} ${serviceName}`,
+      timestamp: new Date().toISOString(),
+      output,
+    };
+  }
+
   async handleServiceAction(data, callback) {
     try {
       const validationError = this._validateServiceActionInput(data);
@@ -1925,25 +1955,11 @@ class WebDashboardService {
 
       try {
         const output = await this.executePm2Command(serviceName, action);
-
-        if (callback) {
-          callback({
-            success: true,
-            serviceName,
-            action,
-            message: `Successfully ${action === 'stop' ? 'stopped' : action === 'start' ? 'started' : 'restarted'} ${serviceName}`,
-            timestamp: new Date().toISOString(),
-            output,
-          });
-        }
+        if (callback) callback(this._buildServiceActionResponse(serviceName, action, output));
       } catch (execError) {
         logger.error(`PM2 command failed: ${execError.message}`);
-        if (callback) {
-          callback({
-            error: `Failed to ${action} service: ${execError.message}`,
-            success: false,
-          });
-        }
+        if (callback)
+          callback({ error: `Failed to ${action} service: ${execError.message}`, success: false });
       }
     } catch (error) {
       logger.error('Error performing service action:', error);
@@ -2606,59 +2622,74 @@ class WebDashboardService {
    * @returns {Promise<Object>} Table data
    */
   async getDatabaseTableContents(tableName, limit = 100, offset = 0) {
-    try {
-      // Validate table name (prevent SQL injection)
-      const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
-      if (!validTables.includes(tableName)) {
-        throw new Error(`Invalid table: ${tableName}`);
-      }
+    this._validateTableName(tableName);
+    const db = this._getDatabase();
 
-      if (!databaseService.getDb) {
-        throw new Error('Database not available');
-      }
+    const totalRows = this._getTableRowCount(db, tableName);
+    let data = db.prepare(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`).all(limit, offset);
 
-      const db = databaseService.getDb();
-      if (!db) {
-        throw new Error('Database connection unavailable');
-      }
-
-      // Get total count
-      const countResult = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
-      const totalRows = countResult?.count || 0;
-
-      // Get limited data
-      let data = db.prepare(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`).all(limit, offset);
-
-      // Enrich user_stats with resolved Discord usernames
-      if (tableName === 'user_stats' && data && data.length > 0) {
-        data = await Promise.all(
-          data.map(async (row) => {
-            // If username is null, try to resolve from Discord
-            if (!row.username && this.discordClient) {
-              const resolvedUsername = await this.resolveDiscordUsername(row.user_id);
-              if (resolvedUsername) {
-                return { ...row, username: resolvedUsername };
-              }
-            }
-            return row;
-          })
-        );
-      }
-
-      return {
-        table: tableName,
-        totalRows,
-        limit,
-        offset,
-        returnedRows: data?.length || 0,
-        columns: this.getTableColumns(tableName),
-        data: data || [],
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.warn(`Failed to get database contents for ${tableName}: ${error.message}`);
-      throw error;
+    // Enrich user_stats with resolved Discord usernames
+    if (tableName === 'user_stats' && data?.length > 0) {
+      data = await this._enrichUserStats(data);
     }
+
+    return {
+      table: tableName,
+      totalRows,
+      limit,
+      offset,
+      returnedRows: data?.length || 0,
+      columns: this.getTableColumns(tableName),
+      data: data || [],
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Validate table name to prevent SQL injection
+   * @private
+   */
+  _validateTableName(tableName) {
+    const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
+    if (!validTables.includes(tableName)) {
+      throw new Error(`Invalid table: ${tableName}`);
+    }
+  }
+
+  /**
+   * Get database connection or throw
+   * @private
+   */
+  _getDatabase() {
+    if (!databaseService.getDb) throw new Error('Database not available');
+    const db = databaseService.getDb();
+    if (!db) throw new Error('Database connection unavailable');
+    return db;
+  }
+
+  /**
+   * Get total row count for table
+   * @private
+   */
+  _getTableRowCount(db, tableName) {
+    const countResult = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
+    return countResult?.count || 0;
+  }
+
+  /**
+   * Enrich user_stats rows with Discord usernames
+   * @private
+   */
+  async _enrichUserStats(data) {
+    return Promise.all(
+      data.map(async (row) => {
+        if (!row.username && this.discordClient) {
+          const resolvedUsername = await this.resolveDiscordUsername(row.user_id);
+          if (resolvedUsername) return { ...row, username: resolvedUsername };
+        }
+        return row;
+      })
+    );
   }
 
   /**
