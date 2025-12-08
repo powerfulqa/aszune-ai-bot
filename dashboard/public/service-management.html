@@ -405,6 +405,52 @@
           </div>
         </div>
 
+        <!-- Instance Tracking Status Card -->
+        <div
+          class="instance-tracking-card"
+          style="
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          "
+        >
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <div style="display: flex; align-items: center; gap: 15px">
+              <div style="font-size: 48px">🔍</div>
+              <div>
+                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem">Instance Tracking</h3>
+                <div id="tracking-status-container">
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span
+                      id="tracking-status-dot"
+                      class="status-dot connecting"
+                      style="width: 12px; height: 12px"
+                    ></span>
+                    <span id="tracking-status-text" style="font-size: 1rem; font-weight: 500"
+                      >Checking...</span
+                    >
+                  </div>
+                  <div
+                    id="tracking-status-details"
+                    style="margin-top: 8px; font-size: 0.9rem; opacity: 0.9"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div
+              id="tracking-status-info"
+              style="text-align: right; font-size: 0.85rem; opacity: 0.8"
+            >
+              <div>Instance: <span id="tracking-instance-id">-</span></div>
+              <div>Location: <span id="tracking-location">-</span></div>
+              <div>IP: <span id="tracking-ip">-</span></div>
+            </div>
+          </div>
+        </div>
+
         <div class="service-grid" id="services-grid">
           <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999">
             ⏳ Loading services from server...
@@ -621,6 +667,65 @@
         });
       }
 
+      function loadInstanceStatus() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) {
+          console.warn('Dashboard socket not ready for instance status');
+          return;
+        }
+
+        dashboardSocket.emit('request_instance_status', {}, (response) => {
+          console.log('Instance status response:', response);
+
+          const statusDot = document.getElementById('tracking-status-dot');
+          const statusText = document.getElementById('tracking-status-text');
+          const statusDetails = document.getElementById('tracking-status-details');
+          const instanceId = document.getElementById('tracking-instance-id');
+          const location = document.getElementById('tracking-location');
+          const ip = document.getElementById('tracking-ip');
+
+          if (!response || response.error) {
+            statusDot.className = 'status-dot disconnected';
+            statusText.textContent = '✗ Error';
+            statusDetails.textContent = response?.error || 'Unable to get tracking status';
+            instanceId.textContent = 'N/A';
+            location.textContent = 'N/A';
+            ip.textContent = 'N/A';
+            return;
+          }
+
+          if (!response.trackingEnabled) {
+            statusDot.className = 'status-dot warning';
+            statusText.textContent = '⚠ Disabled';
+            statusDetails.textContent = 'Instance tracking is not enabled';
+            instanceId.textContent = 'N/A';
+            location.textContent = 'N/A';
+            ip.textContent = 'N/A';
+          } else if (response.isVerified) {
+            statusDot.className = 'status-dot connected';
+            statusText.textContent = '✓ Verified';
+            statusDetails.textContent = 'Instance registered with tracking server';
+            instanceId.textContent = response.instanceId || 'Pending';
+            
+            const loc = response.locationInfo;
+            if (loc && loc.city) {
+              location.textContent = `${loc.city}, ${loc.country || loc.countryCode || ''}`;
+              ip.textContent = loc.ip || 'Unknown';
+            } else {
+              location.textContent = 'Unknown';
+              ip.textContent = 'Unknown';
+            }
+          } else {
+            statusDot.className = 'status-dot warning';
+            statusText.textContent = '⚠ Not Verified';
+            statusDetails.textContent = 'Waiting for verification from tracking server';
+            instanceId.textContent = 'Pending';
+            location.textContent = '-';
+            ip.textContent = '-';
+          }
+        });
+      }
+
       // Mark the current active nav item
       document.addEventListener('DOMContentLoaded', () => {
         const currentPagePath = window.location.pathname;
@@ -640,12 +745,15 @@
         // Wait for dashboard to initialize, then load services
         const initServices = () => {
           if (window.dashboard && window.dashboard.socket) {
-            console.log('Dashboard ready, loading services and Discord status');
+            console.log('Dashboard ready, loading services and status');
             loadServices();
             loadDiscordStatus();
+            loadInstanceStatus();
 
             // Refresh Discord status every 30 seconds
             setInterval(loadDiscordStatus, 30000);
+            // Refresh instance status every 60 seconds
+            setInterval(loadInstanceStatus, 60000);
           } else {
             setTimeout(initServices, 100);
           }

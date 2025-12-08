@@ -1832,6 +1832,38 @@ class WebDashboardService {
     socket.on('request_discord_status', (data, callback) => {
       this.handleDiscordStatus(callback);
     });
+
+    // Handle request_instance_status event
+    socket.on('request_instance_status', (data, callback) => {
+      this.handleInstanceStatus(callback);
+    });
+  }
+
+  /**
+   * Handle instance tracking status request
+   * @param {Function} callback
+   */
+  handleInstanceStatus(callback) {
+    try {
+      const instanceTracker = require('./instance-tracker');
+      const status = instanceTracker.getStatus();
+
+      if (callback) {
+        callback({
+          ...status,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      logger.error('Error getting instance status:', error);
+      if (callback) {
+        callback({
+          error: error.message,
+          trackingEnabled: false,
+          isVerified: false,
+        });
+      }
+    }
   }
 
   /**
