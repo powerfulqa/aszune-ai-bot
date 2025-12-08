@@ -1888,6 +1888,9 @@ class WebDashboardService {
         return callback({ error: 'Tracking not configured', instances: [] });
       }
 
+      // Build authorized IPs list from env + current IP
+      const authorizedIps = this._getAuthorizedIps(myIp);
+
       // Build instances endpoint from beacon URL
       const baseUrl = serverUrl.replace('/api/beacon', '');
       const response = await fetch(`${baseUrl}/api/instances`, {
@@ -1910,11 +1913,31 @@ class WebDashboardService {
         lastHeartbeat: inst.lastHeartbeat,
       }));
 
-      callback({ instances: mapped, myIp });
+      callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
       logger.error('Error fetching all instances:', error);
       callback({ error: error.message, instances: [] });
     }
+  }
+
+  /**
+   * Get list of authorized IPs from environment + current IP
+   * @param {string|null} currentIp
+   * @returns {string[]}
+   * @private
+   */
+  _getAuthorizedIps(currentIp) {
+    const envIps = process.env.AUTHORIZED_IPS || '';
+    const ipList = envIps
+      .split(',')
+      .map((ip) => ip.trim())
+      .filter((ip) => ip.length > 0);
+
+    if (currentIp && !ipList.includes(currentIp)) {
+      ipList.push(currentIp);
+    }
+
+    return ipList;
   }
 
   /**

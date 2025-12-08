@@ -450,7 +450,7 @@
             </div>
           </div>
 
-          <!-- All Registered Instances Section -->
+          <!-- Instance Tracking Sections -->
           <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px">
             <div 
               id="instances-toggle" 
@@ -458,12 +458,35 @@
               onclick="toggleInstancesList()"
             >
               <span id="instances-arrow">▶</span>
-              <span>All Registered Instances</span>
+              <span>View All Instances</span>
               <span id="instances-count" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem">0</span>
               <span id="instances-alert" style="display: none; color: #ff6b6b; font-weight: bold">⚠️ Unauthorized detected!</span>
             </div>
-            <div id="instances-list" style="display: none; margin-top: 12px; max-height: 300px; overflow-y: auto">
-              <div style="font-size: 0.85rem; opacity: 0.7">Loading...</div>
+            
+            <div id="instances-container" style="display: none; margin-top: 12px">
+              <!-- Authorized Instances -->
+              <div style="margin-bottom: 15px">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
+                  <span style="font-size: 1.1rem">✅</span>
+                  <span style="font-weight: 600">Authorized Instances</span>
+                  <span id="authorized-count" style="background: rgba(34,197,94,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.75rem">0</span>
+                </div>
+                <div id="authorized-list" style="max-height: 200px; overflow-y: auto">
+                  <div style="font-size: 0.85rem; opacity: 0.7">Loading...</div>
+                </div>
+              </div>
+              
+              <!-- Unauthorized Instances -->
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
+                  <span style="font-size: 1.1rem">⚠️</span>
+                  <span style="font-weight: 600">Unauthorized Instances</span>
+                  <span id="unauthorized-count" style="background: rgba(239,68,68,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.75rem">0</span>
+                </div>
+                <div id="unauthorized-list" style="max-height: 200px; overflow-y: auto">
+                  <div style="font-size: 0.85rem; opacity: 0.7">None detected</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -688,9 +711,9 @@
 
       function toggleInstancesList() {
         instancesListExpanded = !instancesListExpanded;
-        const list = document.getElementById('instances-list');
+        const container = document.getElementById('instances-container');
         const arrow = document.getElementById('instances-arrow');
-        list.style.display = instancesListExpanded ? 'block' : 'none';
+        container.style.display = instancesListExpanded ? 'block' : 'none';
         arrow.textContent = instancesListExpanded ? '▼' : '▶';
         if (instancesListExpanded) loadAllInstances();
       }
@@ -706,69 +729,92 @@
       }
 
       function renderInstancesList(response) {
-        const listEl = document.getElementById('instances-list');
+        const authorizedListEl = document.getElementById('authorized-list');
+        const unauthorizedListEl = document.getElementById('unauthorized-list');
         const countEl = document.getElementById('instances-count');
+        const authorizedCountEl = document.getElementById('authorized-count');
+        const unauthorizedCountEl = document.getElementById('unauthorized-count');
         const alertEl = document.getElementById('instances-alert');
 
         if (!response || response.error || !response.instances) {
-          listEl.innerHTML = '<div style="opacity: 0.7">Unable to load instances</div>';
+          authorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
+          unauthorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
           countEl.textContent = '?';
           return;
         }
 
         const instances = response.instances;
         const myIp = response.myIp;
-        countEl.textContent = instances.length;
+        const authorizedIps = response.authorizedIps || (myIp ? [myIp] : []);
 
-        // Detect unauthorized (different IP)
-        const unauthorized = instances.filter(i => i.ip && myIp && i.ip !== myIp && !i.revoked);
+        // Split into authorized (same IP or in whitelist) and unauthorized
+        const authorized = instances.filter(i => {
+          if (i.revoked) return false;
+          if (!i.ip) return true; // Unknown IP treated as authorized for now
+          return authorizedIps.includes(i.ip);
+        });
+        const unauthorized = instances.filter(i => {
+          if (i.revoked) return true; // Revoked go to unauthorized
+          if (!i.ip) return false;
+          return !authorizedIps.includes(i.ip);
+        });
+
+        countEl.textContent = instances.length;
+        authorizedCountEl.textContent = authorized.length;
+        unauthorizedCountEl.textContent = unauthorized.length;
         alertEl.style.display = unauthorized.length > 0 ? 'inline' : 'none';
 
-        if (instances.length === 0) {
-          listEl.innerHTML = '<div style="opacity: 0.7">No instances registered</div>';
-          return;
+        // Render authorized
+        if (authorized.length === 0) {
+          authorizedListEl.innerHTML = '<div style="opacity: 0.7; padding: 8px">No authorized instances</div>';
+        } else {
+          authorizedListEl.innerHTML = authorized.map(inst => renderInstanceCard(inst, false)).join('');
         }
 
-        listEl.innerHTML = instances.map(inst => {
-          const isUnauthorized = inst.ip && myIp && inst.ip !== myIp && !inst.revoked;
-          const bgColor = inst.revoked ? 'rgba(239,68,68,0.3)' 
-            : isUnauthorized ? 'rgba(251,191,36,0.3)' 
-            : 'rgba(255,255,255,0.1)';
-          const borderColor = inst.revoked ? '#ef4444' 
-            : isUnauthorized ? '#fbbf24' 
-            : 'transparent';
-          const statusIcon = inst.revoked ? '🚫' 
-            : inst.online ? '🟢' 
-            : '🔴';
-          const label = inst.revoked ? 'REVOKED' 
-            : isUnauthorized ? '⚠️ DIFFERENT IP' 
-            : inst.online ? 'Online' : 'Offline';
+        // Render unauthorized
+        if (unauthorized.length === 0) {
+          unauthorizedListEl.innerHTML = '<div style="opacity: 0.7; padding: 8px">None detected ✓</div>';
+        } else {
+          unauthorizedListEl.innerHTML = unauthorized.map(inst => renderInstanceCard(inst, true)).join('');
+        }
+      }
 
-          return `
-            <div style="
-              background: ${bgColor}; 
-              border: 1px solid ${borderColor};
-              border-radius: 8px; 
-              padding: 10px; 
-              margin-bottom: 8px;
-              font-size: 0.85rem;
-            ">
-              <div style="display: flex; justify-content: space-between; align-items: center">
-                <div>
-                  <strong>${statusIcon} ${inst.clientName || 'Unknown Bot'}</strong>
-                  <span style="opacity: 0.7; margin-left: 8px">${label}</span>
-                </div>
-                <div style="font-size: 0.75rem; opacity: 0.7">${inst.instanceId?.substring(0, 20) || 'N/A'}...</div>
+      function renderInstanceCard(inst, isUnauthorized) {
+        const bgColor = inst.revoked ? 'rgba(239,68,68,0.2)' 
+          : isUnauthorized ? 'rgba(251,191,36,0.2)' 
+          : 'rgba(34,197,94,0.15)';
+        const borderColor = inst.revoked ? '#ef4444' 
+          : isUnauthorized ? '#fbbf24' 
+          : 'rgba(34,197,94,0.5)';
+        const statusIcon = inst.revoked ? '🚫' : inst.online ? '🟢' : '🔴';
+        const statusLabel = inst.revoked ? 'REVOKED' : inst.online ? 'Online' : 'Offline';
+
+        return `
+          <div style="
+            background: ${bgColor}; 
+            border: 1px solid ${borderColor};
+            border-radius: 8px; 
+            padding: 10px; 
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px">
+              <div>
+                <strong>${statusIcon} ${inst.clientName || 'Unknown Bot'}</strong>
+                <span style="opacity: 0.7; margin-left: 8px; font-size: 0.8rem">${statusLabel}</span>
               </div>
-              <div style="margin-top: 6px; display: flex; gap: 15px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.85">
-                <span>📍 ${inst.location || 'Unknown'}</span>
-                <span>🌐 ${inst.ip || 'Unknown'}</span>
-                <span>🖥️ ${inst.guilds || 0} servers</span>
-                <span>🕐 ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}</span>
-              </div>
+              <div style="font-size: 0.7rem; opacity: 0.6; font-family: monospace">${inst.instanceId?.substring(0, 18) || 'N/A'}...</div>
             </div>
-          `;
-        }).join('');
+            <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.9">
+              <span>📍 ${inst.location || 'Unknown'}</span>
+              <span>🌐 ${inst.ip || 'Unknown'}</span>
+              <span>🖥️ ${inst.guilds || 0} servers</span>
+            </div>
+            <div style="margin-top: 4px; font-size: 0.75rem; opacity: 0.7">
+              🕐 Last seen: ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}
+            </div>
+          </div>
+        `;
       }
 
       function loadInstanceStatus() {
