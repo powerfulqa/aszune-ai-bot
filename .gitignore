@@ -11,6 +11,9 @@ junit.xml
 commit_message.txt
 commit_msg.txt
 
+# Private documentation (never commit)
+docs/PRIVATE-*.md
+
 # Qlty output directories
 .qlty/logs/
 .qlty/out/
