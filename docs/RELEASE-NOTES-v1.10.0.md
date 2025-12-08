@@ -124,11 +124,14 @@ maintainability improvements.
 
 ## License
 
-This project is licensed under **CC BY-NC 4.0** (Creative Commons Attribution-NonCommercial 4.0 International).
+This project is **Source Available - All Rights Reserved**.
 
-- ✅ Free to view, fork, and modify for personal use
-- ❌ Commercial use prohibited
-- ⚠️ Attribution required
+- ✅ Free to view and learn from the code
+- ❌ No copying, forking, or downloading without permission
+- ❌ No use in your own projects without permission
+- ❌ No running or deploying without permission
+
+**All uses beyond viewing require explicit written permission.** To request permission, [open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) on GitHub.
 
 See [LICENSE](../LICENSE) for full terms.
 

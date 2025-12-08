@@ -3,7 +3,7 @@
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-1661%20Passing-brightgreen.svg)](#testing--coverage)
 
 [Release Notes](./docs/RELEASE-NOTES-v1.10.0.md) |
@@ -459,28 +459,25 @@ Pull requests and ideas are always welcome! Please:
 
 ## License
 
-This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.
+**Source Available - All Rights Reserved**
 
 ### What this means:
 
 - ✅ **View & Learn** — You can read, study, and learn from this code
-- ✅ **Fork & Modify** — You can create your own versions for personal use
-- ✅ **Share** — You can share the code with others (with attribution)
-- ❌ **No Commercial Use** — You cannot use this to make money
-- ⚠️ **Attribution Required** — You must credit this project
+- ❌ **No Copying** — You cannot clone, fork, or download this repository
+- ❌ **No Use** — You cannot use this code in your own projects
+- ❌ **No Distribution** — You cannot share or redistribute this code
+- ❌ **No Running** — You cannot deploy or run this software
 
-### Attribution
+### Want to use this code?
 
-If you use this software, please include:
-- Project: **Aszune AI Bot**
-- Author: **powerfulqa (Chris Haycock)**
-- Link: https://github.com/powerfulqa/aszune-ai-bot
+All uses beyond viewing require **explicit written permission**. To request permission:
 
-### Let Me Know!
+1. [Open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) on GitHub
+2. Describe your intended use
+3. Wait for approval from the copyright holder
 
-If you're using this bot, I'd love to hear about it! Please [open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) to let me know.
-
-For commercial licensing inquiries, please [open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) with the label "commercial-license".
+Permission is granted at my sole discretion.
 
 **[📄 View Full License Terms](./LICENSE)**
 

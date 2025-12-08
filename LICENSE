@@ -1,59 +1,50 @@
-Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+Source Available License - All Rights Reserved
 
 Copyright (c) 2024-2025 powerfulqa (Chris Haycock)
 
-This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 
-International License.
+TERMS AND CONDITIONS
 
-You are free to:
-- Share — copy and redistribute the material in any medium or format
-- Adapt — remix, transform, and build upon the material
+1. VIEWING RIGHTS
+   You are permitted to:
+   - View and read this source code
+   - Study the code for educational purposes
+   - Reference the code for learning
 
-Under the following terms:
-- Attribution — You must give appropriate credit, provide a link to the license, 
-  and indicate if changes were made. You may do so in any reasonable manner, but 
-  not in any way that suggests the licensor endorses you or your use.
-  
-- NonCommercial — You may not use the material for commercial purposes.
+2. RESTRICTIONS - ALL OTHER USES REQUIRE EXPLICIT PERMISSION
+   Without prior written permission from the copyright holder, you may NOT:
+   - Copy, clone, fork, or download this repository
+   - Use any portion of this code in your own projects
+   - Modify, adapt, or create derivative works
+   - Distribute, share, or redistribute this code
+   - Run, deploy, or execute this software
+   - Use this software for any commercial or non-commercial purpose
+   - Include this code in any other software or product
 
-- No additional restrictions — You may not apply legal terms or technological 
-  measures that legally restrict others from doing anything the license permits.
+3. PERMISSION REQUESTS
+   To request permission for any use beyond viewing, you must:
+   - Open an issue on the GitHub repository: https://github.com/powerfulqa/aszune-ai-bot
+   - Clearly describe your intended use
+   - Wait for explicit written approval from the copyright holder
+   
+   Permission is granted at the sole discretion of the copyright holder and may
+   be revoked at any time.
 
-Notices:
-- You do not have to comply with the license for elements of the material in 
-  the public domain or where your use is permitted by an applicable exception 
-  or limitation.
-- No warranties are given. The license may not give you all of the permissions 
-  necessary for your intended use. For example, other rights such as publicity, 
-  privacy, or moral rights may limit how you use the material.
-
-Full license text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
-
----
-
-ADDITIONAL TERMS:
-
-1. ATTRIBUTION REQUIREMENT
-   Any use of this software must include visible attribution to:
+4. ATTRIBUTION
+   If permission is granted, you must provide visible attribution to:
    - Project: Aszune AI Bot
    - Author: powerfulqa (Chris Haycock)
    - Repository: https://github.com/powerfulqa/aszune-ai-bot
 
-2. NOTIFICATION REQUEST
-   While not legally required, users are kindly requested to notify the author
-   of their use by opening an issue on the GitHub repository. This helps track 
-   usage and improve the software.
-
-3. COMMERCIAL USE PROHIBITION
-   "Commercial use" includes but is not limited to:
-   - Selling the software or derivatives
-   - Using the software in a paid service
-   - Using the software to generate revenue
-   - Including the software in commercial products
-   
-   For commercial licensing inquiries, open an issue on the GitHub repository.
-
-4. NO WARRANTY
+5. NO WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
+
+6. ENFORCEMENT
+   Any use of this software without explicit permission constitutes copyright
+   infringement and may result in legal action.
+
+---
+
+For inquiries: Open an issue at https://github.com/powerfulqa/aszune-ai-bot
