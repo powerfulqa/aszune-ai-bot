@@ -1842,6 +1842,11 @@ class WebDashboardService {
     socket.on('request_all_instances', (data, callback) => {
       this.handleAllInstances(callback);
     });
+
+    // Handle instance_action event (approve/revoke)
+    socket.on('instance_action', (data, callback) => {
+      this.handleInstanceAction(data, callback);
+    });
   }
 
   /**
@@ -1938,6 +1943,52 @@ class WebDashboardService {
     }
 
     return ipList;
+  }
+
+  /**
+   * Handle instance action (approve/revoke)
+   * @param {Object} data - { action, instanceId }
+   * @param {Function} callback
+   */
+  async handleInstanceAction(data, callback) {
+    try {
+      const { action, instanceId } = data;
+
+      if (!instanceId || !['approve', 'revoke'].includes(action)) {
+        return callback({ success: false, error: 'Invalid action or instanceId' });
+      }
+
+      const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
+      const adminKey = process.env.TRACKING_ADMIN_KEY || '';
+
+      if (!serverUrl || !adminKey) {
+        return callback({ success: false, error: 'Tracking not configured' });
+      }
+
+      const baseUrl = serverUrl.replace('/api/beacon', '');
+      const endpoint = action === 'approve' ? '/api/approve' : '/api/revoke';
+
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey,
+        },
+        body: JSON.stringify({ instanceId }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        logger.info(`Instance ${action}d: ${instanceId}`);
+        callback({ success: true });
+      } else {
+        callback({ success: false, error: result.error || 'Action failed' });
+      }
+    } catch (error) {
+      logger.error('Error handling instance action:', error);
+      callback({ success: false, error: error.message });
+    }
   }
 
   /**

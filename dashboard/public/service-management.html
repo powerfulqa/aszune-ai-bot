@@ -789,6 +789,20 @@
         const statusIcon = inst.revoked ? '🚫' : inst.online ? '🟢' : '🔴';
         const statusLabel = inst.revoked ? 'REVOKED' : inst.online ? 'Online' : 'Offline';
 
+        // Action buttons based on status
+        const approveBtn = (isUnauthorized || inst.revoked) 
+          ? `<button onclick="approveInstance('${inst.instanceId}')" style="
+              background: #22c55e; color: white; border: none; border-radius: 4px;
+              padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+            ">✓ Approve</button>` 
+          : '';
+        const revokeBtn = !inst.revoked 
+          ? `<button onclick="revokeInstance('${inst.instanceId}')" style="
+              background: #ef4444; color: white; border: none; border-radius: 4px;
+              padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+            ">✗ Revoke</button>` 
+          : '';
+
         return `
           <div style="
             background: ${bgColor}; 
@@ -803,18 +817,56 @@
                 <strong>${statusIcon} ${inst.clientName || 'Unknown Bot'}</strong>
                 <span style="opacity: 0.7; margin-left: 8px; font-size: 0.8rem">${statusLabel}</span>
               </div>
-              <div style="font-size: 0.7rem; opacity: 0.6; font-family: monospace">${inst.instanceId?.substring(0, 18) || 'N/A'}...</div>
+              <div style="display: flex; gap: 6px; align-items: center">
+                ${approveBtn}
+                ${revokeBtn}
+              </div>
             </div>
             <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.9">
               <span>📍 ${inst.location || 'Unknown'}</span>
               <span>🌐 ${inst.ip || 'Unknown'}</span>
               <span>🖥️ ${inst.guilds || 0} servers</span>
             </div>
-            <div style="margin-top: 4px; font-size: 0.75rem; opacity: 0.7">
-              🕐 Last seen: ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}
+            <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center">
+              <span style="font-size: 0.75rem; opacity: 0.7">
+                🕐 Last seen: ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}
+              </span>
+              <span style="font-size: 0.65rem; opacity: 0.5; font-family: monospace">${inst.instanceId?.substring(0, 20) || 'N/A'}...</span>
             </div>
           </div>
         `;
+      }
+
+      function approveInstance(instanceId) {
+        if (!confirm('Approve this instance? It will be marked as authorized.')) return;
+        
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) return alert('Dashboard not connected');
+
+        dashboardSocket.emit('instance_action', { action: 'approve', instanceId }, (response) => {
+          if (response?.success) {
+            alert('Instance approved successfully');
+            loadAllInstances();
+          } else {
+            alert('Failed to approve: ' + (response?.error || 'Unknown error'));
+          }
+        });
+      }
+
+      function revokeInstance(instanceId) {
+        if (!confirm('Revoke this instance? The bot will shut down if REQUIRE_VERIFICATION is enabled.')) return;
+        
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) return alert('Dashboard not connected');
+
+        dashboardSocket.emit('instance_action', { action: 'revoke', instanceId }, (response) => {
+          if (response?.success) {
+            alert('Instance revoked successfully');
+            loadAllInstances();
+          } else {
+            alert('Failed to revoke: ' + (response?.error || 'Unknown error'));
+          }
+        });
       }
 
       function loadInstanceStatus() {
