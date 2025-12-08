@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Aszune AI Bot - Raspberry Pi 3 Optimized Startup Script
-# This script applies various system-level optimizations for running on Raspberry Pi 3
+# Aszune AI Bot - Raspberry Pi Optimized Startup Script
+# This script applies various system-level optimizations for running on Raspberry Pi
 
 # =========================================
 # Configuration variables - adjust as needed

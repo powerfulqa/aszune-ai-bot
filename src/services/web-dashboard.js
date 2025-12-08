@@ -1837,6 +1837,11 @@ class WebDashboardService {
     socket.on('request_instance_status', (data, callback) => {
       this.handleInstanceStatus(callback);
     });
+
+    // Handle request_all_instances event (admin view)
+    socket.on('request_all_instances', (data, callback) => {
+      this.handleAllInstances(callback);
+    });
   }
 
   /**
@@ -1863,6 +1868,52 @@ class WebDashboardService {
           isVerified: false,
         });
       }
+    }
+  }
+
+  /**
+   * Handle all instances request (fetches from tracking server)
+   * @param {Function} callback
+   */
+  async handleAllInstances(callback) {
+    try {
+      const instanceTracker = require('./instance-tracker');
+      const localStatus = instanceTracker.getStatus();
+      const myIp = localStatus.locationInfo?.ip || null;
+
+      const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
+      const adminKey = process.env.TRACKING_ADMIN_KEY || '';
+
+      if (!serverUrl || !adminKey) {
+        return callback({ error: 'Tracking not configured', instances: [] });
+      }
+
+      // Build instances endpoint from beacon URL
+      const baseUrl = serverUrl.replace('/api/beacon', '');
+      const response = await fetch(`${baseUrl}/api/instances`, {
+        headers: { 'x-admin-key': adminKey },
+      });
+
+      if (!response.ok) {
+        return callback({ error: 'Failed to fetch instances', instances: [] });
+      }
+
+      const instances = await response.json();
+      const mapped = instances.map((inst) => ({
+        instanceId: inst.instanceId,
+        clientName: inst.client?.name || 'Unknown',
+        ip: inst.ip,
+        location: inst.location ? `${inst.location.city}, ${inst.location.country}` : 'Unknown',
+        guilds: inst.client?.guilds || 0,
+        online: inst.online,
+        revoked: inst.revoked,
+        lastHeartbeat: inst.lastHeartbeat,
+      }));
+
+      callback({ instances: mapped, myIp });
+    } catch (error) {
+      logger.error('Error fetching all instances:', error);
+      callback({ error: error.message, instances: [] });
     }
   }
 

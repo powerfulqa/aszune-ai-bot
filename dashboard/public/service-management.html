@@ -449,6 +449,23 @@
               <div>IP: <span id="tracking-ip">-</span></div>
             </div>
           </div>
+
+          <!-- All Registered Instances Section -->
+          <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px">
+            <div 
+              id="instances-toggle" 
+              style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem"
+              onclick="toggleInstancesList()"
+            >
+              <span id="instances-arrow">▶</span>
+              <span>All Registered Instances</span>
+              <span id="instances-count" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem">0</span>
+              <span id="instances-alert" style="display: none; color: #ff6b6b; font-weight: bold">⚠️ Unauthorized detected!</span>
+            </div>
+            <div id="instances-list" style="display: none; margin-top: 12px; max-height: 300px; overflow-y: auto">
+              <div style="font-size: 0.85rem; opacity: 0.7">Loading...</div>
+            </div>
+          </div>
         </div>
 
         <div class="service-grid" id="services-grid">
@@ -665,6 +682,93 @@
             uptimeValue.textContent = 'N/A';
           }
         });
+      }
+
+      let instancesListExpanded = false;
+
+      function toggleInstancesList() {
+        instancesListExpanded = !instancesListExpanded;
+        const list = document.getElementById('instances-list');
+        const arrow = document.getElementById('instances-arrow');
+        list.style.display = instancesListExpanded ? 'block' : 'none';
+        arrow.textContent = instancesListExpanded ? '▼' : '▶';
+        if (instancesListExpanded) loadAllInstances();
+      }
+
+      function loadAllInstances() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) return;
+
+        dashboardSocket.emit('request_all_instances', {}, (response) => {
+          console.log('All instances response:', response);
+          renderInstancesList(response);
+        });
+      }
+
+      function renderInstancesList(response) {
+        const listEl = document.getElementById('instances-list');
+        const countEl = document.getElementById('instances-count');
+        const alertEl = document.getElementById('instances-alert');
+
+        if (!response || response.error || !response.instances) {
+          listEl.innerHTML = '<div style="opacity: 0.7">Unable to load instances</div>';
+          countEl.textContent = '?';
+          return;
+        }
+
+        const instances = response.instances;
+        const myIp = response.myIp;
+        countEl.textContent = instances.length;
+
+        // Detect unauthorized (different IP)
+        const unauthorized = instances.filter(i => i.ip && myIp && i.ip !== myIp && !i.revoked);
+        alertEl.style.display = unauthorized.length > 0 ? 'inline' : 'none';
+
+        if (instances.length === 0) {
+          listEl.innerHTML = '<div style="opacity: 0.7">No instances registered</div>';
+          return;
+        }
+
+        listEl.innerHTML = instances.map(inst => {
+          const isUnauthorized = inst.ip && myIp && inst.ip !== myIp && !inst.revoked;
+          const bgColor = inst.revoked ? 'rgba(239,68,68,0.3)' 
+            : isUnauthorized ? 'rgba(251,191,36,0.3)' 
+            : 'rgba(255,255,255,0.1)';
+          const borderColor = inst.revoked ? '#ef4444' 
+            : isUnauthorized ? '#fbbf24' 
+            : 'transparent';
+          const statusIcon = inst.revoked ? '🚫' 
+            : inst.online ? '🟢' 
+            : '🔴';
+          const label = inst.revoked ? 'REVOKED' 
+            : isUnauthorized ? '⚠️ DIFFERENT IP' 
+            : inst.online ? 'Online' : 'Offline';
+
+          return `
+            <div style="
+              background: ${bgColor}; 
+              border: 1px solid ${borderColor};
+              border-radius: 8px; 
+              padding: 10px; 
+              margin-bottom: 8px;
+              font-size: 0.85rem;
+            ">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div>
+                  <strong>${statusIcon} ${inst.clientName || 'Unknown Bot'}</strong>
+                  <span style="opacity: 0.7; margin-left: 8px">${label}</span>
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.7">${inst.instanceId?.substring(0, 20) || 'N/A'}...</div>
+              </div>
+              <div style="margin-top: 6px; display: flex; gap: 15px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.85">
+                <span>📍 ${inst.location || 'Unknown'}</span>
+                <span>🌐 ${inst.ip || 'Unknown'}</span>
+                <span>🖥️ ${inst.guilds || 0} servers</span>
+                <span>🕐 ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
 
       function loadInstanceStatus() {
