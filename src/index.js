@@ -44,6 +44,9 @@ conversationManager.initializeIntervals();
 // Initialize reminder service
 const reminderService = require('./services/reminder-service');
 
+// Initialize instance tracker for license verification
+const instanceTracker = require('./services/instance-tracker');
+
 // Set up reminder due handler
 reminderService.on('reminderDue', async (reminder) => {
   try {
@@ -166,6 +169,15 @@ function _setupDiscordEventHandlers() {
     logger.info(`Discord bot is online as ${client.user.tag}!`);
     logger.info(`Process ID: ${process.pid}`);
 
+    // Verify instance with tracking server (license enforcement)
+    const isVerified = await instanceTracker.initialize(client);
+
+    if (!isVerified && instanceTracker.isVerificationRequired()) {
+      logger.error('Instance verification required but failed - shutting down');
+      client.destroy();
+      process.exit(1);
+    }
+
     // Log bot startup event
     const databaseService = require('./services/database');
     databaseService.logBotEvent('start', 0, 'Bot started successfully');
@@ -268,6 +280,12 @@ const shutdown = async (signal) => {
 
 // Shutdown step registry - maps step name to shutdown function
 const shutdownSteps = [
+  {
+    name: 'instance tracker',
+    handler: () => {
+      instanceTracker.stop();
+    },
+  },
   {
     name: 'web dashboard service',
     handler: async () => {

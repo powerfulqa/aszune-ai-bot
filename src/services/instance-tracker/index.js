@@ -1,0 +1,259 @@
+/**
+ * Instance Tracker Service
+ * Phone-home beacon and license verification system
+ *
+ * Tracks bot instances for license compliance and provides:
+ * - Registration with tracking server
+ * - Periodic heartbeats
+ * - IP/location tracking
+ * - Kill switch for revoked instances
+ *
+ * @module services/instance-tracker
+ */
+const logger = require('../../utils/logger');
+const { gatherClientInfo, generateInstanceKey } = require('./helpers/client-info');
+const { getLocationInfo } = require('./helpers/location');
+const { createBeaconPayload, sendBeacon } = require('./helpers/beacon');
+
+// Configuration from environment
+const TRACKING_CONFIG = {
+  server: process.env.INSTANCE_TRACKING_SERVER || null,
+  enabled: process.env.INSTANCE_TRACKING_ENABLED === 'true',
+  requireVerification: process.env.REQUIRE_VERIFICATION === 'true',
+  heartbeatIntervalMs: 60 * 60 * 1000, // 1 hour
+  maxRetries: 3,
+  retryDelayMs: 5000,
+};
+
+/**
+ * Instance Tracker class
+ * Manages bot instance registration and heartbeat
+ */
+class InstanceTracker {
+  constructor() {
+    this.instanceId = null;
+    this.isVerified = false;
+    this.lastHeartbeat = null;
+    this.heartbeatTimer = null;
+    this.clientInfo = null;
+    this.locationInfo = null;
+    this.retryCount = 0;
+  }
+
+  /**
+   * Initialize tracking and verify instance
+   * @param {Client} discordClient - Discord.js client
+   * @returns {Promise<boolean>} Whether verification succeeded
+   */
+  async initialize(discordClient) {
+    if (!this._isTrackingEnabled()) {
+      return this._handleDisabledTracking();
+    }
+
+    try {
+      await this._gatherInstanceData(discordClient);
+      const verified = await this._registerWithServer();
+      return this._handleRegistrationResult(verified, discordClient);
+    } catch (error) {
+      logger.error('Instance tracking initialization failed', { error: error.message });
+      return false;
+    }
+  }
+
+  /**
+   * Check if tracking is enabled
+   * @returns {boolean}
+   * @private
+   */
+  _isTrackingEnabled() {
+    return TRACKING_CONFIG.enabled && TRACKING_CONFIG.server;
+  }
+
+  /**
+   * Handle case when tracking is disabled
+   * @returns {boolean}
+   * @private
+   */
+  _handleDisabledTracking() {
+    if (!TRACKING_CONFIG.server) {
+      logger.debug('Instance tracking disabled - no server configured');
+    } else {
+      logger.debug('Instance tracking disabled via config');
+    }
+    return true;
+  }
+
+  /**
+   * Gather all instance data (client info + location)
+   * @param {Client} discordClient
+   * @private
+   */
+  async _gatherInstanceData(discordClient) {
+    this.clientInfo = await gatherClientInfo(discordClient);
+    this.locationInfo = await getLocationInfo();
+  }
+
+  /**
+   * Register instance with tracking server
+   * @returns {Promise<boolean>}
+   * @private
+   */
+  async _registerWithServer() {
+    const payload = createBeaconPayload('register', {
+      client: this.clientInfo,
+      location: this.locationInfo,
+      instanceKey: generateInstanceKey(),
+    });
+
+    const response = await sendBeacon(TRACKING_CONFIG.server, payload, {
+      maxRetries: TRACKING_CONFIG.maxRetries,
+      retryDelayMs: TRACKING_CONFIG.retryDelayMs,
+    });
+
+    if (response?.verified) {
+      this.instanceId = response.instanceId;
+      this.isVerified = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Handle registration result
+   * @param {boolean} verified
+   * @param {Client} discordClient
+   * @returns {boolean}
+   * @private
+   */
+  _handleRegistrationResult(verified, discordClient) {
+    if (verified) {
+      this._startHeartbeat(discordClient);
+      logger.info('Instance verified and registered', { instanceId: this.instanceId });
+      return true;
+    }
+
+    logger.error('Instance verification failed');
+    return false;
+  }
+
+  /**
+   * Start periodic heartbeat
+   * @param {Client} discordClient
+   * @private
+   */
+  _startHeartbeat(discordClient) {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+    }
+
+    this.heartbeatTimer = setInterval(async () => {
+      await this._sendHeartbeat(discordClient);
+    }, TRACKING_CONFIG.heartbeatIntervalMs);
+
+    // Send initial heartbeat
+    this._sendHeartbeat(discordClient);
+  }
+
+  /**
+   * Send heartbeat to tracking server
+   * @param {Client} discordClient
+   * @returns {Promise<boolean>}
+   * @private
+   */
+  async _sendHeartbeat(discordClient) {
+    if (!this.isVerified || !this.instanceId) {
+      logger.warn('Cannot send heartbeat - instance not verified');
+      return false;
+    }
+
+    const payload = createBeaconPayload('heartbeat', {
+      instanceId: this.instanceId,
+      stats: this._getHeartbeatStats(discordClient),
+    });
+
+    try {
+      const response = await sendBeacon(TRACKING_CONFIG.server, payload);
+      this.lastHeartbeat = new Date();
+
+      if (response?.revoked) {
+        this._handleRevocation(discordClient);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logger.error('Heartbeat failed', { error: error.message });
+      return false;
+    }
+  }
+
+  /**
+   * Get stats for heartbeat payload
+   * @param {Client} discordClient
+   * @returns {Object}
+   * @private
+   */
+  _getHeartbeatStats(discordClient) {
+    return {
+      guildCount: discordClient?.guilds?.cache?.size || 0,
+      userCount: discordClient?.users?.cache?.size || 0,
+      uptime: process.uptime(),
+      memoryUsage: process.memoryUsage().heapUsed,
+      status: discordClient?.user?.presence?.status || 'unknown',
+    };
+  }
+
+  /**
+   * Handle instance revocation
+   * @param {Client} discordClient
+   * @private
+   */
+  _handleRevocation(discordClient) {
+    logger.error('Instance has been revoked - shutting down');
+    this.stop();
+
+    if (discordClient) {
+      discordClient.destroy();
+    }
+
+    setTimeout(() => process.exit(1), 5000);
+  }
+
+  /**
+   * Get current instance status for dashboard
+   * @returns {Object}
+   */
+  getStatus() {
+    return {
+      instanceId: this.instanceId,
+      isVerified: this.isVerified,
+      lastHeartbeat: this.lastHeartbeat,
+      clientInfo: this.clientInfo,
+      locationInfo: this.locationInfo,
+      trackingEnabled: TRACKING_CONFIG.enabled,
+      trackingServer: TRACKING_CONFIG.server ? '[configured]' : null,
+    };
+  }
+
+  /**
+   * Stop tracking (for graceful shutdown)
+   */
+  stop() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+    logger.debug('Instance tracker stopped');
+  }
+
+  /**
+   * Check if verification is required
+   * @returns {boolean}
+   */
+  isVerificationRequired() {
+    return TRACKING_CONFIG.requireVerification;
+  }
+}
+
+module.exports = new InstanceTracker();
