@@ -122,6 +122,16 @@ No migration steps required. Simply update to v1.10.0.
 This release includes contributions from multiple development sessions focused on code quality and
 maintainability improvements.
 
+## License
+
+This project is licensed under **CC BY-NC 4.0** (Creative Commons Attribution-NonCommercial 4.0 International).
+
+- ✅ Free to view, fork, and modify for personal use
+- ❌ Commercial use prohibited
+- ⚠️ Attribution required
+
+See [LICENSE](../LICENSE) for full terms.
+
 ## Full Changelog
 
 See the [commit history](https://github.com/powerfulqa/aszune-ai-bot/compare/v1.9.0...v1.10.0) for

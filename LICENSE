@@ -1,57 +1,59 @@
-PROPRIETARY LICENSE
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
-Copyright (c) 2025 Chris Haycock. All Rights Reserved.
+Copyright (c) 2024-2025 powerfulqa (Chris Haycock)
 
-IMPORTANT: This software is proprietary and confidential. Unauthorized copying, 
-distribution, modification, public display, or public performance of this software 
-is strictly prohibited.
+This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 
+International License.
 
-LICENSING TERMS:
+You are free to:
+- Share — copy and redistribute the material in any medium or format
+- Adapt — remix, transform, and build upon the material
 
-1. PERSONAL USE LICENSE (Free)
-   - Individual use on personal Discord servers (non-commercial)
-   - Educational and learning purposes
-   - Must register at: https://github.com/powerfulqa/aszune-ai-bot/issues (create "License Registration" issue)
-   - Limited to 1 server per individual
+Under the following terms:
+- Attribution — You must give appropriate credit, provide a link to the license, 
+  and indicate if changes were made. You may do so in any reasonable manner, but 
+  not in any way that suggests the licensor endorses you or your use.
+  
+- NonCommercial — You may not use the material for commercial purposes.
 
-2. COMMUNITY LICENSE ($29/month)
-   - Non-profit gaming communities
-   - Up to 3 Discord servers
-   - Community support included
-   - Must display attribution in bot status
+- No additional restrictions — You may not apply legal terms or technological 
+  measures that legally restrict others from doing anything the license permits.
 
-3. COMMERCIAL LICENSE ($299/month)
-   - Commercial Discord servers
-   - Unlimited servers
-   - Priority support
-   - Remove attribution requirements
-   - Modification rights included
+Notices:
+- You do not have to comply with the license for elements of the material in 
+  the public domain or where your use is permitted by an applicable exception 
+  or limitation.
+- No warranties are given. The license may not give you all of the permissions 
+  necessary for your intended use. For example, other rights such as publicity, 
+  privacy, or moral rights may limit how you use the material.
 
-4. ENTERPRISE LICENSE (Custom Pricing)
-   - White-label rights
-   - Source code access
-   - Custom modifications
-   - Professional support SLA
+Full license text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
 
-RESTRICTIONS:
-- No redistribution without explicit written permission
-- No reverse engineering or decompilation
-- No removal of copyright notices or license validation
-- All usage must be properly licensed
+---
 
-ENFORCEMENT:
-- Software includes usage tracking and license validation
-- Unauthorized use will result in automatic service termination
-- Legal action will be pursued for license violations
-- Violators are liable for damages up to $100,000 per instance
+ADDITIONAL TERMS:
 
-CONTACT:
-- License inquiries: powerfulqa@users.noreply.github.com
-- License registration: https://github.com/powerfulqa/aszune-ai-bot/issues
-- Commercial licensing: Create issue with "Commercial License Request" label
+1. ATTRIBUTION REQUIREMENT
+   Any use of this software must include visible attribution to:
+   - Project: Aszune AI Bot
+   - Author: powerfulqa (Chris Haycock)
+   - Repository: https://github.com/powerfulqa/aszune-ai-bot
 
-By downloading, accessing, or using this software, you agree to these terms.
+2. NOTIFICATION REQUEST
+   While not legally required, users are kindly requested to notify the author
+   of their use by opening an issue on the GitHub repository. This helps track 
+   usage and improve the software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+3. COMMERCIAL USE PROHIBITION
+   "Commercial use" includes but is not limited to:
+   - Selling the software or derivatives
+   - Using the software in a paid service
+   - Using the software to generate revenue
+   - Including the software in commercial products
+   
+   For commercial licensing inquiries, open an issue on the GitHub repository.
+
+4. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
