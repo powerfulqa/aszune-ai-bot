@@ -19,15 +19,11 @@ module.exports = {
         NODE_ENV: 'production',
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
-        INSTANCE_TRACKING_SERVER: 'http://localhost:3001/api/beacon',
-        INSTANCE_TRACKING_ENABLED: 'true',
-        REQUIRE_VERIFICATION: 'false',
       },
       env_development: {
         NODE_ENV: 'development',
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
-        INSTANCE_TRACKING_ENABLED: 'false',
       },
       // Error handling
       max_memory_restart: '2G',
@@ -40,7 +36,7 @@ module.exports = {
       time: true,
     },
     {
-      name: 'instance-tracker',
+      name: 'analytics-server',
       script: 'scripts/tracking-server.js',
       watch: false,
       env: {

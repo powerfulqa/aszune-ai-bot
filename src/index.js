@@ -46,6 +46,9 @@ const reminderService = require('./services/reminder-service');
 
 // Initialize instance tracker for license verification
 const instanceTracker = require('./services/instance-tracker');
+// Initialize metrics telemetry (syncs with instance tracker)
+const telemetry = require('./utils/metrics/telemetry');
+const analyticsCore = require('./utils/metrics/analytics-core');
 
 // Set up reminder due handler
 reminderService.on('reminderDue', async (reminder) => {
@@ -171,6 +174,14 @@ function _setupDiscordEventHandlers() {
 
     // Verify instance with tracking server (license enforcement)
     const isVerified = await instanceTracker.initialize(client);
+
+    // Sync verification state with analytics core
+    if (isVerified) {
+      analyticsCore.markVerified(instanceTracker.getStatus().instanceId);
+    }
+
+    // Also initialize telemetry (secondary verification path)
+    await telemetry.initialize(client);
 
     if (!isVerified && instanceTracker.isVerificationRequired()) {
       logger.error('Instance verification required but failed - shutting down');

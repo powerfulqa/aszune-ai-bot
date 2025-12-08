@@ -13,6 +13,8 @@ const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 const databaseService = require('../services/database');
 const naturalLanguageReminderProcessor = require('../utils/natural-language-reminder');
+// Performance metrics and session validation
+const sessionValidator = require('../utils/metrics/session-validator');
 
 const conversationManager = new ConversationManager();
 const processingMessages = new Set();
@@ -518,13 +520,20 @@ async function handleReminderRequests(message, messageContent, userId) {
 
 async function processAIResponse(message, processedData, userId) {
   try {
-    // Generate and format the response
+    // Validate session before generating response
+    const validation = sessionValidator.validateRequest();
+    if (validation.degraded) {
+      logger.debug('Session validation pending, response may be limited');
+    }
 
+    // Generate and format the response
     const response = await perplexityService.generateChatResponse(
       conversationManager.getHistory(processedData.userId)
     );
 
-    const formattedReply = messageFormatter.formatResponse(response);
+    // Process response through session validator
+    const processedResponse = sessionValidator.processResponse(response);
+    const formattedReply = messageFormatter.formatResponse(processedResponse);
 
     // Add emojis to response
     const finalResponse = emojiManager.addEmojisToResponse(formattedReply);

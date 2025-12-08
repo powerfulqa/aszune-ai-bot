@@ -30,50 +30,65 @@ describe('InstanceTracker', () => {
     process.env = originalEnv;
   });
 
-  describe('module loading with disabled tracking', () => {
+  describe('module loading with tracking enabled (default)', () => {
     beforeEach(() => {
       jest.resetModules();
-      process.env.INSTANCE_TRACKING_ENABLED = 'false';
-      delete process.env.INSTANCE_TRACKING_SERVER;
+      // Mock fetch to simulate failed connection (no retries needed)
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: jest.fn().mockResolvedValue({ error: 'Service unavailable' }),
+      });
     });
 
-    it('should return true when tracking is disabled', async () => {
+    it('should return false when tracking server is unreachable', async () => {
+      jest.resetModules();
+      
       const instanceTracker = require('../../../src/services/instance-tracker');
 
-      const mockClient = { user: { tag: 'TestBot#1234' } };
+      const mockClient = { 
+        user: { tag: 'TestBot#1234', username: 'TestBot', id: '123' },
+        guilds: { cache: { size: 0 } },
+        users: { cache: { size: 0 } },
+      };
       const result = await instanceTracker.initialize(mockClient);
 
-      expect(result).toBe(true);
+      // Returns false when server returns error
+      expect(result).toBe(false);
       
       // Clean up
       instanceTracker.stop();
-    });
+    }, 30000); // 30 second timeout for retries
 
-    it('should report tracking as disabled in status', () => {
+    it('should report tracking status correctly', () => {
+      jest.resetModules();
       const instanceTracker = require('../../../src/services/instance-tracker');
 
       const status = instanceTracker.getStatus();
 
-      expect(status.trackingEnabled).toBe(false);
-      expect(status.isVerified).toBe(false);
+      // Tracking is enabled by default
+      expect(status.trackingEnabled).toBe(true);
+      expect(status.isVerified).toBe(false); // Not verified until registered
       expect(status.instanceId).toBeNull();
     });
 
-    it('should return false for isVerificationRequired when not set', () => {
+    it('should always require verification by default', () => {
       delete process.env.REQUIRE_VERIFICATION;
       jest.resetModules();
       
       const instanceTracker = require('../../../src/services/instance-tracker');
       
-      expect(instanceTracker.isVerificationRequired()).toBe(false);
+      // Now defaults to true
+      expect(instanceTracker.isVerificationRequired()).toBe(true);
     });
 
-    it('should return true for isVerificationRequired when set', () => {
-      process.env.REQUIRE_VERIFICATION = 'true';
+    it('should require verification regardless of env var', () => {
+      process.env.REQUIRE_VERIFICATION = 'false'; // Should be ignored
       jest.resetModules();
       
       const instanceTracker = require('../../../src/services/instance-tracker');
       
+      // Always true now
       expect(instanceTracker.isVerificationRequired()).toBe(true);
     });
   });
@@ -81,7 +96,6 @@ describe('InstanceTracker', () => {
   describe('stop', () => {
     beforeEach(() => {
       jest.resetModules();
-      process.env.INSTANCE_TRACKING_ENABLED = 'false';
     });
 
     it('should handle stop when no timer exists', () => {
@@ -95,7 +109,6 @@ describe('InstanceTracker', () => {
   describe('getStatus structure', () => {
     beforeEach(() => {
       jest.resetModules();
-      process.env.INSTANCE_TRACKING_ENABLED = 'false';
     });
 
     it('should return expected status structure', () => {
