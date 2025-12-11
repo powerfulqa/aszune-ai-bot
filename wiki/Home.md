@@ -4,15 +4,16 @@ Welcome to the **Aszune AI Bot** Wiki – your complete guide to setup, usage, a
 
 ## Quick Links
 
-| Getting Started | Reference | Advanced |
-|----------------|-----------|----------|
-| [Installation](Getting-Started) | [Commands](Command-Reference) | [Dashboard](Dashboard-Features-Complete) |
-| [Usage Guide](Usage-Guide) | [Troubleshooting](Troubleshooting) | [Technical Docs](Technical-Documentation) |
-| [Configuration](Getting-Started#create-a-env-file) | [Testing](Testing-Guide) | [Pi Optimization](Pi-Optimization-Guide) |
+| Getting Started                                    | Reference                          | Advanced                                  |
+| -------------------------------------------------- | ---------------------------------- | ----------------------------------------- |
+| [Installation](Getting-Started)                    | [Commands](Command-Reference)      | [Dashboard](Dashboard-Features-Complete)  |
+| [Usage Guide](Usage-Guide)                         | [Troubleshooting](Troubleshooting) | [Technical Docs](Technical-Documentation) |
+| [Configuration](Getting-Started#create-a-env-file) | [Testing](Testing-Guide)           | [Pi Optimization](Pi-Optimization-Guide)  |
 
 ## What is Aszune AI Bot?
 
-A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **sonar** model. Features include:
+A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **sonar** model.
+Features include:
 
 - 🤖 **AI Chat** – Context-aware conversations with persistent history
 - ⏰ **Reminders** – Natural language scheduling
@@ -25,6 +26,7 @@ A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **
 **1,708+ tests passing** • 70%+ coverage • [Release Notes](../docs/RELEASE-NOTES-v1.10.0.md)
 
 ### Recent Updates
+
 - v1.10.0 – Code quality improvements, documentation cleanup
 - v1.9.0 – Dashboard features: logs, services, config, network, reminders
 - v1.8.0 – Web dashboard with Socket.IO
@@ -33,6 +35,7 @@ A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **
 ## Code Quality
 
 This project uses [QLTY](https://qlty.sh/) for automated code quality:
+
 - [QLTY Integration Guide](../docs/qlty/QLTY_INTEGRATION.md)
 - [Security Policy](../SECURITY.md)
 - [Contributing](../CONTRIBUTING.md)

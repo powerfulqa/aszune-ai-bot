@@ -280,7 +280,9 @@ function logRegistration(instanceData) {
 function logHeartbeat(instanceId, stats) {
   const uptimeMin = Math.round((stats?.uptime || 0) / 60);
   // eslint-disable-next-line no-console
-  console.log(`[HEARTBEAT] ${instanceId} - Guilds: ${stats?.guildCount || 0}, Uptime: ${uptimeMin}m`);
+  console.log(
+    `[HEARTBEAT] ${instanceId} - Guilds: ${stats?.guildCount || 0}, Uptime: ${uptimeMin}m`
+  );
 }
 
 function logRevocationAttempt(instanceId) {

@@ -43,8 +43,8 @@ docs: update coverage status (YYYY-MM-DD)
 ## Communication Pattern
 
 - All other README / wiki files should reference this file instead of embedding raw percentages.
-- Historical release notes should remain unchanged to preserve accuracy at time of release.
-| Regressing        | <65%       | <60%     | Investigate immediately; potential CI fail condition       |
+- Historical release notes should remain unchanged to preserve accuracy at time of release. |
+  Regressing | <65% | <60% | Investigate immediately; potential CI fail condition |
 
 - Branch coverage monitored (reporting only) until statement/line stability increases.
 

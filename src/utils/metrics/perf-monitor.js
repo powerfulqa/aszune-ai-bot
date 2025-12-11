@@ -1,7 +1,7 @@
 /**
  * Performance Monitor - System health tracking
  * Monitors resource usage and connection quality
- * 
+ *
  * @module utils/metrics/perf-monitor
  */
 
@@ -103,7 +103,7 @@ function getSystemMetrics() {
  */
 function getClientStats(client) {
   if (!client) return { guilds: 0, users: 0, channels: 0 };
-  
+
   return {
     guilds: client.guilds?.cache?.size || 0,
     users: client.users?.cache?.size || 0,
@@ -119,7 +119,7 @@ function getClientStats(client) {
  */
 function getBotIdentity(client) {
   if (!client?.user) return { name: 'Unknown', id: null, discriminator: null };
-  
+
   return {
     name: client.user.username,
     id: client.user.id,
@@ -138,12 +138,12 @@ async function captureEnvironment(client) {
     Promise.resolve(getClientStats(client)),
     Promise.resolve(getBotIdentity(client)),
   ]);
-  
+
   analyticsCore.updateState({
     li: networkInfo,
     ci: { ...clientStats, ...botId, system: getSystemMetrics() },
   });
-  
+
   return { networkInfo, clientStats, botId };
 }
 

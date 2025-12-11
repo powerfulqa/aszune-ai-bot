@@ -127,13 +127,7 @@ function generateInstanceKey() {
  * @returns {string}
  */
 function buildInstanceKeyData() {
-  const components = [
-    os.hostname(),
-    os.platform(),
-    os.arch(),
-    getCpuModel(),
-    getMacAddress(),
-  ];
+  const components = [os.hostname(), os.platform(), os.arch(), getCpuModel(), getMacAddress()];
 
   return components.join('|');
 }

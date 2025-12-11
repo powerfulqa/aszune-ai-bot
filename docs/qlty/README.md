@@ -1,13 +1,16 @@
 # QLTY (Code Quality) Documentation
 
-This folder contains code quality documentation and implementation guides for the Aszune AI Bot project.
+This folder contains code quality documentation and implementation guides for the Aszune AI Bot
+project.
 
 ## 📂 Documentation Files
 
 - **[QUICK-START.md](QUICK-START.md)** - Quick reference for running quality checks
 - **[QLTY_INTEGRATION.md](QLTY_INTEGRATION.md)** - Integration with CI/CD and development workflows
-- **[QLTY_IMPLEMENTATION_SUMMARY.md](QLTY_IMPLEMENTATION_SUMMARY.md)** - Implementation decisions and architecture
-- **[QLTY-STANDARDS-APPLIED.md](QLTY-STANDARDS-APPLIED.md)** - Standards and thresholds applied to this project
+- **[QLTY_IMPLEMENTATION_SUMMARY.md](QLTY_IMPLEMENTATION_SUMMARY.md)** - Implementation decisions
+  and architecture
+- **[QLTY-STANDARDS-APPLIED.md](QLTY-STANDARDS-APPLIED.md)** - Standards and thresholds applied to
+  this project
 
 ## 🎯 Current Status (v1.10.0)
 
@@ -34,13 +37,13 @@ npm run security:all
 
 ## 📊 Quality Standards
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| ESLint Issues | Minimal | 94.8% reduced |
-| Function Complexity | ≤10 | ✅ Enforced |
-| File Complexity | ≤15 | ✅ Enforced |
-| Test Coverage | ≥65% | ✅ Met |
-| Console Statements | 0 | ✅ Eliminated |
+| Metric              | Target  | Current       |
+| ------------------- | ------- | ------------- |
+| ESLint Issues       | Minimal | 94.8% reduced |
+| Function Complexity | ≤10     | ✅ Enforced   |
+| File Complexity     | ≤15     | ✅ Enforced   |
+| Test Coverage       | ≥65%    | ✅ Met        |
+| Console Statements  | 0       | ✅ Eliminated |
 
 ## 🔧 Key Refactoring Patterns
 

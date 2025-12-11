@@ -20,7 +20,7 @@ describe('InstanceTracker', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Save original env
     originalEnv = { ...process.env };
   });
@@ -43,10 +43,10 @@ describe('InstanceTracker', () => {
 
     it('should return false when tracking server is unreachable', async () => {
       jest.resetModules();
-      
+
       const instanceTracker = require('../../../src/services/instance-tracker');
 
-      const mockClient = { 
+      const mockClient = {
         user: { tag: 'TestBot#1234', username: 'TestBot', id: '123' },
         guilds: { cache: { size: 0 } },
         users: { cache: { size: 0 } },
@@ -55,7 +55,7 @@ describe('InstanceTracker', () => {
 
       // Returns false when server returns error
       expect(result).toBe(false);
-      
+
       // Clean up
       instanceTracker.stop();
     }, 30000); // 30 second timeout for retries
@@ -75,9 +75,9 @@ describe('InstanceTracker', () => {
     it('should always require verification by default', () => {
       delete process.env.REQUIRE_VERIFICATION;
       jest.resetModules();
-      
+
       const instanceTracker = require('../../../src/services/instance-tracker');
-      
+
       // Now defaults to true
       expect(instanceTracker.isVerificationRequired()).toBe(true);
     });
@@ -85,9 +85,9 @@ describe('InstanceTracker', () => {
     it('should require verification regardless of env var', () => {
       process.env.REQUIRE_VERIFICATION = 'false'; // Should be ignored
       jest.resetModules();
-      
+
       const instanceTracker = require('../../../src/services/instance-tracker');
-      
+
       // Always true now
       expect(instanceTracker.isVerificationRequired()).toBe(true);
     });

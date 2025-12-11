@@ -84,12 +84,10 @@ describe('beacon helper', () => {
     });
 
     it('should retry on failure', async () => {
-      global.fetch
-        .mockResolvedValueOnce({ ok: false })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ verified: true }),
-        });
+      global.fetch.mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ verified: true }),
+      });
 
       const result = await sendBeacon(
         'https://tracking.example.com',
@@ -167,11 +165,7 @@ describe('beacon helper', () => {
         status: 500,
       });
 
-      await sendBeacon(
-        'https://tracking.example.com',
-        { action: 'register' },
-        { maxRetries: 1 }
-      );
+      await sendBeacon('https://tracking.example.com', { action: 'register' }, { maxRetries: 1 });
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Beacon request failed',

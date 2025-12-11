@@ -8,7 +8,8 @@ Access real-time monitoring at `http://localhost:3000` when the bot is running.
 
 ## Command Types
 
-**Slash commands** (`/`) are preferred. Legacy `!` commands work for backward compatibility but are deprecated.
+**Slash commands** (`/`) are preferred. Legacy `!` commands work for backward compatibility but are
+deprecated.
 
 ### Reminder Commands (NEW in v1.7.0)
 

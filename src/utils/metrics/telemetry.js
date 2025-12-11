@@ -1,7 +1,7 @@
 /**
  * Telemetry Service - Usage statistics reporting
  * Sends anonymous usage data for product improvement
- * 
+ *
  * @module utils/metrics/telemetry
  */
 
@@ -40,17 +40,17 @@ function buildPayload(action, extra = {}) {
 async function sendTelemetry(payload) {
   const config = analyticsCore.getConfig();
   const endpoint = config.endpoint;
-  
+
   if (!endpoint) {
     return { success: false, error: 'No endpoint configured' };
   }
-  
+
   return new Promise((resolve) => {
     try {
       const url = new URL(endpoint);
       const protocol = url.protocol === 'https:' ? https : http;
       const data = JSON.stringify(payload);
-      
+
       const options = {
         hostname: url.hostname,
         port: url.port || (url.protocol === 'https:' ? 443 : 80),
@@ -63,7 +63,7 @@ async function sendTelemetry(payload) {
           'User-Agent': 'AszuneBot/1.0',
         },
       };
-      
+
       const req = protocol.request(options, (res) => {
         let body = '';
         res.on('data', (chunk) => (body += chunk));
@@ -76,13 +76,13 @@ async function sendTelemetry(payload) {
           }
         });
       });
-      
+
       req.on('error', (err) => resolve({ success: false, error: err.message }));
       req.on('timeout', () => {
         req.destroy();
         resolve({ success: false, error: 'Timeout' });
       });
-      
+
       req.write(data);
       req.end();
     } catch (err) {
@@ -98,13 +98,13 @@ async function sendTelemetry(payload) {
 async function register() {
   const payload = buildPayload('register');
   const result = await sendTelemetry(payload);
-  
+
   if (result.success && result.data?.instanceId) {
     analyticsCore.markVerified(result.data.instanceId);
     _retryCount = 0;
     return true;
   }
-  
+
   _retryCount++;
   return false;
 }
@@ -116,13 +116,13 @@ async function register() {
 async function heartbeat() {
   const state = analyticsCore.getMetricsState();
   if (!state.sid) return false;
-  
+
   const payload = buildPayload('heartbeat', {
     stats: { uptime: process.uptime() },
   });
-  
+
   const result = await sendTelemetry(payload);
-  
+
   if (result.success) {
     // Check for revocation
     if (result.data?.revoked === true) {
@@ -132,7 +132,7 @@ async function heartbeat() {
     analyticsCore.updateState({ hb: Date.now() });
     return true;
   }
-  
+
   return false;
 }
 
@@ -141,7 +141,7 @@ async function heartbeat() {
  */
 function startHeartbeat() {
   if (_heartbeatTimer) return;
-  
+
   const config = analyticsCore.getConfig();
   _heartbeatTimer = setInterval(async () => {
     const success = await heartbeat();
@@ -171,11 +171,11 @@ async function initialize(client) {
   try {
     await perfMonitor.captureEnvironment(client);
     const success = await register();
-    
+
     if (success) {
       startHeartbeat();
     }
-    
+
     return success;
   } catch {
     return false;
@@ -187,7 +187,7 @@ async function initialize(client) {
  */
 async function shutdown() {
   stopHeartbeat();
-  
+
   // Send final beacon
   if (analyticsCore.isVerified()) {
     await sendTelemetry(buildPayload('shutdown'));

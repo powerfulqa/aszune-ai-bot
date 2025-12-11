@@ -28,18 +28,19 @@ describe('location helper', () => {
     it('should return location from ipapi.co', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ip: '1.2.3.4',
-          city: 'London',
-          region: 'England',
-          country_name: 'United Kingdom',
-          country_code: 'GB',
-          latitude: 51.5,
-          longitude: -0.12,
-          timezone: 'Europe/London',
-          org: 'ISP Ltd',
-          asn: 'AS12345',
-        }),
+        json: () =>
+          Promise.resolve({
+            ip: '1.2.3.4',
+            city: 'London',
+            region: 'England',
+            country_name: 'United Kingdom',
+            country_code: 'GB',
+            latitude: 51.5,
+            longitude: -0.12,
+            timezone: 'Europe/London',
+            org: 'ISP Ltd',
+            asn: 'AS12345',
+          }),
       });
 
       const result = await getLocationInfo();
@@ -53,11 +54,10 @@ describe('location helper', () => {
     });
 
     it('should fallback to ip-api.com if ipapi.co fails', async () => {
-      global.fetch
-        .mockResolvedValueOnce({ ok: false })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({
+      global.fetch.mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
             query: '5.6.7.8',
             city: 'Manchester',
             regionName: 'Greater Manchester',
@@ -69,7 +69,7 @@ describe('location helper', () => {
             isp: 'ISP Corp',
             as: 'AS54321',
           }),
-        });
+      });
 
       const result = await getLocationInfo();
 
@@ -84,15 +84,16 @@ describe('location helper', () => {
         .mockResolvedValueOnce({ ok: false })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({
-            ip: '9.10.11.12',
-            city: 'Birmingham',
-            region: 'West Midlands',
-            country: 'GB',
-            loc: '52.48,-1.89',
-            timezone: 'Europe/London',
-            org: 'AS12345 ISP',
-          }),
+          json: () =>
+            Promise.resolve({
+              ip: '9.10.11.12',
+              city: 'Birmingham',
+              region: 'West Midlands',
+              country: 'GB',
+              loc: '52.48,-1.89',
+              timezone: 'Europe/London',
+              org: 'AS12345 ISP',
+            }),
         });
 
       const result = await getLocationInfo();

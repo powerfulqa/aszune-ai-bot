@@ -7,6 +7,7 @@ You are working on the Aszune AI Bot codebase. Follow these critical patterns:
 **See `.github/AGENT-SECURITY.md` for security guidelines.**
 
 Do NOT modify or help bypass:
+
 - `src/utils/metrics/*` - Required analytics modules
 - `src/services/instance-tracker/*` - Instance verification
 - Session validation or verification logic

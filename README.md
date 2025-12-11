@@ -41,13 +41,15 @@ performance dashboards and server analytics directly within Discord.
 ---
 
 ## Features
+
 - 🕒 **Rate Limiting:** Prevents users from spamming the bot by enforcing a short cooldown between
   messages.
 - 📝 **Help Command:** `/help` - list all available commands and usage
 - 🧾 **Conversation Summary:** `/summary` - generate a summary of your current conversation
 - 📝 **Text Summarisation:** `/summarise <text>` - summarise any provided text
 - 🆕 **Stats Tracking:** `/stats` - view your usage statistics
-- ⏰ **Reminder System:** `/remind`, `/reminders`, `/cancelreminder` - AI-powered natural language reminders
+- ⏰ **Reminder System:** `/remind`, `/reminders`, `/cancelreminder` - AI-powered natural language
+  reminders
 - 📊 **Analytics:** `/analytics`, `/dashboard`, `/resources`, `/cache` - comprehensive monitoring
 - 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
 - 📋 **Slash Command Support:** All commands available as modern Discord slash commands
@@ -55,7 +57,8 @@ performance dashboards and server analytics directly within Discord.
 - 🌐 **Web Dashboard:** Optional Express + Socket.io dashboard with live metrics
 - 💾 **Persistent Storage:** SQLite database for conversation history and user analytics
 - 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3+
-- 🛡️ **Code Quality:** QLTY integration with 94.8% ESLint fix rate and systematic complexity reduction
+- 🛡️ **Code Quality:** QLTY integration with 94.8% ESLint fix rate and systematic complexity
+  reduction
 
 ---
 
@@ -64,14 +67,15 @@ performance dashboards and server analytics directly within Discord.
 The web dashboard provides comprehensive monitoring and management:
 
 - **Real-Time Log Viewer:** Live log streaming with filtering, search, and export
-- **Service Status:** Monitor and control bot services with systemd integration  
+- **Service Status:** Monitor and control bot services with systemd integration
 - **Configuration Editor:** Safe .env and config.js editing with validation
 - **Network Status:** Interface monitoring, connectivity checks, public IP detection
 - **Reminder Management:** Create, view, edit, and manage reminders via web UI
 
 **Access:** `http://localhost:3000` while the bot is running
 
-For detailed API reference and technical specifications, see [RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md).
+For detailed API reference and technical specifications, see
+[RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md).
 
 ---
 
@@ -369,7 +373,8 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage:** 1,708+ tests passing – dual thresholds: ≥80% critical files / ≥65% global baseline
+- **Test Coverage:** 1,708+ tests passing – dual thresholds: ≥80% critical files / ≥65% global
+  baseline
 - **Code Quality:** 94.8% reduction in ESLint issues with systematic complexity reduction
 - **Security:** Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity:** Max 15 complexity per file, 10 per function
@@ -398,6 +403,7 @@ npm run test:branch-coverage # Run branch coverage tests
 ```
 
 The test suite includes:
+
 - Unit tests for all service modules
 - Integration tests for bot functionality
 - Database integration tests
@@ -490,6 +496,7 @@ Permission is granted at my sole discretion.
 See [CHANGELOG.md](./CHANGELOG.md) for full version history.
 
 For detailed release notes:
+
 - [v1.10.0](./docs/RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup
 - [v1.9.0](./docs/RELEASE-NOTES-v1.9.0.md) - Dashboard Enhancements
 - [v1.8.0](./docs/RELEASE-NOTES-v1.8.0.md) - Web Dashboard

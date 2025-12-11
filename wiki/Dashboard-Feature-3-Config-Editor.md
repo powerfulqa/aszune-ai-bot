@@ -408,11 +408,11 @@ GET /api/config/history?limit=50&startDate=2024-01-14&endDate=2024-01-15
 
 ### Configuration Settings
 
-| Setting                     | Type    | Constraints   | Default |
-| --------------------------- | ------- | ------------- | ------- |
-| CACHE.MAX_SIZE              | Number  | 10-1024 MB    | 512     |
-| CACHE.TTL                   | Number  | 300-86400 sec | 3600    |
-| API.TIMEOUT                 | Number  | 1000-30000 ms | 5000    |
+| Setting        | Type   | Constraints   | Default |
+| -------------- | ------ | ------------- | ------- |
+| CACHE.MAX_SIZE | Number | 10-1024 MB    | 512     |
+| CACHE.TTL      | Number | 300-86400 sec | 3600    |
+| API.TIMEOUT    | Number | 1000-30000 ms | 5000    |
 
 ## Troubleshooting
 

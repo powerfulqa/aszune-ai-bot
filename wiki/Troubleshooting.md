@@ -4,12 +4,12 @@ Quick solutions for common Aszune AI Bot issues.
 
 ## Quick Fixes
 
-| Issue | Solution |
-|-------|----------|
-| Bot offline | Check `.env` token, restart with `pm2 restart aszune-ai` |
+| Issue               | Solution                                                  |
+| ------------------- | --------------------------------------------------------- |
+| Bot offline         | Check `.env` token, restart with `pm2 restart aszune-ai`  |
 | No command response | Enable Message Content Intent in Discord Developer Portal |
-| API errors | Verify `PERPLEXITY_API_KEY` in `.env` |
-| Missing permissions | Re-invite bot with required permissions |
+| API errors          | Verify `PERPLEXITY_API_KEY` in `.env`                     |
+| Missing permissions | Re-invite bot with required permissions                   |
 
 ## Connection Issues
 
@@ -48,10 +48,10 @@ Quick solutions for common Aszune AI Bot issues.
 
 ## Common Errors
 
-| Error | Fix |
-|-------|-----|
-| `Cannot find module` | Run `npm install` |
-| `Disallowed intents` | Enable intents in Developer Portal |
+| Error                 | Fix                                    |
+| --------------------- | -------------------------------------- |
+| `Cannot find module`  | Run `npm install`                      |
+| `Disallowed intents`  | Enable intents in Developer Portal     |
 | `Missing Permissions` | Re-invite bot with correct permissions |
 
 ## Debugging

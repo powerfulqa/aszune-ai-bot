@@ -109,13 +109,13 @@ No migration steps required. Simply update to v1.10.0.
 
 ## Statistics
 
-| Metric              | v1.9.0  | v1.10.0 | Change  |
-| ------------------- | ------- | ------- | ------- |
-| Tests               | 1,231   | 1,661   | +430    |
-| Tests Passing       | 1,228   | 1,661   | +433    |
-| Coverage Threshold  | 64%     | 70%     | +6%     |
-| ESLint Issues       | ~400    | ~20     | -95%    |
-| Code Quality Issues | 37      | 9       | -78%    |
+| Metric              | v1.9.0 | v1.10.0 | Change |
+| ------------------- | ------ | ------- | ------ |
+| Tests               | 1,231  | 1,661   | +430   |
+| Tests Passing       | 1,228  | 1,661   | +433   |
+| Coverage Threshold  | 64%    | 70%     | +6%    |
+| ESLint Issues       | ~400   | ~20     | -95%   |
+| Code Quality Issues | 37     | 9       | -78%   |
 
 ## Contributors
 
@@ -131,7 +131,8 @@ This project is **Source Available - All Rights Reserved**.
 - ❌ No use in your own projects without permission
 - ❌ No running or deploying without permission
 
-**All uses beyond viewing require explicit written permission.** To request permission, [open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) on GitHub.
+**All uses beyond viewing require explicit written permission.** To request permission,
+[open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues) on GitHub.
 
 See [LICENSE](../LICENSE) for full terms.
 

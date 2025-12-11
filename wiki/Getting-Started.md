@@ -102,6 +102,7 @@ Follow these steps to set up the Aszune AI Bot:
 ## Verification
 
 When the bot starts, you'll see:
+
 ```
 Discord bot is online!
 ```

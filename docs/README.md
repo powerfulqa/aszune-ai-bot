@@ -4,7 +4,8 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Current Release
 
-- **[v1.10.0 Release Notes](./RELEASE-NOTES-v1.10.0.md)** - Code Quality & Documentation Cleanup (LATEST)
+- **[v1.10.0 Release Notes](./RELEASE-NOTES-v1.10.0.md)** - Code Quality & Documentation Cleanup
+  (LATEST)
 
 ## Code Quality & Standards
 
@@ -19,18 +20,19 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Dashboard Documentation
 
-- **[Dashboard API Reference v1.9.0](./DASHBOARD-API-REFERENCE-v1.9.0.md)** - Complete API documentation
+- **[Dashboard API Reference v1.9.0](./DASHBOARD-API-REFERENCE-v1.9.0.md)** - Complete API
+  documentation
 
 ## Release Notes Archive
 
-| Version | Description |
-|---------|-------------|
+| Version                               | Description                                   |
+| ------------------------------------- | --------------------------------------------- |
 | [v1.10.0](./RELEASE-NOTES-v1.10.0.md) | Code Quality & Documentation Cleanup (LATEST) |
-| [v1.9.0](./RELEASE-NOTES-v1.9.0.md) | Dashboard Feature Suite |
-| [v1.8.0](./RELEASE-NOTES-v1.8.0.md) | Web Dashboard & Coverage Policy |
-| [v1.7.0](./RELEASE-NOTES-v1.7.0.md) | Database Integration & Reminders |
-| [v1.6.x](./RELEASE-NOTES-v1.6.5.md) | Analytics & Cache Fixes |
-| [v1.5.0](./RELEASE-NOTES-v1.5.0.md) | QLTY Integration |
+| [v1.9.0](./RELEASE-NOTES-v1.9.0.md)   | Dashboard Feature Suite                       |
+| [v1.8.0](./RELEASE-NOTES-v1.8.0.md)   | Web Dashboard & Coverage Policy               |
+| [v1.7.0](./RELEASE-NOTES-v1.7.0.md)   | Database Integration & Reminders              |
+| [v1.6.x](./RELEASE-NOTES-v1.6.5.md)   | Analytics & Cache Fixes                       |
+| [v1.5.0](./RELEASE-NOTES-v1.5.0.md)   | QLTY Integration                              |
 
 ## Project Documentation
 

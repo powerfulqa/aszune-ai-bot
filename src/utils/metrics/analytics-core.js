@@ -1,7 +1,7 @@
 /**
  * Analytics Core - Performance and usage metrics
  * Provides runtime statistics for optimization
- * 
+ *
  * @module utils/metrics/analytics-core
  */
 
