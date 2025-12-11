@@ -1,5 +1,30 @@
 const { setupIndexContext, mockConfigData } = require('./index.test.setup');
 
+// Mock instance-tracker and telemetry to prevent hanging
+jest.mock('../../src/services/instance-tracker', () => ({
+  initialize: jest.fn().mockResolvedValue(true),
+  getStatus: jest.fn().mockReturnValue({ instanceId: 'test-id', verified: true }),
+  isVerificationRequired: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock('../../src/utils/metrics/telemetry', () => ({
+  initialize: jest.fn().mockResolvedValue(),
+}));
+
+jest.mock('../../src/utils/metrics/analytics-core', () => ({
+  markVerified: jest.fn(),
+}));
+
+jest.mock('../../src/services/database', () => ({
+  logBotEvent: jest.fn(),
+}));
+
+// Mock web-dashboard to prevent server startup
+jest.mock('../../src/services/web-dashboard', () => ({
+  start: jest.fn().mockResolvedValue(),
+  stop: jest.fn().mockResolvedValue(),
+}));
+
 describe('Boot Optimizations', () => {
   let context;
 
