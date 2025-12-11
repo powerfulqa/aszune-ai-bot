@@ -90,95 +90,30 @@ Follow these steps to set up the Aszune AI Bot:
 
 7. **Run the bot**
 
-   You can run the bot using one of the following methods:
-
-   **Method 1: Run manually**
-
    ```bash
+   # Development
    node src/index.js
-   ```
 
-   **Method 2: Run with PM2 (recommended for production)**
-
-   ```bash
+   # Production (with PM2)
    npm install pm2 -g
-   DISCORD_BOT_TOKEN=your_discord_bot_token_here PERPLEXITY_API_KEY=your_perplexity_api_key_here pm2 start src/index.js --name aszune-ai
+   pm2 start src/index.js --name aszune-ai
    ```
-
-   Or create an ecosystem file as described in the [Deployment Guide](Deployment-Guide).
 
 ## Verification
 
-When the bot starts successfully, you should see the following message in your terminal:
-
+When the bot starts, you'll see:
 ```
 Discord bot is online!
 ```
 
-You can test the bot by using the `/help` slash command in a channel where the bot has access.
+Test with `/help` in any channel where the bot has access.
 
-## Development Setup (Optional)
+## Optional: Web Dashboard
 
-If you plan to contribute to the project, consider setting up the development environment:
-
-```bash
-# Run quality checks
-npm run quality:check
-
-# Run security scan
-npm run security:all
-
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
+Visit `http://localhost:3000` while running for real-time monitoring dashboards.
 
 ## Next Steps
 
-- Check out the [Usage Guide](Usage-Guide) to learn how to interact with the bot
-- **Try the analytics features**: Use `/analytics`, `/dashboard`, and `/resources` to explore
-  monitoring capabilities
-- Explore the [Command Reference](Command-Reference) for detailed information about all available
-  commands including the new analytics commands
-- Read the [Contributing Guidelines](../CONTRIBUTING.md) if you want to contribute to the project
-- Review the [Code Quality Documentation](../docs/QLTY_INTEGRATION.md) for development standards
-- Visit the [Troubleshooting](Troubleshooting) page if you encounter any issues
-
-## Web Dashboard (Optional, v1.8.0)
-
-Starting with v1.8.0, a lightweight web dashboard is available for continuous real‑time telemetry.
-
-- **Access**: Visit `http://localhost:3000` while the bot is running
-- **Features**: Live metrics (memory, cache, performance), Discord‑style cards showing actual
-  outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`, `/resources`, and `/reminders`
-- **Database Viewer**: Read‑only viewer for key tables (users, conversation_history, reminders)
-- **Isolation**: Dashboard failures are isolated and do not affect core bot operations
-
-See the full feature summary in
-[docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md).
-
-## What's New in v1.8.0
-
-🎯 **Balanced Coverage Policy** – Dual thresholds: ≥80% for critical files and ≥65% global baseline
-with a roadmap toward 82%+.
-
-🌐 **Web Dashboard** – Express + Socket.io dashboard providing continuous real‑time telemetry and
-actual command outputs, complementing `/dashboard` inside Discord.
-
-🧩 **Complexity Reduction** – Refactors across chat, cache, and error handling to align with ≤10
-function complexity targets.
-
-📦 **Dependency Refresh** – Updated core packages for stability and security.
-
-## What's New in v1.6.0
-
-🎉 **Analytics Integration** - The bot now includes comprehensive monitoring and analytics features:
-
-- **`/analytics`** - Discord server analytics with user engagement insights
-- **`/dashboard`** - Real-time performance monitoring dashboard
-- **`/resources`** - Resource optimization analysis and recommendations
-
-All monitoring features are accessible directly in Discord – no need to access your Raspberry Pi
-separately. The v1.8.0 web dashboard provides an optional, continuous view outside Discord.
+- [Usage Guide](Usage-Guide) – How to interact with the bot
+- [Command Reference](Command-Reference) – All available commands
+- [Troubleshooting](Troubleshooting) – Common issues and solutions

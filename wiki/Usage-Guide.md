@@ -2,36 +2,11 @@
 
 This guide explains how to interact with Aszune AI Bot and get the most out of its features.
 
-## What's New in v1.6.0
+## Overview
 
-Version 1.6.0 introduces **Analytics Integration** - comprehensive system monitoring directly in
-Discord:
+Aszune AI Bot uses **slash commands** (prefix `/`). Legacy `!` commands are supported for backward compatibility but new features should use slash commands.
 
-### New Analytics Commands
-
-- **`/analytics`** - Complete Discord server analytics with user engagement statistics, command
-  usage patterns, and performance insights
-- **`/dashboard`** - Real-time performance dashboard showing system status, resource utilization,
-  and operational health
-- **`/resources`** - Resource optimization monitoring with automated recommendations for performance
-  improvements
-
-### Key Features
-
-- **Discord-Native Access**: All analytics accessible directly in Discord without external tools
-- **Real-time Monitoring**: Live system metrics and performance data
-- **Automated Insights**: AI-powered recommendations for optimization
-- **Complete Integration**: Seamless integration with existing bot functionality
-- **Discord Table Formatting**: Automatic conversion of markdown tables to readable Discord format
-- **Full Test Coverage**: All 1000 tests passing with comprehensive analytics coverage
-
-This update eliminates the need to access your Raspberry Pi directly for system monitoring -
-everything is now available through Discord commands!
-
-## Basic Interaction
-
-Aszune AI Bot primarily uses **slash commands** (start with `/`). A limited set of legacy `!`
-commands is still recognised for backward compatibility.
+**Current Version:** v1.10.0 • 1,708+ tests passing • 70%+ coverage
 
 ## Available Commands
 

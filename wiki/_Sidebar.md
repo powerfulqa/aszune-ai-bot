@@ -1,41 +1,33 @@
-### Navigation
+### Aszune AI Bot
 
-- [Home](Home)
-- [Getting Started](Getting-Started)
+**[Home](Home)** • v1.10.0
+
+---
+
+### Getting Started
+- [Installation](Getting-Started)
 - [Usage Guide](Usage-Guide)
-- [Command Reference](Command-Reference)
-- [Technical Documentation](Technical-Documentation)
-- [Testing Guide](Testing-Guide)
-- [CI/CD Pipeline](CI-CD-Pipeline)
-- [Deployment Guide](Deployment-Guide)
-- [Pi Optimization Guide](Pi-Optimization-Guide)
+- [Commands](Command-Reference)
 - [Troubleshooting](Troubleshooting)
-- [Contributing](Contributing)
 
-### Dashboard Features
+### Dashboard
+- [Overview](Dashboard-Features-Complete)
+- [Log Viewer](Dashboard-Feature-1-Log-Viewer)
+- [Services](Dashboard-Feature-2-Service-Management)
+- [Config](Dashboard-Feature-3-Config-Editor)
+- [Network](Dashboard-Feature-5-Network-Status)
+- [Reminders](Dashboard-Feature-7-Reminders)
 
-- [Feature 1: Log Viewer](Dashboard-Feature-1-Log-Viewer)
-- [Feature 2: Service Management](Dashboard-Feature-2-Service-Management)
-- [Feature 3: Configuration Editor](Dashboard-Feature-3-Config-Editor)
-- [Feature 5: Network Status](Dashboard-Feature-5-Network-Status)
-- [Feature 7: Reminders](Dashboard-Feature-7-Reminders)
-
-### Code Quality
-
-- [QLTY Quick Start](../QLTY/QUICK-START.md)
-- [QLTY Integration](../QLTY/QLTY_INTEGRATION.md)
-- [Security Policy](../SECURITY.md)
+### Development
+- [Technical Docs](Technical-Documentation)
+- [Testing](Testing-Guide)
+- [CI/CD](CI-CD-Pipeline)
 - [Contributing](../CONTRIBUTING.md)
 
-### Release Notes
+### Deployment
+- [Guide](Deployment-Guide)
+- [Pi Optimization](Pi-Optimization-Guide)
 
-- [v1.10.0](../docs/RELEASE-NOTES-v1.10.0.md)
-- [v1.9.0](../docs/RELEASE-NOTES-v1.9.0.md)
-- [v1.8.0](../docs/RELEASE-NOTES-v1.8.0.md)
-- [v1.7.0](../docs/RELEASE-NOTES-v1.7.0.md)
-
-### External Links
-
-- [GitHub Repository](https://github.com/powerfulqa/aszune-ai-bot)
-- [Discord.js Docs](https://discord.js.org/)
-- [Perplexity API Docs](https://docs.perplexity.ai/)
+### Resources
+- [Release Notes](../docs/RELEASE-NOTES-v1.10.0.md)
+- [GitHub](https://github.com/powerfulqa/aszune-ai-bot)

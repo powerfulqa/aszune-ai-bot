@@ -1,19 +1,14 @@
 # Command Reference
 
-This page provides detailed documentation for all commands available in the Aszune AI Bot.
+All commands available in Aszune AI Bot v1.10.0.
 
-## Web Dashboard (v1.8.0)
+## Web Dashboard
 
-An optional web dashboard is available at `http://localhost:3000` when the bot is running. It shows
-real‑time metrics and the actual outputs for `/stats`, `/analytics`, `/cache`, `/dashboard`,
-`/resources`, and `/reminders`, alongside a read‑only database viewer and recommendations. See
-[docs/DASHBOARD-v1.8.0-RELEASE.md](../docs/DASHBOARD-v1.8.0-RELEASE.md) for full details.
+Access real-time monitoring at `http://localhost:3000` when the bot is running.
 
 ## Command Types
 
-The bot supports modern **slash commands** and still recognises a limited set of legacy `!` text
-commands for backward compatibility. New features (reminders, analytics, cache stats) should use
-slash commands first. Legacy `!` forms will be deprecated.
+**Slash commands** (`/`) are preferred. Legacy `!` commands work for backward compatibility but are deprecated.
 
 ### Reminder Commands (NEW in v1.7.0)
 

@@ -4,7 +4,7 @@ Last updated: 2025-01-17 (v1.10.0)
 
 ## Current Local Metrics
 
-- Tests: 1,661 total / 1,661 passing / 14 skipped
+- Tests: 1,708+ total / 1,708+ passing / 14 skipped
 - Test Suites: 178 total
 - Statements: ~69%
 - Branches: ~82%

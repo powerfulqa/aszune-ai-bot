@@ -12,7 +12,7 @@ dashboards.
 - Discord.js framework
 - Perplexity API (Sonar model)
 - PM2 process management
-- Redis/persistent storage
+- SQLite database (local file storage)
 - Raspberry Pi 5 (ARM-based Linux)
 
 **Quality Framework:** QLTY.sh standards focused on:
@@ -21,7 +21,7 @@ dashboards.
 - Duplication elimination
 - Security vulnerability prevention
 - Maintainability metrics
-- Code coverage (target: 80%+ statements, 80%+ branches)
+- Code coverage (target: 70%+ statements, 65%+ branches)
 
 ---
 
@@ -102,7 +102,7 @@ text
 
 ### 4. Resource Optimization for Raspberry Pi 5
 
-- **Memory:** Avoid large in-memory data structures; use Redis/persistent storage
+- **Memory:** Avoid large in-memory data structures; use SQLite/persistent storage
 - **CPU:** Minimize blocking operations; prefer async/await
 - **Connections:** Reuse HTTP clients and Discord connections
 - **Cleanup:** Always close resources (database connections, file handles)
@@ -122,7 +122,7 @@ text
 
 ### 5. Test Coverage Requirements
 
-- **Target:** 80%+ statement coverage, 80%+ branch coverage
+- **Target:** 70%+ statement coverage, 65%+ branch coverage
 - **Unit Tests:** For all utility functions and handlers
 - **Integration Tests:** For Discord interactions and API calls
 - **Edge Cases:** Null checks, empty strings, malformed JSON, API timeouts
@@ -206,7 +206,7 @@ text
 // config.js - Validated at startup const config = { discord: { token: process.env.DISCORD_TOKEN,
 clientId: process.env.DISCORD_CLIENT_ID, }, perplexity: { apiKey: process.env.PERPLEXITY_API_KEY,
 model: process.env.PERPLEXITY_MODEL || 'sonar', timeout: parseInt(process.env.PERPLEXITY_TIMEOUT ||
-'30000'), }, redis: { url: process.env.REDIS_URL || 'redis://localhost:6379', }, };
+'30000'), }, database: { path: process.env.DB_PATH || './data/bot.db', }, };
 
 // Validate required config export function validateConfig() { const required = ['DISCORD_TOKEN',
 'DISCORD_CLIENT_ID', 'PERPLEXITY_API_KEY']; const missing = required.filter(key =>

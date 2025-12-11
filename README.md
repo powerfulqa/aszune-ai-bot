@@ -4,7 +4,7 @@
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-1661%20Passing-brightgreen.svg)](#testing--coverage)
+[![Tests](https://img.shields.io/badge/Tests-1708%2B%20Passing-brightgreen.svg)](#testing--coverage)
 
 [Release Notes](./docs/RELEASE-NOTES-v1.10.0.md) |
 [Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
@@ -22,7 +22,7 @@ performance dashboards and server analytics directly within Discord.
 - 📈 **Analytics** - Server analytics, user engagement metrics, and performance monitoring
 - 🍓 **Raspberry Pi Optimized** - Specialized optimizations for resource-constrained devices
 
-**Current Status**: 1,661 tests passing – 70%+ coverage thresholds
+**Current Status**: 1,708+ tests passing – 70%+ coverage thresholds
 
 ## Table of Contents
 
@@ -51,7 +51,7 @@ performance dashboards and server analytics directly within Discord.
 - 📊 **Analytics:** `/analytics`, `/dashboard`, `/resources`, `/cache` - comprehensive monitoring
 - 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
 - 📋 **Slash Command Support:** All commands available as modern Discord slash commands
-- 🧪 **Comprehensive Testing:** 1,661+ tests with 80%+ coverage on critical components
+- 🧪 **Comprehensive Testing:** 1,708+ tests with 70%+ coverage on critical components
 - 🌐 **Web Dashboard:** Optional Express + Socket.io dashboard with live metrics
 - 💾 **Persistent Storage:** SQLite database for conversation history and user analytics
 - 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3+
@@ -369,7 +369,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage:** 1,661+ tests passing – dual thresholds: ≥80% critical files / ≥65% global baseline
+- **Test Coverage:** 1,708+ tests passing – dual thresholds: ≥80% critical files / ≥65% global baseline
 - **Code Quality:** 94.8% reduction in ESLint issues with systematic complexity reduction
 - **Security:** Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
 - **Code Complexity:** Max 15 complexity per file, 10 per function
