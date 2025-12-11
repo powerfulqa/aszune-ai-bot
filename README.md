@@ -385,7 +385,7 @@ npm run quality:smells   # Detect code smells and duplication
 npm run security:all     # Full security scanning
 ```
 
-For detailed information, see [QLTY/README.md](QLTY/README.md).
+For detailed information, see [docs/qlty/README.md](docs/qlty/README.md).
 
 ---
 

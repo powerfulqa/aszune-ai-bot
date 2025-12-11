@@ -6,6 +6,7 @@ coverage-*/
 data/
 logs/
 test-results/
+test-data/
 junit.xml
 .DS_Store
 commit_message.txt

@@ -9,6 +9,7 @@ This directory contains project documentation and release notes for the Aszune A
 ## Code Quality & Standards
 
 - **[Coverage Status](./COVERAGE-STATUS.md)** - Single source of truth for test coverage metrics
+- **[QLTY Documentation](./qlty/)** - Code quality tooling guides
 - **[Database Integration](./DATABASE-INTEGRATION.md)** - SQLite database integration guide
 
 ## Cache Service Documentation
@@ -19,20 +20,21 @@ This directory contains project documentation and release notes for the Aszune A
 ## Dashboard Documentation
 
 - **[Dashboard API Reference v1.9.0](./DASHBOARD-API-REFERENCE-v1.9.0.md)** - Complete API documentation
-- **[Dashboard v1.8.0 Release](./DASHBOARD-v1.8.0-RELEASE.md)** - Initial dashboard release notes
 
 ## Release Notes Archive
 
-- [v1.10.0](./RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup (LATEST)
-- [v1.9.0](./RELEASE-NOTES-v1.9.0.md) - Dashboard Feature Suite
-- [v1.8.0](./RELEASE-NOTES-v1.8.0.md) - Web Dashboard & Coverage Policy
-- [v1.7.0](./RELEASE-NOTES-v1.7.0.md) - Database Integration & Reminders
-- [v1.6.0](./RELEASE-NOTES-v1.6.0.md) - Analytics Integration
-- [v1.5.0](./RELEASE-NOTES-v1.5.0.md) - QLTY Integration
+| Version | Description |
+|---------|-------------|
+| [v1.10.0](./RELEASE-NOTES-v1.10.0.md) | Code Quality & Documentation Cleanup (LATEST) |
+| [v1.9.0](./RELEASE-NOTES-v1.9.0.md) | Dashboard Feature Suite |
+| [v1.8.0](./RELEASE-NOTES-v1.8.0.md) | Web Dashboard & Coverage Policy |
+| [v1.7.0](./RELEASE-NOTES-v1.7.0.md) | Database Integration & Reminders |
+| [v1.6.x](./RELEASE-NOTES-v1.6.5.md) | Analytics & Cache Fixes |
+| [v1.5.0](./RELEASE-NOTES-v1.5.0.md) | QLTY Integration |
 
 ## Project Documentation
 
 - **[Changelog](../CHANGELOG.md)** - Complete version history
 - **[Security Policy](../SECURITY.md)** - Security guidelines
 - **[Contributing Guidelines](../CONTRIBUTING.md)** - Contribution standards
-- **[Wiki Documentation](../wiki/Home.md)** - Comprehensive project wiki
+- **[Wiki](../wiki/Home.md)** - User guides and tutorials

@@ -33,6 +33,6 @@ A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **
 ## Code Quality
 
 This project uses [QLTY](https://qlty.sh/) for automated code quality:
-- [QLTY Integration Guide](../docs/QLTY_INTEGRATION.md)
+- [QLTY Integration Guide](../docs/qlty/QLTY_INTEGRATION.md)
 - [Security Policy](../SECURITY.md)
 - [Contributing](../CONTRIBUTING.md)
