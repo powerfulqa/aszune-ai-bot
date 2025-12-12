@@ -128,9 +128,13 @@ describe('beacon helper', () => {
       );
 
       expect(result).toBeNull();
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'Beacon request failed',
         expect.objectContaining({ error: 'Network error' })
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Beacon failed after all retries',
+        { maxRetries: 1 }
       );
     });
 
@@ -146,7 +150,13 @@ describe('beacon helper', () => {
       );
 
       expect(result).toBeNull();
-      expect(logger.error).toHaveBeenCalledWith('Beacon request timed out');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Beacon request timed out - tracking server may be unavailable'
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Beacon failed after all retries',
+        { maxRetries: 1 }
+      );
     });
 
     it('should use default options', async () => {
