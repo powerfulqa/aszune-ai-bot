@@ -104,7 +104,7 @@ describe('location helper', () => {
       expect(result.longitude).toBe(-1.89);
     });
 
-    it('should return unknown location if all services fail', async () => {
+    it('should return local fallback location if all services fail', async () => {
       global.fetch
         .mockResolvedValueOnce({ ok: false })
         .mockResolvedValueOnce({ ok: false })
@@ -112,9 +112,9 @@ describe('location helper', () => {
 
       const result = await getLocationInfo();
 
-      expect(result.ip).toBe('unknown');
-      expect(result.city).toBeNull();
-      expect(result.country).toBeNull();
+      expect(result.ip).toBe('local');
+      expect(result.source).toBe('hostname');
+      expect(result.country).toBe('Local Network');
     });
 
     it('should handle network errors gracefully', async () => {
@@ -122,7 +122,8 @@ describe('location helper', () => {
 
       const result = await getLocationInfo();
 
-      expect(result.ip).toBe('unknown');
+      expect(result.ip).toBe('local');
+      expect(result.source).toBe('hostname');
     });
 
     it('should handle timeout errors', async () => {
@@ -136,7 +137,8 @@ describe('location helper', () => {
 
       const result = await getLocationInfo();
 
-      expect(result.ip).toBe('unknown');
+      expect(result.ip).toBe('local');
+      expect(result.source).toBe('hostname');
     });
   });
 
