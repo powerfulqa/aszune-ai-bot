@@ -68,9 +68,9 @@ monitoring, management, and operational control. The system consists of:
 
 ---
 
-### 3. 🔧 Service Management (service-management-demo.html)
+### 3. 🔧 Service Management (service-management.html)
 
-**Purpose**: Monitor and control system services
+**Purpose**: Monitor services and instance tracking
 
 **Key Capabilities**:
 
@@ -81,6 +81,12 @@ monitoring, management, and operational control. The system consists of:
 - Response time monitoring
 - Service dependency visualization
 - Automatic health check polling (5-second intervals)
+
+**Instance Tracking**:
+
+- View **Authorized** vs **Unauthorized** instances
+- Approve/revoke instances (admin)
+- Location display supports hostname/local fallback and `BOT_LOCATION` override
 
 **Managed Services**:
 

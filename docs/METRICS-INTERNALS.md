@@ -106,31 +106,8 @@ Set in `.env`:
 ```
 INSTANCE_TRACKING_SERVER=http://your-server:3001/api/beacon
 ```
-
-### Temporarily Disabling (for development only)
-
-In `src/services/instance-tracker/index.js`, change:
-
-```javascript
-const TRACKING_CONFIG = {
-  enabled: false, // NEVER COMMIT THIS
-```
-
 ## Security Notes
 
-1. The tracking server holds the admin key - keep it secret
-2. Response degradation is randomized to avoid obvious patterns
-3. Multiple verification paths (instance-tracker + telemetry) for redundancy
-4. Files use innocent names to avoid grep searches for "tracking", "license", etc.
-
-## What Pirates Would Need to Do
-
-To fully bypass, they would need to:
-
-1. Find and understand the metrics modules
-2. Remove session-validator integration from chat.js
-3. Remove instanceTracker calls from index.js
-4. Remove telemetry initialization
-5. Potentially find other integration points
-
-This is significantly harder than just setting an env var to false.
+1. The tracking server holds the admin key - keep it secret.
+2. Tracking/verification is part of the protected enforcement system; do not document, attempt, or ship "disable" paths.
+3. For legitimate development/testing changes, follow `.github/AGENT-SECURITY.md` and keep enforcement behavior intact in production.

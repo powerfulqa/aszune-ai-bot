@@ -1,6 +1,6 @@
 # Dashboard Feature 2: Service Status & Management
 
-**Version:** v1.9.0 | **Status:** Production Ready | **Last Updated:** 2024
+**Version:** v1.10.0 | **Status:** Production Ready | **Last Updated:** 2025
 
 ## Overview
 
@@ -76,6 +76,20 @@ Click "Restart" button on any service
 1. Start the bot: `npm start` or `npm run dev`
 2. Navigate to `http://localhost:3000/dashboard`
 3. Click on **Service Status & Management** or navigate to `/services`
+
+### Instance Tracking
+
+The Services page includes an Instance Tracking section:
+
+- **Authorized Instances** and **Unauthorized Instances** lists
+- Approve/revoke actions (requires tracking server configured)
+
+Tracking server configuration:
+
+```env
+INSTANCE_TRACKING_SERVER=http://localhost:3001/api/beacon
+TRACKING_ADMIN_KEY=your_strong_admin_key
+```
 
 ### Monitoring Service Health
 
@@ -427,10 +441,6 @@ LIMITS: {
 - [Technical Documentation](Technical-Documentation.md)
 - [Deployment Guide](Deployment-Guide.md)
 
-## Demo
+## Implementation
 
-Interactive demo available:
-[`service-management-demo.html`](../dashboard/public/service-management-demo.html)
-
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Service Status &
-Management"
+Dashboard page: `dashboard/public/service-management.html`

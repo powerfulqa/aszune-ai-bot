@@ -113,6 +113,27 @@ Test with `/help` in any channel where the bot has access.
 
 Visit `http://localhost:3000` while running for real-time monitoring dashboards.
 
+## Optional: Instance Tracking / Authorization
+
+For production deployments, you can run the tracking server to list instances and approve/revoke from the Services page.
+
+Add to `.env`:
+
+```env
+INSTANCE_TRACKING_SERVER=http://localhost:3001/api/beacon
+TRACKING_ADMIN_KEY=your_strong_admin_key
+
+# Optional
+AUTHORIZED_IPS=1.2.3.4,5.6.7.8
+BOT_LOCATION=Home Server, UK
+```
+
+Start the tracking server:
+
+```bash
+node scripts/tracking-server.js
+```
+
 ## Next Steps
 
 - [Usage Guide](Usage-Guide) – How to interact with the bot
