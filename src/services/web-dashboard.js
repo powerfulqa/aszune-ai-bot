@@ -1910,6 +1910,7 @@ class WebDashboardService {
       }
 
       const mapped = this._mapRemoteInstances(instances);
+      logger.debug('Mapped instances for dashboard:', JSON.stringify(mapped.map(i => ({ id: i.instanceId, authorized: i.authorized, revoked: i.revoked }))));
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
       logger.debug('Error fetching all instances (tracking unavailable):', error.message);
@@ -1939,6 +1940,7 @@ class WebDashboardService {
       guilds: guildCount,
       online: true,
       revoked: false,
+      authorized: true,
       lastHeartbeat: new Date().toISOString(),
       isLocal: true,
     };
