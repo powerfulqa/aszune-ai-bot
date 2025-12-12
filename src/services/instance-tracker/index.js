@@ -37,6 +37,7 @@ class InstanceTracker {
   constructor() {
     this.instanceId = null;
     this.isVerified = false;
+    this.isAuthorized = false;
     this.lastHeartbeat = null;
     this.heartbeatTimer = null;
     this.clientInfo = null;
@@ -97,7 +98,7 @@ class InstanceTracker {
 
   /**
    * Register instance with tracking server
-   * @returns {Promise<boolean>}
+   * @returns {Promise<{verified: boolean, authorized: boolean}>}
    * @private
    */
   async _registerWithServer() {
@@ -115,28 +116,49 @@ class InstanceTracker {
     if (response?.verified) {
       this.instanceId = response.instanceId;
       this.isVerified = true;
-      return true;
+      this.isAuthorized = response.authorized === true;
+      return { verified: true, authorized: this.isAuthorized };
     }
 
-    return false;
+    return { verified: false, authorized: false };
   }
 
   /**
    * Handle registration result
-   * @param {boolean} verified
+   * @param {{verified: boolean, authorized: boolean}} result
    * @param {Client} discordClient
    * @returns {boolean}
    * @private
    */
-  _handleRegistrationResult(verified, discordClient) {
-    if (verified) {
-      this._startHeartbeat(discordClient);
-      logger.info('Instance verified and registered', { instanceId: this.instanceId });
-      return true;
+  _handleRegistrationResult(result, discordClient) {
+    const { verified, authorized } = result;
+    
+    if (!verified) {
+      logger.warn('Instance verification not available - bot will run in degraded mode');
+      return false;
+    }
+    
+    if (!authorized) {
+      logger.error('Instance NOT AUTHORIZED - this instance has not been approved');
+      logger.error('Contact the bot owner to authorize this instance');
+      logger.error(`Instance ID: ${this.instanceId}`);
+      
+      // If verification is required and not authorized, shut down
+      if (TRACKING_CONFIG.requireVerification) {
+        logger.error('Shutting down - unauthorized instance');
+        setTimeout(() => process.exit(1), 3000);
+        return false;
+      }
+      
+      // If verification not required, continue in degraded mode
+      logger.warn('Running in degraded mode (unauthorized)');
+      return false;
     }
 
-    logger.warn('Instance verification not available - bot will run in degraded mode');
-    return false;
+    // Verified and authorized - full operation
+    this._startHeartbeat(discordClient);
+    logger.info('Instance verified and AUTHORIZED', { instanceId: this.instanceId });
+    return true;
   }
 
   /**
@@ -179,7 +201,12 @@ class InstanceTracker {
       this.lastHeartbeat = new Date();
 
       if (response?.revoked) {
-        this._handleRevocation(discordClient);
+        this._handleRevocation(discordClient, 'Instance has been REVOKED');
+        return false;
+      }
+      
+      if (response?.authorized === false) {
+        this._handleRevocation(discordClient, 'Instance authorization has been REVOKED');
         return false;
       }
 
@@ -209,10 +236,11 @@ class InstanceTracker {
   /**
    * Handle instance revocation
    * @param {Client} discordClient
+   * @param {string} reason - Reason for revocation
    * @private
    */
-  _handleRevocation(discordClient) {
-    logger.error('Instance has been revoked - shutting down');
+  _handleRevocation(discordClient, reason = 'Instance has been revoked') {
+    logger.error(`${reason} - shutting down`);
     this.stop();
 
     if (discordClient) {
@@ -230,6 +258,7 @@ class InstanceTracker {
     return {
       instanceId: this.instanceId,
       isVerified: this.isVerified,
+      isAuthorized: this.isAuthorized,
       lastHeartbeat: this.lastHeartbeat,
       clientInfo: this.clientInfo,
       locationInfo: this.locationInfo,

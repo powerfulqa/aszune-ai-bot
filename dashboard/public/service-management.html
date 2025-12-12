@@ -745,21 +745,17 @@
         }
 
         const instances = response.instances || [];
-        const myIp = response.myIp;
-        const authorizedIps = response.authorizedIps || (myIp ? [myIp] : []);
 
-        // Split into authorized (same IP or in whitelist) and unauthorized
+        // Split based on authorized status from tracking server
         const authorized = instances.filter(i => {
           if (i.revoked) return false;
           if (i.isLocal) return true; // Local instance always authorized
-          if (!i.ip) return true; // Unknown IP treated as authorized for now
-          return authorizedIps.includes(i.ip);
+          return i.authorized === true;
         });
         const unauthorized = instances.filter(i => {
           if (i.revoked) return true; // Revoked go to unauthorized
           if (i.isLocal) return false; // Local instance never unauthorized
-          if (!i.ip) return false;
-          return !authorizedIps.includes(i.ip);
+          return i.authorized !== true;
         });
 
         countEl.textContent = instances.length;

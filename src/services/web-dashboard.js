@@ -1932,7 +1932,7 @@ class WebDashboardService {
       // Build instances endpoint from beacon URL
       const baseUrl = serverUrl.replace('/api/beacon', '');
       const response = await fetch(`${baseUrl}/api/instances`, {
-        headers: { 'x-admin-key': adminKey },
+        headers: { Authorization: `Bearer ${adminKey}` },
       });
 
       if (!response.ok) {
@@ -1948,13 +1948,14 @@ class WebDashboardService {
       const instances = await response.json();
       const mapped = instances.map((inst) => ({
         instanceId: inst.instanceId,
-        clientName: inst.client?.name || 'Unknown',
-        ip: inst.ip,
-        location: inst.location ? `${inst.location.city}, ${inst.location.country}` : 'Unknown',
-        guilds: inst.client?.guilds || 0,
-        online: inst.online,
+        clientName: inst.client?.botTag || inst.client?.name || 'Unknown',
+        ip: inst.location?.actualIp || inst.ip,
+        location: inst.location ? `${inst.location.city || 'Unknown'}, ${inst.location.country || 'Unknown'}` : 'Unknown',
+        guilds: inst.client?.guildCount || inst.stats?.guildCount || 0,
+        online: inst.isOnline,
         revoked: inst.revoked,
-        lastHeartbeat: inst.lastHeartbeat,
+        authorized: inst.authorized,
+        lastHeartbeat: inst.lastSeen,
       }));
 
       callback({ instances: mapped, myIp, authorizedIps });
@@ -2029,7 +2030,7 @@ class WebDashboardService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
+          Authorization: `Bearer ${adminKey}`,
         },
         body: JSON.stringify({ instanceId }),
       });
