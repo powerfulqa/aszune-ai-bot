@@ -252,6 +252,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 0,
         completedReminders: 0,
         cancelledReminders: 0,
+        nextDue: null,
       });
     });
 

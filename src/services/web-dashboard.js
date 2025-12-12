@@ -1893,94 +1893,115 @@ class WebDashboardService {
    */
   async handleAllInstances(callback) {
     try {
-      const instanceTracker = require('./instance-tracker');
-      const localStatus = instanceTracker.getStatus();
-      const myIp = localStatus.locationInfo?.ip || null;
-
+      const { myIp, localInstance } = this._getLocalInstanceInfo();
       const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
       const adminKey = process.env.TRACKING_ADMIN_KEY || '';
 
-      // Create local instance entry for when tracking server is unavailable
-      const guildCount = this.discordClient?.guilds?.cache?.size || 0;
-      const localInstance = {
-        instanceId: localStatus.instanceId || 'local',
-        clientName: 'Aszune AI Bot (Local)',
-        ip: myIp || 'local',
-        location: localStatus.locationInfo?.city 
-          ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
-          : 'Local Network',
-        guilds: guildCount,
-        online: true,
-        revoked: false,
-        lastHeartbeat: new Date().toISOString(),
-        isLocal: true,
-      };
-
       // If tracking not configured, return local instance as authorized
       if (!serverUrl || !adminKey) {
-        return callback({ 
-          instances: [localInstance], 
-          myIp: myIp || 'local', 
-          authorizedIps: [myIp || 'local'], 
-          trackingUnavailable: true 
-        });
+        return callback(this._createLocalResponse(localInstance, myIp));
       }
 
-      // Build authorized IPs list from env + current IP
       const authorizedIps = this._getAuthorizedIps(myIp);
+      const instances = await this._fetchRemoteInstances(serverUrl, adminKey);
 
-      // Build instances endpoint from beacon URL
-      const baseUrl = serverUrl.replace('/api/beacon', '');
-      const response = await fetch(`${baseUrl}/api/instances`, {
-        headers: { Authorization: `Bearer ${adminKey}` },
-      });
-
-      if (!response.ok) {
-        // Return local instance when tracking server returns error
-        return callback({ 
-          instances: [localInstance], 
-          myIp: myIp || 'local', 
-          authorizedIps: [myIp || 'local'], 
-          trackingUnavailable: true 
-        });
+      if (!instances) {
+        return callback(this._createLocalResponse(localInstance, myIp));
       }
 
-      const instances = await response.json();
-      const mapped = instances.map((inst) => ({
-        instanceId: inst.instanceId,
-        clientName: inst.client?.botTag || inst.client?.name || 'Unknown',
-        ip: inst.location?.actualIp || inst.ip,
-        location: inst.location ? `${inst.location.city || 'Unknown'}, ${inst.location.country || 'Unknown'}` : 'Unknown',
-        guilds: inst.client?.guildCount || inst.stats?.guildCount || 0,
-        online: inst.isOnline,
-        revoked: inst.revoked,
-        authorized: inst.authorized,
-        lastHeartbeat: inst.lastSeen,
-      }));
-
+      const mapped = this._mapRemoteInstances(instances);
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
       logger.debug('Error fetching all instances (tracking unavailable):', error.message);
-      // Return local instance on error
-      const instanceTracker = require('./instance-tracker');
-      const localStatus = instanceTracker.getStatus();
-      const myIp = localStatus.locationInfo?.ip || 'local';
-      const guildCount = this.discordClient?.guilds?.cache?.size || 0;
-      const localInstance = {
-        instanceId: localStatus.instanceId || 'local',
-        clientName: 'Aszune AI Bot (Local)',
-        ip: myIp,
-        location: localStatus.locationInfo?.city 
-          ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
-          : 'Local Network',
-        guilds: guildCount,
-        online: true,
-        revoked: false,
-        lastHeartbeat: new Date().toISOString(),
-        isLocal: true,
-      };
-      callback({ instances: [localInstance], myIp, authorizedIps: [myIp], trackingUnavailable: true });
+      const { myIp, localInstance } = this._getLocalInstanceInfo();
+      callback(this._createLocalResponse(localInstance, myIp));
     }
+  }
+
+  /**
+   * Get local instance information
+   * @returns {{myIp: string, localInstance: Object}}
+   * @private
+   */
+  _getLocalInstanceInfo() {
+    const instanceTracker = require('./instance-tracker');
+    const localStatus = instanceTracker.getStatus();
+    const myIp = localStatus.locationInfo?.ip || 'local';
+    const guildCount = this.discordClient?.guilds?.cache?.size || 0;
+
+    const localInstance = {
+      instanceId: localStatus.instanceId || 'local',
+      clientName: 'Aszune AI Bot (Local)',
+      ip: myIp,
+      location: localStatus.locationInfo?.city
+        ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
+        : 'Local Network',
+      guilds: guildCount,
+      online: true,
+      revoked: false,
+      lastHeartbeat: new Date().toISOString(),
+      isLocal: true,
+    };
+
+    return { myIp, localInstance };
+  }
+
+  /**
+   * Create response for local-only mode
+   * @param {Object} localInstance
+   * @param {string} myIp
+   * @returns {Object}
+   * @private
+   */
+  _createLocalResponse(localInstance, myIp) {
+    return {
+      instances: [localInstance],
+      myIp,
+      authorizedIps: [myIp],
+      trackingUnavailable: true,
+    };
+  }
+
+  /**
+   * Fetch instances from remote tracking server
+   * @param {string} serverUrl
+   * @param {string} adminKey
+   * @returns {Promise<Array|null>}
+   * @private
+   */
+  async _fetchRemoteInstances(serverUrl, adminKey) {
+    const baseUrl = serverUrl.replace('/api/beacon', '');
+    const response = await fetch(`${baseUrl}/api/instances`, {
+      headers: { Authorization: `Bearer ${adminKey}` },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Map remote instance data to dashboard format
+   * @param {Array} instances
+   * @returns {Array}
+   * @private
+   */
+  _mapRemoteInstances(instances) {
+    return instances.map((inst) => ({
+      instanceId: inst.instanceId,
+      clientName: inst.client?.botTag || inst.client?.name || 'Unknown',
+      ip: inst.location?.actualIp || inst.ip,
+      location: inst.location
+        ? `${inst.location.city || 'Unknown'}, ${inst.location.country || 'Unknown'}`
+        : 'Unknown',
+      guilds: inst.client?.guildCount || inst.stats?.guildCount || 0,
+      online: inst.isOnline,
+      revoked: inst.revoked,
+      authorized: inst.authorized,
+      lastHeartbeat: inst.lastSeen,
+    }));
   }
 
   /**
