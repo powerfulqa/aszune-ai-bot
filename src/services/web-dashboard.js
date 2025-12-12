@@ -1901,6 +1901,7 @@ class WebDashboardService {
       const adminKey = process.env.TRACKING_ADMIN_KEY || '';
 
       // Create local instance entry for when tracking server is unavailable
+      const guildCount = this.discordClient?.guilds?.cache?.size || 0;
       const localInstance = {
         instanceId: localStatus.instanceId || 'local',
         clientName: 'Aszune AI Bot (Local)',
@@ -1908,7 +1909,7 @@ class WebDashboardService {
         location: localStatus.locationInfo?.city 
           ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
           : 'Local Network',
-        guilds: 0,
+        guilds: guildCount,
         online: true,
         revoked: false,
         lastHeartbeat: new Date().toISOString(),
@@ -1963,6 +1964,7 @@ class WebDashboardService {
       const instanceTracker = require('./instance-tracker');
       const localStatus = instanceTracker.getStatus();
       const myIp = localStatus.locationInfo?.ip || 'local';
+      const guildCount = this.discordClient?.guilds?.cache?.size || 0;
       const localInstance = {
         instanceId: localStatus.instanceId || 'local',
         clientName: 'Aszune AI Bot (Local)',
@@ -1970,7 +1972,7 @@ class WebDashboardService {
         location: localStatus.locationInfo?.city 
           ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
           : 'Local Network',
-        guilds: 0,
+        guilds: guildCount,
         online: true,
         revoked: false,
         lastHeartbeat: new Date().toISOString(),

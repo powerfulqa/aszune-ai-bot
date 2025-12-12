@@ -118,18 +118,18 @@ function getReminderStats(db) {
   const statusResults = statusStmt.all();
 
   const stats = {
-    total: total,
-    active: 0,
-    completed: 0,
-    cancelled: 0,
+    totalReminders: total,
+    activeReminders: 0,
+    completedReminders: 0,
+    cancelledReminders: 0,
     nextDue: null,
   };
 
   // Map status counts
   statusResults.forEach((row) => {
-    if (row.status === 'active') stats.active = row.count;
-    if (row.status === 'completed') stats.completed = row.count;
-    if (row.status === 'cancelled') stats.cancelled = row.count;
+    if (row.status === 'active') stats.activeReminders = row.count;
+    if (row.status === 'completed') stats.completedReminders = row.count;
+    if (row.status === 'cancelled') stats.cancelledReminders = row.count;
   });
 
   // Get next due reminder
