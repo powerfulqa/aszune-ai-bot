@@ -135,8 +135,9 @@ echo "Optimizations enabled: $ENABLE_PI_OPTIMIZATIONS"
 # Start the application with PM2
 echo "Configuring PM2..."
 pm2 delete aszune-ai 2>/dev/null || true
+pm2 delete Aszune-analytics 2>/dev/null || true
 
-# Start with all exported environment variables
+# Start with all exported environment variables (starts both aszune-ai and Aszune-analytics)
 pm2 start ecosystem.config.js --update-env
 
 # Save the list for startup

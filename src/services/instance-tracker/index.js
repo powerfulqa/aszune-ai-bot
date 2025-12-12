@@ -23,7 +23,7 @@ const _decodeEndpoint = (s) => Buffer.from(s, 'base64').toString('utf-8');
 const TRACKING_CONFIG = {
   server: process.env.INSTANCE_TRACKING_SERVER || _decodeEndpoint(_defaultEndpoint),
   enabled: true, // Always enabled - do not change
-  requireVerification: false, // Set to false for graceful degradation when tracking server unavailable
+  requireVerification: process.env.REQUIRE_INSTANCE_VERIFICATION !== 'false', // Default true, set env var to 'false' to disable
   heartbeatIntervalMs: 60 * 60 * 1000, // 1 hour
   maxRetries: 3,
   retryDelayMs: 5000,

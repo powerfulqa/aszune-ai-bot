@@ -19,11 +19,16 @@ module.exports = {
         NODE_ENV: 'production',
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
+        INSTANCE_TRACKING_SERVER: 'http://localhost:3001/api/beacon',
+        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
       },
       env_development: {
         NODE_ENV: 'development',
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
+        INSTANCE_TRACKING_SERVER: 'http://localhost:3001/api/beacon',
+        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
+        REQUIRE_INSTANCE_VERIFICATION: 'false', // Disable in dev mode
       },
       // Error handling
       max_memory_restart: '2G',
