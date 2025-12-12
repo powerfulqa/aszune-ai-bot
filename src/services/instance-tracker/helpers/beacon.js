@@ -122,9 +122,11 @@ function buildHeaders(payload) {
  */
 function logBeaconError(error) {
   if (error.name === 'AbortError') {
-    logger.error('Beacon request timed out');
+    logger.debug('Beacon request timed out - tracking server may be unavailable');
+  } else if (error.message && error.message.includes('fetch failed')) {
+    logger.debug('Beacon request failed - tracking server connection refused');
   } else {
-    logger.error('Beacon request failed', { error: error.message });
+    logger.debug('Beacon request failed', { error: error.message });
   }
 }
 

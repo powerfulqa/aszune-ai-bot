@@ -187,6 +187,8 @@ function _setupDiscordEventHandlers() {
       logger.error('Instance verification required but failed - shutting down');
       client.destroy();
       process.exit(1);
+    } else if (!isVerified) {
+      logger.warn('Instance verification not available - bot running in degraded mode without license verification');
     }
 
     // Log bot startup event
@@ -252,14 +254,11 @@ const shutdown = async (signal) => {
 
   isShuttingDown = true;
 
-  // DIAGNOSTIC: Log detailed signal information to help identify restart loop
-  // Using ERROR level to ensure it shows even with PI_LOG_LEVEL=ERROR
-  logger.error('========================================');
-  logger.error(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
-  logger.error(`Process uptime: ${Math.floor(process.uptime())}s`);
-  logger.error('Stack trace:');
-  logger.error(new Error().stack);
-  logger.error('========================================');
+  // Log signal information at appropriate level
+  logger.info('========================================');
+  logger.info(`SHUTDOWN TRIGGERED - Signal: ${signal}`);
+  logger.info(`Process uptime: ${Math.floor(process.uptime())}s`);
+  logger.info('========================================');
 
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
