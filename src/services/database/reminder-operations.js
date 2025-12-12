@@ -118,31 +118,58 @@ function getReminderStats(db) {
   const statusResults = statusStmt.all();
 
   const stats = {
-    totalReminders: total,
-    activeReminders: 0,
-    completedReminders: 0,
-    cancelledReminders: 0,
+    total: total,
+    active: 0,
+    completed: 0,
+    cancelled: 0,
+    nextDue: null,
   };
 
-  mapStatusCounts(statusResults, stats);
+  // Map status counts
+  statusResults.forEach((row) => {
+    if (row.status === 'active') stats.active = row.count;
+    if (row.status === 'completed') stats.completed = row.count;
+    if (row.status === 'cancelled') stats.cancelled = row.count;
+  });
+
+  // Get next due reminder
+  const nextStmt = db.prepare(`
+    SELECT id, message, scheduled_time
+    FROM reminders
+    WHERE status = 'active'
+    ORDER BY datetime(scheduled_time) ASC
+    LIMIT 1
+  `);
+  const nextReminder = nextStmt.get();
+  if (nextReminder) {
+    const scheduledDate = new Date(nextReminder.scheduled_time);
+    stats.nextDue = formatDateForDisplay(scheduledDate);
+  }
+
   return stats;
 }
 
-function getDefaultReminderStats() {
-  return {
-    totalReminders: 0,
-    activeReminders: 0,
-    completedReminders: 0,
-    cancelledReminders: 0,
-  };
-}
+function formatDateForDisplay(date) {
+  if (!date) return 'None';
+  const now = new Date();
+  const diffMs = date - now;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-function mapStatusCounts(statusResults, stats) {
-  statusResults.forEach((row) => {
-    if (row.status === 'active') stats.activeReminders = row.count;
-    if (row.status === 'completed') stats.completedReminders = row.count;
-    if (row.status === 'cancelled') stats.cancelledReminders = row.count;
-  });
+  if (diffMs < 0) {
+    return 'Overdue';
+  } else if (diffMs < 3600000) {
+    // Less than 1 hour
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    return `${diffMinutes}m`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h`;
+  } else if (diffDays < 7) {
+    return `${diffDays}d`;
+  } else {
+    // Show date in readable format
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
 }
 
 module.exports = {

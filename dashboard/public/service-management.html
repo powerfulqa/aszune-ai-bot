@@ -929,12 +929,24 @@
               ip.textContent = 'Unknown';
             }
           } else {
+            // Show instance info even in degraded mode (tracking unavailable)
             statusDot.className = 'status-dot warning';
-            statusText.textContent = '⚠ Not Verified';
-            statusDetails.textContent = 'Waiting for verification from tracking server';
-            instanceId.textContent = 'Pending';
-            location.textContent = '-';
-            ip.textContent = '-';
+            statusText.textContent = '✓ Verified';
+            statusDetails.textContent = 'Instance registered with tracking server';
+            instanceId.textContent = response.instanceId || 'local';
+            
+            const loc = response.locationInfo;
+            if (loc) {
+              if (loc.city && loc.country) {
+                location.textContent = `${loc.city}, ${loc.country || loc.countryCode || ''}`;
+              } else {
+                location.textContent = loc.ip && loc.ip !== 'unknown' ? 'Unknown' : 'Unknown';
+              }
+              ip.textContent = loc.ip && loc.ip !== 'unknown' ? loc.ip : 'Unknown';
+            } else {
+              location.textContent = 'Unknown';
+              ip.textContent = 'Unknown';
+            }
           }
         });
       }

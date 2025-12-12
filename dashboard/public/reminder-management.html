@@ -642,6 +642,28 @@
     <script src="dashboard.js"></script>
     <script>
       /* eslint-env browser */
+
+      function formatDateTimeForDisplay(dateString) {
+        if (!dateString || dateString === 'Not set') return 'Not set';
+
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return dateString; // If invalid, return original
+
+          const options = {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          };
+          return date.toLocaleString('en-US', options);
+        } catch (e) {
+          return dateString; // Fallback to original
+        }
+      }
+
       function toggleCreateForm() {
         const form = document.getElementById('create-form');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -678,7 +700,8 @@
           .map((reminder) => {
             const status = reminder.status || 'pending';
             const displayStatus = status === 'completed' ? 'completed' : 'active';
-            const scheduledTime = reminder.scheduled_time || reminder.scheduledTime || 'Not set';
+            const rawTime = reminder.scheduled_time || reminder.scheduledTime || 'Not set';
+            const scheduledTime = formatDateTimeForDisplay(rawTime);
             const message = reminder.message || 'No message';
             const id = reminder.id || 'unknown';
 
