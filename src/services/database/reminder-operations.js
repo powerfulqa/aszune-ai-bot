@@ -172,6 +172,32 @@ function formatDateForDisplay(date) {
   }
 }
 
+/**
+ * Get default reminder stats (used as fallback when DB unavailable)
+ * @returns {Object} Default empty stats
+ */
+function getDefaultReminderStats() {
+  return {
+    totalReminders: 0,
+    activeReminders: 0,
+    completedReminders: 0,
+    cancelledReminders: 0,
+  };
+}
+
+/**
+ * Map status counts from query results to stats object
+ * @param {Array} statusResults - Array of {status, count} objects
+ * @param {Object} stats - Stats object to populate
+ */
+function mapStatusCounts(statusResults, stats) {
+  statusResults.forEach((row) => {
+    if (row.status === 'active') stats.activeReminders = row.count;
+    if (row.status === 'completed') stats.completedReminders = row.count;
+    if (row.status === 'cancelled') stats.cancelledReminders = row.count;
+  });
+}
+
 module.exports = {
   createReminder,
   getReminder,
@@ -184,4 +210,8 @@ module.exports = {
   deleteReminder,
   getUserReminderCount,
   getReminderStats,
+  getDefaultReminderStats,
+  _test: {
+    mapStatusCounts,
+  },
 };
