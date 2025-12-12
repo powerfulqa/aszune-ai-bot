@@ -1892,6 +1892,12 @@ class WebDashboardService {
    * @param {Function} callback
    */
   async handleAllInstances(callback) {
+    // Ensure callback is a function
+    if (typeof callback !== 'function') {
+      logger.warn('handleAllInstances called without callback');
+      return;
+    }
+
     try {
       const { myIp, localInstance } = this._getLocalInstanceInfo();
       const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
@@ -1899,6 +1905,7 @@ class WebDashboardService {
 
       // If tracking not configured, return local instance as authorized
       if (!serverUrl || !adminKey) {
+        logger.debug('Tracking not configured, returning local instance');
         return callback(this._createLocalResponse(localInstance, myIp));
       }
 
@@ -1906,16 +1913,22 @@ class WebDashboardService {
       const instances = await this._fetchRemoteInstances(serverUrl, adminKey);
 
       if (!instances) {
+        logger.debug('Failed to fetch remote instances, returning local instance');
         return callback(this._createLocalResponse(localInstance, myIp));
       }
 
       const mapped = this._mapRemoteInstances(instances);
-      logger.debug('Mapped instances for dashboard:', JSON.stringify(mapped.map(i => ({ id: i.instanceId, authorized: i.authorized, revoked: i.revoked }))));
+      logger.debug('Returning instances:', { count: mapped.length, authorized: mapped.filter(i => i.authorized).length });
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
-      logger.debug('Error fetching all instances (tracking unavailable):', error.message);
-      const { myIp, localInstance } = this._getLocalInstanceInfo();
-      callback(this._createLocalResponse(localInstance, myIp));
+      logger.error('Error in handleAllInstances:', error.message);
+      try {
+        const { myIp, localInstance } = this._getLocalInstanceInfo();
+        callback(this._createLocalResponse(localInstance, myIp));
+      } catch (fallbackError) {
+        logger.error('Fallback also failed:', fallbackError.message);
+        callback({ instances: [], myIp: 'unknown', authorizedIps: [], error: true });
+      }
     }
   }
 

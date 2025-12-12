@@ -731,9 +731,14 @@
       // Load just the instance count (for initial page load)
       function loadInstanceCount() {
         const dashboardSocket = window.dashboard?.socket;
-        if (!dashboardSocket) return;
+        if (!dashboardSocket) {
+          console.warn('Dashboard socket not available for loadInstanceCount');
+          return;
+        }
 
+        console.log('Requesting instance count...');
         dashboardSocket.emit('request_all_instances', {}, (response) => {
+          console.log('Instance count response:', response);
           const countEl = document.getElementById('instances-count');
           if (response && response.instances) {
             countEl.textContent = response.instances.length;
