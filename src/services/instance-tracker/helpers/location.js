@@ -21,6 +21,12 @@ const USER_AGENT = 'AszuneAIBot/1.10.0';
  * @returns {Promise<Object>} Location information
  */
 async function getLocationInfo() {
+  // Allow environment-based override for known deployments
+  const envLocation = process.env.BOT_LOCATION;
+  if (envLocation) {
+    return createLocationFromEnv(envLocation);
+  }
+
   for (const service of LOCATION_SERVICES) {
     const result = await fetchFromService(service);
     if (result) {
@@ -28,7 +34,53 @@ async function getLocationInfo() {
     }
   }
 
-  return createUnknownLocation();
+  return createLocalFallback();
+}
+
+/**
+ * Create location from environment variable
+ * Format: "City, Country" or just "Location Name"
+ * @param {string} envLocation
+ * @returns {Object}
+ */
+function createLocationFromEnv(envLocation) {
+  const parts = envLocation.split(',').map(p => p.trim());
+  return {
+    ip: 'configured',
+    city: parts[0] || 'Unknown',
+    region: null,
+    country: parts[1] || null,
+    countryCode: null,
+    latitude: null,
+    longitude: null,
+    timezone: null,
+    isp: null,
+    asn: null,
+    source: 'environment',
+  };
+}
+
+/**
+ * Create fallback location using hostname
+ * @returns {Object}
+ */
+function createLocalFallback() {
+  const os = require('os');
+  const hostname = os.hostname() || 'Local';
+  
+  return {
+    ip: 'local',
+    city: hostname,
+    region: null,
+    country: 'Local Network',
+    countryCode: 'LAN',
+    latitude: null,
+    longitude: null,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+    isp: null,
+    asn: null,
+    source: 'hostname',
+  };
 }
 
 /**

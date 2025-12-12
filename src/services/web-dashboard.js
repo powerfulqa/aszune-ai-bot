@@ -1995,15 +1995,34 @@ class WebDashboardService {
       instanceId: inst.instanceId,
       clientName: inst.client?.botTag || inst.client?.name || 'Unknown',
       ip: inst.location?.actualIp || inst.ip,
-      location: inst.location
-        ? `${inst.location.city || 'Unknown'}, ${inst.location.country || 'Unknown'}`
-        : 'Unknown',
+      location: this._formatLocation(inst.location),
       guilds: inst.client?.guildCount || inst.stats?.guildCount || 0,
       online: inst.isOnline,
       revoked: inst.revoked,
       authorized: inst.authorized,
       lastHeartbeat: inst.lastSeen,
     }));
+  }
+
+  /**
+   * Format location for display
+   * @param {Object} location
+   * @returns {string}
+   * @private
+   */
+  _formatLocation(location) {
+    if (!location) return 'Unknown';
+    
+    const city = location.city;
+    const country = location.country;
+    
+    // Handle various unknown states
+    if (!city && !country) return 'Local Network';
+    if (city === 'unknown' && country === 'unknown') return 'Local Network';
+    if (!city || city === 'unknown') return country || 'Unknown';
+    if (!country || country === 'unknown') return city;
+    
+    return `${city}, ${country}`;
   }
 
   /**
