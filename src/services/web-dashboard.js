@@ -1735,20 +1735,31 @@ class WebDashboardService {
 
   handleDeleteReminder(data, callback) {
     try {
-      const validationError = this._validateReminderInput(data, ['reminderId', 'userId']);
+      const validationError = this._validateReminderInput(data, ['reminderId']);
       if (validationError) {
         if (callback) callback({ error: validationError, deleted: false });
         return;
       }
 
       const { reminderId, userId } = data;
-      const deleted = databaseService.deleteReminder(reminderId, userId);
+      // Allow admin deletion (from dashboard) without user_id check, or with user_id for user-initiated deletes
+      let deleted;
+      if (userId) {
+        deleted = databaseService.deleteReminder(reminderId, userId);
+      } else {
+        // Admin deletion - delete without user_id check
+        const stmt = databaseService.db.prepare('DELETE FROM reminders WHERE id = ?');
+        const result = stmt.run(reminderId);
+        deleted = result.changes > 0;
+      }
 
       if (!deleted) {
+        logger.warn(`Attempted to delete non-existent or already deleted reminder: ${reminderId} for user ${userId || 'admin'}`);
         if (callback)
           callback({
-            error: `Reminder not found or already deleted: ${reminderId}`,
+            error: `Reminder not found or already deleted`,
             deleted: false,
+            reminderId,
           });
         return;
       }
