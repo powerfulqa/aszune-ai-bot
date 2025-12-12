@@ -170,6 +170,21 @@ function stopHeartbeat() {
 async function initialize(client) {
   try {
     await perfMonitor.captureEnvironment(client);
+    
+    // Skip registration if instance-tracker already verified
+    // This prevents duplicate instance registrations
+    const instanceTracker = require('../../services/instance-tracker');
+    if (instanceTracker.isVerified) {
+      // Use the same instance ID from the main tracker
+      const status = instanceTracker.getStatus();
+      if (status.instanceId) {
+        analyticsCore.markVerified(status.instanceId);
+        startHeartbeat();
+        return true;
+      }
+    }
+    
+    // Only register if main tracker didn't
     const success = await register();
 
     if (success) {
