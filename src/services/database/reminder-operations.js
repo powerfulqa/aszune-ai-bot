@@ -184,7 +184,4 @@ module.exports = {
   deleteReminder,
   getUserReminderCount,
   getReminderStats,
-  _test: {
-    mapStatusCounts,
-  },
 };
