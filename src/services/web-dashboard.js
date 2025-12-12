@@ -1900,9 +1900,29 @@ class WebDashboardService {
       const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
       const adminKey = process.env.TRACKING_ADMIN_KEY || '';
 
-      // If tracking not configured, return empty list gracefully
+      // Create local instance entry for when tracking server is unavailable
+      const localInstance = {
+        instanceId: localStatus.instanceId || 'local',
+        clientName: 'Aszune AI Bot (Local)',
+        ip: myIp || 'local',
+        location: localStatus.locationInfo?.city 
+          ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
+          : 'Local Network',
+        guilds: 0,
+        online: true,
+        revoked: false,
+        lastHeartbeat: new Date().toISOString(),
+        isLocal: true,
+      };
+
+      // If tracking not configured, return local instance as authorized
       if (!serverUrl || !adminKey) {
-        return callback({ instances: [], myIp, authorizedIps: [], trackingUnavailable: true });
+        return callback({ 
+          instances: [localInstance], 
+          myIp: myIp || 'local', 
+          authorizedIps: [myIp || 'local'], 
+          trackingUnavailable: true 
+        });
       }
 
       // Build authorized IPs list from env + current IP
@@ -1915,7 +1935,13 @@ class WebDashboardService {
       });
 
       if (!response.ok) {
-        return callback({ instances: [], myIp, authorizedIps, trackingUnavailable: true });
+        // Return local instance when tracking server returns error
+        return callback({ 
+          instances: [localInstance], 
+          myIp: myIp || 'local', 
+          authorizedIps: [myIp || 'local'], 
+          trackingUnavailable: true 
+        });
       }
 
       const instances = await response.json();
@@ -1933,7 +1959,24 @@ class WebDashboardService {
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
       logger.debug('Error fetching all instances (tracking unavailable):', error.message);
-      callback({ instances: [], myIp: null, authorizedIps: [], trackingUnavailable: true });
+      // Return local instance on error
+      const instanceTracker = require('./instance-tracker');
+      const localStatus = instanceTracker.getStatus();
+      const myIp = localStatus.locationInfo?.ip || 'local';
+      const localInstance = {
+        instanceId: localStatus.instanceId || 'local',
+        clientName: 'Aszune AI Bot (Local)',
+        ip: myIp,
+        location: localStatus.locationInfo?.city 
+          ? `${localStatus.locationInfo.city}, ${localStatus.locationInfo.country || ''}`
+          : 'Local Network',
+        guilds: 0,
+        online: true,
+        revoked: false,
+        lastHeartbeat: new Date().toISOString(),
+        isLocal: true,
+      };
+      callback({ instances: [localInstance], myIp, authorizedIps: [myIp], trackingUnavailable: true });
     }
   }
 

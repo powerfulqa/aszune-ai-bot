@@ -737,20 +737,10 @@
         const alertEl = document.getElementById('instances-alert');
 
         // Handle tracking server unavailable gracefully
-        if (!response || (!response.instances && !response.trackingUnavailable)) {
+        if (!response || !response.instances) {
           authorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
           unauthorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
           countEl.textContent = '?';
-          return;
-        }
-
-        // If tracking is unavailable, show helpful message
-        if (response.trackingUnavailable) {
-          authorizedListEl.innerHTML = '<div style="opacity: 0.7; padding: 8px">Tracking server unavailable (running in degraded mode)</div>';
-          unauthorizedListEl.innerHTML = '<div style="opacity: 0.7; padding: 8px">Tracking server unavailable (running in degraded mode)</div>';
-          countEl.textContent = '0';
-          authorizedCountEl.textContent = '0';
-          unauthorizedCountEl.textContent = '0';
           return;
         }
 
@@ -761,11 +751,13 @@
         // Split into authorized (same IP or in whitelist) and unauthorized
         const authorized = instances.filter(i => {
           if (i.revoked) return false;
+          if (i.isLocal) return true; // Local instance always authorized
           if (!i.ip) return true; // Unknown IP treated as authorized for now
           return authorizedIps.includes(i.ip);
         });
         const unauthorized = instances.filter(i => {
           if (i.revoked) return true; // Revoked go to unauthorized
+          if (i.isLocal) return false; // Local instance never unauthorized
           if (!i.ip) return false;
           return !authorizedIps.includes(i.ip);
         });
@@ -779,7 +771,10 @@
         if (authorized.length === 0) {
           authorizedListEl.innerHTML = '<div style="opacity: 0.7; padding: 8px">No authorized instances</div>';
         } else {
-          authorizedListEl.innerHTML = authorized.map(inst => renderInstanceCard(inst, false)).join('');
+          const degradedNote = response.trackingUnavailable 
+            ? '<div style="opacity: 0.6; font-size: 0.75rem; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1)">ℹ️ Tracking server unavailable - showing local instance</div>' 
+            : '';
+          authorizedListEl.innerHTML = degradedNote + authorized.map(inst => renderInstanceCard(inst, false)).join('');
         }
 
         // Render unauthorized
