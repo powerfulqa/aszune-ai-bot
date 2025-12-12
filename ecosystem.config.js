@@ -36,7 +36,7 @@ module.exports = {
       time: true,
     },
     {
-      name: 'analytics-server',
+      name: 'Aszune-analytics',
       script: 'scripts/tracking-server.js',
       watch: false,
       env: {

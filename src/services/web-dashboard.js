@@ -1440,9 +1440,9 @@ class WebDashboardService {
       const hostname = os.hostname();
       const interfaces = await this._buildNetworkInterfaces();
       const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
-      const gatewayResult = await this.detectGateway();
+      const gatewayResult = await NetworkDetector.detectGateway();
       const externalIp = await this._safeGetExternalIp();
-      const connectivityStatus = await this.getNetworkStatus();
+      const connectivityStatus = await NetworkDetector.getNetworkStatus();
 
       if (callback) {
         callback({
@@ -1515,7 +1515,7 @@ class WebDashboardService {
 
     results.push('Test 1: Gateway Connectivity');
     try {
-      const gatewayResult = await this.detectGateway();
+      const gatewayResult = await NetworkDetector.detectGateway();
       if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
         const pingCmd =
           process.platform === 'win32'
