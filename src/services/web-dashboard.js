@@ -1889,8 +1889,9 @@ class WebDashboardService {
       const serverUrl = process.env.INSTANCE_TRACKING_SERVER || '';
       const adminKey = process.env.TRACKING_ADMIN_KEY || '';
 
+      // If tracking not configured, return empty list gracefully
       if (!serverUrl || !adminKey) {
-        return callback({ error: 'Tracking not configured', instances: [] });
+        return callback({ instances: [], myIp, authorizedIps: [], trackingUnavailable: true });
       }
 
       // Build authorized IPs list from env + current IP
@@ -1903,7 +1904,7 @@ class WebDashboardService {
       });
 
       if (!response.ok) {
-        return callback({ error: 'Failed to fetch instances', instances: [] });
+        return callback({ instances: [], myIp, authorizedIps, trackingUnavailable: true });
       }
 
       const instances = await response.json();
@@ -1920,8 +1921,8 @@ class WebDashboardService {
 
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
-      logger.error('Error fetching all instances:', error);
-      callback({ error: error.message, instances: [] });
+      logger.debug('Error fetching all instances (tracking unavailable):', error.message);
+      callback({ instances: [], myIp: null, authorizedIps: [], trackingUnavailable: true });
     }
   }
 
