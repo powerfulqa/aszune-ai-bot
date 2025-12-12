@@ -146,6 +146,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 0,
         completedReminders: 0,
         cancelledReminders: 0,
+        nextDue: null,
       });
     });
 
@@ -182,6 +183,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 3,
         completedReminders: 2,
         cancelledReminders: 1,
+        nextDue: expect.any(String),
       });
     });
 
@@ -205,6 +207,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 2,
         completedReminders: 0,
         cancelledReminders: 0,
+        nextDue: expect.any(String),
       });
     });
 
@@ -217,6 +220,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 0,
         completedReminders: 0,
         cancelledReminders: 0,
+        nextDue: null,
       });
     });
 
@@ -234,6 +238,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 0,
         completedReminders: 0,
         cancelledReminders: 0,
+        nextDue: null,
       });
     });
   });
