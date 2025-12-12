@@ -728,6 +728,21 @@
         });
       }
 
+      // Load just the instance count (for initial page load)
+      function loadInstanceCount() {
+        const dashboardSocket = window.dashboard?.socket;
+        if (!dashboardSocket) return;
+
+        dashboardSocket.emit('request_all_instances', {}, (response) => {
+          const countEl = document.getElementById('instances-count');
+          if (response && response.instances) {
+            countEl.textContent = response.instances.length;
+          } else {
+            countEl.textContent = '?';
+          }
+        });
+      }
+
       function renderInstancesList(response) {
         const authorizedListEl = document.getElementById('authorized-list');
         const unauthorizedListEl = document.getElementById('unauthorized-list');
@@ -965,11 +980,14 @@
             loadServices();
             loadDiscordStatus();
             loadInstanceStatus();
+            loadInstanceCount(); // Load instance count immediately
 
             // Refresh Discord status every 30 seconds
             setInterval(loadDiscordStatus, 30000);
             // Refresh instance status every 60 seconds
             setInterval(loadInstanceStatus, 60000);
+            // Refresh instance count every 60 seconds
+            setInterval(loadInstanceCount, 60000);
           } else {
             setTimeout(initServices, 100);
           }
