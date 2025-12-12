@@ -196,10 +196,10 @@ script for Pi deployments.
 
 ---
 
-### Web Dashboard Access (v1.8.0)
+### Web Dashboard Access
 
 - Access: `http://localhost:3000` while the bot is running
-- Details: see `docs/DASHBOARD-v1.8.0-RELEASE.md` for features and screenshots
+- Details: see `wiki/Dashboard-Features-Complete.md` (feature overview) and `docs/DASHBOARD-API-REFERENCE-v1.9.0.md` (API reference)
 
 ### Optional: Tracking Server (Instance Authorization)
 

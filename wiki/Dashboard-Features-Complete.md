@@ -38,7 +38,7 @@ monitoring, management, and operational control. The system consists of:
 
 ---
 
-### 2. 📋 Real-Time Log Viewer (logs-viewer-demo.html)
+### 2. 📋 Real-Time Log Viewer (logs-viewer.html)
 
 **Purpose**: Monitor application logs with real-time streaming and filtering
 
@@ -105,7 +105,7 @@ monitoring, management, and operational control. The system consists of:
 
 ---
 
-### 4. ⚙️ Configuration Editor (config-editor-demo.html)
+### 4. ⚙️ Configuration Editor (config-editor.html)
 
 **Purpose**: View and edit bot configuration securely
 
@@ -137,7 +137,7 @@ monitoring, management, and operational control. The system consists of:
 
 ---
 
-### 5. 🌐 Network & Connectivity Status (network-status-demo.html)
+### 5. 🌐 Network & Connectivity Status (network-status.html)
 
 **Purpose**: Monitor network interfaces and connectivity
 
@@ -177,7 +177,7 @@ monitoring, management, and operational control. The system consists of:
 
 ---
 
-### 6. ⏰ Reminder Management (reminder-management-demo.html)
+### 6. ⏰ Reminder Management (reminder-management.html)
 
 **Purpose**: Create, view, and manage reminders
 

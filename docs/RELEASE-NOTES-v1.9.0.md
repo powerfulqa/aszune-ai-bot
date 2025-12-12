@@ -16,6 +16,16 @@ page's link.
 
 ---
 
+## Note on Dashboard Page Filenames
+
+These v1.9.0 release notes reference the original `*-demo.html` dashboard pages. In later releases, they were renamed to the non-demo pages:
+
+- `logs-viewer-demo.html` → `logs-viewer.html`
+- `service-management-demo.html` → `service-management.html`
+- `config-editor-demo.html` → `config-editor.html`
+- `network-status-demo.html` → `network-status.html`
+- `reminder-management-demo.html` → `reminder-management.html`
+
 ## ✨ New Features
 
 ### 1. 📊 Real-Time Log Viewer
@@ -52,7 +62,7 @@ GET  /api/logs/export?format=json&level=ALL
 - `exportLogsAsCSV(res, logs)` - CSV export
 - `exportLogsAsJSON(res, logs)` - JSON export
 
-**Demo:** `dashboard/public/logs-viewer-demo.html`
+**Dashboard Page:** `dashboard/public/logs-viewer.html`
 
 ---
 
@@ -91,7 +101,7 @@ GET  /api/services/:service/logs?lines=50
 - `manageService(action, service)` - Execute systemctl action
 - `getServiceLogs(service, lines)` - Retrieve journalctl logs
 
-**Demo:** `dashboard/public/service-management-demo.html`
+**Dashboard Page:** `dashboard/public/service-management.html`
 
 **Supported Services:**
 
@@ -149,7 +159,7 @@ POST /api/config/:file/validate
 - JavaScript syntax checking for config.js
 - Warning system for incomplete configuration
 
-**Demo:** `dashboard/public/config-editor-demo.html`
+**Dashboard Page:** `dashboard/public/config-editor.html`
 
 ---
 
@@ -195,7 +205,7 @@ GET /api/network/status
 - Gateway reachability (ping local gateway)
 - Network interface status
 
-**Demo:** `dashboard/public/network-status-demo.html`
+**Dashboard Page:** `dashboard/public/network-status.html`
 
 ---
 
@@ -244,7 +254,7 @@ DELETE /api/reminders/:id
 - `follow-up` - Requires follow-up
 - `maintenance` - System maintenance task
 
-**Demo:** `dashboard/public/reminder-management-demo.html`
+**Dashboard Page:** `dashboard/public/reminder-management.html`
 
 ---
 
@@ -264,11 +274,11 @@ All 9 dashboard pages now feature a consistent header with:
 **Affected Pages:**
 
 - `index.html` - Main dashboard
-- `logs-viewer-demo.html` - Log viewer
-- `service-management-demo.html` - Service management
-- `config-editor-demo.html` - Configuration editor
-- `network-status-demo.html` - Network status
-- `reminder-management-demo.html` - Reminder management
+- `logs-viewer.html` - Log viewer
+- `service-management.html` - Service management
+- `config-editor.html` - Configuration editor
+- `network-status.html` - Network status
+- `reminder-management.html` - Reminder management
 - `commands.html` - Commands reference
 - `database.html` - Database viewer
 - `error-logs.html` - Error log archive
@@ -412,13 +422,13 @@ document.querySelectorAll('.navbar-item').forEach((link) => {
 
 ## 📁 Files Added/Modified
 
-### New Demo Files
+### Dashboard Pages
 
-- `dashboard/public/logs-viewer-demo.html` (450+ lines)
-- `dashboard/public/service-management-demo.html` (400+ lines)
-- `dashboard/public/config-editor-demo.html` (550+ lines)
-- `dashboard/public/network-status-demo.html` (450+ lines)
-- `dashboard/public/reminder-management-demo.html` (500+ lines)
+- `dashboard/public/logs-viewer.html`
+- `dashboard/public/service-management.html`
+- `dashboard/public/config-editor.html`
+- `dashboard/public/network-status.html`
+- `dashboard/public/reminder-management.html`
 
 ### Modified Files
 

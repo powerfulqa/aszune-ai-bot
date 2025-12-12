@@ -577,8 +577,8 @@ ip route add 8.8.8.8 via 192.168.1.1 dev eth0
 
 ## Demo
 
-Interactive demo available:
-[`network-status-demo.html`](../dashboard/public/network-status-demo.html)
+Interactive page:
+[`network-status.html`](../dashboard/public/network-status.html)
 
 Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Network &
 Connectivity Status"

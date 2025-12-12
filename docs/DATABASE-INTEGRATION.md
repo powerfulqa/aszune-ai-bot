@@ -126,6 +126,19 @@ DB_PATH=./custom/path/bot.db
 - `getConversationHistory(userId, limit = 20)`: Gets complete conversation with role separation
 - `ensureUserExists(userId)`: Ensures user exists in user_stats (handles foreign keys)
 
+#### Reminder Management
+
+- `createReminder(userId, message, scheduledTime, options = {})`: Creates a reminder
+- `getReminder(reminderId)`: Gets a reminder by ID
+- `getActiveReminders(userId = null)`: Gets active reminders (optionally filtered by user)
+- `getAllReminders(userId = null)`: Gets all reminders (optionally filtered by user)
+- `getDueReminders()`: Gets reminders due to execute
+- `completeReminder(reminderId)`: Marks a reminder completed
+- `cancelReminder(reminderId, userId)`: Cancels a reminder
+- `deleteReminder(reminderId, userId)`: Deletes a reminder
+- `getUserReminderCount(userId)`: Gets active reminder count for a user
+- `getReminderStats()`: Returns overall reminder stats: `totalReminders`, `activeReminders`, `completedReminders`, `cancelledReminders`, and `nextDue` (nullable)
+
 #### Data Management
 
 - `clearUserData(userId)`: Removes all data for specific user

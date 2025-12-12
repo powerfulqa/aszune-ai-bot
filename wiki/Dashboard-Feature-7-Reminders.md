@@ -15,6 +15,7 @@ automatic recovery.
 - **CRUD Operations:** Create, read, update, and delete reminders through intuitive UI
 - **Persistent Storage:** All reminders stored in SQLite with automatic backup
 - **Flexible Scheduling:** Support for various time formats and intervals
+- **Statistics Summary:** Displays totals plus `nextDue` (next scheduled reminder; null when none)
 - **History Tracking:** View past reminder notifications and execution history
 - **Edit Existing:** Modify reminder times, messages, and status without deleting
 - **Recurring Reminders:** Set reminders that repeat daily, weekly, or custom intervals
@@ -759,7 +760,7 @@ INTEGRATIONS: {
 ## Demo
 
 Interactive demo available:
-[`reminder-management-demo.html`](../dashboard/public/reminder-management-demo.html)
+[`reminder-management.html`](../dashboard/public/reminder-management.html)
 
 Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Reminder
 Management Interface"

@@ -574,7 +574,7 @@ BACKUP_ENCRYPTION: {
 
 ## Demo
 
-Interactive demo available: [`config-editor-demo.html`](../dashboard/public/config-editor-demo.html)
+Interactive page: [`config-editor.html`](../dashboard/public/config-editor.html)
 
 Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Configuration
 Editor"

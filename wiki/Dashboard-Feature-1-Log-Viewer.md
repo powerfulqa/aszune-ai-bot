@@ -269,7 +269,7 @@ LOG_VIEWER: {
 
 ## Demo
 
-Interactive demo available: [`logs-viewer-demo.html`](../dashboard/public/logs-viewer-demo.html)
+Interactive page: [`logs-viewer.html`](../dashboard/public/logs-viewer.html)
 
 Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Real-Time Log
 Viewer"
