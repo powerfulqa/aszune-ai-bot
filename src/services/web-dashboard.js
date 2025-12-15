@@ -9,6 +9,7 @@ const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
+const { execPromise } = require('../utils/shell-exec-helper');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -1509,10 +1510,6 @@ class WebDashboardService {
   }
 
   async _addGatewayTest(results) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     results.push('Test 1: Gateway Connectivity');
     try {
       const gatewayResult = await NetworkDetector.detectGateway();
@@ -1532,9 +1529,6 @@ class WebDashboardService {
   }
 
   async _addDnsTests(results) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
     const dns = require('dns').promises;
 
     results.push('Test 2: DNS Server Detection & Testing');
@@ -1574,10 +1568,6 @@ class WebDashboardService {
   }
 
   async _addInternetTests(results) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     results.push('Test 4: Internet Connectivity (8.8.8.8)');
     try {
       const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
@@ -2031,16 +2021,14 @@ class WebDashboardService {
   _formatLocation(location) {
     if (!location) return 'Unknown';
 
-    const city = location.city;
-    const country = location.country;
+    const city = location.city || '';
+    const country = location.country || '';
+    const cityValid = city && city !== 'unknown';
+    const countryValid = country && country !== 'unknown';
 
-    // Handle various unknown states
-    if (!city && !country) return 'Local Network';
-    if (city === 'unknown' && country === 'unknown') return 'Local Network';
-    if (!city || city === 'unknown') return country || 'Unknown';
-    if (!country || country === 'unknown') return city;
-
-    return `${city}, ${country}`;
+    if (!cityValid && !countryValid) return 'Local Network';
+    if (cityValid && countryValid) return `${city}, ${country}`;
+    return cityValid ? city : country || 'Unknown';
   }
 
   /**
