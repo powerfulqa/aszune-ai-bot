@@ -38,8 +38,34 @@ async function executePing(target, options = {}) {
   }
 }
 
+/**
+ * Test gateway connectivity and push results to array
+ * @param {Function} detectGatewayFn - Function that returns gateway detection result
+ * @param {Array} results - Array to append gateway test results to
+ * @returns {Promise<void>}
+ */
+async function testGatewayConnectivity(detectGatewayFn, results) {
+  results.push('Test 1: Gateway Connectivity');
+  try {
+    const gatewayResult = await detectGatewayFn();
+    if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
+      const pingCmd =
+        process.platform === 'win32'
+          ? `ping -n 1 ${gatewayResult.gatewayIp}`
+          : `ping -c 1 ${gatewayResult.gatewayIp}`;
+      await execPromise(pingCmd, { timeout: 3000 });
+      results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
+    } else {
+      results.push('✗ Gateway not detected\n');
+    }
+  } catch (error) {
+    results.push(`✗ Gateway ping failed: ${error.message}\n`);
+  }
+}
+
 module.exports = {
   executeCommand,
   executePing,
   execPromise,
+  testGatewayConnectivity,
 };

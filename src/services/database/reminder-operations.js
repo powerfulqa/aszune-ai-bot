@@ -156,15 +156,14 @@ function formatDateForDisplay(date) {
   if (diffMs < 0) return 'Overdue';
 
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  if (diffMs < 3600000) return `${diffMinutes}m`;
-
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 24) return `${diffHours}h`;
-
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 7) return `${diffDays}d`;
 
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffMs < 3600000) return `${diffMinutes}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return diffDays < 7
+    ? `${diffDays}d`
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 /**

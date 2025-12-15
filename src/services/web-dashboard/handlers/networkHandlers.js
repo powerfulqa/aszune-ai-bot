@@ -8,7 +8,7 @@ const os = require('os');
 const logger = require('../../../utils/logger');
 const { sendError } = require('./callbackHelpers');
 const { buildNetworkInterfaces } = require('../../../utils/system-info');
-const { execPromise } = require('../../../utils/shell-exec-helper');
+const { execPromise, testGatewayConnectivity } = require('../../../utils/shell-exec-helper');
 
 /**
  * Register network-related socket event handlers
@@ -118,22 +118,7 @@ async function handleNetworkTest(dashboard, data, callback) {
  * @param {Array} results - Results array to append to
  */
 async function addGatewayTest(dashboard, results) {
-  results.push('Test 1: Gateway Connectivity');
-  try {
-    const gatewayResult = await dashboard.detectGateway();
-    if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
-      const pingCmd =
-        process.platform === 'win32'
-          ? `ping -n 1 ${gatewayResult.gatewayIp}`
-          : `ping -c 1 ${gatewayResult.gatewayIp}`;
-      await execPromise(pingCmd, { timeout: 3000 });
-      results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
-    } else {
-      results.push('✗ Gateway not detected\n');
-    }
-  } catch (error) {
-    results.push(`✗ Gateway ping failed: ${error.message}\n`);
-  }
+  await testGatewayConnectivity(() => dashboard.detectGateway(), results);
 }
 
 /**

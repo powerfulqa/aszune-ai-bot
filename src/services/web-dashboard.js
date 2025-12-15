@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
-const { execPromise } = require('../utils/shell-exec-helper');
+const { execPromise, testGatewayConnectivity } = require('../utils/shell-exec-helper');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -1510,22 +1510,7 @@ class WebDashboardService {
   }
 
   async _addGatewayTest(results) {
-    results.push('Test 1: Gateway Connectivity');
-    try {
-      const gatewayResult = await NetworkDetector.detectGateway();
-      if (gatewayResult.gatewayIp && gatewayResult.gatewayIp !== 'Not detected') {
-        const pingCmd =
-          process.platform === 'win32'
-            ? `ping -n 1 ${gatewayResult.gatewayIp}`
-            : `ping -c 1 ${gatewayResult.gatewayIp}`;
-        await execPromise(pingCmd, { timeout: 3000 });
-        results.push(`✓ Gateway (${gatewayResult.gatewayIp}) is reachable\n`);
-      } else {
-        results.push('✗ Gateway not detected\n');
-      }
-    } catch (error) {
-      results.push(`✗ Gateway ping failed: ${error.message}\n`);
-    }
+    await testGatewayConnectivity(() => NetworkDetector.detectGateway(), results);
   }
 
   async _addDnsTests(results) {
