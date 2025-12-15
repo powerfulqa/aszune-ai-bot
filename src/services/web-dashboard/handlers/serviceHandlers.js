@@ -5,6 +5,7 @@
  */
 
 const logger = require('../../../utils/logger');
+const { execPromise } = require('../../../utils/shell-exec-helper');
 const {
   sendOperationError,
   sendErrorWithEmptyArray,
@@ -75,10 +76,6 @@ function isRunningUnderPm2() {
 async function checkUnixBootStatus(serviceName) {
   if (isRunningUnderPm2()) return true;
 
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
   try {
     const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, { timeout: 5000 });
     return stdout.trim() === 'enabled';
@@ -93,10 +90,6 @@ async function checkUnixBootStatus(serviceName) {
  * @returns {Promise<boolean>} Whether service is enabled on boot
  */
 async function checkWindowsBootStatus(serviceName) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
   try {
     const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
       timeout: 5000,
@@ -196,10 +189,6 @@ function validateServiceActionInput(data) {
  * @returns {Promise<string>} Command output
  */
 async function executePm2Command(serviceName, action) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
   // Map service names to actual PM2 app name
   let pm2AppName = serviceName;
   if (serviceName === 'aszune-ai-bot' || serviceName === 'aszune-ai') {
@@ -231,10 +220,6 @@ async function handleQuickServiceAction(data, callback) {
     logger.info(`Quick service action: ${group}`);
 
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
-
       const pm2Command = mapGroupToPm2Command(group);
       logger.debug(`Executing PM2 quick action: ${pm2Command}`);
       const { stdout, stderr } = await execPromise(pm2Command);
