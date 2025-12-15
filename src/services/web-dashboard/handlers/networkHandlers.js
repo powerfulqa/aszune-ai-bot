@@ -8,6 +8,7 @@ const os = require('os');
 const logger = require('../../../utils/logger');
 const { sendError } = require('./callbackHelpers');
 const { buildNetworkInterfaces } = require('../../../utils/system-info');
+const { execPromise } = require('../../../utils/shell-exec-helper');
 
 /**
  * Register network-related socket event handlers
@@ -117,10 +118,6 @@ async function handleNetworkTest(dashboard, data, callback) {
  * @param {Array} results - Results array to append to
  */
 async function addGatewayTest(dashboard, results) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
   results.push('Test 1: Gateway Connectivity');
   try {
     const gatewayResult = await dashboard.detectGateway();
@@ -145,9 +142,6 @@ async function addGatewayTest(dashboard, results) {
  * @param {Array} results - Results array to append to
  */
 async function addDnsTests(dashboard, results) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
   const dns = require('dns').promises;
 
   results.push('Test 2: DNS Server Detection & Testing');
@@ -191,10 +185,6 @@ async function addDnsTests(dashboard, results) {
  * @param {Array} results - Results array to append to
  */
 async function addInternetTests(results) {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
   results.push('Test 4: Internet Connectivity');
   const targets = [
     { host: '8.8.8.8', name: 'Google DNS' },

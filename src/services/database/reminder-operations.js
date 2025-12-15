@@ -153,8 +153,6 @@ function formatDateForDisplay(date) {
   if (!date) return 'None';
 
   const diffMs = date - new Date();
-
-  // Early returns for specific conditions
   if (diffMs < 0) return 'Overdue';
 
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
