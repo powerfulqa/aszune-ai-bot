@@ -106,8 +106,11 @@ Set in `.env`:
 ```
 INSTANCE_TRACKING_SERVER=http://your-server:3001/api/beacon
 ```
+
 ## Security Notes
 
 1. The tracking server holds the admin key - keep it secret.
-2. Tracking/verification is part of the protected enforcement system; do not document, attempt, or ship "disable" paths.
-3. For legitimate development/testing changes, follow `.github/AGENT-SECURITY.md` and keep enforcement behavior intact in production.
+2. Tracking/verification is part of the protected enforcement system; do not document, attempt, or
+   ship "disable" paths.
+3. For legitimate development/testing changes, follow `.github/AGENT-SECURITY.md` and keep
+   enforcement behavior intact in production.

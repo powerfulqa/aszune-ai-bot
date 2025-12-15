@@ -115,7 +115,8 @@ Visit `http://localhost:3000` while running for real-time monitoring dashboards.
 
 ## Optional: Instance Tracking / Authorization
 
-For production deployments, you can run the tracking server to list instances and approve/revoke from the Services page.
+For production deployments, you can run the tracking server to list instances and approve/revoke
+from the Services page.
 
 Add to `.env`:
 

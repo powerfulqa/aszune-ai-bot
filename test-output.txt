@@ -1,0 +1,29 @@
+
+> aszuneai@1.10.0 test
+> jest database-reminder-stats --no-coverage
+
+PASS __tests__/unit/services/database-reminder-stats.test.js (8.215 s)
+  DatabaseService - Reminder Statistics
+    getUserReminderCount
+      ÔêÜ should return 0 for user with no reminders (701 ms)
+      ÔêÜ should return correct count of active reminders for user (594 ms)
+      ÔêÜ should not count cancelled reminders (469 ms)
+      ÔêÜ should return 0 when database is disabled (2 ms)
+      ÔêÜ should handle database errors gracefully (358 ms)
+    getReminderStats
+      ÔêÜ should return default stats when no reminders exist (365 ms)
+      ÔêÜ should return correct stats with mixed reminder statuses (652 ms)
+      ÔêÜ should handle stats with only active reminders (402 ms)
+      ÔêÜ should return default stats when database is disabled (2 ms)
+      ÔêÜ should handle database errors gracefully (467 ms)
+    Helper Methods
+      ÔêÜ should return correct default reminder stats from _getDefaultReminderStats (2 ms)
+      ÔêÜ should correctly map status counts with _mapStatusCounts (2 ms)
+      ÔêÜ should handle unknown status in _mapStatusCounts (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        8.908 s, estimated 11 s
+Ran all test suites matching /database-reminder-stats/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

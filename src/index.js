@@ -188,7 +188,9 @@ function _setupDiscordEventHandlers() {
       client.destroy();
       process.exit(1);
     } else if (!isVerified) {
-      logger.warn('Instance verification not available - bot running in degraded mode without license verification');
+      logger.warn(
+        'Instance verification not available - bot running in degraded mode without license verification'
+      );
     }
 
     // Log bot startup event

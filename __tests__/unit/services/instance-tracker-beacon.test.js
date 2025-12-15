@@ -132,10 +132,9 @@ describe('beacon helper', () => {
         'Beacon request failed',
         expect.objectContaining({ error: 'Network error' })
       );
-      expect(logger.error).toHaveBeenCalledWith(
-        'Beacon failed after all retries',
-        { maxRetries: 1 }
-      );
+      expect(logger.error).toHaveBeenCalledWith('Beacon failed after all retries', {
+        maxRetries: 1,
+      });
     });
 
     it('should handle timeout errors', async () => {
@@ -153,10 +152,9 @@ describe('beacon helper', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         'Beacon request timed out - tracking server may be unavailable'
       );
-      expect(logger.error).toHaveBeenCalledWith(
-        'Beacon failed after all retries',
-        { maxRetries: 1 }
-      );
+      expect(logger.error).toHaveBeenCalledWith('Beacon failed after all retries', {
+        maxRetries: 1,
+      });
     });
 
     it('should use default options', async () => {

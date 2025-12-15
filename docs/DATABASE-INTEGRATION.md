@@ -137,7 +137,8 @@ DB_PATH=./custom/path/bot.db
 - `cancelReminder(reminderId, userId)`: Cancels a reminder
 - `deleteReminder(reminderId, userId)`: Deletes a reminder
 - `getUserReminderCount(userId)`: Gets active reminder count for a user
-- `getReminderStats()`: Returns overall reminder stats: `totalReminders`, `activeReminders`, `completedReminders`, `cancelledReminders`, and `nextDue` (nullable)
+- `getReminderStats()`: Returns overall reminder stats: `totalReminders`, `activeReminders`,
+  `completedReminders`, `cancelledReminders`, and `nextDue` (nullable)
 
 #### Data Management
 

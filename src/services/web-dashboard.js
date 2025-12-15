@@ -1754,7 +1754,9 @@ class WebDashboardService {
       }
 
       if (!deleted) {
-        logger.warn(`Attempted to delete non-existent or already deleted reminder: ${reminderId} for user ${userId || 'admin'}`);
+        logger.warn(
+          `Attempted to delete non-existent or already deleted reminder: ${reminderId} for user ${userId || 'admin'}`
+        );
         if (callback)
           callback({
             error: `Reminder not found or already deleted`,
@@ -1918,7 +1920,10 @@ class WebDashboardService {
       }
 
       const mapped = this._mapRemoteInstances(instances);
-      logger.debug('Returning instances:', { count: mapped.length, authorized: mapped.filter(i => i.authorized).length });
+      logger.debug('Returning instances:', {
+        count: mapped.length,
+        authorized: mapped.filter((i) => i.authorized).length,
+      });
       callback({ instances: mapped, myIp, authorizedIps });
     } catch (error) {
       logger.error('Error in handleAllInstances:', error.message);
@@ -2025,16 +2030,16 @@ class WebDashboardService {
    */
   _formatLocation(location) {
     if (!location) return 'Unknown';
-    
+
     const city = location.city;
     const country = location.country;
-    
+
     // Handle various unknown states
     if (!city && !country) return 'Local Network';
     if (city === 'unknown' && country === 'unknown') return 'Local Network';
     if (!city || city === 'unknown') return country || 'Unknown';
     if (!country || country === 'unknown') return city;
-    
+
     return `${city}, ${country}`;
   }
 

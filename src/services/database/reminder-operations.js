@@ -151,25 +151,22 @@ function getReminderStats(db) {
 
 function formatDateForDisplay(date) {
   if (!date) return 'None';
-  const now = new Date();
-  const diffMs = date - now;
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMs < 0) {
-    return 'Overdue';
-  } else if (diffMs < 3600000) {
-    // Less than 1 hour
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes}m`;
-  } else if (diffHours < 24) {
-    return `${diffHours}h`;
-  } else if (diffDays < 7) {
-    return `${diffDays}d`;
-  } else {
-    // Show date in readable format
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
+  const diffMs = date - new Date();
+
+  // Early returns for specific conditions
+  if (diffMs < 0) return 'Overdue';
+
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  if (diffMs < 3600000) return `${diffMinutes}m`;
+
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 24) return `${diffHours}h`;
+
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) return `${diffDays}d`;
+
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 /**

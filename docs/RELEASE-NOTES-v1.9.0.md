@@ -18,7 +18,8 @@ page's link.
 
 ## Note on Dashboard Page Filenames
 
-These v1.9.0 release notes reference the original `*-demo.html` dashboard pages. In later releases, they were renamed to the non-demo pages:
+These v1.9.0 release notes reference the original `*-demo.html` dashboard pages. In later releases,
+they were renamed to the non-demo pages:
 
 - `logs-viewer-demo.html` → `logs-viewer.html`
 - `service-management-demo.html` → `service-management.html`

@@ -7,87 +7,89 @@ const path = require('path');
 const fs = require('fs');
 const { DatabaseService } = require('../../../src/services/database');
 
+/**
+ * Setup test database path and ensure test-data directory exists
+ */
+function setupTestDbPath() {
+  const testDbPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'test-data',
+    `test-reminder-stats-${Date.now()}.db`
+  );
+
+  const testDataDir = path.dirname(testDbPath);
+  if (!fs.existsSync(testDataDir)) {
+    fs.mkdirSync(testDataDir, { recursive: true });
+  }
+
+  if (fs.existsSync(testDbPath)) {
+    fs.unlinkSync(testDbPath);
+  }
+
+  return testDbPath;
+}
+
+/**
+ * Cleanup test database file
+ */
+function cleanupTestDb(testDbPath) {
+  if (fs.existsSync(testDbPath)) {
+    try {
+      fs.unlinkSync(testDbPath);
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  }
+}
+
+/**
+ * Close database service safely
+ */
+function closeDatabaseSafely(dbService) {
+  if (dbService.db && !dbService.isDisabled) {
+    try {
+      dbService.close();
+    } catch (error) {
+      // Ignore errors during cleanup
+    }
+  }
+}
+
 describe('DatabaseService - Reminder Statistics', () => {
   let dbService;
   let testDbPath;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Create a unique test database path
-    testDbPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'test-data',
-      `test-reminder-stats-${Date.now()}.db`
-    );
-
-    // Ensure test-data directory exists
-    const testDataDir = path.dirname(testDbPath);
-    if (!fs.existsSync(testDataDir)) {
-      fs.mkdirSync(testDataDir, { recursive: true });
-    }
-
-    // Clean up any existing test database
-    if (fs.existsSync(testDbPath)) {
-      fs.unlinkSync(testDbPath);
-    }
-
-    // Create new database service instance for each test
+    testDbPath = setupTestDbPath();
     dbService = new DatabaseService();
-    // Force database path for testing
     dbService.dbPath = testDbPath;
   });
 
   afterEach(() => {
-    if (dbService.db && !dbService.isDisabled) {
-      try {
-        dbService.close();
-      } catch (error) {
-        // Ignore errors during cleanup
-      }
-    }
-
-    // Clean up test database file
-    if (fs.existsSync(testDbPath)) {
-      try {
-        fs.unlinkSync(testDbPath);
-      } catch (error) {
-        // Ignore cleanup errors
-      }
-    }
+    closeDatabaseSafely(dbService);
+    cleanupTestDb(testDbPath);
   });
 
   describe('getUserReminderCount', () => {
     it('should return 0 for user with no reminders', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
-      // Ensure user exists
       dbService.ensureUserExists('user123');
-
       const count = dbService.getUserReminderCount('user123');
       expect(count).toBe(0);
     });
 
     it('should return correct count of active reminders for user', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
       const userId = 'user123';
-      const futureTime = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
+      const futureTime = new Date(Date.now() + 3600000).toISOString();
 
-      // Create user and reminders
       dbService.ensureUserExists(userId);
-
-      // Create 3 active reminders
       dbService.createReminder(userId, 'Reminder 1', futureTime);
       dbService.createReminder(userId, 'Reminder 2', futureTime);
       dbService.createReminder(userId, 'Reminder 3', futureTime);
 
-      // Create 1 completed reminder (should not be counted)
       const reminder4 = dbService.createReminder(userId, 'Reminder 4', futureTime);
       dbService.completeReminder(reminder4.id);
 
@@ -96,20 +98,14 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should not count cancelled reminders', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
       const userId = 'user123';
       const futureTime = new Date(Date.now() + 3600000).toISOString();
 
       dbService.ensureUserExists(userId);
-
-      // Create 2 active reminders and 1 cancelled
       dbService.createReminder(userId, 'Active 1', futureTime);
       const reminder2 = dbService.createReminder(userId, 'To Cancel', futureTime);
       dbService.createReminder(userId, 'Active 2', futureTime);
 
-      // Cancel one reminder
       dbService.cancelReminder(reminder2.id, userId);
 
       const count = dbService.getUserReminderCount(userId);
@@ -123,12 +119,7 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should handle database errors gracefully', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
-      // Close database to cause error
       dbService.close();
-
       const count = dbService.getUserReminderCount('user123');
       expect(count).toBe(0);
     });
@@ -136,9 +127,6 @@ describe('DatabaseService - Reminder Statistics', () => {
 
   describe('getReminderStats', () => {
     it('should return default stats when no reminders exist', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
       const stats = dbService.getReminderStats();
 
       expect(stats).toEqual({
@@ -151,9 +139,6 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should return correct stats with mixed reminder statuses', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
       const userId1 = 'user1';
       const userId2 = 'user2';
       const futureTime = new Date(Date.now() + 3600000).toISOString();
@@ -161,18 +146,15 @@ describe('DatabaseService - Reminder Statistics', () => {
       dbService.ensureUserExists(userId1);
       dbService.ensureUserExists(userId2);
 
-      // Create 5 active reminders
       dbService.createReminder(userId1, 'Active 1', futureTime);
       dbService.createReminder(userId1, 'Active 2', futureTime);
       dbService.createReminder(userId2, 'Active 3', futureTime);
 
-      // Create 2 completed reminders
       const reminder4 = dbService.createReminder(userId1, 'To Complete 1', futureTime);
       const reminder5 = dbService.createReminder(userId2, 'To Complete 2', futureTime);
       dbService.completeReminder(reminder4.id);
       dbService.completeReminder(reminder5.id);
 
-      // Create 1 cancelled reminder
       const reminder6 = dbService.createReminder(userId1, 'To Cancel', futureTime);
       dbService.cancelReminder(reminder6.id, userId1);
 
@@ -188,15 +170,10 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should handle stats with only active reminders', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
       const userId = 'user123';
       const futureTime = new Date(Date.now() + 3600000).toISOString();
 
       dbService.ensureUserExists(userId);
-
-      // Create only active reminders
       dbService.createReminder(userId, 'Active 1', futureTime);
       dbService.createReminder(userId, 'Active 2', futureTime);
 
@@ -225,12 +202,7 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should handle database errors gracefully', () => {
-      // Initialize database
-      // const db = dbService.getDb();
-
-      // Close database to cause error
       dbService.close();
-
       const stats = dbService.getReminderStats();
 
       expect(stats).toEqual({
@@ -290,7 +262,7 @@ describe('DatabaseService - Reminder Statistics', () => {
 
       const statusResults = [
         { status: 'active', count: 3 },
-        { status: 'unknown', count: 2 }, // Unknown status should be ignored
+        { status: 'unknown', count: 2 },
       ];
 
       dbService._mapStatusCounts(statusResults, stats);

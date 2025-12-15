@@ -132,24 +132,24 @@ class InstanceTracker {
    */
   _handleRegistrationResult(result, discordClient) {
     const { verified, authorized } = result;
-    
+
     if (!verified) {
       logger.warn('Instance verification not available - bot will run in degraded mode');
       return false;
     }
-    
+
     if (!authorized) {
       logger.error('Instance NOT AUTHORIZED - this instance has not been approved');
       logger.error('Contact the bot owner to authorize this instance');
       logger.error(`Instance ID: ${this.instanceId}`);
-      
+
       // If verification is required and not authorized, shut down
       if (TRACKING_CONFIG.requireVerification) {
         logger.error('Shutting down - unauthorized instance');
         setTimeout(() => process.exit(1), 3000);
         return false;
       }
-      
+
       // If verification not required, continue in degraded mode
       logger.warn('Running in degraded mode (unauthorized)');
       return false;
@@ -204,7 +204,7 @@ class InstanceTracker {
         this._handleRevocation(discordClient, 'Instance has been REVOKED');
         return false;
       }
-      
+
       if (response?.authorized === false) {
         this._handleRevocation(discordClient, 'Instance authorization has been REVOKED');
         return false;

@@ -75,26 +75,35 @@ function handleRegistration(req, res, clientIp) {
       reportedIp: location?.ip,
       actualIp: clientIp,
     };
-    
+
     logReturningInstance(existingInstance);
-    
+
     return res.json({
       instanceId: existingInstance.instanceId,
       verified: true,
       authorized: existingInstance.authorized && !existingInstance.revoked,
-      message: existingInstance.authorized ? 'Instance authorized' : 'Instance pending authorization',
+      message: existingInstance.authorized
+        ? 'Instance authorized'
+        : 'Instance pending authorization',
     });
   }
 
   const instanceId = generateInstanceId();
-  
+
   // Determine if this instance should be auto-authorized
   const shouldAutoAuthorize = determineAutoAuthorization(clientIp);
-  
-  const instanceData = createInstanceData(instanceId, instanceKey, client, location, clientIp, shouldAutoAuthorize);
+
+  const instanceData = createInstanceData({
+    instanceId,
+    instanceKey,
+    client,
+    location,
+    clientIp,
+    authorized: shouldAutoAuthorize,
+  });
 
   instances.set(instanceId, instanceData);
-  
+
   // If auto-authorized, add this IP to authorized IPs
   if (shouldAutoAuthorize) {
     authorizedIps.add(clientIp);
@@ -106,7 +115,9 @@ function handleRegistration(req, res, clientIp) {
     instanceId,
     verified: true,
     authorized: shouldAutoAuthorize,
-    message: shouldAutoAuthorize ? 'Instance authorized' : 'Instance registered - pending authorization',
+    message: shouldAutoAuthorize
+      ? 'Instance authorized'
+      : 'Instance registered - pending authorization',
   });
 }
 
@@ -133,14 +144,14 @@ function determineAutoAuthorization(clientIp) {
     console.log(`[AUTO-AUTH] First instance - auto-authorizing`);
     return true;
   }
-  
+
   // Auto-authorize instances from same IP as an authorized instance
   if (CONFIG.autoAuthorizeSameIp && authorizedIps.has(clientIp)) {
     // eslint-disable-next-line no-console
     console.log(`[AUTO-AUTH] Same IP as authorized instance - auto-authorizing`);
     return true;
   }
-  
+
   return false;
 }
 
@@ -159,7 +170,7 @@ function handleHeartbeat(req, res) {
     logRevocationAttempt(instanceId);
     return res.json({ revoked: true, authorized: false });
   }
-  
+
   if (!instance.authorized) {
     return res.json({ verified: true, revoked: false, authorized: false });
   }
@@ -222,7 +233,7 @@ app.post('/api/approve', authenticateAdmin, (req, res) => {
   instance.authorized = true;
   instance.revoked = false;
   instance.approvedAt = new Date().toISOString();
-  
+
   // Add this IP to authorized IPs for future auto-authorization
   if (instance.location?.actualIp) {
     authorizedIps.add(instance.location.actualIp);
@@ -260,14 +271,21 @@ function generateInstanceId() {
   return `inst_${timestamp}_${random}`;
 }
 
-function createInstanceData(instanceId, instanceKey, client, location, clientIp, authorized = false) {
+function createInstanceData({
+  instanceId,
+  instanceKey,
+  client,
+  location,
+  clientIp,
+  authorized = false,
+}) {
   return {
     instanceId,
     instanceKey,
     registeredAt: new Date().toISOString(),
     lastSeen: new Date().toISOString(),
     verified: true,
-    authorized, // NEW: Must be approved to run
+    authorized,
     revoked: false,
     client,
     location: {

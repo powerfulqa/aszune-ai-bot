@@ -44,7 +44,7 @@ async function getLocationInfo() {
  * @returns {Object}
  */
 function createLocationFromEnv(envLocation) {
-  const parts = envLocation.split(',').map(p => p.trim());
+  const parts = envLocation.split(',').map((p) => p.trim());
   return {
     ip: 'configured',
     city: parts[0] || 'Unknown',
@@ -67,7 +67,7 @@ function createLocationFromEnv(envLocation) {
 function createLocalFallback() {
   const os = require('os');
   const hostname = os.hostname() || 'Local';
-  
+
   return {
     ip: 'local',
     city: hostname,

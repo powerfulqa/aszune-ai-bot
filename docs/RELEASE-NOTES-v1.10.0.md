@@ -97,10 +97,12 @@ Systematically reduced cyclomatic complexity in high-complexity functions:
 ### Instance Tracking & Authorization
 
 - Added server-side instance authorization (approve/revoke) via the tracking server.
-- Services page shows **Authorized Instances** vs **Unauthorized Instances** and supports admin actions.
+- Services page shows **Authorized Instances** vs **Unauthorized Instances** and supports admin
+  actions.
 - Fixed Services page instance count so it updates without requiring an expand/click.
 - Prevented duplicate instance registrations (telemetry now defers to the primary instance tracker).
-- Improved location display: hostname/local fallback when geo-IP lookups fail; supports `BOT_LOCATION` override.
+- Improved location display: hostname/local fallback when geo-IP lookups fail; supports
+  `BOT_LOCATION` override.
 
 ## Breaking Changes
 
