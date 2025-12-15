@@ -725,9 +725,12 @@
       function updateStats(stats) {
         if (stats) {
           // Support both short (total/active) and long (totalReminders/activeReminders) field names
-          document.getElementById('stat-total').textContent = stats.totalReminders ?? stats.total ?? 0;
-          document.getElementById('stat-active').textContent = stats.activeReminders ?? stats.active ?? 0;
-          document.getElementById('stat-completed').textContent = stats.completedReminders ?? stats.completed ?? 0;
+          document.getElementById('stat-total').textContent =
+            stats.totalReminders ?? stats.total ?? 0;
+          document.getElementById('stat-active').textContent =
+            stats.activeReminders ?? stats.active ?? 0;
+          document.getElementById('stat-completed').textContent =
+            stats.completedReminders ?? stats.completed ?? 0;
           document.getElementById('stat-next').textContent = stats.nextDue || 'None';
         }
       }

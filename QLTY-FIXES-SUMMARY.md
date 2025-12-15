@@ -212,7 +212,7 @@ Test `describe` block exceeded 200 line limit (ESLint violation)
    - Refactored `createInstanceData()` to use object destructuring
    - Updated call site in registration handler
 
-3. ****tests**/unit/services/database-reminder-stats.test.js**
+3. \***\*tests**/unit/services/database-reminder-stats.test.js\*\*
    - Extracted helper functions
    - Reduced describe block line count from 202 to ~150
    - Improved code organization
