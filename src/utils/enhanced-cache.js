@@ -534,6 +534,11 @@ class EnhancedCache {
       this.cleanupTimer = setInterval(() => {
         this.cleanup();
       }, this.cleanupInterval);
+
+      // Ensure this timer never keeps the process alive (important for tests)
+      if (this.cleanupTimer && typeof this.cleanupTimer.unref === 'function') {
+        this.cleanupTimer.unref();
+      }
     }
   }
 

@@ -1,150 +1,80 @@
 # Deployment Guide
 
-This guide provides instructions for deploying the Aszune AI Bot to a production environment.
+This guide covers production deployment for Aszune AI Bot.
 
-## Recommended Deployment Methods
+## Recommended Deployment Method: PM2
 
-### Method 1: PM2 (Process Manager)
+PM2 is the supported process manager for keeping the bot running reliably, including across reboots.
 
-PM2 is a production process manager for Node.js applications that helps keep your bot running
-continuously, even after system reboots.
+### Prerequisites
 
-#### Installation
+- Node.js **>= 20.18.1** (matches the repository `package.json` engines)
+- A Discord bot token and Perplexity API key
+- A `.env` file (see below)
 
-```bash
-npm install pm2 -g
-```
+### 1) Create your `.env`
 
-#### Basic Deployment
+This project loads environment variables via `dotenv` on startup.
 
-Run the bot with PM2:
-
-```bash
-DISCORD_BOT_TOKEN=your_token PERPLEXITY_API_KEY=your_key pm2 start src/index.js --name aszune-ai
-```
-
-#### Using Ecosystem Configuration (Recommended)
-
-For better management, create an ecosystem configuration file:
-
-1. The repository includes a `ecosystem.config.js` file:
-
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: 'aszune-ai',
-      script: 'src/index.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '512M',
-      env: {
-        NODE_ENV: 'production',
-        DISCORD_BOT_TOKEN: 'your_discord_bot_token_here',
-        PERPLEXITY_API_KEY: 'your_perplexity_api_key_here',
-      },
-    },
-  ],
-};
-```
-
-2. Edit the `ecosystem.config.js` file to include your actual tokens and API keys.
-
-3. Start the bot using PM2 with the ecosystem file:
+1. Copy the example file:
 
 ```bash
-pm2 start ecosystem.config.js
+cp .env.example .env
 ```
 
-#### PM2 Commands
+2. Edit `.env` and set at least:
 
-- **Start**: `pm2 start aszune-ai`
-- **Stop**: `pm2 stop aszune-ai`
-- **Restart**: `pm2 restart aszune-ai`
-- **Check Status**: `pm2 status`
-- **View Logs**: `pm2 logs aszune-ai`
-- **Setup Startup Script**: `pm2 startup` (followed by the command it provides)
-- **Save Current Process List**: `pm2 save` (after running the startup script)
+- `DISCORD_BOT_TOKEN`
+- `PERPLEXITY_API_KEY`
 
-### Method 2: Docker
+Do **not** put secrets in `ecosystem.config.js`, shell scripts, or source code.
 
-Docker provides an isolated environment for running your bot.
-
-#### Create a Dockerfile
-
-Create a file named `Dockerfile` in the project root:
-
-```dockerfile
-FROM node:16
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
-CMD ["node", "src/index.js"]
-```
-
-#### Create a docker-compose.yml file
-
-```yaml
-version: '3'
-
-services:
-  bot:
-    build: .
-    restart: always
-    environment:
-      - DISCORD_BOT_TOKEN=your_discord_bot_token_here
-      - PERPLEXITY_API_KEY=your_perplexity_api_key_here
-```
-
-#### Deploy with Docker Compose
+### 2) Install PM2
 
 ```bash
-docker-compose up -d
+npm install -g pm2
 ```
 
-### Method 3: Cloud Hosting
+### 3) Start with the repository ecosystem file
 
-You can deploy the bot to various cloud platforms:
+The repository includes `ecosystem.config.js`. Start it from the project root so `.env` is found.
 
-#### Heroku
+```bash
+pm2 start ecosystem.config.js --update-env
+```
 
-1. Create a `Procfile` in the root directory:
+The primary PM2 process name is `aszune-ai`.
 
-   ```
-   worker: node src/index.js
-   ```
+### Raspberry Pi deployments (recommended)
 
-2. Set environment variables in Heroku dashboard or using Heroku CLI:
+If you are deploying on a Raspberry Pi, use the Pi start script. It loads `.env`, applies
+system-level optimisations, then starts PM2 via `ecosystem.config.js`.
 
-   ```bash
-   heroku config:set DISCORD_BOT_TOKEN=your_token
-   heroku config:set PERPLEXITY_API_KEY=your_key
-   ```
+```bash
+sudo ./start-pi-optimized.sh
 
-3. Deploy to Heroku:
-   ```bash
-   git push heroku main
-   ```
+pm2 startup
+pm2 save
+```
 
-#### Railway.app
+### PM2 Commands
 
-1. Connect your GitHub repository to Railway
-2. Set environment variables in Railway dashboard
-3. Railway will automatically deploy your application
+- **Status**: `pm2 status`
+- **Logs**: `pm2 logs aszune-ai`
+- **Restart bot**: `pm2 restart aszune-ai`
+- **Stop bot**: `pm2 stop aszune-ai`
 
 ## Server Requirements
 
-- Node.js 14.x or later
-- Minimum 512MB RAM
+- Node.js **>= 20.18.1**
+- 1GB+ RAM recommended (more helps on larger servers)
 - 1GB+ free disk space
 - Stable internet connection
-- (Optional) PM2 or Docker for process management
+
+## Notes on systemd
+
+Some environments may use a systemd unit for service management. Avoid running both a dedicated
+systemd unit and PM2 for the bot at the same time, as this can cause restart loops.
 
 ## Security Best Practices
 

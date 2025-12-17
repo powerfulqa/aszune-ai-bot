@@ -22,7 +22,7 @@ performance dashboards and server analytics directly within Discord.
 - 📈 **Analytics** - Server analytics, user engagement metrics, and performance monitoring
 - 🍓 **Raspberry Pi Optimized** - Specialized optimizations for resource-constrained devices
 
-**Current Status**: 1,708+ tests passing – 70%+ coverage thresholds
+**Current Status**: 1,700+ tests passing – 70%+ coverage thresholds
 
 ## Table of Contents
 
@@ -56,7 +56,8 @@ performance dashboards and server analytics directly within Discord.
 - 🧪 **Comprehensive Testing:** 1,708+ tests with 70%+ coverage on critical components
 - 🌐 **Web Dashboard:** Optional Express + Socket.io dashboard with live metrics
 - 💾 **Persistent Storage:** SQLite database for conversation history and user analytics
-- 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3+
+- 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3 to Pi 5 (primary
+  deployment target: Pi 5)
 - 🛡️ **Code Quality:** QLTY integration with 94.8% ESLint fix rate and systematic complexity
   reduction
 
@@ -67,7 +68,7 @@ performance dashboards and server analytics directly within Discord.
 The web dashboard provides comprehensive monitoring and management:
 
 - **Real-Time Log Viewer:** Live log streaming with filtering, search, and export
-- **Service Status:** Monitor and control bot services with systemd integration
+- **Service Status:** Monitor and control services (PM2 for the bot; systemd where available)
 - **Configuration Editor:** Safe .env and config.js editing with validation
 - **Network Status:** Interface monitoring, connectivity checks, public IP detection
 - **Reminder Management:** Create, view, edit, and manage reminders via web UI
@@ -75,7 +76,7 @@ The web dashboard provides comprehensive monitoring and management:
 **Access:** `http://localhost:3000` while the bot is running
 
 For detailed API reference and technical specifications, see
-[RELEASE-NOTES-v1.9.0.md](docs/RELEASE-NOTES-v1.9.0.md).
+[DASHBOARD-API-REFERENCE-v1.9.0.md](docs/DASHBOARD-API-REFERENCE-v1.9.0.md).
 
 ---
 
@@ -149,9 +150,9 @@ Discord bot is online!
 
 Your bot should now appear online in your Discord server.
 
-### Running on Raspberry Pi 3
+### Running on Raspberry Pi (recommended: Pi 5)
 
-For optimal performance on Raspberry Pi 3, use the provided script:
+For optimal performance on Raspberry Pi, use the provided script:
 
 ```bash
 # Make the script executable
@@ -163,7 +164,7 @@ chmod +x start-pi-optimized.sh
 
 This script applies several performance optimisations:
 
-- Sets memory limits appropriate for Pi 3
+- Sets memory limits appropriate for your Pi model
 - Reduces CPU and memory usage
 - Optimises network connections
 - Configures compact mode for responses
@@ -179,11 +180,12 @@ PM2 keeps the bot alive in the background and restarts it on crashes or reboots.
 
 #### Recommended: Using the Pi Optimisation Shell Script
 
-To run the bot with full Raspberry Pi optimisations, use the provided shell script as your PM2 entry
-point:
+To run the bot with full Raspberry Pi optimisations, use the provided shell script to apply Pi
+settings and start PM2 using `ecosystem.config.js`:
 
 ```bash
-pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
+sudo ./start-pi-optimized.sh
+
 pm2 startup
 pm2 save
 ```
@@ -191,8 +193,7 @@ pm2 save
 This ensures all Pi-specific environment variables and system-level tweaks are applied before
 starting the bot, and enables automatic restart after a reboot.
 
-**Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations. Always use the shell
-script for Pi deployments.
+**Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations.
 
 ---
 
@@ -237,7 +238,7 @@ If you run the tracking server, the Services page can list instances and allow a
 | ------------ | --------------------------------------------------------------- |
 | `/analytics` | Show Discord server analytics and performance insights          |
 | `/dashboard` | Display comprehensive performance dashboard with real-time data |
-| `/resources` | View resource optimization status and recommendations           |
+| `/resources` | View resource optimisation status and recommendations           |
 | `/cache`     | Display cache statistics and performance metrics (Fixed v1.6.5) |
 
 > **Note:** All commands are available as modern Discord slash commands.

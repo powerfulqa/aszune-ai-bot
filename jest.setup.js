@@ -7,6 +7,13 @@ process.env.NODE_ENV = 'test';
 process.env.PERPLEXITY_API_KEY = 'test-key';
 process.env.DISCORD_BOT_TOKEN = 'test-token';
 
+// Baseline env values to restore after each test
+const BASE_TEST_ENV = {
+  NODE_ENV: 'test',
+  PERPLEXITY_API_KEY: 'test-key',
+  DISCORD_BOT_TOKEN: 'test-token',
+};
+
 // Silence console output during tests to reduce CI noise
 // Tests that intentionally trigger errors will still pass, just without console spam
 const originalConsole = {
@@ -51,6 +58,20 @@ jest.spyOn(process, 'exit').mockImplementation((code) => {
 // Reset modules between tests
 beforeEach(() => {
   jest.resetModules();
+});
+
+// Restore env/timers so tests can't leak state into subsequent suites
+afterEach(() => {
+  process.env.NODE_ENV = BASE_TEST_ENV.NODE_ENV;
+  process.env.PERPLEXITY_API_KEY = BASE_TEST_ENV.PERPLEXITY_API_KEY;
+  process.env.DISCORD_BOT_TOKEN = BASE_TEST_ENV.DISCORD_BOT_TOKEN;
+
+  // Ensure no test leaves fake timers enabled
+  try {
+    jest.useRealTimers();
+  } catch {
+    // Ignore if timers weren't mocked
+  }
 });
 
 // Clean up after all tests - disabled due to hanging issues

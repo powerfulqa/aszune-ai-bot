@@ -28,7 +28,7 @@ compatibility but new features should use slash commands.
 | ------------------------------------------------ | --------------------------------------------------------------- |
 | `/analytics`                                     | Show Discord server analytics and performance insights          |
 | `/dashboard`                                     | Display comprehensive performance dashboard with real-time data |
-| `/resources`                                     | View resource optimization status and recommendations           |
+| `/resources`                                     | View resource optimisation status and recommendations           |
 | Legacy: `!analytics`, `!dashboard`, `!resources` | Limited support                                                 |
 
 ### Reminder Commands (NEW)
@@ -166,7 +166,7 @@ This displays:
 
 ### Resource Monitoring
 
-Monitor system resources and get optimization tips:
+Monitor system resources and get optimisation tips:
 
 ```text
 /resources
@@ -176,7 +176,7 @@ This provides:
 
 - Memory usage analysis
 - Performance status
-- Optimization recommendations
+- Optimisation recommendations
 - System health warnings
 
 ## Using Reminder Features

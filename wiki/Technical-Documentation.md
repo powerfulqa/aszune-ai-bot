@@ -45,10 +45,14 @@ maintainable.
 18. **Pi Optimisation System** - Detects Raspberry Pi hardware and applies performance
     optimisations. For full optimisations, start the bot using the `start-pi-optimized.sh` shell
     script, which sets environment variables and applies system-level tweaks before launching
-    Node.js. For production deployments, use PM2 with the shell script as the entry point:
+    Node.js. For production deployments, use the shell script to start PM2 via
+    `ecosystem.config.js`:
 
 ```bash
-pm2 start start-pi-optimized.sh --name aszune-bot --interpreter bash
+sudo ./start-pi-optimized.sh
+
+pm2 startup
+pm2 save
 ```
 
 This ensures all optimisations are applied. Running `pm2 start src/index.js` will NOT enable Pi

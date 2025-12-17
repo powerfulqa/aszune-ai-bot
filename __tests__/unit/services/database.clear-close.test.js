@@ -39,7 +39,7 @@ describe('Data Cleanup and Close', () => {
     expect(context.mockDb.close).not.toHaveBeenCalled();
   });
 
-  it.skip('should throw on close failure', () => {
+  it('should throw on close failure', () => {
     context.dbService.getDb();
     context.mockDb.close.mockImplementation(() => {
       throw new Error('Close failed');

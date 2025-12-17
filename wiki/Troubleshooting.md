@@ -39,7 +39,7 @@ Quick solutions for common Aszune AI Bot issues.
 
 1. **Check resources** - Use `/resources` command
 2. **Restart** - `pm2 restart aszune-ai`
-3. **Pi users** - Enable Pi optimizations
+3. **Pi users** - Enable Pi optimisations
 
 ### Memory Issues
 

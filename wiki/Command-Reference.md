@@ -216,7 +216,7 @@ resource utilization, and operational health metrics.
 - **System Status**: CPU, memory, and network utilization
 - **Performance Metrics**: Response times and system health indicators
 - **Resource Usage**: Current system resource consumption
-- **Optimization Tips**: AI-powered performance recommendations
+- **Optimisation Tips**: AI-powered performance recommendations
 
 **Technical Details:**
 
@@ -233,7 +233,7 @@ resource utilization, and operational health metrics.
 - `!resources`
 - `/resources`
 
-**Description:** Displays resource optimization status and recommendations for system performance
+**Description:** Displays resource optimisation status and recommendations for system performance
 improvements.
 
 **Example:**
@@ -246,7 +246,7 @@ improvements.
 
 - Memory usage analysis
 - Performance status
-- Optimization recommendations
+- Optimisation recommendations
 - System health warnings
 - Resource utilization tips
 

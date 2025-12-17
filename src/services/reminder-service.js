@@ -69,11 +69,21 @@ class ReminderService extends EventEmitter {
           }
         }, 60000); // Check every minute
 
+        // Ensure this interval never prevents process exit (important for tests)
+        if (checkInterval && typeof checkInterval.unref === 'function') {
+          checkInterval.unref();
+        }
+
         this.activeTimers.set(reminder.id, { type: 'interval', timer: checkInterval });
       } else {
         const timer = setTimeout(async () => {
           await this.executeReminder(reminder);
         }, delay);
+
+        // Ensure this timeout never prevents process exit (important for tests)
+        if (timer && typeof timer.unref === 'function') {
+          timer.unref();
+        }
 
         this.activeTimers.set(reminder.id, { type: 'timeout', timer });
       }

@@ -100,7 +100,7 @@ describe('CacheManager - Core Operations', () => {
 
   describe('constructor', () => {
     it('should create cache instance with correct properties', () => {
-      expect(cacheManager.cache).toBeDefined();
+      expect(cacheManager.cache).toBe(mockEnhancedCache);
       expect(cacheManager.cacheCleanupInterval).toBeNull();
     });
 

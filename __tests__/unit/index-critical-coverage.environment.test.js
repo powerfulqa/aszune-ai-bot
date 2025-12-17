@@ -18,10 +18,6 @@ describe('Production Environment with Pi Optimizations', () => {
     expect(context.mockMemoryMonitor.initialize).toHaveBeenCalled();
     expect(context.mockPerformanceMonitor.initialize).toHaveBeenCalled();
   });
-
-  it.skip('should handle Pi optimization initialization errors gracefully', () => {
-    // Pi optimization errors are validated through runtime integration
-  });
 });
 
 describe('Development Environment', () => {

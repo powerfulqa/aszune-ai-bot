@@ -459,7 +459,8 @@ If configuration change doesn't apply:
 1. Verify save was successful (success message)
 2. Check if bot restart is needed
 3. Verify change persisted to file
-4. Restart bot: systemctl restart aszune-ai-bot
+4. Restart bot (PM2): `pm2 restart aszune-ai`
+  - If you run a dedicated systemd unit instead: `systemctl restart aszune-ai-bot`
 5. Review logs for configuration load errors
 ```
 

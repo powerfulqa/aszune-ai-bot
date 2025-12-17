@@ -1,5 +1,6 @@
 const {
   reminderService,
+  databaseService,
   initializeReminderServiceTestDefaults,
 } = require('./reminder-service.test.setup');
 
@@ -8,9 +9,15 @@ describe('ReminderService command parsing', () => {
     initializeReminderServiceTestDefaults();
   });
 
+  afterEach(() => {
+    // Ensure no timers leak between tests (and avoid Jest open-handle warnings)
+    reminderService.shutdown();
+    jest.restoreAllMocks();
+  });
+
   describe('setReminder', () => {
     it('should parse "in X minutes" format', async () => {
-      const createSpy = jest.spyOn(reminderService, 'createReminder');
+      const createSpy = jest.spyOn(reminderService, 'createReminder').mockResolvedValue({ id: 1 });
 
       await reminderService.setReminder('user1', 'in 5 minutes', 'test message');
 
@@ -27,7 +34,7 @@ describe('ReminderService command parsing', () => {
     });
 
     it('should parse "in X hours" format', async () => {
-      const createSpy = jest.spyOn(reminderService, 'createReminder');
+      const createSpy = jest.spyOn(reminderService, 'createReminder').mockResolvedValue({ id: 1 });
 
       await reminderService.setReminder('user1', 'in 2 hours', 'test message');
 
@@ -44,7 +51,7 @@ describe('ReminderService command parsing', () => {
     });
 
     it('should parse "tomorrow" format', async () => {
-      const createSpy = jest.spyOn(reminderService, 'createReminder');
+      const createSpy = jest.spyOn(reminderService, 'createReminder').mockResolvedValue({ id: 1 });
 
       await reminderService.setReminder('user1', 'tomorrow', 'test message');
 
@@ -86,13 +93,7 @@ describe('ReminderService command parsing', () => {
       expect(reminderService.activeTimers.has(1)).toBe(false);
     });
 
-    // TODO: This test has mock isolation issues - the database mock doesn't properly
-    // override the default return value set in beforeEach. Skipping until mock architecture
-    // can be refactored to properly isolate test cases.
-    it.skip('should return false if delete fails', async () => {
-      // Use the exported databaseService from the test setup
-      const { databaseService } = require('./reminder-service.test.setup');
-      // Override just for this call - use mockReturnValueOnce
+    it('should return false if delete fails', async () => {
       databaseService.deleteReminder.mockReturnValueOnce(false);
 
       const result = await reminderService.deleteReminder(999, 'nonexistent-user');

@@ -1,30 +1,107 @@
-// Web Dashboard Service Tests - Simplified
-// Note: Full integration testing of web-dashboard is handled in integration tests
-// These unit tests verify the service structure
+jest.mock('child_process', () => ({
+  exec: jest.fn(),
+}));
 
-describe('WebDashboardService', () => {
-  // Tests for web-dashboard module loading and structure
-  // Note: Cannot run full restart logic tests due to circular dependency with express/socket.io mocking
-  // This is a known limitation of Jest mocking with heavy dependencies
+jest.mock('../../../src/utils/logger', () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+}));
 
-  it.skip('should have restart endpoint handling', () => {
-    // This test is skipped due to jest.mock issues with express module
-    // Restart functionality is tested in integration tests instead
-    // See: __tests__/integration/web-dashboard-restart.integration.test.js
+jest.mock('../../../src/utils/error-handler', () => ({
+  ErrorHandler: {
+    handleError: jest.fn(() => ({ message: 'An unexpected error occurred.' })),
+  },
+}));
+
+describe('WebDashboardService - Restart Handling', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.SERVICE_NAME;
+    delete process.env.name;
   });
 
-  it.skip('should destroy discord client and try PM2 restart first', () => {
-    // This test is skipped due to jest.mock issues with express module
-    // The functionality is still being tested, but via integration tests
+  it('destroys Discord client connection if present', async () => {
+    const { WebDashboardService } = require('../../../src/services/web-dashboard');
+    const service = new WebDashboardService();
+
+    service.discordClient = {
+      destroy: jest.fn().mockResolvedValue(undefined),
+    };
+
+    jest.spyOn(service, '_attemptRestart').mockResolvedValue({
+      success: true,
+      message: 'ok',
+      timestamp: new Date().toISOString(),
+    });
+
+    const res = {
+      json: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+    };
+
+    await service._handleRestartRequest(res);
+
+    expect(service.discordClient.destroy).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+      })
+    );
   });
 
-  it.skip('should fallback to systemctl if PM2 fails', () => {
-    // This test is skipped due to jest.mock issues with express module
-    // The functionality is still being tested, but via integration tests
+  it('attempts PM2 restart first and returns success response when it works', async () => {
+    const { exec } = require('child_process');
+    exec.mockImplementation((command, options, callback) => callback(null, 'ok', ''));
+
+    const { WebDashboardService } = require('../../../src/services/web-dashboard');
+    const service = new WebDashboardService();
+
+    process.env.name = 'aszune-ai';
+
+    const result = await service._attemptRestart();
+
+    expect(exec).toHaveBeenCalledWith(
+      'pm2 restart aszune-ai',
+      expect.objectContaining({ timeout: 10000 }),
+      expect.any(Function)
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        message: 'Bot restart initiated via PM2 aszune-ai',
+      })
+    );
   });
 
-  it.skip('should fallback to process.exit if all else fails', () => {
-    // This test is skipped due to jest.mock issues with express module
-    // The functionality is still being tested, but via integration tests
+  it('falls back to process exit when restart commands fail', async () => {
+    const { exec } = require('child_process');
+    exec.mockImplementation((command, options, callback) => callback(new Error('nope')));
+
+    const { WebDashboardService } = require('../../../src/services/web-dashboard');
+    const service = new WebDashboardService();
+
+    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+
+    jest.useFakeTimers();
+    try {
+      const result = await service._attemptRestart();
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          message: 'Bot restart initiated (fallback mode)',
+        })
+      );
+
+      expect(exitSpy).not.toHaveBeenCalled();
+
+      jest.advanceTimersByTime(1000);
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    } finally {
+      exitSpy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 });

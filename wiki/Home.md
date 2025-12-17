@@ -8,7 +8,7 @@ Welcome to the **Aszune AI Bot** Wiki – your complete guide to setup, usage, a
 | -------------------------------------------------- | ---------------------------------- | ----------------------------------------- |
 | [Installation](Getting-Started)                    | [Commands](Command-Reference)      | [Dashboard](Dashboard-Features-Complete)  |
 | [Usage Guide](Usage-Guide)                         | [Troubleshooting](Troubleshooting) | [Technical Docs](Technical-Documentation) |
-| [Configuration](Getting-Started#create-a-env-file) | [Testing](Testing-Guide)           | [Pi Optimization](Pi-Optimization-Guide)  |
+| [Configuration](Getting-Started#create-a-env-file) | [Testing](Testing-Guide)           | [Pi Optimisation](Pi-Optimization-Guide)  |
 
 ## What is Aszune AI Bot?
 
@@ -19,7 +19,7 @@ Features include:
 - ⏰ **Reminders** – Natural language scheduling
 - 📊 **Analytics** – Server insights via Discord commands
 - 🌐 **Dashboard** – Real-time web monitoring at `http://localhost:3000`
-- 🍓 **Pi Optimized** – Runs efficiently on Raspberry Pi
+- 🍓 **Pi Optimised** – Runs efficiently on Raspberry Pi
 
 ## Current Version: v1.10.0
 

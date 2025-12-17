@@ -30,7 +30,7 @@
 ### Deployment
 
 - [Guide](Deployment-Guide)
-- [Pi Optimization](Pi-Optimization-Guide)
+- [Pi Optimisation](Pi-Optimization-Guide)
 
 ### Resources
 

@@ -5,8 +5,11 @@
 ## Overview
 
 The Service Status & Management interface provides real-time monitoring and control of core bot
-services. It integrates with systemd to enable start/stop/restart operations and tracks service
-health metrics.
+services. It supports both PM2 (recommended for managing the bot process on Raspberry Pi) and
+systemd (where available) for start/stop/restart operations, and tracks service health metrics.
+
+**Important:** Do not run the bot under both PM2 and a dedicated systemd unit at the same time. This
+can cause restart loops and confusing status reporting.
 
 ## Features
 
@@ -14,8 +17,9 @@ health metrics.
 
 - **Real-Time Service Status:** Monitor status of all core services (perplexity, cache, database,
   reminders)
-- **Systemd Integration:** Direct interaction with systemd service manager
-- **Service Control:** Start, stop, and restart individual services from dashboard
+- **Service Manager Support:** Uses PM2 for the bot process where configured; uses systemd where
+  available for system services
+- **Service Control:** Start, stop, and restart individual services from the dashboard
 - **Uptime Tracking:** Historical uptime metrics with availability percentages
 - **Health Checks:** Automated health verification for each service
 - **Performance Metrics:** CPU and memory usage per service
@@ -43,7 +47,7 @@ Each service shows:
 ```
 Click "Start" button on stopped service
 - Confirms service is not already running
-- Initiates systemd start command
+- Initiates the appropriate service manager action (PM2 or systemd)
 - Updates status immediately
 - Records timestamp for audit trail
 ```
@@ -54,7 +58,7 @@ Click "Start" button on stopped service
 Click "Stop" button on running service
 - Shows confirmation prompt
 - Warns about potential disruption
-- Executes systemd stop command
+- Executes the appropriate service manager action (PM2 or systemd)
 - Updates status immediately
 ```
 
@@ -113,7 +117,7 @@ If service shows ERROR status:
 4. See Troubleshooting section
 ```
 
-#### Performance Optimization
+#### Performance Optimisation
 
 ```
 If service has high resource usage:

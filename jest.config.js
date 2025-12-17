@@ -4,9 +4,8 @@ module.exports = {
   testEnvironment: 'node',
   // Increased timeout. Explicit coverageReporters fixes earlier CLI misuse ("clover,lcov,text" treated as one module)
   testTimeout: 30000,
-  // Force exit to prevent hanging on open handles (timers, servers, sockets)
-  // This is needed because some tests/services leave open resources
-  forceExit: true,
+  // Only force-exit when explicitly requested (prefer fixing open handles instead)
+  forceExit: process.env.JEST_FORCE_EXIT === 'true',
   // Detect open handles to help debug hanging tests (enable with DEBUG_JEST_HANDLES=true)
   detectOpenHandles: process.env.DEBUG_JEST_HANDLES === 'true',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
@@ -30,6 +29,10 @@ module.exports = {
     '/__mocks__/discord.js',
     '/__mocks__/discord.mock.module.js',
     '/__mocks__/loggerMock.js',
+    '/__tests__/__mocks__/discord.test.js',
+    '/__tests__/__mocks__/discord.mock.test.js',
+    '/__tests__/__mocks__/loggerMock.test.js',
+    '/__tests__/utils/undici-mock.js',
     '/__tests__/utils/undici-mock-helpers.js',
     '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',

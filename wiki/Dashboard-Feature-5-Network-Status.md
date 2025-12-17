@@ -156,7 +156,7 @@ Slow bot performance may indicate:
 5. Look for packet retransmissions
 ```
 
-#### WiFi Optimization
+#### WiFi Optimisation
 
 ```
 If WiFi connection is weak:
@@ -518,7 +518,7 @@ NETWORK: {
 }
 ```
 
-## Performance Optimization
+## Performance Optimisation
 
 ### WiFi Tips for Raspberry Pi
 
@@ -572,7 +572,7 @@ ip route add 8.8.8.8 via 192.168.1.1 dev eth0
 - [Dashboard Feature 1: Log Viewer](Dashboard-Feature-1-Log-Viewer.md)
 - [Dashboard Feature 2: Service Management](Dashboard-Feature-2-Service-Management.md)
 - [Dashboard Feature 7: Reminder Management](Dashboard-Feature-7-Reminders.md)
-- [Pi Optimization Guide](Pi-Optimization-Guide.md)
+- [Pi Optimisation Guide](Pi-Optimization-Guide.md)
 - [Deployment Guide](Deployment-Guide.md)
 
 ## Demo

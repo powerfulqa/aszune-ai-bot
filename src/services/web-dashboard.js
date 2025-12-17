@@ -696,30 +696,38 @@ class WebDashboardService {
     try {
       logger.info(`Service management: ${action} ${service}`);
 
-      // Map service names to PM2 app names (actual PM2 process name)
-      let pm2AppName = service;
-      if (service === 'aszune-ai-bot' || service === 'aszune-ai') {
-        pm2AppName = 'aszune-bot'; // Actual PM2 process name
-      }
+      // For the bot process, prefer PM2. Deployments commonly use the PM2 name 'aszune-ai'
+      // (via ecosystem.config.js), but some older setups may use 'aszune-bot'.
+      const isBotService = ['aszune-ai', 'aszune-ai-bot', 'aszune-bot'].includes(service);
+      if (isBotService) {
+        const pm2Candidates =
+          service === 'aszune-ai'
+            ? ['aszune-ai']
+            : service === 'aszune-bot'
+              ? ['aszune-ai', 'aszune-bot']
+              : ['aszune-ai', 'aszune-bot'];
 
-      // For PM2 services, use shell command directly (PM2 daemon may not be accessible)
-      if (['aszune-ai', 'aszune-ai-bot', 'aszune-bot'].includes(service)) {
-        try {
-          const pm2Command = `pm2 ${action} ${pm2AppName}`;
-          logger.debug(`Executing: ${pm2Command}`);
-          await execPromise(pm2Command, { timeout: 10000 });
-          logger.info(`PM2 shell succeeded: ${pm2Command}`);
-          return {
-            success: true,
-            message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
-            service: pm2AppName,
-            action,
-            timestamp: new Date().toISOString(),
-          };
-        } catch (pm2Error) {
-          logger.warn(`PM2 shell command failed: ${pm2Error.message}`);
-          // Fall through to systemctl as final fallback
+        for (const pm2AppName of pm2Candidates) {
+          try {
+            const pm2Command = `pm2 ${action} ${pm2AppName}`;
+            logger.debug(`Executing: ${pm2Command}`);
+            await execPromise(pm2Command, { timeout: 10000 });
+            logger.info(`PM2 shell succeeded: ${pm2Command}`);
+            return {
+              success: true,
+              message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
+              service: pm2AppName,
+              action,
+              timestamp: new Date().toISOString(),
+            };
+          } catch (pm2Error) {
+            logger.warn(
+              `PM2 shell command failed for ${pm2AppName}: ${pm2Error.message}`
+            );
+          }
         }
+
+        // Fall through to systemctl as final fallback
       }
 
       // Fallback to shell commands for other services

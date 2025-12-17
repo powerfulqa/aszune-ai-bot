@@ -138,6 +138,13 @@ async function registerSlashCommands() {
 // This ensures the dashboard remains accessible even if Discord login fails
 async function startWebDashboard() {
   try {
+    // Jest test runs should not start real HTTP/socket servers by default.
+    // This avoids open handles and post-teardown imports in integration tests.
+    if (process.env.NODE_ENV === 'test' && process.env.ASZUNE_START_DASHBOARD_IN_TESTS !== 'true') {
+      logger.debug('Skipping web dashboard start (test env)');
+      return;
+    }
+
     // In test environment avoid multiple starts that cause EADDRINUSE
     if (process.env.NODE_ENV === 'test') {
       if (global.__WEB_DASHBOARD_STARTED__ || global.__WEB_DASHBOARD_SERVICE__) {

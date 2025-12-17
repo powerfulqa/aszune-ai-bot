@@ -47,6 +47,14 @@ class CacheManager {
         logger.warn(`Cache cleanup error: ${errorResponse.message}`);
       });
     }, config.CACHE.CLEANUP_INTERVAL_MS);
+
+    // Ensure this background interval never prevents process exit (esp. in tests)
+    if (
+      this.cacheCleanupInterval &&
+      typeof this.cacheCleanupInterval.unref === 'function'
+    ) {
+      this.cacheCleanupInterval.unref();
+    }
   }
 
   /**
@@ -178,9 +186,24 @@ class CacheManager {
    * @returns {Promise<Object|null>} Cache pruner or null
    */
   async getCachePruner() {
+    if (process.env.NODE_ENV === 'test') {
+      return null;
+    }
+
     try {
-      const { CachePruner } = require('../utils/cache-pruner');
-      return new CachePruner();
+      const cachePrunerModule = require('../utils/cache-pruner');
+
+      // Most common shape: singleton instance exporting pruneCache()
+      if (cachePrunerModule && typeof cachePrunerModule.pruneCache === 'function') {
+        return cachePrunerModule;
+      }
+
+      // Backward-compatible support if a class export exists
+      if (cachePrunerModule && typeof cachePrunerModule.CachePruner === 'function') {
+        return new cachePrunerModule.CachePruner();
+      }
+
+      return null;
     } catch {
       return null; // Cache pruner not available
     }

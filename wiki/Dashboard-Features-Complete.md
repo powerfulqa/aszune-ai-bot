@@ -90,10 +90,10 @@ monitoring, management, and operational control. The system consists of:
 
 **Managed Services**:
 
-- `aszune-ai-bot` - Main Discord bot
+- `aszune-ai-bot` / `aszune-ai` - Main Discord bot (typically managed via PM2 on Raspberry Pi)
 - `nginx` - Web server
 - `postgresql` - Database server
-- Other systemd services
+- Other system services (systemd-managed where available)
 
 **Use Cases**:
 
@@ -345,7 +345,7 @@ API Integration (backend endpoints)
 
 - Full-width layout
 - All navbar items visible
-- Optimized spacing
+- Optimised spacing
 - Charts and graphs displayed
 
 ### Tablet (768px - 1199px)
@@ -360,7 +360,7 @@ API Integration (backend endpoints)
 - Single column layout
 - Hamburger menu for navbar
 - Larger touch targets
-- Optimized for portrait
+- Optimised for portrait
 
 ---
 

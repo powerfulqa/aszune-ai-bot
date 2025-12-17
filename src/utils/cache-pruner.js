@@ -19,6 +19,7 @@ class CachePruner {
     this.pruneIntervalMinutes = config.PI_OPTIMIZATIONS.CLEANUP_INTERVAL_MINUTES || 30;
     this.prunePercentage = 0.2; // Remove 20% of entries when pruning
     this.lastPruneTime = Date.now();
+    this.pruneInterval = null;
 
     // Start pruning timer if enabled (not in test environment)
     if (config.PI_OPTIMIZATIONS.ENABLED && process.env.NODE_ENV !== 'test') {
@@ -36,13 +37,33 @@ class CachePruner {
     // Use a simple interval rather than a full scheduler to save resources
     // Don't start intervals in test environment
     if (process.env.NODE_ENV !== 'test') {
-      setInterval(() => {
+      // Prevent multiple initialisations
+      if (this.pruneInterval) {
+        return;
+      }
+
+      this.pruneInterval = setInterval(() => {
         this.pruneCache().catch((err) =>
           logger.error('[CachePruner] Error during scheduled pruning:', err)
         );
       }, intervalMs);
 
+      // Ensure this timer never keeps the process alive (important for tests)
+      if (this.pruneInterval && typeof this.pruneInterval.unref === 'function') {
+        this.pruneInterval.unref();
+      }
+
       logger.info(`[CachePruner] Initialized with ${this.pruneIntervalMinutes} minute interval`);
+    }
+  }
+
+  /**
+   * Stop the pruning schedule
+   */
+  stop() {
+    if (this.pruneInterval) {
+      clearInterval(this.pruneInterval);
+      this.pruneInterval = null;
     }
   }
 

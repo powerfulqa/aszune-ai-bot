@@ -29,7 +29,8 @@ describe('DatabaseService - Basic Operations', () => {
   describe('constructor', () => {
     it('should initialize database service', () => {
       expect(dbService).toBeDefined();
-      expect(dbService.db).toBeDefined();
+      // db is explicitly reset in the test setup to force lazy initialisation
+      expect(dbService.db).toBeNull();
       expect(dbService.isDisabled).toBe(false);
     });
 

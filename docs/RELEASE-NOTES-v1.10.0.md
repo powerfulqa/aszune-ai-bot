@@ -121,8 +121,8 @@ No migration steps required. Simply update to v1.10.0.
 
 | Metric              | v1.9.0 | v1.10.0 | Change |
 | ------------------- | ------ | ------- | ------ |
-| Tests               | 1,231  | 1,661   | +430   |
-| Tests Passing       | 1,228  | 1,661   | +433   |
+| Tests               | 1,231  | 1,722   | +491   |
+| Tests Passing       | 1,228  | 1,708   | +480   |
 | Coverage Threshold  | 64%    | 70%     | +6%    |
 | ESLint Issues       | ~400   | ~20     | -95%   |
 | Code Quality Issues | 37     | 9       | -78%   |

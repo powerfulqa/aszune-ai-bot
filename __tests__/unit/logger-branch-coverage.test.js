@@ -127,22 +127,19 @@ describe('Logger - Branch Coverage Tests', () => {
     );
   });
 
-  test('tests log file rotation', async () => {
-    // Mock file size to be large (6MB) which should trigger rotation
-    fsPromises.stat.mockImplementation(() => Promise.resolve({ size: 6 * 1024 * 1024 }));
-
-    // Mock readdir for cleanup
+  test('rotates log file when size exceeds max', async () => {
+    // Default max size from configMock is 10MB; use 11MB to trigger rotation.
+    fsPromises.stat.mockResolvedValue({ size: 11 * 1024 * 1024 });
     fsPromises.readdir.mockResolvedValue(['bot.log', 'bot.log.2022-01-01']);
-
-    // Make sure rename works
     fsPromises.rename.mockResolvedValue(undefined);
 
-    // Call directly to the rotation method
     await logger._rotateLogFileIfNeeded();
 
-    // Verify rotation method was called without throwing errors
-    // Note: The actual rotation may not happen due to test environment conditions
-    expect(true).toBe(true); // Test passes if no error is thrown
+    expect(fsPromises.rename).toHaveBeenCalledTimes(1);
+    expect(fsPromises.rename).toHaveBeenCalledWith(logger.logFile, expect.any(String));
+
+    const rotatedName = fsPromises.rename.mock.calls[0][1];
+    expect(rotatedName).toContain('bot.log.');
   });
 
   test('handles custom log size limit', async () => {
@@ -150,7 +147,7 @@ describe('Logger - Branch Coverage Tests', () => {
     process.env.PI_LOG_MAX_SIZE_MB = '2';
 
     // Mock file size to be 3MB (exceeds our 2MB limit)
-    fsPromises.stat.mockImplementation(() => Promise.resolve({ size: 3 * 1024 * 1024 }));
+    fsPromises.stat.mockResolvedValue({ size: 3 * 1024 * 1024 });
 
     // Mock readdir for cleanup
     fsPromises.readdir.mockResolvedValue(['bot.log', 'bot.log.2022-01-01']);
@@ -158,9 +155,8 @@ describe('Logger - Branch Coverage Tests', () => {
     // Call directly to the rotation method
     await logger._rotateLogFileIfNeeded();
 
-    // Verify rotation method was called without throwing errors
-    // Note: The actual rotation may not happen due to test environment conditions
-    expect(true).toBe(true); // Test passes if no error is thrown
+    expect(fsPromises.rename).toHaveBeenCalledTimes(1);
+    expect(fsPromises.readdir).toHaveBeenCalledTimes(1);
   });
 
   test('handles file stat errors during log rotation', async () => {
@@ -243,8 +239,8 @@ describe('Logger - Branch Coverage Tests', () => {
   });
 
   test('handles errors during log rotation', async () => {
-    // Mock file size to be large (10MB)
-    fsPromises.stat.mockImplementation(() => Promise.resolve({ size: 10 * 1024 * 1024 }));
+    // Default max size is 10MB; use 11MB so rename path is executed.
+    fsPromises.stat.mockResolvedValue({ size: 11 * 1024 * 1024 });
 
     // Mock rename to fail
     const renameError = new Error('Rename failed');
@@ -253,17 +249,17 @@ describe('Logger - Branch Coverage Tests', () => {
     // Mock readdir for cleanup path
     fsPromises.readdir.mockResolvedValue(['bot.log']);
 
-    // Call the rotation method directly
     await logger._rotateLogFileIfNeeded();
 
-    // Verify error was logged or method completed without throwing
-    // The error handling may not trigger the exact expected message
-    expect(true).toBe(true); // Test passes if no error is thrown
+    expect(consoleMock.error).toHaveBeenCalledWith(
+      'Failed to rotate log file:',
+      expect.objectContaining({ message: 'Rename failed' })
+    );
   });
 
   test('handles unlink errors during log cleanup', async () => {
     // Setup - large file size to trigger rotation
-    fsPromises.stat.mockImplementation(() => Promise.resolve({ size: 10 * 1024 * 1024 }));
+    fsPromises.stat.mockResolvedValue({ size: 11 * 1024 * 1024 });
 
     // Add more than 5 old log files to trigger cleanup
     fsPromises.readdir.mockImplementation(() =>
@@ -285,8 +281,8 @@ describe('Logger - Branch Coverage Tests', () => {
     // Call rotation method directly
     await logger._rotateLogFileIfNeeded();
 
-    // Verify unlink method was called or completed without throwing
-    // The unlink may not be called due to test environment conditions
-    expect(true).toBe(true); // Test passes if no error is thrown
+    expect(fsPromises.rename).toHaveBeenCalledTimes(1);
+    expect(fsPromises.readdir).toHaveBeenCalledTimes(1);
+    expect(fsPromises.unlink).toHaveBeenCalled();
   });
 });
