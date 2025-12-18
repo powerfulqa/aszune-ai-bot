@@ -111,20 +111,6 @@ For detailed API reference and technical specifications, see
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
    ```
 
-Optional (Instance Tracking / Authorization):
-
-```env
-# Tracking server (recommended for production instance visibility + authorization)
-INSTANCE_TRACKING_SERVER=http://localhost:3001/api/beacon
-TRACKING_ADMIN_KEY=your_strong_admin_key
-
-# Optional: pre-authorize IPs (comma-separated)
-AUTHORIZED_IPS=1.2.3.4,5.6.7.8
-
-# Optional: override location label shown in dashboard
-BOT_LOCATION=Home Server, UK
-```
-
 4. **Database Setup (Automatic)**
 
    The bot automatically creates and manages a SQLite database:
@@ -202,13 +188,6 @@ starting the bot, and enables automatic restart after a reboot.
 - Access: `http://localhost:3000` while the bot is running
 - Details: see `wiki/Dashboard-Features-Complete.md` (feature overview) and
   `docs/DASHBOARD-API-REFERENCE-v1.9.0.md` (API reference)
-
-### Optional: Tracking Server (Instance Authorization)
-
-If you run the tracking server, the Services page can list instances and allow approve/revoke.
-
-- Start: `node scripts/tracking-server.js`
-- Common PM2 name used in deployments: `Aszune-analytics`
 
 ---
 
