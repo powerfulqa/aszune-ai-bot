@@ -2130,24 +2130,43 @@ class WebDashboardService {
     };
   }
 
+  /**
+   * Send callback response safely
+   * @private
+   */
+  _sendCallback(callback, response) {
+    if (callback) callback(response);
+  }
+
+  /**
+   * Build disconnected status response
+   * @private
+   */
+  _buildDisconnectedResponse(error) {
+    return { connected: false, error };
+  }
+
   async handleDiscordStatus(callback) {
     try {
       if (!this.discordClient) {
-        if (callback) callback({ connected: false, error: 'Discord client not initialized' });
+        this._sendCallback(
+          callback,
+          this._buildDisconnectedResponse('Discord client not initialized')
+        );
         return;
       }
 
       const isReady = this.discordClient.isReady();
-      if (isReady && this.discordClient.user) {
-        if (callback) callback(this._buildDiscordConnectedResponse());
-      } else {
-        if (callback) callback({ connected: false, error: 'Discord bot is not connected' });
-      }
+      const response =
+        isReady && this.discordClient.user
+          ? this._buildDiscordConnectedResponse()
+          : this._buildDisconnectedResponse('Discord bot is not connected');
 
+      this._sendCallback(callback, response);
       logger.debug(`Discord status: ${isReady ? 'Connected' : 'Disconnected'}`);
     } catch (error) {
       logger.error('Error retrieving Discord status:', error);
-      if (callback) callback({ connected: false, error: error.message });
+      this._sendCallback(callback, this._buildDisconnectedResponse(error.message));
     }
   }
 
