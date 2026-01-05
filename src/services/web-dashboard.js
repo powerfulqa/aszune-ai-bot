@@ -98,17 +98,40 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Check if error should trigger retry
+   * @private
+   */
+  _shouldRetryPortBind(portError, attempt, maxRetries) {
+    const isRetryableError =
+      this._isPortInUseError(portError) || portError.message === 'Server listen timeout';
+    return isRetryableError && attempt < maxRetries - 1;
+  }
+
+  /**
+   * Attempt to bind to fallback port
+   * @private
+   */
+  async _bindToFallbackPort(preferredPort, maxRetries) {
+    logger.warn(
+      `Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`
+    );
+    const altPort = await this.findAvailablePort();
+
+    await this._createServerListener(altPort);
+    logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
+    return altPort;
+  }
+
   async bindServerWithRetry(preferredPort, maxRetries = 3) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await this._createServerListener(preferredPort);
         return preferredPort;
       } catch (portError) {
-        if (!this._isPortInUseError(portError) && portError.message !== 'Server listen timeout') {
+        if (!this._shouldRetryPortBind(portError, attempt, maxRetries)) {
           throw portError;
         }
-
-        if (attempt >= maxRetries - 1) break;
 
         logger.warn(
           `Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`
@@ -118,22 +141,8 @@ class WebDashboardService {
       }
     }
 
-    // Fallback to alternative port
-    logger.warn(
-      `Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`
-    );
-    const altPort = await this.findAvailablePort();
-
-    try {
-      await this._createServerListener(altPort);
-      logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
-      return altPort;
-    } catch (altPortError) {
-      logger.error(`Failed to bind to alternative port ${altPort}: ${altPortError.message}`);
-      throw new Error(
-        `Unable to bind web dashboard to any port (preferred: ${preferredPort}, alternative: ${altPort})`
-      );
-    }
+    // All retries exhausted - try fallback port
+    return this._bindToFallbackPort(preferredPort, maxRetries);
   }
 
   /**
@@ -688,65 +697,76 @@ class WebDashboardService {
    * @returns {Promise<Object>} Result object
    * @private
    */
+  /**
+   * Get PM2 candidate names for a service
+   * @private
+   */
+  _getPm2Candidates(service) {
+    const candidateMap = {
+      'aszune-ai': ['aszune-ai'],
+      'aszune-bot': ['aszune-ai', 'aszune-bot'],
+      'aszune-ai-bot': ['aszune-ai', 'aszune-bot'],
+    };
+    return candidateMap[service] || null;
+  }
+
+  /**
+   * Try PM2 command for a service
+   * @private
+   */
+  async _tryPm2Command(action, pm2AppName, execPromise) {
+    const pm2Command = `pm2 ${action} ${pm2AppName}`;
+    logger.debug(`Executing: ${pm2Command}`);
+    await execPromise(pm2Command, { timeout: 10000 });
+    logger.info(`PM2 shell succeeded: ${pm2Command}`);
+    return {
+      success: true,
+      message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
+      service: pm2AppName,
+      action,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Build service action result
+   * @private
+   */
+  _buildServiceResult(service, action) {
+    return {
+      success: true,
+      message: `Service ${service} ${action}ed successfully`,
+      service,
+      action,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   async manageService(action, service) {
-    const { exec } = require('child_process');
     const util = require('util');
-    const execPromise = util.promisify(exec);
+    const execPromise = util.promisify(require('child_process').exec);
 
-    try {
-      logger.info(`Service management: ${action} ${service}`);
+    logger.info(`Service management: ${action} ${service}`);
 
-      // For the bot process, prefer PM2. Deployments commonly use the PM2 name 'aszune-ai'
-      // (via ecosystem.config.js), but some older setups may use 'aszune-bot'.
-      const isBotService = ['aszune-ai', 'aszune-ai-bot', 'aszune-bot'].includes(service);
-      if (isBotService) {
-        const pm2Candidates =
-          service === 'aszune-ai'
-            ? ['aszune-ai']
-            : service === 'aszune-bot'
-              ? ['aszune-ai', 'aszune-bot']
-              : ['aszune-ai', 'aszune-bot'];
-
-        for (const pm2AppName of pm2Candidates) {
-          try {
-            const pm2Command = `pm2 ${action} ${pm2AppName}`;
-            logger.debug(`Executing: ${pm2Command}`);
-            await execPromise(pm2Command, { timeout: 10000 });
-            logger.info(`PM2 shell succeeded: ${pm2Command}`);
-            return {
-              success: true,
-              message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
-              service: pm2AppName,
-              action,
-              timestamp: new Date().toISOString(),
-            };
-          } catch (pm2Error) {
-            logger.warn(
-              `PM2 shell command failed for ${pm2AppName}: ${pm2Error.message}`
-            );
-          }
+    // Try PM2 for bot services
+    const pm2Candidates = this._getPm2Candidates(service);
+    if (pm2Candidates) {
+      for (const pm2AppName of pm2Candidates) {
+        try {
+          return await this._tryPm2Command(action, pm2AppName, execPromise);
+        } catch (pm2Error) {
+          logger.warn(`PM2 shell command failed for ${pm2AppName}: ${pm2Error.message}`);
         }
-
-        // Fall through to systemctl as final fallback
       }
-
-      // Fallback to shell commands for other services
-      const cmd = `systemctl ${action} ${service}`;
-      logger.debug(`Executing: ${cmd}`);
-      await execPromise(cmd, { timeout: 10000, shell: '/bin/bash' });
-
-      logger.info(`Service ${action} succeeded: ${service}`);
-      return {
-        success: true,
-        message: `Service ${service} ${action}ed successfully`,
-        service,
-        action,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.warn(`Service ${action} failed: ${service} - ${error.message}`);
-      throw error;
     }
+
+    // Fallback to systemctl
+    const cmd = `systemctl ${action} ${service}`;
+    logger.debug(`Executing: ${cmd}`);
+    await execPromise(cmd, { timeout: 10000, shell: '/bin/bash' });
+
+    logger.info(`Service ${action} succeeded: ${service}`);
+    return this._buildServiceResult(service, action);
   }
 
   /**
@@ -837,42 +857,19 @@ class WebDashboardService {
    * @private
    */
   async validateConfigFile(filename, content) {
-    const errors = [];
-    const warnings = [];
+    let validationResult = { valid: true, errors: [], warnings: [] };
 
     if (filename === '.env') {
-      // Validate .env format: KEY=VALUE
-      const lines = content.split('\n');
-      lines.forEach((line, idx) => {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) return;
-
-        if (!trimmed.includes('=')) {
-          errors.push(`Line ${idx + 1}: Invalid format. Expected KEY=VALUE`);
-        }
-
-        // Check for required keys
-        if (trimmed.startsWith('PERPLEXITY_API_KEY=') && trimmed.endsWith('=')) {
-          warnings.push(`Line ${idx + 1}: PERPLEXITY_API_KEY is empty`);
-        }
-        if (trimmed.startsWith('DISCORD_BOT_TOKEN=') && trimmed.endsWith('=')) {
-          warnings.push(`Line ${idx + 1}: DISCORD_BOT_TOKEN is empty`);
-        }
-      });
+      validationResult = validateEnvContent(content);
     } else if (filename === 'config.js') {
-      // Basic JavaScript validation
-      try {
-        new Function(content);
-      } catch (error) {
-        errors.push(`Syntax error: ${error.message}`);
-      }
+      validationResult = validateJsContent(content);
     }
 
     return {
       file: filename,
-      isValid: errors.length === 0,
-      errors,
-      warnings,
+      isValid: validationResult.errors.length === 0,
+      errors: validationResult.errors,
+      warnings: validationResult.warnings,
       timestamp: new Date().toISOString(),
     };
   }
@@ -1214,42 +1211,47 @@ class WebDashboardService {
   /**
    * Config editor page handlers
    */
+  /**
+   * Load and return config file content
+   * @private
+   */
+  _loadConfigFile(filename, callback) {
+    const configPath = path.join(process.cwd(), filename);
+
+    // Security: prevent directory traversal
+    if (!configPath.startsWith(process.cwd())) {
+      logger.warn(`Security: Attempted directory traversal access to ${filename}`);
+      if (callback)
+        callback({ error: 'Access denied: Cannot access files outside project directory' });
+      return null;
+    }
+
+    if (!fs.existsSync(configPath)) {
+      logger.warn(`Config file not found: ${configPath}`);
+      if (callback) callback({ error: `File not found: ${filename}`, content: '' });
+      return null;
+    }
+
+    return { configPath, content: fs.readFileSync(configPath, 'utf-8') };
+  }
+
   setupConfigHandlers(socket) {
     socket.on('request_config', (data, callback) => {
       try {
         const filename = data?.filename || '.env';
-        const configPath = path.join(process.cwd(), filename);
+        const loaded = this._loadConfigFile(filename, callback);
+        if (!loaded) return;
 
-        // Security: prevent directory traversal
-        if (!configPath.startsWith(process.cwd())) {
-          const error = new Error('Access denied: Cannot access files outside project directory');
-          logger.warn(`Security: Attempted directory traversal access to ${filename}`);
-          if (callback) callback({ error: error.message });
-          return;
-        }
-
-        // Check if file exists
-        if (!fs.existsSync(configPath)) {
-          const error = new Error(`File not found: ${filename}`);
-          logger.warn(`Config file not found: ${configPath}`);
-          if (callback) callback({ error: error.message, content: '' });
-          return;
-        }
-
-        // Read file content
-        const content = fs.readFileSync(configPath, 'utf-8');
-        const fileInfo = fs.statSync(configPath);
-
+        const fileInfo = fs.statSync(loaded.configPath);
         if (callback) {
           callback({
             filename,
-            content,
+            content: loaded.content,
             size: fileInfo.size,
             lastModified: fileInfo.mtime.toISOString(),
             error: null,
           });
         }
-
         logger.debug(`Config loaded: ${filename}`);
       } catch (error) {
         logger.error('Error loading config:', error);
@@ -1716,6 +1718,20 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Delete reminder from database
+   * @private
+   */
+  _deleteReminderFromDb(reminderId, userId) {
+    if (userId) {
+      return databaseService.deleteReminder(reminderId, userId);
+    }
+    // Admin deletion - delete without user_id check
+    const stmt = databaseService.db.prepare('DELETE FROM reminders WHERE id = ?');
+    const result = stmt.run(reminderId);
+    return result.changes > 0;
+  }
+
   handleDeleteReminder(data, callback) {
     try {
       const validationError = this._validateReminderInput(data, ['reminderId']);
@@ -1725,16 +1741,7 @@ class WebDashboardService {
       }
 
       const { reminderId, userId } = data;
-      // Allow admin deletion (from dashboard) without user_id check, or with user_id for user-initiated deletes
-      let deleted;
-      if (userId) {
-        deleted = databaseService.deleteReminder(reminderId, userId);
-      } else {
-        // Admin deletion - delete without user_id check
-        const stmt = databaseService.db.prepare('DELETE FROM reminders WHERE id = ?');
-        const result = stmt.run(reminderId);
-        deleted = result.changes > 0;
-      }
+      const deleted = this._deleteReminderFromDb(reminderId, userId);
 
       if (!deleted) {
         logger.warn(
@@ -2263,6 +2270,26 @@ class WebDashboardService {
     }
   }
 
+  /**
+   * Execute PM2 quick action command
+   * @private
+   */
+  async _executePm2QuickAction(group) {
+    const util = require('util');
+    const execPromise = util.promisify(require('child_process').exec);
+
+    const pm2Command = this._mapGroupToPm2Command(group);
+    logger.debug(`Executing PM2 quick action: ${pm2Command}`);
+    const { stdout, stderr } = await execPromise(pm2Command);
+
+    if (stderr && !stderr.includes('Use `pm2 show')) {
+      logger.warn(`PM2 stderr: ${stderr}`);
+    }
+
+    logger.info(`PM2 quick action completed: ${stdout}`);
+    return stdout;
+  }
+
   async handleQuickServiceAction(data, callback) {
     try {
       const { group } = data;
@@ -2275,42 +2302,24 @@ class WebDashboardService {
 
       logger.info(`Quick service action: ${group}`);
 
-      try {
-        const { exec } = require('child_process');
-        const util = require('util');
-        const execPromise = util.promisify(exec);
-
-        const pm2Command = this._mapGroupToPm2Command(group);
-        logger.debug(`Executing PM2 quick action: ${pm2Command}`);
-        const { stdout, stderr } = await execPromise(pm2Command);
-
-        if (stderr && !stderr.includes('Use `pm2 show')) {
-          logger.warn(`PM2 stderr: ${stderr}`);
-        }
-
-        logger.info(`PM2 quick action completed: ${stdout}`);
-
-        if (callback) {
-          callback({
-            success: true,
-            group,
-            message: `Quick action '${group}' completed successfully`,
-            timestamp: new Date().toISOString(),
-            output: stdout,
-          });
-        }
-      } catch (execError) {
-        logger.error(`PM2 quick action failed: ${execError.message}`);
-        if (callback) {
-          callback({
-            error: `Failed to execute quick action: ${execError.message}`,
-            success: false,
-          });
-        }
+      const output = await this._executePm2QuickAction(group);
+      if (callback) {
+        callback({
+          success: true,
+          group,
+          message: `Quick action '${group}' completed successfully`,
+          timestamp: new Date().toISOString(),
+          output,
+        });
       }
     } catch (error) {
-      logger.error('Error performing batch service action:', error);
-      if (callback) callback({ error: error.message, success: false });
+      logger.error(`PM2 quick action failed: ${error.message}`);
+      if (callback) {
+        callback({
+          error: `Failed to execute quick action: ${error.message}`,
+          success: false,
+        });
+      }
     }
   }
 

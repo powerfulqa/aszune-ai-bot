@@ -520,13 +520,20 @@ class PerplexityService {
     }
 
     // Handle consecutive same roles - combine content
+    return this._handleConsecutiveSameRole(msg, lastRole, messages);
+  }
+
+  /**
+   * Handle consecutive same roles by combining content
+   * @private
+   */
+  _handleConsecutiveSameRole(msg, lastRole, messages) {
     if (msg.role === lastRole && messages.length > 0) {
       const lastMsg = messages[messages.length - 1];
       if (lastMsg.role === msg.role) {
         lastMsg.content += '\n' + msg.content;
       }
     }
-
     return { added: false, newRole: lastRole };
   }
 
@@ -1010,6 +1017,25 @@ class PerplexityService {
   }
 
   /**
+   * Prune expired entries from cache
+   * @private
+   */
+  _pruneExpiredEntries(cache, maxAgeMs) {
+    const now = Date.now();
+    let modified = false;
+
+    for (const [key, entry] of Object.entries(cache)) {
+      const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
+      if (timestamp && now - timestamp > maxAgeMs) {
+        delete cache[key];
+        modified = true;
+      }
+    }
+
+    return modified;
+  }
+
+  /**
    * Clean up old cache entries
    * @returns {Promise<void>}
    */
@@ -1026,17 +1052,7 @@ class PerplexityService {
       const cache = await this._loadCache();
       if (!cache) return;
 
-      const now = Date.now();
-      let modified = false;
-
-      for (const [key, entry] of Object.entries(cache)) {
-        const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
-        if (timestamp && now - timestamp > config.CACHE.MAX_AGE_MS) {
-          delete cache[key];
-          modified = true;
-        }
-      }
-
+      const modified = this._pruneExpiredEntries(cache, config.CACHE.MAX_AGE_MS);
       if (modified) {
         await this._saveCache(cache);
       }

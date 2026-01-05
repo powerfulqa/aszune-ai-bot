@@ -51,6 +51,34 @@ class DataStorage {
   }
 
   /**
+   * Check if error is a JSON parsing error
+   * @private
+   */
+  _isJsonError(error) {
+    return (
+      error instanceof SyntaxError || error.name === 'SyntaxError' || error.message.includes('JSON')
+    );
+  }
+
+  /**
+   * Handle corrupted JSON file by backup and reset
+   * @private
+   */
+  async _handleCorruptedFile(error) {
+    logger.warn(`Corrupted user stats file (${error.message}), resetting to empty stats`);
+    try {
+      const backupPath = `${this.statsFile}.corrupted.${Date.now()}`;
+      await fs.writeFile(backupPath, '');
+      logger.info(`Backed up corrupted user stats to ${backupPath}`);
+
+      await fs.writeFile(this.statsFile, JSON.stringify({}, null, 2));
+      logger.info('Reset user stats file to valid empty JSON');
+    } catch (writeError) {
+      logger.error('Failed to reset user stats file:', writeError);
+    }
+  }
+
+  /**
    * Load user stats from disk
    * @returns {Object} - User stats object
    */
@@ -71,30 +99,12 @@ class DataStorage {
       return stats;
     } catch (error) {
       if (error.code === 'ENOENT') {
-        // File doesn't exist yet, return empty object
         logger.debug('No user stats file found, starting with empty stats');
         return {};
       }
 
-      if (
-        error instanceof SyntaxError ||
-        error.name === 'SyntaxError' ||
-        error.message.includes('JSON')
-      ) {
-        // Corrupted JSON file - log and recover
-        logger.warn(`Corrupted user stats file (${error.message}), resetting to empty stats`);
-        try {
-          // Backup corrupted file
-          const backupPath = `${this.statsFile}.corrupted.${Date.now()}`;
-          await fs.writeFile(backupPath, '');
-          logger.info(`Backed up corrupted user stats to ${backupPath}`);
-
-          // Attempt to fix by writing valid empty JSON
-          await fs.writeFile(this.statsFile, JSON.stringify({}, null, 2));
-          logger.info('Reset user stats file to valid empty JSON');
-        } catch (writeError) {
-          logger.error('Failed to reset user stats file:', writeError);
-        }
+      if (this._isJsonError(error)) {
+        await this._handleCorruptedFile(error);
         return {};
       }
 

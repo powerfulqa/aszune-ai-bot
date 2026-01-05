@@ -38,11 +38,51 @@ class ReminderService extends EventEmitter {
     }
   }
 
+  /**
+   * Schedule long-running interval check for reminders > 24 hours
+   * @private
+   */
+  _scheduleIntervalCheck(reminder, scheduledTime) {
+    const checkInterval = setInterval(async () => {
+      const now = new Date();
+      if (now >= scheduledTime) {
+        clearInterval(checkInterval);
+        this.activeTimers.delete(reminder.id);
+        await this.executeReminder(reminder);
+      }
+    }, 60000); // Check every minute
+
+    // Ensure this interval never prevents process exit (important for tests)
+    if (checkInterval && typeof checkInterval.unref === 'function') {
+      checkInterval.unref();
+    }
+
+    this.activeTimers.set(reminder.id, { type: 'interval', timer: checkInterval });
+  }
+
+  /**
+   * Schedule timeout for reminders within 24 hours
+   * @private
+   */
+  _scheduleTimeout(reminder, delay) {
+    const timer = setTimeout(async () => {
+      await this.executeReminder(reminder);
+    }, delay);
+
+    // Ensure this timeout never prevents process exit (important for tests)
+    if (timer && typeof timer.unref === 'function') {
+      timer.unref();
+    }
+
+    this.activeTimers.set(reminder.id, { type: 'timeout', timer });
+  }
+
   async scheduleReminder(reminder) {
+    const MAX_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
     try {
       const scheduledTime = new Date(reminder.scheduled_time);
-      const now = new Date();
-      const delay = scheduledTime.getTime() - now.getTime();
+      const delay = scheduledTime.getTime() - Date.now();
 
       // Don't schedule reminders that are already past
       if (delay <= 0) {
@@ -54,39 +94,13 @@ class ReminderService extends EventEmitter {
       // Clear any existing timer for this reminder
       this.clearReminderTimer(reminder.id);
 
-      // Schedule the reminder with maximum timeout protection
-      // Use periodic check for very long delays (> 24 hours) to prevent memory leaks
-      const MAX_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
+      // Schedule based on delay duration
       if (delay > MAX_TIMEOUT) {
-        // For long delays, schedule a periodic check instead
-        const checkInterval = setInterval(async () => {
-          const now = new Date();
-          if (now >= scheduledTime) {
-            clearInterval(checkInterval);
-            this.activeTimers.delete(reminder.id);
-            await this.executeReminder(reminder);
-          }
-        }, 60000); // Check every minute
-
-        // Ensure this interval never prevents process exit (important for tests)
-        if (checkInterval && typeof checkInterval.unref === 'function') {
-          checkInterval.unref();
-        }
-
-        this.activeTimers.set(reminder.id, { type: 'interval', timer: checkInterval });
+        this._scheduleIntervalCheck(reminder, scheduledTime);
       } else {
-        const timer = setTimeout(async () => {
-          await this.executeReminder(reminder);
-        }, delay);
-
-        // Ensure this timeout never prevents process exit (important for tests)
-        if (timer && typeof timer.unref === 'function') {
-          timer.unref();
-        }
-
-        this.activeTimers.set(reminder.id, { type: 'timeout', timer });
+        this._scheduleTimeout(reminder, delay);
       }
+
       logger.debug(`Scheduled reminder ${reminder.id} for ${scheduledTime.toISOString()}`);
     } catch (error) {
       logger.error(`Failed to schedule reminder ${reminder.id}:`, error);

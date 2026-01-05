@@ -49,10 +49,7 @@ class CacheManager {
     }, config.CACHE.CLEANUP_INTERVAL_MS);
 
     // Ensure this background interval never prevents process exit (esp. in tests)
-    if (
-      this.cacheCleanupInterval &&
-      typeof this.cacheCleanupInterval.unref === 'function'
-    ) {
+    if (this.cacheCleanupInterval && typeof this.cacheCleanupInterval.unref === 'function') {
       this.cacheCleanupInterval.unref();
     }
   }

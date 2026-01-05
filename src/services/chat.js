@@ -330,51 +330,65 @@ async function processUserMessageStorage(userId, messageContent, username = null
  * @param {string} messageContent - Current message content
  * @returns {Array} Conversation history
  */
+/**
+ * Filter messages by session timeout and deduplication
+ * @private
+ */
+function filterRecentMessages(dbHistory, messageContent, sessionTimeoutMs) {
+  const sessionCutoffTime = new Date(Date.now() - sessionTimeoutMs).toISOString();
+  const recentMessages = dbHistory.filter((msg) => msg.timestamp >= sessionCutoffTime);
+
+  if (recentMessages.length === 0) return null;
+
+  // Filter out recent identical messages using timestamps to prevent duplication
+  const cutoffTime = new Date(Date.now() - 30000).toISOString(); // 30 seconds ago
+  return recentMessages.filter(
+    (msg) => msg.message !== messageContent || msg.timestamp < cutoffTime
+  );
+}
+
 async function loadConversationHistory(userId, messageContent) {
   let conversationHistory = conversationManager.getHistory(userId);
 
   // Supplement with database conversation history if conversation is new or short
-  if (conversationHistory.length <= 1 && userId) {
-    try {
-      // Access config inside function to prevent circular dependencies
-      const config = require('../config/config');
-      const dbLimit = config.DATABASE_CONVERSATION_LIMIT || 20;
-      const SESSION_TIMEOUT_MS = config.SESSION_TIMEOUT_MS || 30 * 60 * 1000; // 30 minutes default
+  if (conversationHistory.length > 1 || !userId) {
+    return conversationHistory;
+  }
 
-      const dbConversationHistory = databaseService.getConversationHistory(userId, dbLimit);
-      if (dbConversationHistory && dbConversationHistory.length > 0) {
-        // Filter messages by session timeout - only load recent messages within last 30 minutes
-        const sessionCutoffTime = new Date(Date.now() - SESSION_TIMEOUT_MS).toISOString();
-        const recentMessages = dbConversationHistory.filter(
-          (msg) => msg.timestamp >= sessionCutoffTime
-        );
+  try {
+    // Access config inside function to prevent circular dependencies
+    const config = require('../config/config');
+    const dbLimit = config.DATABASE_CONVERSATION_LIMIT || 20;
+    const SESSION_TIMEOUT_MS = config.SESSION_TIMEOUT_MS || 30 * 60 * 1000; // 30 minutes default
 
-        // If no recent messages, start fresh (session timeout expired)
-        if (recentMessages.length === 0) {
-          logger.debug(
-            `Session timeout: No messages within ${SESSION_TIMEOUT_MS / 60000} minutes for user ${userId}`
-          );
-          return conversationHistory; // Return only current in-memory history
-        }
-
-        // Add database history to conversation manager for context
-        // Filter out recent identical messages using timestamps to prevent duplication
-        const cutoffTime = new Date(Date.now() - 30000).toISOString(); // 30 seconds ago
-        const historicalMessages = recentMessages.filter(
-          (msg) => msg.message !== messageContent || msg.timestamp < cutoffTime
-        );
-
-        historicalMessages.forEach((msg) => {
-          conversationManager.addMessage(userId, msg.role, msg.message);
-        });
-
-        // Update conversation history after adding database history
-        conversationHistory = conversationManager.getHistory(userId);
-      }
-    } catch (dbError) {
-      logger.warn('Failed to load conversation history from database:', dbError.message);
-      // Continue with in-memory history only
+    const dbConversationHistory = databaseService.getConversationHistory(userId, dbLimit);
+    if (!dbConversationHistory || dbConversationHistory.length === 0) {
+      return conversationHistory;
     }
+
+    const historicalMessages = filterRecentMessages(
+      dbConversationHistory,
+      messageContent,
+      SESSION_TIMEOUT_MS
+    );
+
+    if (!historicalMessages) {
+      logger.debug(
+        `Session timeout: No messages within ${SESSION_TIMEOUT_MS / 60000} minutes for user ${userId}`
+      );
+      return conversationHistory;
+    }
+
+    // Add database history to conversation manager for context
+    historicalMessages.forEach((msg) => {
+      conversationManager.addMessage(userId, msg.role, msg.message);
+    });
+
+    // Update conversation history after adding database history
+    conversationHistory = conversationManager.getHistory(userId);
+  } catch (dbError) {
+    logger.warn('Failed to load conversation history from database:', dbError.message);
+    // Continue with in-memory history only
   }
 
   return conversationHistory;

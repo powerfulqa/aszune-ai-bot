@@ -900,6 +900,7 @@ describe('Service - Edge Cases', () => {
 ### When to Escalate
 
 If you encounter:
+
 - Security vulnerabilities requiring immediate attention
 - Breaking changes to core architecture
 - Test failures that cannot be resolved
