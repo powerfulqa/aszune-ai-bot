@@ -102,7 +102,7 @@ async function fetchWithTimeout(url, payload) {
 function buildHeaders(payload) {
   const headers = {
     'Content-Type': 'application/json',
-    'X-Bot-Version': '1.10.0',
+    'X-Bot-Version': '1.11.0',
   };
 
   if (payload.instanceKey) {

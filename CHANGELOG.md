@@ -7,6 +7,38 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-01-07
+
+### New Features
+
+- **`/userinfo` Command**: Display comprehensive user information
+  - Account creation date and age
+  - Server join date and position
+  - Current status and activity
+  - Roles with permission highlights
+  - Discord badges detection
+  - Avatar display
+- **`/serverinfo` Command**: Display detailed server statistics
+  - Member breakdown (humans, bots, online)
+  - Channel counts by type (text, voice, forum, stage)
+  - Role statistics (total, hoisted, managed)
+  - Boost status and tier
+  - Emoji and sticker counts
+  - Security settings
+  - Server features (Community, Verified, etc.)
+
+### Technical Improvements
+
+- New embed builders following established architecture pattern
+- Helper functions exported for reusability
+- Proper error handling with ErrorHandler integration
+
+### Documentation
+
+- Added RELEASE-NOTES-v1.11.0.md
+- Updated wiki Command-Reference.md
+- Updated help command output
+
 ## [1.10.0] - 2025-01-17
 
 ### Code Quality Excellence

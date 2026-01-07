@@ -1,6 +1,6 @@
 # Command Reference
 
-All commands available in Aszune AI Bot v1.10.0.
+All commands available in Aszune AI Bot v1.11.0.
 
 ## Web Dashboard
 
@@ -10,6 +10,13 @@ Access real-time monitoring at `http://localhost:3000` when the bot is running.
 
 **Slash commands** (`/`) are preferred. Legacy `!` commands work for backward compatibility but are
 deprecated.
+
+### Utility Commands (NEW in v1.11.0)
+
+| Command       | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `/userinfo`   | Display detailed information about a user            |
+| `/serverinfo` | Display detailed information about the current server |
 
 ### Reminder Commands (NEW in v1.7.0)
 
@@ -156,6 +163,88 @@ Your Aszune AI Bot Stats:
 Messages sent: 42
 Summaries requested: 7
 ```
+
+---
+
+## Utility Commands
+
+### User Info Command (NEW in v1.11.0)
+
+**Usage:**
+
+- `!userinfo [user]`
+- `/userinfo [user]`
+
+**Description:** Displays comprehensive information about a Discord user including account details,
+server presence, roles, badges, and activity.
+
+**Parameters:**
+
+- `[user]` (optional): The user to get info about. Defaults to yourself if not specified.
+
+**Example:**
+
+```
+/userinfo @Username
+```
+
+**Output:** Shows detailed user information embed with:
+
+- **User Details**: Username, user ID, bot status
+- **Status**: Current online status with emoji indicator (🟢 Online, 🟡 Idle, 🔴 DND, ⚫ Offline)
+- **Account Created**: Account creation date with relative time (e.g., "5 years ago")
+- **Joined Server**: Server join date with relative time and join position (#42)
+- **Nickname**: Server nickname if different from username
+- **Activity**: Current activity (Playing, Streaming, Listening, Watching, Custom Status)
+- **Badges**: Discord badges (HypeSquad, Early Supporter, Active Developer, etc.)
+- **Roles**: List of roles (up to 10 shown, with count of additional roles)
+- **Key Permissions**: Administrative and moderation permissions highlighted
+
+**Technical Details:**
+
+- Uses Discord API `guild.members.fetch()` for member data
+- Join position calculated by sorting all members by join date
+- Badge detection from Discord user flags
+- Presence data requires Presence Intent enabled
+- Color matches user's highest role color
+
+---
+
+### Server Info Command (NEW in v1.11.0)
+
+**Usage:**
+
+- `!serverinfo`
+- `/serverinfo`
+
+**Description:** Displays comprehensive information about the current Discord server including
+member statistics, channels, roles, boost status, and security settings.
+
+**Example:**
+
+```
+/serverinfo
+```
+
+**Output:** Shows detailed server information embed with:
+
+- **Server Overview**: Server name, ID, owner, creation date
+- **Members**: Total count with breakdown (humans, bots, online estimate)
+- **Channels**: Count by type (text, voice, category, forum, stage, announcement)
+- **Roles**: Total roles with hoisted and managed (bot) role counts
+- **Boost Status**: Tier level, boost count, and unlocked features
+- **Emojis & Stickers**: Static, animated, and sticker counts
+- **Security**: Verification level and content filter settings
+- **Features**: Community, Verified, Partnered, Discoverable badges if present
+- **Banner**: Server banner image if available
+
+**Technical Details:**
+
+- Uses established guild member stats utility for consistent counts
+- Includes timeout protection for large servers
+- Shows server description if set
+- Displays server icon and banner images
+- Color uses default Discord blurple (0x5865F2)
 
 ---
 
@@ -519,6 +608,16 @@ responding further.
 
 ## Version Updates
 
+### v1.11.0 - Enhanced Utility Commands (Current)
+
+- **`/userinfo` Command**: Display comprehensive user information including account age, join
+  position, roles, badges, activity, and key permissions
+- **`/serverinfo` Command**: Display detailed server statistics including member breakdown, channel
+  counts, boost status, emoji stats, and security settings
+- **Embed Architecture**: New embed builders following established patterns for maintainability
+- **Helper Functions**: Reusable utilities for badge detection, time formatting, and stats
+  calculation
+
 ### v1.7.0 - Reminder System & Natural Language Processing
 
 - **Reminder Commands**: Complete reminder system with `!remind`, `!reminders`, and
@@ -532,7 +631,7 @@ responding further.
 - **Reminder Notifications**: Discord ping notifications when reminders trigger
 - **Comprehensive Testing**: Full test coverage for reminder functionality
 
-### v1.6.0 - Analytics Integration (Current)
+### v1.6.0 - Analytics Integration
 
 - **Discord Analytics Commands**: Three new commands (`/analytics`, `/dashboard`, `/resources`)
   provide comprehensive system monitoring directly in Discord

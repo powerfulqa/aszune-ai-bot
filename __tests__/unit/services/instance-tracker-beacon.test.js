@@ -55,7 +55,7 @@ describe('beacon helper', () => {
       const result = buildHeaders({});
 
       expect(result['Content-Type']).toBe('application/json');
-      expect(result['X-Bot-Version']).toBe('1.10.0');
+      expect(result['X-Bot-Version']).toBe('1.11.0');
     });
 
     it('should include instance key when provided', () => {

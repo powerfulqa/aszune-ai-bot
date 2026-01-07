@@ -1,12 +1,12 @@
-# Aszune AI Bot (v1.10.0)
+# Aszune AI Bot (v1.11.0)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-1708%2B%20Passing-brightgreen.svg)](#testing--coverage)
+[![Tests](https://img.shields.io/badge/Tests-1800%2B%20Passing-brightgreen.svg)](#testing--coverage)
 
-[Release Notes](./docs/RELEASE-NOTES-v1.10.0.md) |
+[Release Notes](./docs/RELEASE-NOTES-v1.11.0.md) |
 [Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
 
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
@@ -51,9 +51,11 @@ performance dashboards and server analytics directly within Discord.
 - ⏰ **Reminder System:** `/remind`, `/reminders`, `/cancelreminder` - AI-powered natural language
   reminders
 - 📊 **Analytics:** `/analytics`, `/dashboard`, `/resources`, `/cache` - comprehensive monitoring
+- 👤 **User Info:** `/userinfo [user]` - detailed user information with badges, roles, and activity
+- 🏠 **Server Info:** `/serverinfo` - comprehensive server statistics and features
 - 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
 - 📋 **Slash Command Support:** All commands available as modern Discord slash commands
-- 🧪 **Comprehensive Testing:** 1,708+ tests with 70%+ coverage on critical components
+- 🧪 **Comprehensive Testing:** 1,800+ tests with 70%+ coverage on critical components
 - 🌐 **Web Dashboard:** Optional Express + Socket.io dashboard with live metrics
 - 💾 **Persistent Storage:** SQLite database for conversation history and user analytics
 - 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3 to Pi 5 (primary
@@ -202,6 +204,13 @@ starting the bot, and enables automatic restart after a reboot.
 | `/summary`          | Summarises your current conversation in UK English          |
 | `/summarise <text>` | Summarises any provided text in UK English                  |
 | `/stats`            | Shows your usage stats (messages sent, summaries requested) |
+
+### Utility Commands (NEW in v1.11.0)
+
+| Command       | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `/userinfo`   | Display detailed information about a user            |
+| `/serverinfo` | Display detailed information about the current server |
 
 ### Reminder Commands (NEW in v1.7.0)
 
@@ -499,6 +508,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for full version history.
 
 For detailed release notes:
 
+- [v1.11.0](./docs/RELEASE-NOTES-v1.11.0.md) - Enhanced Utility Commands (/userinfo, /serverinfo)
 - [v1.10.0](./docs/RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup
 - [v1.9.0](./docs/RELEASE-NOTES-v1.9.0.md) - Dashboard Enhancements
 - [v1.8.0](./docs/RELEASE-NOTES-v1.8.0.md) - Web Dashboard

@@ -14,7 +14,7 @@ const LOCATION_SERVICES = [
 ];
 
 const REQUEST_TIMEOUT_MS = 10000;
-const USER_AGENT = 'AszuneAIBot/1.10.0';
+const USER_AGENT = 'AszuneAIBot/1.11.0';
 
 /**
  * Get IP address and geolocation

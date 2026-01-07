@@ -299,6 +299,8 @@ describe('Help Command', () => {
         '`/remind <time> <message>` - Set a reminder\n' +
         '`/reminders` - List your active reminders\n' +
         '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+        '`/userinfo [user]` - Show detailed user information\n' +
+        '`/serverinfo` - Show detailed server information\n' +
         'Simply chat as normal to talk to the bot!'
     );
   });

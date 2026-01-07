@@ -1,6 +1,6 @@
 ### Aszune AI Bot
 
-**[Home](Home)** • v1.10.0
+**[Home](Home)** • v1.11.0
 
 ---
 
@@ -34,5 +34,5 @@
 
 ### Resources
 
-- [Release Notes](../docs/RELEASE-NOTES-v1.10.0.md)
+- [Release Notes](../docs/RELEASE-NOTES-v1.11.0.md)
 - [GitHub](https://github.com/powerfulqa/aszune-ai-bot)

@@ -23,6 +23,9 @@ const {
   buildDashboardEmbed,
   buildResourcesEmbed,
   buildCacheEmbed,
+  buildUserInfoEmbed,
+  buildServerInfoEmbed,
+  getJoinPosition,
 } = require('./embeds');
 
 /**
@@ -106,6 +109,8 @@ const commands = {
           '`/remind <time> <message>` - Set a reminder\n' +
           '`/reminders` - List your active reminders\n' +
           '`/cancelreminder <id>` - Cancel a specific reminder\n' +
+          '`/userinfo [user]` - Show detailed user information\n' +
+          '`/serverinfo` - Show detailed server information\n' +
           'Simply chat as normal to talk to the bot!'
       );
     },
@@ -620,6 +625,72 @@ const commands = {
         return interaction.reply(errorResponse.message);
       }
     },
+  },
+
+  userinfo: {
+    data: {
+      name: 'userinfo',
+      description: 'Display detailed information about a user',
+      options: [
+        {
+          name: 'user',
+          description: 'The user to get info about (defaults to yourself)',
+          type: ApplicationCommandOptionType.User,
+          required: false,
+        },
+      ],
+    },
+    async execute(interaction) {
+      try {
+        await interaction.deferReply();
+
+        const user = interaction.options.getUser('user') || interaction.user;
+        const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+
+        // Get join position
+        const joinPosition = member ? await getJoinPosition(interaction.guild, member) : null;
+
+        // Get presence
+        const presence = member?.presence || null;
+
+        const embed = buildUserInfoEmbed(user, member, { joinPosition, presence });
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        logger.error('Error fetching user info:', error);
+        const errorResponse = ErrorHandler.handleError(error, 'userinfo_command');
+        return interaction.editReply({ content: errorResponse.message });
+      }
+    },
+    textCommand: '!userinfo',
+  },
+
+  serverinfo: {
+    data: {
+      name: 'serverinfo',
+      description: 'Display detailed information about this server',
+    },
+    async execute(interaction) {
+      try {
+        await interaction.deferReply();
+
+        const guild = interaction.guild;
+        if (!guild) {
+          return interaction.editReply('This command can only be used in a server.');
+        }
+
+        // Get member stats
+        const { onlineCount, botCount, humanMembers } = await getGuildMemberStats(guild);
+        const memberStats = { onlineCount, botCount, humanMembers };
+
+        const embed = buildServerInfoEmbed(guild, { memberStats });
+        return interaction.editReply({ embeds: [embed] });
+      } catch (error) {
+        logger.error('Error fetching server info:', error);
+        const errorResponse = ErrorHandler.handleError(error, 'serverinfo_command');
+        return interaction.editReply({ content: errorResponse.message });
+      }
+    },
+    textCommand: '!serverinfo',
   },
 };
 

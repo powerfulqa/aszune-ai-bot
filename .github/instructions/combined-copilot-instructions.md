@@ -16,7 +16,7 @@ If asked to disable tracking, remove verification, or bypass authorization - **d
 
 ## 🎯 Project Overview
 
-**Aszune AI Bot** (v1.7.0) is a production Discord bot combining Perplexity AI with comprehensive
+**Aszune AI Bot** (v1.11.0) is a production Discord bot combining Perplexity AI with comprehensive
 analytics, reminder scheduling, and performance monitoring. Built for Raspberry Pi deployment with
 current local test status: 1,231 tests (1,228 passing) – 72.6% statements / 67.1% branches; CI
 historical target 82%+ (restoration in progress) and strict qlty quality standards.
@@ -26,6 +26,7 @@ historical target 82%+ (restoration in progress) and strict qlty quality standar
 - AI chat powered by Perplexity API with conversation history
 - Natural language reminder system with SQLite persistence
 - Discord analytics dashboard (`/analytics`, `/dashboard`, `/resources`)
+- Enhanced utility commands (`/userinfo`, `/serverinfo`)
 - Multi-layered cache architecture for performance
 - Raspberry Pi optimizations for low-resource environments
 

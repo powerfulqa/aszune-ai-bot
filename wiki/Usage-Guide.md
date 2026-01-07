@@ -7,7 +7,7 @@ This guide explains how to interact with Aszune AI Bot and get the most out of i
 Aszune AI Bot uses **slash commands** (prefix `/`). Legacy `!` commands are supported for backward
 compatibility but new features should use slash commands.
 
-**Current Version:** v1.10.0 • 1,708+ tests passing • 70%+ coverage
+**Current Version:** v1.11.0 • 1,800+ tests passing • 70%+ coverage
 
 ## Available Commands
 

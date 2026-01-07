@@ -21,12 +21,13 @@ Features include:
 - 🌐 **Dashboard** – Real-time web monitoring at `http://localhost:3000`
 - 🍓 **Pi Optimised** – Runs efficiently on Raspberry Pi
 
-## Current Version: v1.10.0
+## Current Version: v1.11.0
 
-**1,708+ tests passing** • 70%+ coverage • [Release Notes](../docs/RELEASE-NOTES-v1.10.0.md)
+**1,800+ tests passing** • 70%+ coverage • [Release Notes](../docs/RELEASE-NOTES-v1.11.0.md)
 
 ### Recent Updates
 
+- v1.11.0 – Enhanced `/userinfo` and `/serverinfo` utility commands
 - v1.10.0 – Code quality improvements, documentation cleanup
 - v1.9.0 – Dashboard features: logs, services, config, network, reminders
 - v1.8.0 – Web dashboard with Socket.IO
