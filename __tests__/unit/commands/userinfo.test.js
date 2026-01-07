@@ -27,7 +27,6 @@ jest.mock('../../../src/utils/conversation', () => {
 });
 
 const { handleSlashCommand } = require('../../../src/commands/index');
-const { ErrorHandler } = require('../../../src/utils/error-handler');
 
 describe('UserInfo Command', () => {
   const mockMember = {
@@ -267,13 +266,11 @@ describe('UserInfo Command', () => {
 
 describe('UserInfo Embed Builder', () => {
   const {
-    buildUserInfoEmbed,
     getStatusEmoji,
     getTimeAgo,
     capitalise,
     getUserBadges,
     getKeyPermissions,
-    formatActivity,
   } = require('../../../src/commands/embeds/userinfo-embed');
 
   describe('getStatusEmoji', () => {
@@ -415,6 +412,14 @@ describe('UserInfo Embed Builder', () => {
       expect(perms).toContain('KickMembers');
     });
   });
+});
+
+// Split into separate describe block to reduce arrow function line count
+describe('UserInfo Embed Builder - Advanced', () => {
+  const {
+    formatActivity,
+    buildUserInfoEmbed,
+  } = require('../../../src/commands/embeds/userinfo-embed');
 
   describe('formatActivity', () => {
     it('should return None for null activity', () => {

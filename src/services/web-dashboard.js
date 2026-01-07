@@ -1828,7 +1828,9 @@ class WebDashboardService {
       const deleted = this._deleteReminderFromDb(reminderId, userId);
 
       if (!deleted) {
-        logger.warn(`Delete failed - reminder not found: ${reminderId} for user ${userId || 'admin'}`);
+        logger.warn(
+          `Delete failed - reminder not found: ${reminderId} for user ${userId || 'admin'}`
+        );
         return this._sendDeleteResponse(callback, {
           error: 'Reminder not found or already deleted',
           deleted: false,
@@ -1837,7 +1839,11 @@ class WebDashboardService {
       }
 
       logger.info(`Reminder deleted: ${reminderId}`);
-      this._sendDeleteResponse(callback, { deleted: true, reminderId, timestamp: new Date().toISOString() });
+      this._sendDeleteResponse(callback, {
+        deleted: true,
+        reminderId,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
       logger.error('Error deleting reminder:', error);
       this._sendDeleteResponse(callback, { error: error.message, deleted: false });

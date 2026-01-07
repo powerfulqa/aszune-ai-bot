@@ -84,11 +84,7 @@ describe('ServerInfo Command', () => {
     emojis: {
       cache: {
         filter: jest.fn().mockImplementation((callback) => {
-          const emojis = [
-            { animated: false },
-            { animated: true },
-            { animated: false },
-          ];
+          const emojis = [{ animated: false }, { animated: true }, { animated: false }];
           return { size: emojis.filter(callback).length };
         }),
         size: 25,
@@ -243,16 +239,11 @@ describe('ServerInfo Command', () => {
 
 describe('ServerInfo Embed Builder', () => {
   const {
-    buildServerInfoEmbed,
     getVerificationLevel,
     getContentFilter,
     getBoostTier,
     getBoostEmoji,
     getChannelCounts,
-    getRoleStats,
-    getEmojiStats,
-    getStickerStats,
-    getTimeAgo,
   } = require('../../../src/commands/embeds/serverinfo-embed');
 
   describe('getVerificationLevel', () => {
@@ -385,6 +376,17 @@ describe('ServerInfo Embed Builder', () => {
       expect(counts.total).toBe(8);
     });
   });
+});
+
+// Split into separate describe block to reduce arrow function line count
+describe('ServerInfo Embed Builder - Stats', () => {
+  const {
+    getRoleStats,
+    getEmojiStats,
+    getStickerStats,
+    getTimeAgo,
+    buildServerInfoEmbed,
+  } = require('../../../src/commands/embeds/serverinfo-embed');
 
   describe('getRoleStats', () => {
     const mockGuild = {
@@ -424,11 +426,7 @@ describe('ServerInfo Embed Builder', () => {
       emojis: {
         cache: {
           filter: jest.fn().mockImplementation((callback) => {
-            const emojis = [
-              { animated: false },
-              { animated: true },
-              { animated: false },
-            ];
+            const emojis = [{ animated: false }, { animated: true }, { animated: false }];
             return { size: emojis.filter(callback).length };
           }),
           size: 3,

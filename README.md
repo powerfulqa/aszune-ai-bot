@@ -207,9 +207,9 @@ starting the bot, and enables automatic restart after a reboot.
 
 ### Utility Commands (NEW in v1.11.0)
 
-| Command       | Description                                          |
-| ------------- | ---------------------------------------------------- |
-| `/userinfo`   | Display detailed information about a user            |
+| Command       | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| `/userinfo`   | Display detailed information about a user             |
 | `/serverinfo` | Display detailed information about the current server |
 
 ### Reminder Commands (NEW in v1.7.0)

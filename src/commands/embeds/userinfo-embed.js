@@ -3,6 +3,8 @@
  * Generates Discord embed for /userinfo command
  */
 
+const { getTimeAgo } = require('../../utils/time-ago');
+
 /**
  * Discord user badge flag mappings
  */
@@ -35,34 +37,6 @@ function getStatusEmoji(status) {
     invisible: '⚫',
   };
   return statusMap[status] || '⚫';
-}
-
-/**
- * Format time ago string
- * @param {Date} date - Date to format
- * @returns {string} Formatted time ago string
- */
-function getTimeAgo(date) {
-  const now = new Date();
-  const diffMs = now - date;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffMonths = Math.floor(diffDays / 30);
-  const diffYears = Math.floor(diffDays / 365);
-
-  if (diffYears > 0) {
-    return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
-  } else if (diffMonths > 0) {
-    return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
-  } else if (diffDays > 0) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    }
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-  }
 }
 
 /**
@@ -181,10 +155,24 @@ function buildCoreFields(user, member, options) {
 
   return [
     { name: '👤 User', value: `${user}\n\`${user.id}\``, inline: true },
-    { name: `${status} Status`, value: presence?.status ? capitalise(presence.status) : 'Offline', inline: true },
+    {
+      name: `${status} Status`,
+      value: presence?.status ? capitalise(presence.status) : 'Offline',
+      inline: true,
+    },
     { name: '🤖 Bot', value: user.bot ? 'Yes' : 'No', inline: true },
-    { name: '📅 Account Created', value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>\n(${getTimeAgo(accountCreated)})`, inline: true },
-    { name: '📥 Joined Server', value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:F>\n(${getTimeAgo(joinedAt)})` : 'Not in server', inline: true },
+    {
+      name: '📅 Account Created',
+      value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>\n(${getTimeAgo(accountCreated)})`,
+      inline: true,
+    },
+    {
+      name: '📥 Joined Server',
+      value: joinedAt
+        ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:F>\n(${getTimeAgo(joinedAt)})`
+        : 'Not in server',
+      inline: true,
+    },
     { name: '🏅 Join Position', value: joinPosition ? `#${joinPosition}` : 'N/A', inline: true },
   ];
 }
@@ -212,9 +200,17 @@ function buildOptionalFields(user, member, options) {
   if (badges.length > 0) {
     fields.push({ name: '🎖️ Badges', value: badges.join('\n'), inline: false });
   }
-  fields.push({ name: `🎭 Roles [${member ? member.roles.cache.size - 1 : 0}]`, value: getRolesDisplay(member), inline: false });
+  fields.push({
+    name: `🎭 Roles [${member ? member.roles.cache.size - 1 : 0}]`,
+    value: getRolesDisplay(member),
+    inline: false,
+  });
   if (keyPermissions.length > 0) {
-    fields.push({ name: '🔑 Key Permissions', value: keyPermissions.map((p) => `\`${p}\``).join(', '), inline: false });
+    fields.push({
+      name: '🔑 Key Permissions',
+      value: keyPermissions.map((p) => `\`${p}\``).join(', '),
+      inline: false,
+    });
   }
 
   return fields;
@@ -229,7 +225,9 @@ function buildOptionalFields(user, member, options) {
 async function getJoinPosition(guild, member) {
   try {
     const members = await guild.members.fetch();
-    const sortedMembers = [...members.values()].sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
+    const sortedMembers = [...members.values()].sort(
+      (a, b) => a.joinedTimestamp - b.joinedTimestamp
+    );
     return sortedMembers.findIndex((m) => m.id === member.id) + 1;
   } catch {
     return null;

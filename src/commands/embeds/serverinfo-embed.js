@@ -3,6 +3,8 @@
  * Generates Discord embed for /serverinfo command
  */
 
+const { getTimeAgo } = require('../../utils/time-ago');
+
 /**
  * Get verification level display string
  * @param {GuildVerificationLevel} level - Verification level
@@ -129,34 +131,6 @@ function getStickerStats(guild) {
 }
 
 /**
- * Format time ago string
- * @param {Date} date - Date to format
- * @returns {string} Formatted time ago string
- */
-function getTimeAgo(date) {
-  const now = new Date();
-  const diffMs = now - date;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffMonths = Math.floor(diffDays / 30);
-  const diffYears = Math.floor(diffDays / 365);
-
-  if (diffYears > 0) {
-    return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
-  } else if (diffMonths > 0) {
-    return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
-  } else if (diffDays > 0) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    }
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-  }
-}
-
-/**
  * Build core server info fields
  * @param {Guild} guild - Discord guild
  * @param {Object} memberStats - Member statistics
@@ -171,9 +145,17 @@ function buildCoreFields(guild, memberStats) {
 
   return [
     { name: '👑 Owner', value: `<@${guild.ownerId}>`, inline: true },
-    { name: '📅 Created', value: `<t:${Math.floor(createdAt.getTime() / 1000)}:D>\n(${getTimeAgo(createdAt)})`, inline: true },
+    {
+      name: '📅 Created',
+      value: `<t:${Math.floor(createdAt.getTime() / 1000)}:D>\n(${getTimeAgo(createdAt)})`,
+      inline: true,
+    },
     { name: '🆔 Server ID', value: `\`${guild.id}\``, inline: true },
-    { name: `👥 Members [${totalMembers}]`, value: `👤 Humans: ${humanCount}\n🤖 Bots: ${botCount}\n🟢 Online: ~${onlineMembers}`, inline: true },
+    {
+      name: `👥 Members [${totalMembers}]`,
+      value: `👤 Humans: ${humanCount}\n🤖 Bots: ${botCount}\n🟢 Online: ~${onlineMembers}`,
+      inline: true,
+    },
   ];
 }
 
@@ -192,7 +174,11 @@ function buildChannelRoleFields(guild) {
 
   return [
     { name: `💬 Channels [${channelCounts.total}]`, value: channelValue, inline: true },
-    { name: `🎭 Roles [${roleStats.total}]`, value: `📌 Hoisted: ${roleStats.hoisted}\n🔗 Managed: ${roleStats.managed}`, inline: true },
+    {
+      name: `🎭 Roles [${roleStats.total}]`,
+      value: `📌 Hoisted: ${roleStats.hoisted}\n🔗 Managed: ${roleStats.managed}`,
+      inline: true,
+    },
   ];
 }
 
@@ -217,7 +203,11 @@ function buildBoostEmojiFields(guild) {
   return [
     { name: `${getBoostEmoji(boostTier)} Boost Status`, value: boostValue, inline: true },
     { name: `😀 Emojis [${emojiStats.total}]`, value: emojiValue, inline: true },
-    { name: '🔒 Security', value: `Verification: ${getVerificationLevel(guild.verificationLevel)}\nContent Filter: ${getContentFilter(guild.explicitContentFilter)}`, inline: true },
+    {
+      name: '🔒 Security',
+      value: `Verification: ${getVerificationLevel(guild.verificationLevel)}\nContent Filter: ${getContentFilter(guild.explicitContentFilter)}`,
+      inline: true,
+    },
   ];
 }
 
@@ -228,12 +218,19 @@ function buildBoostEmojiFields(guild) {
  */
 function getFeaturesField(guild) {
   const featureMap = {
-    COMMUNITY: '🏘️ Community', VERIFIED: '✅ Verified', PARTNERED: '🤝 Partnered',
-    DISCOVERABLE: '🔍 Discoverable', WELCOME_SCREEN_ENABLED: '👋 Welcome Screen',
-    VANITY_URL: '🔗 Vanity URL', ANIMATED_ICON: '🎞️ Animated Icon', BANNER: '🖼️ Banner',
+    COMMUNITY: '🏘️ Community',
+    VERIFIED: '✅ Verified',
+    PARTNERED: '🤝 Partnered',
+    DISCOVERABLE: '🔍 Discoverable',
+    WELCOME_SCREEN_ENABLED: '👋 Welcome Screen',
+    VANITY_URL: '🔗 Vanity URL',
+    ANIMATED_ICON: '🎞️ Animated Icon',
+    BANNER: '🖼️ Banner',
   };
   const notable = guild.features.filter((f) => featureMap[f]).map((f) => featureMap[f]);
-  return notable.length > 0 ? { name: '✨ Features', value: notable.join(' • '), inline: false } : null;
+  return notable.length > 0
+    ? { name: '✨ Features', value: notable.join(' • '), inline: false }
+    : null;
 }
 
 /**

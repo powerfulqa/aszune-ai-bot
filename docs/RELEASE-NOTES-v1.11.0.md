@@ -23,11 +23,13 @@ Display comprehensive information about any Discord user:
 - **Avatar**: High-resolution user avatar display
 
 **Usage:**
+
 ```
 /userinfo [user]
 ```
 
 **Example Output:**
+
 ```
 👤 User: @Username#1234
    Status: 🟢 Online
@@ -51,11 +53,13 @@ Display detailed information about the current Discord server:
 - **Server Features**: Community, Verified, Partnered badges
 
 **Usage:**
+
 ```
 /serverinfo
 ```
 
 **Example Output:**
+
 ```
 👑 Owner: @ServerOwner
 📅 Created: March 2020 (5 years ago)
@@ -66,9 +70,9 @@ Display detailed information about the current Discord server:
 
 ## 📁 New Files
 
-| File | Description |
-|------|-------------|
-| [src/commands/embeds/userinfo-embed.js](src/commands/embeds/userinfo-embed.js) | User info embed builder with badge detection |
+| File                                                                               | Description                                        |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [src/commands/embeds/userinfo-embed.js](src/commands/embeds/userinfo-embed.js)     | User info embed builder with badge detection       |
 | [src/commands/embeds/serverinfo-embed.js](src/commands/embeds/serverinfo-embed.js) | Server info embed builder with comprehensive stats |
 
 ## 🔧 Technical Details
@@ -88,6 +92,7 @@ const embed = buildUserInfoEmbed(user, member, { joinPosition, presence });
 ### Helper Functions
 
 **userinfo-embed.js exports:**
+
 - `buildUserInfoEmbed()` - Main embed builder
 - `getJoinPosition()` - Calculate member join position
 - `getStatusEmoji()` - Status to emoji mapping
@@ -97,6 +102,7 @@ const embed = buildUserInfoEmbed(user, member, { joinPosition, presence });
 - `formatActivity()` - Activity type formatting
 
 **serverinfo-embed.js exports:**
+
 - `buildServerInfoEmbed()` - Main embed builder
 - `getVerificationLevel()` - Verification level display
 - `getContentFilter()` - Content filter level display
@@ -132,6 +138,7 @@ The `/help` command now includes the new utility commands:
 ## 🧪 Testing
 
 New test files should be created for:
+
 - `__tests__/unit/commands/userinfo.test.js`
 - `__tests__/unit/commands/serverinfo.test.js`
 - `__tests__/unit/embeds/userinfo-embed.test.js`
@@ -157,6 +164,7 @@ these utility commands provide:
 ## 🔜 What's Next
 
 Future enhancements may include:
+
 - `/avatar` command for quick avatar display
 - `/roleinfo` command for role details
 - Enhanced AI integration with user context
