@@ -4,6 +4,7 @@ name: Aszune AI Bot CI/CD
 # - Tests run in 3 parallel shards for faster execution (NO coverage = speed)
 # - Coverage run separately as FULL suite (no sharding = accuracy)
 # - Quality and security checks run in parallel with tests
+# - QLTY analysis runs to trigger maintainability checks
 
 on:
   push:
@@ -15,6 +16,26 @@ on:
       - main
 
 jobs:
+  # QLTY code analysis (triggers maintainability checks)
+  qlty:
+    name: QLTY Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for accurate analysis
+
+      - name: Install QLTY CLI
+        uses: qltysh/qlty-action/install@v2
+
+      - name: Run QLTY check
+        run: qlty check --all --no-progress
+        continue-on-error: true  # Don't fail CI on code smells
+
   # Quality and security checks (fast, runs in parallel with tests)
   quality:
     name: Quality & Security
