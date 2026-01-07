@@ -188,7 +188,9 @@ describe('Chat Service - Basic', () => {
 
       for (const pattern of patterns) {
         // Reset mock for each pattern
-        reminderService.setReminder = jest.fn().mockResolvedValue({ id: `test-reminder-${Date.now()}` });
+        reminderService.setReminder = jest
+          .fn()
+          .mockResolvedValue({ id: `test-reminder-${Date.now()}` });
         reminderService.isInitialized = true;
 
         const result = await checkForSimpleReminderRequest(

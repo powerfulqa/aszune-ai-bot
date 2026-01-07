@@ -1809,35 +1809,38 @@ class WebDashboardService {
     return result.changes > 0;
   }
 
+  /**
+   * Send delete response via callback
+   * @private
+   */
+  _sendDeleteResponse(callback, response) {
+    if (callback) callback(response);
+  }
+
   handleDeleteReminder(data, callback) {
     try {
       const validationError = this._validateReminderInput(data, ['reminderId']);
       if (validationError) {
-        if (callback) callback({ error: validationError, deleted: false });
-        return;
+        return this._sendDeleteResponse(callback, { error: validationError, deleted: false });
       }
 
       const { reminderId, userId } = data;
       const deleted = this._deleteReminderFromDb(reminderId, userId);
 
       if (!deleted) {
-        logger.warn(
-          `Attempted to delete non-existent or already deleted reminder: ${reminderId} for user ${userId || 'admin'}`
-        );
-        if (callback)
-          callback({
-            error: `Reminder not found or already deleted`,
-            deleted: false,
-            reminderId,
-          });
-        return;
+        logger.warn(`Delete failed - reminder not found: ${reminderId} for user ${userId || 'admin'}`);
+        return this._sendDeleteResponse(callback, {
+          error: 'Reminder not found or already deleted',
+          deleted: false,
+          reminderId,
+        });
       }
 
       logger.info(`Reminder deleted: ${reminderId}`);
-      if (callback) callback({ deleted: true, reminderId, timestamp: new Date().toISOString() });
+      this._sendDeleteResponse(callback, { deleted: true, reminderId, timestamp: new Date().toISOString() });
     } catch (error) {
       logger.error('Error deleting reminder:', error);
-      if (callback) callback({ error: error.message, deleted: false });
+      this._sendDeleteResponse(callback, { error: error.message, deleted: false });
     }
   }
 

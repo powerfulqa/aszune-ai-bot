@@ -249,9 +249,10 @@ async function createSimpleReminder(match, userId, channelId, serverId) {
       serverId !== 'DM' ? serverId : null
     );
 
-    const responseMessage = reminderMessage && reminderMessage !== 'Reminder'
-      ? `I'll remind you about "${reminderMessage}" in ${timeAmount} ${timeUnit}.`
-      : `I'll remind you in ${timeAmount} ${timeUnit}.`;
+    const responseMessage =
+      reminderMessage && reminderMessage !== 'Reminder'
+        ? `I'll remind you about "${reminderMessage}" in ${timeAmount} ${timeUnit}.`
+        : `I'll remind you in ${timeAmount} ${timeUnit}.`;
 
     const fullResponse = `✅ **Reminder Set!**\n\n${responseMessage}\n\n*Reminder ID: ${reminder.id}*`;
 
@@ -262,7 +263,8 @@ async function createSimpleReminder(match, userId, channelId, serverId) {
     };
   } catch (error) {
     logger.error('Error creating simple reminder:', error);
-    const errorMessage = 'Sorry, I couldn\'t set that reminder. Please try using the /remind command or say "remind me in 5 minutes to check the oven".';
+    const errorMessage =
+      'Sorry, I couldn\'t set that reminder. Please try using the /remind command or say "remind me in 5 minutes to check the oven".';
     return {
       success: false,
       message: errorMessage, // For backward compatibility with tests
