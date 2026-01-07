@@ -72,6 +72,9 @@ jobs:
     name: Coverage
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write  # Required for QLTY OIDC authentication
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,6 +133,13 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: coverage/
           fail_ci_if_error: false
+
+      - name: Upload coverage to QLTY
+        uses: qltysh/qlty-action/coverage@v2
+        continue-on-error: true
+        with:
+          oidc: true
+          files: coverage/lcov.info
 
   # Final status check (ensures all jobs pass)
   ci-status:
