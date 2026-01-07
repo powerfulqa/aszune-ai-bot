@@ -1,9 +1,13 @@
+// @ts-check
 /**
  * Chat message handler for the bot
  * Updated for v1.3.2 with source link formatting and truncation fixes
+ *
+ * @module services/chat
  */
 const perplexityService = require('../services/perplexity-secure');
-const ConversationManager = require('../utils/conversation');
+// Use singleton ConversationManager for consistent state across the app
+const conversationManager = require('../state/conversationManager');
 const emojiManager = require('../utils/emoji');
 const logger = require('../utils/logger');
 // Command handler removed - all commands are now slash commands
@@ -16,7 +20,6 @@ const naturalLanguageReminderProcessor = require('../utils/natural-language-remi
 // Performance metrics and session validation
 const sessionValidator = require('../utils/metrics/session-validator');
 
-const conversationManager = new ConversationManager();
 const processingMessages = new Set();
 
 /**
@@ -199,45 +202,71 @@ function findSimpleReminderMatch(messageContent) {
   return null;
 }
 
+/**
+ * Create a simple reminder using the canonical ReminderService API
+ * Replaces legacy handleReminderCommand path for correctness
+ *
+ * @param {RegExpMatchArray} match - Regex match from findSimpleReminderMatch
+ * @param {string} userId - User ID
+ * @param {string} channelId - Channel ID
+ * @param {string} serverId - Server ID ('DM' for direct messages)
+ * @returns {Promise<{success: boolean, message: string, response: string}>}
+ */
 async function createSimpleReminder(match, userId, channelId, serverId) {
-  const { handleReminderCommand } = require('../commands/reminder');
+  // Use canonical reminder service directly instead of legacy command module
+  const reminderService = require('./reminder-service');
 
-  // Extract time and message components
+  // Extract time and message components from regex match
   let timeAmount, timeUnit, reminderMessage;
 
   if (match[2] && match[3]) {
+    // Pattern: "remind me about X in Y Z"
     reminderMessage = match[1] || 'Reminder';
     timeAmount = match[2];
     timeUnit = match[3];
   } else if (match[1] && match[2]) {
+    // Pattern: "remind me in Y Z to/about X"
     timeAmount = match[1];
     timeUnit = match[2];
     reminderMessage = match[3] || 'Reminder';
   }
 
-  const mockMessage = {
-    author: { id: userId },
-    channel: { id: channelId },
-    guild: serverId !== 'DM' ? { id: serverId } : null,
-    content: `!remind "${timeAmount} ${timeUnit}" ${reminderMessage}`,
-    reply: () => Promise.resolve(),
-  };
+  // Build time string for reminderService.setReminder
+  const timeString = `in ${timeAmount} ${timeUnit}`;
 
   try {
-    await handleReminderCommand(mockMessage, [
-      `"in ${timeAmount} ${timeUnit}"`,
-      ...reminderMessage.split(' '),
-    ]);
+    // Initialize reminder service if needed
+    if (!reminderService.isInitialized) {
+      await reminderService.initialize();
+    }
+
+    // Call the canonical reminder service API directly
+    const reminder = await reminderService.setReminder(
+      userId,
+      timeString,
+      reminderMessage,
+      channelId,
+      serverId !== 'DM' ? serverId : null
+    );
+
+    const responseMessage = reminderMessage && reminderMessage !== 'Reminder'
+      ? `I'll remind you about "${reminderMessage}" in ${timeAmount} ${timeUnit}.`
+      : `I'll remind you in ${timeAmount} ${timeUnit}.`;
+
+    const fullResponse = `✅ **Reminder Set!**\n\n${responseMessage}\n\n*Reminder ID: ${reminder.id}*`;
+
     return {
       success: true,
-      message: `I'll remind you ${reminderMessage ? `about "${reminderMessage}" ` : ''}in ${timeAmount} ${timeUnit}.`,
+      message: responseMessage, // For backward compatibility with tests
+      response: fullResponse, // For UI rendering
     };
   } catch (error) {
     logger.error('Error creating simple reminder:', error);
+    const errorMessage = 'Sorry, I couldn\'t set that reminder. Please try using the /remind command or say "remind me in 5 minutes to check the oven".';
     return {
       success: false,
-      message:
-        'Sorry, I couldn\'t set that reminder. Please try using the format: !remind "in 5 minutes" your message',
+      message: errorMessage, // For backward compatibility with tests
+      response: errorMessage, // For UI rendering
     };
   }
 }

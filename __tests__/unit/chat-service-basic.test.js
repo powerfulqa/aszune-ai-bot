@@ -117,15 +117,20 @@ describe('Chat Service - Basic', () => {
   describe('Simple Reminder Detection', () => {
     const { checkForSimpleReminderRequest } = require('../../src/services/chat');
 
-    // Mock the reminder command handler
-    const mockHandleReminderCommand = jest.fn();
-    jest.doMock('../../src/commands/reminder', () => ({
-      handleReminderCommand: mockHandleReminderCommand,
-    }));
+    // Mock the reminder service (canonical API)
+    const mockReminderService = {
+      isInitialized: true,
+      initialize: jest.fn().mockResolvedValue(),
+      setReminder: jest.fn(),
+    };
 
     beforeEach(() => {
       jest.clearAllMocks();
-      mockHandleReminderCommand.mockResolvedValue();
+      // Reset reminder service mock
+      mockReminderService.setReminder.mockResolvedValue({ id: 'test-reminder-123' });
+
+      // Mock the reminder-service module
+      jest.doMock('../../src/services/reminder-service', () => mockReminderService);
     });
 
     it('should detect simple reminder patterns', async () => {
@@ -152,7 +157,10 @@ describe('Chat Service - Basic', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockHandleReminderCommand.mockRejectedValue(new Error('Test error'));
+      // Mock reminder service to throw an error
+      const reminderService = require('../../src/services/reminder-service');
+      reminderService.setReminder = jest.fn().mockRejectedValue(new Error('Test error'));
+      reminderService.isInitialized = true;
 
       const result = await checkForSimpleReminderRequest(
         'remind me in 5 minutes',
@@ -168,6 +176,8 @@ describe('Chat Service - Basic', () => {
     });
 
     it('should handle different reminder pattern variations', async () => {
+      const reminderService = require('../../src/services/reminder-service');
+
       const patterns = [
         'remind me to check email in 10 minutes',
         'please remind me about meeting in 1 hour',
@@ -177,10 +187,9 @@ describe('Chat Service - Basic', () => {
       ];
 
       for (const pattern of patterns) {
-        mockHandleReminderCommand.mockReturnValue({
-          success: true,
-          message: "I'll remind you",
-        });
+        // Reset mock for each pattern
+        reminderService.setReminder = jest.fn().mockResolvedValue({ id: `test-reminder-${Date.now()}` });
+        reminderService.isInitialized = true;
 
         const result = await checkForSimpleReminderRequest(
           pattern,
@@ -191,7 +200,6 @@ describe('Chat Service - Basic', () => {
 
         expect(result).toBeTruthy();
         expect(result.message).toContain("I'll remind you");
-        mockHandleReminderCommand.mockClear();
       }
     });
 
@@ -209,7 +217,9 @@ describe('Chat Service - Basic', () => {
 
     it('should test reply function in simple reminder', async () => {
       // Test a case that triggers the createSimpleReminder function properly
-      mockHandleReminderCommand.mockResolvedValue(); // Mock successful completion
+      const reminderService = require('../../src/services/reminder-service');
+      reminderService.setReminder = jest.fn().mockResolvedValue({ id: 'test-reply-123' });
+      reminderService.isInitialized = true;
 
       const result = await checkForSimpleReminderRequest(
         'remind me in 5 minutes',
@@ -226,7 +236,9 @@ describe('Chat Service - Basic', () => {
 
     it('should call sendReminderResponse for successful reminders', async () => {
       // Mock successful reminder creation
-      mockHandleReminderCommand.mockResolvedValue();
+      const reminderService = require('../../src/services/reminder-service');
+      reminderService.setReminder = jest.fn().mockResolvedValue({ id: 'test-reminder-456' });
+      reminderService.isInitialized = true;
 
       // Test through checkForSimpleReminderRequest to exercise reminder logic
       const reminderResult = await checkForSimpleReminderRequest(
@@ -241,8 +253,10 @@ describe('Chat Service - Basic', () => {
     });
 
     it('should handle reminder response formatting correctly', async () => {
-      // Test another scenario that exercises the reminder response logic
-      mockHandleReminderCommand.mockRejectedValue(new Error('Command failed'));
+      // Test error scenario that exercises the reminder response logic
+      const reminderService = require('../../src/services/reminder-service');
+      reminderService.setReminder = jest.fn().mockRejectedValue(new Error('Command failed'));
+      reminderService.isInitialized = true;
 
       const result = await checkForSimpleReminderRequest(
         'remind me to do something in 5 minutes',

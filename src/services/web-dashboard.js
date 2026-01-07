@@ -22,6 +22,12 @@ const { buildServiceObject, buildNetworkInterfaces } = require('../utils/system-
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
 const { processReminderRequest, processFilterReminders } = require('../utils/reminder-filters');
 
+// Extracted modules for decomposition (PR 4)
+// Prefixed with _ to indicate staged for future integration
+const _LogBuffer = require('./web-dashboard/log-buffer');
+const _UsernameResolver = require('./web-dashboard/username-resolver');
+const _MetricsBroadcaster = require('./web-dashboard/metrics-broadcaster');
+
 class WebDashboardService {
   constructor() {
     this.app = null;
@@ -40,13 +46,64 @@ class WebDashboardService {
     this.externalIpCache = { value: null, timestamp: null }; // Cache external IP for 1 hour
     this.setupErrorInterception();
     this.setupLogInterception();
+
+    // Security configuration - defaults to localhost-only binding
+    this.bindHost = process.env.DASHBOARD_BIND_HOST || '127.0.0.1';
+    this.authToken = process.env.DASHBOARD_TOKEN || null;
+    this.corsOrigin = process.env.DASHBOARD_CORS_ORIGIN || null;
+  }
+
+  /**
+   * Get configured CORS origin
+   * @private
+   * @returns {string|boolean} CORS origin configuration
+   */
+  _getCorsOrigin() {
+    // If explicit origin configured, use it
+    if (this.corsOrigin) {
+      return this.corsOrigin;
+    }
+    // Default: allow localhost origins only for security
+    // This allows common localhost ports used in development
+    if (this.bindHost === '127.0.0.1' || this.bindHost === 'localhost') {
+      return /^https?:\/\/localhost(:\d+)?$/;
+    }
+    // If binding to all interfaces, still default to localhost unless explicitly configured
+    return /^https?:\/\/localhost(:\d+)?$/;
+  }
+
+  /**
+   * Create bearer token auth middleware
+   * @private
+   * @returns {Function} Express middleware
+   */
+  _createAuthMiddleware() {
+    return (req, res, next) => {
+      // If no token configured, allow all requests (localhost-only binding provides security)
+      if (!this.authToken) {
+        return next();
+      }
+
+      // Check Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      }
+
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      if (token !== this.authToken) {
+        return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+      }
+
+      next();
+    };
   }
 
   /**
    * Create promise-based server listener with timeout
    * @private
    */
-  _createServerListener(port, timeoutMs = 5000) {
+  _createServerListener(port, host, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.server.removeAllListeners('error');
@@ -63,7 +120,8 @@ class WebDashboardService {
         resolve();
       });
 
-      this.server.listen(port);
+      // Bind to specific host for security (default: 127.0.0.1)
+      this.server.listen(port, host);
     });
   }
 
@@ -118,7 +176,7 @@ class WebDashboardService {
     );
     const altPort = await this.findAvailablePort();
 
-    await this._createServerListener(altPort);
+    await this._createServerListener(altPort, this.bindHost);
     logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
     return altPort;
   }
@@ -126,7 +184,7 @@ class WebDashboardService {
   async bindServerWithRetry(preferredPort, maxRetries = 3) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        await this._createServerListener(preferredPort);
+        await this._createServerListener(preferredPort, this.bindHost);
         return preferredPort;
       } catch (portError) {
         if (!this._shouldRetryPortBind(portError, attempt, maxRetries)) {
@@ -163,9 +221,12 @@ class WebDashboardService {
 
       this.app = express();
       this.server = http.createServer(this.app);
+
+      // Configure CORS with security-conscious defaults (localhost-only by default)
+      const corsOrigin = this._getCorsOrigin();
       this.io = socketIo(this.server, {
         cors: {
-          origin: '*',
+          origin: corsOrigin,
           methods: ['GET', 'POST'],
         },
       });
@@ -177,7 +238,10 @@ class WebDashboardService {
 
       const boundPort = await this.bindServerWithRetry(testPort);
       this.isRunning = true;
-      logger.info(`Web dashboard started on port ${boundPort}`);
+
+      // Log security configuration for awareness
+      const securityInfo = this.authToken ? 'token auth enabled' : 'no token auth (localhost-only)';
+      logger.info(`Web dashboard started on ${this.bindHost}:${boundPort} (${securityInfo})`);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'starting web dashboard');
       logger.error(`Failed to start web dashboard: ${errorResponse.message}`);
@@ -421,9 +485,19 @@ class WebDashboardService {
     // JSON parsing
     this.app.use(express.json());
 
-    // CORS headers
+    // CORS headers with security-conscious defaults
+    const corsOrigin = this._getCorsOrigin();
     this.app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
+      // Set CORS origin based on configuration
+      if (typeof corsOrigin === 'string') {
+        res.header('Access-Control-Allow-Origin', corsOrigin);
+      } else if (corsOrigin instanceof RegExp) {
+        // For regex origins, check if request origin matches
+        const requestOrigin = req.headers.origin;
+        if (requestOrigin && corsOrigin.test(requestOrigin)) {
+          res.header('Access-Control-Allow-Origin', requestOrigin);
+        }
+      }
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.header(
         'Access-Control-Allow-Headers',
@@ -435,6 +509,9 @@ class WebDashboardService {
         next();
       }
     });
+
+    // Apply token auth middleware to all API routes when DASHBOARD_TOKEN is set
+    this.app.use('/api', this._createAuthMiddleware());
   }
 
   /**

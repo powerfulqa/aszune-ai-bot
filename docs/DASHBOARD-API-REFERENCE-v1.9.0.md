@@ -2,6 +2,29 @@
 
 **Status:** Production Ready | **Version:** v1.9.0 | **Last Updated:** 2025-01-15
 
+## ⚠️ Security Notice
+
+**By default, the dashboard binds to localhost (127.0.0.1) only.** This means it is only accessible
+from the local machine. Remote access is disabled by default for security.
+
+### Enabling Remote Access (Advanced)
+
+To enable remote access, set these environment variables:
+
+```bash
+# Bind to all interfaces (required for remote access)
+DASHBOARD_BIND_HOST=0.0.0.0
+
+# REQUIRED for remote access: Set a secure token
+DASHBOARD_TOKEN=your-secure-random-token-here
+
+# Optional: Configure allowed CORS origin
+DASHBOARD_CORS_ORIGIN=https://your-domain.com
+```
+
+**WARNING:** Never expose the dashboard without token authentication. The dashboard includes service
+control and configuration editing capabilities that could be exploited if exposed.
+
 ## Base URL
 
 ```
@@ -10,12 +33,13 @@ http://localhost:3000/api
 
 ## Authentication
 
-All API endpoints are currently unauthenticated (local dashboard). For production deployments with
-remote access, implement authentication headers:
+When `DASHBOARD_TOKEN` is set, all API endpoints require Bearer token authentication:
 
 ```
-Authorization: Bearer <token>
+Authorization: Bearer <your-token>
 ```
+
+If `DASHBOARD_TOKEN` is not set, authentication is disabled (safe for localhost-only access).
 
 ## Response Format
 
@@ -38,6 +62,14 @@ Error responses:
   "error": "Error description",
   "code": "ERROR_CODE",
   "timestamp": "2024-01-15T10:35:00Z"
+}
+```
+
+Authentication error (when token auth is enabled):
+
+```json
+{
+  "error": "Unauthorized - Bearer token required"
 }
 ```
 

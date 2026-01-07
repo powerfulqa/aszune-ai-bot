@@ -296,8 +296,8 @@ class NaturalLanguageReminderProcessor {
     const perplexityService = require('../services/perplexity-secure');
     const query = `When will ${event} be released or come out? Please provide the exact release date if known.`;
 
-    const ConversationManager = require('./conversation');
-    const conversationManager = new ConversationManager();
+    // Use singleton ConversationManager for consistent state
+    const conversationManager = require('../state/conversationManager');
     const history = conversationManager.getHistory(userId);
     const lookupHistory = [...history, { role: 'user', content: query }];
 

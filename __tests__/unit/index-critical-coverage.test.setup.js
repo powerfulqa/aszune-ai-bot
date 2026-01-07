@@ -102,6 +102,12 @@ function setupIndexCriticalMocks() {
     handleSlashCommand: jest.fn(),
   }));
   jest.doMock('../../src/utils/conversation', () => jest.fn(() => mockConversationManager));
+  // Mock the new singleton module that wraps ConversationManager
+  jest.doMock('../../src/state/conversationManager', () => ({
+    conversationManager: mockConversationManager,
+    initializeIntervals: jest.fn(),
+    resetForTests: jest.fn(),
+  }));
   jest.doMock('../../src/utils/lazy-loader', () => ({
     lazyLoad: jest.fn((fn) => fn),
   }));

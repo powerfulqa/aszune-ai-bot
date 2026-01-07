@@ -1,7 +1,8 @@
 /**
  * Command handler for the bot
  */
-const ConversationManager = require('../utils/conversation');
+// Use singleton ConversationManager for consistent state across the app
+const conversationManager = require('../state/conversationManager');
 const perplexityService = require('../services/perplexity-secure');
 const logger = require('../utils/logger');
 const config = require('../config/config');
@@ -23,8 +24,6 @@ const {
   buildResourcesEmbed,
   buildCacheEmbed,
 } = require('./embeds');
-
-const conversationManager = new ConversationManager();
 
 /**
  * Helper function to ensure user metadata is updated in the database
@@ -654,6 +653,11 @@ function createMockInteraction(message) {
 
 /**
  * Handle text commands from messages
+ *
+ * @deprecated This function is maintained for testing compatibility only.
+ * Text commands (messages starting with !) are no longer processed by chat.js.
+ * All user-facing commands should use slash commands (/help, /remind, etc.)
+ *
  * @param {Object} message - Discord.js message object
  * @returns {Promise<Object|null>} - Command result or null if no command matched
  */

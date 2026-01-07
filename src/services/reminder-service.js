@@ -1,3 +1,10 @@
+// @ts-check
+/**
+ * Reminder Service
+ * Handles reminder scheduling, persistence, and delivery
+ *
+ * @module services/reminder-service
+ */
 const databaseService = require('./database');
 const logger = require('../utils/logger');
 const EventEmitter = require('events');
@@ -5,6 +12,7 @@ const EventEmitter = require('events');
 class ReminderService extends EventEmitter {
   constructor() {
     super();
+    /** @type {Map<number, {type: string, timer: NodeJS.Timeout|NodeJS.Timer}>} */
     this.activeTimers = new Map();
     this.isInitialized = false;
   }

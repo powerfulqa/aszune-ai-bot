@@ -29,6 +29,9 @@ const TRACKING_CONFIG = {
   retryDelayMs: 5000,
 };
 
+// Import shared verification state (PR 5 - unified state management)
+const verificationState = require('../../utils/metrics/verification-state');
+
 /**
  * Instance Tracker class
  * Manages bot instance registration and heartbeat
@@ -51,6 +54,15 @@ class InstanceTracker {
    * @returns {Promise<boolean>} Whether verification succeeded
    */
   async initialize(discordClient) {
+    // Check if telemetry has already registered (prevent double-registration)
+    if (verificationState.isVerified() && verificationState.isRegisteredBy('telemetry')) {
+      logger.debug('Instance already registered by telemetry, syncing state');
+      this.instanceId = verificationState.getInstanceId();
+      this.isVerified = true;
+      this.isAuthorized = verificationState.isAuthorized();
+      return true;
+    }
+
     if (!this._isTrackingEnabled()) {
       return this._handleDisabledTracking();
     }
@@ -117,6 +129,11 @@ class InstanceTracker {
       this.instanceId = response.instanceId;
       this.isVerified = true;
       this.isAuthorized = response.authorized === true;
+
+      // Update shared verification state (PR 5 - unified state)
+      verificationState.markVerified(this.instanceId, 'instance-tracker');
+      verificationState.markAuthorized(this.isAuthorized);
+
       return { verified: true, authorized: this.isAuthorized };
     }
 

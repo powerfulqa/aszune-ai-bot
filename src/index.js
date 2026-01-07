@@ -37,9 +37,11 @@ async function bootWithOptimizations() {
 // Core dependencies
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
-const ConversationManager = require('./utils/conversation');
-const conversationManager = new ConversationManager();
-conversationManager.initializeIntervals();
+// Use singleton ConversationManager for consistent state across the app
+const conversationManager = require('./state/conversationManager');
+const { initializeIntervals } = require('./state/conversationManager');
+// Initialize intervals once at startup
+initializeIntervals();
 
 // Initialize reminder service
 const reminderService = require('./services/reminder-service');

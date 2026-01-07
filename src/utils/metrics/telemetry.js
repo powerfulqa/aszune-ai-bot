@@ -9,6 +9,8 @@ const http = require('http');
 const https = require('https');
 const analyticsCore = require('./analytics-core');
 const perfMonitor = require('./perf-monitor');
+// Import shared verification state (PR 5 - unified state management)
+const verificationState = require('./verification-state');
 
 let _heartbeatTimer = null;
 let _retryCount = 0;
@@ -171,23 +173,27 @@ async function initialize(client) {
   try {
     await perfMonitor.captureEnvironment(client);
 
-    // Skip registration if instance-tracker already verified
+    // Use shared verification state to check if already verified (PR 5)
     // This prevents duplicate instance registrations
-    const instanceTracker = require('../../services/instance-tracker');
-    if (instanceTracker.isVerified) {
-      // Use the same instance ID from the main tracker
-      const status = instanceTracker.getStatus();
-      if (status.instanceId) {
-        analyticsCore.markVerified(status.instanceId);
+    if (verificationState.isVerified()) {
+      // Already verified by instance-tracker
+      const instanceId = verificationState.getInstanceId();
+      if (instanceId) {
+        analyticsCore.markVerified(instanceId);
         startHeartbeat();
         return true;
       }
     }
 
-    // Only register if main tracker didn't
+    // Only register if no one else has
     const success = await register();
 
     if (success) {
+      // Update shared state when telemetry registers
+      const state = analyticsCore.getMetricsState();
+      if (state.sid) {
+        verificationState.markVerified(state.sid, 'telemetry');
+      }
       startHeartbeat();
     }
 

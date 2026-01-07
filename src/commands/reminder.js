@@ -1,3 +1,21 @@
+/**
+ * @deprecated LEGACY REMINDER COMMAND MODULE
+ *
+ * This module is deprecated and maintained only for backward compatibility with existing tests.
+ * For new reminder functionality, use the canonical service API:
+ *
+ *   const reminderService = require('../services/reminder-service');
+ *   await reminderService.setReminder(userId, timeString, message, channelId, serverId);
+ *
+ * The chat service (src/services/chat.js) now uses reminderService directly for "simple reminders"
+ * instead of routing through this module.
+ *
+ * Slash commands (/remind, /reminders, /cancelreminder) are handled in src/commands/index.js
+ * and also use reminderService directly.
+ *
+ * @module commands/reminder
+ * @deprecated Use reminderService directly instead
+ */
 const reminderService = require('../services/reminder-service');
 const timeParser = require('../utils/time-parser');
 const ErrorHandler = require('../utils/error-handler');
@@ -5,6 +23,7 @@ const logger = require('../utils/logger');
 
 /**
  * Command alias handlers mapped by command name
+ * @deprecated Text commands are disabled in chat.js - messages starting with "!" are ignored
  */
 const COMMAND_ALIAS_HANDLERS = {
   '!remind': async (message, args) => {
