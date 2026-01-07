@@ -3,8 +3,6 @@
  * Generates Discord embed for /userinfo command
  */
 
-const { EmbedBuilder } = require('discord.js');
-
 /**
  * Discord user badge flag mappings
  */
@@ -149,6 +147,80 @@ function formatActivity(activity) {
 }
 
 /**
+ * Get roles display string for a member
+ * @param {GuildMember|null} member - Guild member
+ * @returns {string} Formatted roles string
+ */
+function getRolesDisplay(member) {
+  if (!member) return 'No roles';
+
+  const roles = member.roles.cache
+    .filter((role) => role.id !== member.guild.id)
+    .sort((a, b) => b.position - a.position)
+    .map((role) => `<@&${role.id}>`)
+    .slice(0, 10);
+
+  if (roles.length === 0) return 'No roles';
+
+  const extraCount = member.roles.cache.size - 11;
+  return roles.join(', ') + (extraCount > 0 ? ` +${extraCount} more` : '');
+}
+
+/**
+ * Build core fields for user info embed
+ * @param {User} user - Discord user
+ * @param {GuildMember|null} member - Guild member
+ * @param {Object} options - Additional options
+ * @returns {Array} Array of embed fields
+ */
+function buildCoreFields(user, member, options) {
+  const { joinPosition, presence } = options;
+  const accountCreated = user.createdAt;
+  const joinedAt = member?.joinedAt;
+  const status = getStatusEmoji(presence?.status);
+
+  return [
+    { name: '👤 User', value: `${user}\n\`${user.id}\``, inline: true },
+    { name: `${status} Status`, value: presence?.status ? capitalise(presence.status) : 'Offline', inline: true },
+    { name: '🤖 Bot', value: user.bot ? 'Yes' : 'No', inline: true },
+    { name: '📅 Account Created', value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>\n(${getTimeAgo(accountCreated)})`, inline: true },
+    { name: '📥 Joined Server', value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:F>\n(${getTimeAgo(joinedAt)})` : 'Not in server', inline: true },
+    { name: '🏅 Join Position', value: joinPosition ? `#${joinPosition}` : 'N/A', inline: true },
+  ];
+}
+
+/**
+ * Build optional fields for user info embed
+ * @param {User} user - Discord user
+ * @param {GuildMember|null} member - Guild member
+ * @param {Object} options - Additional options
+ * @returns {Array} Array of optional embed fields
+ */
+function buildOptionalFields(user, member, options) {
+  const fields = [];
+  const { presence } = options;
+  const activity = presence?.activities?.[0];
+  const badges = getUserBadges(user.flags);
+  const keyPermissions = member ? getKeyPermissions(member) : [];
+
+  if (member?.nickname) {
+    fields.push({ name: '📝 Nickname', value: member.nickname, inline: true });
+  }
+  if (activity) {
+    fields.push({ name: '🎮 Activity', value: formatActivity(activity), inline: true });
+  }
+  if (badges.length > 0) {
+    fields.push({ name: '🎖️ Badges', value: badges.join('\n'), inline: false });
+  }
+  fields.push({ name: `🎭 Roles [${member ? member.roles.cache.size - 1 : 0}]`, value: getRolesDisplay(member), inline: false });
+  if (keyPermissions.length > 0) {
+    fields.push({ name: '🔑 Key Permissions', value: keyPermissions.map((p) => `\`${p}\``).join(', '), inline: false });
+  }
+
+  return fields;
+}
+
+/**
  * Calculate join position in guild
  * @param {Guild} guild - Discord guild
  * @param {GuildMember} member - Guild member
@@ -172,128 +244,14 @@ async function getJoinPosition(guild, member) {
  * @returns {Object} Discord embed object
  */
 function buildUserInfoEmbed(user, member, options = {}) {
-  const { joinPosition, presence } = options;
-
-  // Calculate account age
-  const accountCreated = user.createdAt;
-  const accountAge = getTimeAgo(accountCreated);
-
-  // Calculate server join info
-  const joinedAt = member?.joinedAt;
-  const joinAge = joinedAt ? getTimeAgo(joinedAt) : 'Not in server';
-
-  // Get roles (excluding @everyone)
-  let rolesDisplay = 'No roles';
-  if (member) {
-    const roles = member.roles.cache
-      .filter((role) => role.id !== member.guild.id)
-      .sort((a, b) => b.position - a.position)
-      .map((role) => `<@&${role.id}>`)
-      .slice(0, 10);
-
-    if (roles.length > 0) {
-      rolesDisplay =
-        roles.join(', ') + (member.roles.cache.size > 11 ? ` +${member.roles.cache.size - 11} more` : '');
-    }
-  }
-
-  // Get key permissions
-  const keyPermissions = member ? getKeyPermissions(member) : [];
-
-  // Get user badges
-  const badges = getUserBadges(user.flags);
-
-  // Get status and activity
-  const status = getStatusEmoji(presence?.status);
-  const activity = presence?.activities?.[0];
-
-  // Build embed fields
-  const fields = [
-    {
-      name: '👤 User',
-      value: `${user}\n\`${user.id}\``,
-      inline: true,
-    },
-    {
-      name: `${status} Status`,
-      value: presence?.status ? capitalise(presence.status) : 'Offline',
-      inline: true,
-    },
-    {
-      name: '🤖 Bot',
-      value: user.bot ? 'Yes' : 'No',
-      inline: true,
-    },
-    {
-      name: '📅 Account Created',
-      value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>\n(${accountAge})`,
-      inline: true,
-    },
-    {
-      name: '📥 Joined Server',
-      value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:F>\n(${joinAge})` : 'Not in server',
-      inline: true,
-    },
-    {
-      name: '🏅 Join Position',
-      value: joinPosition ? `#${joinPosition}` : 'N/A',
-      inline: true,
-    },
-  ];
-
-  // Add nickname if different
-  if (member?.nickname) {
-    fields.push({
-      name: '📝 Nickname',
-      value: member.nickname,
-      inline: true,
-    });
-  }
-
-  // Add activity if present
-  if (activity) {
-    fields.push({
-      name: '🎮 Activity',
-      value: formatActivity(activity),
-      inline: true,
-    });
-  }
-
-  // Add badges if any
-  if (badges.length > 0) {
-    fields.push({
-      name: '🎖️ Badges',
-      value: badges.join('\n'),
-      inline: false,
-    });
-  }
-
-  // Add roles
-  fields.push({
-    name: `🎭 Roles [${member ? member.roles.cache.size - 1 : 0}]`,
-    value: rolesDisplay,
-    inline: false,
-  });
-
-  // Add key permissions if any
-  if (keyPermissions.length > 0) {
-    fields.push({
-      name: '🔑 Key Permissions',
-      value: keyPermissions.map((p) => `\`${p}\``).join(', '),
-      inline: false,
-    });
-  }
+  const coreFields = buildCoreFields(user, member, options);
+  const optionalFields = buildOptionalFields(user, member, options);
 
   return {
     color: member?.displayColor || 0x5865f2,
-    author: {
-      name: user.tag,
-      icon_url: user.displayAvatarURL({ dynamic: true }),
-    },
-    thumbnail: {
-      url: user.displayAvatarURL({ dynamic: true, size: 256 }),
-    },
-    fields,
+    author: { name: user.tag, icon_url: user.displayAvatarURL({ dynamic: true }) },
+    thumbnail: { url: user.displayAvatarURL({ dynamic: true, size: 256 }) },
+    fields: [...coreFields, ...optionalFields],
     footer: { text: 'Aszai Bot • User Info' },
     timestamp: new Date().toISOString(),
   };

@@ -157,6 +157,86 @@ function getTimeAgo(date) {
 }
 
 /**
+ * Build core server info fields
+ * @param {Guild} guild - Discord guild
+ * @param {Object} memberStats - Member statistics
+ * @returns {Array} Array of embed fields
+ */
+function buildCoreFields(guild, memberStats) {
+  const createdAt = guild.createdAt;
+  const totalMembers = guild.memberCount || 0;
+  const onlineMembers = memberStats.onlineCount || Math.floor(totalMembers * 0.2);
+  const botCount = memberStats.botCount || 0;
+  const humanCount = memberStats.humanMembers || totalMembers - botCount;
+
+  return [
+    { name: '👑 Owner', value: `<@${guild.ownerId}>`, inline: true },
+    { name: '📅 Created', value: `<t:${Math.floor(createdAt.getTime() / 1000)}:D>\n(${getTimeAgo(createdAt)})`, inline: true },
+    { name: '🆔 Server ID', value: `\`${guild.id}\``, inline: true },
+    { name: `👥 Members [${totalMembers}]`, value: `👤 Humans: ${humanCount}\n🤖 Bots: ${botCount}\n🟢 Online: ~${onlineMembers}`, inline: true },
+  ];
+}
+
+/**
+ * Build channel and role fields
+ * @param {Guild} guild - Discord guild
+ * @returns {Array} Array of embed fields
+ */
+function buildChannelRoleFields(guild) {
+  const channelCounts = getChannelCounts(guild);
+  const roleStats = getRoleStats(guild);
+
+  let channelValue = `📝 Text: ${channelCounts.text}\n🔊 Voice: ${channelCounts.voice}\n📂 Categories: ${channelCounts.category}`;
+  if (channelCounts.forum > 0) channelValue += `\n💬 Forums: ${channelCounts.forum}`;
+  if (channelCounts.stage > 0) channelValue += `\n🎭 Stage: ${channelCounts.stage}`;
+
+  return [
+    { name: `💬 Channels [${channelCounts.total}]`, value: channelValue, inline: true },
+    { name: `🎭 Roles [${roleStats.total}]`, value: `📌 Hoisted: ${roleStats.hoisted}\n🔗 Managed: ${roleStats.managed}`, inline: true },
+  ];
+}
+
+/**
+ * Build boost and emoji fields
+ * @param {Guild} guild - Discord guild
+ * @returns {Array} Array of embed fields
+ */
+function buildBoostEmojiFields(guild) {
+  const boostTier = guild.premiumTier;
+  const boostCount = guild.premiumSubscriptionCount || 0;
+  const emojiStats = getEmojiStats(guild);
+  const stickerStats = getStickerStats(guild);
+
+  let boostValue = `Tier: ${getBoostTier(boostTier)}\nBoosts: ${boostCount}`;
+  if (boostTier >= 2) boostValue += '\n✅ Animated Icon';
+  if (boostTier >= 3) boostValue += '\n✅ Vanity URL';
+
+  let emojiValue = `Static: ${emojiStats.static}\nAnimated: ${emojiStats.animated}`;
+  if (stickerStats.total > 0) emojiValue += `\n🏷️ Stickers: ${stickerStats.total}`;
+
+  return [
+    { name: `${getBoostEmoji(boostTier)} Boost Status`, value: boostValue, inline: true },
+    { name: `😀 Emojis [${emojiStats.total}]`, value: emojiValue, inline: true },
+    { name: '🔒 Security', value: `Verification: ${getVerificationLevel(guild.verificationLevel)}\nContent Filter: ${getContentFilter(guild.explicitContentFilter)}`, inline: true },
+  ];
+}
+
+/**
+ * Get notable features field if any
+ * @param {Guild} guild - Discord guild
+ * @returns {Object|null} Features field or null
+ */
+function getFeaturesField(guild) {
+  const featureMap = {
+    COMMUNITY: '🏘️ Community', VERIFIED: '✅ Verified', PARTNERED: '🤝 Partnered',
+    DISCOVERABLE: '🔍 Discoverable', WELCOME_SCREEN_ENABLED: '👋 Welcome Screen',
+    VANITY_URL: '🔗 Vanity URL', ANIMATED_ICON: '🎞️ Animated Icon', BANNER: '🖼️ Banner',
+  };
+  const notable = guild.features.filter((f) => featureMap[f]).map((f) => featureMap[f]);
+  return notable.length > 0 ? { name: '✨ Features', value: notable.join(' • '), inline: false } : null;
+}
+
+/**
  * Build the server info embed
  * @param {Guild} guild - Discord guild
  * @param {Object} options - Additional options
@@ -165,146 +245,20 @@ function getTimeAgo(date) {
 function buildServerInfoEmbed(guild, options = {}) {
   const { memberStats = {} } = options;
 
-  // Get various stats
-  const channelCounts = getChannelCounts(guild);
-  const roleStats = getRoleStats(guild);
-  const emojiStats = getEmojiStats(guild);
-  const stickerStats = getStickerStats(guild);
-
-  // Server creation info
-  const createdAt = guild.createdAt;
-  const createdAgo = getTimeAgo(createdAt);
-
-  // Member stats with fallbacks
-  const totalMembers = guild.memberCount || 0;
-  const onlineMembers = memberStats.onlineCount || Math.floor(totalMembers * 0.2);
-  const botCount = memberStats.botCount || 0;
-  const humanCount = memberStats.humanMembers || totalMembers - botCount;
-
-  // Boost info
-  const boostTier = guild.premiumTier;
-  const boostCount = guild.premiumSubscriptionCount || 0;
-  const boostEmoji = getBoostEmoji(boostTier);
-
-  // Build the embed
   const fields = [
-    {
-      name: '👑 Owner',
-      value: `<@${guild.ownerId}>`,
-      inline: true,
-    },
-    {
-      name: '📅 Created',
-      value: `<t:${Math.floor(createdAt.getTime() / 1000)}:D>\n(${createdAgo})`,
-      inline: true,
-    },
-    {
-      name: '🆔 Server ID',
-      value: `\`${guild.id}\``,
-      inline: true,
-    },
-    {
-      name: `👥 Members [${totalMembers}]`,
-      value:
-        `👤 Humans: ${humanCount}\n` +
-        `🤖 Bots: ${botCount}\n` +
-        `🟢 Online: ~${onlineMembers}`,
-      inline: true,
-    },
-    {
-      name: `💬 Channels [${channelCounts.total}]`,
-      value:
-        `📝 Text: ${channelCounts.text}\n` +
-        `🔊 Voice: ${channelCounts.voice}\n` +
-        `📂 Categories: ${channelCounts.category}` +
-        (channelCounts.forum > 0 ? `\n💬 Forums: ${channelCounts.forum}` : '') +
-        (channelCounts.stage > 0 ? `\n🎭 Stage: ${channelCounts.stage}` : ''),
-      inline: true,
-    },
-    {
-      name: `🎭 Roles [${roleStats.total}]`,
-      value:
-        `📌 Hoisted: ${roleStats.hoisted}\n` + `🔗 Managed: ${roleStats.managed}`,
-      inline: true,
-    },
-    {
-      name: `${boostEmoji} Boost Status`,
-      value:
-        `Tier: ${getBoostTier(boostTier)}\n` +
-        `Boosts: ${boostCount}\n` +
-        (boostTier >= 2 ? '✅ Animated Icon\n' : '') +
-        (boostTier >= 3 ? '✅ Vanity URL' : ''),
-      inline: true,
-    },
-    {
-      name: `😀 Emojis [${emojiStats.total}]`,
-      value:
-        `Static: ${emojiStats.static}\n` +
-        `Animated: ${emojiStats.animated}` +
-        (stickerStats.total > 0 ? `\n🏷️ Stickers: ${stickerStats.total}` : ''),
-      inline: true,
-    },
-    {
-      name: '🔒 Security',
-      value:
-        `Verification: ${getVerificationLevel(guild.verificationLevel)}\n` +
-        `Content Filter: ${getContentFilter(guild.explicitContentFilter)}`,
-      inline: true,
-    },
+    ...buildCoreFields(guild, memberStats),
+    ...buildChannelRoleFields(guild),
+    ...buildBoostEmojiFields(guild),
   ];
 
-  // Add features if any notable ones
-  const notableFeatures = guild.features
-    .filter((f) =>
-      [
-        'COMMUNITY',
-        'VERIFIED',
-        'PARTNERED',
-        'DISCOVERABLE',
-        'WELCOME_SCREEN_ENABLED',
-        'VANITY_URL',
-        'ANIMATED_ICON',
-        'BANNER',
-      ].includes(f)
-    )
-    .map((f) => {
-      const featureMap = {
-        COMMUNITY: '🏘️ Community',
-        VERIFIED: '✅ Verified',
-        PARTNERED: '🤝 Partnered',
-        DISCOVERABLE: '🔍 Discoverable',
-        WELCOME_SCREEN_ENABLED: '👋 Welcome Screen',
-        VANITY_URL: '🔗 Vanity URL',
-        ANIMATED_ICON: '🎞️ Animated Icon',
-        BANNER: '🖼️ Banner',
-      };
-      return featureMap[f] || f;
-    });
-
-  if (notableFeatures.length > 0) {
-    fields.push({
-      name: '✨ Features',
-      value: notableFeatures.join(' • '),
-      inline: false,
-    });
-  }
-
-  // Add description if exists
-  let description = '';
-  if (guild.description) {
-    description = `*${guild.description}*\n\n`;
-  }
+  const featuresField = getFeaturesField(guild);
+  if (featuresField) fields.push(featuresField);
 
   return {
     color: 0x5865f2,
-    author: {
-      name: guild.name,
-      icon_url: guild.iconURL({ dynamic: true }),
-    },
-    thumbnail: {
-      url: guild.iconURL({ dynamic: true, size: 256 }),
-    },
-    description: description || undefined,
+    author: { name: guild.name, icon_url: guild.iconURL({ dynamic: true }) },
+    thumbnail: { url: guild.iconURL({ dynamic: true, size: 256 }) },
+    description: guild.description ? `*${guild.description}*\n\n` : undefined,
     image: guild.bannerURL({ size: 512 }) ? { url: guild.bannerURL({ size: 512 }) } : undefined,
     fields,
     footer: { text: 'Aszai Bot • Server Info' },
