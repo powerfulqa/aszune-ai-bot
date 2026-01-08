@@ -27,14 +27,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for accurate analysis
+          fetch-depth: 0 # Full history for accurate analysis
 
       - name: Install QLTY CLI
         uses: qltysh/qlty-action/install@v2
 
       - name: Run QLTY check
         run: qlty check --all --no-progress
-        continue-on-error: true  # Don't fail CI on code smells
+        continue-on-error: true # Don't fail CI on code smells
 
   # Quality and security checks (fast, runs in parallel with tests)
   quality:
@@ -95,7 +95,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
-      id-token: write  # Required for QLTY OIDC authentication
+      id-token: write # Required for QLTY OIDC authentication
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
