@@ -1,10 +1,6 @@
 config_version = "0"
 
-[[source]]
-name = "default"
-default = true
-
-# Exclude patterns for files we don't want to analyze
+# Exclude patterns for files we don't want to analyze (root level)
 exclude_patterns = [
   "node_modules/**",
   "coverage/**",
@@ -16,7 +12,7 @@ exclude_patterns = [
   ".env*"
 ]
 
-# Test patterns
+# Test patterns (root level)
 test_patterns = [
   "**/__tests__/**",
   "**/*.test.js",
