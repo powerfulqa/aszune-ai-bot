@@ -402,7 +402,7 @@ API Integration (backend endpoints)
 
 ## 📚 Documentation
 
-- [Release Notes v1.9.0](../docs/RELEASE-NOTES-v1.9.0.md)
+- [Release Notes v1.9.0](../docs/release-notes/RELEASE-NOTES-v1.9.0.md)
 - [Dashboard API Reference](../docs/Dashboard-API-Reference-v1.9.0.md)
 - [Log Viewer Feature](./Dashboard-Feature-1-Log-Viewer.md)
 - [Service Management Feature](./Dashboard-Feature-2-Service-Management.md)

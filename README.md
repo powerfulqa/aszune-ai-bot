@@ -513,8 +513,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for full version history.
 For detailed release notes:
 
 - [v2.0.0](./docs/RELEASE-NOTES-v2.0.0.md) - Security, Perplexity API Enhancements, Architecture
-- [v1.11.0](./docs/RELEASE-NOTES-v1.11.0.md) - Enhanced Utility Commands (/userinfo, /serverinfo)
-- [v1.10.0](./docs/RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup
-- [v1.9.0](./docs/RELEASE-NOTES-v1.9.0.md) - Dashboard Enhancements
-- [v1.8.0](./docs/RELEASE-NOTES-v1.8.0.md) - Web Dashboard
-- [v1.7.0](./docs/RELEASE-NOTES-v1.7.0.md) - Database & Reminders
+- [v1.11.0](./docs/release-notes/RELEASE-NOTES-v1.11.0.md) - Enhanced Utility Commands (/userinfo, /serverinfo)
+- [v1.10.0](./docs/release-notes/RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup
+- [v1.9.0](./docs/release-notes/RELEASE-NOTES-v1.9.0.md) - Dashboard Enhancements
+- [v1.8.0](./docs/release-notes/RELEASE-NOTES-v1.8.0.md) - Web Dashboard
+- [v1.7.0](./docs/release-notes/RELEASE-NOTES-v1.7.0.md) - Database & Reminders

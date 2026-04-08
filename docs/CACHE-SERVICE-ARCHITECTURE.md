@@ -337,7 +337,7 @@ If you have custom cache implementations, ensure they follow the new patterns:
 - [Cache Manager Service](../src/services/cache-manager.js)
 - [Perplexity Service Integration](../src/services/perplexity-secure.js)
 - [Discord Commands Implementation](../src/commands/index.js)
-- [Release Notes v1.6.5](./RELEASE-NOTES-v1.6.5.md)
+- [Release Notes v1.6.5](./release-notes/RELEASE-NOTES-v1.6.5.md)
 
 ---
 

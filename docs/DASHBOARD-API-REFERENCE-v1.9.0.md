@@ -822,4 +822,4 @@ console.log(reminderData.data.reminder);
 - [Feature 3: Configuration Editor](../wiki/Dashboard-Feature-3-Config-Editor.md)
 - [Feature 5: Network Status](../wiki/Dashboard-Feature-5-Network-Status.md)
 - [Feature 7: Reminders](../wiki/Dashboard-Feature-7-Reminders.md)
-- [v1.9.0 Release Notes](./RELEASE-NOTES-v1.9.0.md)
+- [v1.9.0 Release Notes](./release-notes/RELEASE-NOTES-v1.9.0.md)
