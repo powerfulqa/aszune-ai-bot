@@ -7,6 +7,46 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-08
+
+### Security
+
+- Fix SQL injection in `database.js` `getPerformanceMetrics()` — parameterised query instead of
+  string interpolation
+
+### New Features
+
+- **Intelligent Model Selection**: Auto-upgrade to `sonar-pro` for multi-turn conversations
+- **Citation Support**: Compact domain-only source footer on AI responses
+- **Search Domain Filter**: Configurable `SEARCH_DOMAIN_FILTER` for authoritative gaming sources
+- **Search Recency Filter**: Auto-detect time-sensitive queries and prioritise recent results
+- **Token Usage Tracking**: Log prompt/completion/total tokens from every API response
+
+### Architecture
+
+- Remove 625 lines of duplicate inline socket handlers from `web-dashboard.js`
+- Wire up extracted handler modules (`configHandlers`, `logsHandlers`, `networkHandlers`,
+  `reminderHandlers`, `serviceHandlers`)
+- Replace all synchronous file I/O with async `fsPromises` equivalents
+- Replace `execSync` with async `execPromise` for git SHA lookup
+- Replace metrics `setInterval` with self-scheduling `setTimeout` to prevent overlap
+- Cap `userStats` Map at `DEFAULT_MAX_ENTRIES` to prevent unbounded growth
+
+### Bug Fixes
+
+- Fix conversation cleanup using `CACHE.CLEANUP_INTERVAL_MS` (24h) instead of
+  `CONVERSATION_INACTIVITY_TIMEOUT_MS` (15min) as threshold
+- Fix `getTimeAgo()` month/year calculation using calendar-aware math instead of `diffDays / 30`
+- Add debug logging to silent `.catch()` blocks in web dashboard
+- Convert help command from string concatenation to template literal
+
+### Tests
+
+- Add 32 new tests for Perplexity API features (model selection, search options, citations,
+  recency filter, token logging)
+- Fix 3 pre-existing flaky time-ago tests
+- **1,845 tests passing** across 182 suites, 0 failures
+
 ## [1.11.0] - 2026-01-07
 
 ### New Features

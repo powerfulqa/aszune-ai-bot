@@ -12,26 +12,27 @@ Welcome to the **Aszune AI Bot** Wiki – your complete guide to setup, usage, a
 
 ## What is Aszune AI Bot?
 
-A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **sonar** model.
-Features include:
+A Discord bot providing gaming lore, guides, and advice using Perplexity AI's **sonar** and
+**sonar-pro** models. Features include:
 
-- 🤖 **AI Chat** – Context-aware conversations with persistent history
+- 🤖 **AI Chat** – Context-aware conversations with intelligent model selection and source citations
 - ⏰ **Reminders** – Natural language scheduling
 - 📊 **Analytics** – Server insights via Discord commands
 - 🌐 **Dashboard** – Real-time web monitoring at `http://localhost:3000`
 - 🍓 **Pi Optimised** – Runs efficiently on Raspberry Pi
 
-## Current Version: v1.11.0
+## Current Version: v2.0.0
 
-**1,800+ tests passing** • 70%+ coverage • [Release Notes](../docs/RELEASE-NOTES-v1.11.0.md)
+**1,845 tests passing** • 70%+ coverage • [Release Notes](../docs/RELEASE-NOTES-v2.0.0.md)
 
 ### Recent Updates
 
+- v2.0.0 – Security fixes, Perplexity API enhancements (citations, sonar-pro, search filters),
+  architecture cleanup
 - v1.11.0 – Enhanced `/userinfo` and `/serverinfo` utility commands
 - v1.10.0 – Code quality improvements, documentation cleanup
 - v1.9.0 – Dashboard features: logs, services, config, network, reminders
 - v1.8.0 – Web dashboard with Socket.IO
-- v1.7.0 – SQLite database, reminder system
 
 ## Code Quality
 

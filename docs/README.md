@@ -4,8 +4,8 @@ This directory contains project documentation and release notes for the Aszune A
 
 ## Current Release
 
-- **[v1.10.0 Release Notes](./RELEASE-NOTES-v1.10.0.md)** - Code Quality & Documentation Cleanup
-  (LATEST)
+- **[v2.0.0 Release Notes](./RELEASE-NOTES-v2.0.0.md)** - Security, Perplexity API Enhancements,
+  Architecture (LATEST)
 
 ## Code Quality & Standards
 
@@ -27,7 +27,9 @@ This directory contains project documentation and release notes for the Aszune A
 
 | Version                               | Description                                   |
 | ------------------------------------- | --------------------------------------------- |
-| [v1.10.0](./RELEASE-NOTES-v1.10.0.md) | Code Quality & Documentation Cleanup (LATEST) |
+| [v2.0.0](./RELEASE-NOTES-v2.0.0.md)   | Security, Perplexity API, Architecture (LATEST) |
+| [v1.11.0](./RELEASE-NOTES-v1.11.0.md) | Enhanced Utility Commands                      |
+| [v1.10.0](./RELEASE-NOTES-v1.10.0.md) | Code Quality & Documentation Cleanup           |
 | [v1.9.0](./RELEASE-NOTES-v1.9.0.md)   | Dashboard Feature Suite                       |
 | [v1.8.0](./RELEASE-NOTES-v1.8.0.md)   | Web Dashboard & Coverage Policy               |
 | [v1.7.0](./RELEASE-NOTES-v1.7.0.md)   | Database Integration & Reminders              |

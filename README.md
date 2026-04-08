@@ -1,28 +1,30 @@
-# Aszune AI Bot (v1.11.0)
+# Aszune AI Bot (v2.0.0)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-1800%2B%20Passing-brightgreen.svg)](#testing--coverage)
+[![Tests](https://img.shields.io/badge/Tests-1845%20Passing-brightgreen.svg)](#testing--coverage)
 
-[Release Notes](./docs/RELEASE-NOTES-v1.11.0.md) |
+[Release Notes](./docs/RELEASE-NOTES-v2.0.0.md) |
 [Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
 
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
 with comprehensive analytics and monitoring features. Built for gaming communities, it provides
-lore, guides, and advice using the Perplexity API's **sonar** model while offering real-time
-performance dashboards and server analytics directly within Discord.
+lore, guides, and advice using the Perplexity API's **sonar** and **sonar-pro** models while
+offering real-time performance dashboards and server analytics directly within Discord.
 
 ## Key Features
 
-- 🤖 **AI-Powered Conversations** - Context-aware chat using Perplexity API's sonar model
+- 🤖 **AI-Powered Conversations** - Context-aware chat with intelligent model selection
+  (sonar for quick queries, sonar-pro for multi-turn conversations)
+- 📎 **Source Citations** - Responses include source domains so users can verify information
 - 📊 **Web Dashboard** - Real-time monitoring with logs, services, network status, and configuration
 - ⏰ **Smart Reminders** - Natural language reminder scheduling with Discord notifications
 - 📈 **Analytics** - Server analytics, user engagement metrics, and performance monitoring
-- 🍓 **Raspberry Pi Optimized** - Specialized optimizations for resource-constrained devices
+- 🍓 **Raspberry Pi Optimised** - Specialised optimisations for resource-constrained devices
 
-**Current Status**: 1,700+ tests passing – 70%+ coverage thresholds
+**Current Status**: 1,845 tests passing – 70%+ coverage thresholds
 
 ## Table of Contents
 
@@ -55,7 +57,7 @@ performance dashboards and server analytics directly within Discord.
 - 🏠 **Server Info:** `/serverinfo` - comprehensive server statistics and features
 - 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
 - 📋 **Slash Command Support:** All commands available as modern Discord slash commands
-- 🧪 **Comprehensive Testing:** 1,800+ tests with 70%+ coverage on critical components
+- 🧪 **Comprehensive Testing:** 1,845 tests with 70%+ coverage on critical components
 - 🌐 **Web Dashboard:** Optional Express + Socket.io dashboard with live metrics
 - 💾 **Persistent Storage:** SQLite database for conversation history and user analytics
 - 🍓 **Raspberry Pi Optimised:** Specialised performance optimisations for Pi 3 to Pi 5 (primary
@@ -384,7 +386,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage:** 1,708+ tests passing – dual thresholds: ≥80% critical files / ≥65% global
+- **Test Coverage:** 1,845 tests passing – dual thresholds: ≥80% critical files / ≥65% global
   baseline
 - **Code Quality:** 94.8% reduction in ESLint issues with systematic complexity reduction
 - **Security:** Zero tolerance for secrets, timing-safe authentication, vulnerability scanning
@@ -451,16 +453,18 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 ### 🔴 Perplexity API Errors (400 / 401)
 
 - Validate your API key is current and supports the `chat/completions` endpoint
-- Ensure model name is `"sonar"` and the format of your payload is correct
+- Model names are `"sonar"` (default) and `"sonar-pro"` (auto-selected for multi-turn)
 - Test the same key using a tool like Postman or curl
 
 ---
 
 ## Future Enhancements
 
-- [ ] Add clickable sources and reference links from Perplexity results
-- [ ] Enhance error handling with retry/backoff logic for API rate limits
+- [x] ~~Add clickable sources and reference links from Perplexity results~~ (v2.0.0)
+- [x] ~~Enhance error handling with retry/backoff logic for API rate limits~~ (v2.0.0)
+- [ ] Populate `SEARCH_DOMAIN_FILTER` with gaming-specific domains (wowpedia, wowhead, icy-veins)
 - [ ] Implement AI-powered content moderation for safer interactions
+- [ ] Further decompose `web-dashboard.js` (~2,600 lines remaining)
 
 ---
 
@@ -508,6 +512,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for full version history.
 
 For detailed release notes:
 
+- [v2.0.0](./docs/RELEASE-NOTES-v2.0.0.md) - Security, Perplexity API Enhancements, Architecture
 - [v1.11.0](./docs/RELEASE-NOTES-v1.11.0.md) - Enhanced Utility Commands (/userinfo, /serverinfo)
 - [v1.10.0](./docs/RELEASE-NOTES-v1.10.0.md) - Code Quality & Documentation Cleanup
 - [v1.9.0](./docs/RELEASE-NOTES-v1.9.0.md) - Dashboard Enhancements
