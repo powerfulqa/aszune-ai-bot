@@ -79,13 +79,22 @@ class ConversationManager {
   async loadUserStats() {
     try {
       const stats = await dataStorage.loadUserStats();
+      const maxStatsEntries = config.CACHE?.DEFAULT_MAX_ENTRIES || 100;
 
-      // Convert object to Map
-      for (const [userId, data] of Object.entries(stats)) {
+      // Convert object to Map, keeping only the most recent entries
+      const entries = Object.entries(stats);
+      const toLoad = entries.length > maxStatsEntries ? entries.slice(-maxStatsEntries) : entries;
+      for (const [userId, data] of toLoad) {
         this.userStats.set(userId, data);
       }
 
-      logger.info(`Loaded stats for ${this.userStats.size} users`);
+      if (entries.length > maxStatsEntries) {
+        logger.info(
+          `Loaded stats for ${this.userStats.size} users (capped from ${entries.length})`
+        );
+      } else {
+        logger.info(`Loaded stats for ${this.userStats.size} users`);
+      }
     } catch (error) {
       const errorResponse = ErrorHandler.handleFileError(
         error,
@@ -294,7 +303,8 @@ class ConversationManager {
    */
   cleanupOldConversations() {
     const now = Date.now();
-    const oneDayAgo = now - config.CACHE.CLEANUP_INTERVAL_MS;
+    const timeoutMs = config.CONVERSATION_INACTIVITY_TIMEOUT_MS || 15 * 60 * 1000;
+    const oneDayAgo = now - timeoutMs;
 
     for (const [userId, timestamp] of this.lastMessageTimestamps.entries()) {
       if (timestamp < oneDayAgo) {

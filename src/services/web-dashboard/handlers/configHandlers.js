@@ -4,7 +4,7 @@
  * @module web-dashboard/handlers/configHandlers
  */
 
-const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const logger = require('../../../utils/logger');
 const { sendError, sendSaveError, sendValidationError } = require('./callbackHelpers');
@@ -16,12 +16,12 @@ const { validateEnvContent, validateJsContent } = require('../../../utils/config
  * @param {WebDashboardService} _dashboard - Dashboard service instance (unused, for API consistency)
  */
 function registerConfigHandlers(socket, _dashboard) {
-  socket.on('request_config', (data, callback) => {
-    handleRequestConfig(data, callback);
+  socket.on('request_config', async (data, callback) => {
+    await handleRequestConfig(data, callback);
   });
 
-  socket.on('save_config', (data, callback) => {
-    handleSaveConfig(data, callback);
+  socket.on('save_config', async (data, callback) => {
+    await handleSaveConfig(data, callback);
   });
 
   socket.on('validate_config', (data, callback) => {
@@ -34,30 +34,30 @@ function registerConfigHandlers(socket, _dashboard) {
  * @param {Object} data - Request data with filename
  * @param {Function} callback - Response callback
  */
-function handleRequestConfig(data, callback) {
+async function handleRequestConfig(data, callback) {
   try {
     const filename = data?.filename || '.env';
     const configPath = path.join(process.cwd(), filename);
 
     // Security: prevent directory traversal
     if (!configPath.startsWith(process.cwd())) {
-      const error = new Error('Access denied: Cannot access files outside project directory');
       logger.warn(`Security: Attempted directory traversal access to ${filename}`);
-      sendError(callback, error.message);
+      sendError(callback, 'Access denied: Cannot access files outside project directory');
       return;
     }
 
     // Check if file exists
-    if (!fs.existsSync(configPath)) {
-      const error = new Error(`File not found: ${filename}`);
+    try {
+      await fsPromises.access(configPath);
+    } catch {
       logger.warn(`Config file not found: ${configPath}`);
-      sendError(callback, error.message, { content: '' });
+      sendError(callback, `File not found: ${filename}`, { content: '' });
       return;
     }
 
     // Read file content
-    const content = fs.readFileSync(configPath, 'utf-8');
-    const fileInfo = fs.statSync(configPath);
+    const content = await fsPromises.readFile(configPath, 'utf-8');
+    const fileInfo = await fsPromises.stat(configPath);
 
     if (callback) {
       callback({
@@ -81,7 +81,7 @@ function handleRequestConfig(data, callback) {
  * @param {Object} data - Save data with filename and content
  * @param {Function} callback - Response callback
  */
-function handleSaveConfig(data, callback) {
+async function handleSaveConfig(data, callback) {
   try {
     const validationError = validateConfigSaveInput(data);
     if (validationError) {
@@ -100,14 +100,17 @@ function handleSaveConfig(data, callback) {
     }
 
     // Create backup if file exists
-    if (fs.existsSync(configPath)) {
+    try {
+      await fsPromises.access(configPath);
       const backupPath = `${configPath}.backup.${Date.now()}`;
-      fs.copyFileSync(configPath, backupPath);
+      await fsPromises.copyFile(configPath, backupPath);
       logger.info(`Config backup created: ${backupPath}`);
+    } catch {
+      // File doesn't exist yet, no backup needed
     }
 
     // Write new content
-    fs.writeFileSync(configPath, content, 'utf-8');
+    await fsPromises.writeFile(configPath, content, 'utf-8');
 
     if (callback) {
       callback({

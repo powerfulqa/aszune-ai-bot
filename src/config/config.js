@@ -152,11 +152,16 @@ const config = {
         CHAT_COMPLETIONS: '/chat/completions',
       },
       DEFAULT_MODEL: 'sonar',
+      MULTI_TURN_MODEL: 'sonar-pro',
+      MULTI_TURN_THRESHOLD: 2, // Use sonar-pro when conversation history exceeds this many messages
       DEFAULT_TEMPERATURE: 0.2,
       MAX_TOKENS: {
         CHAT: 1024,
         SUMMARY: 256,
       },
+      RETURN_CITATIONS: true,
+      SEARCH_DOMAIN_FILTER: [],
+      SEARCH_RECENCY_KEYWORDS: ['latest', 'recent', 'new', 'current', 'today', 'patch', 'update'],
     },
   },
 

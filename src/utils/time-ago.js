@@ -8,8 +8,6 @@
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
-const DAYS_PER_MONTH = 30;
-const DAYS_PER_YEAR = 365;
 
 /**
  * Format a unit with proper pluralisation
@@ -27,13 +25,24 @@ function formatUnit(value, unit) {
  * @returns {string} Formatted time ago string (e.g., "2 years ago", "5 minutes ago")
  */
 function getTimeAgo(date) {
-  const diffMs = Date.now() - date.getTime();
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / MS_PER_DAY);
 
-  const diffYears = Math.floor(diffDays / DAYS_PER_YEAR);
+  // Use calendar-aware year calculation
+  let diffYears = now.getFullYear() - date.getFullYear();
+  if (
+    now.getMonth() < date.getMonth() ||
+    (now.getMonth() === date.getMonth() && now.getDate() < date.getDate())
+  ) {
+    diffYears--;
+  }
   if (diffYears > 0) return formatUnit(diffYears, 'year');
 
-  const diffMonths = Math.floor(diffDays / DAYS_PER_MONTH);
+  // Use calendar-aware month calculation
+  let diffMonths =
+    (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
+  if (now.getDate() < date.getDate()) diffMonths--;
   if (diffMonths > 0) return formatUnit(diffMonths, 'month');
 
   if (diffDays > 0) return formatUnit(diffDays, 'day');

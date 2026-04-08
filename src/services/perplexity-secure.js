@@ -552,11 +552,43 @@ class PerplexityService {
       if (cachedContent) return cachedContent;
     }
 
+    // Detect time-sensitive queries and apply recency filter
+    const requestOptions = {};
+    const recencyKeywords = config.API.PERPLEXITY.SEARCH_RECENCY_KEYWORDS || [];
+    if (recencyKeywords.length > 0 && history.length > 0) {
+      const lastUserMsg = [...history].reverse().find((m) => m.role === 'user');
+      if (lastUserMsg) {
+        const lowerContent = lastUserMsg.content.toLowerCase();
+        const isRecent = recencyKeywords.some((kw) => lowerContent.includes(kw));
+        if (isRecent) {
+          requestOptions.searchRecencyFilter = 'month';
+        }
+      }
+    }
+
     // Try to generate new response with retry for rate limits
-    const requestFn = () => this.sendChatRequest(history);
+    const requestFn = () => this.sendChatRequest(history, requestOptions);
     const response = await this.responseProcessor.generateResponseWithRetry(requestFn, opts);
 
-    const content = this.responseProcessor.extractResponseContent(response);
+    let content = this.responseProcessor.extractResponseContent(response);
+
+    // Append citations as a compact footer if available
+    if (response.citations && Array.isArray(response.citations) && response.citations.length > 0) {
+      const citationDomains = response.citations
+        .slice(0, 5)
+        .map((url) => {
+          try {
+            return new URL(url).hostname.replace('www.', '');
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      if (citationDomains.length > 0) {
+        content += `\n\n*Sources: ${citationDomains.join(', ')}*`;
+      }
+    }
 
     // Save to cache if enabled
     if (shouldUseCache) {

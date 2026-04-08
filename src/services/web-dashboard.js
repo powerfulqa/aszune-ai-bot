@@ -3,13 +3,13 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const os = require('os');
-const fs = require('fs');
+const fsPromises = require('fs').promises;
 const databaseService = require('./database');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
-const { execPromise, testGatewayConnectivity } = require('../utils/shell-exec-helper');
+const { execPromise } = require('../utils/shell-exec-helper');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -17,16 +17,16 @@ const reminderRoutes = require('./web-dashboard/routes/reminderRoutes');
 const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
-const { getBootEnabledStatus } = require('./web-dashboard/handlers/serviceHandlers');
-const { buildServiceObject, buildNetworkInterfaces } = require('../utils/system-info');
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
-const { processReminderRequest, processFilterReminders } = require('../utils/reminder-filters');
 
-// Extracted modules for decomposition (PR 4)
-// Prefixed with _ to indicate staged for future integration
-const _LogBuffer = require('./web-dashboard/log-buffer');
-const _UsernameResolver = require('./web-dashboard/username-resolver');
-const _MetricsBroadcaster = require('./web-dashboard/metrics-broadcaster');
+// Extracted handler modules
+const {
+  registerConfigHandlers,
+  registerLogsHandlers,
+  registerNetworkHandlers,
+  registerReminderHandlers,
+  registerServiceHandlers,
+} = require('./web-dashboard/handlers');
 
 class WebDashboardService {
   constructor() {
@@ -602,8 +602,8 @@ class WebDashboardService {
    * @private
    */
   setupVersionRoutes() {
-    this.app.get('/api/version', (req, res) => {
-      res.json(this.getVersionInfo());
+    this.app.get('/api/version', async (req, res) => {
+      res.json(await this.getVersionInfo());
     });
   }
 
@@ -650,7 +650,10 @@ class WebDashboardService {
       try {
         const { stdout } = await execPromise(`systemctl is-active ${service}`, {
           timeout: 5000,
-        }).catch(() => ({ stdout: 'inactive' }));
+        }).catch((err) => {
+          logger.debug(`Service status check failed for ${service}: ${err.message}`);
+          return { stdout: 'inactive' };
+        });
 
         results.push({
           name: service,
@@ -888,11 +891,13 @@ class WebDashboardService {
       throw new Error('Path traversal attempt detected');
     }
 
-    if (!fs.existsSync(filepath)) {
+    try {
+      await fsPromises.access(filepath);
+    } catch {
       throw new Error(`File not found: ${filename}`);
     }
 
-    return fs.readFileSync(filepath, 'utf-8');
+    return fsPromises.readFile(filepath, 'utf-8');
   }
 
   /**
@@ -913,13 +918,18 @@ class WebDashboardService {
     }
 
     // Create backup before modification
-    if (createBackup && fs.existsSync(filepath)) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupPath = `${filepath}.backup.${timestamp}`;
-      fs.copyFileSync(filepath, backupPath);
+    if (createBackup) {
+      try {
+        await fsPromises.access(filepath);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupPath = `${filepath}.backup.${timestamp}`;
+        await fsPromises.copyFile(filepath, backupPath);
+      } catch {
+        // File doesn't exist yet, no backup needed
+      }
     }
 
-    fs.writeFileSync(filepath, content, 'utf-8');
+    await fsPromises.writeFile(filepath, content, 'utf-8');
 
     return {
       file: filename,
@@ -1001,7 +1011,10 @@ class WebDashboardService {
     try {
       const { stdout } = await execPromise('curl -s https://api.ipify.org', {
         timeout: 5000,
-      }).catch(() => ({ stdout: '' }));
+      }).catch((err) => {
+        logger.debug(`External IP lookup failed: ${err.message}`);
+        return { stdout: '' };
+      });
       externalIP = stdout.trim() || 'Unable to determine';
     } catch (error) {
       logger.debug('Failed to get external IP');
@@ -1276,667 +1289,36 @@ class WebDashboardService {
         this._emitMetricsToSocket(socket, 'sending requested metrics');
       });
 
-      // Register handler groups
-      this.setupConfigHandlers(socket);
-      this.setupLogsHandlers(socket);
-      this.setupNetworkHandlers(socket);
-      this.setupReminderHandlers(socket);
-      this.setupServiceHandlers(socket);
+      // Register handler groups via extracted modules
+      registerConfigHandlers(socket, this);
+      registerLogsHandlers(socket, this);
+      registerNetworkHandlers(socket, this);
+      registerReminderHandlers(socket, this);
+      registerServiceHandlers(socket, this);
+
+      // Instance tracking handlers (not yet extracted)
+      this._registerInstanceHandlers(socket);
     });
   }
 
   /**
-   * Config editor page handlers
-   */
-  /**
-   * Load and return config file content
+   * Register instance-tracking socket handlers (not yet extracted to handler modules)
    * @private
    */
-  _loadConfigFile(filename, callback) {
-    const configPath = path.join(process.cwd(), filename);
-
-    // Security: prevent directory traversal
-    if (!configPath.startsWith(process.cwd())) {
-      logger.warn(`Security: Attempted directory traversal access to ${filename}`);
-      if (callback)
-        callback({ error: 'Access denied: Cannot access files outside project directory' });
-      return null;
-    }
-
-    if (!fs.existsSync(configPath)) {
-      logger.warn(`Config file not found: ${configPath}`);
-      if (callback) callback({ error: `File not found: ${filename}`, content: '' });
-      return null;
-    }
-
-    return { configPath, content: fs.readFileSync(configPath, 'utf-8') };
-  }
-
-  setupConfigHandlers(socket) {
-    socket.on('request_config', (data, callback) => {
-      try {
-        const filename = data?.filename || '.env';
-        const loaded = this._loadConfigFile(filename, callback);
-        if (!loaded) return;
-
-        const fileInfo = fs.statSync(loaded.configPath);
-        if (callback) {
-          callback({
-            filename,
-            content: loaded.content,
-            size: fileInfo.size,
-            lastModified: fileInfo.mtime.toISOString(),
-            error: null,
-          });
-        }
-        logger.debug(`Config loaded: ${filename}`);
-      } catch (error) {
-        logger.error('Error loading config:', error);
-        if (callback) callback({ error: error.message });
-      }
-    });
-
-    socket.on('save_config', (data, callback) => {
-      this.handleSaveConfig(data, callback);
-    });
-
-    socket.on('validate_config', (data, callback) => {
-      this.handleValidateConfig(data, callback);
-    });
-  }
-
-  handleSaveConfig(data, callback) {
-    try {
-      const validationError = this._validateConfigSaveInput(data);
-      if (validationError) {
-        if (callback) callback({ error: validationError, saved: false });
-        return;
-      }
-
-      const { filename, content } = data;
-      const configPath = path.join(process.cwd(), filename);
-
-      const traversalError = this._validatePathSafety(configPath, filename);
-      if (traversalError) {
-        if (callback) callback({ error: traversalError, saved: false });
-        return;
-      }
-
-      fs.writeFileSync(configPath, content, 'utf-8');
-      logger.info(`Config saved: ${filename}`);
-
-      if (callback) {
-        callback({
-          saved: true,
-          filename,
-          timestamp: new Date().toISOString(),
-          error: null,
-        });
-      }
-    } catch (error) {
-      logger.error('Error saving config:', error);
-      if (callback) callback({ error: error.message, saved: false });
-    }
-  }
-
-  /**
-   * Validate config save input data
-   * @param {Object} data - Input data
-   * @returns {string|null} - Error message or null if valid
-   * @private
-   */
-  _validateConfigSaveInput(data) {
-    const { filename, content } = data || {};
-    if (!filename || content === undefined) {
-      return 'Missing filename or content';
-    }
-    return null;
-  }
-
-  /**
-   * Validate path safety for file operations
-   * @param {string} configPath - Full path to config file
-   * @param {string} filename - Original filename for logging
-   * @returns {string|null} - Error message or null if safe
-   * @private
-   */
-  _validatePathSafety(configPath, filename) {
-    if (!configPath.startsWith(process.cwd())) {
-      logger.warn(`Security: Attempted directory traversal save to ${filename}`);
-      return 'Access denied: Cannot save files outside project directory';
-    }
-    return null;
-  }
-
-  handleValidateConfig(data, callback) {
-    try {
-      const { content, fileType = 'env' } = data;
-      const validationResult = { valid: true, errors: [], warnings: [] };
-
-      this._performFileValidation(fileType, content, validationResult);
-      validationResult.timestamp = new Date().toISOString();
-
-      if (callback) {
-        callback(validationResult);
-      }
-
-      logger.debug(`Config validation complete: ${validationResult.valid ? 'valid' : 'invalid'}`);
-    } catch (error) {
-      logger.error('Error validating config:', error);
-      if (callback) callback({ error: error.message, valid: false });
-    }
-  }
-
-  /**
-   * Perform file type-specific validation
-   * @param {string} fileType - Type of file (env, js, etc.)
-   * @param {string} content - File content to validate
-   * @param {Object} result - Result object to populate
-   * @private
-   */
-  _performFileValidation(fileType, content, result) {
-    if (fileType === 'env') {
-      this.validateEnvFile(content, result);
-    } else if (fileType === 'js') {
-      this.validateJsFile(content, result);
-    }
-  }
-
-  validateEnvFile(content, result) {
-    const validation = validateEnvContent(content);
-    result.errors.push(...validation.errors);
-    result.warnings.push(...validation.warnings);
-    if (!validation.valid) result.valid = false;
-  }
-
-  validateJsFile(content, result) {
-    const validation = validateJsContent(content);
-    result.errors.push(...validation.errors);
-    result.warnings.push(...validation.warnings);
-    if (!validation.valid) result.valid = false;
-  }
-
-  /**
-   * Logs viewer page handlers
-   */
-  setupLogsHandlers(socket) {
-    socket.on('request_logs', (data, callback) => {
-      try {
-        const { limit = 100, level = null } = data || {};
-
-        let logs = this.allLogs;
-
-        if (level) {
-          logs = logs.filter((log) => log.level === level);
-        }
-
-        const limitedLogs = logs.slice(-limit);
-
-        if (callback) {
-          callback({
-            logs: limitedLogs,
-            total: this.allLogs.length,
-            filtered: limitedLogs.length,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      } catch (error) {
-        logger.error('Error retrieving logs:', error);
-        if (callback) callback({ error: error.message, logs: [] });
-      }
-    });
-
-    socket.on('clear_logs', (data, callback) => {
-      try {
-        const count = this.allLogs.length;
-        this.allLogs = [];
-        this.errorLogs = [];
-
-        logger.info(`Logs cleared by dashboard (${count} entries removed)`);
-
-        if (callback) {
-          callback({
-            cleared: true,
-            count,
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        this.io.emit('logs_cleared', { count, timestamp: new Date().toISOString() });
-      } catch (error) {
-        logger.error('Error clearing logs:', error);
-        if (callback) callback({ error: error.message, cleared: false });
-      }
-    });
-  }
-
-  /**
-   * Network status page handlers
-   */
-  setupNetworkHandlers(socket) {
-    socket.on('request_network_status', (data, callback) => {
-      this.handleNetworkStatus(callback);
-    });
-
-    socket.on('request_network_test', (data, callback) => {
-      this.handleNetworkTest(data, callback);
-    });
-  }
-
-  async handleNetworkStatus(callback) {
-    try {
-      const hostname = os.hostname();
-      const interfaces = await this._buildNetworkInterfaces();
-      const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
-      const gatewayResult = await NetworkDetector.detectGateway();
-      const externalIp = await this._safeGetExternalIp();
-      const connectivityStatus = await NetworkDetector.getNetworkStatus();
-
-      if (callback) {
-        callback({
-          hostname,
-          localIp,
-          gateway: gatewayResult.gatewayIp !== 'Not detected' ? gatewayResult.gatewayIp : null,
-          gatewayStatus: gatewayResult.reachable,
-          externalIp: externalIp || null,
-          interfaces,
-          connectivity: connectivityStatus,
-          timestamp: new Date().toISOString(),
-        });
-      }
-      logger.debug(`Network status retrieved for hostname: ${hostname}`);
-    } catch (error) {
-      logger.error('Error retrieving network status:', error);
-      if (callback) callback({ error: error.message });
-    }
-  }
-
-  async _buildNetworkInterfaces() {
-    return buildNetworkInterfaces();
-  }
-
-  async _safeGetExternalIp() {
-    try {
-      return await this.getExternalIp();
-    } catch (error) {
-      logger.debug(`Failed to get external IP: ${error.message}`);
-      return null;
-    }
-  }
-
-  async handleNetworkTest(data, callback) {
-    try {
-      const results = ['=== NETWORK CONNECTIVITY TEST SUITE ===\n'];
-
-      await this._addGatewayTest(results);
-      await this._addDnsTests(results);
-      await this._addInternetTests(results);
-      await this._addConfigurationTests(results);
-
-      results.push('\n=== TEST SUITE COMPLETE ===');
-
-      if (callback) {
-        callback({
-          success: true,
-          message: 'Network test completed',
-          results: results.join('\n'),
-          timestamp: new Date().toISOString(),
-        });
-      }
-      logger.info('Network test completed successfully');
-    } catch (error) {
-      logger.error('Network test error:', error);
-      if (callback) {
-        callback({
-          success: false,
-          error: error.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    }
-  }
-
-  async _addGatewayTest(results) {
-    await testGatewayConnectivity(() => NetworkDetector.detectGateway(), results);
-  }
-
-  async _addDnsTests(results) {
-    const dns = require('dns').promises;
-
-    results.push('Test 2: DNS Server Detection & Testing');
-    try {
-      const dnsServers = await this.detectDnsServers();
-      results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
-
-      let dnsWorking = false;
-      for (const dnsServer of dnsServers) {
-        try {
-          const pingCmd =
-            process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
-          await execPromise(pingCmd, { timeout: 3000 });
-          results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
-          dnsWorking = true;
-        } catch (error) {
-          results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
-        }
-      }
-
-      if (dnsWorking) {
-        results.push('  ✓ At least one DNS server is accessible\n');
-      } else {
-        results.push('  ✗ No DNS servers are reachable\n');
-      }
-    } catch (error) {
-      results.push(`✗ DNS detection failed: ${error.message}\n`);
-    }
-
-    results.push('Test 3: DNS Resolution Test');
-    try {
-      const addresses = await dns.resolve4('google.com');
-      results.push(`✓ DNS resolution working (google.com → ${addresses[0]})\n`);
-    } catch (error) {
-      results.push(`✗ DNS resolution failed: ${error.message}\n`);
-    }
-  }
-
-  async _addInternetTests(results) {
-    results.push('Test 4: Internet Connectivity (8.8.8.8)');
-    try {
-      const pingCmd = process.platform === 'win32' ? 'ping -n 1 8.8.8.8' : 'ping -c 1 8.8.8.8';
-      await execPromise(pingCmd, { timeout: 5000 });
-      results.push('✓ Internet reachable (Google DNS)\n');
-    } catch (error) {
-      results.push(`✗ Internet ping failed: ${error.message}\n`);
-    }
-
-    results.push('Test 5: External API Access');
-    try {
-      const { stdout } = await execPromise(
-        'curl -s -o /dev/null -w "%{http_code}" https://api.ipify.org',
-        { timeout: 5000 }
-      );
-      if (stdout.trim() === '200') {
-        results.push('✓ External API accessible (api.ipify.org)\n');
-      } else {
-        results.push(`⚠ API returned HTTP ${stdout.trim()}\n`);
-      }
-    } catch (error) {
-      results.push(`✗ External API test failed: ${error.message}\n`);
-    }
-  }
-
-  async _addConfigurationTests(results) {
-    results.push('Test 6: IP Configuration');
-    try {
-      const ipAssignment = await this.detectDhcpOrStatic();
-      results.push(`✓ IP Assignment Type: ${ipAssignment}\n`);
-    } catch (error) {
-      results.push(`✗ Could not detect IP assignment: ${error.message}\n`);
-    }
-
-    results.push('Test 7: Network Interfaces');
-    const interfaces = os.networkInterfaces();
-    const activeInterfaces = Object.entries(interfaces)
-      .filter(([_name, addrs]) => addrs.some((a) => !a.internal && a.family === 'IPv4'))
-      .map(([name]) => name);
-
-    if (activeInterfaces.length > 0) {
-      results.push(`✓ Active interfaces: ${activeInterfaces.join(', ')}\n`);
-    } else {
-      results.push('✗ No active network interfaces found\n');
-    }
-  }
-
-  /**
-   * Reminder management page handlers
-   */
-  setupReminderHandlers(socket) {
-    socket.on('request_reminders', (data, callback) => {
-      try {
-        const result = processReminderRequest(databaseService, data);
-        if (callback) callback(result);
-        logger.debug(`Reminders requested: ${result.total} found`);
-      } catch (error) {
-        logger.error('Error retrieving reminders:', error);
-        if (callback) callback({ error: error.message, reminders: [], stats: {} });
-      }
-    });
-
-    socket.on('create_reminder', (data, callback) => {
-      this.handleCreateReminder(data, callback);
-    });
-
-    socket.on('edit_reminder', (data, callback) => {
-      this.handleEditReminder(data, callback);
-    });
-
-    socket.on('delete_reminder', (data, callback) => {
-      this.handleDeleteReminder(data, callback);
-    });
-
-    socket.on('filter_reminders', (data, callback) => {
-      this.handleFilterReminders(data, callback);
-    });
-  }
-
-  handleCreateReminder(data, callback) {
-    try {
-      const { userId, message, scheduledTime, channelId } = data;
-
-      if (!userId || !message || !scheduledTime) {
-        const error = new Error('Missing required fields: userId, message, scheduledTime');
-        if (callback) callback({ error: error.message, created: false });
-        return;
-      }
-
-      const reminder = databaseService.createReminder(userId, message, scheduledTime, {
-        channelId,
-      });
-
-      if (callback) {
-        callback({
-          created: true,
-          reminder,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      logger.info(`Reminder created: ${reminder.id} for user ${userId}`);
-    } catch (error) {
-      logger.error('Error creating reminder:', error);
-      if (callback) callback({ error: error.message, created: false });
-    }
-  }
-
-  /**
-   * Validate reminder edit/delete input has required fields
-   * @private
-   */
-  _validateReminderInput(data, requiredFields) {
-    for (const field of requiredFields) {
-      if (!data[field]) return `Missing required fields: ${requiredFields.join(', ')}`;
-    }
-    return null;
-  }
-
-  /**
-   * Find reminder by ID from active reminders
-   * @private
-   */
-  _findReminder(userId, reminderId) {
-    const allReminders = databaseService.getActiveReminders(userId);
-    return allReminders?.find((r) => r.id === reminderId);
-  }
-
-  handleEditReminder(data, callback) {
-    try {
-      const validationError = this._validateReminderInput(data, ['reminderId', 'userId']);
-      if (validationError) {
-        if (callback) callback({ error: validationError, updated: false });
-        return;
-      }
-
-      const { reminderId, userId, message, scheduledTime } = data;
-      const reminder = this._findReminder(userId, reminderId);
-
-      if (!reminder) {
-        if (callback) callback({ error: `Reminder not found: ${reminderId}`, updated: false });
-        return;
-      }
-
-      if (message) reminder.message = message;
-      if (scheduledTime) reminder.scheduled_time = scheduledTime;
-
-      logger.info(`Reminder ${reminderId} updated`);
-      if (callback) callback({ updated: true, reminder, timestamp: new Date().toISOString() });
-    } catch (error) {
-      logger.error('Error editing reminder:', error);
-      if (callback) callback({ error: error.message, updated: false });
-    }
-  }
-
-  /**
-   * Delete reminder from database
-   * @private
-   */
-  _deleteReminderFromDb(reminderId, userId) {
-    if (userId) {
-      return databaseService.deleteReminder(reminderId, userId);
-    }
-    // Admin deletion - delete without user_id check
-    const stmt = databaseService.db.prepare('DELETE FROM reminders WHERE id = ?');
-    const result = stmt.run(reminderId);
-    return result.changes > 0;
-  }
-
-  /**
-   * Send delete response via callback
-   * @private
-   */
-  _sendDeleteResponse(callback, response) {
-    if (callback) callback(response);
-  }
-
-  handleDeleteReminder(data, callback) {
-    try {
-      const validationError = this._validateReminderInput(data, ['reminderId']);
-      if (validationError) {
-        return this._sendDeleteResponse(callback, { error: validationError, deleted: false });
-      }
-
-      const { reminderId, userId } = data;
-      const deleted = this._deleteReminderFromDb(reminderId, userId);
-
-      if (!deleted) {
-        logger.warn(
-          `Delete failed - reminder not found: ${reminderId} for user ${userId || 'admin'}`
-        );
-        return this._sendDeleteResponse(callback, {
-          error: 'Reminder not found or already deleted',
-          deleted: false,
-          reminderId,
-        });
-      }
-
-      logger.info(`Reminder deleted: ${reminderId}`);
-      this._sendDeleteResponse(callback, {
-        deleted: true,
-        reminderId,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      logger.error('Error deleting reminder:', error);
-      this._sendDeleteResponse(callback, { error: error.message, deleted: false });
-    }
-  }
-
-  handleFilterReminders(data, callback) {
-    try {
-      const result = processFilterReminders(databaseService, data);
-      if (callback) callback(result);
-      logger.debug(`Reminders filtered: ${result.total} results`);
-    } catch (error) {
-      logger.error('Error filtering reminders:', error);
-      if (callback) callback({ error: error.message, reminders: [] });
-    }
-  }
-
-  /**
-   * Service management page handlers
-   * Note: getBootEnabledStatus is imported from ./web-dashboard/handlers/serviceHandlers
-   */
-
-  /**
-   * Build service object with system info
-   * @private
-   */
-  _buildServiceObject(bootEnabled) {
-    return buildServiceObject(bootEnabled);
-  }
-
-  setupServiceHandlers(socket) {
-    // Handle request_services event
-    socket.on('request_services', (data, callback) => {
-      try {
-        getBootEnabledStatus('aszune-bot')
-          .then((bootEnabled) => {
-            const services = [this._buildServiceObject(bootEnabled)];
-            if (callback) {
-              callback({
-                services,
-                total: services.length,
-                timestamp: new Date().toISOString(),
-              });
-            }
-            logger.debug(`Services retrieved: ${services.length}`);
-          })
-          .catch((error) => {
-            logger.error('Error getting boot status:', error);
-            const services = [this._buildServiceObject(false)];
-            if (callback) {
-              callback({
-                services,
-                total: services.length,
-                timestamp: new Date().toISOString(),
-              });
-            }
-          });
-      } catch (error) {
-        logger.error('Error retrieving services:', error);
-        if (callback) callback({ error: error.message, services: [] });
-      }
-    });
-
-    // Handle service_action event
-    socket.on('service_action', (data, callback) => {
-      this.handleServiceAction(data, callback);
-    });
-
-    // Handle quick_service_action event
-    socket.on('quick_service_action', (data, callback) => {
-      this.handleQuickServiceAction(data, callback);
-    });
-
-    // Handle request_discord_status event
-    socket.on('request_discord_status', (data, callback) => {
-      this.handleDiscordStatus(callback);
-    });
-
-    // Handle request_instance_status event
+  _registerInstanceHandlers(socket) {
     socket.on('request_instance_status', (data, callback) => {
       this.handleInstanceStatus(callback);
     });
 
-    // Handle request_all_instances event (admin view)
     socket.on('request_all_instances', (data, callback) => {
       this.handleAllInstances(callback);
     });
 
-    // Handle instance_action event (approve/revoke)
     socket.on('instance_action', (data, callback) => {
       this.handleInstanceAction(data, callback);
     });
   }
+
 
   /**
    * Handle instance tracking status request
@@ -2863,17 +2245,17 @@ class WebDashboardService {
    * Get version and commit information
    * @returns {Object} Version info
    */
-  getVersionInfo() {
+  async getVersionInfo() {
     try {
       const packageJson = require('../../package.json');
-      const { execSync } = require('child_process');
 
       let commitSha = 'unknown';
       let commitUrl = '';
       let releaseUrl = '';
 
       try {
-        commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+        const { stdout } = await execPromise('git rev-parse --short HEAD');
+        commitSha = stdout.trim();
         commitUrl = `https://github.com/powerfulqa/aszune-ai-bot/commit/${commitSha}`;
       } catch (e) {
         // Git not available

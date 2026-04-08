@@ -96,22 +96,22 @@ const commands = {
     },
     async execute(interaction) {
       return interaction.reply(
-        '**Aszai Bot Commands:**\n' +
-          '`/help` - Show this help message\n' +
-          '`/clearhistory` - Clear your conversation history (keeps your stats)\n' +
-          '`/newconversation` - Start fresh on a new topic\n' +
-          '`/summary` - Summarise your current conversation\n' +
-          '`/summarise <text>` - Summarise provided text\n' +
-          '`/stats` - Show your usage stats\n' +
-          '`/analytics` - Show Discord server analytics\n' +
-          '`/dashboard` - Show performance dashboard\n' +
-          '`/resources` - Show resource optimization status\n' +
-          '`/remind <time> <message>` - Set a reminder\n' +
-          '`/reminders` - List your active reminders\n' +
-          '`/cancelreminder <id>` - Cancel a specific reminder\n' +
-          '`/userinfo [user]` - Show detailed user information\n' +
-          '`/serverinfo` - Show detailed server information\n' +
-          'Simply chat as normal to talk to the bot!'
+        `**Aszai Bot Commands:**
+\`/help\` - Show this help message
+\`/clearhistory\` - Clear your conversation history (keeps your stats)
+\`/newconversation\` - Start fresh on a new topic
+\`/summary\` - Summarise your current conversation
+\`/summarise <text>\` - Summarise provided text
+\`/stats\` - Show your usage stats
+\`/analytics\` - Show Discord server analytics
+\`/dashboard\` - Show performance dashboard
+\`/resources\` - Show resource optimization status
+\`/remind <time> <message>\` - Set a reminder
+\`/reminders\` - List your active reminders
+\`/cancelreminder <id>\` - Cancel a specific reminder
+\`/userinfo [user]\` - Show detailed user information
+\`/serverinfo\` - Show detailed server information
+Simply chat as normal to talk to the bot!`
       );
     },
     textCommand: '!help',

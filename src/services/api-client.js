@@ -58,11 +58,13 @@ class ApiClient {
       );
     }
 
+    const perplexityConfig = config.API.PERPLEXITY;
     const payload = {
-      model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
+      model: this._selectModel(messages, options, perplexityConfig),
       messages: messages,
-      max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
-      temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
+      max_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS.CHAT,
+      temperature: options.temperature || perplexityConfig.DEFAULT_TEMPERATURE,
+      ...this._buildSearchOptions(options, perplexityConfig),
     };
 
     // Log request summary for debugging
@@ -93,6 +95,47 @@ class ApiClient {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Select the appropriate model based on conversation length
+   * @param {Array} messages - Conversation messages
+   * @param {Object} options - Request options
+   * @param {Object} perplexityConfig - Perplexity API config
+   * @returns {string} Model ID
+   * @private
+   */
+  _selectModel(messages, options, perplexityConfig) {
+    if (options.model) return options.model;
+    if (
+      perplexityConfig.MULTI_TURN_MODEL &&
+      messages.length > perplexityConfig.MULTI_TURN_THRESHOLD
+    ) {
+      return perplexityConfig.MULTI_TURN_MODEL;
+    }
+    return perplexityConfig.DEFAULT_MODEL;
+  }
+
+  /**
+   * Build search-specific options for the API payload
+   * @param {Object} options - Request options
+   * @param {Object} perplexityConfig - Perplexity API config
+   * @returns {Object} Search options to merge into payload
+   * @private
+   */
+  _buildSearchOptions(options, perplexityConfig) {
+    const searchOpts = {};
+    if (perplexityConfig.RETURN_CITATIONS) {
+      searchOpts.return_citations = true;
+    }
+    const domainFilter = options.searchDomainFilter || perplexityConfig.SEARCH_DOMAIN_FILTER;
+    if (domainFilter && domainFilter.length > 0) {
+      searchOpts.search_domain_filter = domainFilter;
+    }
+    if (options.searchRecencyFilter) {
+      searchOpts.search_recency_filter = options.searchRecencyFilter;
+    }
+    return searchOpts;
   }
 
   /**
@@ -150,6 +193,13 @@ class ApiClient {
       // Validate response structure
       this._validateResponseStructure(body);
       this._validateChoiceContent(body.choices[0]);
+
+      // Log token usage if available
+      if (body.usage) {
+        logger.info(
+          `API Usage: prompt=${body.usage.prompt_tokens}, completion=${body.usage.completion_tokens}, total=${body.usage.total_tokens}`
+        );
+      }
 
       return body;
     } catch (parseError) {

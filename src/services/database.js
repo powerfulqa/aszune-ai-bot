@@ -212,6 +212,8 @@ class DatabaseService {
   }
 
   getPerformanceMetrics(metricType, hours = 24) {
+    const hoursNum = Math.max(1, Math.floor(Number(hours) || 24));
+    const hoursStr = `-${hoursNum} hours`;
     return this._executeSql(
       (db) =>
         db
@@ -219,11 +221,11 @@ class DatabaseService {
             `
         SELECT value, timestamp, metadata
         FROM performance_metrics
-        WHERE metric_type = ? AND timestamp >= datetime('now', '-${hours} hours')
+        WHERE metric_type = ? AND timestamp >= datetime('now', ?)
         ORDER BY timestamp DESC
       `
           )
-          .all(metricType),
+          .all(metricType, hoursStr),
       []
     );
   }

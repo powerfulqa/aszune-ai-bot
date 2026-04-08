@@ -48,11 +48,22 @@ class MetricsBroadcaster {
       return;
     }
 
-    this.metricsInterval = setInterval(async () => {
-      await this._broadcastMetrics();
-    }, this.broadcastIntervalMs);
+    this._scheduleNext();
 
     logger.debug(`Metrics broadcaster started (interval: ${this.broadcastIntervalMs}ms)`);
+  }
+
+  /**
+   * Schedule next broadcast after current one completes (prevents overlap)
+   * @private
+   */
+  _scheduleNext() {
+    this.metricsInterval = setTimeout(async () => {
+      await this._broadcastMetrics();
+      if (this.metricsInterval) {
+        this._scheduleNext();
+      }
+    }, this.broadcastIntervalMs);
   }
 
   /**
@@ -60,7 +71,7 @@ class MetricsBroadcaster {
    */
   stop() {
     if (this.metricsInterval) {
-      clearInterval(this.metricsInterval);
+      clearTimeout(this.metricsInterval);
       this.metricsInterval = null;
       logger.debug('Metrics broadcaster stopped');
     }
