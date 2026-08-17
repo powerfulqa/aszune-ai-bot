@@ -6,6 +6,10 @@ const { request } = require('undici');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
+const {
+  buildAgentRequest,
+  normalizeAgentResponse,
+} = require('./perplexity-secure/helpers/agentApiAdapter');
 
 /**
  * API Client class for handling HTTP requests
@@ -59,8 +63,15 @@ class ApiClient {
     }
 
     const perplexityConfig = config.API.PERPLEXITY;
+    const model = this._selectModel(messages, options, perplexityConfig);
+
+    // Agent API path (flag-gated, OFF by default — see agentApiAdapter.js)
+    if (perplexityConfig.USE_AGENT_API) {
+      return buildAgentRequest(messages, model, options, perplexityConfig);
+    }
+
     const payload = {
-      model: this._selectModel(messages, options, perplexityConfig),
+      model,
       messages: messages,
       max_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS.CHAT,
       temperature: options.temperature || perplexityConfig.DEFAULT_TEMPERATURE,
@@ -154,10 +165,14 @@ class ApiClient {
     );
 
     try {
+      // Hard timeout so a stalled upstream can't hang the request forever.
+      // (RATE_LIMITS.API_TIMEOUT_MS was defined in config but never applied.)
+      const timeoutMs = config.RATE_LIMITS?.API_TIMEOUT_MS || 30000;
       const response = await request(fullUrl, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       return await this.handleResponse(response);
@@ -166,6 +181,15 @@ class ApiClient {
       logger.error(`API request failed for endpoint ${endpoint}:`, error.message);
       throw this.handleRequestError(error);
     }
+  }
+
+  /**
+   * Resolve the chat endpoint based on the Agent-API flag.
+   * @returns {string} Endpoint path
+   */
+  getChatEndpoint() {
+    const p = config.API.PERPLEXITY;
+    return p.USE_AGENT_API ? p.ENDPOINTS.AGENT : p.ENDPOINTS.CHAT_COMPLETIONS;
   }
 
   /**
@@ -188,7 +212,11 @@ class ApiClient {
     }
 
     try {
-      const body = await response.body.json();
+      const raw = await response.body.json();
+
+      // Normalise the Agent API response into the Chat Completions shape so the
+      // rest of the pipeline is unchanged (flag-gated, OFF by default).
+      const body = config.API.PERPLEXITY.USE_AGENT_API ? normalizeAgentResponse(raw) : raw;
 
       // Validate response structure
       this._validateResponseStructure(body);

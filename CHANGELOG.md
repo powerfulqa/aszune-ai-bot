@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- Removed a sanitizer bug that silently stripped SQL keywords (`drop`, `create`, `update`, …) from
+  every chat message, corrupting gaming vocabulary before it reached the AI or history
+- Hardened the admin dashboard: Socket.IO handshake authentication, destructive operations gated
+  behind `DASHBOARD_TOKEN` (read-only without it), config file allowlist + secret masking,
+  command-injection fix (execFile with allowlisted args), and constant-time token comparison
+- Removed the hardcoded default `TRACKING_ADMIN_KEY`; the tracking server now requires it and
+  persists authorizations to SQLite (survives restarts)
+- `npm audit` now **gates CI** (production, high severity); cleared 33 advisories (16 high) to zero
+
+### Changed
+
+- **Node.js floor raised to `>=22.19.0`** (Node 20 is EOL); added `.nvmrc` (24); CI now tests a
+  Node 22 + 24 matrix and runs on current GitHub Actions (checkout/setup-node/codecov v7)
+- **Tooling:** ESLint 8 → 10 with flat config (`eslint.config.js`); Jest 29 → 30; Prettier 3.9
+- **Runtime deps:** discord.js 14.27, express 4 → 5, undici 7 → 8 (with an enforced request
+  timeout), better-sqlite3 12 → 13, dotenv 16 → 17
+- Added Dependabot; consolidated five divergent AI-agent instruction files into a single root
+  `CLAUDE.md`
+
+### Fixed
+
+- Restored missing config keys (`CACHE.MAX_MEMORY_MB`/`DEFAULT_TTL_MS`, `COLORS.SUCCESS`/`WARNING`),
+  the user-stats save interval (was 24h, now 5m), a duplicate emoji-reaction call, and a missing
+  telemetry shutdown step
+- Removed broken/stub npm scripts and stopped tracking generated test artifacts
+
 ## [2.0.0] - 2026-04-08
 
 ### Security
@@ -42,8 +70,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Tests
 
-- Add 32 new tests for Perplexity API features (model selection, search options, citations,
-  recency filter, token logging)
+- Add 32 new tests for Perplexity API features (model selection, search options, citations, recency
+  filter, token logging)
 - Fix 3 pre-existing flaky time-ago tests
 - **1,845 tests passing** across 182 suites, 0 failures
 
@@ -522,7 +550,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - JavaScript `Map` objects for conversation history and rate limiting
 - Enhanced error handling and environment variable validation
 
-[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.5.0...HEAD
+<!-- Note: v1.11.0 and v2.0.0 are documented above but were never git-tagged, so they have no
+     compare links. The latest tag is v1.10.0. -->
+
+[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.7.0...v1.8.0
+[1.7.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.6.5...v1.7.0
+[1.6.5]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.6.0...v1.6.5
+[1.6.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.3.6...v1.4.0

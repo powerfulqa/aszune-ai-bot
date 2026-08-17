@@ -20,7 +20,6 @@ module.exports = {
     '!**/data/**',
     '!ecosystem.config.js',
     '!jest.setup.js',
-    '!src/utils/enhanced-conversation-context.js',
   ],
   // Define pattern for test files to exclude helper files
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],

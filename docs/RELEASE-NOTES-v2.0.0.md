@@ -4,10 +4,10 @@
 
 ## Overview
 
-Version 2.0.0 is a major release focused on security hardening, architecture cleanup, and
-Perplexity API enhancements. The web dashboard was reduced by 625 lines through handler module
-extraction, all synchronous file I/O was replaced with async equivalents, and the Perplexity
-integration now supports citations, intelligent model selection, and search filtering.
+Version 2.0.0 is a major release focused on security hardening, architecture cleanup, and Perplexity
+API enhancements. The web dashboard was reduced by 625 lines through handler module extraction, all
+synchronous file I/O was replaced with async equivalents, and the Perplexity integration now
+supports citations, intelligent model selection, and search filtering.
 
 ## Security Fixes
 
@@ -29,7 +29,7 @@ integration now supports citations, intelligent model selection, and search filt
 ### Citation Support
 
 - Enabled `return_citations: true` on all API requests
-- Responses now include a compact source footer: *Sources: wowpedia.fandom.com, wowhead.com*
+- Responses now include a compact source footer: _Sources: wowpedia.fandom.com, wowhead.com_
 - Limited to 5 domains, displayed as domain names only to stay within Discord embed limits
 - Invalid URLs are silently skipped
 
@@ -56,8 +56,8 @@ integration now supports citations, intelligent model selection, and search filt
 ### Web Dashboard Decomposition
 
 - Removed 625 lines of duplicate inline socket handler code from `web-dashboard.js`
-- Wired up the already-extracted handler modules in `web-dashboard/handlers/`
-  (`configHandlers`, `logsHandlers`, `networkHandlers`, `reminderHandlers`, `serviceHandlers`)
+- Wired up the already-extracted handler modules in `web-dashboard/handlers/` (`configHandlers`,
+  `logsHandlers`, `networkHandlers`, `reminderHandlers`, `serviceHandlers`)
 - Removed unused imports (`fs`, `getBootEnabledStatus`, `buildServiceObject`,
   `buildNetworkInterfaces`, `processReminderRequest`, `processFilterReminders`,
   `testGatewayConnectivity`)
@@ -122,19 +122,19 @@ integration now supports citations, intelligent model selection, and search filt
 
 ## Files Changed
 
-| File | Change |
-| --- | --- |
-| `src/services/database.js` | SQL injection fix |
-| `src/services/web-dashboard.js` | -625 lines: handler extraction, async I/O, logging |
-| `src/services/web-dashboard/handlers/configHandlers.js` | Async file I/O |
-| `src/services/web-dashboard/metrics-broadcaster.js` | Self-scheduling broadcasts |
-| `src/utils/conversation.js` | Cleanup threshold fix, userStats cap |
-| `src/services/api-client.js` | Model selection, search options, token logging |
-| `src/services/perplexity-secure.js` | Citation footer, recency filter |
-| `src/config/config.js` | New Perplexity API config fields |
-| `src/utils/time-ago.js` | Calendar-aware month/year math |
-| `src/commands/index.js` | Template literal for help command |
-| `package.json` | Version bump to 2.0.0 |
+| File                                                    | Change                                             |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| `src/services/database.js`                              | SQL injection fix                                  |
+| `src/services/web-dashboard.js`                         | -625 lines: handler extraction, async I/O, logging |
+| `src/services/web-dashboard/handlers/configHandlers.js` | Async file I/O                                     |
+| `src/services/web-dashboard/metrics-broadcaster.js`     | Self-scheduling broadcasts                         |
+| `src/utils/conversation.js`                             | Cleanup threshold fix, userStats cap               |
+| `src/services/api-client.js`                            | Model selection, search options, token logging     |
+| `src/services/perplexity-secure.js`                     | Citation footer, recency filter                    |
+| `src/config/config.js`                                  | New Perplexity API config fields                   |
+| `src/utils/time-ago.js`                                 | Calendar-aware month/year math                     |
+| `src/commands/index.js`                                 | Template literal for help command                  |
+| `package.json`                                          | Version bump to 2.0.0                              |
 
 ## Upgrade Notes
 
@@ -142,5 +142,5 @@ integration now supports citations, intelligent model selection, and search filt
 - No database migrations required
 - New config fields have sensible defaults; no `.env` changes needed
 - `SEARCH_DOMAIN_FILTER` is empty by default; optionally populate with gaming domains
-- `sonar-pro` model upgrade is automatic for multi-turn conversations; set
-  `MULTI_TURN_MODEL: null` in config to disable
+- `sonar-pro` model upgrade is automatic for multi-turn conversations; set `MULTI_TURN_MODEL: null`
+  in config to disable

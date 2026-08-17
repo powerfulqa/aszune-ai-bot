@@ -183,9 +183,9 @@ describe('PerplexitySecure - Search Features', () => {
     it('should throw for empty history (validated by buildRequestPayload)', async () => {
       mockApiResponse();
 
-      await expect(
-        service._processChatResponse([], opts, cacheConfig, false)
-      ).rejects.toThrow('Messages array cannot be empty');
+      await expect(service._processChatResponse([], opts, cacheConfig, false)).rejects.toThrow(
+        'Messages array cannot be empty'
+      );
     });
   });
 });

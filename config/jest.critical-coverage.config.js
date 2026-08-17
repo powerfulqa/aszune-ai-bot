@@ -72,7 +72,10 @@ module.exports = {
     },
     './src/utils/conversation.js': {
       branches: 80, // Target: 80%
-      functions: 100, // Already exceeds
+      // Jest 30's v8 provider counts the interval-callback arrows inside
+      // initializeIntervals(), which are guarded by NODE_ENV !== 'test' and so
+      // never run under test — 94.11% (16/17). Jest 29 did not count them.
+      functions: 94,
       lines: 80, // Target: 80%
       statements: 80, // Target: 80%
     },
@@ -99,7 +102,6 @@ module.exports = {
     '!**/data/**',
     '!ecosystem.config.js',
     '!jest.setup.js',
-    '!src/utils/enhanced-conversation-context.js',
   ],
 
   // Generate detailed coverage reports

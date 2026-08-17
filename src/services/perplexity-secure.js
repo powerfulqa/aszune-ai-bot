@@ -294,7 +294,8 @@ class PerplexityService {
    * @returns {Promise<Object>} API response
    */
   async sendChatRequest(messages, options = {}) {
-    const endpoint = config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS;
+    // Endpoint follows the Agent-API flag (defaults to Chat Completions)
+    const endpoint = this.apiClient.getChatEndpoint();
     const requestPayload = this.apiClient.buildRequestPayload(messages, options);
 
     // Define API request function

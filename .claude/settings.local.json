@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(find '/c/Users/ch/Personal Projects/aszune-ai-bot/src' -type f -name '*.js' -exec grep -l 'process.exit' {} \\\\;)",
+      "WebFetch(domain:docs.perplexity.ai)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npx jest:*)",
+      "Bash(node_modules/.bin/jest --passWithNoTests --silent)",
+      "Bash(ls node_modules/.bin/jest*)",
+      "Bash(npx --no-install jest --version)",
+      "Bash(npx --no-install jest --passWithNoTests)",
+      "Bash(npx eslint:*)",
+      "Bash(node -e ':*)",
+      "Bash(gh pr create --title 'fix: code review fixes, Perplexity API enhancements, and test improvements' --body ':*)",
+      "Bash(ls -la *.md *.txt *.json *.js *.sh)",
+      "Bash(ls docs/RELEASE-NOTES-v1.*.md)",
+      "Bash(ls docs/RELEASE-NOTES-*.md)"
+    ]
+  }
+}

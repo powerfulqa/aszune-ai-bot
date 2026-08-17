@@ -6,6 +6,8 @@ coverage-*/
 data/
 logs/
 test-results/
+test-results.json
+test-output.txt
 test-data/
 junit.xml
 .DS_Store

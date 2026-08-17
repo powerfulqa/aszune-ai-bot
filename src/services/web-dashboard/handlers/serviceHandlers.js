@@ -7,6 +7,12 @@
 const logger = require('../../../utils/logger');
 const { execPromise } = require('../../../utils/shell-exec-helper');
 const {
+  runPm2ServiceAction,
+  runPm2QuickAction,
+  resolvePm2AppName,
+  isValidAction,
+} = require('../../../utils/pm2-service');
+const {
   sendOperationError,
   sendErrorWithEmptyArray,
   sendConnectionError,
@@ -18,22 +24,27 @@ const { buildServiceObject } = require('../../../utils/system-info');
  * @param {Socket} socket - Socket.IO socket instance
  * @param {WebDashboardService} dashboard - Dashboard service instance
  */
-function registerServiceHandlers(socket, dashboard) {
+function registerServiceHandlers(socket, dashboard, options = {}) {
+  const { allowControl = true } = options;
+
   socket.on('request_services', (data, callback) => {
     handleRequestServices(dashboard, callback);
-  });
-
-  socket.on('service_action', (data, callback) => {
-    handleServiceAction(dashboard, data, callback);
-  });
-
-  socket.on('quick_service_action', (data, callback) => {
-    handleQuickServiceAction(data, callback);
   });
 
   socket.on('request_discord_status', (data, callback) => {
     handleDiscordStatus(dashboard, callback);
   });
+
+  // start/stop/restart mutate running services; only register when control is allowed
+  if (allowControl) {
+    socket.on('service_action', (data, callback) => {
+      handleServiceAction(dashboard, data, callback);
+    });
+
+    socket.on('quick_service_action', (data, callback) => {
+      handleQuickServiceAction(data, callback);
+    });
+  }
 }
 
 /**
@@ -174,33 +185,28 @@ function validateServiceActionInput(data) {
     return 'Missing required fields: serviceName, action';
   }
 
-  const validActions = ['start', 'stop', 'restart'];
-  if (!validActions.includes(action)) {
-    return `Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`;
+  if (!resolvePm2AppName(serviceName)) {
+    return `Unknown or disallowed service: ${serviceName}`;
+  }
+
+  if (!isValidAction(action)) {
+    return `Invalid action: ${action}. Must be one of: start, stop, restart`;
   }
 
   return null;
 }
 
 /**
- * Execute PM2 command
+ * Execute PM2 command safely (no shell; allowlisted service name and action).
  * @param {string} serviceName - Service name
  * @param {string} action - Action to perform
  * @returns {Promise<string>} Command output
  */
 async function executePm2Command(serviceName, action) {
-  // Map service names to actual PM2 app name
-  let pm2AppName = serviceName;
-  if (serviceName === 'aszune-ai-bot' || serviceName === 'aszune-ai') {
-    pm2AppName = 'aszune-bot';
-  }
-
-  const pm2Command = `pm2 ${action} ${pm2AppName}`;
-  logger.debug(`Shell: ${pm2Command}`);
-
-  const { stdout } = await execPromise(pm2Command, { timeout: 10000 });
-  logger.info(`PM2 shell OK: ${pm2Command}`);
-  return stdout || `Successfully ${action}ed ${pm2AppName}`;
+  logger.debug(`PM2 action: ${action} ${serviceName}`);
+  const output = await runPm2ServiceAction(serviceName, action);
+  logger.info(`PM2 action OK: ${action} ${serviceName}`);
+  return output;
 }
 
 /**
@@ -220,9 +226,8 @@ async function handleQuickServiceAction(data, callback) {
     logger.info(`Quick service action: ${group}`);
 
     try {
-      const pm2Command = mapGroupToPm2Command(group);
-      logger.debug(`Executing PM2 quick action: ${pm2Command}`);
-      const { stdout, stderr } = await execPromise(pm2Command);
+      logger.debug(`Executing PM2 quick action: ${group}`);
+      const { stdout, stderr } = await runPm2QuickAction(group);
 
       if (stderr && !stderr.includes('Use `pm2 show')) {
         logger.warn(`PM2 stderr: ${stderr}`);
@@ -246,25 +251,6 @@ async function handleQuickServiceAction(data, callback) {
   } catch (error) {
     logger.error('Error performing batch service action:', error);
     sendOperationError(callback, error.message);
-  }
-}
-
-/**
- * Map quick action group to PM2 command
- * @param {string} group - Action group name
- * @returns {string} PM2 command
- */
-function mapGroupToPm2Command(group) {
-  switch (group) {
-    case 'restart-all':
-      return 'pm2 restart all';
-    case 'start-all':
-      return 'pm2 start all';
-    case 'stop-non-essential':
-      logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-      return 'pm2 restart all';
-    default:
-      throw new Error(`Unknown quick action group: ${group}`);
   }
 }
 
@@ -332,7 +318,6 @@ module.exports = {
   buildServiceObject,
   validateServiceActionInput,
   executePm2Command,
-  mapGroupToPm2Command,
   formatUptime,
   // Exported for testing
   isRunningUnderPm2,

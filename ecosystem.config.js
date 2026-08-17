@@ -20,14 +20,14 @@ module.exports = {
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
         INSTANCE_TRACKING_SERVER: 'http://localhost:3001/api/beacon',
-        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
+        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY,
       },
       env_development: {
         NODE_ENV: 'development',
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
         INSTANCE_TRACKING_SERVER: 'http://localhost:3001/api/beacon',
-        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
+        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY,
         REQUIRE_INSTANCE_VERIFICATION: 'false', // Disable in dev mode
       },
       // Error handling
@@ -47,7 +47,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
+        TRACKING_ADMIN_KEY: process.env.TRACKING_ADMIN_KEY,
       },
       // Lightweight - minimal resources
       max_memory_restart: '100M',

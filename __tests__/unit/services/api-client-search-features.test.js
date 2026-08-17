@@ -184,9 +184,7 @@ describe('ApiClient - Search Features', () => {
 
       await client.handleResponse(mockResponse);
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        'API Usage: prompt=10, completion=20, total=30'
-      );
+      expect(infoSpy).toHaveBeenCalledWith('API Usage: prompt=10, completion=20, total=30');
       infoSpy.mockRestore();
     });
 

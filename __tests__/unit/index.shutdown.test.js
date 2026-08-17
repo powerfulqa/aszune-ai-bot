@@ -34,7 +34,7 @@ describe('Graceful Shutdown', () => {
     });
 
     const handler = context.processHandlers.get('uncaughtException');
-    handler(new Error('Test')); // eslint-disable-line no-unused-expressions
+    handler(new Error('Test'));
 
     expect(mockShutdown).toHaveBeenCalledWith('uncaughtException');
     context.processHandlers.set('uncaughtException', originalHandler);

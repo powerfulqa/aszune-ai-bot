@@ -1,7 +1,7 @@
 /**
  * Configuration for the Discord bot with auto-detection for Raspberry Pi models
  */
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 // Environment validation
 const requiredEnvVars = ['PERPLEXITY_API_KEY', 'DISCORD_BOT_TOKEN'];
@@ -41,6 +41,25 @@ function getIntEnvVar(envVar, defaultValue) {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
+/**
+ * Parse a comma-separated environment variable into a trimmed string array.
+ * Returns defaultValue when the variable is unset or empty.
+ *
+ * @param {string} envVar - Name of the environment variable
+ * @param {string[]} defaultValue - Fallback when unset/empty
+ * @returns {string[]} Parsed list
+ */
+function getListEnvVar(envVar, defaultValue = []) {
+  const raw = process.env[envVar];
+  if (typeof raw !== 'string' || raw.trim() === '') {
+    return defaultValue;
+  }
+  return raw
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 const config = {
   // API Keys and Tokens
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
@@ -61,6 +80,7 @@ const config = {
   CONVERSATION_INACTIVITY_TIMEOUT_MS: 15 * 60 * 1000, // 15 minutes - auto-clear context
   SESSION_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutes - conversation session timeout before treating as new conversation
   CONVERSATION_CONTEXT_WARNING_THRESHOLD: 10, // Warn user approaching limit
+  STATS_SAVE_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes - flush user stats to disk
 
   // Message and UI Limits
   MESSAGE_LIMITS: {
@@ -76,6 +96,8 @@ const config = {
   // Cache Configuration
   CACHE: {
     DEFAULT_MAX_ENTRIES: 100,
+    MAX_MEMORY_MB: 50, // In-memory response cache memory cap
+    DEFAULT_TTL_MS: 60 * 60 * 1000, // 1 hour default entry TTL
     CLEANUP_PERCENTAGE: 0.2,
     MAX_AGE_DAYS: 7,
     MAX_AGE_MS: 7 * 24 * 60 * 60 * 1000,
@@ -150,7 +172,15 @@ const config = {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
         CHAT_COMPLETIONS: '/chat/completions',
+        AGENT: '/v1/agent',
       },
+      // Opt-in migration to the newer Agent API (/v1/agent). Legacy Chat
+      // Completions remains supported by Perplexity (no announced sunset), so
+      // this defaults OFF. NOTE: the Agent request/response mapping in
+      // perplexity-secure/helpers/agentApiAdapter.js is a best-effort
+      // implementation from the migration guide and has NOT been validated
+      // against the live endpoint — verify before enabling in production.
+      USE_AGENT_API: process.env.USE_AGENT_API === 'true',
       DEFAULT_MODEL: 'sonar',
       MULTI_TURN_MODEL: 'sonar-pro',
       MULTI_TURN_THRESHOLD: 2, // Use sonar-pro when conversation history exceeds this many messages
@@ -160,7 +190,15 @@ const config = {
         SUMMARY: 256,
       },
       RETURN_CITATIONS: true,
-      SEARCH_DOMAIN_FILTER: [],
+      // Perplexity search_domain_filter is an ALLOWLIST: when non-empty, search
+      // is restricted to ONLY these domains. That improves answer quality for
+      // gaming questions but would starve general/long-tail queries, so the
+      // default stays empty (unrestricted). Operators can opt in via the
+      // SEARCH_DOMAIN_FILTER env var, e.g.:
+      //   SEARCH_DOMAIN_FILTER=wowhead.com,icy-veins.com,fextralife.com,ign.com,pcgamer.com
+      // NOTE (Agent API migration, Phase 5): this moves to a preset config
+      // rather than a per-request param — see the plan file.
+      SEARCH_DOMAIN_FILTER: getListEnvVar('SEARCH_DOMAIN_FILTER', []),
       SEARCH_RECENCY_KEYWORDS: ['latest', 'recent', 'new', 'current', 'today', 'patch', 'update'],
     },
   },
@@ -168,6 +206,9 @@ const config = {
   // Discord Embed Colors
   COLORS: {
     PRIMARY: parseInt('0099ff', 16),
+    SUCCESS: parseInt('57f287', 16), // green
+    WARNING: parseInt('fee75c', 16), // yellow
+    ERROR: parseInt('ed4245', 16), // red
   },
   // System Messages
   SYSTEM_MESSAGES: {

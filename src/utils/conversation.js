@@ -39,10 +39,10 @@ class ConversationManager {
    */
   initializeIntervals() {
     if (process.env.NODE_ENV !== 'test') {
-      // Set up save interval (every 5 minutes)
+      // Set up save interval (default every 5 minutes)
       this.saveStatsInterval = setInterval(
         () => this.saveUserStats(),
-        config.CACHE.CLEANUP_INTERVAL_MS
+        config.STATS_SAVE_INTERVAL_MS || 5 * 60 * 1000
       );
       this.activeIntervals.add(this.saveStatsInterval);
       // Set up cleanup interval - more frequently if Pi optimizations are enabled
@@ -68,7 +68,7 @@ class ConversationManager {
   startSaveStatsInterval() {
     this.saveStatsInterval = setInterval(
       () => this.saveUserStats(),
-      config.CACHE.CLEANUP_INTERVAL_MS
+      config.STATS_SAVE_INTERVAL_MS || 5 * 60 * 1000
     );
     this.activeIntervals.add(this.saveStatsInterval);
   }

@@ -461,14 +461,8 @@ async function handleChatMessage(message) {
     const reminderHandled = await handleReminderRequests(message, messageContent, userId);
     if (reminderHandled) return;
 
-    // Generate and process AI response
+    // Generate and process AI response (adds emoji reactions after replying)
     await processAIResponse(message, processedData, userId);
-
-    // Skip reactions in low CPU mode
-    const config = require('../config/config');
-    if (!config.PI_OPTIMIZATIONS?.LOW_CPU_MODE) {
-      await emojiManager.addReactionsToMessage(message);
-    }
 
     // Track performance metrics (simplified for refactored version)
     const totalTime = Date.now() - startTime;

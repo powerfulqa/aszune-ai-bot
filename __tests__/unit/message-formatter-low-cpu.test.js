@@ -3,8 +3,6 @@
  * Target: Cover the footer removal branch
  */
 
-/* eslint-disable max-lines-per-function */
-
 jest.mock('../../src/utils/logger');
 
 // Mock config for LOW_CPU_MODE testing

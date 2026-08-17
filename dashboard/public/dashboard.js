@@ -76,8 +76,33 @@ class Dashboard {
     }
   }
 
+  /**
+   * Resolve the dashboard auth token. A token supplied via ?token=... in the
+   * URL is persisted to localStorage (and stripped from the address bar) so it
+   * only needs to be provided once. Returns null when no token is available.
+   * @private
+   */
+  _resolveAuthToken() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get('token');
+      if (fromUrl) {
+        localStorage.setItem('dashboardToken', fromUrl);
+        params.delete('token');
+        const query = params.toString();
+        const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+        return fromUrl;
+      }
+      return localStorage.getItem('dashboardToken');
+    } catch {
+      return null;
+    }
+  }
+
   initializeSocket() {
-    this.socket = io();
+    const token = this._resolveAuthToken();
+    this.socket = token ? io({ auth: { token } }) : io();
 
     this.socket.on('connect', () => {
       this.setConnectionStatus(true);

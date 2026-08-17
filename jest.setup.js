@@ -79,5 +79,6 @@ afterEach(() => {
 //   jest.restoreAllMocks();
 // }, 2000);
 
-// Global test timeouts
-jest.setTimeout(10000);
+// Test timeout is configured centrally via testTimeout in jest.config.js
+// (30s). A previous jest.setTimeout(10000) here silently overrode it and was
+// too low for some legitimately slow tests (e.g. network-unreachable paths).

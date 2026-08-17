@@ -74,30 +74,45 @@ const VALIDATION_LIMITS = {
 };
 
 /**
- * Dangerous patterns that should be sanitized or rejected
+ * Sanitization rules: each dangerous pattern is paired with the warning
+ * emitted when it is removed. Keeping pattern and message together (rather
+ * than in parallel arrays indexed by position) prevents mismatches.
+ *
+ * SQL keywords are deliberately NOT stripped from user text: the database
+ * layer uses parameterized statements throughout, and words like "select",
+ * "update", "create" or "drop" are ordinary vocabulary in chat messages
+ * (e.g. "what's the drop rate?").
  */
-const DANGEROUS_PATTERNS = [
-  /<script[^>]*>.*?<\/script>/gi,
-  /<[^>]*>/g,
-  /javascript:/gi,
-  /data:/gi,
-  /vbscript:/gi,
-  /on\w+\s*=/gi,
-  /(union|select|insert|update|delete|drop|create|alter|exec|execute)/gi,
-  /\.\.\/|\.\.\\/gi,
-  /<iframe|<object|<embed|<link|<meta|<style/gi,
+const SANITIZATION_RULES = [
+  { pattern: /<script[^>]*>.*?<\/script>/gi, message: 'Script tags removed' },
+  { pattern: /<[^>]*>/g, message: 'HTML tags removed' },
+  { pattern: /javascript:/gi, message: 'JavaScript protocol removed' },
+  { pattern: /data:/gi, message: 'Data protocol removed' },
+  { pattern: /vbscript:/gi, message: 'VBScript protocol removed' },
+  { pattern: /on\w+\s*=/gi, message: 'Event handlers removed' },
+  { pattern: /\.\.\/|\.\.\\/g, message: 'Path traversal pattern removed' },
+  { pattern: /<iframe|<object|<embed|<link|<meta|<style/gi, message: 'Embedded content removed' },
 ];
+
+/**
+ * Dangerous patterns that should be sanitized or rejected
+ * (derived from SANITIZATION_RULES; exported for external use)
+ */
+const DANGEROUS_PATTERNS = SANITIZATION_RULES.map((rule) => rule.pattern);
 
 /**
  * Security patterns for input validation (shared across multiple validators)
  * These patterns detect common XSS and injection attempts
  */
+// Detection-only patterns used with .test() — no /g flag, because global
+// regexes are stateful across .test() calls (lastIndex carries over) and
+// produce intermittent false negatives.
 const DANGEROUS_SECURITY_PATTERNS = [
-  /<script[^>]*>.*?<\/script>/gi,
-  /javascript:/gi,
-  /data:/gi,
-  /vbscript:/gi,
-  /on\w+\s*=/gi,
+  /<script[^>]*>.*?<\/script>/i,
+  /javascript:/i,
+  /data:/i,
+  /vbscript:/i,
+  /on\w+\s*=/i,
 ];
 
 /**
@@ -106,10 +121,10 @@ const DANGEROUS_SECURITY_PATTERNS = [
  */
 const DANGEROUS_JS_EXECUTION_PATTERNS = [
   ...DANGEROUS_SECURITY_PATTERNS,
-  /eval\s*\(/gi,
-  /expression\s*\(/gi,
-  /setTimeout\s*\(/gi,
-  /setInterval\s*\(/gi,
+  /eval\s*\(/i,
+  /expression\s*\(/i,
+  /setTimeout\s*\(/i,
+  /setInterval\s*\(/i,
 ];
 
 /**
@@ -509,29 +524,14 @@ class InputValidator {
     let sanitized = content;
     const warnings = [];
 
-    // Apply all sanitization rules
-    const sanitizationRules = [
-      { pattern: DANGEROUS_PATTERNS[0], message: 'Script tags removed' },
-      { pattern: DANGEROUS_PATTERNS[1], message: 'HTML tags removed' },
-      { pattern: DANGEROUS_PATTERNS[2], message: 'JavaScript protocol removed' },
-      { pattern: DANGEROUS_PATTERNS[3], message: 'Data protocol removed' },
-      { pattern: DANGEROUS_PATTERNS[4], message: 'VBScript protocol removed' },
-      { pattern: DANGEROUS_PATTERNS[5], message: 'Event handlers removed' },
-      { pattern: DANGEROUS_PATTERNS[6], message: 'Path traversal pattern removed' },
-      { pattern: DANGEROUS_PATTERNS[7], message: 'XSS patterns removed' },
-    ];
-
-    // Apply removal patterns
-    sanitizationRules.forEach((rule) => {
-      if (rule.pattern.test(sanitized)) {
-        sanitized = sanitized.replace(rule.pattern, '');
+    for (const rule of SANITIZATION_RULES) {
+      // replace() with a /g pattern always scans from the start, unlike
+      // test(), which is stateful on global regexes.
+      const replaced = sanitized.replace(rule.pattern, '');
+      if (replaced !== sanitized) {
+        sanitized = replaced;
         warnings.push(rule.message);
       }
-    });
-
-    // Check for detection-only patterns
-    if (DANGEROUS_PATTERNS[6].test(sanitized)) {
-      warnings.push('Potential SQL injection pattern detected');
     }
 
     return { content: sanitized, warnings };

@@ -4,9 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.10.x  | :white_check_mark: |
-| 1.9.x   | :white_check_mark: |
-| < 1.9   | :x:                |
+| 2.0.x   | :white_check_mark: |
+| < 2.0   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -15,8 +14,11 @@ follow these steps:
 
 ### How to Report
 
-1. **DO NOT** create a public GitHub issue for security vulnerabilities
-2. Send an email to the project maintainers with details about the vulnerability
+1. **DO NOT** create a public GitHub issue for security vulnerabilities.
+2. Use **GitHub's private vulnerability reporting**: on the repository, open the **Security** tab and
+   click **"Report a vulnerability"**
+   (<https://github.com/powerfulqa/aszune-ai-bot/security/advisories/new>). This opens a private
+   advisory visible only to the maintainers.
 3. Include the following information:
    - Description of the vulnerability
    - Steps to reproduce the issue
@@ -62,14 +64,21 @@ The following are generally out of scope:
 
 The project implements several security measures:
 
-- **Dependency Scanning**: Automated vulnerability scanning with npm audit
-- **Secret Detection**: Gitleaks integration for detecting exposed secrets
-- **Input Validation**: Comprehensive input sanitization and validation
-- **Error Handling**: Secure error handling to prevent information disclosure
-- **File Permissions**: Secure file permissions for sensitive data
-- **Rate Limiting**: Built-in rate limiting to prevent abuse
+- **Dependency scanning**: `npm audit` runs in CI and **fails the build** on high-severity
+  production advisories; Dependabot proposes updates weekly
+- **Secret detection**: Gitleaks (via qlty); secrets are read from environment only and validated at
+  startup — none are committed
+- **Input validation**: sanitisation of user content before it reaches the AI or storage
+- **Parameterised SQL**: all `better-sqlite3` access uses prepared statements with bound parameters
+- **Dashboard access control**: the admin dashboard binds to `127.0.0.1` by default; destructive
+  operations require `DASHBOARD_TOKEN` (Socket.IO handshake auth with constant-time comparison), and
+  without a token the dashboard is read-only
+- **Command execution**: service control uses `execFile` with allowlisted arguments (no shell
+  interpolation)
+- **Rate limiting**: per-user request throttling
 
 ## Contact
 
-For security-related questions or concerns, please contact the project maintainers through the
-repository's issue tracker (for non-sensitive matters) or via email for sensitive security issues.
+For **sensitive security issues**, use GitHub's private vulnerability reporting (see
+[How to Report](#how-to-report)) — do not open a public issue. For non-sensitive questions, the
+public issue tracker is fine.

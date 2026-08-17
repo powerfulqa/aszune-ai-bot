@@ -79,7 +79,7 @@ class TimeParser {
         parsedText: result.text,
       };
     } catch (error) {
-      throw new Error(`Time parsing failed: ${error.message}`);
+      throw new Error(`Time parsing failed: ${error.message}`, { cause: error });
     }
   }
 

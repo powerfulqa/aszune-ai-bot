@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const crypto = require('crypto');
 const path = require('path');
 const os = require('os');
 const fsPromises = require('fs').promises;
@@ -10,6 +11,12 @@ const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
 const { execPromise } = require('../utils/shell-exec-helper');
+const {
+  runPm2ServiceAction,
+  runPm2QuickAction,
+  resolvePm2AppName,
+  isValidAction,
+} = require('../utils/pm2-service');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -73,6 +80,41 @@ class WebDashboardService {
   }
 
   /**
+   * Constant-time comparison of a provided token against the configured one.
+   * Returns true when no token is configured (auth disabled).
+   * @private
+   * @param {string} provided - Token supplied by the client
+   * @returns {boolean} Whether the token is valid
+   */
+  _verifyToken(provided) {
+    if (!this.authToken) {
+      return true; // auth disabled
+    }
+    if (typeof provided !== 'string' || provided.length === 0) {
+      return false;
+    }
+    const providedBuf = Buffer.from(provided);
+    const expectedBuf = Buffer.from(this.authToken);
+    // timingSafeEqual requires equal lengths; an early length check leaks only
+    // the token length, which is not sensitive.
+    if (providedBuf.length !== expectedBuf.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(providedBuf, expectedBuf);
+  }
+
+  /**
+   * Extract a bearer token from an Authorization header value.
+   * @private
+   */
+  _extractBearer(authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    return authHeader.substring(7);
+  }
+
+  /**
    * Create bearer token auth middleware
    * @private
    * @returns {Function} Express middleware
@@ -84,19 +126,37 @@ class WebDashboardService {
         return next();
       }
 
-      // Check Authorization header
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      const token = this._extractBearer(req.headers.authorization);
+      if (token === null) {
         return res.status(401).json({ error: 'Unauthorized - Bearer token required' });
       }
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      if (token !== this.authToken) {
+      if (!this._verifyToken(token)) {
         return res.status(401).json({ error: 'Unauthorized - Invalid token' });
       }
 
       next();
     };
+  }
+
+  /**
+   * Socket.IO connection auth middleware. When a token is configured, requires
+   * it in the handshake (auth.token or Authorization header); otherwise allows
+   * the connection (destructive handlers are gated separately).
+   * @private
+   */
+  _authorizeSocket(socket, next) {
+    if (!this.authToken) {
+      return next();
+    }
+    const token =
+      socket.handshake?.auth?.token ||
+      this._extractBearer(socket.handshake?.headers?.authorization);
+    if (this._verifyToken(token)) {
+      return next();
+    }
+    logger.warn(`Dashboard socket rejected (invalid/missing token): ${socket.id}`);
+    next(new Error('Unauthorized'));
   }
 
   /**
@@ -1276,6 +1336,21 @@ class WebDashboardService {
    * Setup Socket.IO handlers
    */
   setupSocketHandlers() {
+    // Enforce token auth on the handshake when a token is configured
+    this.io.use((socket, next) => this._authorizeSocket(socket, next));
+
+    // Destructive operations (config writes, service control, reminder edits,
+    // instance actions) require a configured token. Without one the dashboard
+    // is read-only, so it is never "secure only by accident of bind address".
+    const allowDestructive = !!this.authToken;
+    if (!allowDestructive) {
+      logger.warn(
+        'DASHBOARD_TOKEN is not set — dashboard is read-only. Config saves, ' +
+          'service control, reminder edits and instance actions are disabled. ' +
+          'Set DASHBOARD_TOKEN to enable them.'
+      );
+    }
+
     this.io.on('connection', (socket) => {
       logger.debug(`Dashboard client connected: ${socket.id}`);
 
@@ -1289,15 +1364,18 @@ class WebDashboardService {
         this._emitMetricsToSocket(socket, 'sending requested metrics');
       });
 
-      // Register handler groups via extracted modules
-      registerConfigHandlers(socket, this);
+      // Read-only handler groups are always available
       registerLogsHandlers(socket, this);
       registerNetworkHandlers(socket, this);
-      registerReminderHandlers(socket, this);
-      registerServiceHandlers(socket, this);
+
+      // Handler groups with mixed read/write register their destructive events
+      // only when destructive operations are allowed
+      registerConfigHandlers(socket, this, { allowWrite: allowDestructive });
+      registerReminderHandlers(socket, this, { allowWrite: allowDestructive });
+      registerServiceHandlers(socket, this, { allowControl: allowDestructive });
 
       // Instance tracking handlers (not yet extracted)
-      this._registerInstanceHandlers(socket);
+      this._registerInstanceHandlers(socket, { allowActions: allowDestructive });
     });
   }
 
@@ -1305,7 +1383,9 @@ class WebDashboardService {
    * Register instance-tracking socket handlers (not yet extracted to handler modules)
    * @private
    */
-  _registerInstanceHandlers(socket) {
+  _registerInstanceHandlers(socket, options = {}) {
+    const { allowActions = true } = options;
+
     socket.on('request_instance_status', (data, callback) => {
       this.handleInstanceStatus(callback);
     });
@@ -1314,11 +1394,13 @@ class WebDashboardService {
       this.handleAllInstances(callback);
     });
 
-    socket.on('instance_action', (data, callback) => {
-      this.handleInstanceAction(data, callback);
-    });
+    // instance_action can revoke/approve instances; only register when allowed
+    if (allowActions) {
+      socket.on('instance_action', (data, callback) => {
+        this.handleInstanceAction(data, callback);
+      });
+    }
   }
-
 
   /**
    * Handle instance tracking status request
@@ -1638,33 +1720,14 @@ class WebDashboardService {
     }
   }
 
-  async executePm2ViaShell(pm2AppName, action) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    const pm2Command = `pm2 ${action} ${pm2AppName}`;
-    logger.debug(`Shell: ${pm2Command}`);
-
-    await execPromise(pm2Command, { timeout: 10000 });
-    logger.info(`PM2 shell OK: ${pm2Command}`);
-    return `Successfully ${action}ed ${pm2AppName}`;
-  }
-
   async executePm2Command(serviceName, action) {
     try {
-      // Map service names to actual PM2 app name
-      let pm2AppName = serviceName;
-      if (serviceName === 'aszune-ai-bot' || serviceName === 'aszune-ai') {
-        pm2AppName = 'aszune-bot'; // Actual PM2 process name
-      }
-
-      // Use PM2 shell command directly (daemon may not be accessible from app context)
-      logger.debug(`PM2 shell command: ${action} ${pm2AppName}`);
-      return await this.executePm2ViaShell(pm2AppName, action);
+      logger.debug(`PM2 action: ${action} ${serviceName}`);
+      // Runs via execFile with an allowlisted app name and action — no shell
+      return await runPm2ServiceAction(serviceName, action);
     } catch (error) {
       logger.error(`PM2 error: ${error.message}`);
-      throw new Error(`Failed to execute PM2 command: ${error.message}`);
+      throw new Error(`Failed to execute PM2 command: ${error.message}`, { cause: error });
     }
   }
 
@@ -1730,44 +1793,24 @@ class WebDashboardService {
       return 'Missing required fields: serviceName, action';
     }
 
-    const validActions = ['start', 'stop', 'restart'];
-    if (!validActions.includes(action)) {
-      return `Invalid action: ${action}. Must be one of: ${validActions.join(', ')}`;
+    if (!resolvePm2AppName(serviceName)) {
+      return `Unknown or disallowed service: ${serviceName}`;
+    }
+
+    if (!isValidAction(action)) {
+      return `Invalid action: ${action}. Must be one of: start, stop, restart`;
     }
 
     return null;
   }
 
   /**
-   * Map quick action group to PM2 command
-   * @private
-   */
-  _mapGroupToPm2Command(group) {
-    switch (group) {
-      case 'restart-all':
-        return 'pm2 restart all';
-      case 'start-all':
-        return 'pm2 start all';
-      case 'stop-non-essential':
-        // This would stop the bot itself, which would kill the dashboard
-        logger.warn('stop-non-essential mapped to restart-all to prevent dashboard shutdown');
-        return 'pm2 restart all';
-      default:
-        throw new Error(`Unknown quick action group: ${group}`);
-    }
-  }
-
-  /**
-   * Execute PM2 quick action command
+   * Execute PM2 quick action command safely (no shell; allowlisted group).
    * @private
    */
   async _executePm2QuickAction(group) {
-    const util = require('util');
-    const execPromise = util.promisify(require('child_process').exec);
-
-    const pm2Command = this._mapGroupToPm2Command(group);
-    logger.debug(`Executing PM2 quick action: ${pm2Command}`);
-    const { stdout, stderr } = await execPromise(pm2Command);
+    logger.debug(`Executing PM2 quick action: ${group}`);
+    const { stdout, stderr } = await runPm2QuickAction(group);
 
     if (stderr && !stderr.includes('Use `pm2 show')) {
       logger.warn(`PM2 stderr: ${stderr}`);

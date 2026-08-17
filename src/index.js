@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 /**
  * Aszai Discord Bot - Main Entry Point
  *
@@ -305,6 +305,12 @@ const shutdownSteps = [
     name: 'instance tracker',
     handler: () => {
       instanceTracker.stop();
+    },
+  },
+  {
+    name: 'telemetry',
+    handler: async () => {
+      await telemetry.shutdown();
     },
   },
   {

@@ -3,8 +3,6 @@
  * Target: Cover the non-compact code paths
  */
 
-/* eslint-disable max-lines-per-function */
-
 jest.mock('../../src/utils/logger');
 
 // Mock config with compact mode disabled

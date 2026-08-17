@@ -16,8 +16,8 @@ async function getGuildMemberStats(guild) {
     return { onlineCount: 0, botCount: 0, totalMembers: 0, humanMembers: 0 };
   }
 
-  let onlineCount = 0;
-  let botCount = 0;
+  let onlineCount;
+  let botCount;
   const totalMembers = guild.memberCount || 0;
 
   try {

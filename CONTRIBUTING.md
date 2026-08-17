@@ -1,7 +1,13 @@
 # Contributing to Aszune AI Bot
 
-Thank you for your interest in contributing to Aszune AI Bot! We welcome contributions from the
-community and are pleased to have you join us.
+Thank you for your interest in Aszune AI Bot.
+
+> **Important — licensing.** This is a **source-available** project under a proprietary license
+> ("All Rights Reserved" — see [`LICENSE`](LICENSE)). Cloning, forking, downloading, using, and
+> running the code all require **prior written permission** from the maintainer. Before doing any of
+> the setup steps below, please [open an issue](https://github.com/powerfulqa/aszune-ai-bot/issues)
+> to request permission and describe your intended contribution. The workflow below applies once
+> permission has been granted.
 
 ## Table of Contents
 

@@ -16,12 +16,13 @@
 
 const express = require('express');
 const cors = require('cors');
+const InstanceStore = require('./instance-store');
 
 // Configuration
 const CONFIG = {
   port: process.env.PORT || 3001,
-  adminKey: process.env.TRACKING_ADMIN_KEY || 'change-this-secret-key',
-  dbPath: process.env.DB_PATH || './data/instances.db',
+  adminKey: process.env.TRACKING_ADMIN_KEY || null,
+  dbPath: process.env.INSTANCE_DB_PATH || './data/instances.db',
   onlineThresholdMs: 2 * 60 * 60 * 1000, // 2 hours
   // Auto-authorize first instance (your Pi) or instances from same IP
   autoAuthorizeFirstInstance: true,
@@ -33,10 +34,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// In-memory storage (use SQLite in production)
+// In-process working store, mirrored to SQLite for durability across restarts
 const instances = new Map();
 // Set of authorized IPs (populated from first authorized instance)
 const authorizedIps = new Set();
+const store = new InstanceStore(CONFIG.dbPath);
+
+/**
+ * Persist an instance to SQLite (write-through from the in-memory Map).
+ */
+function persistInstance(instance) {
+  store.upsert(instance);
+}
+
+/**
+ * Load persisted instances into the in-memory Map at startup and rebuild the
+ * set of authorized IPs.
+ */
+function loadPersistedInstances() {
+  for (const instance of store.loadAll()) {
+    instances.set(instance.instanceId, instance);
+    if (instance.authorized && !instance.revoked && instance.location?.actualIp) {
+      authorizedIps.add(instance.location.actualIp);
+    }
+  }
+  if (instances.size > 0) {
+    // eslint-disable-next-line no-console
+    console.log(`[STORE] Loaded ${instances.size} instance(s) from ${CONFIG.dbPath}`);
+  }
+}
 
 // ============================================================================
 // Beacon Endpoint - Registration and Heartbeat
@@ -76,6 +102,7 @@ function handleRegistration(req, res, clientIp) {
       actualIp: clientIp,
     };
 
+    persistInstance(existingInstance);
     logReturningInstance(existingInstance);
 
     return res.json({
@@ -103,6 +130,7 @@ function handleRegistration(req, res, clientIp) {
   });
 
   instances.set(instanceId, instanceData);
+  persistInstance(instanceData);
 
   // If auto-authorized, add this IP to authorized IPs
   if (shouldAutoAuthorize) {
@@ -176,6 +204,7 @@ function handleHeartbeat(req, res) {
   }
 
   updateInstanceStats(instance, stats);
+  persistInstance(instance);
   logHeartbeat(instanceId, stats);
 
   res.json({ verified: true, revoked: false, authorized: true });
@@ -214,6 +243,7 @@ app.post('/api/revoke', authenticateAdmin, (req, res) => {
   instance.revoked = true;
   instance.authorized = false;
   instance.revokedAt = new Date().toISOString();
+  persistInstance(instance);
 
   // eslint-disable-next-line no-console
   console.log(`[REVOKED] Instance ${instanceId}`);
@@ -238,6 +268,7 @@ app.post('/api/approve', authenticateAdmin, (req, res) => {
   if (instance.location?.actualIp) {
     authorizedIps.add(instance.location.actualIp);
   }
+  persistInstance(instance);
 
   // eslint-disable-next-line no-console
   console.log(`[APPROVED] Instance ${instanceId}`);
@@ -348,6 +379,11 @@ function getUniqueCountries(instanceList) {
 // ============================================================================
 
 function authenticateAdmin(req, res, next) {
+  // Fail closed if no admin key is configured — never allow admin access
+  if (!CONFIG.adminKey) {
+    return res.status(503).json({ error: 'Admin API disabled: TRACKING_ADMIN_KEY not configured' });
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -406,11 +442,33 @@ function logRevocationAttempt(instanceId) {
 // Server Startup
 // ============================================================================
 
-app.listen(CONFIG.port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Instance Tracking Server running on port ${CONFIG.port}`);
-  // eslint-disable-next-line no-console
-  console.log(`Admin key: ${CONFIG.adminKey.substring(0, 4)}...`);
-});
+function start() {
+  if (!CONFIG.adminKey) {
+    // eslint-disable-next-line no-console
+    console.error(
+      'FATAL: TRACKING_ADMIN_KEY is not set. Refusing to start the tracking server ' +
+        'without an admin key (the admin API would otherwise be unprotected).'
+    );
+    process.exit(1);
+  }
+
+  loadPersistedInstances();
+
+  app.listen(CONFIG.port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Instance Tracking Server running on port ${CONFIG.port}`);
+    // eslint-disable-next-line no-console
+    console.log(`Admin key: ${CONFIG.adminKey.substring(0, 4)}...`);
+    // eslint-disable-next-line no-console
+    console.log(`Persistence: ${store.persistent ? CONFIG.dbPath : 'in-memory only'}`);
+  });
+}
+
+// Only start the server when run directly (not when imported by tests)
+if (require.main === module) {
+  start();
+}
 
 module.exports = app;
+module.exports.start = start;
+module.exports.loadPersistedInstances = loadPersistedInstances;

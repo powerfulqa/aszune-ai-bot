@@ -1,19 +1,26 @@
-name: "Pull Request Template" description: "Template for creating new Pull Requests" title: "[TYPE]:
-Brief description" body:
+<!--
+Note: this is a source-available project under a proprietary license. Code contributions require
+prior written permission from the maintainer — please open an issue to request it before submitting.
+-->
 
-- type: markdown attributes: value: | Thanks for creating a new Pull Request! Please fill out the
-  template below.
+## Type of change
 
-- type: dropdown id: type attributes: label: Type of change options: - Feature (new functionality) -
-  Bug fix - Documentation - Refactoring - Performance improvement - Test - Build/CI - Other
-  validations: required: true
-- type: textarea id: description attributes: label: Description description: Please provide a
-  detailed description of your changes placeholder: What changes did you make and why? validations:
-  required: true
-- type: textarea id: testing attributes: label: Testing description: Describe the tests you've added
-  or updated placeholder: How did you verify your changes work correctly? validations: required:
-  true
-- type: checkboxes id: checks attributes: label: Checklist options: - label: I have added tests that
-  prove my fix is effective or that my feature works required: false - label: I have updated the
-  documentation accordingly required: false - label: My changes generate no new warnings required:
-  true - label: I have added appropriate release notes required: false
+<!-- Delete those that don't apply -->
+
+Feature / Bug fix / Documentation / Refactoring / Performance / Test / Build-CI / Other
+
+## Description
+
+<!-- What does this PR change, and why? -->
+
+## Related issues
+
+<!-- e.g. Fixes #123 -->
+
+## Checklist
+
+- [ ] I have permission to contribute this change (see the note above)
+- [ ] `npm test` passes
+- [ ] `npm run lint` passes (`eslint src __tests__ --max-warnings=0`)
+- [ ] Tests added/updated for the change
+- [ ] Docs updated if behaviour or configuration changed

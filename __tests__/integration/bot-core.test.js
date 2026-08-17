@@ -7,7 +7,6 @@
 let mockGlobalConversationManager = null;
 
 // Mock dependencies
-jest.mock('axios');
 jest.mock('../../src/commands', () => ({
   handleTextCommand: jest.fn().mockImplementation(async (message) => {
     // Mock implementation that simulates command handling
@@ -386,11 +385,6 @@ describe('Bot Integration - Core', () => {
     // Mock Discord.js Client constructor
     const { Client } = require('discord.js');
     Client.mockImplementation(() => mockClientInstance);
-
-    // Mock axios
-    const axios = require('axios');
-    axios.get = jest.fn().mockResolvedValue({ data: 'Mock data' });
-    axios.post = jest.fn().mockResolvedValue({ data: 'Mock response' });
 
     // Create mock message
     message = {

@@ -1,5 +1,6 @@
 jest.mock('child_process', () => ({
   exec: jest.fn(),
+  execFile: jest.fn(),
 }));
 
 jest.mock('../../../src/utils/logger', () => ({

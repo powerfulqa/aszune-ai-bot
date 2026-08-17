@@ -173,7 +173,7 @@ class ErrorHandler {
     const safeError = error || { message: 'Unknown error', stack: null };
 
     // Safely access potentially problematic properties
-    let stack = null;
+    let stack;
     try {
       stack = safeError.stack;
     } catch (stackError) {

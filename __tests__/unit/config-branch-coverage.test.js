@@ -109,6 +109,23 @@ describe('Config - Branch Coverage', () => {
       expect(config.SYSTEM_MESSAGES).toHaveProperty('CHAT');
       expect(config.SYSTEM_MESSAGES).toHaveProperty('SUMMARY');
     });
+
+    it('exposes cache keys the cache manager reads (regression: were missing)', () => {
+      const config = require('../../src/config/config');
+
+      expect(Number.isFinite(config.CACHE.MAX_MEMORY_MB)).toBe(true);
+      expect(Number.isFinite(config.CACHE.DEFAULT_TTL_MS)).toBe(true);
+      // cache-manager multiplies MAX_MEMORY_MB by 1024*1024 — must not be NaN
+      expect(Number.isFinite(config.CACHE.MAX_MEMORY_MB * 1024 * 1024)).toBe(true);
+    });
+
+    it('exposes embed colors used by reminder responses (regression: were missing)', () => {
+      const config = require('../../src/config/config');
+
+      expect(Number.isFinite(config.COLORS.PRIMARY)).toBe(true);
+      expect(Number.isFinite(config.COLORS.SUCCESS)).toBe(true);
+      expect(Number.isFinite(config.COLORS.WARNING)).toBe(true);
+    });
   });
 
   describe('Edge cases', () => {

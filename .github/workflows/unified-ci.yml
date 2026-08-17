@@ -25,7 +25,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history for accurate analysis
 
@@ -42,40 +42,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.17.0'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint src/ --max-warnings=0
+        run: npx eslint src __tests__ --max-warnings=0
 
       - name: Security audit
-        run: npm audit --audit-level=high --production
-        continue-on-error: true
+        run: npm audit --audit-level=high --omit=dev
 
   # Parallel test shards (3x faster than sequential) - NO COVERAGE for speed
+  # Matrix over the supported Node LTS lines (Maintenance 22 + Active 24)
   test:
-    name: Test (Shard ${{ matrix.shard }}/3)
+    name: Test (Node ${{ matrix.node }}, Shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        node: ['22', '24']
         shard: [1, 2, 3]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.17.0'
+          node-version: ${{ matrix.node }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -98,12 +99,12 @@ jobs:
       id-token: write # Required for QLTY OIDC authentication
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.17.0'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -148,7 +149,7 @@ jobs:
           "
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

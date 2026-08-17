@@ -74,7 +74,7 @@ class DatabaseService {
       if (this.isDisabled) return null;
       return operation(this.getDb());
     } catch (error) {
-      throw new Error(`${errorContext}: ${error.message}`);
+      throw new Error(`${errorContext}: ${error.message}`, { cause: error });
     }
   }
 
@@ -124,7 +124,7 @@ class DatabaseService {
       try {
         this._initializeDatabase();
       } catch (error) {
-        throw new Error(`Failed to initialize database: ${error.message}`);
+        throw new Error(`Failed to initialize database: ${error.message}`, { cause: error });
       }
     }
     return this.db;
@@ -140,7 +140,7 @@ class DatabaseService {
       schema.ensureTriggers(db);
       schema.runMigrations(db);
     } catch (error) {
-      throw new Error(`Failed to initialize database tables: ${error.message}`);
+      throw new Error(`Failed to initialize database tables: ${error.message}`, { cause: error });
     }
   }
 
@@ -618,7 +618,7 @@ class DatabaseService {
         this.db.close();
         this.db = null;
       } catch (error) {
-        throw new Error(`Failed to close database: ${error.message}`);
+        throw new Error(`Failed to close database: ${error.message}`, { cause: error });
       }
     }
   }

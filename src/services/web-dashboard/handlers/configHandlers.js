@@ -10,23 +10,41 @@ const logger = require('../../../utils/logger');
 const { sendError, sendSaveError, sendValidationError } = require('./callbackHelpers');
 const { validateEnvContent, validateJsContent } = require('../../../utils/config-validators');
 
+// Only these files may be read or written through the dashboard. Without this
+// allowlist the handlers accept any path under cwd, which allows overwriting
+// source files (remote code execution) and reading arbitrary files.
+const READABLE_FILES = ['.env', 'config.js', '.env.example'];
+const WRITABLE_FILES = ['.env', 'config.js'];
+
+// Placeholder shown to the dashboard in place of a secret value. A save that
+// still carries this sentinel is treated as "leave the secret unchanged".
+const SECRET_MASK = '********';
+
+// Env keys whose values must never be sent to the browser.
+const SECRET_KEY_PATTERN = /(TOKEN|KEY|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL)/i;
+
 /**
  * Register config-related socket event handlers
  * @param {Socket} socket - Socket.IO socket instance
  * @param {WebDashboardService} _dashboard - Dashboard service instance (unused, for API consistency)
  */
-function registerConfigHandlers(socket, _dashboard) {
+function registerConfigHandlers(socket, _dashboard, options = {}) {
+  const { allowWrite = true } = options;
+
   socket.on('request_config', async (data, callback) => {
     await handleRequestConfig(data, callback);
-  });
-
-  socket.on('save_config', async (data, callback) => {
-    await handleSaveConfig(data, callback);
   });
 
   socket.on('validate_config', (data, callback) => {
     handleValidateConfig(data, callback);
   });
+
+  // save_config mutates files on disk; only register it when writes are allowed
+  if (allowWrite) {
+    socket.on('save_config', async (data, callback) => {
+      await handleSaveConfig(data, callback);
+    });
+  }
 }
 
 /**
@@ -37,9 +55,17 @@ function registerConfigHandlers(socket, _dashboard) {
 async function handleRequestConfig(data, callback) {
   try {
     const filename = data?.filename || '.env';
+
+    // Security: only allow reading known config files
+    if (!READABLE_FILES.includes(filename)) {
+      logger.warn(`Security: Rejected config read for non-allowlisted file "${filename}"`);
+      sendError(callback, `Access denied: ${filename} is not a readable config file`);
+      return;
+    }
+
     const configPath = path.join(process.cwd(), filename);
 
-    // Security: prevent directory traversal
+    // Defense in depth: reject anything that resolves outside cwd
     if (!configPath.startsWith(process.cwd())) {
       logger.warn(`Security: Attempted directory traversal access to ${filename}`);
       sendError(callback, 'Access denied: Cannot access files outside project directory');
@@ -55,8 +81,9 @@ async function handleRequestConfig(data, callback) {
       return;
     }
 
-    // Read file content
-    const content = await fsPromises.readFile(configPath, 'utf-8');
+    // Read file content, masking any secret values before sending to the browser
+    const rawContent = await fsPromises.readFile(configPath, 'utf-8');
+    const content = maskSecrets(filename, rawContent);
     const fileInfo = await fsPromises.stat(configPath);
 
     if (callback) {
@@ -99,18 +126,22 @@ async function handleSaveConfig(data, callback) {
       return;
     }
 
-    // Create backup if file exists
+    // Create backup if file exists, and restore any masked secrets from the
+    // current file so an edited-in-browser copy can't blank out real secrets
+    let contentToWrite = content;
     try {
       await fsPromises.access(configPath);
+      const existing = await fsPromises.readFile(configPath, 'utf-8');
+      contentToWrite = restoreMaskedSecrets(filename, content, existing);
       const backupPath = `${configPath}.backup.${Date.now()}`;
       await fsPromises.copyFile(configPath, backupPath);
       logger.info(`Config backup created: ${backupPath}`);
     } catch {
-      // File doesn't exist yet, no backup needed
+      // File doesn't exist yet, no backup/restore needed
     }
 
     // Write new content
-    await fsPromises.writeFile(configPath, content, 'utf-8');
+    await fsPromises.writeFile(configPath, contentToWrite, 'utf-8');
 
     if (callback) {
       callback({
@@ -137,7 +168,69 @@ function validateConfigSaveInput(data) {
   if (!filename || content === undefined) {
     return 'Missing filename or content';
   }
+  if (!WRITABLE_FILES.includes(filename)) {
+    logger.warn(`Security: Rejected config save for non-allowlisted file "${filename}"`);
+    return `Access denied: ${filename} cannot be modified`;
+  }
   return null;
+}
+
+/**
+ * Replace secret values in .env content with a mask placeholder so raw
+ * credentials are never sent to the browser.
+ * @param {string} filename - File being read
+ * @param {string} content - Raw file content
+ * @returns {string} Content with secret values masked
+ */
+function maskSecrets(filename, content) {
+  if (filename !== '.env' || typeof content !== 'string') {
+    return content;
+  }
+  return content
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
+      if (!match) return line;
+      const [, indent, key, sep, value] = match;
+      if (value.trim() && SECRET_KEY_PATTERN.test(key)) {
+        return `${indent}${key}${sep}${SECRET_MASK}`;
+      }
+      return line;
+    })
+    .join('\n');
+}
+
+/**
+ * Restore masked secret values from the existing file so a save that still
+ * carries the mask placeholder keeps the real credential intact.
+ * @param {string} filename - File being written
+ * @param {string} newContent - Content submitted from the browser
+ * @param {string} existingContent - Current on-disk content
+ * @returns {string} Content with masked values restored
+ */
+function restoreMaskedSecrets(filename, newContent, existingContent) {
+  if (filename !== '.env' || typeof newContent !== 'string') {
+    return newContent;
+  }
+
+  const existingValues = new Map();
+  for (const line of existingContent.split('\n')) {
+    const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
+    if (match) existingValues.set(match[2], match[4]);
+  }
+
+  return newContent
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
+      if (!match) return line;
+      const [, indent, key, sep, value] = match;
+      if (value.trim() === SECRET_MASK && existingValues.has(key)) {
+        return `${indent}${key}${sep}${existingValues.get(key)}`;
+      }
+      return line;
+    })
+    .join('\n');
 }
 
 /**
@@ -226,4 +319,9 @@ module.exports = {
   performFileValidation,
   validateEnvFile,
   validateJsFile,
+  maskSecrets,
+  restoreMaskedSecrets,
+  READABLE_FILES,
+  WRITABLE_FILES,
+  SECRET_MASK,
 };

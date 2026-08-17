@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 10
+    labels:
+      - 'dependencies'
+    # Group low-risk minor/patch bumps into a single PR to reduce noise;
+    # majors come through as individual PRs for deliberate review.
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      # discord.js v15 is not stable yet; hold until it ships (tracked in the
+      # modernization plan). Remove this once ready to migrate.
+      - dependency-name: 'discord.js'
+        update-types: ['version-update:semver-major']
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    groups:
+      actions:
+        applies-to: version-updates
+        update-types:
+          - 'minor'
+          - 'patch'

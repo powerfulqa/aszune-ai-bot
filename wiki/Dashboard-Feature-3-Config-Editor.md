@@ -362,9 +362,7 @@ Content-Type: application/json
 {
   "success": true,
   "message": "Configuration restored successfully",
-  "config": {
-    /* restored configuration */
-  }
+  "config": {/* restored configuration */}
 }
 ```
 

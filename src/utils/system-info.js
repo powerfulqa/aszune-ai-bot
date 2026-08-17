@@ -72,31 +72,42 @@ function buildServiceObject(bootEnabled, options = {}) {
 }
 
 /**
+ * Build a single network interface entry, or null if it has no IP address.
+ * @param {string} name - Interface name
+ * @param {Array} addrs - Address records from os.networkInterfaces()
+ * @returns {Object|null} Interface entry
+ * @private
+ */
+function _buildInterfaceEntry(name, addrs) {
+  // Default to {} so the field reads below don't need optional chaining.
+  const ipv4 = addrs.find((addr) => addr.family === 'IPv4') || {};
+  const ipv6 = addrs.find((addr) => addr.family === 'IPv6') || {};
+
+  if (!ipv4.address && !ipv6.address) return null;
+
+  const isInternal = Boolean(ipv4.internal || ipv6.internal);
+  const isLoopback = name.toLowerCase().includes('lo') || isInternal;
+
+  return {
+    name,
+    ipv4: ipv4.address || null,
+    ipv6: ipv6.address || null,
+    mac: ipv4.mac || ipv6.mac || null,
+    internal: isInternal,
+    status: isLoopback ? 'LOOPBACK' : 'UP',
+  };
+}
+
+/**
  * Build network interfaces information
  * Used by web-dashboard.js and networkHandlers.js
  * @returns {Array} Network interfaces array
  */
 function buildNetworkInterfaces() {
-  const networkInterfaces = os.networkInterfaces();
   const interfaces = [];
-
-  for (const [name, addrs] of Object.entries(networkInterfaces)) {
-    const ipv4 = addrs.find((addr) => addr.family === 'IPv4');
-    const ipv6 = addrs.find((addr) => addr.family === 'IPv6');
-
-    if (ipv4 || ipv6) {
-      const isInternal = ipv4?.internal || ipv6?.internal || false;
-      const isLoopback = name.toLowerCase().includes('lo') || isInternal;
-
-      interfaces.push({
-        name,
-        ipv4: ipv4?.address || null,
-        ipv6: ipv6?.address || null,
-        mac: ipv4?.mac || ipv6?.mac || null,
-        internal: isInternal,
-        status: isLoopback ? 'LOOPBACK' : 'UP',
-      });
-    }
+  for (const [name, addrs] of Object.entries(os.networkInterfaces())) {
+    const entry = _buildInterfaceEntry(name, addrs);
+    if (entry) interfaces.push(entry);
   }
   return interfaces;
 }

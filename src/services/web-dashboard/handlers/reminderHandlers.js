@@ -23,26 +23,31 @@ const {
  * @param {Socket} socket - Socket.IO socket instance
  * @param {WebDashboardService} _dashboard - Dashboard service instance (unused, for API consistency)
  */
-function registerReminderHandlers(socket, _dashboard) {
+function registerReminderHandlers(socket, _dashboard, options = {}) {
+  const { allowWrite = true } = options;
+
   socket.on('request_reminders', (data, callback) => {
     handleRequestReminders(data, callback);
-  });
-
-  socket.on('create_reminder', (data, callback) => {
-    handleCreateReminder(data, callback);
-  });
-
-  socket.on('edit_reminder', (data, callback) => {
-    handleEditReminder(data, callback);
-  });
-
-  socket.on('delete_reminder', (data, callback) => {
-    handleDeleteReminder(data, callback);
   });
 
   socket.on('filter_reminders', (data, callback) => {
     handleFilterReminders(data, callback);
   });
+
+  // create/edit/delete mutate reminder records; only register when writes are allowed
+  if (allowWrite) {
+    socket.on('create_reminder', (data, callback) => {
+      handleCreateReminder(data, callback);
+    });
+
+    socket.on('edit_reminder', (data, callback) => {
+      handleEditReminder(data, callback);
+    });
+
+    socket.on('delete_reminder', (data, callback) => {
+      handleDeleteReminder(data, callback);
+    });
+  }
 }
 
 /**
