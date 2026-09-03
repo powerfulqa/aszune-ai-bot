@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-03
+
 ### Security
 
 - Removed a sanitizer bug that silently stripped SQL keywords (`drop`, `create`, `update`, …) from
