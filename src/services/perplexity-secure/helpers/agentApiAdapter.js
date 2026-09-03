@@ -156,13 +156,23 @@ function normalizeUsage(usage) {
 }
 
 /**
+ * Convert the Agent API's `[web:N]` inline citation markers to plain `[N]` so
+ * they match the numbered citation footer the rest of the pipeline renders.
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeInlineCitations(text) {
+  return typeof text === 'string' ? text.replace(/\[web:(\d+)\]/g, '[$1]') : text;
+}
+
+/**
  * Normalise an Agent response into the Chat Completions shape the rest of the
  * codebase expects.
  * @param {Object} body - Raw Agent response body
  * @returns {Object} `{ choices: [{ message: { role, content } }], citations, usage }`
  */
 function normalizeAgentResponse(body) {
-  const content = extractOutputText(body);
+  const content = normalizeInlineCitations(extractOutputText(body));
   const normalized = {
     choices: [{ message: { role: 'assistant', content } }],
     usage: normalizeUsage(body?.usage),
@@ -178,4 +188,5 @@ module.exports = {
   extractOutputText,
   extractCitations,
   normalizeUsage,
+  normalizeInlineCitations,
 };
