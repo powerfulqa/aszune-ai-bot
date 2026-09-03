@@ -10,13 +10,13 @@
 
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
 with comprehensive analytics and monitoring features. Built for gaming communities, it provides
-lore, guides, and advice using the Perplexity API's **sonar** and **sonar-pro** models while
+lore, guides, and advice using the **Perplexity Agent API** (`/v1/agent`) with web search while
 offering real-time performance dashboards and server analytics directly within Discord.
 
 ## Key Features
 
-- 🤖 **AI-Powered Conversations** - Context-aware chat with intelligent model selection (sonar for
-  quick queries, sonar-pro for multi-turn conversations)
+- 🤖 **AI-Powered Conversations** - Context-aware chat via the Perplexity Agent API (`/v1/agent`)
+  with web search, selectable by preset (`AGENT_PRESET`, default `low`)
 - 📎 **Source Citations** - Responses include source domains so users can verify information
 - 📊 **Web Dashboard** - Real-time monitoring with logs, services, network status, and configuration
 - ⏰ **Smart Reminders** - Natural language reminder scheduling with Discord notifications
@@ -451,8 +451,9 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 
 ### 🔴 Perplexity API Errors (400 / 401)
 
-- Validate your API key is current and supports the `chat/completions` endpoint
-- Model names are `"sonar"` (default) and `"sonar-pro"` (auto-selected for multi-turn)
+- Validate your API key is current and supports the Agent API `/v1/agent` endpoint
+- The bot uses the Agent API by default (`USE_AGENT_API=true`) with `AGENT_PRESET` (default `low`);
+  set `USE_AGENT_API=false` to fall back to the legacy Chat Completions path (sunset 2026-09-27)
 - Test the same key using a tool like Postman or curl
 
 ---

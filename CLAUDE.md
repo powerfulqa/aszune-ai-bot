@@ -20,7 +20,9 @@ default secrets, add persistence) but never add a disable/bypass path or weaken 
 Discord bot specialising in gaming lore, guides, and advice via the Perplexity API. Self-hosted,
 primary target a Raspberry Pi 5 (PM2). Node.js, CommonJS, no build step.
 
-- AI chat (Perplexity `sonar`/`sonar-pro`) with per-user conversation history + citations
+- AI chat via the Perplexity Agent API (`/v1/agent`, `USE_AGENT_API=true`, `AGENT_PRESET` default
+  `low`) with web search, per-user conversation history + citations. Legacy Chat Completions
+  (`sonar`/`sonar-pro`) remains as a fallback (`USE_AGENT_API=false`) but is sunset 2026-09-27.
 - Natural-language reminders (chrono-node) persisted in SQLite (`better-sqlite3`)
 - Express + Socket.IO admin dashboard (`src/services/web-dashboard.js`, bound to `127.0.0.1:3000`)
 - Discord analytics/monitoring commands; Raspberry Pi resource optimisations
