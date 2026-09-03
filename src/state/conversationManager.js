@@ -27,7 +27,12 @@ function initializeIntervals() {
     return;
   }
   if (process.env.NODE_ENV !== 'test') {
-    conversationManager.initializeIntervals();
+    // `module.exports = conversationManager` (below) assigns this wrapper onto the
+    // instance as `conversationManager.initializeIntervals`, shadowing the prototype
+    // method. Calling it via the instance would re-enter this wrapper and recurse
+    // infinitely (RangeError: Maximum call stack size exceeded) — a crash that only
+    // surfaces outside test mode. Invoke the prototype method directly.
+    ConversationManager.prototype.initializeIntervals.call(conversationManager);
     _intervalsInitialized = true;
   }
 }
