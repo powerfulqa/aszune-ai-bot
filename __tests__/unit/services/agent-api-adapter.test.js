@@ -12,6 +12,7 @@ const {
   extractOutputText,
   extractCitations,
   normalizeUsage,
+  normalizeInlineCitations,
 } = require('../../../src/services/perplexity-secure/helpers/agentApiAdapter');
 
 const PERPLEXITY = {
@@ -154,7 +155,27 @@ describe('normalizeUsage', () => {
   });
 });
 
+describe('normalizeInlineCitations', () => {
+  it('converts [web:N] markers to plain [N]', () => {
+    expect(normalizeInlineCitations('Released in 2017 [web:2] by Team Cherry [web:10].')).toBe(
+      'Released in 2017 [2] by Team Cherry [10].'
+    );
+  });
+
+  it('leaves text without markers unchanged and passes through non-strings', () => {
+    expect(normalizeInlineCitations('no markers here')).toBe('no markers here');
+    expect(normalizeInlineCitations(undefined)).toBeUndefined();
+  });
+});
+
 describe('normalizeAgentResponse', () => {
+  it('normalises [web:N] markers in the answer text', () => {
+    const normalized = normalizeAgentResponse({
+      output: [{ type: 'message', content: [{ type: 'output_text', text: 'See [web:1].' }] }],
+    });
+    expect(normalized.choices[0].message.content).toBe('See [1].');
+  });
+
   it('produces a Chat Completions shape from an Agent response', () => {
     const normalized = normalizeAgentResponse({
       output: [
