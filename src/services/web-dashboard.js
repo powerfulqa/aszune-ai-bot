@@ -600,8 +600,10 @@ class WebDashboardService {
       }
     });
 
-    this.app.get('/api/system', (req, res) => {
-      res.json(this.getSystemInfo());
+    this.app.get('/api/system', async (req, res) => {
+      // getSystemInfo() is async; without await, res.json serializes a pending
+      // Promise to `{}`, leaving the dashboard System Info panel blank.
+      res.json(await this.getSystemInfo());
     });
 
     this.setupDatabaseRoutes();

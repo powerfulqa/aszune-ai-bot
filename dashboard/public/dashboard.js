@@ -12,8 +12,41 @@ class Dashboard {
     this.lastActivityLogTime = 0;
     this.activityLogThrottle = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+    // Resolve the dashboard auth token once, then make every same-origin /api
+    // request carry it as a Bearer header. The server gates all /api routes
+    // behind DASHBOARD_TOKEN; without this only the Socket.IO connection is
+    // authenticated, so REST-fed panels (System Info, Database viewer, etc.)
+    // would 401 and render blank.
+    this._authToken = this._resolveAuthToken();
+    this._installAuthenticatedFetch();
+
     this.initializeSocket();
     this.setupEventListeners();
+  }
+
+  /**
+   * Wrap window.fetch so same-origin /api requests include the Bearer token.
+   * Idempotent across the multiple pages that load this script.
+   * @private
+   */
+  _installAuthenticatedFetch() {
+    const token = this._authToken;
+    if (!token || window.__dashAuthFetchInstalled) return;
+    window.__dashAuthFetchInstalled = true;
+    const origFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      try {
+        const url = typeof input === 'string' ? input : (input && input.url) || '';
+        if (url.startsWith('/api')) {
+          const headers = new Headers(init.headers || {});
+          if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+          init = { ...init, headers };
+        }
+      } catch {
+        // fall through to an unmodified fetch on any unexpected input shape
+      }
+      return origFetch(input, init);
+    };
   }
 
   /**
@@ -101,7 +134,7 @@ class Dashboard {
   }
 
   initializeSocket() {
-    const token = this._resolveAuthToken();
+    const token = this._authToken;
     this.socket = token ? io({ auth: { token } }) : io();
 
     this.socket.on('connect', () => {

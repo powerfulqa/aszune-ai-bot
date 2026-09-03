@@ -9,6 +9,7 @@ const logger = require('../../../utils/logger');
 const { sendError } = require('./callbackHelpers');
 const { buildNetworkInterfaces } = require('../../../utils/system-info');
 const { execPromise, testGatewayConnectivity } = require('../../../utils/shell-exec-helper');
+const NetworkDetector = require('../../network-detector');
 
 /**
  * Register network-related socket event handlers
@@ -35,7 +36,7 @@ async function handleNetworkStatus(dashboard, callback) {
     const hostname = os.hostname();
     const interfaces = await buildNetworkInterfaces();
     const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
-    const gatewayResult = await dashboard.detectGateway();
+    const gatewayResult = await NetworkDetector.detectGateway();
     const externalIp = await safeGetExternalIp(dashboard);
     const connectivityStatus = await dashboard.getNetworkStatus();
 
@@ -118,7 +119,7 @@ async function handleNetworkTest(dashboard, data, callback) {
  * @param {Array} results - Results array to append to
  */
 async function addGatewayTest(dashboard, results) {
-  await testGatewayConnectivity(() => dashboard.detectGateway(), results);
+  await testGatewayConnectivity(() => NetworkDetector.detectGateway(), results);
 }
 
 /**
