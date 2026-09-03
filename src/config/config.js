@@ -181,6 +181,11 @@ const config = {
       // implementation from the migration guide and has NOT been validated
       // against the live endpoint — verify before enabling in production.
       USE_AGENT_API: process.env.USE_AGENT_API === 'true',
+      // Agent API preset used when USE_AGENT_API is on. Perplexity's documented
+      // Sonar→Agent mapping: 'fast' = sonar, 'low' = sonar-pro,
+      // 'medium' = sonar-reasoning-pro, 'high' = sonar-deep-research. Defaults to
+      // 'low' (sonar-pro tier). Override with the AGENT_PRESET env var.
+      AGENT_PRESET: process.env.AGENT_PRESET || 'low',
       DEFAULT_MODEL: 'sonar',
       MULTI_TURN_MODEL: 'sonar-pro',
       MULTI_TURN_THRESHOLD: 2, // Use sonar-pro when conversation history exceeds this many messages
