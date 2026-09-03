@@ -80,26 +80,22 @@ function buildAgentRequest(messages, model, options = {}, perplexityConfig = {})
  * @param {Object} body
  * @returns {string}
  */
+function textFromOutputItem(item) {
+  if (Array.isArray(item?.content)) {
+    return item.content.map((c) => (typeof c?.text === 'string' ? c.text : '')).join('');
+  }
+  if (typeof item?.text === 'string') return item.text;
+  if (typeof item?.content === 'string') return item.content;
+  return '';
+}
+
 function extractOutputText(body) {
   if (!body || typeof body !== 'object') return '';
   if (typeof body.output_text === 'string' && body.output_text) return body.output_text;
-
   if (Array.isArray(body.output)) {
-    const texts = [];
-    for (const item of body.output) {
-      if (Array.isArray(item?.content)) {
-        for (const c of item.content) {
-          if (typeof c?.text === 'string') texts.push(c.text);
-        }
-      } else if (typeof item?.text === 'string') {
-        texts.push(item.text);
-      } else if (typeof item?.content === 'string') {
-        texts.push(item.content);
-      }
-    }
-    if (texts.length > 0) return texts.join('');
+    const text = body.output.map(textFromOutputItem).join('');
+    if (text) return text;
   }
-
   if (typeof body.choices?.[0]?.message?.content === 'string') {
     return body.choices[0].message.content;
   }
@@ -112,6 +108,23 @@ function extractOutputText(body) {
  * @param {Object} body
  * @returns {Array<string>}
  */
+function annotationUrls(content) {
+  const out = [];
+  for (const c of content || []) {
+    for (const a of c?.annotations || []) {
+      out.push(a?.url || a?.uri || a?.source?.url);
+    }
+  }
+  return out;
+}
+
+function urlsFromOutputItem(item) {
+  const out = [];
+  if (Array.isArray(item?.results)) out.push(...item.results.map((r) => r?.url));
+  if (Array.isArray(item?.content)) out.push(...annotationUrls(item.content));
+  return out;
+}
+
 function extractCitations(body) {
   const urls = new Set();
   const add = (u) => {
@@ -120,18 +133,8 @@ function extractCitations(body) {
 
   if (Array.isArray(body?.citations)) body.citations.forEach(add);
   if (Array.isArray(body?.search_results)) body.search_results.forEach((r) => add(r?.url));
-
   if (Array.isArray(body?.output)) {
-    for (const item of body.output) {
-      if (Array.isArray(item?.results)) item.results.forEach((r) => add(r?.url));
-      if (Array.isArray(item?.content)) {
-        for (const c of item.content) {
-          if (Array.isArray(c?.annotations)) {
-            c.annotations.forEach((a) => add(a?.url || a?.uri || a?.source?.url));
-          }
-        }
-      }
-    }
+    for (const item of body.output) urlsFromOutputItem(item).forEach(add);
   }
 
   return Array.from(urls);
