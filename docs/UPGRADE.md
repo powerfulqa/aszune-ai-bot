@@ -55,11 +55,13 @@ On the Pi, start via `start-pi-optimized.sh` if you are doing a full restart rat
 - **Dashboard is read-only by default.** Destructive dashboard operations (service control, config
   editor, reminder edits) now require `DASHBOARD_TOKEN`. Set it, then open the dashboard once as
   `http://<host>:3000/?token=YOUR_TOKEN` (the token is saved in the browser).
-- **Perplexity Agent API** stays OFF. Leave `USE_AGENT_API` unset — the Agent API path
-  (`/v1/agent`) has not been validated against the live endpoint yet; the bot runs on the proven
-  Chat Completions path by default.
-- **Optional env vars:** `SEARCH_DOMAIN_FILTER` (comma-separated Perplexity allowlist) and
-  `USE_AGENT_API` both default to off/empty and can be omitted.
+- **Perplexity Agent API** is now the default path. It has been validated against the live
+  `/v1/agent` endpoint and is enabled with `USE_AGENT_API=true` and `AGENT_PRESET=low` (sonar-pro
+  tier). This matters because the legacy Chat Completions path (`sonar`/`sonar-pro`) is **sunset on
+  2026-09-27**. To fall back temporarily, set `USE_AGENT_API=false` and restart.
+- **Optional env vars:** `AGENT_PRESET` (Agent API preset: `fast`/`low`/`medium`/`high`, default
+  `low`) and `SEARCH_DOMAIN_FILTER` (comma-separated Perplexity allowlist) can be omitted to take
+  the defaults.
 
 ### If startup fails
 

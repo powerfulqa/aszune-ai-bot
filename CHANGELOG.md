@@ -27,6 +27,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   timeout), better-sqlite3 12 → 13, dotenv 16 → 17
 - Added Dependabot; consolidated five divergent AI-agent instruction files into a single root
   `CLAUDE.md`
+- **Migrated the AI backend to the Perplexity Agent API** (`/v1/agent`, `USE_AGENT_API=true`,
+  `AGENT_PRESET` default `low`) with web search, ahead of the Chat Completions sunset
+  (2026-09-27). The adapter was validated end-to-end against the live endpoint; the legacy
+  Chat Completions path (`sonar`/`sonar-pro`) remains as a fallback via `USE_AGENT_API=false`
 
 ### Fixed
 
@@ -34,6 +38,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the user-stats save interval (was 24h, now 5m), a duplicate emoji-reaction call, and a missing
   telemetry shutdown step
 - Removed broken/stub npm scripts and stopped tracking generated test artifacts
+- **Startup crash:** `ConversationManager.initializeIntervals` recursed infinitely outside test
+  mode — the singleton export shadowed the prototype method — crash-looping the bot in production
+  while the full test suite (guarded by `NODE_ENV=test`) stayed green
+- **Dashboard:** System Info panel blank (`/api/system` served an un-awaited Promise); Network
+  panel blank (`dashboard.detectGateway` did not exist → now `NetworkDetector.detectGateway`);
+  REST-fed panels returned 401 because the client only sent the auth token on the Socket.IO
+  handshake, never on REST fetches; reminder edit/delete failed with "Missing required fields"
+  (missing/incorrect `userId`)
+- Normalised the Agent API's `[web:N]` inline citation markers to `[N]`
 
 ## [2.0.0] - 2026-04-08
 
