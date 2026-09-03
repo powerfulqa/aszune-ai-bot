@@ -704,6 +704,7 @@
             const scheduledTime = formatDateTimeForDisplay(rawTime);
             const message = reminder.message || 'No message';
             const id = reminder.id || 'unknown';
+            const userId = reminder.user_id || reminder.userId || '';
 
             return `
                 <tr>
@@ -713,8 +714,8 @@
                     <td><span class="status-badge status-${displayStatus}">${status}</span></td>
                     <td>${reminder.type || 'General'}</td>
                     <td class="reminder-actions">
-                        <button class="action-icon-btn edit" onclick="editReminder('${id}')">✏ Edit</button>
-                        <button class="action-icon-btn delete" onclick="deleteReminder('${id}')">🗑 Delete</button>
+                        <button class="action-icon-btn edit" onclick="editReminder('${id}', '${userId}')">✏ Edit</button>
+                        <button class="action-icon-btn delete" onclick="deleteReminder('${id}', '${userId}')">🗑 Delete</button>
                     </td>
                 </tr>
             `;
@@ -774,7 +775,7 @@
         );
       }
 
-      function editReminder(id) {
+      function editReminder(id, userId) {
         const dashboardSocket = window.dashboard?.socket;
         if (!dashboardSocket) {
           console.error('Dashboard socket not available');
@@ -787,7 +788,7 @@
             'edit_reminder',
             {
               reminderId: id,
-              userId: 'dashboard-user',
+              userId: userId,
               message: message,
             },
             (response) => {
@@ -803,7 +804,7 @@
         }
       }
 
-      function deleteReminder(id) {
+      function deleteReminder(id, userId) {
         if (!confirm('Are you sure you want to delete this reminder?')) {
           return;
         }
@@ -818,6 +819,7 @@
           'delete_reminder',
           {
             reminderId: id,
+            userId: userId,
           },
           (response) => {
             console.log('Delete reminder response:', response);
