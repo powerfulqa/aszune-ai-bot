@@ -628,9 +628,9 @@
             (service) => `
                 <div class="service-card">
                     <div class="service-header">
-                        <span class="service-name">${service.icon} ${service.name}</span>
+                        <span class="service-name">${escapeHtml(service.icon)} ${escapeHtml(service.name)}</span>
                         <div class="service-status">
-                            <span class="status-badge status-${service.status === 'Active' ? 'active' : 'inactive'}">${service.status}</span>
+                            <span class="status-badge status-${service.status === 'Active' ? 'active' : 'inactive'}">${escapeHtml(service.status)}</span>
                             <span class="enabled-indicator ${service.enabledOnBoot ? 'yes' : 'no'}">● ${service.enabledOnBoot ? 'Enabled' : 'Disabled'} on boot</span>
                         </div>
                     </div>
@@ -638,13 +638,13 @@
                     <div class="service-info">
                         <div class="info-row">
                             <span class="info-label">Status</span>
-                            <span class="info-value">${service.status}</span>
+                            <span class="info-value">${escapeHtml(service.status)}</span>
                         </div>
                         ${
                           service.uptime
                             ? `<div class="info-row">
                             <span class="info-label">Uptime</span>
-                            <span class="info-value">${service.uptime}</span>
+                            <span class="info-value">${escapeHtml(service.uptime)}</span>
                         </div>`
                             : ''
                         }
@@ -652,7 +652,7 @@
                           service.memory
                             ? `<div class="info-row">
                             <span class="info-label">Memory</span>
-                            <span class="info-value">${service.memory}</span>
+                            <span class="info-value">${escapeHtml(service.memory)}</span>
                         </div>`
                             : ''
                         }
@@ -661,9 +661,9 @@
                     <div class="service-actions">
                         ${
                           service.status === 'Running'
-                            ? `<button class="action-btn btn-stop" onclick="performAction('${service.id}', 'stop')">⏹ Stop</button>
-                            <button class="action-btn btn-restart" onclick="performAction('${service.id}', 'restart')">🔄 Restart</button>`
-                            : `<button class="action-btn btn-start" onclick="performAction('${service.id}', 'start')">▶ Start</button>`
+                            ? `<button class="action-btn btn-stop" data-service-action="stop" data-service="${escapeHtml(service.id)}">⏹ Stop</button>
+                            <button class="action-btn btn-restart" data-service-action="restart" data-service="${escapeHtml(service.id)}">🔄 Restart</button>`
+                            : `<button class="action-btn btn-start" data-service-action="start" data-service="${escapeHtml(service.id)}">▶ Start</button>`
                         }
                     </div>
                 </div>
@@ -671,6 +671,23 @@
           )
           .join('');
       }
+
+      // Buttons rendered from server data carry their target in data-*
+      // attributes (not inline onclick with interpolated ids, which could
+      // break out of the JS string). Same actions as before.
+      document.addEventListener('click', (event) => {
+        const serviceBtn = event.target.closest('[data-service-action]');
+        if (serviceBtn) {
+          performAction(serviceBtn.dataset.service, serviceBtn.dataset.serviceAction);
+          return;
+        }
+        const instanceBtn = event.target.closest('[data-instance-action]');
+        if (instanceBtn) {
+          const { instanceId, instanceAction } = instanceBtn.dataset;
+          if (instanceAction === 'approve') approveInstance(instanceId);
+          if (instanceAction === 'revoke') revokeInstance(instanceId);
+        }
+      });
 
       function performAction(serviceName, action) {
         const dashboardSocket = window.dashboard?.socket;
@@ -864,13 +881,13 @@
         // Action buttons based on status
         const approveBtn =
           isUnauthorized || inst.revoked
-            ? `<button onclick="approveInstance('${inst.instanceId}')" style="
+            ? `<button data-instance-action="approve" data-instance-id="${escapeHtml(inst.instanceId)}" style="
               background: #22c55e; color: white; border: none; border-radius: 4px;
               padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
             ">✓ Approve</button>`
             : '';
         const revokeBtn = !inst.revoked
-          ? `<button onclick="revokeInstance('${inst.instanceId}')" style="
+          ? `<button data-instance-action="revoke" data-instance-id="${escapeHtml(inst.instanceId)}" style="
               background: #ef4444; color: white; border: none; border-radius: 4px;
               padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
             ">✗ Revoke</button>`
@@ -887,7 +904,7 @@
           ">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px">
               <div>
-                <strong>${statusIcon} ${inst.clientName || 'Unknown Bot'}</strong>
+                <strong>${statusIcon} ${escapeHtml(inst.clientName || 'Unknown Bot')}</strong>
                 <span style="opacity: 0.7; margin-left: 8px; font-size: 0.8rem">${statusLabel}</span>
               </div>
               <div style="display: flex; gap: 6px; align-items: center">
@@ -896,15 +913,15 @@
               </div>
             </div>
             <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.9">
-              <span>📍 ${inst.location || 'Unknown'}</span>
-              <span>🌐 ${inst.ip || 'Unknown'}</span>
-              <span>🖥️ ${inst.guilds || 0} servers</span>
+              <span>📍 ${escapeHtml(inst.location || 'Unknown')}</span>
+              <span>🌐 ${escapeHtml(inst.ip || 'Unknown')}</span>
+              <span>🖥️ ${escapeHtml(inst.guilds || 0)} servers</span>
             </div>
             <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center">
               <span style="font-size: 0.75rem; opacity: 0.7">
-                🕐 Last seen: ${inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never'}
+                🕐 Last seen: ${escapeHtml(inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never')}
               </span>
-              <span style="font-size: 0.65rem; opacity: 0.5; font-family: monospace">${inst.instanceId?.substring(0, 20) || 'N/A'}...</span>
+              <span style="font-size: 0.65rem; opacity: 0.5; font-family: monospace">${escapeHtml(inst.instanceId?.substring(0, 20) || 'N/A')}...</span>
             </div>
           </div>
         `;

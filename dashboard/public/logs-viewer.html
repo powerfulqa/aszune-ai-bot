@@ -428,7 +428,9 @@
         }
 
         // Reverse logs so latest appears at top
-        tbody.innerHTML = logs
+        // Copy before reversing: reverse() mutates, which flipped the stored
+        // order on every re-render
+        tbody.innerHTML = [...logs]
           .reverse()
           .map((log) => {
             // Format timestamp to human-readable format
@@ -445,9 +447,9 @@
 
             return `
                     <tr>
-                        <td class="log-timestamp">${formattedTime}</td>
-                        <td><span class="log-level-${log.level}">${log.level}</span></td>
-                        <td class="log-message">${log.message}</td>
+                        <td class="log-timestamp">${escapeHtml(formattedTime)}</td>
+                        <td><span class="log-level-${escapeHtml(log.level)}">${escapeHtml(log.level)}</span></td>
+                        <td class="log-message">${escapeHtml(log.message)}</td>
                     </tr>
                 `;
           })

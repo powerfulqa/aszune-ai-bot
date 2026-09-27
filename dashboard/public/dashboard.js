@@ -1,3 +1,23 @@
+/**
+ * Escape a value for safe insertion into HTML (text or attribute context).
+ * Global so every page's inline script can use it. Anything rendered via
+ * innerHTML that came from the server, logs or users must go through this.
+ * @param {*} value - Value to escape (null/undefined become '')
+ * @returns {string} Escaped string
+ */
+function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+window.escapeHtml = escapeHtml;
+
 // Aszune AI Bot Dashboard JavaScript - Enhanced v2.0
 
 class Dashboard {
@@ -455,11 +475,11 @@ class Dashboard {
     container.innerHTML = recommendations
       .map(
         (rec) => `
-      <div class="recommendation-item ${rec.severity || 'info'}">
-        <span class="rec-severity ${rec.severity || 'info'}">${(rec.severity || 'info').toUpperCase()}</span>
+      <div class="recommendation-item ${escapeHtml(rec.severity || 'info')}">
+        <span class="rec-severity ${escapeHtml(rec.severity || 'info')}">${escapeHtml((rec.severity || 'info').toUpperCase())}</span>
         <div style="flex: 1;">
-          <div class="rec-message"><strong>${rec.message}</strong></div>
-          <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ ${rec.action}</div>
+          <div class="rec-message"><strong>${escapeHtml(rec.message)}</strong></div>
+          <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ ${escapeHtml(rec.action)}</div>
         </div>
       </div>
     `
@@ -483,9 +503,9 @@ class Dashboard {
         const errorMsg = error.error || 'Unknown error';
         return `
         <div class="error-log-item">
-          <div class="error-log-time">[${timestamp}]</div>
-          <div class="error-log-message">ERROR: ${error.message}</div>
-          ${error.error ? `<div class="error-log-detail">→ ${errorMsg}</div>` : ''}
+          <div class="error-log-time">[${escapeHtml(timestamp)}]</div>
+          <div class="error-log-message">ERROR: ${escapeHtml(error.message)}</div>
+          ${error.error ? `<div class="error-log-detail">→ ${escapeHtml(errorMsg)}</div>` : ''}
         </div>
       `;
       })
@@ -508,7 +528,9 @@ class Dashboard {
     if (tableInfo) tableInfo.textContent = 'Loading...';
 
     try {
-      const response = await fetch(`/api/database/${tableName}?limit=100&offset=0`);
+      const response = await fetch(
+        `/api/database/${encodeURIComponent(tableName)}?limit=100&offset=0`
+      );
       if (!response.ok) throw new Error('Failed to fetch table data');
 
       const tableData = await response.json();
@@ -516,7 +538,7 @@ class Dashboard {
       this.renderDatabaseTable(tableData);
     } catch (error) {
       console.error(`Error loading table ${tableName}:`, error);
-      databaseViewer.innerHTML = `<div class="db-message">Error loading table: ${error.message}</div>`;
+      databaseViewer.innerHTML = `<div class="db-message">Error loading table: ${escapeHtml(error.message)}</div>`;
     }
   }
 
@@ -546,7 +568,7 @@ class Dashboard {
   }
 
   _buildTableHtml(columns, rows) {
-    const headerHtml = columns.map((col) => `<th>${col}</th>`).join('');
+    const headerHtml = columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('');
     const bodyHtml = rows
       .map(
         (row) => `
@@ -631,7 +653,7 @@ class Dashboard {
       <table class="database-table">
         <thead>
           <tr>
-            ${columns.map((col) => `<th>${col}</th>`).join('')}
+            ${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
@@ -661,12 +683,7 @@ class Dashboard {
   }
 
   escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return escapeHtml(unsafe);
   }
 
   addActivityItem(message, type = 'info', preserveFormatting = false) {
@@ -782,8 +799,8 @@ class Dashboard {
         return `
           <div class="leaderboard-row ${rankClass}">
             <span class="rank-badge">${rank}</span>
-            <span class="user-name" title="ID: ${user.user_id}">${this.escapeHtml(displayName)}</span>
-            <span class="user-count">${interactionCount}</span>
+            <span class="user-name" title="ID: ${escapeHtml(user.user_id)}">${escapeHtml(displayName)}</span>
+            <span class="user-count">${escapeHtml(interactionCount)}</span>
           </div>
         `;
       })

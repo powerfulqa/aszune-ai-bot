@@ -708,14 +708,14 @@
 
             return `
                 <tr>
-                    <td class="reminder-id">${id}</td>
-                    <td class="reminder-message">${message}</td>
-                    <td class="reminder-time">${scheduledTime}</td>
-                    <td><span class="status-badge status-${displayStatus}">${status}</span></td>
-                    <td>${reminder.type || 'General'}</td>
+                    <td class="reminder-id">${escapeHtml(id)}</td>
+                    <td class="reminder-message">${escapeHtml(message)}</td>
+                    <td class="reminder-time">${escapeHtml(scheduledTime)}</td>
+                    <td><span class="status-badge status-${displayStatus}">${escapeHtml(status)}</span></td>
+                    <td>${escapeHtml(reminder.type || 'General')}</td>
                     <td class="reminder-actions">
-                        <button class="action-icon-btn edit" onclick="editReminder('${id}', '${userId}')">✏ Edit</button>
-                        <button class="action-icon-btn delete" onclick="deleteReminder('${id}', '${userId}')">🗑 Delete</button>
+                        <button class="action-icon-btn edit" data-action="edit" data-id="${escapeHtml(id)}" data-user-id="${escapeHtml(userId)}">✏ Edit</button>
+                        <button class="action-icon-btn delete" data-action="delete" data-id="${escapeHtml(id)}" data-user-id="${escapeHtml(userId)}">🗑 Delete</button>
                     </td>
                 </tr>
             `;
@@ -774,6 +774,17 @@
           }
         );
       }
+
+      // Row buttons carry their ids in data-* attributes and are handled here,
+      // instead of inline onclick="editReminder('${id}')" — ids interpolated
+      // into a JS string inside an attribute could break out and run code.
+      document.addEventListener('click', (event) => {
+        const btn = event.target.closest('.reminder-actions [data-action]');
+        if (!btn) return;
+        const { id, userId } = btn.dataset;
+        if (btn.dataset.action === 'edit') editReminder(id, userId);
+        if (btn.dataset.action === 'delete') deleteReminder(id, userId);
+      });
 
       function editReminder(id, userId) {
         const dashboardSocket = window.dashboard?.socket;
