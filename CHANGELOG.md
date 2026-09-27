@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-27
+
 ### Security
 
 - Dashboard REST API now honours the read-only rule without `DASHBOARD_TOKEN` (previously only
@@ -626,7 +628,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!-- Note: v1.11.0 and v2.0.0 are documented above but were never git-tagged, so they have no
      compare links. The latest tag is v1.10.0. -->
 
-[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.10.0...v2.1.0
 [1.10.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.7.0...v1.8.0
