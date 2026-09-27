@@ -273,6 +273,8 @@ class Dashboard {
       `${data.system.cpu.loadPercent}% (${data.system.cpu.loadAverage[0].toFixed(2)})`
     );
     this._setText('platform', `${data.system.platform} ${data.system.arch}`);
+    this._setMeter('memory-usage', 'memory-meter', data.system.memory.usagePercent);
+    this._setMeter('cpu-load', 'cpu-meter', data.system.cpu.loadPercent);
 
     // Process Info
     this._setText('process-id', data.system.process.pid);
@@ -301,6 +303,42 @@ class Dashboard {
 
     // Poll Discord status separately (not in main metrics)
     this.updateDiscordStatus();
+  }
+
+  /**
+   * Fill a threshold meter and colour its value: amber from 75%, red from 90%.
+   * @param {string} valueId - Element showing the number
+   * @param {string} meterId - Meter fill element
+   * @param {number} percent - Current percentage
+   * @private
+   */
+  _setMeter(valueId, meterId, percent) {
+    const pct = Math.max(0, Math.min(100, Number(percent) || 0));
+    let level = '';
+    if (pct >= 90) level = 'danger';
+    else if (pct >= 75) level = 'warn';
+
+    const meter = this._getElement(meterId);
+    if (meter) {
+      meter.style.width = `${pct}%`;
+      meter.dataset.level = level;
+    }
+    const value = this._getElement(valueId);
+    if (value) value.dataset.level = level;
+  }
+
+  /**
+   * Show a dash for a value the bot doesn't actually track (instead of an
+   * invented number), with a tooltip saying so.
+   * @param {string} id - Element id
+   * @private
+   */
+  _setNotTracked(id) {
+    const el = this._getElement(id);
+    if (!el) return;
+    el.textContent = '—';
+    el.title = 'Not tracked by the bot';
+    el.classList.add('not-tracked');
   }
 
   /**
@@ -347,21 +385,21 @@ class Dashboard {
     // /stats command output - show system-wide stats as demo (no user context)
     if (data.database) {
       const totalMessages = data.database.totalMessages || 0;
-      const estimatedSummaries = Math.floor(totalMessages * 0.1);
       const activeReminders = data.reminders?.activeReminders || 0;
       this._setText('cmd-stats-messages', totalMessages);
-      this._setText('cmd-stats-summaries', estimatedSummaries);
+      this._setNotTracked('cmd-stats-summaries');
       this._setText('cmd-stats-reminders', activeReminders);
     }
 
     // /analytics command output
     if (data.analytics) {
       const totalUsers = data.analytics.summary.totalUsers || 0;
-      const estimatedOnline = Math.floor(totalUsers * 0.2) || 0;
       this._setText('cmd-analytics-users', totalUsers);
-      this._setText('cmd-analytics-online', estimatedOnline);
-      this._setText('cmd-analytics-bots', 0);
-      this._setText('cmd-analytics-success', '100%');
+      // Online members, bot count and success rate were invented (users × 0.2,
+      // 0, 100%); show them as not tracked rather than as real numbers.
+      this._setNotTracked('cmd-analytics-online');
+      this._setNotTracked('cmd-analytics-bots');
+      this._setNotTracked('cmd-analytics-success');
     }
 
     // /cache command output
@@ -375,9 +413,14 @@ class Dashboard {
     // /dashboard command output (performance dashboard)
     if (data.system) {
       this._setText('cmd-dashboard-status', 'Running');
-      this._setText('cmd-dashboard-response', '150ms');
+      const responseTime = data.resources?.performance?.responseTime;
+      if (Number.isFinite(responseTime) && responseTime > 0) {
+        this._setText('cmd-dashboard-response', `${responseTime}ms`);
+      } else {
+        this._setNotTracked('cmd-dashboard-response');
+      }
       this._setText('cmd-dashboard-memory', `${data.system.memory.usagePercent}%`);
-      this._setText('cmd-dashboard-tier', 'Standard');
+      this._setText('cmd-dashboard-tier', data.resources?.optimizationTier || 'Standard');
     }
 
     // /resources command output
@@ -482,7 +525,7 @@ class Dashboard {
         <span class="rec-severity ${escapeHtml(rec.severity || 'info')}">${escapeHtml((rec.severity || 'info').toUpperCase())}</span>
         <div style="flex: 1;">
           <div class="rec-message"><strong>${escapeHtml(rec.message)}</strong></div>
-          <div class="rec-message" style="font-size: 0.85rem; color: #666;">→ ${escapeHtml(rec.action)}</div>
+          <div class="rec-message" style="font-size: 0.85rem; color: var(--text-muted);">→ ${escapeHtml(rec.action)}</div>
         </div>
       </div>
     `
@@ -777,12 +820,12 @@ class Dashboard {
 
   _renderEmptyLeaderboard(container) {
     container.innerHTML =
-      '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.9rem;">No users yet</div>';
+      '<div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No users yet</div>';
   }
 
   _renderDiscordNotConnectedMessage(container) {
     container.innerHTML = `
-      <div style="padding: 15px; text-align: center; color: #999; font-size: 0.9rem;">
+      <div style="padding: 15px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
         <div style="margin-bottom: 8px;">⚠️ Discord Not Connected</div>
         <div style="font-size: 0.8rem;">Usernames will appear when Discord reconnects</div>
       </div>

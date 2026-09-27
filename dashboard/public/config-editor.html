@@ -6,19 +6,9 @@
     <title>Aszune AI Bot Dashboard - Configuration Editor</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .demo-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
 
       .config-section {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
@@ -27,7 +17,7 @@
       }
 
       .config-section h2 {
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 20px;
         font-size: 1.3rem;
         font-weight: 600;
@@ -42,9 +32,9 @@
 
       .file-btn {
         padding: 8px 16px;
-        border: 2px solid #d0d0d0;
-        background: #f5f5f5;
-        color: #2c3e50;
+        border: 2px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.3s;
@@ -53,12 +43,12 @@
 
       .file-btn:hover {
         border-color: #bbb;
-        background: #efefef;
+        background: var(--surface-2);
       }
 
       .file-btn.active {
-        border-color: #667eea;
-        background: #667eea;
+        border-color: var(--accent);
+        background: var(--accent);
         color: #ffffff;
       }
 
@@ -77,12 +67,12 @@
       .editor-pane h3 {
         margin-top: 0;
         margin-bottom: 10px;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .editor-label {
         font-size: 11px;
-        color: #666;
+        color: var(--text-muted);
         margin-bottom: 5px;
         text-transform: uppercase;
         font-weight: 700;
@@ -92,10 +82,10 @@
       textarea {
         width: 100%;
         height: 430px;
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
-        color: #2c3e50;
+        color: var(--text);
         font-family: 'Courier New', monospace;
         font-size: 12px;
         padding: 12px;
@@ -106,7 +96,7 @@
 
       textarea:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
       }
 
@@ -128,43 +118,43 @@
       }
 
       .btn-save {
-        background: #2e7d32;
+        background: var(--ok-text);
         color: #ffffff;
-        border: 1px solid #2e7d32;
+        border: 1px solid var(--ok-text);
       }
 
       .btn-save:hover {
-        background: #1b5e20;
+        background: var(--ok-text);
       }
 
       .btn-validate {
-        background: #1565c0;
+        background: var(--info-text);
         color: #ffffff;
-        border: 1px solid #1565c0;
+        border: 1px solid var(--info-text);
       }
 
       .btn-validate:hover {
-        background: #0d47a1;
+        background: var(--info-text);
       }
 
       .btn-revert {
-        background: #f57c00;
+        background: var(--warn);
         color: #ffffff;
-        border: 1px solid #f57c00;
+        border: 1px solid var(--warn);
       }
 
       .btn-revert:hover {
-        background: #e65100;
+        background: var(--warn-text);
       }
 
       .btn-export {
-        background: #e65100;
+        background: var(--warn-text);
         color: #ffffff;
-        border: 1px solid #e65100;
+        border: 1px solid var(--warn-text);
       }
 
       .btn-export:hover {
-        background: #d84315;
+        background: var(--warn-text);
       }
 
       .validation-panel {
@@ -176,15 +166,15 @@
       .validation-panel > h4 {
         margin-top: 0;
         margin-bottom: 5px;
-        color: #2c3e50;
+        color: var(--text);
         font-size: 11px;
         text-transform: uppercase;
         font-weight: 600;
       }
 
       .validation-box {
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
         padding: 12px;
         overflow-y: auto;
@@ -196,7 +186,7 @@
 
       .validation-box h4 {
         margin: 0 0 8px 0;
-        color: #2c3e50;
+        color: var(--text);
         font-size: 11px;
         text-transform: uppercase;
         font-weight: 600;
@@ -208,7 +198,7 @@
 
       .validation-box h4 {
         margin: 0 0 10px 0;
-        color: #2c3e50;
+        color: var(--text);
         font-size: 12px;
         text-transform: uppercase;
       }
@@ -223,20 +213,20 @@
 
       .validation-error {
         background: rgba(211, 47, 47, 0.05);
-        color: #d32f2f;
-        border-left: 3px solid #d32f2f;
+        color: var(--danger-text);
+        border-left: 3px solid var(--danger-text);
       }
 
       .validation-warning {
         background: rgba(245, 124, 0, 0.05);
-        color: #f57c00;
-        border-left: 3px solid #f57c00;
+        color: var(--warn);
+        border-left: 3px solid var(--warn);
       }
 
       .validation-success {
         background: rgba(46, 125, 50, 0.05);
-        color: #2e7d32;
-        border-left: 3px solid #2e7d32;
+        color: var(--ok-text);
+        border-left: 3px solid var(--ok-text);
       }
 
       .validation-status {
@@ -254,8 +244,8 @@
         align-items: center;
         gap: 6px;
         padding: 4px 8px;
-        background: #1b5e20;
-        color: #4caf50;
+        background: var(--ok-text);
+        color: var(--ok);
         border-radius: 3px;
         font-size: 11px;
         font-weight: 600;
@@ -271,11 +261,11 @@
         grid-template-columns: 1fr 1fr;
         gap: 8px;
         padding: 10px;
-        background: #f8f9fa;
+        background: var(--surface-2);
         border-radius: 4px;
         margin-bottom: 12px;
         font-size: 11px;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .info-item {
@@ -285,23 +275,23 @@
       }
 
       .info-label {
-        color: #888;
+        color: var(--text-muted);
         text-transform: uppercase;
         font-size: 10px;
       }
 
       .info-value {
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 500;
       }
 
       .backup-info {
         padding: 10px;
         background: rgba(33, 150, 243, 0.1);
-        border-left: 3px solid #2196f3;
+        border-left: 3px solid var(--info);
         border-radius: 3px;
         font-size: 11px;
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 12px;
       }
 
@@ -314,7 +304,7 @@
         display: inline-block;
         width: 30px;
         text-align: right;
-        color: #666;
+        color: var(--text-muted);
         margin-right: 10px;
       }
 
@@ -332,14 +322,14 @@
 
       .diff-label {
         font-size: 11px;
-        color: #888;
+        color: var(--text-muted);
         margin-bottom: 8px;
         font-weight: 600;
       }
 
       .diff-content {
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
         padding: 10px;
         font-family: 'Courier New', monospace;
@@ -347,41 +337,20 @@
         max-height: 200px;
         overflow-y: auto;
         line-height: 1.5;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .diff-added {
-        color: #2e7d32;
+        color: var(--ok-text);
       }
 
       .diff-removed {
-        color: #d32f2f;
+        color: var(--danger-text);
       }
 
-      .legend {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
 
-      .legend-title {
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: #2c3e50;
-      }
 
-      .legend-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-        font-size: 12px;
-      }
 
-      .legend-item {
-        display: flex;
-        gap: 8px;
-      }
 
       .legend-icon {
         width: 16px;
@@ -467,8 +436,8 @@
               display: flex;
               align-items: center;
               justify-content: center;
-              color: #999;
-              background: #f5f5f5;
+              color: var(--text-muted);
+              background: var(--surface-2);
               border-radius: 6px;
             "
           >
@@ -481,15 +450,15 @@
           <div class="legend-title">Configuration Editor Features</div>
           <div class="legend-items">
             <div class="legend-item">
-              <div class="legend-icon" style="background: #1b5e20"></div>
+              <div class="legend-icon" style="background: var(--ok-text)"></div>
               <span>Syntax validation for .env format</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #1565c0"></div>
+              <div class="legend-icon" style="background: var(--info-text)"></div>
               <span>Real-time validation feedback</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #e65100"></div>
+              <div class="legend-icon" style="background: var(--warn-text)"></div>
               <span>Automatic timestamped backups</span>
             </div>
             <div class="legend-item">
@@ -497,7 +466,7 @@
               <span>Change diff viewer</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #2d6a4f"></div>
+              <div class="legend-icon" style="background: var(--ok-text)"></div>
               <span>Safe file access whitelist</span>
             </div>
             <div class="legend-item">
@@ -508,9 +477,9 @@
         </div>
 
         <!-- Allowed Files Notice -->
-        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px">
-          <h3 style="margin-top: 0; color: #2c3e50">🔒 Security Features</h3>
-          <ul style="margin: 10px 0; padding-left: 20px; color: #2c3e50">
+        <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
+          <h3 style="margin-top: 0; color: var(--text)">🔒 Security Features</h3>
+          <ul style="margin: 10px 0; padding-left: 20px; color: var(--text)">
             <li>
               <strong>Path Traversal Prevention:</strong> Automatic detection and blocking of ../
               attempts
@@ -527,8 +496,8 @@
             style="
               margin-top: 15px;
               padding: 12px;
-              background: #fff3cd;
-              border-left: 4px solid #ffc107;
+              background: var(--warn-bg);
+              border-left: 4px solid var(--warn);
               border-radius: 4px;
             "
           >
@@ -651,7 +620,7 @@
             if (response && response.valid) {
               const warningsHtml =
                 response.warnings && response.warnings.length > 0
-                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(245, 124, 0, 0.1); border-left: 3px solid #f57c00; border-radius: 4px;">
+                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(245, 124, 0, 0.1); border-left: 3px solid var(--warn); border-radius: 4px;">
                              <strong>Warnings:</strong><br>${response.warnings.map(escapeHtml).join('<br>')}</div>`
                   : '';
 
@@ -668,7 +637,7 @@
             } else {
               const errorsHtml =
                 response.errors && response.errors.length > 0
-                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(211, 47, 47, 0.1); border-left: 3px solid #d32f2f; border-radius: 4px;">
+                  ? `<div style="margin-top: 10px; padding: 10px; background: rgba(211, 47, 47, 0.1); border-left: 3px solid var(--danger-text); border-radius: 4px;">
                              <strong>Errors:</strong><br>${response.errors.map(escapeHtml).join('<br>')}</div>`
                   : '';
 

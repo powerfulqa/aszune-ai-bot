@@ -11,6 +11,30 @@
  *   - whenDashboardReady(fn)     run fn(socket) once the dashboard socket is connected
  */
 
+const THEME_KEY = 'aszune-dashboard-theme';
+
+/** Saved theme ('light' | 'dark'), or null to follow the OS setting */
+function getSavedTheme() {
+  try {
+    const value = localStorage.getItem(THEME_KEY);
+    return value === 'light' || value === 'dark' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Theme currently in effect */
+function getEffectiveTheme() {
+  const saved = getSavedTheme();
+  if (saved) return saved;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// Apply a saved choice before anything renders (no flash of the other theme)
+if (getSavedTheme()) {
+  document.documentElement.dataset.theme = getSavedTheme();
+}
+
 (function renderShell() {
   const NAV_ITEMS = [
     { href: 'index.html', icon: '📊', label: 'Dashboard', title: 'Dashboard' },
@@ -78,6 +102,7 @@
           <span class="status-dot connecting" id="status-dot"></span>
           <span id="status-text">Connecting...</span>
         </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
       </div>
     </header>
     <nav class="dashboard-navbar" aria-label="Dashboard pages">
@@ -87,6 +112,26 @@
   const script = document.currentScript;
   if (script) {
     script.insertAdjacentHTML('beforebegin', shellHtml);
+  }
+
+  const toggle = document.getElementById('theme-toggle');
+  const paintToggle = () => {
+    const dark = getEffectiveTheme() === 'dark';
+    toggle.textContent = dark ? '☀️' : '🌙';
+    toggle.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+  };
+  if (toggle) {
+    paintToggle();
+    toggle.addEventListener('click', () => {
+      const next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem(THEME_KEY, next);
+      } catch {
+        // storage unavailable: the choice lasts for this page only
+      }
+      paintToggle();
+    });
   }
 })();
 

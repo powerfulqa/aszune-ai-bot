@@ -6,19 +6,9 @@
     <title>Aszune AI Bot Dashboard - Service Management</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .demo-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
 
       .services-section {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
@@ -27,7 +17,7 @@
       }
 
       .services-section h2 {
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 20px;
         font-size: 1.3rem;
         font-weight: 600;
@@ -41,15 +31,15 @@
       }
 
       .service-card {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 15px;
         transition: border-color 0.3s;
       }
 
       .service-card:hover {
-        border-color: #667eea;
+        border-color: var(--accent);
       }
 
       .service-header {
@@ -62,7 +52,7 @@
       .service-name {
         font-size: 16px;
         font-weight: 600;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .service-status {
@@ -83,8 +73,8 @@
       }
 
       .status-active {
-        background: #1b5e20;
-        color: #4caf50;
+        background: var(--ok-text);
+        color: var(--ok);
       }
 
       .status-active::before {
@@ -135,13 +125,13 @@
       }
 
       .info-label {
-        color: #888;
+        color: var(--text-muted);
         font-size: 11px;
         text-transform: uppercase;
       }
 
       .info-value {
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 500;
       }
 
@@ -163,13 +153,13 @@
       }
 
       .btn-start {
-        background: #1b5e20;
-        color: #4caf50;
-        border: 1px solid #4caf50;
+        background: var(--ok-text);
+        color: var(--ok);
+        border: 1px solid var(--ok);
       }
 
       .btn-start:hover {
-        background: #2e7d32;
+        background: var(--ok-text);
       }
 
       .btn-stop {
@@ -183,13 +173,13 @@
       }
 
       .btn-restart {
-        background: #1565c0;
-        color: #42a5f5;
-        border: 1px solid #42a5f5;
+        background: var(--info-text);
+        color: var(--info);
+        border: 1px solid var(--info);
       }
 
       .btn-restart:hover {
-        background: #1976d2;
+        background: var(--info-text);
       }
 
       .action-btn:disabled {
@@ -198,25 +188,25 @@
       }
 
       .service-logs-preview {
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
         padding: 10px;
         font-size: 11px;
         font-family: 'Courier New', monospace;
         max-height: 150px;
         overflow-y: auto;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .log-line {
-        color: #888;
+        color: var(--text-muted);
         line-height: 1.4;
         margin-bottom: 2px;
       }
 
       .log-line.error {
-        color: #e57373;
+        color: var(--danger);
       }
 
       .log-line.warn {
@@ -225,40 +215,19 @@
 
       .enabled-indicator {
         font-size: 11px;
-        color: #888;
+        color: var(--text-muted);
       }
 
       .enabled-indicator.yes {
-        color: #4caf50;
+        color: var(--ok);
       }
 
-      .legend {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
 
-      .legend-title {
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: #2c3e50;
-      }
 
-      .legend-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-        font-size: 12px;
-      }
 
-      .legend-item {
-        display: flex;
-        gap: 8px;
-      }
 
       .legend-icon {
-        color: #2c3e50;
+        color: var(--text);
       }
     </style>
   </head>
@@ -444,7 +413,7 @@
         </div>
 
         <div class="service-grid" id="services-grid">
-          <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999">
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted)">
             ⏳ Loading services from server...
           </div>
         </div>
@@ -478,8 +447,8 @@
       </div>
 
       <!-- Quick Actions -->
-      <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px">
-        <h3 style="margin-top: 0; color: #2c3e50">⚡ Quick Actions</h3>
+      <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
+        <h3 style="margin-top: 0; color: var(--text)">⚡ Quick Actions</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap">
           <button class="action-btn btn-restart" onclick="performQuickAction('restart-all')">
             🔄 Restart All Services
@@ -492,12 +461,12 @@
           style="
             margin-top: 10px;
             padding: 10px;
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
+            background: var(--warn-bg);
+            border-left: 4px solid var(--warn);
             border-radius: 4px;
           "
         >
-          <small style="color: #856404">
+          <small style="color: var(--warn-text)">
             <strong>Note:</strong> These actions affect all PM2-managed processes. Use individual
             service controls above for specific services.
           </small>
@@ -530,7 +499,7 @@
         const grid = document.getElementById('services-grid');
         if (services.length === 0) {
           grid.innerHTML =
-            '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999;">No services available</div>';
+            '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">No services available</div>';
           return;
         }
 
@@ -793,13 +762,13 @@
         const approveBtn =
           isUnauthorized || inst.revoked
             ? `<button data-instance-action="approve" data-instance-id="${escapeHtml(inst.instanceId)}" style="
-              background: #22c55e; color: white; border: none; border-radius: 4px;
+              background: var(--ok); color: white; border: none; border-radius: 4px;
               padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
             ">✓ Approve</button>`
             : '';
         const revokeBtn = !inst.revoked
           ? `<button data-instance-action="revoke" data-instance-id="${escapeHtml(inst.instanceId)}" style="
-              background: #ef4444; color: white; border: none; border-radius: 4px;
+              background: var(--danger); color: white; border: none; border-radius: 4px;
               padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
             ">✗ Revoke</button>`
           : '';
