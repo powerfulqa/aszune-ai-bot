@@ -43,12 +43,17 @@ describe('buildAgentRequest', () => {
     ]);
   });
 
-  it('enables web search and carries temperature + max_output_tokens (not max_tokens)', () => {
-    const req = buildAgentRequest(messages, 'sonar', { temperature: 0.5 }, PERPLEXITY);
+  it('enables web search and sets max_output_tokens (not max_tokens)', () => {
+    const req = buildAgentRequest(messages, 'sonar', {}, PERPLEXITY);
     expect(req.tools).toEqual([{ type: 'web_search' }]);
-    expect(req.temperature).toBe(0.5);
     expect(req.max_output_tokens).toBe(1024);
     expect(req.max_tokens).toBeUndefined();
+  });
+
+  it('never sends temperature with a preset (the Agent API rejects the combination)', () => {
+    const req = buildAgentRequest(messages, 'sonar', { temperature: 0.5 }, PERPLEXITY);
+    expect(req.preset).toBe('low');
+    expect(req).not.toHaveProperty('temperature');
   });
 
   it('puts domain and recency filters under the web_search tool', () => {

@@ -66,8 +66,9 @@ function buildAgentRequest(messages, model, options = {}, perplexityConfig = {})
     tools: [webSearch],
     max_output_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS?.CHAT,
   };
-  const temperature = options.temperature ?? perplexityConfig.DEFAULT_TEMPERATURE;
-  if (temperature !== undefined) request.temperature = temperature;
+  // No `temperature`: presets carry their own sampling settings, and the Agent
+  // API rejects a preset request that also sets temperature (bare 400
+  // "invalid request", observed 2026-09-27).
   if (instructions) request.instructions = instructions;
 
   return request;
