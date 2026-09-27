@@ -31,6 +31,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Service status checks run in parallel and without a shell; the monitored units are
   configurable with `DASHBOARD_SERVICES`
 - Network status lookups and connectivity-test pings run in parallel (same report order)
+- Dashboard pages share one header + navigation (`dashboard/public/shell.js`) instead of ~90
+  copied lines per page; the current page is highlighted by the shell (the per-page active-link
+  scripts are gone). Pages dropped from ~5,000 to ~4,200 lines of HTML
+- Page refreshes use a shared `Poller` that pauses in hidden tabs and never overlaps (logs every
+  5s, Discord status 30s, instances 60s); pages wait for the socket to *connect* via
+  `whenDashboardReady()` instead of polling every 100ms for it to exist
+- Success/failure messages are toasts instead of blocking `alert()` dialogs (confirmations stay)
+- The recommendations request no longer runs every 30s on pages that have no recommendations
+  panel
 - Removed ~220 lines of dead dashboard code: socket handlers duplicated by
   `handlers/serviceHandlers.js`, plus unused response/uptime/PM2 helpers
 
