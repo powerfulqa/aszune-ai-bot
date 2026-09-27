@@ -627,7 +627,7 @@
 
         dashboardSocket.emit('request_network_test', {}, (response) => {
           if (response && response.result) {
-            resultDiv.innerHTML = '<pre>' + response.result + '</pre>';
+            resultDiv.innerHTML = '<pre>' + escapeHtml(response.result) + '</pre>';
           } else {
             resultDiv.textContent = 'Test request sent to server.';
           }
@@ -790,11 +790,11 @@
                 .map(
                   (iface) => `
                             <tr>
-                                <td class="interface-name">${iface.name}</td>
-                                <td><span class="interface-status" style="background: ${iface.internal ? '#e0e0e0' : '#4caf50'};">${iface.status}</span></td>
-                                <td>${iface.ipv4 || '-'}</td>
-                                <td>${iface.ipv6 || '-'}</td>
-                                <td>${iface.mac || '-'}</td>
+                                <td class="interface-name">${escapeHtml(iface.name)}</td>
+                                <td><span class="interface-status" style="background: ${iface.internal ? '#e0e0e0' : '#4caf50'};">${escapeHtml(iface.status)}</span></td>
+                                <td>${escapeHtml(iface.ipv4 || '-')}</td>
+                                <td>${escapeHtml(iface.ipv6 || '-')}</td>
+                                <td>${escapeHtml(iface.mac || '-')}</td>
                             </tr>
                         `
                 )

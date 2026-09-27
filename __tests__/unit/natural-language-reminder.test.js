@@ -131,9 +131,12 @@ describe('Natural Language Reminder Processor', () => {
     test('should successfully set reminder when date is found', async () => {
       // Mock AI response with a date
       const mockPerplexityService = require('../../src/services/perplexity-secure');
+      // Use a date a year out: a fixed date eventually passes and the
+      // processor (correctly) refuses to set a reminder in the past.
+      const nextYear = new Date().getFullYear() + 1;
       mockPerplexityService.generateChatResponse = jest
         .fn()
-        .mockResolvedValue('The new iPhone 15 will be released on September 15, 2026.');
+        .mockResolvedValue(`The new iPhone will be released on September 15, ${nextYear}.`);
 
       const requestData = {
         event: 'new iPhone',

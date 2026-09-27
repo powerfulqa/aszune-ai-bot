@@ -11,6 +11,7 @@ const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
 const { execPromise } = require('../utils/shell-exec-helper');
+const { execFileAsync, assertSafeServiceName, clampInt } = require('../utils/safe-exec');
 const {
   runPm2ServiceAction,
   runPm2QuickAction,
@@ -25,6 +26,9 @@ const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
+
+/** HTTP methods allowed on /api when no DASHBOARD_TOKEN is configured */
+const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // Extracted handler modules
 const {
@@ -121,9 +125,17 @@ class WebDashboardService {
    */
   _createAuthMiddleware() {
     return (req, res, next) => {
-      // If no token configured, allow all requests (localhost-only binding provides security)
+      // No token configured → read-only, the same rule the Socket.IO side
+      // applies (destructive handlers are only registered with a token).
+      // Reads are allowed; anything that changes state is refused.
       if (!this.authToken) {
-        return next();
+        if (READ_ONLY_METHODS.has(req.method)) {
+          return next();
+        }
+        return res.status(403).json({
+          error: 'Dashboard is read-only: set DASHBOARD_TOKEN to enable changes',
+          timestamp: new Date().toISOString(),
+        });
       }
 
       const token = this._extractBearer(req.headers.authorization);
@@ -856,10 +868,10 @@ class WebDashboardService {
    * Try PM2 command for a service
    * @private
    */
-  async _tryPm2Command(action, pm2AppName, execPromise) {
+  async _tryPm2Command(action, pm2AppName) {
     const pm2Command = `pm2 ${action} ${pm2AppName}`;
     logger.debug(`Executing: ${pm2Command}`);
-    await execPromise(pm2Command, { timeout: 10000 });
+    await execFileAsync('pm2', [action, pm2AppName], { timeout: 10000 });
     logger.info(`PM2 shell succeeded: ${pm2Command}`);
     return {
       success: true,
@@ -885,8 +897,14 @@ class WebDashboardService {
   }
 
   async manageService(action, service) {
-    const util = require('util');
-    const execPromise = util.promisify(require('child_process').exec);
+    // Both values reach a child process: allowlist the action and validate the
+    // name, then run without a shell (execFile) so nothing is interpreted.
+    if (!isValidAction(action)) {
+      const error = new Error('Invalid action. Must be start, stop, or restart');
+      error.statusCode = 400;
+      throw error;
+    }
+    assertSafeServiceName(service);
 
     logger.info(`Service management: ${action} ${service}`);
 
@@ -895,17 +913,16 @@ class WebDashboardService {
     if (pm2Candidates) {
       for (const pm2AppName of pm2Candidates) {
         try {
-          return await this._tryPm2Command(action, pm2AppName, execPromise);
+          return await this._tryPm2Command(action, pm2AppName);
         } catch (pm2Error) {
-          logger.warn(`PM2 shell command failed for ${pm2AppName}: ${pm2Error.message}`);
+          logger.warn(`PM2 command failed for ${pm2AppName}: ${pm2Error.message}`);
         }
       }
     }
 
     // Fallback to systemctl
-    const cmd = `systemctl ${action} ${service}`;
-    logger.debug(`Executing: ${cmd}`);
-    await execPromise(cmd, { timeout: 10000, shell: '/bin/bash' });
+    logger.debug(`Executing: systemctl ${action} ${service}`);
+    await execFileAsync('systemctl', [action, service], { timeout: 10000 });
 
     logger.info(`Service ${action} succeeded: ${service}`);
     return this._buildServiceResult(service, action);
@@ -919,13 +936,13 @@ class WebDashboardService {
    * @private
    */
   async getServiceLogs(service, lines = 50) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
+    assertSafeServiceName(service);
+    const lineCount = clampInt(lines, { def: 50, min: 1, max: 1000 });
 
     try {
-      const { stdout } = await execPromise(
-        `journalctl -u ${service} -n ${lines} --no-pager --output=short-iso`,
+      const { stdout } = await execFileAsync(
+        'journalctl',
+        ['-u', service, '-n', String(lineCount), '--no-pager', '--output=short-iso'],
         { timeout: 10000 }
       );
 
@@ -959,7 +976,9 @@ class WebDashboardService {
       throw new Error(`File not found: ${filename}`);
     }
 
-    return fsPromises.readFile(filepath, 'utf-8');
+    // Never send credentials to the browser (same masking as the socket path)
+    const { maskSecrets } = require('./web-dashboard/handlers/configHandlers');
+    return maskSecrets(filename, await fsPromises.readFile(filepath, 'utf-8'));
   }
 
   /**
@@ -991,7 +1010,20 @@ class WebDashboardService {
       }
     }
 
-    await fsPromises.writeFile(filepath, content, 'utf-8');
+    // Content read via readConfigFile carries masked secrets; keep the real
+    // on-disk values for any line still holding the mask placeholder.
+    const { restoreMaskedSecrets } = require('./web-dashboard/handlers/configHandlers');
+    let existing = '';
+    try {
+      existing = await fsPromises.readFile(filepath, 'utf-8');
+    } catch {
+      // New file: nothing to restore
+    }
+    await fsPromises.writeFile(
+      filepath,
+      restoreMaskedSecrets(filename, content, existing),
+      'utf-8'
+    );
 
     return {
       file: filename,

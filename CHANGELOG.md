@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- Dashboard REST API now honours the read-only rule without `DASHBOARD_TOKEN` (previously only
+  Socket.IO did): `POST`/`PUT`/`DELETE`/`PATCH` are refused with 403, so config writes, service
+  control, restart and git-pull all require the token
+- Fixed shell command injection in `POST /api/services/:action` and
+  `GET /api/services/:service/logs`: service names are validated and passed to `systemctl`,
+  `pm2` and `journalctl` via `execFile` (no shell); log line counts are clamped
+- `GET /api/config/.env` masks secret values like the socket path, and saves keep the real value
+  for any line still carrying the mask
+- Escaped all server-, log- and user-supplied text rendered into the dashboard (log messages,
+  reminders, service and instance fields, network results, validation messages, table headers);
+  row buttons use `data-*` attributes instead of inline `onclick` with interpolated ids
+
+### Fixed
+
+- Logs viewer no longer flips the stored log order on every re-render
+- Natural-language reminder test used a fixed date that has now passed
+
 ## [2.1.0] - 2026-09-03
 
 ### Security

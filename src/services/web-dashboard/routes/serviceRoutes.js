@@ -1,4 +1,5 @@
 const { createSimpleGetHandler, wrapAsyncHandler, sendValidationError } = require('./routeHelper');
+const { isSafeServiceName } = require('../../../utils/safe-exec');
 
 function registerServiceRoutes(app, service) {
   app.get('/api/services', handleGetServices(service));
@@ -25,14 +26,23 @@ function handleManageService(service) {
       return;
     }
 
+    if (!isSafeServiceName(serviceName)) {
+      sendValidationError(res, 'Invalid service name');
+      return;
+    }
+
     const result = await service.manageService(action, serviceName);
     res.json(result);
   }, 'managing service');
 }
 
 function handleServiceLogs(service) {
-  return wrapAsyncHandler(async (req) => {
+  return wrapAsyncHandler(async (req, res) => {
     const { service: serviceName } = req.params;
+    if (!isSafeServiceName(serviceName)) {
+      sendValidationError(res, 'Invalid service name');
+      return;
+    }
     const { lines = 50 } = req.query;
     const logs = await service.getServiceLogs(serviceName, parseInt(lines, 10));
     return { service: serviceName, logs };

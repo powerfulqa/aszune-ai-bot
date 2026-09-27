@@ -920,6 +920,28 @@ describe('Web Dashboard Route Modules', () => {
         });
       });
 
+      it('should reject a service name that could inject a command', async () => {
+        const mockService = { manageService: jest.fn() };
+        const mockApp = { get: jest.fn(), post: jest.fn() };
+        registerServiceRoutes(mockApp, mockService);
+
+        const handler = mockApp.post.mock.calls[0][1];
+        const req = createMockReq({
+          params: { action: 'restart' },
+          body: { service: 'nginx; reboot' },
+        });
+        const res = createMockRes();
+
+        await handler(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          error: 'Invalid service name',
+          timestamp: expect.any(String),
+        });
+        expect(mockService.manageService).not.toHaveBeenCalled();
+      });
+
       it('should handle manage service error', async () => {
         const mockService = {
           manageService: jest.fn().mockRejectedValue(new Error('Manage error')),
@@ -964,6 +986,28 @@ describe('Web Dashboard Route Modules', () => {
           logs: mockLogs,
           timestamp: expect.any(String),
         });
+      });
+
+      it('should reject an unsafe service name for logs', async () => {
+        const mockService = { getServiceLogs: jest.fn() };
+        const mockApp = { get: jest.fn(), post: jest.fn() };
+        registerServiceRoutes(mockApp, mockService);
+
+        const handler = mockApp.get.mock.calls[1][1];
+        const req = createMockReq({
+          params: { service: '$(id)' },
+          query: {},
+        });
+        const res = createMockRes();
+
+        await handler(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          error: 'Invalid service name',
+          timestamp: expect.any(String),
+        });
+        expect(mockService.getServiceLogs).not.toHaveBeenCalled();
       });
 
       it('should handle service logs error', async () => {
