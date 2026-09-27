@@ -8,7 +8,8 @@ const os = require('os');
 const logger = require('../../../utils/logger');
 const { sendError } = require('./callbackHelpers');
 const { buildNetworkInterfaces } = require('../../../utils/system-info');
-const { execPromise, testGatewayConnectivity } = require('../../../utils/shell-exec-helper');
+const { testGatewayConnectivity } = require('../../../utils/shell-exec-helper');
+const { execFileAsync } = require('../../../utils/safe-exec');
 const NetworkDetector = require('../../network-detector');
 
 /**
@@ -34,11 +35,14 @@ function registerNetworkHandlers(socket, dashboard) {
 async function handleNetworkStatus(dashboard, callback) {
   try {
     const hostname = os.hostname();
-    const interfaces = await buildNetworkInterfaces();
+    // Independent lookups: run together rather than one after another
+    const [interfaces, gatewayResult, externalIp, connectivityStatus] = await Promise.all([
+      buildNetworkInterfaces(),
+      NetworkDetector.detectGateway(),
+      safeGetExternalIp(dashboard),
+      dashboard.getNetworkStatus(),
+    ]);
     const localIp = interfaces.find((i) => !i.internal && i.ipv4)?.ipv4 || 'localhost';
-    const gatewayResult = await NetworkDetector.detectGateway();
-    const externalIp = await safeGetExternalIp(dashboard);
-    const connectivityStatus = await dashboard.getNetworkStatus();
 
     if (callback) {
       callback({
@@ -72,6 +76,21 @@ async function safeGetExternalIp(dashboard) {
   } catch (error) {
     logger.debug(`Failed to get external IP: ${error.message}`);
     return null;
+  }
+}
+
+/**
+ * Ping a host once (no shell). Resolves true when it answers.
+ * @param {string} host - Hostname or IP
+ * @returns {Promise<boolean>} Reachable
+ */
+async function pingOnce(host) {
+  const args = process.platform === 'win32' ? ['-n', '1', host] : ['-c', '1', host];
+  try {
+    await execFileAsync('ping', args, { timeout: 3000 });
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -135,18 +154,16 @@ async function addDnsTests(dashboard, results) {
     const dnsServers = await dashboard.detectDnsServers();
     results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
 
-    let dnsWorking = false;
-    for (const dnsServer of dnsServers) {
-      try {
-        const pingCmd =
-          process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
-        await execPromise(pingCmd, { timeout: 3000 });
-        results.push(`  ✓ DNS Server ${dnsServer} is reachable`);
-        dnsWorking = true;
-      } catch (error) {
-        results.push(`  ✗ DNS Server ${dnsServer} not reachable`);
-      }
-    }
+    // Ping all servers at once; report in the detected order
+    const reachable = await Promise.all(dnsServers.map((server) => pingOnce(server)));
+    dnsServers.forEach((dnsServer, i) => {
+      results.push(
+        reachable[i]
+          ? `  ✓ DNS Server ${dnsServer} is reachable`
+          : `  ✗ DNS Server ${dnsServer} not reachable`
+      );
+    });
+    const dnsWorking = reachable.some(Boolean);
 
     if (dnsWorking) {
       results.push('  ✓ At least one DNS server is accessible\n');
@@ -177,16 +194,14 @@ async function addInternetTests(results) {
     { host: '1.1.1.1', name: 'Cloudflare DNS' },
   ];
 
-  for (const target of targets) {
-    try {
-      const pingCmd =
-        process.platform === 'win32' ? `ping -n 1 ${target.host}` : `ping -c 1 ${target.host}`;
-      await execPromise(pingCmd, { timeout: 3000 });
-      results.push(`✓ ${target.name} (${target.host}) is reachable`);
-    } catch (error) {
-      results.push(`✗ ${target.name} (${target.host}) not reachable`);
-    }
-  }
+  const reachable = await Promise.all(targets.map((target) => pingOnce(target.host)));
+  targets.forEach((target, i) => {
+    results.push(
+      reachable[i]
+        ? `✓ ${target.name} (${target.host}) is reachable`
+        : `✗ ${target.name} (${target.host}) not reachable`
+    );
+  });
   results.push('');
 }
 
@@ -218,4 +233,5 @@ module.exports = {
   addDnsTests,
   addInternetTests,
   addConfigurationTests,
+  pingOnce,
 };

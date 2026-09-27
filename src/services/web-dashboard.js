@@ -12,12 +12,9 @@ const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
 const { execPromise } = require('../utils/shell-exec-helper');
 const { execFileAsync, assertSafeServiceName, clampInt } = require('../utils/safe-exec');
-const {
-  runPm2ServiceAction,
-  runPm2QuickAction,
-  resolvePm2AppName,
-  isValidAction,
-} = require('../utils/pm2-service');
+const { cached } = require('../utils/cached');
+const { wrapAsyncHandler } = require('./web-dashboard/routes/routeHelper');
+const { isValidAction } = require('../utils/pm2-service');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -26,6 +23,20 @@ const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
 const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
+
+/** Metrics are shared between tabs, the broadcast and REST for this long */
+const METRICS_CACHE_MS = 5000;
+
+/** External IP: keep a good answer for an hour; after a failure, wait 5 minutes */
+const EXTERNAL_IP_TTL_MS = 60 * 60 * 1000;
+const EXTERNAL_IP_ERROR_TTL_MS = 5 * 60 * 1000;
+const EXTERNAL_IP_TIMEOUT_MS = 5000;
+
+/** systemd units shown on the Services page (override with DASHBOARD_SERVICES) */
+const DEFAULT_MONITORED_SERVICES = ['aszune-ai-bot', 'nginx', 'postgresql'];
+
+/** Tables the dashboard may read (schema listing and table viewer) */
+const DASHBOARD_TABLES = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
 
 /** HTTP methods allowed on /api when no DASHBOARD_TOKEN is configured */
 const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -54,7 +65,6 @@ class WebDashboardService {
     this.allLogs = []; // Buffer for all logs (INFO, WARN, ERROR, DEBUG)
     this.maxAllLogs = 500; // Keep last 500 logs for viewer
     this.logWatchers = new Set(); // Track socket connections for log streaming
-    this.externalIpCache = { value: null, timestamp: null }; // Cache external IP for 1 hour
     this.setupErrorInterception();
     this.setupLogInterception();
 
@@ -219,9 +229,6 @@ class WebDashboardService {
     }
 
     try {
-      const { exec } = require('child_process');
-      const { promisify } = require('util');
-      const execPromise = promisify(exec);
       await execPromise(`fuser -k ${port}/tcp 2>/dev/null || true`, { timeout: 3000 });
     } catch (e) {
       logger.debug(`Failed to force kill port ${port}: ${e.message}`);
@@ -599,24 +606,15 @@ class WebDashboardService {
       });
     });
 
-    this.app.get('/api/metrics', async (req, res) => {
-      try {
-        const metrics = await this.getMetrics();
-        res.json(metrics);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting metrics');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
+    this.app.get(
+      '/api/metrics',
+      wrapAsyncHandler(() => this.getMetrics(), 'getting metrics')
+    );
 
-    this.app.get('/api/system', async (req, res) => {
-      // getSystemInfo() is async; without await, res.json serializes a pending
-      // Promise to `{}`, leaving the dashboard System Info panel blank.
-      res.json(await this.getSystemInfo());
-    });
+    this.app.get(
+      '/api/system',
+      wrapAsyncHandler(() => this.getSystemInfo(), 'getting system info')
+    );
 
     this.setupDatabaseRoutes();
     this.setupVersionRoutes();
@@ -642,8 +640,9 @@ class WebDashboardService {
     this.app.get('/api/database/:table', async (req, res) => {
       try {
         const { table } = req.params;
-        const { limit = 100, offset = 0 } = req.query;
-        const data = await this.getDatabaseTableContents(table, parseInt(limit), parseInt(offset));
+        const limit = clampInt(req.query.limit, { def: 100, min: 1, max: 1000 });
+        const offset = clampInt(req.query.offset, { def: 0, min: 0, max: Number.MAX_SAFE_INTEGER });
+        const data = await this.getDatabaseTableContents(table, limit, offset);
         res.json(data);
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(
@@ -657,18 +656,10 @@ class WebDashboardService {
       }
     });
 
-    this.app.get('/api/database-schema', async (req, res) => {
-      try {
-        const schema = await this.getDatabaseSchema();
-        res.json(schema);
-      } catch (error) {
-        const errorResponse = ErrorHandler.handleError(error, 'getting database schema');
-        res.status(500).json({
-          error: errorResponse.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
+    this.app.get(
+      '/api/database-schema',
+      wrapAsyncHandler(() => this.getDatabaseSchema(), 'getting database schema')
+    );
   }
 
   /**
@@ -676,9 +667,10 @@ class WebDashboardService {
    * @private
    */
   setupVersionRoutes() {
-    this.app.get('/api/version', async (req, res) => {
-      res.json(await this.getVersionInfo());
-    });
+    this.app.get(
+      '/api/version',
+      wrapAsyncHandler(() => this.getVersionInfo(), 'getting version info')
+    );
   }
 
   /**
@@ -713,39 +705,47 @@ class WebDashboardService {
    * @private
    */
   async getServiceStatus() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
+    // Short cache + shared in-flight: the Services page and socket requests
+    // don't each spawn 3 systemctl calls per unit.
+    return cached('dashboard:service-status', 10000, () =>
+      Promise.all(this._getMonitoredServices().map((name) => this._getOneServiceStatus(name)))
+    );
+  }
 
-    const services = ['aszune-ai-bot', 'nginx', 'postgresql'];
-    const results = [];
+  /**
+   * systemd units to report on (DASHBOARD_SERVICES, comma-separated)
+   * @private
+   * @returns {string[]} Unit names
+   */
+  _getMonitoredServices() {
+    const configured = (process.env.DASHBOARD_SERVICES || '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+    return configured.length > 0 ? configured : DEFAULT_MONITORED_SERVICES;
+  }
 
-    for (const service of services) {
-      try {
-        const { stdout } = await execPromise(`systemctl is-active ${service}`, {
-          timeout: 5000,
-        }).catch((err) => {
+  /**
+   * Status, uptime and boot-enabled flag for one unit, queried in parallel.
+   * @private
+   * @param {string} service - Unit name
+   * @returns {Promise<Object>} Service status
+   */
+  async _getOneServiceStatus(service) {
+    try {
+      assertSafeServiceName(service);
+      const [active, uptime, enabled] = await Promise.all([
+        execFileAsync('systemctl', ['is-active', service], { timeout: 5000 }).catch((err) => {
           logger.debug(`Service status check failed for ${service}: ${err.message}`);
           return { stdout: 'inactive' };
-        });
-
-        results.push({
-          name: service,
-          status: stdout.trim() || 'unknown',
-          uptime: await this.getServiceUptime(service),
-          enabled: await this.isServiceEnabled(service),
-        });
-      } catch (error) {
-        results.push({
-          name: service,
-          status: 'error',
-          uptime: null,
-          enabled: false,
-        });
-      }
+        }),
+        this.getServiceUptime(service),
+        this.isServiceEnabled(service),
+      ]);
+      return { name: service, status: active.stdout.trim() || 'unknown', uptime, enabled };
+    } catch (error) {
+      return { name: service, status: 'error', uptime: null, enabled: false };
     }
-
-    return results;
   }
 
   /**
@@ -755,13 +755,10 @@ class WebDashboardService {
    * @private
    */
   async getServiceUptime(service) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     try {
-      const { stdout } = await execPromise(
-        `systemctl show ${service} --property=ActiveEnterTimestamp --value`,
+      const { stdout } = await execFileAsync(
+        'systemctl',
+        ['show', service, '--property=ActiveEnterTimestamp', '--value'],
         { timeout: 5000 }
       );
 
@@ -790,57 +787,11 @@ class WebDashboardService {
    * @private
    */
   async isServiceEnabled(service) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     try {
-      await execPromise(`systemctl is-enabled ${service}`, { timeout: 5000 });
+      await execFileAsync('systemctl', ['is-enabled', service], { timeout: 5000 });
       return true;
     } catch {
       return false;
-    }
-  }
-
-  /**
-   * Try PM2 programmatic API
-   * @param {string} action - Action (start, stop, restart)
-   * @param {string} pm2AppName - PM2 app name
-   * @returns {Promise<Object>} Result or null if failed
-   * @private
-   */
-  async tryPm2Api(action, pm2AppName) {
-    try {
-      const pm2 = require('pm2');
-      return await new Promise((resolve, reject) => {
-        pm2.connect((connectErr) => {
-          if (connectErr) {
-            logger.debug(`PM2 daemon not accessible: ${connectErr.message}`);
-            reject(connectErr);
-            return;
-          }
-
-          const pmAction = action === 'restart' ? 'restart' : action === 'stop' ? 'stop' : 'start';
-          pm2[pmAction](pm2AppName, (actionErr) => {
-            pm2.disconnect();
-            if (actionErr) {
-              logger.debug(`PM2 ${pmAction} failed: ${actionErr.message}`);
-              reject(actionErr);
-            } else {
-              resolve({
-                success: true,
-                message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
-                service: pm2AppName,
-                action,
-                timestamp: new Date().toISOString(),
-              });
-            }
-          });
-        });
-      });
-    } catch (error) {
-      logger.debug(`PM2 API error: ${error.message}`);
-      return null;
     }
   }
 
@@ -1086,10 +1037,6 @@ class WebDashboardService {
    * @private
    */
   async getIPAddresses() {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     const local = os.networkInterfaces();
     let localIP = 'localhost';
 
@@ -1103,15 +1050,9 @@ class WebDashboardService {
 
     let externalIP = 'Unable to determine';
     try {
-      const { stdout } = await execPromise('curl -s https://api.ipify.org', {
-        timeout: 5000,
-      }).catch((err) => {
-        logger.debug(`External IP lookup failed: ${err.message}`);
-        return { stdout: '' };
-      });
-      externalIP = stdout.trim() || 'Unable to determine';
+      externalIP = await this.getExternalIp();
     } catch (error) {
-      logger.debug('Failed to get external IP');
+      logger.debug(`External IP lookup failed: ${error.message}`);
     }
 
     return {
@@ -1256,9 +1197,6 @@ class WebDashboardService {
    */
   async _executeRestartCommand(command, logPrefix, successMessage, logLevel = 'info') {
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
       logger.info(`Attempting ${logPrefix}: ${command}`);
       await execPromise(command, { timeout: 10000 });
       logger.info(successMessage);
@@ -1319,9 +1257,6 @@ class WebDashboardService {
   async _handleGitPullRequest(res) {
     try {
       logger.info('Git pull command received from dashboard');
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
 
       try {
         const { stdout } = await execPromise('git pull origin main', {
@@ -1682,226 +1617,8 @@ class WebDashboardService {
   }
 
   /**
-   * Format uptime from milliseconds
-   * @private
-   */
-  _formatUptime(uptimeMs) {
-    const uptimeSeconds = Math.floor(uptimeMs / 1000);
-    const hours = Math.floor(uptimeSeconds / 3600);
-    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-    const seconds = uptimeSeconds % 60;
-
-    let result = '';
-    if (hours > 0) result += `${hours}h `;
-    if (minutes > 0 || hours > 0) result += `${minutes}m `;
-    result += `${seconds}s`;
-    return result.trim();
-  }
-
-  /**
-   * Build Discord connected status response
-   * @private
-   */
-  _buildDiscordConnectedResponse() {
-    const uptime = this._formatUptime(this.discordClient.uptime || 0);
-    return {
-      connected: true,
-      username: this.discordClient.user.tag,
-      id: this.discordClient.user.id,
-      uptime,
-      guilds: this.discordClient.guilds.cache.size,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Send callback response safely
-   * @private
-   */
-  _sendCallback(callback, response) {
-    if (callback) callback(response);
-  }
-
-  /**
-   * Build disconnected status response
-   * @private
-   */
-  _buildDisconnectedResponse(error) {
-    return { connected: false, error };
-  }
-
-  async handleDiscordStatus(callback) {
-    try {
-      if (!this.discordClient) {
-        this._sendCallback(
-          callback,
-          this._buildDisconnectedResponse('Discord client not initialized')
-        );
-        return;
-      }
-
-      const isReady = this.discordClient.isReady();
-      const response =
-        isReady && this.discordClient.user
-          ? this._buildDiscordConnectedResponse()
-          : this._buildDisconnectedResponse('Discord bot is not connected');
-
-      this._sendCallback(callback, response);
-      logger.debug(`Discord status: ${isReady ? 'Connected' : 'Disconnected'}`);
-    } catch (error) {
-      logger.error('Error retrieving Discord status:', error);
-      this._sendCallback(callback, this._buildDisconnectedResponse(error.message));
-    }
-  }
-
-  async executePm2Command(serviceName, action) {
-    try {
-      logger.debug(`PM2 action: ${action} ${serviceName}`);
-      // Runs via execFile with an allowlisted app name and action — no shell
-      return await runPm2ServiceAction(serviceName, action);
-    } catch (error) {
-      logger.error(`PM2 error: ${error.message}`);
-      throw new Error(`Failed to execute PM2 command: ${error.message}`, { cause: error });
-    }
-  }
-
-  /**
-   * Get action verb for service action message
-   * @private
-   */
-  _getActionVerb(action) {
-    const verbs = { stop: 'stopped', start: 'started', restart: 'restarted' };
-    return verbs[action] || action;
-  }
-
-  /**
-   * Build service action success response
-   * @private
-   */
-  _buildServiceActionResponse(serviceName, action, output) {
-    return {
-      success: true,
-      serviceName,
-      action,
-      message: `Successfully ${this._getActionVerb(action)} ${serviceName}`,
-      timestamp: new Date().toISOString(),
-      output,
-    };
-  }
-
-  async handleServiceAction(data, callback) {
-    try {
-      const validationError = this._validateServiceActionInput(data);
-      if (validationError) {
-        if (callback) callback({ error: validationError, success: false });
-        return;
-      }
-
-      const { serviceName, action } = data;
-      logger.info(`Service action requested: ${serviceName} - ${action}`);
-
-      try {
-        const output = await this.executePm2Command(serviceName, action);
-        if (callback) callback(this._buildServiceActionResponse(serviceName, action, output));
-      } catch (execError) {
-        logger.error(`PM2 command failed: ${execError.message}`);
-        if (callback)
-          callback({ error: `Failed to ${action} service: ${execError.message}`, success: false });
-      }
-    } catch (error) {
-      logger.error('Error performing service action:', error);
-      if (callback) callback({ error: error.message, success: false });
-    }
-  }
-
-  /**
-   * Validate service action input
-   * @param {Object} data - Service action data
-   * @returns {string|null} Error message or null if valid
-   * @private
-   */
-  _validateServiceActionInput(data) {
-    const { serviceName, action } = data;
-
-    if (!serviceName || !action) {
-      return 'Missing required fields: serviceName, action';
-    }
-
-    if (!resolvePm2AppName(serviceName)) {
-      return `Unknown or disallowed service: ${serviceName}`;
-    }
-
-    if (!isValidAction(action)) {
-      return `Invalid action: ${action}. Must be one of: start, stop, restart`;
-    }
-
-    return null;
-  }
-
-  /**
-   * Execute PM2 quick action command safely (no shell; allowlisted group).
-   * @private
-   */
-  async _executePm2QuickAction(group) {
-    logger.debug(`Executing PM2 quick action: ${group}`);
-    const { stdout, stderr } = await runPm2QuickAction(group);
-
-    if (stderr && !stderr.includes('Use `pm2 show')) {
-      logger.warn(`PM2 stderr: ${stderr}`);
-    }
-
-    logger.info(`PM2 quick action completed: ${stdout}`);
-    return stdout;
-  }
-
-  async handleQuickServiceAction(data, callback) {
-    try {
-      const { group } = data;
-
-      const validationError = this._validateQuickServiceActionInput(group);
-      if (validationError) {
-        if (callback) callback({ error: validationError, success: false });
-        return;
-      }
-
-      logger.info(`Quick service action: ${group}`);
-
-      const output = await this._executePm2QuickAction(group);
-      if (callback) {
-        callback({
-          success: true,
-          group,
-          message: `Quick action '${group}' completed successfully`,
-          timestamp: new Date().toISOString(),
-          output,
-        });
-      }
-    } catch (error) {
-      logger.error(`PM2 quick action failed: ${error.message}`);
-      if (callback) {
-        callback({
-          error: `Failed to execute quick action: ${error.message}`,
-          success: false,
-        });
-      }
-    }
-  }
-
-  /**
-   * Validate quick service action input
-   * @param {string} group - Action group name
-   * @returns {string|null} Error message or null if valid
-   * @private
-   */
-  _validateQuickServiceActionInput(group) {
-    if (!group) {
-      return 'Missing required field: group';
-    }
-    return null;
-  }
-
-  /**
-   * Start broadcasting metrics to connected clients
+   * Push metrics to connected dashboards every 30s (skipped when nobody is
+   * connected; the collection itself is shared via getMetrics' cache).
    */
   startMetricsBroadcast() {
     this.metricsInterval = setInterval(async () => {
@@ -1936,21 +1653,26 @@ class WebDashboardService {
    */
   async getMetrics() {
     try {
-      const stats = await this._collectAllMetrics();
-      logger.debug('Metrics collected successfully');
-      return {
-        timestamp: new Date().toISOString(),
-        uptime: this.getUptime(),
-        cache: stats[0],
-        database: stats[1],
-        reminders: stats[2],
-        system: stats[3],
-        resources: stats[4],
-        analytics: stats[5],
-      };
+      // Every tab, the 30s broadcast, /api/metrics and recommendations share
+      // one collection per METRICS_CACHE_MS instead of each running all six.
+      return await cached('dashboard:metrics', METRICS_CACHE_MS, async () => {
+        const stats = await this._collectAllMetrics();
+        logger.debug('Metrics collected successfully');
+        return {
+          timestamp: new Date().toISOString(),
+          uptime: this.getUptime(),
+          cache: stats[0],
+          database: stats[1],
+          reminders: stats[2],
+          system: stats[3],
+          resources: stats[4],
+          analytics: stats[5],
+        };
+      });
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'aggregating metrics');
       logger.error(`Metrics aggregation error: ${errorResponse.message}`);
+      throw error;
     }
   }
 
@@ -2131,58 +1853,67 @@ class WebDashboardService {
         heapTotalFormatted: this.formatBytes(processMemory.heapTotal),
         heapUsedFormatted: this.formatBytes(processMemory.heapUsed),
       },
-      cpu: {
-        count: os.cpus().length,
-        model: os.cpus()[0]?.model || 'Unknown',
-        loadAverage: os.loadavg(),
-        loadPercent: Math.round((os.loadavg()[0] / os.cpus().length) * 100),
-      },
+      cpu: this._getCpuInfo(),
+    };
+  }
+
+  /**
+   * CPU count, model and load (reads os.cpus() once)
+   * @private
+   * @returns {Object} CPU info
+   */
+  _getCpuInfo() {
+    const cpus = os.cpus();
+    const loadAverage = os.loadavg();
+    return {
+      count: cpus.length,
+      model: cpus[0]?.model || 'Unknown',
+      loadAverage,
+      loadPercent: Math.round((loadAverage[0] / (cpus.length || 1)) * 100),
     };
   }
 
   async getExternalIp() {
-    try {
-      // Check if cached and still valid (1 hour cache)
-      const cacheExpiry = 60 * 60 * 1000; // 1 hour
-      if (
-        this.externalIpCache.value &&
-        this.externalIpCache.timestamp &&
-        Date.now() - this.externalIpCache.timestamp < cacheExpiry
-      ) {
-        return this.externalIpCache.value;
-      }
+    // One cached lookup shared by metrics, the network page and REST. Failures
+    // are remembered for a few minutes so an offline Pi doesn't retry every poll.
+    return cached('dashboard:external-ip', EXTERNAL_IP_TTL_MS, () => this._fetchExternalIp(), {
+      errorTtl: EXTERNAL_IP_ERROR_TTL_MS,
+    });
+  }
 
-      // Fetch external IP from ipify.org API
-      const https = require('https');
-      const response = await new Promise((resolve, reject) => {
-        https
-          .get('https://api.ipify.org?format=json', (res) => {
-            let data = '';
-            res.on('data', (chunk) => {
-              data += chunk;
-            });
-            res.on('end', () => {
-              try {
-                const parsed = JSON.parse(data);
-                resolve(parsed.ip);
-              } catch (e) {
-                reject(new Error('Failed to parse IP response'));
-              }
-            });
-          })
-          .on('error', reject);
+  /**
+   * Ask ipify for the public IP, giving up after EXTERNAL_IP_TIMEOUT_MS.
+   * @private
+   * @returns {Promise<string>} Public IP
+   */
+  _fetchExternalIp() {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+      const request = https.get(
+        'https://api.ipify.org?format=json',
+        { timeout: EXTERNAL_IP_TIMEOUT_MS },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+          res.on('end', () => {
+            try {
+              const { ip } = JSON.parse(data);
+              logger.debug(`External IP detected: ${ip}`);
+              resolve(ip);
+            } catch {
+              reject(new Error('Failed to parse IP response'));
+            }
+          });
+        }
+      );
+      request.on('timeout', () => request.destroy(new Error('External IP lookup timed out')));
+      request.on('error', (error) => {
+        logger.warn(`Failed to get external IP from ipify.org: ${error.message}`);
+        reject(error);
       });
-
-      // Cache the result
-      this.externalIpCache.value = response;
-      this.externalIpCache.timestamp = Date.now();
-
-      logger.debug(`External IP detected: ${response}`);
-      return response;
-    } catch (error) {
-      logger.warn(`Failed to get external IP from ipify.org: ${error.message}`);
-      throw error;
-    }
+    });
   }
 
   /**
@@ -2281,14 +2012,6 @@ class WebDashboardService {
   }
 
   /**
-   * Get dashboard uptime
-   * @returns {string} Formatted uptime
-   */
-  getUptimeFormatted() {
-    return this.formatUptime(Date.now() - this.startTime);
-  }
-
-  /**
    * Format uptime in human-readable format
    * @param {number} ms - Milliseconds
    * @returns {string} Formatted uptime
@@ -2338,7 +2061,7 @@ class WebDashboardService {
         // Git not available
       }
 
-      const version = packageJson.version || '1.8.0';
+      const { version } = packageJson;
       releaseUrl = `https://github.com/powerfulqa/aszune-ai-bot/releases/tag/v${version}`;
 
       return {
@@ -2352,7 +2075,7 @@ class WebDashboardService {
     } catch (error) {
       logger.warn(`Failed to get version info: ${error.message}`);
       return {
-        version: '1.8.0',
+        version: 'unknown',
         commit: 'unknown',
         commitUrl: '',
         releaseUrl: 'https://github.com/powerfulqa/aszune-ai-bot/releases',
@@ -2370,10 +2093,8 @@ class WebDashboardService {
     try {
       const tables = [];
 
-      // Define expected tables
-      const expectedTables = ['users', 'user_messages', 'conversation_history', 'reminders'];
-
-      for (const tableName of expectedTables) {
+      // Same list the table viewer accepts ('users' never existed; it's user_stats)
+      for (const tableName of DASHBOARD_TABLES) {
         try {
           const count = await this.getDatabaseTableRowCount(tableName);
           tables.push({
@@ -2407,7 +2128,7 @@ class WebDashboardService {
    */
   getTableDescription(tableName) {
     const descriptions = {
-      users: 'User profiles and stats',
+      user_stats: 'User profiles and stats',
       user_messages: 'Legacy user messages (deprecated)',
       conversation_history: 'AI conversation history with roles',
       reminders: 'User reminders with scheduling info',
@@ -2479,7 +2200,7 @@ class WebDashboardService {
    * @private
    */
   _validateTableName(tableName) {
-    const validTables = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
+    const validTables = DASHBOARD_TABLES;
     if (!validTables.includes(tableName)) {
       throw new Error(`Invalid table: ${tableName}`);
     }
@@ -2641,29 +2362,6 @@ class WebDashboardService {
         timestamp: new Date().toISOString(),
       });
     }
-  }
-
-  /**
-   * Send standard HTTP response with timestamp
-   * @private
-   */
-  _sendResponse(res, data, statusCode = 200) {
-    res.status(statusCode).json({
-      ...data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  /**
-   * Send error HTTP response with timestamp
-   * @private
-   */
-  _sendErrorResponse(res, error, context, statusCode = 500) {
-    const errorResponse = ErrorHandler.handleError(error, context);
-    res.status(statusCode).json({
-      error: errorResponse.message,
-      timestamp: new Date().toISOString(),
-    });
   }
 
   /**

@@ -294,11 +294,38 @@ describe('WebDashboardService - Helper Methods', () => {
   });
 
   describe('external IP caching', () => {
-    it('should have external IP cache initialized', () => {
-      expect(dashboardService.externalIpCache).toEqual({
-        value: null,
-        timestamp: null,
-      });
+    beforeEach(() => {
+      // jest.setup.js resets modules per test: build the service from the same
+      // module registry as the cache we clear, so they share one store.
+      const { WebDashboardService: FreshService } = require('../../../src/services/web-dashboard');
+      require('../../../src/utils/cached').invalidate();
+      dashboardService = new FreshService();
+    });
+
+    it('looks the IP up once and shares it between callers', async () => {
+      const fetchSpy = jest
+        .spyOn(dashboardService, '_fetchExternalIp')
+        .mockResolvedValue('203.0.113.10');
+
+      const [a, b] = await Promise.all([
+        dashboardService.getExternalIp(),
+        dashboardService.getExternalIp(),
+      ]);
+      const c = await dashboardService.getExternalIp();
+
+      expect([a, b, c]).toEqual(['203.0.113.10', '203.0.113.10', '203.0.113.10']);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('remembers a failed lookup instead of retrying every poll', async () => {
+      const fetchSpy = jest
+        .spyOn(dashboardService, '_fetchExternalIp')
+        .mockRejectedValue(new Error('offline'));
+
+      await expect(dashboardService.getExternalIp()).rejects.toThrow('offline');
+      await expect(dashboardService.getExternalIp()).rejects.toThrow('offline');
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
   });
 

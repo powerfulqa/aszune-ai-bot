@@ -21,8 +21,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reminders, service and instance fields, network results, validation messages, table headers);
   row buttons use `data-*` attributes instead of inline `onclick` with interpolated ids
 
+### Changed
+
+- Dashboard metrics are collected once per 5s and shared by every open tab, the 30s broadcast,
+  `/api/metrics` and recommendations (previously each ran the full collection)
+- External IP lookup: one cached path (the network page no longer shells `curl`), a 5s timeout
+  so it can't stall metrics, and failures are remembered for 5 minutes instead of retried on
+  every poll
+- Service status checks run in parallel and without a shell; the monitored units are
+  configurable with `DASHBOARD_SERVICES`
+- Network status lookups and connectivity-test pings run in parallel (same report order)
+- Removed ~220 lines of dead dashboard code: socket handlers duplicated by
+  `handlers/serviceHandlers.js`, plus unused response/uptime/PM2 helpers
+
 ### Fixed
 
+- `getMetrics` now throws on failure (services throw) instead of returning `undefined`, which
+  made `/api/metrics` answer `200` with an empty body
+- Database schema listed a non-existent `users` table instead of `user_stats`
+- `/api/database/:table` clamps `limit`/`offset`; `/api/system` and `/api/version` errors are
+  handled instead of falling through to Express's default handler
+- Version fallback no longer reports a stale `1.8.0`
 - Logs viewer no longer flips the stored log order on every re-render
 - Natural-language reminder test used a fixed date that has now passed
 
