@@ -125,7 +125,7 @@ class Dashboard {
     try {
       return await response.json();
     } catch (error) {
-      throw new Error(`Failed to parse response: ${error.message}`);
+      throw new Error(`Failed to parse response: ${error.message}`, { cause: error });
     }
   }
 
@@ -253,7 +253,7 @@ class Dashboard {
   }
 
   updateVersionDisplay(versionData) {
-    this._setText('version-number', versionData.version || '1.8.0');
+    this._setText('version-number', versionData.version || 'unknown');
     this._setText('commit-sha', versionData.commit || 'unknown');
     const commitLink = this._getElement('commit-link');
     if (commitLink && versionData.commitUrl) {
@@ -448,6 +448,9 @@ class Dashboard {
   }
 
   async fetchAndUpdateRecommendations() {
+    // Only pages with a recommendations panel need the request (it ran every
+    // 30s on every page before, even with nowhere to show it)
+    if (!document.getElementById('recommendations-list')) return;
     try {
       const response = await fetch('/api/recommendations');
       if (!response.ok) throw new Error('Failed to fetch recommendations');
@@ -910,9 +913,3 @@ document.addEventListener('DOMContentLoaded', () => {
   window.dashboard.fetchVersionInfo();
 });
 
-// Handle page visibility changes
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && window.dashboard && !window.dashboard.isConnected) {
-    // Reconnect logic could go here
-  }
-});
