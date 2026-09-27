@@ -6,19 +6,9 @@
     <title>Aszune AI Bot Dashboard - Network Status</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .demo-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
 
       .network-section {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
@@ -27,7 +17,7 @@
       }
 
       .network-section h2 {
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 20px;
         font-size: 1.3rem;
         font-weight: 600;
@@ -41,20 +31,20 @@
       }
 
       .status-card {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 20px;
         transition: border-color 0.3s;
       }
 
       .status-card:hover {
-        border-color: #667eea;
+        border-color: var(--accent);
       }
 
       .status-card h3 {
         margin: 0 0 15px 0;
-        color: #2c3e50;
+        color: var(--text);
         font-size: 14px;
         text-transform: uppercase;
         display: flex;
@@ -74,7 +64,7 @@
 
       .badge-connected {
         background: rgba(46, 125, 50, 0.1);
-        color: #2e7d32;
+        color: var(--ok-text);
       }
 
       .badge-connected::before {
@@ -84,7 +74,7 @@
 
       .badge-disconnected {
         background: rgba(211, 47, 47, 0.1);
-        color: #d32f2f;
+        color: var(--danger-text);
       }
 
       .badge-disconnected::before {
@@ -106,7 +96,7 @@
         grid-template-columns: 120px 1fr;
         gap: 10px;
         padding: 8px 0;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
       }
 
       .info-item:last-child {
@@ -114,21 +104,21 @@
       }
 
       .info-label {
-        color: #666;
+        color: var(--text-muted);
         font-size: 11px;
         text-transform: uppercase;
         font-weight: 600;
       }
 
       .info-value {
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 500;
         font-family: 'Courier New', monospace;
         font-size: 12px;
       }
 
       .connectivity-label {
-        color: #2c3e50;
+        color: var(--text);
         font-size: 12px;
         font-weight: 600;
         letter-spacing: 0.4px;
@@ -138,8 +128,8 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 15px;
-        background: #ffffff;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
         border-radius: 4px;
         overflow: hidden;
       }
@@ -148,20 +138,20 @@
       .interfaces-table td {
         padding: 10px;
         text-align: left;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
         font-size: 12px;
       }
 
       .interfaces-table th {
-        background: #f5f5f5;
-        color: #2c3e50;
+        background: var(--surface-2);
+        color: var(--text);
         font-weight: 600;
         text-transform: uppercase;
         font-size: 11px;
       }
 
       .interfaces-table tr:hover {
-        background: #fafafa;
+        background: var(--surface-2);
       }
 
       .interfaces-table tr:last-child td {
@@ -169,7 +159,7 @@
       }
 
       .interface-name {
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 600;
       }
 
@@ -178,15 +168,15 @@
         align-items: center;
         gap: 5px;
         padding: 2px 6px;
-        background: #1b5e20;
-        color: #4caf50;
+        background: var(--ok-bg);
+        color: var(--ok-text);
         border-radius: 3px;
         font-size: 10px;
       }
 
       .interface-status.loopback {
-        background: #e0e0e0;
-        color: #666;
+        background: var(--surface-3);
+        color: var(--text-muted);
       }
 
       .connectivity-checks {
@@ -197,8 +187,8 @@
       }
 
       .check-item {
-        background: #f8f9fa;
-        border-left: 3px solid #2e7d32;
+        background: var(--surface-2);
+        border-left: 3px solid var(--ok-text);
         padding: 15px;
         border-radius: 4px;
         display: flex;
@@ -220,13 +210,13 @@
 
       .check-name {
         font-weight: 600;
-        color: #2c3e50;
+        color: var(--text);
         font-size: 12px;
       }
 
       .check-status {
         font-size: 11px;
-        color: #888;
+        color: var(--text-muted);
         margin-top: 3px;
       }
 
@@ -238,14 +228,14 @@
       }
 
       .chart-item {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
         padding: 15px;
       }
 
       .chart-title {
-        color: #2c3e50;
+        color: var(--text);
         font-size: 12px;
         font-weight: 600;
         margin-bottom: 12px;
@@ -254,7 +244,7 @@
       .progress-bar {
         width: 100%;
         height: 8px;
-        background: #e0e0e0;
+        background: var(--surface-3);
         border-radius: 4px;
         overflow: hidden;
         margin-bottom: 8px;
@@ -262,7 +252,7 @@
 
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #2e7d32, #f57c00);
+        background: linear-gradient(90deg, var(--ok-text), var(--warn));
         border-radius: 4px;
         transition: width 0.3s;
       }
@@ -271,33 +261,12 @@
         display: flex;
         justify-content: space-between;
         font-size: 11px;
-        color: #2c3e50;
+        color: var(--text);
       }
 
-      .legend {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
 
-      .legend-title {
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: #2c3e50;
-      }
 
-      .legend-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-        font-size: 12px;
-      }
 
-      .legend-item {
-        display: flex;
-        gap: 8px;
-      }
 
       .legend-icon {
         width: 16px;
@@ -309,14 +278,14 @@
       .quick-test {
         margin-top: 20px;
         padding: 15px;
-        background: #f8f9fa;
+        background: var(--surface-2);
         border-radius: 6px;
       }
 
       .test-btn {
         padding: 8px 16px;
-        border: 1px solid #667eea;
-        background: #667eea;
+        border: 1px solid var(--accent);
+        background: var(--accent);
         color: #ffffff;
         border-radius: 4px;
         cursor: pointer;
@@ -326,17 +295,17 @@
       }
 
       .test-btn:hover {
-        background: #1976d2;
+        background: var(--info-text);
       }
 
       .test-result {
         margin-top: 10px;
         padding: 10px;
-        background: #f5f5f5;
+        background: var(--surface-2);
         border-radius: 4px;
         font-family: 'Courier New', monospace;
         font-size: 11px;
-        color: #2e7d32;
+        color: var(--ok-text);
         max-height: 100px;
         overflow-y: auto;
       }
@@ -443,7 +412,7 @@
 
         <!-- Network Interfaces -->
         <div style="margin-top: 30px">
-          <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
+          <h3 style="color: var(--text); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
             🔌 Network Interfaces
           </h3>
           <table class="interfaces-table">
@@ -458,7 +427,7 @@
             </thead>
             <tbody id="network-interfaces">
               <tr>
-                <td colspan="5" style="text-align: center; color: #999">Loading interfaces...</td>
+                <td colspan="5" style="text-align: center; color: var(--text-muted)">Loading interfaces...</td>
               </tr>
             </tbody>
           </table>
@@ -466,11 +435,11 @@
 
         <!-- Connectivity Checks -->
         <div style="margin-top: 30px">
-          <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
+          <h3 style="color: var(--text); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
             ✓ Connectivity Checks
           </h3>
           <div class="connectivity-checks" id="connectivity-checks">
-            <p style="text-align: center; color: #999">
+            <p style="text-align: center; color: var(--text-muted)">
               Network connectivity data will be shown here when available.
             </p>
           </div>
@@ -478,7 +447,7 @@
 
         <!-- Quick Connectivity Test -->
         <div class="quick-test">
-          <h3 style="color: #2c3e50; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 600">
+          <h3 style="color: var(--text); margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 600">
             🧪 Quick Connectivity Test
           </h3>
           <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
@@ -489,9 +458,9 @@
               display: none;
               margin-top: 10px;
               padding: 10px;
-              background: #f5f5f5;
+              background: var(--surface-2);
               border-radius: 4px;
-              color: #2c3e50;
+              color: var(--text);
             "
           ></div>
         </div>
@@ -501,7 +470,7 @@
           <div class="legend-title">Network Status Legend</div>
           <div class="legend-items">
             <div class="legend-item">
-              <div class="legend-icon" style="background: #1b5e20"></div>
+              <div class="legend-icon" style="background: var(--ok-text)"></div>
               <span>Active / Reachable</span>
             </div>
             <div class="legend-item">
@@ -509,11 +478,11 @@
               <span>Inactive / Unreachable</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #e0e0e0"></div>
+              <div class="legend-icon" style="background: var(--surface-3)"></div>
               <span>Loopback Interface</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #667eea"></div>
+              <div class="legend-icon" style="background: var(--accent)"></div>
               <span>Performance Metric</span>
             </div>
           </div>
@@ -626,10 +595,10 @@
               // Update DNS status text
               if (response.connectivity.dnsReachable) {
                 document.getElementById('dns-status-text').textContent = '✓ Working';
-                document.getElementById('dns-status-text').style.color = '#4caf50';
+                document.getElementById('dns-status-text').style.color = 'var(--ok)';
               } else {
                 document.getElementById('dns-status-text').textContent = '✗ Not reachable';
-                document.getElementById('dns-status-text').style.color = '#f44336';
+                document.getElementById('dns-status-text').style.color = 'var(--danger)';
               }
             } else {
               console.warn('No DNS servers detected in response');
@@ -666,27 +635,27 @@
               const checks = response.connectivity;
               connectivityDiv.innerHTML = `
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.internetReachable ? '#4caf50' : '#f44336'};">
+                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.internetReachable ? 'var(--ok)' : 'var(--danger)'};">
                                     <div style="font-weight: 600; margin-bottom: 5px;">Internet Reachable</div>
-                                    <div style="color: ${checks.internetReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                    <div style="color: ${checks.internetReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
                                         ${checks.internetReachable ? '✓ YES' : '✗ NO'}
                                     </div>
                                 </div>
-                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.dnsReachable ? '#4caf50' : '#f44336'};">
+                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.dnsReachable ? 'var(--ok)' : 'var(--danger)'};">
                                     <div style="font-weight: 600; margin-bottom: 5px;">DNS Reachable</div>
-                                    <div style="color: ${checks.dnsReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                    <div style="color: ${checks.dnsReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
                                         ${checks.dnsReachable ? '✓ YES' : '✗ NO'}
                                     </div>
                                 </div>
-                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.gatewayReachable ? '#4caf50' : '#f44336'};">
+                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.gatewayReachable ? 'var(--ok)' : 'var(--danger)'};">
                                     <div style="font-weight: 600; margin-bottom: 5px;">Gateway Reachable</div>
-                                    <div style="color: ${checks.gatewayReachable ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                    <div style="color: ${checks.gatewayReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
                                         ${checks.gatewayReachable ? '✓ YES' : '✗ NO'}
                                     </div>
                                 </div>
-                                <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${checks.connected ? '#4caf50' : '#f44336'};">
+                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.connected ? 'var(--ok)' : 'var(--danger)'};">
                                     <div style="font-weight: 600; margin-bottom: 5px;">Overall Connected</div>
-                                    <div style="color: ${checks.connected ? '#4caf50' : '#f44336'}; font-size: 1.2rem;">
+                                    <div style="color: ${checks.connected ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
                                         ${checks.connected ? '✓ YES' : '✗ NO'}
                                     </div>
                                 </div>
@@ -702,7 +671,7 @@
                   (iface) => `
                             <tr>
                                 <td class="interface-name">${escapeHtml(iface.name)}</td>
-                                <td><span class="interface-status" style="background: ${iface.internal ? '#e0e0e0' : '#4caf50'};">${escapeHtml(iface.status)}</span></td>
+                                <td><span class="interface-status${iface.internal ? ' loopback' : ''}">${escapeHtml(iface.status)}</span></td>
                                 <td>${escapeHtml(iface.ipv4 || '-')}</td>
                                 <td>${escapeHtml(iface.ipv6 || '-')}</td>
                                 <td>${escapeHtml(iface.mac || '-')}</td>

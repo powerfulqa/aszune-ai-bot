@@ -6,19 +6,9 @@
     <title>Aszune AI Bot Dashboard - Reminder Management</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .demo-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
 
       .reminder-section {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
@@ -27,7 +17,7 @@
       }
 
       .reminder-section h2 {
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 20px;
         font-size: 1.3rem;
         font-weight: 600;
@@ -50,8 +40,8 @@
       }
 
       .stat-card {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 15px;
         text-align: center;
@@ -60,20 +50,20 @@
       .stat-value {
         font-size: 24px;
         font-weight: 600;
-        color: #667eea;
+        color: var(--accent);
         margin-bottom: 5px;
       }
 
       .stat-label {
         font-size: 11px;
-        color: #666;
+        color: var(--text-muted);
         text-transform: uppercase;
       }
 
       .action-btn {
         padding: 8px 16px;
-        border: 1px solid #667eea;
-        background: #667eea;
+        border: 1px solid var(--accent);
+        background: var(--accent);
         color: #ffffff;
         border-radius: 4px;
         cursor: pointer;
@@ -83,7 +73,7 @@
       }
 
       .action-btn:hover {
-        background: #5568d3;
+        background: var(--accent-hover);
       }
 
       .filter-bar {
@@ -95,9 +85,9 @@
 
       .filter-btn {
         padding: 6px 12px;
-        border: 1px solid #d0d0d0;
-        background: #f5f5f5;
-        color: #2c3e50;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
         border-radius: 4px;
         cursor: pointer;
         font-size: 12px;
@@ -105,8 +95,8 @@
       }
 
       .filter-btn.active {
-        border-color: #667eea;
-        background: #667eea;
+        border-color: var(--accent);
+        background: var(--accent);
         color: #ffffff;
       }
 
@@ -117,8 +107,8 @@
       .reminder-table {
         width: 100%;
         border-collapse: collapse;
-        background: #ffffff;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
         border-radius: 4px;
         overflow: hidden;
         margin-bottom: 20px;
@@ -128,20 +118,20 @@
       .reminder-table td {
         padding: 12px;
         text-align: left;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
         font-size: 12px;
       }
 
       .reminder-table th {
-        background: #f5f5f5;
-        color: #2c3e50;
+        background: var(--surface-2);
+        color: var(--text);
         font-weight: 600;
         text-transform: uppercase;
         font-size: 11px;
       }
 
       .reminder-table tr:hover {
-        background: #fafafa;
+        background: var(--surface-2);
       }
 
       .reminder-table tr:last-child td {
@@ -149,13 +139,13 @@
       }
 
       .reminder-id {
-        color: #666;
+        color: var(--text-muted);
         font-family: 'Courier New', monospace;
         font-size: 10px;
       }
 
       .reminder-message {
-        color: #2c3e50;
+        color: var(--text);
         max-width: 300px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -163,7 +153,7 @@
       }
 
       .reminder-time {
-        color: #1565c0;
+        color: var(--info-text);
         font-family: 'Courier New', monospace;
         font-size: 11px;
       }
@@ -180,7 +170,7 @@
 
       .status-active {
         background: rgba(46, 125, 50, 0.1);
-        color: #2e7d32;
+        color: var(--ok-text);
       }
 
       .status-active::before {
@@ -189,7 +179,7 @@
 
       .status-completed {
         background: rgba(200, 200, 200, 0.1);
-        color: #666;
+        color: var(--text-muted);
       }
 
       .status-completed::before {
@@ -203,9 +193,9 @@
 
       .action-icon-btn {
         padding: 4px 8px;
-        border: 1px solid #d0d0d0;
+        border: 1px solid var(--border);
         background: transparent;
-        color: #666;
+        color: var(--text-muted);
         border-radius: 3px;
         cursor: pointer;
         font-size: 11px;
@@ -214,27 +204,27 @@
 
       .action-icon-btn:hover {
         border-color: #bbb;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .action-icon-btn.edit {
-        color: #1565c0;
+        color: var(--info-text);
       }
 
       .action-icon-btn.delete {
-        color: #d32f2f;
+        color: var(--danger-text);
       }
 
       .create-form {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 20px;
         margin-bottom: 20px;
       }
 
       .form-title {
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 600;
         margin: 0 0 15px 0;
       }
@@ -257,7 +247,7 @@
       }
 
       .form-label {
-        color: #2c3e50;
+        color: var(--text);
         font-size: 12px;
         font-weight: 600;
       }
@@ -265,9 +255,9 @@
       input[type='text'],
       input[type='datetime-local'],
       select {
-        background: #ffffff;
-        border: 1px solid #d0d0d0;
-        color: #2c3e50;
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
+        color: var(--text);
         padding: 8px;
         border-radius: 4px;
         font-size: 12px;
@@ -278,7 +268,7 @@
       input[type='datetime-local']:focus,
       select:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
       }
 
@@ -288,9 +278,9 @@
       }
 
       .btn-create {
-        background: #2e7d32;
+        background: var(--ok-text);
         color: #ffffff;
-        border: 1px solid #2e7d32;
+        border: 1px solid var(--ok-text);
         padding: 8px 16px;
         border-radius: 4px;
         cursor: pointer;
@@ -299,13 +289,13 @@
       }
 
       .btn-create:hover {
-        background: #1b5e20;
+        background: var(--ok-text);
       }
 
       .btn-cancel {
         background: transparent;
-        color: #666;
-        border: 1px solid #d0d0d0;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
         padding: 8px 16px;
         border-radius: 4px;
         cursor: pointer;
@@ -323,7 +313,7 @@
       }
 
       .history-title {
-        color: #2c3e50;
+        color: var(--text);
         font-size: 14px;
         text-transform: uppercase;
         font-weight: 600;
@@ -331,55 +321,34 @@
       }
 
       .history-item {
-        background: #f8f9fa;
-        border-left: 3px solid #2e7d32;
+        background: var(--surface-2);
+        border-left: 3px solid var(--ok-text);
         padding: 12px;
         margin-bottom: 10px;
         border-radius: 3px;
-        color: #2c3e50;
+        color: var(--text);
       }
 
       .history-item.completed {
-        border-left-color: #d0d0d0;
+        border-left-color: var(--border);
         opacity: 0.7;
       }
 
       .history-time {
         font-family: 'Courier New', monospace;
         font-size: 11px;
-        color: #888;
+        color: var(--text-muted);
       }
 
       .history-message {
-        color: #2c3e50;
+        color: var(--text);
         margin: 5px 0 0 0;
         font-size: 12px;
       }
 
-      .legend {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
 
-      .legend-title {
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: #2c3e50;
-      }
 
-      .legend-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-        font-size: 12px;
-      }
 
-      .legend-item {
-        display: flex;
-        gap: 8px;
-      }
 
       .legend-icon {
         width: 16px;
@@ -391,7 +360,7 @@
       .empty-state {
         text-align: center;
         padding: 40px 20px;
-        color: #888;
+        color: var(--text-muted);
       }
 
       .empty-state-icon {
@@ -487,7 +456,7 @@
           </thead>
           <tbody id="reminders-tbody">
             <tr>
-              <td colspan="6" style="text-align: center; padding: 20px; color: #999">
+              <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted)">
                 Loading reminders from server...
               </td>
             </tr>
@@ -498,7 +467,7 @@
         <div class="reminder-history">
           <h3 class="history-title">📋 Recent Activity</h3>
           <div id="recent-activity">
-            <p style="text-align: center; color: #999; padding: 20px">
+            <p style="text-align: center; color: var(--text-muted); padding: 20px">
               Recent reminder activity will appear here when available.
             </p>
           </div>
@@ -509,7 +478,7 @@
           <div class="legend-title">Reminder Management Features</div>
           <div class="legend-items">
             <div class="legend-item">
-              <div class="legend-icon" style="background: #2e7d32"></div>
+              <div class="legend-icon" style="background: var(--ok-text)"></div>
               <span>Active reminders (pending)</span>
             </div>
             <div class="legend-item">
@@ -517,24 +486,24 @@
               <span>Completed reminders</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #667eea"></div>
+              <div class="legend-icon" style="background: var(--accent)"></div>
               <span>Action buttons</span>
             </div>
             <div class="legend-item">
-              <div class="legend-icon" style="background: #d32f2f"></div>
+              <div class="legend-icon" style="background: var(--danger-text)"></div>
               <span>Destructive actions</span>
             </div>
           </div>
         </div>
 
         <!-- API Information -->
-        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px">
-          <h3 style="margin-top: 0; color: #2c3e50">📡 API Endpoints</h3>
+        <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
+          <h3 style="margin-top: 0; color: var(--text)">📡 API Endpoints</h3>
           <ul
             style="
               margin: 10px 0;
               padding-left: 20px;
-              color: #2c3e50;
+              color: var(--text);
               font-family: 'Courier New', monospace;
               font-size: 11px;
             "
@@ -603,7 +572,7 @@
         const tbody = document.getElementById('reminders-tbody');
         if (reminders.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">No reminders found. Create one to get started!</td></tr>';
+            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No reminders found. Create one to get started!</td></tr>';
           return;
         }
 

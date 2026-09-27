@@ -6,19 +6,9 @@
     <title>Aszune AI Bot Dashboard - Logs Viewer</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .demo-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
 
       .logs-section {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
@@ -27,7 +17,7 @@
       }
 
       .logs-section h2 {
-        color: #2c3e50;
+        color: var(--text);
         margin-bottom: 20px;
         font-size: 1.3rem;
         font-weight: 600;
@@ -51,31 +41,31 @@
 
       .log-filter {
         padding: 8px 12px;
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
-        color: #333;
+        color: var(--text);
         font-size: 13px;
         cursor: pointer;
       }
 
       .log-search {
         padding: 8px 12px;
-        background: #f5f5f5;
-        border: 1px solid #d0d0d0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
         border-radius: 4px;
-        color: #333;
+        color: var(--text);
         font-size: 13px;
         min-width: 200px;
       }
 
       .log-search::placeholder {
-        color: #999;
+        color: var(--text-muted);
       }
 
       .log-button {
         padding: 8px 16px;
-        background: #0d47a1;
+        background: var(--info-text);
         border: none;
         border-radius: 4px;
         color: #fff;
@@ -85,19 +75,19 @@
       }
 
       .log-button:hover {
-        background: #1565c0;
+        background: var(--info-text);
       }
 
       .log-button.pause {
-        background: #f57c00;
+        background: var(--warn);
       }
 
       .log-button.pause:hover {
-        background: #e65100;
+        background: var(--warn-text);
       }
 
       .log-button.export {
-        background: #558b2f;
+        background: var(--ok-text);
       }
 
       .log-button.export:hover {
@@ -110,22 +100,22 @@
         font-size: 12px;
         font-family: 'Courier New', monospace;
         background: rgba(30, 30, 30, 0.5);
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--border);
         border-radius: 6px;
         overflow: hidden;
       }
 
       .logs-table thead {
-        background: #f5f5f5;
-        border-bottom: 2px solid #e0e0e0;
+        background: var(--surface-2);
+        border-bottom: 2px solid var(--border);
       }
 
       .logs-table th {
         padding: 10px;
         text-align: left;
-        color: #2c3e50;
+        color: var(--text);
         font-weight: 600;
-        border-right: 1px solid #e0e0e0;
+        border-right: 1px solid var(--border);
       }
 
       .logs-table th:last-child {
@@ -135,35 +125,35 @@
       .logs-table td {
         padding: 8px 10px;
         border-bottom: 1px solid #f0f0f0;
-        color: #333;
+        color: var(--text);
       }
 
       .logs-table tr:hover {
-        background: #fafafa;
+        background: var(--surface-2);
       }
 
       .log-level-DEBUG {
-        color: #1565c0;
+        color: var(--info-text);
         font-weight: 500;
       }
 
       .log-level-INFO {
-        color: #2e7d32;
+        color: var(--ok-text);
         font-weight: 500;
       }
 
       .log-level-WARN {
-        color: #f57c00;
+        color: var(--warn);
         font-weight: 500;
       }
 
       .log-level-ERROR {
-        color: #d32f2f;
+        color: var(--danger-text);
         font-weight: 600;
       }
 
       .log-timestamp {
-        color: #a0aec0;
+        color: var(--text-muted);
         font-size: 11px;
         white-space: nowrap;
       }
@@ -180,7 +170,7 @@
         justify-content: space-between;
         align-items: center;
         font-size: 12px;
-        color: #888;
+        color: var(--text-muted);
       }
 
       .log-stats {
@@ -204,10 +194,10 @@
         align-items: center;
         gap: 5px;
         padding: 4px 8px;
-        background: #1b5e20;
+        background: var(--ok-text);
         border-radius: 4px;
         font-size: 12px;
-        color: #4caf50;
+        color: var(--ok);
       }
 
       .live-indicator.pulsing::before {
@@ -228,7 +218,7 @@
       .no-logs {
         padding: 40px;
         text-align: center;
-        color: #888;
+        color: var(--text-muted);
         font-size: 14px;
       }
     </style>
@@ -304,9 +294,9 @@
       </div>
 
       <!-- Log Level Legend -->
-      <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px">
-        <h3 style="margin-top: 0; margin-bottom: 10px; color: #2c3e50">Log Levels</h3>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; color: #2c3e50">
+      <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
+        <h3 style="margin-top: 0; margin-bottom: 10px; color: var(--text)">Log Levels</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; color: var(--text)">
           <div><span class="log-level-DEBUG">● DEBUG</span> - Detailed diagnostic information</div>
           <div><span class="log-level-INFO">● INFO</span> - General informational messages</div>
           <div>

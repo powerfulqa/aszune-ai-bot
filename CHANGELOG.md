@@ -40,6 +40,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Success/failure messages are toasts instead of blocking `alert()` dialogs (confirmations stay)
 - The recommendations request no longer runs every 30s on pages that have no recommendations
   panel
+- Dashboard visual refresh: design tokens for every colour (~400 literals replaced), a **dark
+  theme** that follows the OS setting, and a theme toggle in the header (remembered per
+  browser). Cards share one radius/border/shadow; navigation is a consistent pill style (the
+  per-link colours never matched their links)
+- Index memory and CPU show threshold meters (amber from 75%, red from 90%)
+- Values the bot doesn't track are shown as "—" ("Not tracked" tooltip) instead of invented
+  numbers (summaries = messages × 0.1, online = users × 0.2, bots 0, success 100%, response
+  150ms); the response time and tier now use the real resource data
+- Removed dead CSS (unused section/chart/command/status classes, `.demo-warning` in 5 pages) and
+  moved the legend styles duplicated in 4 pages into `styles.css`
+- Network page interface status ("UP") was green text on a green background; now readable
 - Removed ~220 lines of dead dashboard code: socket handlers duplicated by
   `handlers/serviceHandlers.js`, plus unused response/uptime/PM2 helpers
 
