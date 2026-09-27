@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-09-27
+
+### Fixed
+
+- **Bot stopped answering in Discord** ("The service is temporarily unavailable"): the Perplexity
+  Agent API began rejecting preset requests that also set `temperature` (bare 400
+  "invalid request"). The adapter no longer sends `temperature` with a preset; presets carry their
+  own sampling settings
+
 ## [2.2.0] - 2026-09-27
 
 ### Security
