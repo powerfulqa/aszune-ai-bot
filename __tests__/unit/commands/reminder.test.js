@@ -194,7 +194,7 @@ describe('Reminder Commands', () => {
       reminderService.cancelReminder.mockResolvedValue(true);
       const interaction = createCancelReminderInteraction();
       await handleSlashCommand(interaction);
-      expect(reminderService.cancelReminder).toHaveBeenCalledWith('user123', '123');
+      expect(reminderService.cancelReminder).toHaveBeenCalledWith('123', 'user123');
       expect(interaction.reply).toHaveBeenCalledWith({
         embeds: [
           {

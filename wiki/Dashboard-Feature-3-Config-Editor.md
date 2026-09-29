@@ -54,6 +54,21 @@ PERFORMANCE.MAX_RETRIES;
 PERFORMANCE.THROTTLE_RATE;
 ```
 
+### Secret Handling
+
+REST and socket reads of `.env` replace non-empty values with `********` when the key contains
+`TOKEN`, `KEY`, `SECRET`, `PASSWORD`, `PASSPHRASE`, or `CREDENTIAL` (case-insensitive). Exported
+assignments and quoted multiline values are supported; comments and surrounding formatting are
+preserved. Do not put credentials in comments or ordinary non-secret settings.
+
+Leave a mask unchanged when saving to retain its existing value. Enter an explicit replacement
+only when rotating a credential. Saving a mask without an original value is rejected. Unreadable
+original files and failed backups also stop the save instead of overwriting the configuration.
+The socket editor always backs up an existing file; REST callers can explicitly opt out of a backup.
+
+These rules do not change dashboard authentication: without `DASHBOARD_TOKEN`, changes remain
+disabled. Restart the managed bot after saving environment changes to load the new settings.
+
 ### Validation System
 
 #### Pre-Save Validation

@@ -16,7 +16,7 @@ jest.mock('../../src/commands', () => ({
 
 const handleChatMessage = require('../../src/services/chat');
 const { handleTextCommand } = require('../../src/commands');
-const ConversationManager = require('../../src/utils/conversation');
+const conversationManager = require('../../src/state/conversationManager');
 const logger = require('../../src/utils/logger');
 
 jest.mock('undici', () => ({
@@ -28,13 +28,12 @@ jest.mock('../../src/services/database', () => ({
   addUserMessage: jest.fn(),
   updateUserStats: jest.fn(),
   getUserMessages: jest.fn().mockReturnValue([]),
+  getConversationHistory: jest.fn().mockReturnValue([]),
   addBotResponse: jest.fn(),
 }));
 
 describe('Error handling', () => {
-  let conversationManager;
   beforeEach(() => {
-    conversationManager = new ConversationManager();
     jest.clearAllMocks();
     // Mock the logger to return a simple error message
     logger.handleError.mockImplementation((error, context) => {
@@ -49,7 +48,7 @@ describe('Error handling', () => {
     // Arrange
     request.mockRejectedValueOnce(new Error('API Error'));
     conversationManager.isRateLimited.mockReturnValue(false);
-    conversationManager.getHistory.mockReturnValue([]);
+    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'test' }]);
     conversationManager.updateTimestamp = jest.fn();
     conversationManager.addMessage = jest.fn();
 
@@ -64,14 +63,15 @@ describe('Error handling', () => {
     await handleChatMessage(fakeMessage);
 
     // Assert
+    expect(request).toHaveBeenCalledTimes(1);
     expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
     expect(fakeMessage.reply).toHaveBeenCalledWith({
       embeds: [
-        expect.objectContaining({
-          description: 'An unexpected error occurred. Please try again later.',
-          color: expect.any(Number),
+        {
+          description: 'The service is temporarily unavailable. Please try again later.',
+          color: 39423,
           footer: { text: 'Aszai Bot' },
-        }),
+        },
       ],
     });
   });

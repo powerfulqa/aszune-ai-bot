@@ -89,6 +89,8 @@ async function processUserMessage(message) {
   const pipelineResult = await runValidationPipeline(message, userId);
   if (!pipelineResult.success) return null;
 
+  await loadConversationHistory(userId, pipelineResult.sanitizedContent);
+
   // Add sanitized message to history
   conversationManager.addMessage(userId, 'user', pipelineResult.sanitizedContent);
 
@@ -365,24 +367,33 @@ async function processUserMessageStorage(userId, messageContent, username = null
  * Filter messages by session timeout and deduplication
  * @private
  */
+function parseMessageTimestamp(timestamp) {
+  if (typeof timestamp !== 'string') return NaN;
+  return Date.parse(
+    timestamp.replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}(?:\.\d+)?)$/, '$1T$2Z')
+  );
+}
+
 function filterRecentMessages(dbHistory, messageContent, sessionTimeoutMs) {
-  const sessionCutoffTime = new Date(Date.now() - sessionTimeoutMs).toISOString();
-  const recentMessages = dbHistory.filter((msg) => msg.timestamp >= sessionCutoffTime);
+  const now = Date.now();
+  const sessionCutoffTime = now - sessionTimeoutMs;
+  const recentMessages = dbHistory.filter(
+    (msg) => parseMessageTimestamp(msg.timestamp) >= sessionCutoffTime
+  );
 
   if (recentMessages.length === 0) return null;
 
   // Filter out recent identical messages using timestamps to prevent duplication
-  const cutoffTime = new Date(Date.now() - 30000).toISOString(); // 30 seconds ago
+  const cutoffTime = now - 30000;
   return recentMessages.filter(
-    (msg) => msg.message !== messageContent || msg.timestamp < cutoffTime
+    (msg) => msg.message !== messageContent || parseMessageTimestamp(msg.timestamp) < cutoffTime
   );
 }
 
 async function loadConversationHistory(userId, messageContent) {
   let conversationHistory = conversationManager.getHistory(userId);
 
-  // Supplement with database conversation history if conversation is new or short
-  if (conversationHistory.length > 1 || !userId) {
+  if (conversationHistory.length > 0 || !userId) {
     return conversationHistory;
   }
 
@@ -453,9 +464,6 @@ async function handleChatMessage(message) {
 
     // Store user message and update stats in database
     await processUserMessageStorage(userId, messageContent, message.author.username);
-
-    // Load conversation history
-    await loadConversationHistory(userId, messageContent);
 
     // Check for reminder requests
     const reminderHandled = await handleReminderRequests(message, messageContent, userId);

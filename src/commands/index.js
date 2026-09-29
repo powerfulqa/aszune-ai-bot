@@ -592,7 +592,7 @@ Simply chat as normal to talk to the bot!`
       const reminderId = interaction.options.getString('id');
 
       try {
-        const success = await reminderService.cancelReminder(userId, reminderId);
+        const success = await reminderService.cancelReminder(reminderId, userId);
 
         if (success) {
           return interaction.reply({

@@ -45,6 +45,21 @@ The Pi 5 receives the lightest optimisations due to its improved performance:
 - **8GB RAM**: Full performance mode, up to 10 concurrent connections, no debouncing, increased
   cache size
 
+## API Request Queue
+
+With Pi optimisations enabled, AI requests share one connection throttler and respect the
+configured `PI_MAX_CONNECTIONS` limit. At most 20 additional requests can wait in the queue.
+Excess requests receive a retry-later error without reaching the AI provider.
+
+Queued requests expire after `RATE_LIMITS.API_TIMEOUT_MS` (30 seconds by default), freeing their
+queue slot without executing later. This waiting deadline is separate from the HTTP timeout,
+which starts when the request begins. Requests already running are not cancelled by clearing the
+waiting queue; queued callers are rejected rather than left waiting indefinitely.
+
+Non-Pi request routing is unchanged. After a burst, ordinary requests should resume as slots
+become available. Use a few distinct users for a smoke test so per-user rate limiting does not
+hide the concurrency behavior; avoid flooding the bot or incurring unnecessary API costs.
+
 ## Environment Variable Overrides
 
 You can manually override any optimisation setting using environment variables:

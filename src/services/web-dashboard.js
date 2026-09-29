@@ -949,32 +949,17 @@ class WebDashboardService {
       throw new Error('Path traversal attempt detected');
     }
 
-    // Create backup before modification
-    if (createBackup) {
-      try {
-        await fsPromises.access(filepath);
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupPath = `${filepath}.backup.${timestamp}`;
-        await fsPromises.copyFile(filepath, backupPath);
-      } catch {
-        // File doesn't exist yet, no backup needed
-      }
+    const {
+      restoreMaskedSecrets,
+      readExistingConfig,
+    } = require('./web-dashboard/handlers/configHandlers');
+    const existing = await readExistingConfig(filepath);
+    const restored = restoreMaskedSecrets(filename, content, existing ?? '');
+    if (createBackup && existing !== null) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await fsPromises.copyFile(filepath, `${filepath}.backup.${timestamp}`);
     }
-
-    // Content read via readConfigFile carries masked secrets; keep the real
-    // on-disk values for any line still holding the mask placeholder.
-    const { restoreMaskedSecrets } = require('./web-dashboard/handlers/configHandlers');
-    let existing = '';
-    try {
-      existing = await fsPromises.readFile(filepath, 'utf-8');
-    } catch {
-      // New file: nothing to restore
-    }
-    await fsPromises.writeFile(
-      filepath,
-      restoreMaskedSecrets(filename, content, existing),
-      'utf-8'
-    );
+    await fsPromises.writeFile(filepath, restored, 'utf-8');
 
     return {
       file: filename,

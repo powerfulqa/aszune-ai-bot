@@ -19,8 +19,7 @@ class ThrottlingService {
    */
   initializeThrottler() {
     try {
-      const { ConnectionThrottler } = require('../utils/connection-throttler');
-      this.connectionThrottler = new ConnectionThrottler();
+      this.connectionThrottler = require('../utils/connection-throttler');
     } catch (error) {
       // Throttler not available, continue without it
       this.connectionThrottler = null;

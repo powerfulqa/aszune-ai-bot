@@ -90,22 +90,31 @@ describe('ReminderService command parsing', () => {
       const result = await reminderService.deleteReminder(1, 'user1');
 
       expect(result).toBe(true);
+      expect(databaseService.deleteReminder).toHaveBeenCalledWith(1, 'user1');
       expect(reminderService.activeTimers.has(1)).toBe(false);
     });
 
-    it('should return false if delete fails', async () => {
+    it('should preserve the timer if deletion is rejected', async () => {
+      const scheduled = { type: 'timeout', timer: setTimeout(() => {}, 1000) };
+      reminderService.activeTimers.set(999, scheduled);
       databaseService.deleteReminder.mockReturnValueOnce(false);
 
       const result = await reminderService.deleteReminder(999, 'nonexistent-user');
 
       expect(result).toBe(false);
+      expect(databaseService.deleteReminder).toHaveBeenCalledWith(999, 'nonexistent-user');
+      expect(reminderService.activeTimers.get(999)).toBe(scheduled);
     });
 
-    it('should handle errors', async () => {
-      const error = new Error('Delete Error');
-      jest.spyOn(reminderService, 'deleteReminder').mockRejectedValue(error);
+    it('should preserve the timer if the database throws', async () => {
+      const scheduled = { type: 'timeout', timer: setTimeout(() => {}, 1000) };
+      reminderService.activeTimers.set(1, scheduled);
+      databaseService.deleteReminder.mockImplementationOnce(() => {
+        throw new Error('Delete Error');
+      });
 
-      await expect(reminderService.deleteReminder(1, 'user1')).rejects.toThrow(error);
+      await expect(reminderService.deleteReminder(1, 'user1')).resolves.toBe(false);
+      expect(reminderService.activeTimers.get(1)).toBe(scheduled);
     });
   });
 });

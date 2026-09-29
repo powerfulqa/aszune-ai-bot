@@ -208,3 +208,59 @@ describe('dashboard REST security', () => {
     });
   });
 });
+
+describe('dashboard config save safety', () => {
+  let service;
+
+  beforeEach(() => {
+    service = require('../../../../src/services/web-dashboard');
+    jest.spyOn(fsPromises, 'readFile').mockResolvedValue('export API_KEY="first\nsecond"');
+    jest.spyOn(fsPromises, 'writeFile').mockResolvedValue();
+    jest.spyOn(fsPromises, 'copyFile').mockResolvedValue();
+    jest.spyOn(fsPromises, 'access').mockResolvedValue();
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('masks and restores an exported multiline secret over REST', async () => {
+    const masked = await service.readConfigFile('.env');
+    expect(masked).toBe('export API_KEY=********');
+    await service.updateConfigFile('.env', masked, false);
+    expect(fsPromises.writeFile).toHaveBeenCalledWith(
+      require('path').join(process.cwd(), '.env'),
+      'export API_KEY="first\nsecond"',
+      'utf-8'
+    );
+  });
+
+  it.each(['EACCES', 'EIO', 'ENOENT'])('does not overwrite secrets after %s', async (code) => {
+    fsPromises.readFile.mockRejectedValueOnce(Object.assign(new Error('Read failed'), { code }));
+    await expect(service.updateConfigFile('.env', 'API_KEY=********')).rejects.toThrow(
+      code === 'ENOENT'
+        ? 'Cannot restore masked value for API_KEY: original value is unavailable'
+        : 'Read failed'
+    );
+    expect(fsPromises.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite the original after a backup failure', async () => {
+    fsPromises.copyFile.mockRejectedValueOnce(new Error('Backup failed'));
+    await expect(service.updateConfigFile('.env', 'API_KEY=********')).rejects.toThrow(
+      'Backup failed'
+    );
+    expect(fsPromises.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('allows a new config with explicit values', async () => {
+    fsPromises.readFile.mockRejectedValueOnce(
+      Object.assign(new Error('Missing'), { code: 'ENOENT' })
+    );
+    await service.updateConfigFile('.env', 'API_KEY=new-value');
+    expect(fsPromises.copyFile).not.toHaveBeenCalled();
+    expect(fsPromises.writeFile).toHaveBeenCalledWith(
+      require('path').join(process.cwd(), '.env'),
+      'API_KEY=new-value',
+      'utf-8'
+    );
+  });
+});

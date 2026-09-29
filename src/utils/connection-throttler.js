@@ -3,10 +3,10 @@
  * Helps prevent network overload on resource-constrained devices
  */
 const logger = require('./logger');
-const config = require('../config/config');
 
 class ConnectionThrottler {
   constructor() {
+    const config = require('../config/config');
     // Initialize connection tracking
     this.activeConnections = 0;
     this.connectionQueue = [];
@@ -19,6 +19,8 @@ class ConnectionThrottler {
     this.maxConnections = config.PI_OPTIMIZATIONS?.ENABLED
       ? config.PI_OPTIMIZATIONS?.MAX_CONNECTIONS || DEFAULT_PI_CONNECTIONS
       : DEFAULT_NORMAL_CONNECTIONS;
+    this.maxQueueLength = 20;
+    this.queueTimeoutMs = config.RATE_LIMITS?.API_TIMEOUT_MS || 30000;
   }
 
   /**
@@ -37,12 +39,29 @@ class ConnectionThrottler {
       if (executeNow) {
         task();
       } else {
-        logger.debug(
-          `[ConnectionThrottler] Queueing ${requestType} request (queue length: ${this.connectionQueue.length + 1})`
-        );
-        this.connectionQueue.push(task);
+        this._enqueueTask(task, requestType, reject);
       }
     });
+  }
+
+  _enqueueTask(task, requestType, reject) {
+    if (this.connectionQueue.length >= this.maxQueueLength) {
+      reject(new Error('Request queue is full. Please try again shortly.'));
+      return;
+    }
+
+    const queued = { task, reject, timer: null };
+    queued.timer = setTimeout(() => {
+      const index = this.connectionQueue.indexOf(queued);
+      if (index === -1) return;
+      this.connectionQueue.splice(index, 1);
+      reject(new Error('Request expired while waiting. Please try again shortly.'));
+    }, this.queueTimeoutMs);
+    queued.timer.unref?.();
+    this.connectionQueue.push(queued);
+    logger.debug(
+      `[ConnectionThrottler] Queueing ${requestType} request (queue length: ${this.connectionQueue.length})`
+    );
   }
 
   /**
@@ -91,8 +110,9 @@ class ConnectionThrottler {
    */
   _processQueue() {
     if (this.connectionQueue.length > 0 && this.activeConnections < this.maxConnections) {
-      const nextTask = this.connectionQueue.shift();
-      nextTask();
+      const next = this.connectionQueue.shift();
+      clearTimeout(next.timer);
+      next.task();
     }
   }
 
@@ -101,6 +121,10 @@ class ConnectionThrottler {
    */
   clearQueue() {
     const queueLength = this.connectionQueue.length;
+    for (const queued of this.connectionQueue) {
+      clearTimeout(queued.timer);
+      queued.reject(new Error('Request cancelled before execution. Please try again shortly.'));
+    }
     this.connectionQueue = [];
     logger.info(`[ConnectionThrottler] Cleared ${queueLength} pending requests`);
   }

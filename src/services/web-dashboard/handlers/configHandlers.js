@@ -6,6 +6,7 @@
 
 const fsPromises = require('fs').promises;
 const path = require('path');
+const { parse } = require('dotenv');
 const logger = require('../../../utils/logger');
 const { sendError, sendSaveError, sendValidationError } = require('./callbackHelpers');
 const { validateEnvContent, validateJsContent } = require('../../../utils/config-validators');
@@ -22,6 +23,31 @@ const SECRET_MASK = '********';
 
 // Env keys whose values must never be sent to the browser.
 const SECRET_KEY_PATTERN = /(TOKEN|KEY|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL)/i;
+const ENV_ASSIGNMENT_PATTERN =
+  /^(\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?))(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?$/gm;
+
+async function readExistingConfig(configPath) {
+  try {
+    return await fsPromises.readFile(configPath, 'utf-8');
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+function transformEnvValues(content, transform) {
+  return content.replace(ENV_ASSIGNMENT_PATTERN, (assignment, prefix, key, rawValue = '') => {
+    const parsed = parse(assignment);
+    if (!Object.hasOwn(parsed, key)) return assignment;
+    const value = rawValue.trim();
+    const replacement = transform(key, parsed[key], value);
+    return (
+      prefix +
+      rawValue.replace(value, () => replacement) +
+      assignment.slice(prefix.length + rawValue.length)
+    );
+  });
+}
 
 /**
  * Register config-related socket event handlers
@@ -126,18 +152,12 @@ async function handleSaveConfig(data, callback) {
       return;
     }
 
-    // Create backup if file exists, and restore any masked secrets from the
-    // current file so an edited-in-browser copy can't blank out real secrets
-    let contentToWrite = content;
-    try {
-      await fsPromises.access(configPath);
-      const existing = await fsPromises.readFile(configPath, 'utf-8');
-      contentToWrite = restoreMaskedSecrets(filename, content, existing);
+    const existing = await readExistingConfig(configPath);
+    const contentToWrite = restoreMaskedSecrets(filename, content, existing ?? '');
+    if (existing !== null) {
       const backupPath = `${configPath}.backup.${Date.now()}`;
       await fsPromises.copyFile(configPath, backupPath);
       logger.info(`Config backup created: ${backupPath}`);
-    } catch {
-      // File doesn't exist yet, no backup/restore needed
     }
 
     // Write new content
@@ -186,18 +206,9 @@ function maskSecrets(filename, content) {
   if (filename !== '.env' || typeof content !== 'string') {
     return content;
   }
-  return content
-    .split('\n')
-    .map((line) => {
-      const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
-      if (!match) return line;
-      const [, indent, key, sep, value] = match;
-      if (value.trim() && SECRET_KEY_PATTERN.test(key)) {
-        return `${indent}${key}${sep}${SECRET_MASK}`;
-      }
-      return line;
-    })
-    .join('\n');
+  return transformEnvValues(content, (key, value, rawValue) =>
+    value && SECRET_KEY_PATTERN.test(key) ? SECRET_MASK : rawValue
+  );
 }
 
 /**
@@ -214,23 +225,18 @@ function restoreMaskedSecrets(filename, newContent, existingContent) {
   }
 
   const existingValues = new Map();
-  for (const line of existingContent.split('\n')) {
-    const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
-    if (match) existingValues.set(match[2], match[4]);
-  }
+  transformEnvValues(existingContent, (key, value, rawValue) => {
+    existingValues.set(key, rawValue);
+    return rawValue;
+  });
 
-  return newContent
-    .split('\n')
-    .map((line) => {
-      const match = line.match(/^(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.*)$/);
-      if (!match) return line;
-      const [, indent, key, sep, value] = match;
-      if (value.trim() === SECRET_MASK && existingValues.has(key)) {
-        return `${indent}${key}${sep}${existingValues.get(key)}`;
-      }
-      return line;
-    })
-    .join('\n');
+  return transformEnvValues(newContent, (key, value, rawValue) => {
+    if (value !== SECRET_MASK) return rawValue;
+    if (!existingValues.has(key)) {
+      throw new Error(`Cannot restore masked value for ${key}: original value is unavailable`);
+    }
+    return existingValues.get(key);
+  });
 }
 
 /**
@@ -310,6 +316,7 @@ function validateJsFile(content, result) {
 }
 
 module.exports = {
+  readExistingConfig,
   registerConfigHandlers,
   handleRequestConfig,
   handleSaveConfig,

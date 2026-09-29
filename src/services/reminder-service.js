@@ -243,15 +243,12 @@ class ReminderService extends EventEmitter {
 
   async deleteReminder(reminderId, userId) {
     try {
-      // Clear timer first
-      this.clearReminderTimer(reminderId);
-
-      // Delete from database
       const deleted = databaseService.deleteReminder(reminderId, userId);
       if (!deleted) {
         return false;
       }
 
+      this.clearReminderTimer(reminderId);
       logger.info(`Deleted reminder ${reminderId} for user ${userId}`);
       return true;
     } catch (error) {

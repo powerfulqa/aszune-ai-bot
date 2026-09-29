@@ -16,10 +16,18 @@ const handleChatMessage = chatService.handleChatMessage || chatService.default |
 const perplexityService = require('../../src/services/perplexity-secure');
 const ConversationManager = require('../../src/utils/conversation');
 const emojiManager = require('../../src/utils/emoji');
+const databaseService = require('../../src/services/database');
 
 // Mock dependencies
 jest.mock('../../src/services/perplexity-secure', () => ({
   generateChatResponse: jest.fn(),
+}));
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  addBotResponse: jest.fn(),
+  getConversationHistory: jest.fn(),
+  logPerformanceMetric: jest.fn(),
 }));
 
 // Mock ConversationManager
@@ -35,6 +43,96 @@ jest.mock('../../src/utils/conversation', () => {
 
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
+
+function registerHistoryTests(createMessage, getConversationManager) {
+  describe('Persisted conversation history', () => {
+    const currentMessage = 'What was my code word?';
+    let mockConversationManager;
+
+    beforeEach(() => {
+      mockConversationManager = getConversationManager();
+      jest.useFakeTimers({ now: new Date('2026-09-29T12:00:00.000Z') });
+      const history = [];
+      mockConversationManager.getHistory.mockImplementation(() => [...history]);
+      mockConversationManager.addMessage.mockImplementation((userId, role, content) => {
+        history.push({ role, content });
+      });
+    });
+
+    it.each([
+      '2026-09-29 11:59:00',
+      '2026-09-29 11:59:00.123',
+      '2026-09-29T11:59:00.000Z',
+      '2026-09-29T13:59:00+02:00',
+    ])('restores %s before the current message', async (timestamp) => {
+      databaseService.getConversationHistory.mockReturnValue([
+        { role: 'user', message: 'My code word is sapphire.', timestamp },
+        { role: 'assistant', message: 'Understood.', timestamp },
+      ]);
+
+      await handleChatMessage(createMessage(currentMessage));
+
+      expect(perplexityService.generateChatResponse).toHaveBeenCalledWith([
+        { role: 'user', content: 'My code word is sapphire.' },
+        { role: 'assistant', content: 'Understood.' },
+        { role: 'user', content: currentMessage },
+      ]);
+    });
+
+    it.each(['2026-09-29 11:00:00', '2026-09-28T23:59:00Z', 'invalid', null])(
+      'ignores expired or malformed timestamp %s',
+      async (timestamp) => {
+        databaseService.getConversationHistory.mockReturnValue([
+          { role: 'user', message: 'Old message', timestamp },
+        ]);
+
+        await handleChatMessage(createMessage(currentMessage));
+
+        expect(perplexityService.generateChatResponse).toHaveBeenCalledWith([
+          { role: 'user', content: currentMessage },
+        ]);
+      }
+    );
+
+    it('filters recent duplicates but retains older repeated messages', async () => {
+      databaseService.getConversationHistory.mockReturnValue([
+        { role: 'user', message: currentMessage, timestamp: '2026-09-29 11:59:00' },
+        { role: 'assistant', message: 'Previous reply', timestamp: '2026-09-29 11:59:01' },
+        { role: 'user', message: currentMessage, timestamp: '2026-09-29 11:59:50' },
+      ]);
+
+      await handleChatMessage(createMessage(currentMessage));
+
+      expect(perplexityService.generateChatResponse).toHaveBeenCalledWith([
+        { role: 'user', content: currentMessage },
+        { role: 'assistant', content: 'Previous reply' },
+        { role: 'user', content: currentMessage },
+      ]);
+    });
+
+    it('continues with the current message when history loading fails', async () => {
+      databaseService.getConversationHistory.mockImplementationOnce(() => {
+        throw new Error('Database unavailable');
+      });
+
+      await handleChatMessage(createMessage(currentMessage));
+
+      expect(perplexityService.generateChatResponse).toHaveBeenCalledWith([
+        { role: 'user', content: currentMessage },
+      ]);
+    });
+
+    it('does not reload persisted history when memory already contains messages', async () => {
+      mockConversationManager.getHistory.mockReturnValue([
+        { role: 'user', content: 'Existing message' },
+      ]);
+
+      await handleChatMessage(createMessage(currentMessage));
+
+      expect(databaseService.getConversationHistory).not.toHaveBeenCalled();
+    });
+  });
+}
 
 describe('Chat Service - Basic', () => {
   // Create a mock message
@@ -56,6 +154,7 @@ describe('Chat Service - Basic', () => {
     mockConversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
     mockConversationManager.addMessage.mockImplementation(() => {});
     mockConversationManager.updateTimestamp.mockImplementation(() => {});
+    databaseService.getConversationHistory.mockReturnValue([]);
 
     perplexityService.generateChatResponse.mockResolvedValue('AI response');
     emojiManager.addEmojisToResponse.mockReturnValue('AI response 😊');
@@ -112,6 +211,8 @@ describe('Chat Service - Basic', () => {
     );
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
+
+  registerHistoryTests(createMessage, () => mockConversationManager);
 
   // Test the new simple reminder detection function for coverage
   describe('Simple Reminder Detection', () => {
