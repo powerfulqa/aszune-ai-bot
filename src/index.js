@@ -165,7 +165,7 @@ async function startWebDashboard() {
 
     global.__WEB_DASHBOARD_SERVICE__ = true;
     await webDashboardService.start(3000);
-    logger.info('Web dashboard service initialized on port 3000');
+    logger.info('Web dashboard service initialized');
 
     if (process.env.NODE_ENV === 'test') {
       global.__WEB_DASHBOARD_STARTED__ = true;

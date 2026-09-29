@@ -25,6 +25,18 @@ Quick solutions for common Aszune AI Bot issues.
 2. **Check permissions** - Bot needs Read/Send Messages in the channel
 3. **Use slash commands** - Try `/help` instead of `!help`
 
+## Dashboard Port Conflicts
+
+The dashboard normally listens on `127.0.0.1:3000`. If binding fails because the port is busy or
+times out, it tries up to three times before binding to an OS-assigned port on the same configured
+host. It never stops the process already using the preferred port.
+
+Check `pm2 logs aszune-ai` for `Using alternative port` or `Web dashboard started on` to find the
+actual port. Update your SSH tunnel or reverse proxy to use that port, or resolve the conflict and
+restart the bot to return to port 3000. The alternative port can change after a restart; dashboard
+authentication requirements remain unchanged. Other bind errors, such as permission failures, are
+reported without retrying or switching ports.
+
 ## API Issues
 
 ### Perplexity API Errors

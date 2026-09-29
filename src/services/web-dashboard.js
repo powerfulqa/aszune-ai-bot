@@ -187,23 +187,31 @@ class WebDashboardService {
    */
   _createServerListener(port, host, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        this.server.removeAllListeners('error');
-        reject(new Error('Server listen timeout'));
-      }, timeoutMs);
-
-      this.server.once('error', (err) => {
+      const server = this.server;
+      const controller = new AbortController();
+      const cleanup = () => {
         clearTimeout(timeout);
-        reject(err);
-      });
-
-      this.server.once('listening', () => {
-        clearTimeout(timeout);
+        server.removeListener('error', onError);
+        server.removeListener('listening', onListening);
+      };
+      const onError = (error) => {
+        cleanup();
+        controller.abort();
+        reject(error);
+      };
+      const onListening = () => {
+        cleanup();
         resolve();
-      });
+      };
+      const timeout = setTimeout(() => onError(new Error('Server listen timeout')), timeoutMs);
 
-      // Bind to specific host for security (default: 127.0.0.1)
-      this.server.listen(port, host);
+      server.once('error', onError);
+      server.once('listening', onListening);
+      try {
+        server.listen({ port, host, signal: controller.signal });
+      } catch (error) {
+        onError(error);
+      }
     });
   }
 
@@ -217,22 +225,6 @@ class WebDashboardService {
       error.message?.includes('EADDRINUSE') ||
       error.message?.includes('address already in use')
     );
-  }
-
-  /**
-   * Force kill process on port (Linux/macOS)
-   * @private
-   */
-  async _forceKillPort(port) {
-    if (process.platform !== 'linux' && process.platform !== 'darwin') {
-      return;
-    }
-
-    try {
-      await execPromise(`fuser -k ${port}/tcp 2>/dev/null || true`, { timeout: 3000 });
-    } catch (e) {
-      logger.debug(`Failed to force kill port ${port}: ${e.message}`);
-    }
   }
 
   /**
@@ -253,9 +245,8 @@ class WebDashboardService {
     logger.warn(
       `Port ${preferredPort} unavailable after ${maxRetries} retries, finding alternative...`
     );
-    const altPort = await this.findAvailablePort();
-
-    await this._createServerListener(altPort, this.bindHost);
+    await this._createServerListener(0, this.bindHost);
+    const altPort = this.server.address().port;
     logger.info(`Using alternative port ${altPort} due to port conflict on ${preferredPort}`);
     return altPort;
   }
@@ -266,15 +257,17 @@ class WebDashboardService {
         await this._createServerListener(preferredPort, this.bindHost);
         return preferredPort;
       } catch (portError) {
-        if (!this._shouldRetryPortBind(portError, attempt, maxRetries)) {
+        if (!this._isPortInUseError(portError) && portError.message !== 'Server listen timeout') {
           throw portError;
+        }
+        if (!this._shouldRetryPortBind(portError, attempt, maxRetries)) {
+          break;
         }
 
         logger.warn(
           `Port ${preferredPort} in use (attempt ${attempt + 1}/${maxRetries}), retrying...`
         );
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-        await this._forceKillPort(preferredPort);
       }
     }
 

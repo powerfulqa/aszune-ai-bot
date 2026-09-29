@@ -125,6 +125,163 @@ jest.mock('../../../src/services/web-dashboard/routes/controlRoutes', () => ({
 // Import the class (named export), not the singleton instance (default export)
 const { WebDashboardService } = require('../../../src/services/web-dashboard');
 const _logger = require('../../../src/utils/logger');
+const { execPromise } = require('../../../src/utils/shell-exec-helper');
+
+jest.mock('../../../src/utils/shell-exec-helper', () => ({ execPromise: jest.fn() }));
+
+describe('Dashboard port retries', () => {
+  let service;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    service = new WebDashboardService();
+    jest.spyOn(service, '_createServerListener');
+    jest.spyOn(service, '_bindToFallbackPort').mockResolvedValue(3005);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
+  it('uses the preferred port immediately when it is available', async () => {
+    service._createServerListener.mockResolvedValueOnce();
+
+    await expect(service.bindServerWithRetry(3000)).resolves.toBe(3000);
+    expect(service._createServerListener).toHaveBeenCalledTimes(1);
+    expect(service._bindToFallbackPort).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('falls back after the last failed attempt without running shell commands', async () => {
+    service._createServerListener.mockRejectedValue(
+      Object.assign(new Error('Busy'), { code: 'EADDRINUSE' })
+    );
+    const pending = service.bindServerWithRetry(3000);
+
+    await jest.runAllTimersAsync();
+
+    await expect(pending).resolves.toBe(3005);
+    expect(service._createServerListener).toHaveBeenCalledTimes(3);
+    expect(service._createServerListener).toHaveBeenCalledWith(3000, service.bindHost);
+    expect(service._bindToFallbackPort).toHaveBeenCalledWith(3000, 3);
+    expect(execPromise).not.toHaveBeenCalled();
+  });
+
+  it('keeps the preferred port when a retry succeeds', async () => {
+    service._createServerListener
+      .mockRejectedValueOnce(Object.assign(new Error('Busy'), { code: 'EADDRINUSE' }))
+      .mockResolvedValueOnce();
+    const pending = service.bindServerWithRetry(3000);
+
+    await jest.runAllTimersAsync();
+
+    await expect(pending).resolves.toBe(3000);
+    expect(service._createServerListener).toHaveBeenCalledTimes(2);
+    expect(service._bindToFallbackPort).not.toHaveBeenCalled();
+    expect(execPromise).not.toHaveBeenCalled();
+  });
+
+  it('does not retry non-port errors', async () => {
+    const error = Object.assign(new Error('Permission denied'), { code: 'EACCES' });
+    service._createServerListener.mockRejectedValueOnce(error);
+
+    await expect(service.bindServerWithRetry(3000)).rejects.toBe(error);
+    expect(service._createServerListener).toHaveBeenCalledTimes(1);
+    expect(service._bindToFallbackPort).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('propagates fallback errors', async () => {
+    const error = new Error('Fallback unavailable');
+    service._createServerListener.mockRejectedValueOnce({ code: 'EADDRINUSE' });
+    service._bindToFallbackPort.mockRejectedValueOnce(error);
+
+    await expect(service.bindServerWithRetry(3000, 1)).rejects.toBe(error);
+    expect(execPromise).not.toHaveBeenCalled();
+  });
+
+  it('falls back after repeated listen timeouts', async () => {
+    service._createServerListener.mockRejectedValue(new Error('Server listen timeout'));
+    const pending = service.bindServerWithRetry(3000);
+
+    await jest.runAllTimersAsync();
+
+    await expect(pending).resolves.toBe(3005);
+    expect(service._createServerListener).toHaveBeenCalledTimes(3);
+    expect(service._bindToFallbackPort).toHaveBeenCalledTimes(1);
+    expect(service._bindToFallbackPort).toHaveBeenCalledWith(3000, 3);
+    expect(execPromise).not.toHaveBeenCalled();
+  });
+});
+
+describe('Dashboard listen lifecycle', () => {
+  let service;
+  let existingErrorHandler;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    service = new WebDashboardService();
+    service.server = new (require('events').EventEmitter)();
+    service.server.listen = jest.fn();
+    existingErrorHandler = jest.fn();
+    service.server.on('error', existingErrorHandler);
+  });
+
+  afterEach(() => jest.useRealTimers());
+
+  it('cleans up failed attempts without removing other error handlers', async () => {
+    const error = Object.assign(new Error('Busy'), { code: 'EADDRINUSE' });
+    const pending = service._createServerListener(3000, '127.0.0.1');
+    const signal = service.server.listen.mock.calls[0][0].signal;
+    service.server.emit('error', error);
+
+    await expect(pending).rejects.toBe(error);
+    expect(signal.aborted).toBe(true);
+    expect(service.server.listeners('error')).toEqual([existingErrorHandler]);
+    expect(service.server.listenerCount('listening')).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('cleans up after successful listening without aborting the server', async () => {
+    const pending = service._createServerListener(3000, '127.0.0.1');
+    const signal = service.server.listen.mock.calls[0][0].signal;
+    service.server.emit('listening');
+
+    await expect(pending).resolves.toBeUndefined();
+    expect(signal.aborted).toBe(false);
+    expect(service.server.listeners('error')).toEqual([existingErrorHandler]);
+    expect(service.server.listenerCount('listening')).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('aborts timed-out binds and cleans up its listeners', async () => {
+    const pending = service._createServerListener(3000, '127.0.0.1', 50);
+    const rejected = expect(pending).rejects.toThrow('Server listen timeout');
+    const signal = service.server.listen.mock.calls[0][0].signal;
+
+    await jest.advanceTimersByTimeAsync(50);
+    await rejected;
+
+    expect(signal.aborted).toBe(true);
+    expect(service.server.listeners('error')).toEqual([existingErrorHandler]);
+    expect(service.server.listenerCount('listening')).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('cleans up synchronous listen errors', async () => {
+    const error = new Error('Invalid port');
+    service.server.listen.mockImplementationOnce(() => {
+      throw error;
+    });
+
+    await expect(service._createServerListener(-1, '127.0.0.1')).rejects.toBe(error);
+    expect(service.server.listeners('error')).toEqual([existingErrorHandler]);
+    expect(service.server.listenerCount('listening')).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+});
 
 describe('WebDashboardService - Basic Operations', () => {
   let dashboardService;
