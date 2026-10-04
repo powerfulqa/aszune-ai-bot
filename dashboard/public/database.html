@@ -7,36 +7,45 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
-      <!-- Database Contents Section -->
-      <div class="database-section">
-        <h2>💾 Database Contents (Read-Only)</h2>
-        <div class="database-controls">
-          <select id="database-table-select" class="table-select">
-            <option value="">Select a table...</option>
-            <option value="user_stats" selected>user_stats</option>
-            <option value="conversation_history">conversation_history</option>
-            <option value="reminders">reminders</option>
-          </select>
-          <input
-            type="text"
-            id="database-search"
-            class="database-search"
-            placeholder="Search table..."
-          />
-          <span id="table-info" class="table-info">Loading...</span>
+      <section class="section" id="databaseSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">💾</span> Database Contents
+          </h2>
+          <span class="section-badge">read-only</span>
         </div>
-        <div id="database-viewer" class="database-viewer">
-          <div class="db-message">Select a table to view data...</div>
+        <div class="database-section">
+          <div class="database-controls">
+            <select id="database-table-select" class="table-select" aria-label="Table">
+              <option value="">Select a table...</option>
+              <option value="user_stats" selected>user_stats</option>
+              <option value="conversation_history">conversation_history</option>
+              <option value="reminders">reminders</option>
+            </select>
+            <input
+              type="text"
+              id="database-search"
+              class="database-search"
+              placeholder="Search table..."
+              aria-label="Search table"
+            />
+            <span id="table-info" class="table-info">Loading...</span>
+          </div>
+          <div id="database-viewer" class="database-viewer">
+            <div class="db-message">Select a table to view data...</div>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
-    <!-- Socket.IO and Dashboard Script -->
+    <!-- Socket.IO, layout and Dashboard scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

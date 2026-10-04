@@ -185,6 +185,10 @@ class Dashboard {
       tableSelect.addEventListener('change', (e) => {
         this.loadDatabaseTable(e.target.value);
       });
+      // The page opens with a table preselected; show it without needing a change
+      if (tableSelect.value) {
+        this.loadDatabaseTable(tableSelect.value);
+      }
     }
 
     // Database search
@@ -957,4 +961,3 @@ document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
   window.dashboard.fetchVersionInfo();
 });
-

@@ -6,97 +6,73 @@
     <title>Aszune AI Bot Dashboard - Network Status</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-
-      .network-section {
-        background: var(--surface);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      }
-
-      .network-section h2 {
-        color: var(--text);
-        margin-bottom: 20px;
-        font-size: 1.3rem;
-        font-weight: 600;
-      }
-
       .status-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: var(--spacing-md);
       }
 
       .status-card {
+        min-width: 0;
         background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 20px;
-        transition: border-color 0.3s;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+        padding: var(--spacing-md);
+        transition: border-color var(--transition-fast);
       }
 
       .status-card:hover {
-        border-color: var(--accent);
+        border-color: var(--hairline-strong);
       }
 
       .status-card h3 {
-        margin: 0 0 15px 0;
-        color: var(--text);
-        font-size: 14px;
-        text-transform: uppercase;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
       }
 
-      .status-badge {
+      /* JS-assigned: 'status-badge badge-connected' / 'status-badge badge-disconnected' */
+      .status-badge.badge-connected,
+      .status-badge.badge-disconnected {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
+        text-transform: none;
+        max-width: 100%;
+        overflow-wrap: anywhere;
       }
 
       .badge-connected {
-        background: rgba(46, 125, 50, 0.1);
-        color: var(--ok-text);
+        background: var(--tint-ok);
+        color: var(--level-ok);
       }
 
       .badge-connected::before {
         content: '●';
-        animation: pulse 1s infinite;
+        animation: pulse 1.5s infinite;
       }
 
       .badge-disconnected {
-        background: rgba(211, 47, 47, 0.1);
-        color: var(--danger-text);
+        background: var(--tint-danger);
+        color: var(--level-danger);
       }
 
       .badge-disconnected::before {
         content: '○';
       }
 
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.6;
-        }
-      }
-
       .info-item {
         display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 10px;
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border);
+        grid-template-columns: minmax(90px, 40%) 1fr;
+        gap: var(--spacing-sm);
+        padding: 6px 0;
+        border-bottom: 1px solid var(--hairline);
       }
 
       .info-item:last-child {
@@ -105,61 +81,93 @@
 
       .info-label {
         color: var(--text-muted);
-        font-size: 11px;
-        text-transform: uppercase;
+        font-size: 0.7rem;
         font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
 
       .info-value {
-        color: var(--text);
-        font-weight: 500;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .connectivity-rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+      }
+
+      .connectivity-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-sm);
       }
 
       .connectivity-label {
-        color: var(--text);
-        font-size: 12px;
+        color: var(--text-secondary);
+        font-size: var(--font-size-xs);
         font-weight: 600;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
       }
 
       .interfaces-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 15px;
-        background: var(--surface-solid);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
+        background: var(--surface-2);
       }
 
       .interfaces-table th,
       .interfaces-table td {
-        padding: 10px;
+        padding: 8px 10px;
         text-align: left;
-        border-bottom: 1px solid var(--border);
-        font-size: 12px;
+        border-bottom: 1px solid var(--hairline);
+        font-size: var(--font-size-xs);
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .interfaces-table td {
+        font-family: var(--font-mono);
       }
 
       .interfaces-table th {
-        background: var(--surface-2);
-        color: var(--text);
+        background: var(--surface-3);
+        color: var(--text-muted);
+        font-size: 0.7rem;
         font-weight: 600;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        font-size: 11px;
+        white-space: nowrap;
       }
 
-      .interfaces-table tr:hover {
-        background: var(--surface-2);
+      .interfaces-table tbody tr:hover {
+        background: var(--surface-hover);
       }
 
       .interfaces-table tr:last-child td {
         border-bottom: none;
       }
 
+      .interfaces-table td.table-empty {
+        text-align: center;
+        color: var(--text-muted);
+        font-family: inherit;
+      }
+
       .interface-name {
-        color: var(--text);
         font-weight: 600;
       }
 
@@ -167,11 +175,13 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding: 2px 6px;
-        background: var(--ok-bg);
-        color: var(--ok-text);
-        border-radius: 3px;
-        font-size: 10px;
+        padding: 2px 8px;
+        background: var(--tint-ok);
+        color: var(--level-ok);
+        border-radius: var(--radius-pill);
+        font-family: inherit;
+        font-size: 0.7rem;
+        font-weight: 600;
       }
 
       .interface-status.loopback {
@@ -181,23 +191,30 @@
 
       .connectivity-checks {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: var(--spacing-md);
+      }
+
+      .connectivity-checks > p {
+        grid-column: 1 / -1;
+        margin: 0;
+        text-align: center;
       }
 
       .check-item {
-        background: var(--surface-2);
-        border-left: 3px solid var(--ok-text);
-        padding: 15px;
-        border-radius: 4px;
         display: flex;
         align-items: center;
         gap: 10px;
+        min-width: 0;
+        padding: var(--spacing-md);
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--level-ok);
+        border-radius: var(--border-radius-md);
       }
 
       .check-item.failing {
-        border-left-color: #ce93d8;
+        border-left-color: var(--level-danger);
       }
 
       .check-icon {
@@ -206,292 +223,308 @@
 
       .check-content {
         flex: 1;
+        min-width: 0;
       }
 
       .check-name {
+        color: var(--text-muted);
+        font-size: 0.7rem;
         font-weight: 600;
-        color: var(--text);
-        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
       .check-status {
-        font-size: 11px;
-        color: var(--text-muted);
-        margin-top: 3px;
-      }
-
-      .bandwidth-chart {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-      }
-
-      .chart-item {
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 15px;
-      }
-
-      .chart-title {
-        color: var(--text);
-        font-size: 12px;
+        margin-top: 4px;
+        color: var(--level-ok);
+        font-size: var(--font-size-lg);
         font-weight: 600;
-        margin-bottom: 12px;
       }
 
-      .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: var(--surface-3);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 8px;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--ok-text), var(--warn));
-        border-radius: 4px;
-        transition: width 0.3s;
-      }
-
-      .chart-value {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: var(--text);
-      }
-
-
-
-
-
-      .legend-icon {
-        width: 16px;
-        height: 16px;
-        border-radius: 2px;
-        flex-shrink: 0;
+      .check-item.failing .check-status {
+        color: var(--level-danger);
       }
 
       .quick-test {
-        margin-top: 20px;
-        padding: 15px;
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
         background: var(--surface-2);
-        border-radius: 6px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+      }
+
+      .quick-test-title {
+        margin: 0 0 var(--spacing-sm) 0;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
       .test-btn {
-        padding: 8px 16px;
-        border: 1px solid var(--accent);
-        background: var(--accent);
-        color: #ffffff;
-        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--hairline);
+        background: var(--tint-accent);
+        color: var(--level-accent);
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
-        font-size: 12px;
+        font-size: var(--font-size-sm);
         font-weight: 600;
-        transition: all 0.3s;
+        transition: all var(--transition-fast);
       }
 
       .test-btn:hover {
-        background: var(--info-text);
+        border-color: var(--hairline-strong);
+        background: var(--surface-hover);
+      }
+
+      .test-btn:focus-visible {
+        outline: 2px solid var(--text-accent);
+        outline-offset: 2px;
       }
 
       .test-result {
         margin-top: 10px;
         padding: 10px;
-        background: var(--surface-2);
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
-        color: var(--ok-text);
-        max-height: 100px;
-        overflow-y: auto;
+        max-height: 200px;
+        overflow: auto;
+        background: var(--surface-3);
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+      }
+
+      .test-result pre {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .legend.legend-flush {
+        margin-top: 0;
+      }
+
+      .legend-item {
+        align-items: center;
+      }
+
+      .legend-icon {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        flex-shrink: 0;
+        border: 1px solid var(--hairline);
+      }
+
+      .legend-icon.icon-ok {
+        background: var(--level-ok);
+      }
+
+      .legend-icon.icon-fail {
+        background: var(--level-danger);
+      }
+
+      .legend-icon.icon-loopback {
+        background: var(--surface-3);
+      }
+
+      .legend-icon.icon-metric {
+        background: var(--brand);
       }
     </style>
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
-      <!-- Network Status Section -->
-      <div class="network-section">
-        <h2>🌐 Network & Connectivity Status</h2>
-
-        <!-- IP Address Information -->
-        <div class="status-grid">
-          <div class="status-card">
-            <h3>📍 IP Addresses</h3>
-            <div class="info-item">
-              <span class="info-label">Hostname</span>
-              <span class="info-value" id="hostname">Loading...</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Local IP</span>
-              <span class="info-value" id="local-ip">Loading...</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">External IP</span>
-              <span class="info-value" id="external-ip">Loading...</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Gateway</span>
-              <span class="info-value" id="gateway">Loading...</span>
-            </div>
-          </div>
-
-          <!-- Connectivity Status -->
-          <div class="status-card">
-            <h3>🔗 Connectivity</h3>
-            <div id="connectivity-status" style="display: flex; flex-direction: column; gap: 10px">
-              <div style="display: flex; justify-content: space-between; align-items: center">
-                <span class="connectivity-label">Status</span>
-                <span class="status-badge" id="connectivity-status-badge">⏳ Loading...</span>
+      <!-- Network overview -->
+      <section class="section" id="networkSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">🌐</span> Network &amp; Connectivity Status
+          </h2>
+        </div>
+        <div class="widget-card">
+          <details class="panel-chooser" data-for="networkGrid">
+            <summary>⚙ Panels</summary>
+          </details>
+          <div class="status-grid" id="networkGrid" data-sortable>
+            <div class="status-card" data-sort-id="ip">
+              <h3>📍 IP Addresses</h3>
+              <div class="info-item">
+                <span class="info-label">Hostname</span>
+                <span class="info-value" id="hostname">Loading...</span>
               </div>
-              <div style="display: flex; justify-content: space-between; align-items: center">
-                <span class="connectivity-label">Gateway</span>
-                <span class="status-badge" id="gateway-status">⏳ Loading...</span>
+              <div class="info-item">
+                <span class="info-label">Local IP</span>
+                <span class="info-value" id="local-ip">Loading...</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">External IP</span>
+                <span class="info-value" id="external-ip">Loading...</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Gateway</span>
+                <span class="info-value" id="gateway">Loading...</span>
               </div>
             </div>
-          </div>
 
-          <!-- Network Statistics -->
-          <div class="status-card">
-            <h3>📊 Statistics</h3>
-            <div class="info-item">
-              <span class="info-label">Total Interfaces</span>
-              <span class="info-value" id="stat-total-interfaces">-</span>
+            <div class="status-card" data-sort-id="connectivity">
+              <h3>🔗 Connectivity</h3>
+              <div id="connectivity-status" class="connectivity-rows">
+                <div class="connectivity-row">
+                  <span class="connectivity-label">Status</span>
+                  <span class="status-badge" id="connectivity-status-badge">⏳ Loading...</span>
+                </div>
+                <div class="connectivity-row">
+                  <span class="connectivity-label">Gateway</span>
+                  <span class="status-badge" id="gateway-status">⏳ Loading...</span>
+                </div>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="info-label">Active Interfaces</span>
-              <span class="info-value" id="stat-active-interfaces">-</span>
+
+            <div class="status-card" data-sort-id="statistics">
+              <h3>📊 Statistics</h3>
+              <div class="info-item">
+                <span class="info-label">Total Interfaces</span>
+                <span class="info-value" id="stat-total-interfaces">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Active Interfaces</span>
+                <span class="info-value" id="stat-active-interfaces">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">IPv4 Addresses</span>
+                <span class="info-value" id="stat-ipv4-count">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">IPv6 Addresses</span>
+                <span class="info-value" id="stat-ipv6-count">-</span>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="info-label">IPv4 Addresses</span>
-              <span class="info-value" id="stat-ipv4-count">-</span>
+
+            <div class="status-card" data-sort-id="dns">
+              <h3>🌐 DNS Configuration</h3>
+              <div class="info-item">
+                <span class="info-label">Primary DNS</span>
+                <span class="info-value" id="dns-primary">Loading...</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Secondary DNS</span>
+                <span class="info-value" id="dns-secondary">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">DNS Status</span>
+                <span class="info-value" id="dns-status-text">Checking...</span>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="info-label">IPv6 Addresses</span>
-              <span class="info-value" id="stat-ipv6-count">-</span>
+
+            <div class="status-card" data-sort-id="ipconfig">
+              <h3>⚙️ IP Configuration</h3>
+              <div class="info-item">
+                <span class="info-label">Assignment Type</span>
+                <span class="info-value" id="ip-assignment">Loading...</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Configuration</span>
+                <span class="info-value" id="ip-config-details">-</span>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- DNS and DHCP Information Row -->
-        <div class="status-grid" style="margin-top: 20px">
-          <div class="status-card">
-            <h3>🌐 DNS Configuration</h3>
-            <div class="info-item">
-              <span class="info-label">Primary DNS</span>
-              <span class="info-value" id="dns-primary">Loading...</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Secondary DNS</span>
-              <span class="info-value" id="dns-secondary">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">DNS Status</span>
-              <span class="info-value" id="dns-status-text">Checking...</span>
-            </div>
-          </div>
-
-          <div class="status-card">
-            <h3>⚙️ IP Configuration</h3>
-            <div class="info-item">
-              <span class="info-label">Assignment Type</span>
-              <span class="info-value" id="ip-assignment">Loading...</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Configuration</span>
-              <span class="info-value" id="ip-config-details">-</span>
-            </div>
+      <!-- Network Interfaces -->
+      <section class="section" id="interfacesSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">🔌</span> Network Interfaces
+          </h2>
+        </div>
+        <div class="widget-card">
+          <div class="table-wrap">
+            <table class="interfaces-table">
+              <thead>
+                <tr>
+                  <th>Interface</th>
+                  <th>Status</th>
+                  <th>IPv4</th>
+                  <th>IPv6</th>
+                  <th>MAC Address</th>
+                </tr>
+              </thead>
+              <tbody id="network-interfaces">
+                <tr>
+                  <td colspan="5" class="table-empty">Loading interfaces...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
+      </section>
 
-        <!-- Network Interfaces -->
-        <div style="margin-top: 30px">
-          <h3 style="color: var(--text); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
-            🔌 Network Interfaces
-          </h3>
-          <table class="interfaces-table">
-            <thead>
-              <tr>
-                <th>Interface</th>
-                <th>Status</th>
-                <th>IPv4</th>
-                <th>IPv6</th>
-                <th>MAC Address</th>
-              </tr>
-            </thead>
-            <tbody id="network-interfaces">
-              <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted)">Loading interfaces...</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- Connectivity Checks + Quick Test -->
+      <section class="section" id="connectivityChecksSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">✓</span> Connectivity Checks
+          </h2>
         </div>
-
-        <!-- Connectivity Checks -->
-        <div style="margin-top: 30px">
-          <h3 style="color: var(--text); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600">
-            ✓ Connectivity Checks
-          </h3>
+        <div class="widget-card">
           <div class="connectivity-checks" id="connectivity-checks">
-            <p style="text-align: center; color: var(--text-muted)">
-              Network connectivity data will be shown here when available.
-            </p>
+            <p class="muted">Network connectivity data will be shown here when available.</p>
+          </div>
+
+          <div class="quick-test">
+            <h3 class="quick-test-title">🧪 Quick Connectivity Test</h3>
+            <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
+            <div class="test-result" id="test-result" style="display: none"></div>
           </div>
         </div>
+      </section>
 
-        <!-- Quick Connectivity Test -->
-        <div class="quick-test">
-          <h3 style="color: var(--text); margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 600">
-            🧪 Quick Connectivity Test
-          </h3>
-          <button class="test-btn" onclick="runTest()">▶ Run Full Test Suite</button>
-          <div
-            class="test-result"
-            id="test-result"
-            style="
-              display: none;
-              margin-top: 10px;
-              padding: 10px;
-              background: var(--surface-2);
-              border-radius: 4px;
-              color: var(--text);
-            "
-          ></div>
+      <!-- Legend -->
+      <section class="section" id="networkLegendSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">ℹ️</span> Legend</h2>
         </div>
-
-        <!-- Legend -->
-        <div class="legend">
-          <div class="legend-title">Network Status Legend</div>
-          <div class="legend-items">
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--ok-text)"></div>
-              <span>Active / Reachable</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: #4a235a"></div>
-              <span>Inactive / Unreachable</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--surface-3)"></div>
-              <span>Loopback Interface</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--accent)"></div>
-              <span>Performance Metric</span>
+        <div class="widget-card">
+          <div class="legend legend-flush">
+            <div class="legend-title">Network Status Legend</div>
+            <div class="legend-items">
+              <div class="legend-item">
+                <div class="legend-icon icon-ok"></div>
+                <span>Active / Reachable</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon icon-fail"></div>
+                <span>Inactive / Unreachable</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon icon-loopback"></div>
+                <span>Loopback Interface</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon icon-metric"></div>
+                <span>Performance Metric</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
-    <!-- Socket.IO -->
+    <!-- Socket.IO, layout and Dashboard scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
     <script>
       function runTest() {
@@ -595,10 +628,10 @@
               // Update DNS status text
               if (response.connectivity.dnsReachable) {
                 document.getElementById('dns-status-text').textContent = '✓ Working';
-                document.getElementById('dns-status-text').style.color = 'var(--ok)';
+                document.getElementById('dns-status-text').style.color = 'var(--level-ok)';
               } else {
                 document.getElementById('dns-status-text').textContent = '✗ Not reachable';
-                document.getElementById('dns-status-text').style.color = 'var(--danger)';
+                document.getElementById('dns-status-text').style.color = 'var(--level-danger)';
               }
             } else {
               console.warn('No DNS servers detected in response');
@@ -615,14 +648,14 @@
               if (ipAssignment === 'DHCP') {
                 document.getElementById('ip-config-details').textContent =
                   'IP address assigned automatically';
-                document.getElementById('ip-assignment').style.color = '#2196f3';
+                document.getElementById('ip-assignment').style.color = 'var(--level-info)';
               } else if (ipAssignment === 'Static') {
                 document.getElementById('ip-config-details').textContent =
                   'IP address manually configured';
-                document.getElementById('ip-assignment').style.color = '#ff9800';
+                document.getElementById('ip-assignment').style.color = 'var(--level-warn)';
               } else {
                 document.getElementById('ip-config-details').textContent = 'Unable to determine';
-                document.getElementById('ip-assignment').style.color = '#999';
+                document.getElementById('ip-assignment').style.color = 'var(--text-muted)';
               }
             } else {
               document.getElementById('ip-assignment').textContent = 'Unknown';
@@ -633,34 +666,18 @@
             const connectivityDiv = document.getElementById('connectivity-checks');
             if (response.connectivity) {
               const checks = response.connectivity;
-              connectivityDiv.innerHTML = `
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.internetReachable ? 'var(--ok)' : 'var(--danger)'};">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">Internet Reachable</div>
-                                    <div style="color: ${checks.internetReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
-                                        ${checks.internetReachable ? '✓ YES' : '✗ NO'}
-                                    </div>
+              const renderCheck = (name, ok) => `
+                            <div class="check-item${ok ? '' : ' failing'}">
+                                <div class="check-content">
+                                    <div class="check-name">${name}</div>
+                                    <div class="check-status">${ok ? '✓ YES' : '✗ NO'}</div>
                                 </div>
-                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.dnsReachable ? 'var(--ok)' : 'var(--danger)'};">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">DNS Reachable</div>
-                                    <div style="color: ${checks.dnsReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
-                                        ${checks.dnsReachable ? '✓ YES' : '✗ NO'}
-                                    </div>
-                                </div>
-                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.gatewayReachable ? 'var(--ok)' : 'var(--danger)'};">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">Gateway Reachable</div>
-                                    <div style="color: ${checks.gatewayReachable ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
-                                        ${checks.gatewayReachable ? '✓ YES' : '✗ NO'}
-                                    </div>
-                                </div>
-                                <div style="padding: 15px; background: var(--surface-2); border-radius: 8px; border-left: 4px solid ${checks.connected ? 'var(--ok)' : 'var(--danger)'};">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">Overall Connected</div>
-                                    <div style="color: ${checks.connected ? 'var(--ok)' : 'var(--danger)'}; font-size: 1.2rem;">
-                                        ${checks.connected ? '✓ YES' : '✗ NO'}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                            </div>`;
+              connectivityDiv.innerHTML =
+                renderCheck('Internet Reachable', checks.internetReachable) +
+                renderCheck('DNS Reachable', checks.dnsReachable) +
+                renderCheck('Gateway Reachable', checks.gatewayReachable) +
+                renderCheck('Overall Connected', checks.connected);
             }
 
             // Update interfaces table

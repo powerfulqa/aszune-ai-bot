@@ -7,23 +7,28 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
-      <!-- Error Logs Section -->
-      <div class="error-logs-section">
-        <h2>⚠️ Error Logs</h2>
-        <div class="error-log-container">
-          <div id="error-logs">
-            <div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>
+      <section class="section" id="errorLogsSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">⚠️</span> Error Logs</h2>
+        </div>
+        <div class="error-logs-section">
+          <div class="error-log-container">
+            <div id="error-logs">
+              <div class="error-log-no-errors">✓ No errors logged - System running smoothly</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
-    <!-- Socket.IO and Dashboard Script -->
+    <!-- Socket.IO, layout and Dashboard scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

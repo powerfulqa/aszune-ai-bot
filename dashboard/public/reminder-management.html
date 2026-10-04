@@ -6,146 +6,123 @@
     <title>Aszune AI Bot Dashboard - Reminder Management</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-
-      .reminder-section {
-        background: var(--surface);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      .reminder-stats {
+        margin-bottom: var(--spacing-md);
       }
 
-      .reminder-section h2 {
-        color: var(--text);
-        margin-bottom: 20px;
-        font-size: 1.3rem;
-        font-weight: 600;
+      .reminder-stats .stat-value {
+        color: var(--text-accent);
       }
 
-      .reminder-header {
+      .reminder-toolbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
       }
 
-      .reminder-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-      }
-
-      .stat-card {
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 15px;
-        text-align: center;
-      }
-
-      .stat-value {
-        font-size: 24px;
+      .control-btn.primary {
+        background: var(--tint-accent);
+        border-color: var(--tint-accent);
+        color: var(--level-accent);
         font-weight: 600;
-        color: var(--accent);
-        margin-bottom: 5px;
       }
 
-      .stat-label {
-        font-size: 11px;
-        color: var(--text-muted);
-        text-transform: uppercase;
+      .control-btn.primary:hover:not(:disabled) {
+        background: var(--tint-accent);
+        border-color: var(--level-accent);
       }
 
-      .action-btn {
-        padding: 8px 16px;
-        border: 1px solid var(--accent);
-        background: var(--accent);
-        color: #ffffff;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.3s;
-      }
-
-      .action-btn:hover {
-        background: var(--accent-hover);
-      }
-
+      /* Filter pills */
       .filter-bar {
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
+        gap: 6px;
         flex-wrap: wrap;
       }
 
       .filter-btn {
-        padding: 6px 12px;
-        border: 1px solid var(--border);
+        padding: 4px 12px;
+        border: 1px solid var(--hairline);
         background: var(--surface-2);
-        color: var(--text);
-        border-radius: 4px;
+        color: var(--text-secondary);
+        border-radius: var(--radius-pill);
         cursor: pointer;
-        font-size: 12px;
-        transition: all 0.3s;
-      }
-
-      .filter-btn.active {
-        border-color: var(--accent);
-        background: var(--accent);
-        color: #ffffff;
+        font-size: var(--font-size-xs);
+        font-weight: 500;
+        transition: all var(--transition-fast);
       }
 
       .filter-btn:hover {
-        border-color: #bbb;
+        background: var(--surface-hover);
+        border-color: var(--hairline-strong);
+        color: var(--text-primary);
+      }
+
+      .filter-btn.active {
+        background: var(--tint-accent);
+        border-color: var(--level-accent);
+        color: var(--level-accent);
+        font-weight: 600;
+      }
+
+      /* Table */
+      .table-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+        background: var(--surface-2);
       }
 
       .reminder-table {
         width: 100%;
         border-collapse: collapse;
-        background: var(--surface-solid);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 20px;
       }
 
       .reminder-table th,
       .reminder-table td {
-        padding: 12px;
+        padding: 8px 12px;
         text-align: left;
-        border-bottom: 1px solid var(--border);
-        font-size: 12px;
+        border-bottom: 1px solid var(--hairline);
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
       }
 
       .reminder-table th {
-        background: var(--surface-2);
-        color: var(--text);
+        background: var(--surface-3);
+        color: var(--text-muted);
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 11px;
+        letter-spacing: 0.08em;
+        font-size: 0.68rem;
+        white-space: nowrap;
       }
 
-      .reminder-table tr:hover {
-        background: var(--surface-2);
+      .reminder-table tbody tr:hover {
+        background: var(--surface-hover);
       }
 
       .reminder-table tr:last-child td {
         border-bottom: none;
       }
 
-      .reminder-id {
+      .reminder-table td.empty-row {
+        text-align: center;
+        padding: 20px;
         color: var(--text-muted);
-        font-family: 'Courier New', monospace;
-        font-size: 10px;
+      }
+
+      .reminder-id {
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+      }
+
+      .reminder-table td.reminder-id {
+        color: var(--text-muted);
       }
 
       .reminder-message {
-        color: var(--text);
         max-width: 300px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -153,32 +130,35 @@
       }
 
       .reminder-time {
-        color: var(--info-text);
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
       }
 
+      .reminder-table td.reminder-time {
+        color: var(--level-info);
+      }
+
+      /* Status pills (status-active / status-completed set by the page script) */
       .status-badge {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding: 4px 8px;
-        border-radius: 3px;
-        font-size: 10px;
-        font-weight: 600;
+        white-space: nowrap;
       }
 
-      .status-active {
-        background: rgba(46, 125, 50, 0.1);
-        color: var(--ok-text);
+      .status-badge.status-active {
+        background: var(--tint-ok);
+        color: var(--level-ok);
       }
 
       .status-active::before {
         content: '●';
       }
 
-      .status-completed {
-        background: rgba(200, 200, 200, 0.1);
+      .status-badge.status-completed {
+        background: var(--surface-3);
         color: var(--text-muted);
       }
 
@@ -192,48 +172,55 @@
       }
 
       .action-icon-btn {
-        padding: 4px 8px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--text-muted);
-        border-radius: 3px;
+        padding: 3px 8px;
+        border: 1px solid var(--hairline);
+        background: var(--surface-2);
+        color: var(--text-secondary);
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
-        font-size: 11px;
-        transition: all 0.2s;
+        font-size: var(--font-size-xs);
+        white-space: nowrap;
+        transition: all var(--transition-fast);
       }
 
       .action-icon-btn:hover {
-        border-color: #bbb;
-        color: var(--text);
+        background: var(--surface-hover);
+        border-color: var(--hairline-strong);
       }
 
       .action-icon-btn.edit {
-        color: var(--info-text);
+        color: var(--level-info);
       }
 
       .action-icon-btn.delete {
-        color: var(--danger-text);
+        background: var(--tint-danger);
+        border-color: var(--tint-danger-border);
+        color: var(--level-danger);
       }
 
+      /* Create form */
       .create-form {
         background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 20px;
-        margin-bottom: 20px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
       }
 
       .form-title {
-        color: var(--text);
+        margin: 0 0 var(--spacing-md) 0;
+        font-size: 0.7rem;
         font-weight: 600;
-        margin: 0 0 15px 0;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
       }
 
       .form-group {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-bottom: 15px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
       }
 
       .form-group.full {
@@ -244,117 +231,139 @@
         display: flex;
         flex-direction: column;
         gap: 5px;
+        min-width: 0;
       }
 
       .form-label {
-        color: var(--text);
-        font-size: 12px;
+        color: var(--text-secondary);
+        font-size: var(--font-size-xs);
         font-weight: 600;
       }
 
-      input[type='text'],
-      input[type='datetime-local'],
-      select {
-        background: var(--surface-solid);
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 12px;
+      .form-field .form-control {
+        width: 100%;
         font-family: inherit;
-      }
-
-      input[type='text']:focus,
-      input[type='datetime-local']:focus,
-      select:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        color-scheme: light dark;
       }
 
       .form-actions {
         display: flex;
-        gap: 10px;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+      }
+
+      .btn-create,
+      .btn-cancel {
+        padding: 6px 14px;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: var(--font-size-sm);
+        transition: all var(--transition-fast);
       }
 
       .btn-create {
-        background: var(--ok-text);
-        color: #ffffff;
-        border: 1px solid var(--ok-text);
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 12px;
+        background: var(--tint-ok);
+        border: 1px solid var(--tint-ok-border);
+        color: var(--level-ok);
       }
 
       .btn-create:hover {
-        background: var(--ok-text);
+        border-color: var(--level-ok);
       }
 
       .btn-cancel {
-        background: transparent;
-        color: var(--text-muted);
-        border: 1px solid var(--border);
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        color: var(--text-secondary);
       }
 
       .btn-cancel:hover {
-        border-color: #666;
-        color: #e0e0e0;
+        background: var(--surface-hover);
+        border-color: var(--hairline-strong);
+        color: var(--text-primary);
       }
 
-      .reminder-history {
-        margin-top: 30px;
-      }
-
-      .history-title {
-        color: var(--text);
-        font-size: 14px;
-        text-transform: uppercase;
-        font-weight: 600;
-        margin-bottom: 15px;
-      }
-
+      /* Recent activity */
       .history-item {
         background: var(--surface-2);
-        border-left: 3px solid var(--ok-text);
-        padding: 12px;
-        margin-bottom: 10px;
-        border-radius: 3px;
-        color: var(--text);
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--level-ok);
+        padding: 10px 12px;
+        margin-bottom: var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-primary);
       }
 
       .history-item.completed {
-        border-left-color: var(--border);
+        border-left-color: var(--hairline-strong);
         opacity: 0.7;
       }
 
       .history-time {
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
         color: var(--text-muted);
       }
 
       .history-message {
-        color: var(--text);
+        color: var(--text-primary);
         margin: 5px 0 0 0;
-        font-size: 12px;
+        font-size: var(--font-size-sm);
       }
 
+      .activity-empty {
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+      }
 
-
-
-
+      /* Legend */
       .legend-icon {
         width: 16px;
         height: 16px;
-        border-radius: 2px;
+        border-radius: 4px;
         flex-shrink: 0;
+        border: 1px solid var(--hairline);
+      }
+
+      .legend-icon.ok {
+        background: var(--tint-ok);
+        border-color: var(--level-ok);
+      }
+
+      .legend-icon.completed {
+        background: var(--surface-3);
+        border-color: var(--hairline-strong);
+      }
+
+      .legend-icon.accent {
+        background: var(--tint-accent);
+        border-color: var(--level-accent);
+      }
+
+      .legend-icon.danger {
+        background: var(--tint-danger);
+        border-color: var(--level-danger);
+      }
+
+      /* API endpoints */
+      .api-info {
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+      }
+
+      .api-list {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        line-height: 1.7;
+        overflow-wrap: anywhere;
       }
 
       .empty-state {
@@ -370,155 +379,172 @@
     </style>
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
-      <!-- Reminder Management Section -->
-      <div class="reminder-section">
-        <div class="reminder-header">
-          <h2 style="margin: 0">⏰ Reminder Management</h2>
-          <button class="action-btn" onclick="toggleCreateForm()">➕ Create New Reminder</button>
-        </div>
-
-        <!-- Statistics -->
-        <div class="reminder-stats" id="reminder-stats">
-          <div class="stat-card">
-            <div class="stat-value" id="stat-total">-</div>
-            <div class="stat-label">Total Reminders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-active">-</div>
-            <div class="stat-label">Active</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-completed">-</div>
-            <div class="stat-label">Completed</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-next">-</div>
-            <div class="stat-label">Next Due</div>
+      <!-- Reminders -->
+      <section class="section" id="remindersSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">⏰</span> Reminder Management
+          </h2>
+          <div class="section-actions">
+            <button class="control-btn primary action-btn" onclick="toggleCreateForm()">
+              ➕ Create New Reminder
+            </button>
           </div>
         </div>
-
-        <!-- Create Form (Hidden by default) -->
-        <div class="create-form" id="create-form" style="display: none">
-          <h3 class="form-title">➕ Create New Reminder</h3>
-          <div class="form-group full">
-            <div class="form-field">
-              <label class="form-label">Reminder Message</label>
-              <input
-                type="text"
-                placeholder="What do you want to be reminded about?"
-                id="reminder-message"
-              />
+        <div class="widget-card">
+          <!-- Statistics -->
+          <div class="stat-grid reminder-stats" id="reminder-stats">
+            <div class="stat-tile stat-card">
+              <div class="stat-value" id="stat-total">-</div>
+              <div class="stat-label">Total Reminders</div>
+            </div>
+            <div class="stat-tile stat-card">
+              <div class="stat-value" id="stat-active">-</div>
+              <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-tile stat-card">
+              <div class="stat-value" id="stat-completed">-</div>
+              <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-tile stat-card">
+              <div class="stat-value" id="stat-next">-</div>
+              <div class="stat-label">Next Due</div>
             </div>
           </div>
-          <div class="form-group">
-            <div class="form-field">
-              <label class="form-label">Scheduled Date & Time</label>
-              <input type="datetime-local" id="reminder-datetime" />
+
+          <!-- Create Form (Hidden by default; toggleCreateForm reads the inline display) -->
+          <div class="create-form" id="create-form" style="display: none">
+            <h3 class="form-title">➕ Create New Reminder</h3>
+            <div class="form-group full">
+              <div class="form-field">
+                <label class="form-label" for="reminder-message">Reminder Message</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="What do you want to be reminded about?"
+                  id="reminder-message"
+                />
+              </div>
             </div>
-            <div class="form-field">
-              <label class="form-label">Reminder Type</label>
-              <select id="reminder-type">
-                <option value="general">General Reminder</option>
-                <option value="important">Important</option>
-                <option value="follow-up">Follow-up</option>
-                <option value="maintenance">Maintenance</option>
-              </select>
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label" for="reminder-datetime">Scheduled Date & Time</label>
+                <input type="datetime-local" class="form-control" id="reminder-datetime" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="reminder-type">Reminder Type</label>
+                <select class="form-control" id="reminder-type">
+                  <option value="general">General Reminder</option>
+                  <option value="important">Important</option>
+                  <option value="follow-up">Follow-up</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn-create" onclick="createReminder()">✓ Create Reminder</button>
+              <button class="btn-cancel" onclick="toggleCreateForm()">✕ Cancel</button>
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn-create" onclick="createReminder()">✓ Create Reminder</button>
-            <button class="btn-cancel" onclick="toggleCreateForm()">✕ Cancel</button>
+
+          <!-- Filter Bar -->
+          <div class="reminder-toolbar">
+            <div class="panel-title">Reminders</div>
+            <div class="filter-bar">
+              <button class="filter-btn active" onclick="filterReminders('all')">
+                All Reminders
+              </button>
+              <button class="filter-btn" onclick="filterReminders('active')">Active Only</button>
+              <button class="filter-btn" onclick="filterReminders('completed')">Completed</button>
+            </div>
+          </div>
+
+          <!-- Reminders Table -->
+          <div class="table-scroll">
+            <table class="reminder-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Message</th>
+                  <th>Scheduled Time</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reminders-tbody">
+                <tr>
+                  <td colspan="6" class="empty-row">Loading reminders from server...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
+      </section>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterReminders('all')">All Reminders</button>
-          <button class="filter-btn" onclick="filterReminders('active')">Active Only</button>
-          <button class="filter-btn" onclick="filterReminders('completed')">Completed</button>
+      <!-- Recent Activity -->
+      <section class="section" id="reminderActivitySection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">📋</span> Recent Activity</h2>
         </div>
-
-        <!-- Reminders Table -->
-        <table class="reminder-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Message</th>
-              <th>Scheduled Time</th>
-              <th>Status</th>
-              <th>Type</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="reminders-tbody">
-            <tr>
-              <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted)">
-                Loading reminders from server...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Reminder History -->
-        <div class="reminder-history">
-          <h3 class="history-title">📋 Recent Activity</h3>
+        <div class="widget-card reminder-history">
           <div id="recent-activity">
-            <p style="text-align: center; color: var(--text-muted); padding: 20px">
+            <p class="muted activity-empty">
               Recent reminder activity will appear here when available.
             </p>
           </div>
         </div>
+      </section>
 
-        <!-- Legend -->
-        <div class="legend">
-          <div class="legend-title">Reminder Management Features</div>
-          <div class="legend-items">
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--ok-text)"></div>
-              <span>Active reminders (pending)</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: #d0d0d0"></div>
-              <span>Completed reminders</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--accent)"></div>
-              <span>Action buttons</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-icon" style="background: var(--danger-text)"></div>
-              <span>Destructive actions</span>
+      <!-- Legend + API reference -->
+      <section class="section" id="reminderHelpSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">ℹ️</span> Legend &amp; API</h2>
+        </div>
+        <div class="widget-card">
+          <div class="legend">
+            <div class="legend-title">Reminder Management Features</div>
+            <div class="legend-items">
+              <div class="legend-item">
+                <div class="legend-icon ok"></div>
+                <span>Active reminders (pending)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon completed"></div>
+                <span>Completed reminders</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon accent"></div>
+                <span>Action buttons</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-icon danger"></div>
+                <span>Destructive actions</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- API Information -->
-        <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
-          <h3 style="margin-top: 0; color: var(--text)">📡 API Endpoints</h3>
-          <ul
-            style="
-              margin: 10px 0;
-              padding-left: 20px;
-              color: var(--text);
-              font-family: 'Courier New', monospace;
-              font-size: 11px;
-            "
-          >
-            <li>GET /api/reminders?status=all|active|completed - List reminders</li>
-            <li>POST /api/reminders - Create new reminder</li>
-            <li>PUT /api/reminders/:id - Update reminder</li>
-            <li>DELETE /api/reminders/:id - Delete reminder</li>
-          </ul>
+          <div class="api-info">
+            <div class="legend-title">📡 API Endpoints</div>
+            <ul class="api-list">
+              <li>GET /api/reminders?status=all|active|completed - List reminders</li>
+              <li>POST /api/reminders - Create new reminder</li>
+              <li>PUT /api/reminders/:id - Update reminder</li>
+              <li>DELETE /api/reminders/:id - Delete reminder</li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
     <script>
       /* eslint-env browser */
@@ -572,7 +598,7 @@
         const tbody = document.getElementById('reminders-tbody');
         if (reminders.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No reminders found. Create one to get started!</td></tr>';
+            '<tr><td colspan="6" class="empty-row">No reminders found. Create one to get started!</td></tr>';
           return;
         }
 
@@ -649,7 +675,10 @@
               toggleCreateForm();
               loadReminders();
             } else {
-              showToast('Failed to create reminder: ' + (response?.error || 'Unknown error'), 'error');
+              showToast(
+                'Failed to create reminder: ' + (response?.error || 'Unknown error'),
+                'error'
+              );
             }
           }
         );
@@ -688,7 +717,10 @@
                 showToast('Reminder updated successfully!', 'success');
                 loadReminders();
               } else {
-                showToast('Failed to edit reminder: ' + (response?.error || 'Unknown error'), 'error');
+                showToast(
+                  'Failed to edit reminder: ' + (response?.error || 'Unknown error'),
+                  'error'
+                );
               }
             }
           );
@@ -718,7 +750,10 @@
               showToast('Reminder deleted successfully!', 'success');
               loadReminders();
             } else {
-              showToast('Failed to delete reminder: ' + (response?.error || 'Unknown error'), 'error');
+              showToast(
+                'Failed to delete reminder: ' + (response?.error || 'Unknown error'),
+                'error'
+              );
             }
           }
         );

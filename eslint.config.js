@@ -10,6 +10,7 @@ module.exports = [
   {
     ignores: [
       'dashboard/public/**/*.html',
+      'dashboard/public/vendor/**',
       'node_modules/**',
       'coverage/**',
       'test-results/**',
@@ -53,6 +54,7 @@ module.exports = [
         ...globals.browser,
         io: 'readonly',
         Chart: 'readonly',
+        Sortable: 'readonly',
       },
     },
     rules: {

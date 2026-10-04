@@ -6,53 +6,292 @@
     <title>Aszune AI Bot Dashboard - Service Management</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-
-      .services-section {
-        background: var(--surface);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      /* ---------- Connection status cards (Discord + Instance Tracking) ---------- */
+      .conn-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+        gap: var(--spacing-md);
+        align-items: start;
       }
 
-      .services-section h2 {
-        color: var(--text);
-        margin-bottom: 20px;
-        font-size: 1.3rem;
+      .conn-card {
+        position: relative;
+        min-width: 0;
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--brand);
+        border-radius: var(--border-radius-md);
+        padding: var(--spacing-md);
+      }
+
+      .conn-card.instance-tracking-card {
+        border-left-color: var(--text-accent);
+      }
+
+      .conn-card > .drag-handle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+
+      .conn-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+        padding-right: 28px; /* room for the drag handle */
+      }
+
+      .conn-main {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+        min-width: 0;
+      }
+
+      .conn-icon {
+        font-size: 1.75rem;
+        line-height: 1;
+      }
+
+      .conn-title {
+        margin: 0 0 6px;
+        font-size: 0.7rem;
         font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
       }
 
+      .conn-status-line {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .conn-status-line .status-dot {
+        width: 10px;
+        height: 10px;
+      }
+
+      .conn-status-text {
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .conn-details {
+        margin-top: 6px;
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+      }
+
+      .conn-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        text-align: right;
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+      }
+
+      .conn-meta span {
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---------- Instances list (inside the tracking card) ---------- */
+      .instances-block {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--hairline);
+      }
+
+      .instances-toggle {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
+      }
+
+      .instances-toggle:hover {
+        color: var(--text-accent);
+      }
+
+      .count-pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: var(--radius-pill);
+        background: var(--surface-3);
+        color: var(--text-secondary);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .count-pill.ok {
+        background: var(--tint-ok);
+        color: var(--level-ok);
+      }
+
+      .count-pill.danger {
+        background: var(--tint-danger);
+        color: var(--level-danger);
+      }
+
+      .instances-alert {
+        color: var(--level-danger);
+        font-weight: 700;
+      }
+
+      .instances-container {
+        margin-top: 12px;
+      }
+
+      .instance-group + .instance-group {
+        margin-top: var(--spacing-md);
+      }
+
+      .instance-group-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .instance-list {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .instance-empty {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+      }
+
+      .instance-note {
+        padding: 4px 8px;
+        margin-bottom: 6px;
+        border-bottom: 1px solid var(--hairline);
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+      }
+
+      .instance-card {
+        margin-bottom: var(--spacing-sm);
+        padding: 10px;
+        background: var(--tint-ok);
+        border: 1px solid var(--tint-ok-border);
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
+      }
+
+      .instance-card.unauthorized {
+        background: var(--tint-warn);
+        border-color: var(--level-warn);
+      }
+
+      .instance-card.revoked {
+        background: var(--tint-danger);
+        border-color: var(--tint-danger-border);
+      }
+
+      .instance-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .instance-state {
+        margin-left: 8px;
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+      }
+
+      .instance-buttons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .instance-facts {
+        margin-top: var(--spacing-sm);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+      }
+
+      .instance-foot {
+        margin-top: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+      }
+
+      .instance-id {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        overflow-wrap: anywhere;
+      }
+
+      /* ---------- Service cards (rendered by renderServices) ---------- */
       .service-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        gap: var(--spacing-md);
+      }
+
+      .grid-placeholder {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
       }
 
       .service-card {
+        min-width: 0;
         background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 15px;
-        transition: border-color 0.3s;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
+        padding: var(--spacing-md);
+        transition: border-color var(--transition-fast);
       }
 
       .service-card:hover {
-        border-color: var(--accent);
+        border-color: var(--hairline-strong);
       }
 
       .service-header {
         display: flex;
         justify-content: space-between;
-        align-items: start;
-        margin-bottom: 15px;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+        margin-bottom: 12px;
       }
 
       .service-name {
-        font-size: 16px;
+        font-size: var(--font-size-base);
         font-weight: 600;
-        color: var(--text);
+        color: var(--text-primary);
       }
 
       .service-status {
@@ -62,60 +301,46 @@
         gap: 5px;
       }
 
-      .status-badge {
+      .service-status .status-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
       }
 
-      .status-active {
-        background: var(--ok-text);
-        color: var(--ok);
+      .status-badge.status-active {
+        background: var(--tint-ok);
+        color: var(--level-ok);
       }
 
-      .status-active::before {
+      .status-badge.status-active::before {
         content: '●';
         animation: pulse 1s infinite;
       }
 
-      .status-inactive {
-        background: #3e2723;
-        color: #ff7043;
+      .status-badge.status-inactive {
+        background: var(--tint-danger);
+        color: var(--level-danger);
       }
 
-      .status-inactive::before {
+      .status-badge.status-inactive::before {
         content: '○';
       }
 
-      .status-error {
-        background: #4a235a;
-        color: #ce93d8;
+      .status-badge.status-error {
+        background: var(--tint-warn);
+        color: var(--level-warn);
       }
 
-      .status-error::before {
+      .status-badge.status-error::before {
         content: '⚠';
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.6;
-        }
       }
 
       .service-info {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
-        margin-bottom: 15px;
-        font-size: 12px;
+        margin-bottom: 12px;
+        font-size: var(--font-size-xs);
       }
 
       .info-row {
@@ -126,60 +351,67 @@
 
       .info-label {
         color: var(--text-muted);
-        font-size: 11px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
       .info-value {
-        color: var(--text);
+        color: var(--text-primary);
         font-weight: 500;
+        font-variant-numeric: tabular-nums;
       }
 
       .service-actions {
         display: flex;
-        gap: 8px;
-        margin-bottom: 15px;
+        gap: var(--spacing-sm);
         flex-wrap: wrap;
       }
 
+      /* ---------- Buttons ---------- */
       .action-btn {
-        padding: 6px 12px;
-        border: none;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-primary);
+        font-size: var(--font-size-xs);
         font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-fast);
       }
 
-      .btn-start {
-        background: var(--ok-text);
-        color: var(--ok);
-        border: 1px solid var(--ok);
+      .action-btn:hover:not(:disabled) {
+        filter: brightness(1.15);
+        border-color: var(--hairline-strong);
       }
 
-      .btn-start:hover {
-        background: var(--ok-text);
+      .action-btn:focus-visible {
+        outline: 2px solid var(--text-accent);
+        outline-offset: 2px;
       }
 
-      .btn-stop {
-        background: #4a235a;
-        color: #ce93d8;
-        border: 1px solid #ce93d8;
+      .btn-start,
+      .btn-approve {
+        background: var(--tint-ok);
+        color: var(--level-ok);
+        border-color: var(--tint-ok-border);
       }
 
-      .btn-stop:hover {
-        background: #6a1b9a;
+      .btn-stop,
+      .btn-revoke {
+        background: var(--tint-danger);
+        color: var(--level-danger);
+        border-color: var(--tint-danger-border);
       }
 
       .btn-restart {
-        background: var(--info-text);
-        color: var(--info);
-        border: 1px solid var(--info);
-      }
-
-      .btn-restart:hover {
-        background: var(--info-text);
+        background: var(--tint-info);
+        color: var(--level-info);
       }
 
       .action-btn:disabled {
@@ -189,14 +421,14 @@
 
       .service-logs-preview {
         background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 4px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-sm);
         padding: 10px;
         font-size: 11px;
-        font-family: 'Courier New', monospace;
+        font-family: var(--font-mono);
         max-height: 150px;
         overflow-y: auto;
-        color: var(--text);
+        color: var(--text-primary);
       }
 
       .log-line {
@@ -206,11 +438,11 @@
       }
 
       .log-line.error {
-        color: var(--danger);
+        color: var(--level-danger);
       }
 
       .log-line.warn {
-        color: #ffb74d;
+        color: var(--level-warn);
       }
 
       .enabled-indicator {
@@ -219,263 +451,219 @@
       }
 
       .enabled-indicator.yes {
-        color: var(--ok);
+        color: var(--level-ok);
       }
 
-
-
-
-
       .legend-icon {
-        color: var(--text);
+        color: var(--text-primary);
+      }
+
+      /* ---------- Quick actions ---------- */
+      .quick-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .quick-note {
+        margin-top: 12px;
+        padding: 10px 12px;
+        background: var(--tint-warn);
+        border-left: 3px solid var(--status-paused);
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+      }
+
+      .quick-note strong {
+        color: var(--level-warn);
+      }
+
+      @media (max-width: 480px) {
+        .conn-meta {
+          text-align: left;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
-      <!-- Service Management Section -->
-      <div class="services-section">
-        <h2>🔧 System Services Management</h2>
-
-        <!-- Discord Connection Status Card -->
-        <div
-          class="discord-status-card"
-          style="
-            background: linear-gradient(135deg, #5865f2 0%, #404eed 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
-          "
-        >
-          <div style="display: flex; align-items: center; justify-content: space-between">
-            <div style="display: flex; align-items: center; gap: 15px">
-              <div style="font-size: 48px">💬</div>
-              <div>
-                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem">Discord Connection</h3>
-                <div id="discord-status-container">
-                  <div style="display: flex; align-items: center; gap: 10px">
-                    <span
-                      id="discord-status-dot"
-                      class="status-dot connecting"
-                      style="width: 12px; height: 12px"
-                    ></span>
-                    <span id="discord-status-text" style="font-size: 1rem; font-weight: 500"
-                      >Checking...</span
-                    >
-                  </div>
-                  <div
-                    id="discord-status-details"
-                    style="margin-top: 8px; font-size: 0.9rem; opacity: 0.9"
-                  ></div>
-                </div>
-              </div>
-            </div>
-            <div
-              id="discord-status-info"
-              style="text-align: right; font-size: 0.85rem; opacity: 0.8"
-            >
-              <div id="discord-username">Bot: <span id="discord-bot-tag">-</span></div>
-              <div id="discord-uptime">Uptime: <span id="discord-uptime-value">-</span></div>
-            </div>
-          </div>
+      <!-- Connection status -->
+      <section class="section" id="connectionSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">📡</span> Connection Status
+          </h2>
         </div>
-
-        <!-- Instance Tracking Status Card -->
-        <div
-          class="instance-tracking-card"
-          style="
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-          "
-        >
-          <div style="display: flex; align-items: center; justify-content: space-between">
-            <div style="display: flex; align-items: center; gap: 15px">
-              <div style="font-size: 48px">🔍</div>
-              <div>
-                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem">Instance Tracking</h3>
-                <div id="tracking-status-container">
-                  <div style="display: flex; align-items: center; gap: 10px">
-                    <span
-                      id="tracking-status-dot"
-                      class="status-dot connecting"
-                      style="width: 12px; height: 12px"
-                    ></span>
-                    <span id="tracking-status-text" style="font-size: 1rem; font-weight: 500"
-                      >Checking...</span
-                    >
+        <div class="widget-card">
+          <details class="panel-chooser" data-for="connectionGrid">
+            <summary>⚙ Panels</summary>
+          </details>
+          <div class="conn-grid" id="connectionGrid" data-sortable>
+            <!-- Discord Connection Status Card -->
+            <div class="conn-card discord-status-card" data-sort-id="discord">
+              <div class="conn-row">
+                <div class="conn-main">
+                  <div class="conn-icon">💬</div>
+                  <div>
+                    <h3 class="conn-title">Discord Connection</h3>
+                    <div id="discord-status-container">
+                      <div class="conn-status-line">
+                        <span id="discord-status-dot" class="status-dot connecting"></span>
+                        <span id="discord-status-text" class="conn-status-text">Checking...</span>
+                      </div>
+                      <div id="discord-status-details" class="conn-details"></div>
+                    </div>
                   </div>
-                  <div
-                    id="tracking-status-details"
-                    style="margin-top: 8px; font-size: 0.9rem; opacity: 0.9"
-                  ></div>
+                </div>
+                <div id="discord-status-info" class="conn-meta">
+                  <div id="discord-username">Bot: <span id="discord-bot-tag">-</span></div>
+                  <div id="discord-uptime">Uptime: <span id="discord-uptime-value">-</span></div>
                 </div>
               </div>
             </div>
-            <div
-              id="tracking-status-info"
-              style="text-align: right; font-size: 0.85rem; opacity: 0.8"
-            >
-              <div>Instance: <span id="tracking-instance-id">-</span></div>
-              <div>Location: <span id="tracking-location">-</span></div>
-              <div>IP: <span id="tracking-ip">-</span></div>
-            </div>
-          </div>
 
-          <!-- Instance Tracking Sections -->
-          <div
-            style="
-              margin-top: 20px;
-              border-top: 1px solid rgba(255, 255, 255, 0.2);
-              padding-top: 15px;
-            "
-          >
-            <div
-              id="instances-toggle"
-              style="
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 0.95rem;
-              "
-              onclick="toggleInstancesList()"
-            >
-              <span id="instances-arrow">▶</span>
-              <span>View All Instances</span>
-              <span
-                id="instances-count"
-                style="
-                  background: rgba(255, 255, 255, 0.2);
-                  padding: 2px 8px;
-                  border-radius: 10px;
-                  font-size: 0.8rem;
-                "
-                >0</span
-              >
-              <span id="instances-alert" style="display: none; color: #ff6b6b; font-weight: bold"
-                >⚠️ Unauthorized detected!</span
-              >
-            </div>
+            <!-- Instance Tracking Status Card -->
+            <div class="conn-card instance-tracking-card" data-sort-id="tracking">
+              <div class="conn-row">
+                <div class="conn-main">
+                  <div class="conn-icon">🔍</div>
+                  <div>
+                    <h3 class="conn-title">Instance Tracking</h3>
+                    <div id="tracking-status-container">
+                      <div class="conn-status-line">
+                        <span id="tracking-status-dot" class="status-dot connecting"></span>
+                        <span id="tracking-status-text" class="conn-status-text">Checking...</span>
+                      </div>
+                      <div id="tracking-status-details" class="conn-details"></div>
+                    </div>
+                  </div>
+                </div>
+                <div id="tracking-status-info" class="conn-meta">
+                  <div>Instance: <span id="tracking-instance-id">-</span></div>
+                  <div>Location: <span id="tracking-location">-</span></div>
+                  <div>IP: <span id="tracking-ip">-</span></div>
+                </div>
+              </div>
 
-            <div id="instances-container" style="display: none; margin-top: 12px">
-              <!-- Authorized Instances -->
-              <div style="margin-bottom: 15px">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
-                  <span style="font-size: 1.1rem">✅</span>
-                  <span style="font-weight: 600">Authorized Instances</span>
-                  <span
-                    id="authorized-count"
-                    style="
-                      background: rgba(34, 197, 94, 0.3);
-                      padding: 2px 8px;
-                      border-radius: 10px;
-                      font-size: 0.75rem;
-                    "
-                    >0</span
+              <!-- Instance Tracking Sections -->
+              <div class="instances-block">
+                <div id="instances-toggle" class="instances-toggle" onclick="toggleInstancesList()">
+                  <span id="instances-arrow">▶</span>
+                  <span>View All Instances</span>
+                  <span id="instances-count" class="count-pill">0</span>
+                  <span id="instances-alert" class="instances-alert" style="display: none"
+                    >⚠️ Unauthorized detected!</span
                   >
                 </div>
-                <div id="authorized-list" style="max-height: 200px; overflow-y: auto">
-                  <div style="font-size: 0.85rem; opacity: 0.7">Loading...</div>
+
+                <div id="instances-container" class="instances-container" style="display: none">
+                  <!-- Authorized Instances -->
+                  <div class="instance-group">
+                    <div class="instance-group-header">
+                      <span>✅</span>
+                      <span>Authorized Instances</span>
+                      <span id="authorized-count" class="count-pill ok">0</span>
+                    </div>
+                    <div id="authorized-list" class="instance-list">
+                      <div class="instance-empty">Loading...</div>
+                    </div>
+                  </div>
+
+                  <!-- Unauthorized Instances -->
+                  <div class="instance-group">
+                    <div class="instance-group-header">
+                      <span>⚠️</span>
+                      <span>Unauthorized Instances</span>
+                      <span id="unauthorized-count" class="count-pill danger">0</span>
+                    </div>
+                    <div id="unauthorized-list" class="instance-list">
+                      <div class="instance-empty">None detected</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <!-- Unauthorized Instances -->
-              <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
-                  <span style="font-size: 1.1rem">⚠️</span>
-                  <span style="font-weight: 600">Unauthorized Instances</span>
-                  <span
-                    id="unauthorized-count"
-                    style="
-                      background: rgba(239, 68, 68, 0.3);
-                      padding: 2px 8px;
-                      border-radius: 10px;
-                      font-size: 0.75rem;
-                    "
-                    >0</span
-                  >
-                </div>
-                <div id="unauthorized-list" style="max-height: 200px; overflow-y: auto">
-                  <div style="font-size: 0.85rem; opacity: 0.7">None detected</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="service-grid" id="services-grid">
-          <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted)">
-            ⏳ Loading services from server...
+      <!-- Service Management -->
+      <section class="section" id="servicesSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">🔧</span> System Services</h2>
+          <span class="section-badge">PM2</span>
+        </div>
+        <div class="widget-card">
+          <div class="service-grid" id="services-grid">
+            <div class="grid-placeholder">⏳ Loading services from server...</div>
           </div>
         </div>
-
-        <!-- Legend -->
-        <div class="legend">
-          <div class="legend-title">Service Status Legend</div>
-          <div class="legend-items">
-            <div class="legend-item">
-              <span class="legend-icon">● </span>
-              <span>Active service running normally</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">○ </span>
-              <span>Service stopped</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">⚠ </span>
-              <span>Service error or timeout</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">✓ </span>
-              <span>Service enabled on boot</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">✗ </span>
-              <span>Service disabled on boot</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
 
       <!-- Quick Actions -->
-      <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
-        <h3 style="margin-top: 0; color: var(--text)">⚡ Quick Actions</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap">
-          <button class="action-btn btn-restart" onclick="performQuickAction('restart-all')">
-            🔄 Restart All Services
-          </button>
-          <button class="action-btn btn-start" onclick="performQuickAction('start-all')">
-            ▶ Start All Services
-          </button>
+      <section class="section" id="quickActionsSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">⚡</span> Quick Actions</h2>
         </div>
-        <div
-          style="
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--warn-bg);
-            border-left: 4px solid var(--warn);
-            border-radius: 4px;
-          "
-        >
-          <small style="color: var(--warn-text)">
+        <div class="widget-card">
+          <div class="quick-actions">
+            <button class="action-btn btn-restart" onclick="performQuickAction('restart-all')">
+              🔄 Restart All Services
+            </button>
+            <button class="action-btn btn-start" onclick="performQuickAction('start-all')">
+              ▶ Start All Services
+            </button>
+          </div>
+          <div class="quick-note">
             <strong>Note:</strong> These actions affect all PM2-managed processes. Use individual
             service controls above for specific services.
-          </small>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Socket.IO -->
+      <!-- Legend -->
+      <section class="section" id="legendSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">ℹ️</span> Legend</h2>
+        </div>
+        <div class="widget-card">
+          <div class="legend">
+            <div class="legend-title">Service Status Legend</div>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="legend-icon">● </span>
+                <span>Active service running normally</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">○ </span>
+                <span>Service stopped</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">⚠ </span>
+                <span>Service error or timeout</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">✓ </span>
+                <span>Service enabled on boot</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">✗ </span>
+                <span>Service disabled on boot</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Socket.IO, layout and Dashboard scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
     <script>
       function loadServices() {
@@ -498,8 +686,7 @@
       function renderServices(services) {
         const grid = document.getElementById('services-grid');
         if (services.length === 0) {
-          grid.innerHTML =
-            '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">No services available</div>';
+          grid.innerHTML = '<div class="grid-placeholder">No services available</div>';
           return;
         }
 
@@ -584,7 +771,10 @@
               showToast(`Service ${action} successful`, 'success');
               loadServices(); // Reload service status
             } else {
-              showToast(`Failed to ${action} service: ` + (response?.error || 'Unknown error'), 'error');
+              showToast(
+                `Failed to ${action} service: ` + (response?.error || 'Unknown error'),
+                'error'
+              );
             }
           }
         );
@@ -696,8 +886,8 @@
 
         // Handle tracking server unavailable gracefully
         if (!response || !response.instances) {
-          authorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
-          unauthorizedListEl.innerHTML = '<div style="opacity: 0.7">Unable to load</div>';
+          authorizedListEl.innerHTML = '<div class="instance-empty">Unable to load</div>';
+          unauthorizedListEl.innerHTML = '<div class="instance-empty">Unable to load</div>';
           countEl.textContent = '?';
           return;
         }
@@ -723,11 +913,10 @@
 
         // Render authorized
         if (authorized.length === 0) {
-          authorizedListEl.innerHTML =
-            '<div style="opacity: 0.7; padding: 8px">No authorized instances</div>';
+          authorizedListEl.innerHTML = '<div class="instance-empty">No authorized instances</div>';
         } else {
           const degradedNote = response.trackingUnavailable
-            ? '<div style="opacity: 0.6; font-size: 0.75rem; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1)">ℹ️ Tracking server unavailable - showing local instance</div>'
+            ? '<div class="instance-note">ℹ️ Tracking server unavailable - showing local instance</div>'
             : '';
           authorizedListEl.innerHTML =
             degradedNote + authorized.map((inst) => renderInstanceCard(inst, false)).join('');
@@ -735,8 +924,7 @@
 
         // Render unauthorized
         if (unauthorized.length === 0) {
-          unauthorizedListEl.innerHTML =
-            '<div style="opacity: 0.7; padding: 8px">None detected ✓</div>';
+          unauthorizedListEl.innerHTML = '<div class="instance-empty">None detected ✓</div>';
         } else {
           unauthorizedListEl.innerHTML = unauthorized
             .map((inst) => renderInstanceCard(inst, true))
@@ -745,63 +933,45 @@
       }
 
       function renderInstanceCard(inst, isUnauthorized) {
-        const bgColor = inst.revoked
-          ? 'rgba(239,68,68,0.2)'
+        const stateClass = inst.revoked
+          ? 'revoked'
           : isUnauthorized
-            ? 'rgba(251,191,36,0.2)'
-            : 'rgba(34,197,94,0.15)';
-        const borderColor = inst.revoked
-          ? '#ef4444'
-          : isUnauthorized
-            ? '#fbbf24'
-            : 'rgba(34,197,94,0.5)';
+            ? 'unauthorized'
+            : 'authorized';
         const statusIcon = inst.revoked ? '🚫' : inst.online ? '🟢' : '🔴';
         const statusLabel = inst.revoked ? 'REVOKED' : inst.online ? 'Online' : 'Offline';
 
         // Action buttons based on status
         const approveBtn =
           isUnauthorized || inst.revoked
-            ? `<button data-instance-action="approve" data-instance-id="${escapeHtml(inst.instanceId)}" style="
-              background: var(--ok); color: white; border: none; border-radius: 4px;
-              padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
-            ">✓ Approve</button>`
+            ? `<button class="action-btn btn-approve" data-instance-action="approve" data-instance-id="${escapeHtml(inst.instanceId)}">✓ Approve</button>`
             : '';
         const revokeBtn = !inst.revoked
-          ? `<button data-instance-action="revoke" data-instance-id="${escapeHtml(inst.instanceId)}" style="
-              background: var(--danger); color: white; border: none; border-radius: 4px;
-              padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
-            ">✗ Revoke</button>`
+          ? `<button class="action-btn btn-revoke" data-instance-action="revoke" data-instance-id="${escapeHtml(inst.instanceId)}">✗ Revoke</button>`
           : '';
 
         return `
-          <div style="
-            background: ${bgColor}; 
-            border: 1px solid ${borderColor};
-            border-radius: 8px; 
-            padding: 10px; 
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-          ">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px">
+          <div class="instance-card ${stateClass}">
+            <div class="instance-head">
               <div>
                 <strong>${statusIcon} ${escapeHtml(inst.clientName || 'Unknown Bot')}</strong>
-                <span style="opacity: 0.7; margin-left: 8px; font-size: 0.8rem">${statusLabel}</span>
+                <span class="instance-state">${statusLabel}</span>
               </div>
-              <div style="display: flex; gap: 6px; align-items: center">
+              <div class="instance-buttons">
                 ${approveBtn}
                 ${revokeBtn}
               </div>
             </div>
-            <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; opacity: 0.9">
+            <div class="instance-facts">
               <span>📍 ${escapeHtml(inst.location || 'Unknown')}</span>
               <span>🌐 ${escapeHtml(inst.ip || 'Unknown')}</span>
               <span>🖥️ ${escapeHtml(inst.guilds || 0)} servers</span>
             </div>
-            <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center">
-              <span style="font-size: 0.75rem; opacity: 0.7">
+            <div class="instance-foot">
+              <span>
                 🕐 Last seen: ${escapeHtml(inst.lastHeartbeat ? new Date(inst.lastHeartbeat).toLocaleString() : 'Never')}
               </span>
-              <span style="font-size: 0.65rem; opacity: 0.5; font-family: monospace">${escapeHtml(inst.instanceId?.substring(0, 20) || 'N/A')}...</span>
+              <span class="instance-id">${escapeHtml(inst.instanceId?.substring(0, 20) || 'N/A')}...</span>
             </div>
           </div>
         `;

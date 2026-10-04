@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Dashboard redesign** to match the homelab dashboard: a slim sticky header with the version,
+  live-connection chip, icon buttons and a row of page chips; frosted cards over a lit background;
+  dark and light themes (OS default until toggled). Every page is split into sections that collapse
+  and can be reordered (drag the ▾ or use ▲/▼), and card grids can be dragged into a new order and
+  shown or hidden from a "⚙ Panels" chooser. Layout choices are remembered per page in the browser.
+  SortableJS 1.15.7 is vendored in `dashboard/public/vendor/`, not loaded from a CDN
+- The one-time dashboard token link is now `http://<host>:3000/#token=…` (was `?token=`), so the
+  token never reaches request lines or proxy logs
+
+### Fixed
+
+- Dashboard API and live data now require `DASHBOARD_TOKEN` whenever the dashboard listens on a
+  non-loopback address (read-only access without a token is localhost-only), and clearing logs needs
+  write access
+- Dashboard routes return 400 instead of 500 when a request has no JSON body (Express 5 no longer
+  defaults `req.body` to `{}`)
+- Dashboard responses carry a Content-Security-Policy and nosniff, frame and referrer headers, and
+  no longer advertise Express; CORS uses the `cors` package instead of hand-rolled headers
+- Service boot-status checks run without a shell
+- The Database page shows its preselected table on open
+
 ## [2.3.0] - 2026-10-04
 
 Conversation-focused upgrade after Perplexity retired Sonar Chat Completions: the Agent API is the

@@ -3,9 +3,10 @@
  *
  * Include as the first element inside `<div class="dashboard">`:
  *   <script src="shell.js"></script>
- * It synchronously inserts the header and navigation in its own place (so the
- * ids dashboard.js looks up exist before DOMContentLoaded), marks the current
- * page's nav link, and provides small shared helpers for page scripts:
+ * It synchronously inserts the sticky header (with the page navigation) at
+ * the top of <body> (so the ids dashboard.js looks up exist before
+ * DOMContentLoaded), marks the current page's nav link, and provides small
+ * shared helpers for page scripts:
  *   - Poller.every(fn, ms)       polling that pauses in hidden tabs, never overlaps
  *   - showToast(message, type)   non-blocking notification (replaces alert())
  *   - whenDashboardReady(fn)     run fn(socket) once the dashboard socket is connected
@@ -75,44 +76,47 @@ if (getSavedTheme()) {
   }).join('');
 
   const shellHtml = `
-    <header class="dashboard-header">
-      <div class="header-left">
-        <h1>Aszune AI Bot Dashboard</h1>
-        <div class="version-info">
-          <span class="version-badge" id="version-badge">
-            <span class="version-text">v<span id="version-number">…</span></span>
-            <span class="commit-text">Commit:
-              <a id="commit-link" href="#" target="_blank" rel="noopener noreferrer"><span id="commit-sha">unknown</span></a>
+    <header class="header">
+      <div class="header-bar">
+        <div class="header-left">
+          <a class="header-logo" href="index.html" title="Dashboard home">
+            <span class="header-logo-icon" aria-hidden="true">🤖</span>
+            <span class="header-title">Aszune AI Bot</span>
+          </a>
+          <span class="header-subtitle">Dashboard</span>
+          <a id="commit-link" class="header-version" href="#" target="_blank" rel="noopener noreferrer"
+            title="Running version and commit">v<span id="version-number">…</span> · <span id="commit-sha">unknown</span></a>
+        </div>
+        <div class="header-right">
+          <div class="service-badges">
+            <span class="service-badge" title="Live connection to the bot">
+              <span class="status-dot connecting" id="status-dot"></span>
+              <span class="service-label" id="status-text">Connecting...</span>
             </span>
-          </span>
+          </div>
+          <div class="header-actions">
+            <button id="git-pull-btn" class="icon-btn" type="button" title="Pull latest changes from GitHub">
+              <span class="btn-icon" aria-hidden="true">⬇️</span>
+              <span class="btn-label">Git Pull</span>
+            </button>
+            <button id="restart-btn" class="icon-btn danger" type="button" title="Restart the bot">
+              <span class="btn-icon" aria-hidden="true">🔄</span>
+              <span class="btn-label">Restart</span>
+            </button>
+            <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
+          </div>
         </div>
       </div>
-      <div class="header-right">
-        <div class="control-buttons">
-          <button id="git-pull-btn" class="control-btn git-pull-btn" title="Pull latest changes from GitHub">
-            <span class="btn-icon">⬇️</span>
-            <span class="btn-label">Git Pull</span>
-          </button>
-          <button id="restart-btn" class="control-btn restart-btn" title="Restart the bot">
-            <span class="btn-icon">🔄</span>
-            <span class="btn-label">Restart</span>
-          </button>
-        </div>
-        <div class="status-indicator">
-          <span class="status-dot connecting" id="status-dot"></span>
-          <span id="status-text">Connecting...</span>
-        </div>
-        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
-      </div>
-    </header>
-    <nav class="dashboard-navbar" aria-label="Dashboard pages">
-      <div class="navbar-content">${navHtml}</div>
-    </nav>`;
+      <nav class="dashboard-navbar" aria-label="Dashboard pages">
+        <div class="navbar-content">${navHtml}</div>
+      </nav>
+    </header>`;
 
-  const script = document.currentScript;
-  if (script) {
-    script.insertAdjacentHTML('beforebegin', shellHtml);
-  }
+  // The header spans the full window width, so it goes at the top of <body>
+  // rather than inside the page container this script sits in. It is still
+  // inserted synchronously, so the ids dashboard.js looks up exist before
+  // DOMContentLoaded.
+  document.body.insertAdjacentHTML('afterbegin', shellHtml);
 
   const toggle = document.getElementById('theme-toggle');
   const paintToggle = () => {

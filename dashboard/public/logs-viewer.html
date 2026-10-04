@@ -6,206 +6,220 @@
     <title>Aszune AI Bot Dashboard - Logs Viewer</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-
-      .logs-section {
-        background: var(--surface);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      }
-
-      .logs-section h2 {
-        color: var(--text);
-        margin-bottom: 20px;
-        font-size: 1.3rem;
-        font-weight: 600;
-      }
-
       .logs-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
+        margin-bottom: var(--spacing-md);
         flex-wrap: wrap;
-        gap: 10px;
+        gap: var(--spacing-sm);
       }
 
       .logs-controls {
         display: flex;
-        gap: 10px;
+        gap: var(--spacing-sm);
         align-items: center;
         flex-wrap: wrap;
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       .log-filter {
-        padding: 8px 12px;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text);
-        font-size: 13px;
         cursor: pointer;
       }
 
       .log-search {
-        padding: 8px 12px;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text);
-        font-size: 13px;
-        min-width: 200px;
+        flex: 1 1 200px;
+        min-width: 0;
+        max-width: 360px;
       }
 
       .log-search::placeholder {
         color: var(--text-muted);
       }
 
-      .log-button {
-        padding: 8px 16px;
-        background: var(--info-text);
-        border: none;
-        border-radius: 4px;
-        color: #fff;
-        cursor: pointer;
-        font-size: 13px;
-        transition: background 0.3s;
-      }
-
-      .log-button:hover {
-        background: var(--info-text);
-      }
-
       .log-button.pause {
-        background: var(--warn);
+        background: var(--tint-warn);
+        color: var(--level-warn);
       }
 
-      .log-button.pause:hover {
-        background: var(--warn-text);
+      .log-button.pause.paused {
+        background: var(--tint-ok);
+        border-color: var(--tint-ok-border);
+        color: var(--level-ok);
       }
 
       .log-button.export {
-        background: var(--ok-text);
+        background: var(--tint-accent);
+        color: var(--level-accent);
       }
 
-      .log-button.export:hover {
-        background: #689f38;
+      .log-button.pause:hover:not(:disabled),
+      .log-button.export:hover:not(:disabled) {
+        filter: brightness(1.1);
+      }
+
+      .table-wrapper {
+        overflow: auto;
+        max-height: 600px;
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-radius: var(--border-radius-md);
       }
 
       .logs-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px;
-        font-family: 'Courier New', monospace;
-        background: rgba(30, 30, 30, 0.5);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        overflow: hidden;
+        font-size: var(--font-size-xs);
+        font-family: var(--font-mono);
       }
 
-      .logs-table thead {
-        background: var(--surface-2);
-        border-bottom: 2px solid var(--border);
+      .logs-table thead th {
+        position: sticky;
+        top: 0;
+        background: var(--surface-solid);
+        border-bottom: 1px solid var(--hairline-strong);
+        z-index: 1;
       }
 
       .logs-table th {
-        padding: 10px;
+        padding: 8px 10px;
         text-align: left;
-        color: var(--text);
+        color: var(--text-muted);
+        font-family: inherit;
+        font-size: 0.7rem;
         font-weight: 600;
-        border-right: 1px solid var(--border);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
-      .logs-table th:last-child {
-        border-right: none;
+      .logs-table th.col-timestamp {
+        width: 180px;
+      }
+
+      .logs-table th.col-level {
+        width: 80px;
       }
 
       .logs-table td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #f0f0f0;
-        color: var(--text);
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--hairline);
+        color: var(--text-primary);
+        vertical-align: top;
       }
 
-      .logs-table tr:hover {
-        background: var(--surface-2);
+      .logs-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .logs-table tbody tr:hover {
+        background: var(--surface-hover);
+      }
+
+      .log-level-DEBUG,
+      .log-level-INFO,
+      .log-level-WARN,
+      .log-level-ERROR {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: var(--radius-pill);
+        font-weight: 600;
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
       }
 
       .log-level-DEBUG {
-        color: var(--info-text);
-        font-weight: 500;
+        background: var(--tint-info);
+        color: var(--level-info);
       }
 
       .log-level-INFO {
-        color: var(--ok-text);
-        font-weight: 500;
+        background: var(--tint-ok);
+        color: var(--level-ok);
       }
 
       .log-level-WARN {
-        color: var(--warn);
-        font-weight: 500;
+        background: var(--tint-warn);
+        color: var(--level-warn);
       }
 
       .log-level-ERROR {
-        color: var(--danger-text);
-        font-weight: 600;
+        background: var(--tint-danger);
+        color: var(--level-danger);
       }
 
       .log-timestamp {
         color: var(--text-muted);
-        font-size: 11px;
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .logs-table td.log-timestamp {
+        color: var(--text-muted);
       }
 
       .log-message {
-        color: #e0e0e0;
-        max-width: 500px;
+        color: var(--text-primary);
         word-break: break-word;
       }
 
       .logs-footer {
-        margin-top: 15px;
+        margin-top: var(--spacing-md);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 12px;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        font-size: var(--font-size-xs);
         color: var(--text-muted);
       }
 
       .log-stats {
         display: flex;
-        gap: 20px;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
       }
 
       .log-stat {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
+        padding: 2px 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-pill);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.7rem;
       }
 
       .log-stat-value {
-        color: #87ceeb;
+        color: var(--text-primary);
         font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        text-transform: none;
+        letter-spacing: 0;
       }
 
       .live-indicator {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding: 4px 8px;
-        background: var(--ok-text);
-        border-radius: 4px;
-        font-size: 12px;
-        color: var(--ok);
+        padding: 2px 10px;
+        background: var(--tint-ok);
+        border: 1px solid var(--tint-ok-border);
+        border-radius: var(--radius-pill);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        color: var(--level-ok);
       }
 
       .live-indicator.pulsing::before {
         content: '●';
-        animation: pulse 1s infinite;
+        animation: live-pulse 1s infinite;
       }
 
-      @keyframes pulse {
+      @keyframes live-pulse {
         0%,
         100% {
           opacity: 1;
@@ -219,96 +233,136 @@
         padding: 40px;
         text-align: center;
         color: var(--text-muted);
-        font-size: 14px;
+        font-size: var(--font-size-sm);
+      }
+
+      .logs-table td.no-logs {
+        color: var(--text-muted);
+      }
+
+      .legend-item .log-level-DEBUG,
+      .legend-item .log-level-INFO,
+      .legend-item .log-level-WARN,
+      .legend-item .log-level-ERROR {
+        flex: 0 0 auto;
+        align-self: flex-start;
+      }
+
+      .levels-legend {
+        margin-top: 0;
       }
     </style>
   </head>
   <body>
-    <div class="dashboard">
+    <main class="dashboard" id="mainContent">
       <!-- Shared header + navigation (shell.js) -->
       <script src="shell.js"></script>
 
       <!-- Real-Time Log Viewer Section -->
-      <div class="logs-section">
-        <h2>📋 Real-Time Log Viewer</h2>
-
-        <div class="logs-header">
-          <div class="logs-controls">
-            <select id="log-filter" class="log-filter">
-              <option value="ALL">All Levels</option>
-              <option value="DEBUG">Debug</option>
-              <option value="INFO" selected>Info</option>
-              <option value="WARN">Warnings</option>
-              <option value="ERROR">Errors</option>
-            </select>
-
-            <input
-              type="text"
-              id="log-search"
-              class="log-search"
-              placeholder="Search logs (e.g., 'cache', 'API', 'database')..."
-            />
-
-            <button class="log-button pause" onclick="toggleAutoScroll()">⏸ Pause</button>
-
-            <button class="log-button export" onclick="exportLogs()">⬇️ Export</button>
-          </div>
-
-          <div>
-            <span class="live-indicator pulsing">● Live</span>
+      <section class="section" id="logViewerSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-title-icon">📋</span> Real-Time Log Viewer
+          </h2>
+          <div class="section-actions">
+            <span class="live-indicator pulsing">Live</span>
           </div>
         </div>
+        <div class="widget-card">
+          <div class="logs-header">
+            <div class="logs-controls">
+              <select id="log-filter" class="log-filter form-control">
+                <option value="ALL">All Levels</option>
+                <option value="DEBUG">Debug</option>
+                <option value="INFO" selected>Info</option>
+                <option value="WARN">Warnings</option>
+                <option value="ERROR">Errors</option>
+              </select>
 
-        <div class="table-wrapper" style="overflow-x: auto; max-height: 600px; overflow-y: auto">
-          <table class="logs-table" id="logs-table">
-            <thead>
-              <tr>
-                <th style="width: 180px">Timestamp</th>
-                <th style="width: 80px">Level</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody id="logs-body">
-              <!-- Sample logs will be populated here -->
-            </tbody>
-          </table>
-        </div>
+              <input
+                type="text"
+                id="log-search"
+                class="log-search form-control"
+                placeholder="Search logs (e.g., 'cache', 'API', 'database')..."
+              />
 
-        <div class="logs-footer">
-          <div class="log-stats">
-            <div class="log-stat">
-              <span>Total Logs:</span>
-              <span class="log-stat-value" id="total-logs">127</span>
-            </div>
-            <div class="log-stat">
-              <span>Errors:</span>
-              <span class="log-stat-value" id="error-count">3</span>
-            </div>
-            <div class="log-stat">
-              <span>Warnings:</span>
-              <span class="log-stat-value" id="warn-count">12</span>
+              <button class="log-button control-btn pause" onclick="toggleAutoScroll()">
+                ⏸ Pause
+              </button>
+
+              <button class="log-button control-btn export" onclick="exportLogs()">
+                ⬇️ Export
+              </button>
             </div>
           </div>
-          <span id="last-update">Last updated: just now</span>
+
+          <div class="table-wrapper">
+            <table class="logs-table" id="logs-table">
+              <thead>
+                <tr>
+                  <th class="col-timestamp">Timestamp</th>
+                  <th class="col-level">Level</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="logs-body">
+                <!-- Sample logs will be populated here -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="logs-footer">
+            <div class="log-stats">
+              <div class="log-stat">
+                <span>Total Logs:</span>
+                <span class="log-stat-value" id="total-logs">127</span>
+              </div>
+              <div class="log-stat">
+                <span>Errors:</span>
+                <span class="log-stat-value" id="error-count">3</span>
+              </div>
+              <div class="log-stat">
+                <span>Warnings:</span>
+                <span class="log-stat-value" id="warn-count">12</span>
+              </div>
+            </div>
+            <span id="last-update">Last updated: just now</span>
+          </div>
         </div>
-      </div>
+      </section>
 
       <!-- Log Level Legend -->
-      <div style="margin-top: 20px; padding: 15px; background: var(--surface-2); border-radius: 6px">
-        <h3 style="margin-top: 0; margin-bottom: 10px; color: var(--text)">Log Levels</h3>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; color: var(--text)">
-          <div><span class="log-level-DEBUG">● DEBUG</span> - Detailed diagnostic information</div>
-          <div><span class="log-level-INFO">● INFO</span> - General informational messages</div>
-          <div>
-            <span class="log-level-WARN">● WARN</span> - Warning messages for potential issues
-          </div>
-          <div><span class="log-level-ERROR">● ERROR</span> - Error messages for failures</div>
+      <section class="section" id="logLevelsSection">
+        <div class="section-header">
+          <h2 class="section-title"><span class="section-title-icon">🏷️</span> Log Levels</h2>
         </div>
-      </div>
-    </div>
+        <div class="widget-card">
+          <div class="legend levels-legend">
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="log-level-DEBUG">DEBUG</span
+                ><span>Detailed diagnostic information</span>
+              </div>
+              <div class="legend-item">
+                <span class="log-level-INFO">INFO</span><span>General informational messages</span>
+              </div>
+              <div class="legend-item">
+                <span class="log-level-WARN">WARN</span
+                ><span>Warning messages for potential issues</span>
+              </div>
+              <div class="legend-item">
+                <span class="log-level-ERROR">ERROR</span><span>Error messages for failures</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-    <!-- Socket.IO -->
+    <!-- Socket.IO, layout and Dashboard scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/Sortable.min.js"></script>
+    <script src="layout.js"></script>
     <script src="dashboard.js"></script>
     <script>
       let autoScroll = true;
@@ -388,7 +442,7 @@
         isPaused = !isPaused;
         const btn = event.target;
         btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
-        btn.style.background = isPaused ? '#558b2f' : '#f57c00';
+        btn.classList.toggle('paused', isPaused);
       }
 
       function exportLogs() {
