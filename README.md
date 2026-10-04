@@ -163,12 +163,10 @@ chmod +x start-pi-optimized.sh
 ./start-pi-optimized.sh
 ```
 
-This script applies several performance optimisations:
-
-- Sets memory limits appropriate for your Pi model
-- Reduces CPU and memory usage
-- Optimises network connections
-- Configures compact mode for responses
+This script detects your Pi model and sets the bot's own limits for it (Node heap size, memory
+monitor thresholds, concurrent API requests, compact/low-CPU modes). Any `PI_*` value in `.env`
+overrides the detected one. It does not change system-wide settings such as the CPU governor or
+swappiness; tune the OS itself with your distro's tools (e.g. `dietpi-config`).
 
 For more details on Pi optimisations, see the
 [Raspberry Pi Optimisation Guide](wiki/Pi-Optimization-Guide.md).
@@ -191,8 +189,10 @@ pm2 startup
 pm2 save
 ```
 
-This ensures all Pi-specific environment variables and system-level tweaks are applied before
-starting the bot, and enables automatic restart after a reboot.
+This ensures all Pi-specific environment variables are applied before starting the bot, and
+enables automatic restart after a reboot. The script is one-shot: it exits once PM2 has started the
+apps. Do not wrap it in a systemd service with `Restart=always`; that re-runs it every few seconds,
+and each run is a fresh Discord login, which soon exhausts Discord's daily session-start limit.
 
 **Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations.
 
