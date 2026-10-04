@@ -25,6 +25,19 @@ describe('Perplexity Service - Basic', () => {
     perplexityService = PerplexityService;
   });
 
+  describe('getRuntimeInfo', () => {
+    it('exposes the last reported model and last call from the API client', () => {
+      perplexityService.apiClient.lastModel = 'openai/gpt-6-luna';
+      perplexityService.apiClient.lastCall = { ok: true };
+      expect(perplexityService.getRuntimeInfo()).toEqual({
+        lastModel: 'openai/gpt-6-luna',
+        lastCall: { ok: true },
+      });
+      perplexityService.apiClient.lastModel = '';
+      perplexityService.apiClient.lastCall = null;
+    });
+  });
+
   describe('sendChatRequest', () => {
     it('sends a request to the API with correct parameters', async () => {
       const mockResponse = {

@@ -301,6 +301,15 @@ class PerplexityService {
   }
 
   /**
+   * Runtime facts for the /diag command: the model Perplexity last reported
+   * and a summary of the most recent API call.
+   * @returns {{ lastModel: string, lastCall: Object|null }}
+   */
+  getRuntimeInfo() {
+    return { lastModel: this.apiClient.lastModel, lastCall: this.apiClient.lastCall };
+  }
+
+  /**
    * Send a chat request to the API
    * @param {Array} messages - Messages to send
    * @param {Object} options - Request options

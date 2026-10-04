@@ -26,6 +26,9 @@ module.exports = {
     ClientReady: 'ready',
     MessageCreate: 'messageCreate',
   },
+  MessageFlags: {
+    Ephemeral: 64,
+  },
   ApplicationCommandOptionType: {
     String: 3,
     Integer: 4,

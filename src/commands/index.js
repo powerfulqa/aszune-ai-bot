@@ -15,6 +15,7 @@ const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
 const reminderService = require('../services/reminder-service');
 const { getGuildMemberStats } = require('../utils/guild-member-stats');
+const { diagCommand } = require('./diag');
 const os = require('os');
 
 // Embed builders (extracted for maintainability)
@@ -692,6 +693,9 @@ Simply chat as normal to talk to the bot!`
     },
     textCommand: '!serverinfo',
   },
+
+  // Owner-only diagnostics (slash only, ephemeral) - see ./diag.js
+  diag: diagCommand,
 };
 
 /**
