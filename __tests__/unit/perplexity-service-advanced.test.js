@@ -118,7 +118,10 @@ describe('Perplexity Service - Advanced', () => {
       const messages = [{ role: 'user', content: longMessage }];
       const response = await perplexityService.sendChatRequest(messages);
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual({
+        choices: [{ message: { role: 'assistant', content: 'Mock response' } }],
+        usage: undefined,
+      });
     });
 
     it('handles messages with special characters', async () => {
@@ -132,7 +135,10 @@ describe('Perplexity Service - Advanced', () => {
       const messages = [{ role: 'user', content: specialMessage }];
       const response = await perplexityService.sendChatRequest(messages);
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual({
+        choices: [{ message: { role: 'assistant', content: 'Mock response' } }],
+        usage: undefined,
+      });
     });
 
     it('handles messages with unicode characters', async () => {
@@ -146,7 +152,10 @@ describe('Perplexity Service - Advanced', () => {
       const messages = [{ role: 'user', content: unicodeMessage }];
       const response = await perplexityService.sendChatRequest(messages);
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual({
+        choices: [{ message: { role: 'assistant', content: 'Mock response' } }],
+        usage: undefined,
+      });
     });
   });
 });

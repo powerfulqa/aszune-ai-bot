@@ -20,9 +20,10 @@ default secrets, add persistence) but never add a disable/bypass path or weaken 
 Discord bot specialising in gaming lore, guides, and advice via the Perplexity API. Self-hosted,
 primary target a Raspberry Pi 5 (PM2). Node.js, CommonJS, no build step.
 
-- AI chat via the Perplexity Agent API (`/v1/agent`, `USE_AGENT_API=true`, `AGENT_PRESET` default
-  `low`) with web search, per-user conversation history + citations. Legacy Chat Completions
-  (`sonar`/`sonar-pro`) remains as a fallback (`USE_AGENT_API=false`) but is sunset 2026-09-27.
+- AI chat via the Perplexity Agent API (`/v1/agent`, the only chat path since Sonar Chat Completions
+  was retired 2026-09-27). `AGENT_PRESET` (default `medium`) plus optional `AGENT_MODEL` /
+  `AGENT_REASONING_EFFORT` overrides; tools `web_search` + `fetch_url`; per-user conversation
+  history (30 messages, 2h session window) replayed each turn; numbered citations.
 - Natural-language reminders (chrono-node) persisted in SQLite (`better-sqlite3`)
 - Express + Socket.IO admin dashboard (`src/services/web-dashboard.js`, bound to `127.0.0.1:3000`)
 - Discord analytics/monitoring commands; Raspberry Pi resource optimisations
@@ -32,7 +33,7 @@ primary target a Raspberry Pi 5 (PM2). Node.js, CommonJS, no build step.
 - **Node** `>=22.19.0` (see `.nvmrc` = 24). CI matrix tests 22 + 24.
 - **ESLint 10**, flat config in `eslint.config.js` (there is no `.eslintrc.json`).
 - **Jest 30**, config in `jest.config.js`; setup in `jest.setup.js`.
-- **Prettier 3.9**. Runtime deps: discord.js 14, express 5, undici 8, better-sqlite3 13, dotenv 17.
+- **Prettier 3.9**. Runtime deps: discord.js 14, express 5, undici 8, better-sqlite3 13, dotenv 18.
 - Dependency updates are automated via `.github/dependabot.yml`.
 
 ## Architecture — service layer (do not bypass)
@@ -132,5 +133,6 @@ command string. On the Pi, start via `start-pi-optimized.sh` to apply optimisati
 
 Key env vars: `DISCORD_BOT_TOKEN`, `PERPLEXITY_API_KEY` (required); `DASHBOARD_TOKEN` (enables the
 dashboard's destructive operations — without it the dashboard is read-only); `TRACKING_ADMIN_KEY`
-(required to start the tracking server); `SEARCH_DOMAIN_FILTER` (optional comma-separated Perplexity
-allowlist). See `.env.example`.
+(required to start the tracking server); `AGENT_PRESET`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
+`AGENT_FETCH_URL` (Perplexity Agent API tuning); `SEARCH_DOMAIN_FILTER` (optional comma-separated
+Perplexity allowlist). See `.env.example`.

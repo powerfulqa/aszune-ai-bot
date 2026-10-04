@@ -53,7 +53,7 @@ describe('PerplexitySecure - Search Features', () => {
       );
     }
 
-    it('should append citation domains as footer', async () => {
+    it('should append a numbered source footer', async () => {
       mockApiWithCitations('Arthas was the Lich King.', [
         'https://wowpedia.fandom.com/wiki/Arthas',
         'https://www.wowhead.com/npc/arthas',
@@ -61,29 +61,25 @@ describe('PerplexitySecure - Search Features', () => {
 
       const result = await service._processChatResponse(history, opts, cacheConfig, false);
 
-      expect(result).toContain('Arthas was the Lich King.');
-      expect(result).toContain('*Sources: wowpedia.fandom.com, wowhead.com*');
+      expect(result).toBe(
+        'Arthas was the Lich King.\n\n*Sources: ' +
+          '[1] [wowpedia.fandom.com](https://wowpedia.fandom.com/wiki/Arthas) · ' +
+          '[2] [wowhead.com](https://www.wowhead.com/npc/arthas)*'
+      );
     });
 
-    it('should strip www. prefix from domains', async () => {
-      mockApiWithCitations('Response text', ['https://www.example.com/page']);
+    it('should list only the sources the answer cites', async () => {
+      mockApiWithCitations('Arthas fell at Icecrown [2].', [
+        'https://a.com/1',
+        'https://b.com/2',
+        'https://c.com/3',
+      ]);
 
       const result = await service._processChatResponse(history, opts, cacheConfig, false);
 
-      expect(result).toContain('*Sources: example.com*');
-      expect(result).not.toContain('www.');
-    });
-
-    it('should limit citations to 5 domains', async () => {
-      const citations = Array.from({ length: 8 }, (_, i) => `https://site${i}.com/page`);
-      mockApiWithCitations('Response', citations);
-
-      const result = await service._processChatResponse(history, opts, cacheConfig, false);
-
-      const sourcesMatch = result.match(/\*Sources: (.+)\*/);
-      expect(sourcesMatch).toBeTruthy();
-      const domains = sourcesMatch[1].split(', ');
-      expect(domains.length).toBe(5);
+      expect(result).toBe(
+        'Arthas fell at Icecrown [2].\n\n*Sources: [2] [b.com](https://b.com/2)*'
+      );
     });
 
     it('should not append footer when no citations returned', async () => {
@@ -92,7 +88,6 @@ describe('PerplexitySecure - Search Features', () => {
       const result = await service._processChatResponse(history, opts, cacheConfig, false);
 
       expect(result).toBe('Response without sources');
-      expect(result).not.toContain('Sources:');
     });
 
     it('should not append footer when citations array is empty', async () => {
@@ -100,19 +95,51 @@ describe('PerplexitySecure - Search Features', () => {
 
       const result = await service._processChatResponse(history, opts, cacheConfig, false);
 
-      expect(result).not.toContain('Sources:');
+      expect(result).toBe('Response text');
+    });
+  });
+
+  describe('formatCitationFooter', () => {
+    const { formatCitationFooter } = require('../../../src/services/perplexity-secure');
+
+    it('falls back to the first five sources when nothing is cited inline', () => {
+      const citations = Array.from({ length: 8 }, (_, i) => `https://site${i + 1}.com/p`);
+      expect(formatCitationFooter('No markers here', citations)).toBe(
+        '\n\n*Sources: ' +
+          [1, 2, 3, 4, 5].map((n) => `[${n}] [site${n}.com](https://site${n}.com/p)`).join(' · ') +
+          '*'
+      );
     });
 
-    it('should skip invalid URLs in citations', async () => {
-      mockApiWithCitations('Response', [
-        'https://valid.com/page',
-        'not-a-url',
-        'https://another.com/page',
-      ]);
+    it('strips only a leading www. from hostnames', () => {
+      expect(formatCitationFooter('See [1]', ['https://www.awww.example.com/x'])).toBe(
+        '\n\n*Sources: [1] [awww.example.com](https://www.awww.example.com/x)*'
+      );
+    });
 
-      const result = await service._processChatResponse(history, opts, cacheConfig, false);
+    it('ignores cited numbers with no matching source', () => {
+      expect(formatCitationFooter('Claims [1][9]', ['https://one.com/'])).toBe(
+        '\n\n*Sources: [1] [one.com](https://one.com/)*'
+      );
+    });
 
-      expect(result).toContain('*Sources: valid.com, another.com*');
+    it('skips unparseable URLs but keeps the other numbers', () => {
+      expect(
+        formatCitationFooter('Text', [
+          'https://valid.com/page',
+          'not-a-url',
+          'https://another.com/page',
+        ])
+      ).toBe(
+        '\n\n*Sources: [1] [valid.com](https://valid.com/page) · ' +
+          '[3] [another.com](https://another.com/page)*'
+      );
+    });
+
+    it('returns an empty string when there are no usable sources', () => {
+      expect(formatCitationFooter('Text', ['not-a-url'])).toBe('');
+      expect(formatCitationFooter('Text', [])).toBe('');
+      expect(formatCitationFooter('Text', undefined)).toBe('');
     });
   });
 
@@ -135,9 +162,11 @@ describe('PerplexitySecure - Search Features', () => {
 
       await service._processChatResponse(history, opts, cacheConfig, false);
 
-      // The recency filter is passed via options to sendChatRequest → buildRequestPayload
-      // We verify the request was made (integration confirmation)
-      expect(request).toHaveBeenCalled();
+      const body = JSON.parse(request.mock.calls[0][1].body);
+      expect(body.tools[0]).toEqual({
+        type: 'web_search',
+        filters: { search_recency_filter: 'month' },
+      });
     });
 
     it('should apply recency filter for "current" keyword', async () => {

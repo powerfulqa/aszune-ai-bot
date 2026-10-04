@@ -92,6 +92,30 @@ describe('Conversation Manager - Basic Operations', () => {
     });
   });
 
+  describe('long assistant replies', () => {
+    const userId = '123456789012345678';
+
+    it('keeps the start of an over-long assistant reply instead of dropping it', () => {
+      conversationManager.addMessage(userId, 'assistant', 'x'.repeat(5000));
+
+      const history = conversationManager.getHistory(userId);
+      expect(history).toHaveLength(1);
+      expect(history[0].content).toBe(`${'x'.repeat(3900)}…`);
+    });
+
+    it('stores an assistant reply at the limit unchanged', () => {
+      conversationManager.addMessage(userId, 'assistant', 'y'.repeat(3900));
+
+      expect(conversationManager.getHistory(userId)[0].content).toBe('y'.repeat(3900));
+    });
+
+    it('does not truncate user messages (they are validated as-is)', () => {
+      conversationManager.addMessage(userId, 'user', 'z'.repeat(5000));
+
+      expect(conversationManager.getHistory(userId)).toHaveLength(0);
+    });
+  });
+
   describe('clearHistory', () => {
     it('clears conversation history for user', () => {
       const userId = '123456789012345678';

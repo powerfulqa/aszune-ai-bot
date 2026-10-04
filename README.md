@@ -16,7 +16,7 @@ offering real-time performance dashboards and server analytics directly within D
 ## Key Features
 
 - 🤖 **AI-Powered Conversations** - Context-aware chat via the Perplexity Agent API (`/v1/agent`)
-  with web search, selectable by preset (`AGENT_PRESET`, default `low`)
+  with web search and link reading, selectable by preset (`AGENT_PRESET`, default `medium`)
 - 📎 **Source Citations** - Responses include source domains so users can verify information
 - 📊 **Web Dashboard** - Real-time monitoring with logs, services, network status, and configuration
 - ⏰ **Smart Reminders** - Natural language reminder scheduling with Discord notifications
@@ -452,8 +452,8 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 ### 🔴 Perplexity API Errors (400 / 401)
 
 - Validate your API key is current and supports the Agent API `/v1/agent` endpoint
-- The bot uses the Agent API by default (`USE_AGENT_API=true`) with `AGENT_PRESET` (default `low`);
-  set `USE_AGENT_API=false` to fall back to the legacy Chat Completions path (sunset 2026-09-27)
+- The bot uses the Perplexity Agent API (the Sonar Chat Completions path was retired 2026-09-27)
+  with `AGENT_PRESET` (default `medium`); optionally pin `AGENT_MODEL` or `AGENT_REASONING_EFFORT`
 - Test the same key using a tool like Postman or curl
 
 ---

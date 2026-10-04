@@ -69,16 +69,18 @@ const config = {
   DB_PATH: process.env.DB_PATH || './data/bot.db',
 
   // Bot Configuration
-  MAX_HISTORY: 12, // Reduced from 20 for better context management
+  MAX_HISTORY: 30, // Messages (user + assistant) replayed to the model each turn
   RATE_LIMIT_WINDOW: 5000, // 5 seconds
   CONVERSATION_MAX_LENGTH: 50, // Max messages per conversation history
 
   // Database Configuration - should match runtime limits
-  DATABASE_CONVERSATION_LIMIT: 12, // Match MAX_HISTORY for consistency
+  DATABASE_CONVERSATION_LIMIT: 30, // Match MAX_HISTORY for consistency
 
   // Conversation Context Management
-  CONVERSATION_INACTIVITY_TIMEOUT_MS: 15 * 60 * 1000, // 15 minutes - auto-clear context
-  SESSION_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutes - conversation session timeout before treating as new conversation
+  // Small-group, back-and-forth use: a conversation survives a couple of hours
+  // pause before the bot treats the next message as a fresh topic.
+  CONVERSATION_INACTIVITY_TIMEOUT_MS: 2 * 60 * 60 * 1000, // 2 hours - auto-clear context
+  SESSION_TIMEOUT_MS: 2 * 60 * 60 * 1000, // 2 hours - reload persisted history after a restart within this window
   CONVERSATION_CONTEXT_WARNING_THRESHOLD: 10, // Warn user approaching limit
   STATS_SAVE_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes - flush user stats to disk
 
@@ -110,7 +112,7 @@ const config = {
     DEFAULT_WINDOW_MS: 5000,
     RETRY_DELAY_MS: 1000,
     MAX_RETRIES: 1,
-    API_TIMEOUT_MS: 30000,
+    API_TIMEOUT_MS: 120000, // Agent runs with search + page fetches take 10-60s
   },
 
   // File Permissions
@@ -171,38 +173,32 @@ const config = {
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
         AGENT: '/v1/agent',
       },
-      // Opt-in migration to the newer Agent API (/v1/agent). Legacy Chat
-      // Completions remains supported by Perplexity (no announced sunset), so
-      // this defaults OFF. NOTE: the Agent request/response mapping in
-      // perplexity-secure/helpers/agentApiAdapter.js is a best-effort
-      // implementation from the migration guide and has NOT been validated
-      // against the live endpoint — verify before enabling in production.
-      USE_AGENT_API: process.env.USE_AGENT_API === 'true',
-      // Agent API preset used when USE_AGENT_API is on. Perplexity's documented
-      // Sonar→Agent mapping: 'fast' = sonar, 'low' = sonar-pro,
-      // 'medium' = sonar-reasoning-pro, 'high' = sonar-deep-research. Defaults to
-      // 'low' (sonar-pro tier). Override with the AGENT_PRESET env var.
-      AGENT_PRESET: process.env.AGENT_PRESET || 'low',
-      DEFAULT_MODEL: 'sonar',
-      MULTI_TURN_MODEL: 'sonar-pro',
-      MULTI_TURN_THRESHOLD: 2, // Use sonar-pro when conversation history exceeds this many messages
-      DEFAULT_TEMPERATURE: 0.2,
+      // Agent API preset: supplies the model, reasoning effort, step budget and
+      // default tools. 'medium' suits multi-turn conversation; 'fast' and 'low'
+      // trade answer quality for latency/cost, 'high'/'xhigh' go deeper.
+      AGENT_PRESET: process.env.AGENT_PRESET || 'medium',
+      // Optional overrides on top of the preset, e.g.
+      //   AGENT_MODEL=anthropic/claude-sonnet-5-5  AGENT_REASONING_EFFORT=low
+      // Leave unset to follow whatever model Perplexity puts behind the preset.
+      AGENT_MODEL: process.env.AGENT_MODEL || '',
+      AGENT_REASONING_EFFORT: process.env.AGENT_REASONING_EFFORT || '',
+      // Let the agent read links people paste into the conversation.
+      FETCH_URL: process.env.AGENT_FETCH_URL !== 'false',
+      // Output budgets. Reasoning models spend part of this on thinking, so
+      // keep headroom; the system prompt asks for Discord-length answers.
       MAX_TOKENS: {
-        CHAT: 1024,
-        SUMMARY: 256,
+        CHAT: 4096,
+        SUMMARY: 1024,
       },
-      RETURN_CITATIONS: true,
       // Perplexity search_domain_filter is an ALLOWLIST: when non-empty, search
       // is restricted to ONLY these domains. That improves answer quality for
       // gaming questions but would starve general/long-tail queries, so the
       // default stays empty (unrestricted). Operators can opt in via the
       // SEARCH_DOMAIN_FILTER env var, e.g.:
       //   SEARCH_DOMAIN_FILTER=wowhead.com,icy-veins.com,fextralife.com,ign.com,pcgamer.com
-      // NOTE (Agent API migration, Phase 5): this moves to a preset config
-      // rather than a per-request param — see the plan file.
+      // Sent as web_search tool filters on the Agent API.
       SEARCH_DOMAIN_FILTER: getListEnvVar('SEARCH_DOMAIN_FILTER', []),
       SEARCH_RECENCY_KEYWORDS: ['latest', 'recent', 'new', 'current', 'today', 'patch', 'update'],
     },
@@ -217,7 +213,15 @@ const config = {
   },
   // System Messages
   SYSTEM_MESSAGES: {
-    CHAT: 'Aszai is a bot that specialises in gaming lore, game logic, guides, and advice. If you do not know the answer to a question, clearly say "I don\'t know" rather than attempting to make up an answer.',
+    CHAT: [
+      'You are Aszai, a Discord bot for a small group of friends. You specialise in gaming lore, game logic, guides, and advice, but happily help with other questions too.',
+      'Conversations are back-and-forth: use the earlier turns for context, and only search the web when the answer depends on facts you need to look up or check.',
+      'If someone pastes a link, read it before answering questions about it.',
+      'Keep answers conversational and Discord-sized: usually under 1500 characters, using short paragraphs or bullet points and Discord markdown. Go longer only when asked for detail.',
+      'Use UK English.',
+      'When you use web results, cite them inline as [1], [2] matching the source numbers.',
+      'If you do not know the answer, clearly say "I don\'t know" rather than making one up.',
+    ].join(' '),
     SUMMARY:
       'Summarise the following conversation between a user and an AI assistant in a concise paragraph, using UK English.',
     TEXT_SUMMARY: 'Summarise the following text in a concise paragraph, using UK English.',

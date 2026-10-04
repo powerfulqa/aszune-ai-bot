@@ -59,7 +59,7 @@ function ensureTriggers(db) {
     AFTER INSERT ON conversation_history
     BEGIN
       DELETE FROM conversation_history WHERE user_id = NEW.user_id AND id NOT IN (
-        SELECT id FROM conversation_history WHERE user_id = NEW.user_id ORDER BY timestamp DESC LIMIT 20
+        SELECT id FROM conversation_history WHERE user_id = NEW.user_id ORDER BY id DESC LIMIT 60
       );
     END;
   `);

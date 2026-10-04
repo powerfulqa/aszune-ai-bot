@@ -9,14 +9,13 @@ module.exports = {
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
+        AGENT: '/v1/agent',
       },
       MAX_TOKENS: {
         SUMMARY: 1000,
         CHAT: 2000,
       },
-      DEFAULT_MODEL: 'llama-3.1-sonar-small-128k-online',
-      DEFAULT_TEMPERATURE: 0.7,
+      AGENT_PRESET: 'medium',
     },
   },
   LOGGING: {

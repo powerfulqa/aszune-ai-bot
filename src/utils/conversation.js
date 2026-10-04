@@ -173,8 +173,17 @@ class ConversationManager {
       return;
     }
 
+    // Long answers would fail the message length check and silently vanish
+    // from memory, leaving the next turn without the bot's side; keep the
+    // start of them instead.
+    const ASSISTANT_MEMORY_LIMIT = 3900;
+    const remembered =
+      role === 'assistant' && typeof content === 'string' && content.length > ASSISTANT_MEMORY_LIMIT
+        ? `${content.slice(0, ASSISTANT_MEMORY_LIMIT)}…`
+        : content;
+
     // Validate message content
-    const contentValidation = InputValidator.validateAndSanitize(content, {
+    const contentValidation = InputValidator.validateAndSanitize(remembered, {
       type: 'message',
       strict: false,
     });
@@ -198,11 +207,7 @@ class ConversationManager {
     history.push({ role, content: contentValidation.sanitized });
 
     // Trim history if it exceeds the max length
-    // Use a smaller history size on Pi to save memory
-    const maxLength =
-      config.PI_OPTIMIZATIONS && config.PI_OPTIMIZATIONS.ENABLED
-        ? config.MAX_HISTORY * 2 // Use MAX_HISTORY*2 for Pi optimization
-        : config.MAX_HISTORY; // Use MAX_HISTORY for regular operation
+    const maxLength = config.MAX_HISTORY;
 
     if (history.length > maxLength) {
       // Remove excess messages from the beginning (oldest first)

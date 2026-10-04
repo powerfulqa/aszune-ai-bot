@@ -18,27 +18,6 @@ function _getPiSettings() {
   return defaultSettings;
 }
 
-function _getPiOptimizationSettings() {
-  return _getPiSettings();
-}
-
-function buildRequestPayload(messages, options = {}) {
-  const payload = {
-    model: options.model || config.API.PERPLEXITY.DEFAULT_MODEL,
-    messages,
-    max_tokens: options.maxTokens || config.API.PERPLEXITY.MAX_TOKENS.CHAT,
-    temperature: options.temperature || config.API.PERPLEXITY.DEFAULT_TEMPERATURE,
-  };
-
-  const piOptSettings = _getPiOptimizationSettings();
-  if (options.stream && piOptSettings.enabled && !piOptSettings.lowCpuMode) {
-    payload.stream = true;
-  }
-
-  return payload;
-}
-
 module.exports = {
-  buildRequestPayload,
   getPiSettings: _getPiSettings,
 };

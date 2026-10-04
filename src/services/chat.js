@@ -437,6 +437,26 @@ async function loadConversationHistory(userId, messageContent) {
 }
 
 /**
+ * Show the typing indicator now and refresh it until the returned stop
+ * function is called. Typing failures are cosmetic and never thrown.
+ * @param {Object} channel - Discord.js text channel
+ * @returns {Function} stop function
+ */
+function startTyping(channel) {
+  const send = () => {
+    try {
+      Promise.resolve(channel?.sendTyping?.()).catch(() => {});
+    } catch {
+      // ignore: typing is cosmetic
+    }
+  };
+  send();
+  const timer = setInterval(send, 8000);
+  timer.unref?.();
+  return () => clearInterval(timer);
+}
+
+/**
  * Handle an incoming chat message
  * @param {Object} message - Discord.js message object
  * @returns {Promise<void>}
@@ -450,14 +470,16 @@ async function handleChatMessage(message) {
 
   processingMessages.add(message.id);
   const startTime = Date.now();
+  let stopTyping = () => {};
 
   try {
     // Process the incoming message
     const processedData = await processUserMessage(message);
     if (!processedData) return null;
 
-    // Show typing indicator
-    message.channel.sendTyping();
+    // Keep the typing indicator alive for the whole agent run (it lapses
+    // after ~10s, and runs with web search often take longer).
+    stopTyping = startTyping(message.channel);
 
     const userId = processedData.userId;
     const messageContent = processedData.sanitizedContent;
@@ -481,6 +503,7 @@ async function handleChatMessage(message) {
   } catch (error) {
     await handleChatError(error, startTime, null, message);
   } finally {
+    stopTyping();
     // Always remove message from processing set
     processingMessages.delete(message.id);
   }
@@ -585,12 +608,13 @@ async function processAIResponse(message, processedData, userId) {
     // Add emojis to response
     const finalResponse = emojiManager.addEmojisToResponse(formattedReply);
 
-    // Add bot's reply to the conversation history
-    conversationManager.addMessage(processedData.userId, 'assistant', finalResponse);
+    // Remember the answer itself, not the display decoration (emoji suffixes),
+    // so later turns replay what the model actually said.
+    conversationManager.addMessage(processedData.userId, 'assistant', processedResponse);
 
     // Store bot response in database
     try {
-      databaseService.addBotResponse(userId, finalResponse);
+      databaseService.addBotResponse(userId, processedResponse);
     } catch (dbError) {
       logger.warn('Failed to store bot response:', dbError.message);
     }
