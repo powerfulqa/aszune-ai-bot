@@ -51,9 +51,9 @@ With Pi optimisations enabled, AI requests share one connection throttler and re
 configured `PI_MAX_CONNECTIONS` limit. At most 20 additional requests can wait in the queue.
 Excess requests receive a retry-later error without reaching the AI provider.
 
-Queued requests expire after `RATE_LIMITS.API_TIMEOUT_MS` (30 seconds by default), freeing their
-queue slot without executing later. This waiting deadline is separate from the HTTP timeout,
-which starts when the request begins. Requests already running are not cancelled by clearing the
+Queued requests expire after `RATE_LIMITS.API_TIMEOUT_MS` (120 seconds by default), freeing
+their queue slot without executing later. This waiting deadline is separate from the HTTP timeout
+(the same 120 seconds), which starts when the request begins. Requests already running are not cancelled by clearing the
 waiting queue; queued callers are rejected rather than left waiting indefinitely.
 
 Non-Pi request routing is unchanged. After a burst, ordinary requests should resume as slots

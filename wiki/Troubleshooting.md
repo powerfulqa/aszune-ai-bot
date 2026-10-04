@@ -4,12 +4,14 @@ Quick solutions for common Aszune AI Bot issues.
 
 ## Quick Fixes
 
-| Issue               | Solution                                                  |
-| ------------------- | --------------------------------------------------------- |
-| Bot offline         | Check `.env` token, restart with `pm2 restart aszune-ai`  |
-| No command response | Enable Message Content Intent in Discord Developer Portal |
-| API errors          | Verify `PERPLEXITY_API_KEY` in `.env`                     |
-| Missing permissions | Re-invite bot with required permissions                   |
+| Issue                 | Solution                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Bot offline           | Check `.env` token, restart with `pm2 restart aszune-ai`                              |
+| No command response   | Enable Message Content Intent in Discord Developer Portal                             |
+| API errors            | Verify `PERPLEXITY_API_KEY` in `.env`                                                 |
+| Missing permissions   | Re-invite bot with required permissions                                               |
+| `.env` change ignored | PM2 kept the old value, see [Settings not taking effect](#settings-not-taking-effect) |
+| `/diag` not listed    | Reload Discord (Ctrl+R) so it fetches the new command list                            |
 
 ## Connection Issues
 
@@ -44,6 +46,28 @@ reported without retrying or switching ports.
 1. **Verify API key** in `.env`
 2. **Check quota** - May have reached usage limits
 3. **Network** - Ensure server can reach Perplexity API
+4. **Run `/diag live:true`** (owners only) - sends a tiny real request and shows the last call's
+   latency, model, tokens, cost or the exact error
+
+User-facing messages:
+
+- "The AI took too long to answer": the request passed the 120-second timeout
+  (`RATE_LIMITS.API_TIMEOUT_MS`); agent runs that search and read pages are usually 5-60 seconds
+- "The AI could not finish an answer": the agent returned no text (step or token budget used up);
+  try again or rephrase
+
+### Settings Not Taking Effect
+
+PM2 stores the environment from when the bot was first started, and `dotenv` never overrides a
+variable that already exists, so an edited `.env` can be ignored. `/diag` shows this under **Config
+source**. Fix it with `VAR=value pm2 restart aszune-ai --update-env` followed by `pm2 save`.
+
+### `/diag` Missing or Refused
+
+- The bot registers commands globally at start-up; if `/diag` is not offered, reload Discord
+  (Ctrl+R, or restart the mobile app) and check Server Settings → Integrations for command
+  overrides.
+- "owner-only": add the Discord user ID from that reply to `BOT_OWNER_IDS` and restart as above.
 
 ## Performance Issues
 

@@ -1,15 +1,15 @@
 # Coverage Status (Single Source of Truth)
 
-Last updated: 2025-01-17 (v1.10.0)
+Last updated: 2026-10-04 (v2.3.0)
 
 ## Current Local Metrics
 
-- Tests: 1,708+ total / 1,708+ passing / 14 skipped
-- Test Suites: 178 total
-- Statements: ~69%
-- Branches: ~82%
-- Functions: ~68%
-- Lines: ~69%
+- Tests: 2,036 total / 2,036 passing / 0 skipped
+- Test Suites: 193 total
+- Statements: 81.9%
+- Branches: 86.1%
+- Functions: 78.3%
+- Lines: 81.9%
 
 These reflect the latest full `npm test` execution on the `main` branch.
 
@@ -19,12 +19,12 @@ These reflect the latest full `npm test` execution on the `main` branch.
 - v1.8.0 policy: Dual-threshold enforcement (80% critical files / 65% global baseline)
 - Strategy: Protect reliability hotspots while iteratively raising global coverage
 
-## Acceptance Thresholds (v1.10.0 Policy)
+## Acceptance Thresholds (current)
 
-| Tier           | Statements | Branches | Action                            |
-| -------------- | ---------- | -------- | --------------------------------- |
-| Critical Gate  | ≥80%       | n/a\*    | Enforced per critical file config |
-| Global Minimum | ≥65%       | n/a\*    | Baseline satisfied                |
+| Tier           | Gate                                                 | Source                                    |
+| -------------- | ---------------------------------------------------- | ----------------------------------------- |
+| Global Minimum | ≥70% statements, branches, functions and lines       | `jest.config.js`                          |
+| Critical Gate  | Per-file thresholds on critical files (76-80% stmts) | `config/jest.critical-coverage.config.js` |
 
 ## Update Procedure
 
@@ -43,8 +43,7 @@ docs: update coverage status (YYYY-MM-DD)
 ## Communication Pattern
 
 - All other README / wiki files should reference this file instead of embedding raw percentages.
-- Historical release notes should remain unchanged to preserve accuracy at time of release. |
-  Regressing | <65% | <60% | Investigate immediately; potential CI fail condition |
+- Historical release notes should remain unchanged to preserve accuracy at time of release.
 
 - Branch coverage monitored (reporting only) until statement/line stability increases.
 

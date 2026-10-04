@@ -58,8 +58,8 @@ CREATE TABLE conversation_history (
 
 #### Automatic Cleanup Trigger
 
-- Maintains maximum 10 messages per user
-- Automatically removes oldest messages when limit exceeded
+- Maintains maximum 60 messages per user (`limit_conversation_history`, recreated at start-up)
+- Automatically removes the oldest messages (by insertion order) when the limit is exceeded
 - Preserves conversation flow while managing storage
 
 ## Key Features
@@ -69,8 +69,8 @@ CREATE TABLE conversation_history (
 - **User Messages**: All user messages are stored with timestamps
 - **Bot Responses**: Bot replies are stored with `[BOT]` prefix for identification
 - **Role-Based Storage**: Enhanced conversation_history table separates user/assistant messages
-- **History Reconstruction**: `getConversationHistory()` retrieves chronologically ordered
-  conversations
+- **History Reconstruction**: `getConversationHistory()` returns the most recent N messages in
+  chronological order (fixed in v2.3.0: it previously returned the oldest N)
 - **History Loading**: Recent conversation history is loaded when conversation manager history is
   sparse
 - **Seamless Integration**: Works transparently with existing conversation management
@@ -123,7 +123,8 @@ DB_PATH=./custom/path/bot.db
 - `getUserMessages(userId, limit = 10)`: Gets user messages (most recent first)
 - `addUserMessage(userId, message)`: Adds user message to history and conversation_history table
 - `addBotResponse(userId, response)`: Adds bot response with `[BOT]` prefix to both tables
-- `getConversationHistory(userId, limit = 20)`: Gets complete conversation with role separation
+- `getConversationHistory(userId, limit = DATABASE_CONVERSATION_LIMIT)`: Gets the most recent
+  `limit` messages (default 30) in chronological order, with role separation
 - `ensureUserExists(userId)`: Ensures user exists in user_stats (handles foreign keys)
 
 #### Reminder Management

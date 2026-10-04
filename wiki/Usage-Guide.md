@@ -7,50 +7,53 @@ This guide explains how to interact with Aszune AI Bot and get the most out of i
 Aszune AI Bot uses **slash commands** (prefix `/`). Legacy `!` commands are supported for backward
 compatibility but new features should use slash commands.
 
-**Current Version:** v1.11.0 • 1,800+ tests passing • 70%+ coverage
+**Current Version:** v2.3.0 • 2,000+ tests passing • 70%+ coverage
 
 ## Available Commands
 
 ### Core Commands
 
-| Command                                                              | Description                                                 |
-| -------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `/help`                                                              | Shows a list of available commands and usage                |
-| `/clearhistory`                                                      | Clears your conversation history                            |
-| `/summary`                                                           | Summarises your current conversation in UK English          |
-| `/summarise <text>`                                                  | Summarises any provided text in UK English                  |
-| `/stats`                                                             | Shows your usage stats (messages sent, summaries requested) |
-| Legacy: `!help`, `!clearhistory`, `!summary`, `!summarise`, `!stats` | Limited support                                             |
+| Command             | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `/help`             | Shows a list of available commands and usage                |
+| `/clearhistory`     | Clears your conversation history                            |
+| `/summary`          | Summarises your current conversation in UK English          |
+| `/summarise <text>` | Summarises any provided text in UK English                  |
+| `/stats`            | Shows your usage stats (messages sent, summaries requested) |
 
 ### Analytics Commands (NEW)
 
-| Command                                          | Description                                                     |
-| ------------------------------------------------ | --------------------------------------------------------------- |
-| `/analytics`                                     | Show Discord server analytics and performance insights          |
-| `/dashboard`                                     | Display comprehensive performance dashboard with real-time data |
-| `/resources`                                     | View resource optimisation status and recommendations           |
-| Legacy: `!analytics`, `!dashboard`, `!resources` | Limited support                                                 |
+| Command      | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `/analytics` | Show Discord server analytics and performance insights          |
+| `/dashboard` | Display comprehensive performance dashboard with real-time data |
+| `/resources` | View resource optimisation status and recommendations           |
 
 ### Reminder Commands (NEW)
 
-| Command                                            | Description                                            |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| `/remind <time> <message>`                         | Set a reminder for a specific time with custom message |
-| `/reminders`                                       | List all your active reminders                         |
-| `/cancelreminder <index>`                          | Cancel a specific reminder by index number             |
-| Legacy: `!remind`, `!reminders`, `!cancelreminder` | Limited support                                        |
+| Command                    | Description                                            |
+| -------------------------- | ------------------------------------------------------ |
+| `/remind <time> <message>` | Set a reminder for a specific time with custom message |
+| `/reminders`               | List all your active reminders                         |
+| `/cancelreminder <id>`     | Cancel a specific reminder by its ID                   |
+
+### Owner Commands (NEW in v2.3.0)
+
+| Command        | Description                                                               |
+| -------------- | ------------------------------------------------------------------------- |
+| `/diag [live]` | Private diagnostics for owners in `BOT_OWNER_IDS` (see Command Reference) |
 
 ## Asking Questions
 
 To ask the bot a question about gaming lore, game logic, guides, or advice:
 
-1. **Direct mention**: Mention the bot followed by your question
+1. **Just type**: The bot answers every message in channels it can read, so no mention is needed
 
    ```text
-   @AszuneBot What's the best build for a mage in Elden Ring?
+   What's the best build for a mage in Elden Ring?
    ```
 
-2. **Reply to the bot**: Reply to one of the bot's messages with your follow-up question
+2. **Follow up**: Keep chatting; the bot remembers the last 30 messages of your conversation
 
 ## Long Responses
 
@@ -91,6 +94,15 @@ Becomes:
 The bot maintains a conversation history for each user, allowing it to remember context from
 previous messages. This enables more coherent and contextual responses over time.
 
+- The last 30 messages (yours and the bot's) are sent with every new question.
+- A conversation carries on after a pause of up to 2 hours; after that the next message starts
+  fresh. History is stored in the database, so a bot restart within that window keeps your context.
+- The bot searches the web only when an answer needs it, and cites sources inline as `[1]`, `[2]`
+  with a numbered, linked source list underneath.
+- Paste a link and the bot can read the page before answering questions about it.
+- Ask "what model are you?" and it will tell you the API, preset and model it runs on (straight
+  after a restart it can only name the preset until its first reply comes back).
+
 ### Managing Your History
 
 If you want to start a new conversation or clear your history:
@@ -112,13 +124,7 @@ You can ask the bot to summarize your current conversation:
 You can also ask the bot to summarize any text:
 
 ```text
-/summarise <your text here>
-```
-
-or
-
-```text
-!summerise <your text here>
+/summarise text:<your text here>
 ```
 
 The bot will generate a concise summary in UK English.
@@ -220,8 +226,8 @@ This shows all your active reminders in chronological order.
 #### Cancelling Reminders
 
 ```text
-/reminders  # First see the list with index numbers
-/cancelreminder 1  # Cancel the first reminder
+/reminders  # First see the list; each reminder's ID is shown in bold
+/cancelreminder id:42  # Cancel reminder 42
 ```
 
 ### Reminder Features

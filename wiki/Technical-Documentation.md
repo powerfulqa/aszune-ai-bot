@@ -351,65 +351,59 @@ function handleCommand(message) {
 
 ### 3. Perplexity API Client
 
-Manages communication with the Perplexity AI API.
+Manages communication with the Perplexity **Agent API** (`POST /v1/agent`), the only chat path since
+Sonar Chat Completions was retired on 2026-09-27. `ApiClient` (undici) builds the request via
+`perplexity-secure/helpers/agentApiAdapter.js` and normalises the reply back into a
+`choices[0].message.content` shape for the rest of the pipeline.
 
 ```javascript
-// Simplified example
-const axios = require('axios');
+// Simplified example of the request the bot sends
+const payload = {
+  preset: process.env.AGENT_PRESET || 'medium', // picks model, reasoning, steps, default tools
+  // model: 'anthropic/claude-sonnet-5-5',        // only when AGENT_MODEL is set
+  // reasoning: { effort: 'low' },                // only when AGENT_REASONING_EFFORT is set
+  instructions: 'Today is 2026-10-04.\n\n<system prompt>\n\n<which API/preset/model it runs on>',
+  input: history.map((m) => ({ type: 'message', role: m.role, content: m.content })),
+  tools: [{ type: 'web_search' }, { type: 'fetch_url' }], // fetch_url off when AGENT_FETCH_URL=false
+  max_output_tokens: 4096,
+};
 
-async function sendChatCompletion(messages) {
-  try {
-    const response = await axios.post(
-      'https://api.perplexity.ai/chat/completions',
-      {
-        model: 'sonar',
-        messages: messages,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-        },
-      }
-    );
-
-    return response.data.choices[0].message.content;
-  } catch (error) {
-    console.error('Error calling Perplexity API:', error);
-    throw error;
-  }
-}
+const response = await request('https://api.perplexity.ai/v1/agent', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload),
+  signal: AbortSignal.timeout(120000), // agent runs with search and page fetches can take 10-60s
+});
 ```
+
+Notes:
+
+- No `temperature`: the API rejects it alongside a preset.
+- Answer text comes from `output_text` or the `output[]` message items; source URLs come from
+  `search_results`/`fetch_url` results and annotations, rendered as a numbered, linked footer.
+- The client keeps the model Perplexity reports (so the bot can say what it runs on) and a summary
+  of the last call (latency, tokens, cost, tool use) for the `/diag` command.
 
 ### 4. Conversation Manager
 
-Tracks and manages user conversation history.
+Tracks and manages per-user conversation history (`src/utils/conversation.js`, shared via
+`src/state/conversationManager.js`), persisted to SQLite.
+
+- The last `MAX_HISTORY` (30) messages are replayed to the model on every turn.
+- The database keeps the newest 60 messages per user; after a restart the newest ones are reloaded
+  if the user's last message was within `SESSION_TIMEOUT_MS` (2 hours).
+- Assistant replies are stored as the model's answer (not the emoji-decorated display text), and
+  replies over the message length limit are truncated rather than dropped.
 
 ```javascript
 // Simplified example
-const userConversations = new Map();
-const MAX_HISTORY_LENGTH = 10;
-
-function addMessageToHistory(userId, role, content) {
-  if (!userConversations.has(userId)) {
-    userConversations.set(userId, []);
-  }
-
-  const history = userConversations.get(userId);
+function addMessage(userId, role, content) {
+  const history = conversations.get(userId) ?? [];
   history.push({ role, content });
-
-  // Trim history if it exceeds maximum length
-  if (history.length > MAX_HISTORY_LENGTH) {
-    history.shift();
+  if (history.length > config.MAX_HISTORY) {
+    history.splice(0, history.length - config.MAX_HISTORY); // drop the oldest
   }
-}
-
-function getConversationHistory(userId) {
-  return userConversations.get(userId) || [];
-}
-
-function clearConversationHistory(userId) {
-  userConversations.set(userId, []);
+  conversations.set(userId, history);
 }
 ```
 
@@ -722,7 +716,17 @@ The bot uses environment variables for configuration, stored in a `.env` file:
 ```env
 DISCORD_BOT_TOKEN=your_discord_bot_token_here
 PERPLEXITY_API_KEY=your_perplexity_api_key_here
+
+# Optional Perplexity Agent API tuning
+AGENT_PRESET=medium          # fast | low | medium | high | xhigh
+AGENT_MODEL=                 # pin a model on top of the preset
+AGENT_REASONING_EFFORT=      # minimal | low | medium | high
+AGENT_FETCH_URL=true         # let the agent read pasted links
+SEARCH_DOMAIN_FILTER=        # comma-separated allowlist for web search
+BOT_OWNER_IDS=               # Discord user IDs allowed to run /diag
 ```
+
+See `.env.example` for the full list.
 
 ## Testing Framework
 

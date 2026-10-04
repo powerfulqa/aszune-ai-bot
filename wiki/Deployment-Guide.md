@@ -8,7 +8,7 @@ PM2 is the supported process manager for keeping the bot running reliably, inclu
 
 ### Prerequisites
 
-- Node.js **>= 20.18.1** (matches the repository `package.json` engines)
+- Node.js **>= 22.19.0** (matches the repository `package.json` engines)
 - A Discord bot token and Perplexity API key
 - A `.env` file (see below)
 
@@ -26,6 +26,10 @@ cp .env.example .env
 
 - `DISCORD_BOT_TOKEN`
 - `PERPLEXITY_API_KEY`
+
+Optional: `AGENT_PRESET` (default `medium`), `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
+`AGENT_FETCH_URL`, `SEARCH_DOMAIN_FILTER` and `BOT_OWNER_IDS` (who may run `/diag`). See
+`.env.example`.
 
 Do **not** put secrets in `ecosystem.config.js`, shell scripts, or source code.
 
@@ -64,9 +68,23 @@ pm2 save
 - **Restart bot**: `pm2 restart aszune-ai`
 - **Stop bot**: `pm2 stop aszune-ai`
 
+### Changing settings after the first start
+
+PM2 stores a copy of the environment the bot was started with, and `dotenv` never overrides a
+variable that is already set. So editing `.env` and running a plain `pm2 restart` may leave the old
+value in effect. To change a setting:
+
+```bash
+AGENT_PRESET=high pm2 restart aszune-ai --update-env
+pm2 save
+```
+
+Run `/diag` afterwards: its **Config source** section shows ✅ when the running values match `.env`,
+or names each setting PM2 is still overriding.
+
 ## Server Requirements
 
-- Node.js **>= 20.18.1**
+- Node.js **>= 22.19.0**
 - 1GB+ RAM recommended (more helps on larger servers)
 - 1GB+ free disk space
 - Stable internet connection

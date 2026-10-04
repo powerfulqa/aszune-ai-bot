@@ -1,6 +1,6 @@
 # Command Reference
 
-All commands available in Aszune AI Bot v1.11.0.
+All commands available in Aszune AI Bot v2.3.0.
 
 ## Web Dashboard
 
@@ -18,6 +18,30 @@ deprecated.
 | `/userinfo`   | Display detailed information about a user             |
 | `/serverinfo` | Display detailed information about the current server |
 
+### Owner Commands (NEW in v2.3.0)
+
+| Command        | Description                                                       |
+| -------------- | ----------------------------------------------------------------- |
+| `/diag [live]` | Private diagnostics: build, running AI settings and last API call |
+
+`/diag` only works for Discord user IDs listed in `BOT_OWNER_IDS`, and its reply is visible only to
+you (ephemeral). Anyone else gets a private reply containing their own user ID, ready to add to
+`BOT_OWNER_IDS`. There is no `!` form.
+
+The report has these sections:
+
+- **Build**: version, git commit, Node version, uptime, host, memory
+- **AI settings (running)**: endpoint, preset, model (pinned, reported by Perplexity, or not yet
+  known after a restart), reasoning, tools, token and time limits, history, session window, domain
+  filter
+- **Config source**: confirms the running `AGENT_*` / `SEARCH_DOMAIN_FILTER` values match `.env`, or
+  flags each one where PM2's stored environment is overriding `.env` (with the fix)
+- **Last API call**: when, latency, model, turns, tokens (including cached), cost, tool use and
+  number of sources, or the error
+- **Your conversation**: your messages in memory and stored in the database
+- **Live check** (only with `live:true`): sends a tiny real request (a fraction of a cent) and
+  reports it the same way
+
 ### Reminder Commands (NEW in v1.7.0)
 
 | Command           | Description                                       |
@@ -26,7 +50,7 @@ deprecated.
 | `/reminders`      | List all your active reminders                    |
 | `/cancelreminder` | Cancel a specific reminder by ID                  |
 
-Legacy forms (`!remind`, `!reminders`, `!cancelreminder`) still work but are discouraged.
+Text (`!`) commands have been removed; every command is a slash command.
 
 ## Core Commands
 
@@ -34,7 +58,6 @@ Legacy forms (`!remind`, `!reminders`, `!cancelreminder`) still work but are dis
 
 **Usage:**
 
-- `!help`
 - `/help`
 
 **Description:** Displays a list of all available commands and their basic usage information.
@@ -42,18 +65,29 @@ Legacy forms (`!remind`, `!reminders`, `!cancelreminder`) still work but are dis
 **Example:**
 
 ```
-!help
+/help
 ```
 
 **Output:**
 
 ```
-Available commands:
-!help - Show this help message
-!clearhistory - Clear your conversation history
-!summary - Summarise your current conversation
-!summarise <text> or !summerise <text> - Summarise the provided text
-!stats - Show your usage statistics
+Aszai Bot Commands:
+/help - Show this help message
+/clearhistory - Clear your conversation history (keeps your stats)
+/summary - Summarise your current conversation
+/summarise <text> - Summarise provided text
+/stats - Show your usage stats
+/analytics - Show Discord server analytics
+/dashboard - Show performance dashboard
+/resources - Show resource optimization status
+/cache - Show cache statistics
+/remind <time> <message> - Set a reminder
+/reminders - List your active reminders
+/cancelreminder <id> - Cancel a specific reminder
+/userinfo [user] - Show detailed user information
+/serverinfo - Show detailed server information
+/diag [live] - Bot diagnostics (owner only, private)
+Simply chat as normal to talk to the bot!
 ```
 
 ---
@@ -62,7 +96,6 @@ Available commands:
 
 **Usage:**
 
-- `!clearhistory`
 - `/clearhistory`
 
 **Description:** Clears your personal conversation history with the bot, starting a fresh
@@ -71,7 +104,7 @@ conversation context.
 **Example:**
 
 ```
-!clearhistory
+/clearhistory
 ```
 
 **Output:**
@@ -86,7 +119,6 @@ Your conversation history has been cleared. What would you like to chat about?
 
 **Usage:**
 
-- `!summary`
 - `/summary`
 
 **Description:** Generates a summary of your current conversation with the bot in UK English.
@@ -94,7 +126,7 @@ Your conversation history has been cleared. What would you like to chat about?
 **Example:**
 
 ```
-!summary
+/summary
 ```
 
 **Output:**
@@ -115,16 +147,13 @@ Your conversation history has been cleared. What would you like to chat about?
 
 **Usage:**
 
-- `!summarise <text>`
-- `!summerise <text>`
-
 **Description:** Summarises any provided text in UK English. This command accepts arbitrary text and
 generates a concise summary.
 
 **Example:**
 
 ```
-!summarise The Elder Scrolls V: Skyrim is an open-world action role-playing video game developed by Bethesda Game Studios and published by Bethesda Softworks. It is the fifth main installment in The Elder Scrolls series, following The Elder Scrolls IV: Oblivion, and was released worldwide for Microsoft Windows, PlayStation 3, and Xbox 360 on November 11, 2011. The game's main story revolves around the player's character, the Dragonborn, on their quest to defeat Alduin the World-Eater, a dragon who is prophesied to destroy the world.
+/summarise text:The Elder Scrolls V: Skyrim is an open-world action role-playing video game developed by Bethesda Game Studios and published by Bethesda Softworks. It is the fifth main installment in The Elder Scrolls series, following The Elder Scrolls IV: Oblivion, and was released worldwide for Microsoft Windows, PlayStation 3, and Xbox 360 on November 11, 2011. The game's main story revolves around the player's character, the Dragonborn, on their quest to defeat Alduin the World-Eater, a dragon who is prophesied to destroy the world.
 ```
 
 **Output:**
@@ -144,7 +173,6 @@ generates a concise summary.
 
 **Usage:**
 
-- `!stats`
 - `/stats`
 
 **Description:** Displays your personal usage statistics, including the number of messages sent and
@@ -153,7 +181,7 @@ summaries requested.
 **Example:**
 
 ```
-!stats
+/stats
 ```
 
 **Output:**
@@ -172,7 +200,6 @@ Summaries requested: 7
 
 **Usage:**
 
-- `!userinfo [user]`
 - `/userinfo [user]`
 
 **Description:** Displays comprehensive information about a Discord user including account details,
@@ -214,7 +241,6 @@ server presence, roles, badges, and activity.
 
 **Usage:**
 
-- `!serverinfo`
 - `/serverinfo`
 
 **Description:** Displays comprehensive information about the current Discord server including
@@ -254,7 +280,6 @@ member statistics, channels, roles, boost status, and security settings.
 
 **Usage:**
 
-- `!analytics`
 - `/analytics`
 
 **Description:** Displays comprehensive Discord server analytics including user engagement
@@ -287,7 +312,6 @@ statistics, command usage patterns, and system performance metrics.
 
 **Usage:**
 
-- `!dashboard`
 - `/dashboard`
 
 **Description:** Displays a comprehensive performance dashboard with real-time system status,
@@ -319,7 +343,6 @@ resource utilization, and operational health metrics.
 
 **Usage:**
 
-- `!resources`
 - `/resources`
 
 **Description:** Displays resource optimisation status and recommendations for system performance
@@ -345,7 +368,6 @@ improvements.
 
 **Usage:**
 
-- `!cache`
 - `/cache`
 
 **Description:** Displays comprehensive cache statistics and performance metrics for the bot's
@@ -404,7 +426,6 @@ Configuration: Strategy: hybrid, Uptime: 28s
 
 **Usage:**
 
-- `!remind <time> <message>`
 - `/remind <time> <message>`
 
 **Description:** Sets a reminder for a specific time with a custom message. The bot will ping you
@@ -419,9 +440,9 @@ when the reminder time arrives.
 **Examples:**
 
 ```
-!remind in 5 minutes Check the oven
+/remind time:in 5 minutes message:Check the oven
 /remind tomorrow at 3pm Team meeting
-!remind next friday Release day!
+/remind time:next friday message:Release day!
 ```
 
 **Output:**
@@ -444,7 +465,6 @@ when the reminder time arrives.
 
 **Usage:**
 
-- `!reminders`
 - `/reminders`
 
 **Description:** Lists all your active reminders with their scheduled times and messages.
@@ -452,7 +472,7 @@ when the reminder time arrives.
 **Example:**
 
 ```
-!reminders
+/reminders
 ```
 
 **Output:**
@@ -476,37 +496,34 @@ Your active reminders:
 
 **Usage:**
 
-- `!cancelreminder <index>`
-- `/cancelreminder <index>`
+- `/cancelreminder id:<id>`
 
-**Description:** Cancels a specific reminder by its index number from the reminders list.
+**Description:** Cancels a specific reminder by its ID.
 
 **Parameters:**
 
-- `<index>`: The number of the reminder to cancel (from `!reminders` list)
+- `id`: The reminder ID, shown in bold next to each reminder in `/reminders`
 
 **Example:**
 
 ```
-!reminders
-Your active reminders:
-• 1. Tomorrow at 15:00 - Team meeting
-• 2. Friday at 18:00 - Release day!
+/reminders
+**42**: Team meeting
+⏰ in 3 hours (Saturday 4 October 2026 18:00)
 
-!cancelreminder 1
+/cancelreminder id:42
 ```
 
 **Output:**
 
 ```
-✅ Reminder cancelled: Team meeting
+Reminder 42 has been cancelled.
 ```
 
 **Notes:**
 
-- Use `!reminders` first to see the index numbers
+- Use `/reminders` first to see the IDs
 - Only you can cancel your own reminders
-- Cancelled reminders are permanently removed
 
 ---
 
@@ -620,8 +637,8 @@ responding further.
 
 ### v1.7.0 - Reminder System & Natural Language Processing
 
-- **Reminder Commands**: Complete reminder system with `!remind`, `!reminders`, and
-  `!cancelreminder`
+- **Reminder Commands**: Complete reminder system with `/remind`, `/reminders`, and
+  `/cancelreminder`
 - **Natural Language Reminders**: AI-powered reminder detection in conversations
 - **Time Parsing**: Advanced chrono-node integration for natural language time expressions
 - **Database Integration**: SQLite-based reminder persistence with automatic table creation
