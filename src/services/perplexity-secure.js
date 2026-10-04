@@ -18,10 +18,7 @@ const { CacheManager } = require('./cache-manager');
 const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
 const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
-const {
-  buildRequestPayload,
-  getPiSettings,
-} = require('./perplexity-secure/helpers/requestBuilder');
+const { getPiSettings } = require('./perplexity-secure/helpers/requestBuilder');
 const {
   handleApiResponse,
   extractResponseContent,
@@ -62,6 +59,33 @@ const lazyLoadModule = (importPath) => {
 
 // Lazy load optimization utilities
 const getCachePruner = lazyLoadModule('../utils/cache-pruner');
+
+/**
+ * Build a numbered source footer matching the inline [N] markers.
+ * Lists the sources the answer actually cites; when it cites none, the first
+ * few sources the agent used.
+ * @param {string} content - Answer text (with [N] markers)
+ * @param {Array<string>} citations - Source URLs in result order (1-based ids)
+ * @returns {string} Footer to append, or '' when there are no sources
+ */
+function formatCitationFooter(content, citations) {
+  if (!Array.isArray(citations) || citations.length === 0) return '';
+  const cited = new Set([...String(content).matchAll(/\[(\d{1,2})\]/g)].map((m) => Number(m[1])));
+  const numbers = cited.size > 0 ? [...cited].sort((a, b) => a - b) : [1, 2, 3, 4, 5];
+  const links = numbers
+    .filter((n) => n >= 1 && n <= citations.length)
+    .slice(0, 8)
+    .map((n) => {
+      try {
+        const host = new URL(citations[n - 1]).hostname.replace(/^www\./, '');
+        return `[${n}] [${host}](${citations[n - 1]})`;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  return links.length > 0 ? `\n\n*Sources: ${links.join(' · ')}*` : '';
+}
 
 /**
  * Client for the Perplexity API
@@ -260,17 +284,6 @@ class PerplexityService {
     return options.caching !== false && (process.env.NODE_ENV === 'test' || cacheConfig.enabled);
   }
 
-  /**
-   * Build API request payload
-   * @param {Array} messages - The messages to send
-   * @param {Object} options - Request options
-   * @returns {Object} - The request payload
-   * @private
-   */
-  _buildRequestPayload(messages, options) {
-    return buildRequestPayload(messages, options);
-  }
-
   async _handleApiResponse(response) {
     return handleApiResponse(response);
   }
@@ -294,7 +307,6 @@ class PerplexityService {
    * @returns {Promise<Object>} API response
    */
   async sendChatRequest(messages, options = {}) {
-    // Endpoint follows the Agent-API flag (defaults to Chat Completions)
     const endpoint = this.apiClient.getChatEndpoint();
     const requestPayload = this.apiClient.buildRequestPayload(messages, options);
 
@@ -354,6 +366,14 @@ class PerplexityService {
       {
         condition: () => error.statusCode >= 500,
         message: 'The service is temporarily unavailable. Please try again later.',
+      },
+      {
+        condition: () => error.message?.includes('timed out'),
+        message: 'The AI took too long to answer. Please try again.',
+      },
+      {
+        condition: () => error.message?.includes('empty answer'),
+        message: 'The AI could not finish an answer. Try rephrasing or asking again.',
       },
       {
         condition: () => error.message?.includes('Network'),
@@ -573,23 +593,7 @@ class PerplexityService {
 
     let content = this.responseProcessor.extractResponseContent(response);
 
-    // Append citations as a compact footer if available
-    if (response.citations && Array.isArray(response.citations) && response.citations.length > 0) {
-      const citationDomains = response.citations
-        .slice(0, 5)
-        .map((url) => {
-          try {
-            return new URL(url).hostname.replace('www.', '');
-          } catch {
-            return null;
-          }
-        })
-        .filter(Boolean);
-
-      if (citationDomains.length > 0) {
-        content += `\n\n*Sources: ${citationDomains.join(', ')}*`;
-      }
-    }
+    content += formatCitationFooter(content, response.citations);
 
     // Save to cache if enabled
     if (shouldUseCache) {
@@ -1097,3 +1101,4 @@ class PerplexityService {
 }
 
 module.exports = new PerplexityService();
+module.exports.formatCitationFooter = formatCitationFooter;

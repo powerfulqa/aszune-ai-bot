@@ -69,7 +69,7 @@ function setupIndexCriticalMocks() {
       PERPLEXITY: {
         BASE_URL: 'https://api.perplexity.ai',
         ENDPOINTS: {
-          CHAT_COMPLETIONS: '/chat/completions',
+          AGENT: '/v1/agent',
         },
       },
     },

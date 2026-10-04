@@ -1,27 +1,24 @@
 /**
  * Perplexity Agent API (`/v1/agent`) adapter.
  *
- * Enabled when `config.API.PERPLEXITY.USE_AGENT_API` is true (env
- * `USE_AGENT_API=true`). Sonar Chat Completions is being sunset (2026-09-27),
- * so this path migrates the bot onto the Agent API.
- *
- * Schema validated against the live endpoint (see the migration guide,
- * https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to):
+ * The Agent API is the bot's only chat path: Perplexity retired Sonar Chat
+ * Completions on 2026-09-27. Request shape per
+ * https://docs.perplexity.ai/docs/agent-api/presets and /conversation-state:
  *   request:
- *     - `messages` → `input` (array of `{type:'message', role, content}` items;
- *       a system message is lifted out into the top-level `instructions`)
- *     - `model: 'sonar'/'sonar-pro'` → `preset` ('fast'/'low'; this bot uses
- *       `config.API.PERPLEXITY.AGENT_PRESET`, default 'low' = sonar-pro tier)
- *     - `max_tokens` → `max_output_tokens`
- *     - web search is opt-in: `tools: [{type:'web_search', filters:{…}}]`
- *       (legacy `search_domain_filter`/`search_recency_filter` live under
- *       `filters`)
+ *     - `input` is the replayed conversation (`{type:'message', role, content}`
+ *       items); the system message is lifted into top-level `instructions`,
+ *       prefixed with today's date so web-search answers are anchored in time
+ *     - `preset` supplies defaults (model, reasoning, steps, tools); `model`
+ *       and `reasoning.effort` override it when configured
+ *     - `tools` merge per tool with the preset's own set: we list `web_search`
+ *       (with any domain/recency filters) and `fetch_url` so pasted links can
+ *       be read mid-conversation
+ *     - no `temperature`: the API rejects it alongside a preset
  *   response:
- *     - assistant text lives in `output[]` message items at
- *       `content[].text` (type `output_text`); `output_text` is not returned
- *       for the sonar tiers, so we read the `output[]` tree
- *     - citations are inconsistent: gathered from any `output[]` item's
- *       `results[].url` and from `content[].annotations[]` url fields
+ *     - assistant text lives in `output[]` message items at `content[].text`,
+ *       with `output_text` as a shortcut when present
+ *     - citations come from `output[]` items' `results[].url` and from
+ *       `content[].annotations[]` url fields
  *
  * The adapter normalises the response back into the Chat Completions shape
  * (`{ choices: [{ message: { content } }], citations, usage }`) so the rest of
@@ -31,28 +28,48 @@
  */
 
 /**
- * Build an Agent API request payload from a Chat-Completions-style messages
- * array and the model the caller resolved.
- * @param {Array<{role: string, content: string}>} messages
- * @param {string} model - Legacy model id ('sonar'/'sonar-pro') the caller chose
- * @param {Object} options - Request options (maxTokens, temperature, search…)
- * @param {Object} perplexityConfig - config.API.PERPLEXITY
- * @returns {Object} Agent request payload
+ * Describe the bot's own runtime so it can answer "what model are you?".
+ * The model is the pinned AGENT_MODEL, else the one Perplexity reported on the
+ * last response, else unknown until the first reply comes back.
+ * @param {string} preset
+ * @param {string} [model]
+ * @returns {string}
  */
-function buildAgentRequest(messages, model, options = {}, perplexityConfig = {}) {
-  const list = Array.isArray(messages) ? messages : [];
+function describeRuntime(preset, model) {
+  const modelText = model
+    ? `the model is ${model}`
+    : 'the preset picks the model (not reported yet)';
+  return (
+    `If someone asks what model, AI or API you use, tell them: you run on the Perplexity ` +
+    `Agent API (/v1/agent) with the "${preset}" preset, and ${modelText}.`
+  );
+}
 
-  // A system message becomes top-level `instructions`; the rest become the
-  // `input` conversation (multi-turn is replayed as message items).
-  const instructions = list
+/**
+ * Build the `instructions` string: today's date, the system messages, then a
+ * note on the runtime (API, preset, model).
+ * @param {Array<{role: string, content: string}>} list
+ * @param {Date} now
+ * @param {string} [runtime] - Output of describeRuntime
+ * @returns {string}
+ */
+function buildInstructions(list, now = new Date(), runtime = '') {
+  const system = list
     .filter((m) => m.role === 'system')
     .map((m) => m.content)
     .join('\n');
-  const input = list
-    .filter((m) => m.role !== 'system')
-    .map((m) => ({ type: 'message', role: m.role, content: m.content }));
+  return [`Today is ${now.toISOString().slice(0, 10)}.`, system, runtime]
+    .filter(Boolean)
+    .join('\n\n');
+}
 
-  // Web search is opt-in on the Agent API; legacy search filters move under it.
+/**
+ * Build the tools list: web search (with filters) plus URL fetching.
+ * @param {Object} options - Request options (searchDomainFilter, searchRecencyFilter)
+ * @param {Object} perplexityConfig - config.API.PERPLEXITY
+ * @returns {Array<Object>}
+ */
+function buildTools(options, perplexityConfig) {
   const webSearch = { type: 'web_search' };
   const filters = {};
   const domainFilter = options.searchDomainFilter || perplexityConfig.SEARCH_DOMAIN_FILTER;
@@ -60,24 +77,46 @@ function buildAgentRequest(messages, model, options = {}, perplexityConfig = {})
   if (options.searchRecencyFilter) filters.search_recency_filter = options.searchRecencyFilter;
   if (Object.keys(filters).length > 0) webSearch.filters = filters;
 
+  const tools = [webSearch];
+  if (perplexityConfig.FETCH_URL !== false) tools.push({ type: 'fetch_url' });
+  return tools;
+}
+
+/**
+ * Build an Agent API request payload from a Chat-Completions-style messages
+ * array.
+ * @param {Array<{role: string, content: string}>} messages
+ * @param {Object} options - Request options (maxTokens, reasoningEffort,
+ *   lastModel — the model Perplexity reported last time, search…)
+ * @param {Object} perplexityConfig - config.API.PERPLEXITY
+ * @returns {Object} Agent request payload
+ */
+function buildAgentRequest(messages, options = {}, perplexityConfig = {}) {
+  const list = Array.isArray(messages) ? messages : [];
+  const input = list
+    .filter((m) => m.role !== 'system')
+    .map((m) => ({ type: 'message', role: m.role, content: m.content }));
+
+  const preset = perplexityConfig.AGENT_PRESET || 'medium';
+  const runtime = describeRuntime(preset, perplexityConfig.AGENT_MODEL || options.lastModel);
   const request = {
-    preset: perplexityConfig.AGENT_PRESET || 'low',
+    preset,
     input,
-    tools: [webSearch],
+    instructions: buildInstructions(list, new Date(), runtime),
+    tools: buildTools(options, perplexityConfig),
     max_output_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS?.CHAT,
   };
-  // No `temperature`: presets carry their own sampling settings, and the Agent
-  // API rejects a preset request that also sets temperature (bare 400
-  // "invalid request", observed 2026-09-27).
-  if (instructions) request.instructions = instructions;
+  if (perplexityConfig.AGENT_MODEL) request.model = perplexityConfig.AGENT_MODEL;
+  const effort = options.reasoningEffort || perplexityConfig.AGENT_REASONING_EFFORT;
+  if (effort) request.reasoning = { effort };
 
   return request;
 }
 
 /**
  * Extract the assistant text from an Agent response body.
- * Reads the `output[]` tree (message items → `content[].text`) with fallbacks
- * to a top-level `output_text` and to a legacy `choices` shape.
+ * Reads a top-level `output_text`, falling back to the `output[]` tree
+ * (message items → `content[].text`).
  * @param {Object} body
  * @returns {string}
  */
@@ -96,9 +135,6 @@ function extractOutputText(body) {
   if (Array.isArray(body.output)) {
     const text = body.output.map(textFromOutputItem).join('');
     if (text) return text;
-  }
-  if (typeof body.choices?.[0]?.message?.content === 'string') {
-    return body.choices[0].message.content;
   }
   return '';
 }
@@ -178,6 +214,7 @@ function normalizeAgentResponse(body) {
     choices: [{ message: { role: 'assistant', content } }],
     usage: normalizeUsage(body?.usage),
   };
+  if (typeof body?.model === 'string' && body.model) normalized.model = body.model;
   const citations = extractCitations(body);
   if (citations.length > 0) normalized.citations = citations;
   return normalized;
@@ -185,6 +222,9 @@ function normalizeAgentResponse(body) {
 
 module.exports = {
   buildAgentRequest,
+  buildInstructions,
+  buildTools,
+  describeRuntime,
   normalizeAgentResponse,
   extractOutputText,
   extractCitations,

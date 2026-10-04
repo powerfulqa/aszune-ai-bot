@@ -188,9 +188,9 @@ jest.mock('../../src/config/config', () => ({
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
+        AGENT: '/v1/agent',
       },
-      DEFAULT_MODEL: 'sonar',
+      AGENT_PRESET: 'medium',
     },
   },
   COLORS: {
@@ -318,9 +318,9 @@ jest.mock('../../src/config/config', () => ({
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
       ENDPOINTS: {
-        CHAT_COMPLETIONS: '/chat/completions',
+        AGENT: '/v1/agent',
       },
-      DEFAULT_MODEL: 'sonar',
+      AGENT_PRESET: 'medium',
     },
   },
   COLORS: {

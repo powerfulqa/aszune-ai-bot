@@ -7,14 +7,51 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Agent API is now the only chat path.** Sonar Chat Completions was retired by Perplexity on
+  2026-09-27, so the `USE_AGENT_API` flag and the legacy request code (model selection,
+  `temperature`, `return_citations`, `/chat/completions`) are removed. A deployment whose `.env`
+  lacked `USE_AGENT_API=true` was calling the retired endpoint
+- Tuned for small-group, back-and-forth conversation:
+  - default preset `low` → `medium`; new optional `AGENT_MODEL` and `AGENT_REASONING_EFFORT`
+    overrides on top of the preset
+  - `fetch_url` tool enabled so the bot can read links people paste (`AGENT_FETCH_URL=false` to
+    disable)
+  - history replayed per turn raised from 12 to 30 messages (DB keeps 60 per user); the session
+    window before a conversation is treated as new is 2 hours (was 15/30 minutes)
+  - system prompt rewritten: today's date, Discord-sized answers, UK English, numbered inline
+    citations
+  - output budgets raised (chat 1024 → 4096, summary 256 → 1024 tokens) because reasoning models
+    spend part of the budget thinking
+- The bot can say what it runs on when asked ("what model are you?"): the instructions name the
+  Agent API, the preset and the model (a pinned `AGENT_MODEL`, else the model Perplexity reported on
+  the previous reply)
+- Source footer is numbered and linked, and lists the sources the answer actually cites
+- API timeout raised from 30s to 120s; agent runs with search and page fetches often take longer
+  than 30s
+- Dependencies: dotenv 18, undici 8.11 (security fixes), socket.io 4.8.4, chrono-node, dev tooling
+
+### Fixed
+
+- After a restart the bot reloaded the **oldest** 12 stored messages instead of the most recent,
+  answering follow-ups with stale context
+- The typing indicator lapsed after ~10s during long answers; it now refreshes until the reply is
+  sent
+- Conversation memory stored the emoji-decorated reply rather than the model's answer, and silently
+  dropped replies over 4000 characters (the next turn then had no assistant side)
+- An empty agent answer (step or token budget exhausted) produced an empty embed that Discord
+  rejected; it now raises a clear error ("The AI could not finish an answer")
+- Timeouts were reported to users as a network problem with their connection
+
 ## [2.2.1] - 2026-09-27
 
 ### Fixed
 
 - **Bot stopped answering in Discord** ("The service is temporarily unavailable"): the Perplexity
-  Agent API began rejecting preset requests that also set `temperature` (bare 400
-  "invalid request"). The adapter no longer sends `temperature` with a preset; presets carry their
-  own sampling settings
+  Agent API began rejecting preset requests that also set `temperature` (bare 400 "invalid
+  request"). The adapter no longer sends `temperature` with a preset; presets carry their own
+  sampling settings
 
 ## [2.2.0] - 2026-09-27
 
@@ -24,41 +61,39 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Socket.IO did): `POST`/`PUT`/`DELETE`/`PATCH` are refused with 403, so config writes, service
   control, restart and git-pull all require the token
 - Fixed shell command injection in `POST /api/services/:action` and
-  `GET /api/services/:service/logs`: service names are validated and passed to `systemctl`,
-  `pm2` and `journalctl` via `execFile` (no shell); log line counts are clamped
-- `GET /api/config/.env` masks secret values like the socket path, and saves keep the real value
-  for any line still carrying the mask
+  `GET /api/services/:service/logs`: service names are validated and passed to `systemctl`, `pm2`
+  and `journalctl` via `execFile` (no shell); log line counts are clamped
+- `GET /api/config/.env` masks secret values like the socket path, and saves keep the real value for
+  any line still carrying the mask
 - Escaped all server-, log- and user-supplied text rendered into the dashboard (log messages,
-  reminders, service and instance fields, network results, validation messages, table headers);
-  row buttons use `data-*` attributes instead of inline `onclick` with interpolated ids
+  reminders, service and instance fields, network results, validation messages, table headers); row
+  buttons use `data-*` attributes instead of inline `onclick` with interpolated ids
 
 ### Changed
 
 - Dashboard metrics are collected once per 5s and shared by every open tab, the 30s broadcast,
   `/api/metrics` and recommendations (previously each ran the full collection)
-- External IP lookup: one cached path (the network page no longer shells `curl`), a 5s timeout
-  so it can't stall metrics, and failures are remembered for 5 minutes instead of retried on
-  every poll
-- Service status checks run in parallel and without a shell; the monitored units are
-  configurable with `DASHBOARD_SERVICES`
+- External IP lookup: one cached path (the network page no longer shells `curl`), a 5s timeout so it
+  can't stall metrics, and failures are remembered for 5 minutes instead of retried on every poll
+- Service status checks run in parallel and without a shell; the monitored units are configurable
+  with `DASHBOARD_SERVICES`
 - Network status lookups and connectivity-test pings run in parallel (same report order)
-- Dashboard pages share one header + navigation (`dashboard/public/shell.js`) instead of ~90
-  copied lines per page; the current page is highlighted by the shell (the per-page active-link
-  scripts are gone). Pages dropped from ~5,000 to ~4,200 lines of HTML
-- Page refreshes use a shared `Poller` that pauses in hidden tabs and never overlaps (logs every
-  5s, Discord status 30s, instances 60s); pages wait for the socket to *connect* via
+- Dashboard pages share one header + navigation (`dashboard/public/shell.js`) instead of ~90 copied
+  lines per page; the current page is highlighted by the shell (the per-page active-link scripts are
+  gone). Pages dropped from ~5,000 to ~4,200 lines of HTML
+- Page refreshes use a shared `Poller` that pauses in hidden tabs and never overlaps (logs every 5s,
+  Discord status 30s, instances 60s); pages wait for the socket to _connect_ via
   `whenDashboardReady()` instead of polling every 100ms for it to exist
 - Success/failure messages are toasts instead of blocking `alert()` dialogs (confirmations stay)
-- The recommendations request no longer runs every 30s on pages that have no recommendations
-  panel
+- The recommendations request no longer runs every 30s on pages that have no recommendations panel
 - Dashboard visual refresh: design tokens for every colour (~400 literals replaced), a **dark
-  theme** that follows the OS setting, and a theme toggle in the header (remembered per
-  browser). Cards share one radius/border/shadow; navigation is a consistent pill style (the
-  per-link colours never matched their links)
+  theme** that follows the OS setting, and a theme toggle in the header (remembered per browser).
+  Cards share one radius/border/shadow; navigation is a consistent pill style (the per-link colours
+  never matched their links)
 - Index memory and CPU show threshold meters (amber from 75%, red from 90%)
-- Values the bot doesn't track are shown as "—" ("Not tracked" tooltip) instead of invented
-  numbers (summaries = messages × 0.1, online = users × 0.2, bots 0, success 100%, response
-  150ms); the response time and tier now use the real resource data
+- Values the bot doesn't track are shown as "—" ("Not tracked" tooltip) instead of invented numbers
+  (summaries = messages × 0.1, online = users × 0.2, bots 0, success 100%, response 150ms); the
+  response time and tier now use the real resource data
 - Removed dead CSS (unused section/chart/command/status classes, `.demo-warning` in 5 pages) and
   moved the legend styles duplicated in 4 pages into `styles.css`
 - Network page interface status ("UP") was green text on a green background; now readable
@@ -67,8 +102,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- `getMetrics` now throws on failure (services throw) instead of returning `undefined`, which
-  made `/api/metrics` answer `200` with an empty body
+- `getMetrics` now throws on failure (services throw) instead of returning `undefined`, which made
+  `/api/metrics` answer `200` with an empty body
 - Database schema listed a non-existent `users` table instead of `user_stats`
 - `/api/database/:table` clamps `limit`/`offset`; `/api/system` and `/api/version` errors are
   handled instead of falling through to Express's default handler
@@ -91,17 +126,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **Node.js floor raised to `>=22.19.0`** (Node 20 is EOL); added `.nvmrc` (24); CI now tests a
-  Node 22 + 24 matrix and runs on current GitHub Actions (checkout/setup-node/codecov v7)
+- **Node.js floor raised to `>=22.19.0`** (Node 20 is EOL); added `.nvmrc` (24); CI now tests a Node
+  22 + 24 matrix and runs on current GitHub Actions (checkout/setup-node/codecov v7)
 - **Tooling:** ESLint 8 → 10 with flat config (`eslint.config.js`); Jest 29 → 30; Prettier 3.9
 - **Runtime deps:** discord.js 14.27, express 4 → 5, undici 7 → 8 (with an enforced request
   timeout), better-sqlite3 12 → 13, dotenv 16 → 17
 - Added Dependabot; consolidated five divergent AI-agent instruction files into a single root
   `CLAUDE.md`
 - **Migrated the AI backend to the Perplexity Agent API** (`/v1/agent`, `USE_AGENT_API=true`,
-  `AGENT_PRESET` default `low`) with web search, ahead of the Chat Completions sunset
-  (2026-09-27). The adapter was validated end-to-end against the live endpoint; the legacy
-  Chat Completions path (`sonar`/`sonar-pro`) remains as a fallback via `USE_AGENT_API=false`
+  `AGENT_PRESET` default `low`) with web search, ahead of the Chat Completions sunset (2026-09-27).
+  The adapter was validated end-to-end against the live endpoint; the legacy Chat Completions path
+  (`sonar`/`sonar-pro`) remains as a fallback via `USE_AGENT_API=false`
 
 ### Fixed
 
@@ -109,14 +144,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the user-stats save interval (was 24h, now 5m), a duplicate emoji-reaction call, and a missing
   telemetry shutdown step
 - Removed broken/stub npm scripts and stopped tracking generated test artifacts
-- **Startup crash:** `ConversationManager.initializeIntervals` recursed infinitely outside test
-  mode — the singleton export shadowed the prototype method — crash-looping the bot in production
-  while the full test suite (guarded by `NODE_ENV=test`) stayed green
-- **Dashboard:** System Info panel blank (`/api/system` served an un-awaited Promise); Network
-  panel blank (`dashboard.detectGateway` did not exist → now `NetworkDetector.detectGateway`);
-  REST-fed panels returned 401 because the client only sent the auth token on the Socket.IO
-  handshake, never on REST fetches; reminder edit/delete failed with "Missing required fields"
-  (missing/incorrect `userId`)
+- **Startup crash:** `ConversationManager.initializeIntervals` recursed infinitely outside test mode
+  — the singleton export shadowed the prototype method — crash-looping the bot in production while
+  the full test suite (guarded by `NODE_ENV=test`) stayed green
+- **Dashboard:** System Info panel blank (`/api/system` served an un-awaited Promise); Network panel
+  blank (`dashboard.detectGateway` did not exist → now `NetworkDetector.detectGateway`); REST-fed
+  panels returned 401 because the client only sent the auth token on the Socket.IO handshake, never
+  on REST fetches; reminder edit/delete failed with "Missing required fields" (missing/incorrect
+  `userId`)
 - Normalised the Agent API's `[web:N]` inline citation markers to `[N]`
 
 ## [2.0.0] - 2026-04-08

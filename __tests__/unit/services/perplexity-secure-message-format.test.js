@@ -11,7 +11,7 @@ jest.mock('../../../src/config/config', () => ({
   API: {
     PERPLEXITY: {
       BASE_URL: 'https://api.perplexity.ai',
-      DEFAULT_MODEL: 'sonar',
+      AGENT_PRESET: 'medium',
     },
   },
   FILE_PERMISSIONS: {

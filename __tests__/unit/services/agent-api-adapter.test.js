@@ -1,13 +1,16 @@
 /**
  * Tests for the Perplexity Agent API adapter.
  *
- * The request/response mapping was validated against the live /v1/agent
- * endpoint (preset-based models, `input` message array, web_search tool,
+ * The request/response mapping follows the /v1/agent docs (preset-based
+ * defaults, `input` message array, web_search + fetch_url tools,
  * `output[].content[].text`). These tests lock that mapping in.
  */
 
 const {
   buildAgentRequest,
+  buildInstructions,
+  buildTools,
+  describeRuntime,
   normalizeAgentResponse,
   extractOutputText,
   extractCitations,
@@ -15,9 +18,11 @@ const {
   normalizeInlineCitations,
 } = require('../../../src/services/perplexity-secure/helpers/agentApiAdapter');
 
+const RUNTIME_UNKNOWN =
+  'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) with the "medium" preset, and the preset picks the model (not reported yet).';
+
 const PERPLEXITY = {
-  AGENT_PRESET: 'low',
-  DEFAULT_TEMPERATURE: 0.2,
+  AGENT_PRESET: 'medium',
   MAX_TOKENS: { CHAT: 1024 },
   SEARCH_DOMAIN_FILTER: [],
 };
@@ -30,52 +35,145 @@ describe('buildAgentRequest', () => {
     { role: 'user', content: 'and for the rare version?' },
   ];
 
-  it('uses a preset, builds an input message array, and lifts system to instructions', () => {
-    const req = buildAgentRequest(messages, 'sonar-pro', {}, PERPLEXITY);
-    expect(req.preset).toBe('low');
-    expect(req.model).toBeUndefined();
-    expect(req.messages).toBeUndefined();
-    expect(req.instructions).toBe('be concise');
-    expect(req.input).toEqual([
-      { type: 'message', role: 'user', content: 'what is the drop rate' },
-      { type: 'message', role: 'assistant', content: 'about 1%' },
-      { type: 'message', role: 'user', content: 'and for the rare version?' },
-    ]);
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-10-04T23:59:00Z') });
   });
 
-  it('enables web search and sets max_output_tokens (not max_tokens)', () => {
-    const req = buildAgentRequest(messages, 'sonar', {}, PERPLEXITY);
-    expect(req.tools).toEqual([{ type: 'web_search' }]);
-    expect(req.max_output_tokens).toBe(1024);
-    expect(req.max_tokens).toBeUndefined();
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('builds the full preset request with dated instructions and both tools', () => {
+    expect(buildAgentRequest(messages, {}, PERPLEXITY)).toEqual({
+      preset: 'medium',
+      input: [
+        { type: 'message', role: 'user', content: 'what is the drop rate' },
+        { type: 'message', role: 'assistant', content: 'about 1%' },
+        { type: 'message', role: 'user', content: 'and for the rare version?' },
+      ],
+      instructions: `Today is 2026-10-04.\n\nbe concise\n\n${RUNTIME_UNKNOWN}`,
+      tools: [{ type: 'web_search' }, { type: 'fetch_url' }],
+      max_output_tokens: 1024,
+    });
   });
 
   it('never sends temperature with a preset (the Agent API rejects the combination)', () => {
-    const req = buildAgentRequest(messages, 'sonar', { temperature: 0.5 }, PERPLEXITY);
-    expect(req.preset).toBe('low');
+    const req = buildAgentRequest(messages, { temperature: 0.5 }, PERPLEXITY);
     expect(req).not.toHaveProperty('temperature');
   });
 
+  it('applies AGENT_MODEL and reasoning effort overrides', () => {
+    const cfg = {
+      ...PERPLEXITY,
+      AGENT_MODEL: 'anthropic/claude-sonnet-5-5',
+      AGENT_REASONING_EFFORT: 'high',
+    };
+    const req = buildAgentRequest(messages, {}, cfg);
+    expect(req.model).toBe('anthropic/claude-sonnet-5-5');
+    expect(req.reasoning).toEqual({ effort: 'high' });
+  });
+
+  it('lets a per-request reasoning effort beat the configured one', () => {
+    const cfg = { ...PERPLEXITY, AGENT_REASONING_EFFORT: 'high' };
+    const req = buildAgentRequest(messages, { reasoningEffort: 'low' }, cfg);
+    expect(req.reasoning).toEqual({ effort: 'low' });
+  });
+
+  it('defaults the preset to medium when unset', () => {
+    const req = buildAgentRequest(messages, {}, { MAX_TOKENS: { CHAT: 100 } });
+    expect(req.preset).toBe('medium');
+    expect(req.max_output_tokens).toBe(100);
+    expect(req.model).toBeUndefined();
+    expect(req.reasoning).toBeUndefined();
+  });
+
+  it('handles a non-array messages input safely', () => {
+    const req = buildAgentRequest(null, {}, PERPLEXITY);
+    expect(req.input).toEqual([]);
+    expect(req.instructions).toBe(`Today is 2026-10-04.\n\n${RUNTIME_UNKNOWN}`);
+  });
+
+  it('names the model Perplexity reported last time', () => {
+    const req = buildAgentRequest(messages, { lastModel: 'openai/gpt-6-luna' }, PERPLEXITY);
+    expect(
+      req.instructions.endsWith('the "medium" preset, and the model is openai/gpt-6-luna.')
+    ).toBe(true);
+  });
+
+  it('prefers a pinned AGENT_MODEL over the last reported model', () => {
+    const req = buildAgentRequest(
+      messages,
+      { lastModel: 'openai/gpt-6-luna' },
+      { ...PERPLEXITY, AGENT_MODEL: 'anthropic/claude-sonnet-5-5' }
+    );
+    expect(
+      req.instructions.endsWith(
+        'the "medium" preset, and the model is anthropic/claude-sonnet-5-5.'
+      )
+    ).toBe(true);
+  });
+});
+
+describe('describeRuntime', () => {
+  it('describes a known model', () => {
+    expect(describeRuntime('high', 'openai/gpt-6-sol')).toBe(
+      'If someone asks what model, AI or API you use, tell them: you run on the Perplexity ' +
+        'Agent API (/v1/agent) with the "high" preset, and the model is openai/gpt-6-sol.'
+    );
+  });
+
+  it('says the preset picks the model when none is known', () => {
+    expect(describeRuntime('medium')).toBe(RUNTIME_UNKNOWN);
+  });
+});
+
+describe('buildInstructions', () => {
+  it('joins several system messages after the date line', () => {
+    const list = [
+      { role: 'system', content: 'one' },
+      { role: 'user', content: 'hi' },
+      { role: 'system', content: 'two' },
+    ];
+    expect(buildInstructions(list, new Date('2026-01-02T00:00:00Z'))).toBe(
+      'Today is 2026-01-02.\n\none\ntwo'
+    );
+  });
+
+  it('appends the runtime note last', () => {
+    expect(buildInstructions([], new Date('2026-01-02T00:00:00Z'), 'runtime note')).toBe(
+      'Today is 2026-01-02.\n\nruntime note'
+    );
+  });
+});
+
+describe('buildTools', () => {
+  it('enables web_search and fetch_url by default', () => {
+    expect(buildTools({}, { SEARCH_DOMAIN_FILTER: [] })).toEqual([
+      { type: 'web_search' },
+      { type: 'fetch_url' },
+    ]);
+  });
+
+  it('drops fetch_url when FETCH_URL is false', () => {
+    expect(buildTools({}, { FETCH_URL: false })).toEqual([{ type: 'web_search' }]);
+  });
+
   it('puts domain and recency filters under the web_search tool', () => {
-    const cfg = { ...PERPLEXITY, SEARCH_DOMAIN_FILTER: ['wowhead.com'] };
-    const req = buildAgentRequest(messages, 'sonar', { searchRecencyFilter: 'month' }, cfg);
-    expect(req.tools).toEqual([
+    expect(
+      buildTools({ searchRecencyFilter: 'month' }, { SEARCH_DOMAIN_FILTER: ['wowhead.com'] })
+    ).toEqual([
       {
         type: 'web_search',
         filters: { search_domain_filter: ['wowhead.com'], search_recency_filter: 'month' },
       },
+      { type: 'fetch_url' },
     ]);
   });
 
-  it('defaults the preset to low when unset', () => {
-    const req = buildAgentRequest(messages, 'sonar', {}, { MAX_TOKENS: { CHAT: 100 } });
-    expect(req.preset).toBe('low');
-    expect(req.max_output_tokens).toBe(100);
-  });
-
-  it('handles a non-array messages input safely', () => {
-    const req = buildAgentRequest(null, 'sonar', {}, PERPLEXITY);
-    expect(req.input).toEqual([]);
+  it('prefers a per-request domain filter over config', () => {
+    expect(
+      buildTools({ searchDomainFilter: ['a.com'] }, { SEARCH_DOMAIN_FILTER: ['b.com'] })[0]
+    ).toEqual({ type: 'web_search', filters: { search_domain_filter: ['a.com'] } });
   });
 });
 
@@ -103,8 +201,8 @@ describe('extractOutputText', () => {
     expect(extractOutputText({ output_text: 'hello' })).toBe('hello');
   });
 
-  it('falls back to a legacy choices shape', () => {
-    expect(extractOutputText({ choices: [{ message: { content: 'legacy' } }] })).toBe('legacy');
+  it('no longer reads the retired Chat Completions choices shape', () => {
+    expect(extractOutputText({ choices: [{ message: { content: 'legacy' } }] })).toBe('');
   });
 
   it('returns empty string for unrecognised shapes', () => {
@@ -117,7 +215,9 @@ describe('extractCitations', () => {
   it('gathers urls from an output[] search-results item', () => {
     expect(
       extractCitations({
-        output: [{ type: 'search_results', results: [{ url: 'https://a.com' }, { url: 'https://b.com' }] }],
+        output: [
+          { type: 'search_results', results: [{ url: 'https://a.com' }, { url: 'https://b.com' }] },
+        ],
       })
     ).toEqual(['https://a.com', 'https://b.com']);
   });
@@ -174,6 +274,21 @@ describe('normalizeInlineCitations', () => {
 });
 
 describe('normalizeAgentResponse', () => {
+  it('carries the model Perplexity reported', () => {
+    expect(normalizeAgentResponse({ output_text: 'hi', model: 'openai/gpt-6-luna' })).toEqual({
+      choices: [{ message: { role: 'assistant', content: 'hi' } }],
+      usage: undefined,
+      model: 'openai/gpt-6-luna',
+    });
+  });
+
+  it('omits model when the response has none', () => {
+    expect(normalizeAgentResponse({ output_text: 'hi' })).toEqual({
+      choices: [{ message: { role: 'assistant', content: 'hi' } }],
+      usage: undefined,
+    });
+  });
+
   it('normalises [web:N] markers in the answer text', () => {
     const normalized = normalizeAgentResponse({
       output: [{ type: 'message', content: [{ type: 'output_text', text: 'See [web:1].' }] }],
@@ -186,7 +301,9 @@ describe('normalizeAgentResponse', () => {
       output: [
         {
           type: 'message',
-          content: [{ type: 'output_text', text: 'the answer', annotations: [{ url: 'https://src.com' }] }],
+          content: [
+            { type: 'output_text', text: 'the answer', annotations: [{ url: 'https://src.com' }] },
+          ],
         },
       ],
       usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },

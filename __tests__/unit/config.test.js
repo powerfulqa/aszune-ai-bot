@@ -55,7 +55,8 @@ describe('Config', () => {
       expect(config.API).toBeDefined();
       expect(config.API.PERPLEXITY).toBeDefined();
       expect(config.API.PERPLEXITY.BASE_URL).toBeDefined();
-      expect(config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS).toBeDefined();
+      expect(config.API.PERPLEXITY.ENDPOINTS.AGENT).toBe('/v1/agent');
+      expect(config.API.PERPLEXITY.ENDPOINTS.CHAT_COMPLETIONS).toBeUndefined();
     });
 
     it('should have system messages defined', () => {

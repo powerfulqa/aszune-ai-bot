@@ -109,53 +109,6 @@ describe('_shouldUseCache method', () => {
   });
 });
 
-describe('_buildRequestPayload method', () => {
-  it('should build basic request payload with defaults', () => {
-    const messages = [{ role: 'user', content: 'Hello' }];
-    const options = {};
-    const result = perplexityService._buildRequestPayload(messages, options);
-
-    expect(result).toHaveProperty('model');
-    expect(result).toHaveProperty('messages', messages);
-    expect(result).toHaveProperty('max_tokens');
-    expect(result).toHaveProperty('temperature');
-  });
-
-  it('should use custom options when provided', () => {
-    const messages = [{ role: 'user', content: 'Hello' }];
-    const options = {
-      model: 'custom-model',
-      maxTokens: 100,
-      temperature: 0.8,
-    };
-    const result = perplexityService._buildRequestPayload(messages, options);
-
-    expect(result.model).toBe('custom-model');
-    expect(result.max_tokens).toBe(100);
-    expect(result.temperature).toBe(0.8);
-  });
-
-  it('should handle streaming when PI optimizations enabled', () => {
-    const messages = [{ role: 'user', content: 'Hello' }];
-    const options = { stream: true };
-
-    const result = perplexityService._buildRequestPayload(messages, options);
-    expect(result).toHaveProperty('model');
-    expect(result).toHaveProperty('messages', messages);
-    expect(result).toHaveProperty('max_tokens');
-    expect(result).toHaveProperty('temperature');
-  });
-
-  it('should not enable streaming in low CPU mode', () => {
-    const messages = [{ role: 'user', content: 'Hello' }];
-    const options = { stream: true };
-
-    const result = perplexityService._buildRequestPayload(messages, options);
-    expect(result).toHaveProperty('model');
-    expect(result).toHaveProperty('messages', messages);
-  });
-});
-
 describe('_getPiOptimizationSettings method', () => {
   it('should return default settings when PI_OPTIMIZATIONS is not configured', () => {
     const mockConfig = require('../../../src/config/config');

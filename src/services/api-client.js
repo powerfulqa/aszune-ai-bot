@@ -18,6 +18,9 @@ class ApiClient {
   constructor(apiKey, baseUrl) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
+    // Model Perplexity reported on the last reply, so the bot can say what it
+    // runs on when the preset (not us) picks the model.
+    this.lastModel = '';
   }
 
   /**
@@ -32,7 +35,7 @@ class ApiClient {
   }
 
   /**
-   * Build request payload for chat completions
+   * Build an Agent API request payload
    * @param {Array} messages - Conversation messages
    * @param {Object} options - Request options
    * @returns {Object} Request payload
@@ -62,91 +65,18 @@ class ApiClient {
       );
     }
 
-    const perplexityConfig = config.API.PERPLEXITY;
-    const model = this._selectModel(messages, options, perplexityConfig);
-
-    // Agent API path (flag-gated, OFF by default — see agentApiAdapter.js)
-    if (perplexityConfig.USE_AGENT_API) {
-      return buildAgentRequest(messages, model, options, perplexityConfig);
-    }
-
-    const payload = {
-      model,
-      messages: messages,
-      max_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS.CHAT,
-      temperature: options.temperature || perplexityConfig.DEFAULT_TEMPERATURE,
-      ...this._buildSearchOptions(options, perplexityConfig),
-    };
-
-    // Log request summary for debugging
-    logger.info(
-      `API Request: model="${payload.model}", messages=${messages.length}, temperature=${payload.temperature}, max_tokens=${payload.max_tokens}`
+    const payload = buildAgentRequest(
+      messages,
+      { lastModel: this.lastModel, ...options },
+      config.API.PERPLEXITY
     );
-
-    // Log full payload in debug mode
+    logger.info(
+      `API Request: preset="${payload.preset}", model="${payload.model || 'preset default'}", turns=${payload.input.length}, max_output_tokens=${payload.max_output_tokens}`
+    );
     if (process.env.DEBUG === 'true') {
       logger.debug('Full request payload:', JSON.stringify(payload, null, 2));
     }
-
-    // Enable streaming if requested and not in low CPU mode
-    if (options.stream && !this.isLowCpuMode()) {
-      payload.stream = true;
-    }
-
     return payload;
-  }
-
-  /**
-   * Check if running in low CPU mode
-   * @returns {boolean} True if in low CPU mode
-   */
-  isLowCpuMode() {
-    try {
-      return Boolean(config.PI_OPTIMIZATIONS?.ENABLED && config.PI_OPTIMIZATIONS?.LOW_CPU_MODE);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Select the appropriate model based on conversation length
-   * @param {Array} messages - Conversation messages
-   * @param {Object} options - Request options
-   * @param {Object} perplexityConfig - Perplexity API config
-   * @returns {string} Model ID
-   * @private
-   */
-  _selectModel(messages, options, perplexityConfig) {
-    if (options.model) return options.model;
-    if (
-      perplexityConfig.MULTI_TURN_MODEL &&
-      messages.length > perplexityConfig.MULTI_TURN_THRESHOLD
-    ) {
-      return perplexityConfig.MULTI_TURN_MODEL;
-    }
-    return perplexityConfig.DEFAULT_MODEL;
-  }
-
-  /**
-   * Build search-specific options for the API payload
-   * @param {Object} options - Request options
-   * @param {Object} perplexityConfig - Perplexity API config
-   * @returns {Object} Search options to merge into payload
-   * @private
-   */
-  _buildSearchOptions(options, perplexityConfig) {
-    const searchOpts = {};
-    if (perplexityConfig.RETURN_CITATIONS) {
-      searchOpts.return_citations = true;
-    }
-    const domainFilter = options.searchDomainFilter || perplexityConfig.SEARCH_DOMAIN_FILTER;
-    if (domainFilter && domainFilter.length > 0) {
-      searchOpts.search_domain_filter = domainFilter;
-    }
-    if (options.searchRecencyFilter) {
-      searchOpts.search_recency_filter = options.searchRecencyFilter;
-    }
-    return searchOpts;
   }
 
   /**
@@ -160,14 +90,11 @@ class ApiClient {
 
     // Log request details for debugging
     logger.info(`Making API request to: ${endpoint}`);
-    logger.info(
-      `Request payload summary: model=${payload.model}, messages=${payload.messages?.length || 0}, temperature=${payload.temperature}`
-    );
 
     try {
       // Hard timeout so a stalled upstream can't hang the request forever.
-      // (RATE_LIMITS.API_TIMEOUT_MS was defined in config but never applied.)
-      const timeoutMs = config.RATE_LIMITS?.API_TIMEOUT_MS || 30000;
+      // Agent runs that search and fetch pages routinely take 10-60s.
+      const timeoutMs = config.RATE_LIMITS?.API_TIMEOUT_MS || 120000;
       const response = await request(fullUrl, {
         method: 'POST',
         headers: this.getHeaders(),
@@ -184,12 +111,11 @@ class ApiClient {
   }
 
   /**
-   * Resolve the chat endpoint based on the Agent-API flag.
+   * Resolve the chat endpoint (the Agent API is the only chat path).
    * @returns {string} Endpoint path
    */
   getChatEndpoint() {
-    const p = config.API.PERPLEXITY;
-    return p.USE_AGENT_API ? p.ENDPOINTS.AGENT : p.ENDPOINTS.CHAT_COMPLETIONS;
+    return config.API.PERPLEXITY.ENDPOINTS.AGENT;
   }
 
   /**
@@ -215,8 +141,9 @@ class ApiClient {
       const raw = await response.body.json();
 
       // Normalise the Agent API response into the Chat Completions shape so the
-      // rest of the pipeline is unchanged (flag-gated, OFF by default).
-      const body = config.API.PERPLEXITY.USE_AGENT_API ? normalizeAgentResponse(raw) : raw;
+      // rest of the pipeline is unchanged.
+      const body = normalizeAgentResponse(raw);
+      if (body.model) this.lastModel = body.model;
 
       // Validate response structure
       this._validateResponseStructure(body);
@@ -231,6 +158,8 @@ class ApiClient {
 
       return body;
     } catch (parseError) {
+      // Validation errors raised above are already typed; only wrap JSON failures.
+      if (parseError.type) throw parseError;
       throw ErrorHandler.createError(
         `Failed to parse API response: ${parseError.message}`,
         ERROR_TYPES.API_ERROR
@@ -261,6 +190,15 @@ class ApiClient {
     if (!choice || (!choice.message && !choice.text && !choice.content)) {
       throw ErrorHandler.createError(
         'Invalid response: missing content in choices',
+        ERROR_TYPES.API_ERROR
+      );
+    }
+    // An agent run that ran out of steps or output tokens returns no text; an
+    // empty reply would make Discord reject the embed, so fail loudly instead.
+    const text = choice.message?.content ?? choice.text ?? choice.content;
+    if (typeof text === 'string' && text.trim() === '') {
+      throw ErrorHandler.createError(
+        'Invalid response: the model returned an empty answer',
         ERROR_TYPES.API_ERROR
       );
     }
@@ -303,10 +241,13 @@ class ApiClient {
    * @returns {Error} Enhanced error
    */
   handleRequestError(error) {
-    if (error.statusCode) {
-      return error; // Already handled by handleErrorResponse
+    if (error.statusCode || error.type) {
+      return error; // Already classified (HTTP status or response validation)
     }
 
+    if (error.name === 'TimeoutError') {
+      return ErrorHandler.createError(`Request timed out: ${error.message}`, ERROR_TYPES.API_ERROR);
+    }
     return ErrorHandler.createError(`Request failed: ${error.message}`, ERROR_TYPES.NETWORK_ERROR);
   }
 }

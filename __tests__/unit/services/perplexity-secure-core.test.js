@@ -74,23 +74,28 @@ describe('PerplexitySecure Service - Core', () => {
       );
     });
 
-    it('should handle invalid response format', async () => {
+    it('should reject an unrecognised body as an empty answer', async () => {
       request.mockResolvedValueOnce(mockSuccessResponse({ invalid: 'format' }));
 
       const messages = [{ role: 'user', content: 'Hello' }];
 
       await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
-        'Invalid response: missing or empty choices array'
+        'Invalid response: the model returned an empty answer'
       );
     });
 
-    it('should handle empty response', async () => {
-      request.mockResolvedValueOnce(mockSuccessResponse({ choices: [] }));
+    it('should reject an incomplete agent run with no text', async () => {
+      request.mockResolvedValueOnce(
+        mockSuccessResponse({
+          status: 'incomplete',
+          output: [{ type: 'search_results', results: [] }],
+        })
+      );
 
       const messages = [{ role: 'user', content: 'Hello' }];
 
       await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
-        'Invalid response: missing or empty choices array'
+        'Invalid response: the model returned an empty answer'
       );
     });
 

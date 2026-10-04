@@ -101,8 +101,10 @@ function addBotResponse(db, { userId, response, responseTimeMs }) {
 
 function getConversationHistory(db, userId, limit) {
   const stmt = db.prepare(`
-    SELECT message, role, timestamp, message_length, response_time_ms FROM conversation_history
-    WHERE user_id = ? ORDER BY timestamp ASC LIMIT ?
+    SELECT message, role, timestamp, message_length, response_time_ms FROM (
+      SELECT id, message, role, timestamp, message_length, response_time_ms FROM conversation_history
+      WHERE user_id = ? ORDER BY id DESC LIMIT ?
+    ) ORDER BY id ASC
   `);
   return stmt.all(userId, limit).map((row) => ({
     message: row.message,

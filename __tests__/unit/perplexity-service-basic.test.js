@@ -10,6 +10,12 @@ jest.mock('undici', () => ({
   request: jest.fn(),
 }));
 
+// What the client returns once an Agent API body is normalised
+const NORMALIZED_MOCK = {
+  choices: [{ message: { role: 'assistant', content: 'Mock response' } }],
+  usage: undefined,
+};
+
 describe('Perplexity Service - Basic', () => {
   let perplexityService;
 
@@ -27,22 +33,33 @@ describe('Perplexity Service - Basic', () => {
 
       request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
 
+      jest.useFakeTimers({ now: new Date('2026-10-04T12:00:00Z'), doNotFake: ['setTimeout'] });
       const messages = [{ role: 'user', content: 'Hello' }];
-      const response = await perplexityService.sendChatRequest(messages);
+      let response;
+      try {
+        response = await perplexityService.sendChatRequest(messages);
+      } finally {
+        jest.useRealTimers();
+      }
 
-      expect(request).toHaveBeenCalledWith(
-        expect.stringContaining('/chat/completions'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            Authorization: expect.stringContaining(config.PERPLEXITY_API_KEY),
-            'Content-Type': 'application/json',
-          }),
-          body: expect.any(String),
-        })
-      );
+      const [url, init] = request.mock.calls[0];
+      expect(url).toBe('https://api.perplexity.ai/v1/agent');
+      expect(init.method).toBe('POST');
+      expect(init.headers).toEqual({
+        Authorization: `Bearer ${config.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json',
+      });
+      expect(JSON.parse(init.body)).toEqual({
+        preset: 'medium',
+        input: [{ type: 'message', role: 'user', content: 'Hello' }],
+        instructions:
+          'Today is 2026-10-04.\n\n' +
+          'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) with the "medium" preset, and the preset picks the model (not reported yet).',
+        tools: [{ type: 'web_search' }, { type: 'fetch_url' }],
+        max_output_tokens: 4096,
+      });
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual(NORMALIZED_MOCK);
     });
 
     it('throws an error when API request fails', async () => {
@@ -82,7 +99,7 @@ describe('Perplexity Service - Basic', () => {
       const messages = [{ role: 'user', content: 'Hello' }];
       const response = await perplexityService.sendChatRequest(messages);
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual(NORMALIZED_MOCK);
     });
 
     it('handles multiple messages', async () => {
@@ -99,7 +116,7 @@ describe('Perplexity Service - Basic', () => {
       ];
       const response = await perplexityService.sendChatRequest(messages);
 
-      expect(response).toEqual(mockResponse);
+      expect(response).toEqual(NORMALIZED_MOCK);
     });
   });
 });
