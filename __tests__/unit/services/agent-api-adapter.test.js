@@ -11,6 +11,7 @@ const {
   buildInstructions,
   buildTools,
   describeRuntime,
+  summarizeUsageDetails,
   normalizeAgentResponse,
   extractOutputText,
   extractCitations,
@@ -243,6 +244,28 @@ describe('extractCitations', () => {
 
   it('returns [] when absent', () => {
     expect(extractCitations({})).toEqual([]);
+  });
+});
+
+describe('summarizeUsageDetails', () => {
+  it('extracts cached tokens, cost and tool invocations', () => {
+    expect(
+      summarizeUsageDetails({
+        input_tokens: 3681,
+        input_tokens_details: { cached_tokens: 1200 },
+        cost: { currency: 'USD', total_cost: 0.03282 },
+        tool_calls_details: { search_web: { invocation: 2 }, fetch_url: {} },
+      })
+    ).toEqual({ cachedTokens: 1200, costUsd: 0.03282, toolCalls: { search_web: 2, fetch_url: 0 } });
+  });
+
+  it('defaults missing parts and returns undefined without usage', () => {
+    expect(summarizeUsageDetails({})).toEqual({
+      cachedTokens: 0,
+      costUsd: undefined,
+      toolCalls: {},
+    });
+    expect(summarizeUsageDetails(null)).toBeUndefined();
   });
 });
 

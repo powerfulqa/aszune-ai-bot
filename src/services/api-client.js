@@ -21,6 +21,8 @@ class ApiClient {
     // Model Perplexity reported on the last reply, so the bot can say what it
     // runs on when the preset (not us) picks the model.
     this.lastModel = '';
+    // Summary of the most recent request, for the /diag command.
+    this.lastCall = null;
   }
 
   /**
@@ -87,6 +89,7 @@ class ApiClient {
    */
   async makeRequest(endpoint, payload) {
     const fullUrl = this.baseUrl + endpoint;
+    const startedAt = Date.now();
 
     // Log request details for debugging
     logger.info(`Making API request to: ${endpoint}`);
@@ -102,12 +105,39 @@ class ApiClient {
         signal: AbortSignal.timeout(timeoutMs),
       });
 
-      return await this.handleResponse(response);
+      const body = await this.handleResponse(response);
+      this._recordCall(startedAt, payload, body, null);
+      return body;
     } catch (error) {
       // Log the error with request context
       logger.error(`API request failed for endpoint ${endpoint}:`, error.message);
-      throw this.handleRequestError(error);
+      const handled = this.handleRequestError(error);
+      this._recordCall(startedAt, payload, null, handled);
+      throw handled;
     }
+  }
+
+  /**
+   * Remember a summary of the last request for diagnostics.
+   * @param {number} startedAt - Epoch ms the request started
+   * @param {Object} payload - Request payload sent
+   * @param {Object|null} body - Normalised response body on success
+   * @param {Error|null} error - Classified error on failure
+   * @private
+   */
+  _recordCall(startedAt, payload, body, error) {
+    this.lastCall = {
+      at: new Date(startedAt).toISOString(),
+      durationMs: Date.now() - startedAt,
+      ok: !error,
+      preset: payload?.preset,
+      model: body?.model || payload?.model || '',
+      turns: Array.isArray(payload?.input) ? payload.input.length : 0,
+      usage: body?.usage,
+      details: body?.usage_details,
+      citations: Array.isArray(body?.citations) ? body.citations.length : 0,
+      error: error ? error.message : null,
+    };
   }
 
   /**

@@ -134,5 +134,5 @@ command string. On the Pi, start via `start-pi-optimized.sh` to apply optimisati
 Key env vars: `DISCORD_BOT_TOKEN`, `PERPLEXITY_API_KEY` (required); `DASHBOARD_TOKEN` (enables the
 dashboard's destructive operations — without it the dashboard is read-only); `TRACKING_ADMIN_KEY`
 (required to start the tracking server); `AGENT_PRESET`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
-`AGENT_FETCH_URL` (Perplexity Agent API tuning); `SEARCH_DOMAIN_FILTER` (optional comma-separated
+`AGENT_FETCH_URL` (Perplexity Agent API tuning); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
 Perplexity allowlist). See `.env.example`.

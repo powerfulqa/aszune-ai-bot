@@ -193,6 +193,25 @@ function normalizeUsage(usage) {
 }
 
 /**
+ * Pull the diagnostic extras out of Agent API usage: cached input tokens, the
+ * billed cost and how many times each tool ran.
+ * @param {Object} usage - Raw Agent API usage object
+ * @returns {Object|undefined} `{ cachedTokens, costUsd, toolCalls }`
+ */
+function summarizeUsageDetails(usage) {
+  if (!usage || typeof usage !== 'object') return undefined;
+  const toolCalls = {};
+  for (const [name, detail] of Object.entries(usage.tool_calls_details || {})) {
+    toolCalls[name] = detail?.invocation ?? 0;
+  }
+  return {
+    cachedTokens: usage.input_tokens_details?.cached_tokens ?? 0,
+    costUsd: usage.cost?.total_cost,
+    toolCalls,
+  };
+}
+
+/**
  * Convert the Agent API's `[web:N]` inline citation markers to plain `[N]` so
  * they match the numbered citation footer the rest of the pipeline renders.
  * @param {string} text
@@ -215,6 +234,8 @@ function normalizeAgentResponse(body) {
     usage: normalizeUsage(body?.usage),
   };
   if (typeof body?.model === 'string' && body.model) normalized.model = body.model;
+  const details = summarizeUsageDetails(body?.usage);
+  if (details) normalized.usage_details = details;
   const citations = extractCitations(body);
   if (citations.length > 0) normalized.citations = citations;
   return normalized;
@@ -229,5 +250,6 @@ module.exports = {
   extractOutputText,
   extractCitations,
   normalizeUsage,
+  summarizeUsageDetails,
   normalizeInlineCitations,
 };

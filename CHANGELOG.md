@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `/diag` owner-only diagnostics command, visible only to the caller. It reports the version and
+  commit, the Agent API settings actually running (preset, model, reasoning, tools, limits), whether
+  PM2's stored environment is overriding `.env`, the last API call (latency, model, tokens, cache,
+  cost, tool use, sources) and the caller's conversation state. `live: true` also sends a tiny real
+  request. Owners are listed in `BOT_OWNER_IDS`
+
 ### Changed
 
 - **Agent API is now the only chat path.** Sonar Chat Completions was retired by Perplexity on

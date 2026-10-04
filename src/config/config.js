@@ -65,6 +65,9 @@ const config = {
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
 
+  // Discord user IDs allowed to run owner-only commands such as /diag
+  BOT_OWNER_IDS: getListEnvVar('BOT_OWNER_IDS', []),
+
   // Database Configuration
   DB_PATH: process.env.DB_PATH || './data/bot.db',
 

@@ -54,6 +54,8 @@ offering real-time performance dashboards and server analytics directly within D
 - 📊 **Analytics:** `/analytics`, `/dashboard`, `/resources`, `/cache` - comprehensive monitoring
 - 👤 **User Info:** `/userinfo [user]` - detailed user information with badges, roles, and activity
 - 🏠 **Server Info:** `/serverinfo` - comprehensive server statistics and features
+- 🩺 **Diagnostics:** `/diag [live]` - owner-only, private report of version, running AI settings
+  and the last API call (owners set in `BOT_OWNER_IDS`)
 - 🇬🇧 **UK English Responses:** All bot replies use UK English spelling and phrasing
 - 📋 **Slash Command Support:** All commands available as modern Discord slash commands
 - 🧪 **Comprehensive Testing:** 1,896 tests with a 70% coverage gate and stricter per-file gates on critical components
@@ -212,6 +214,7 @@ starting the bot, and enables automatic restart after a reboot.
 | ------------- | ----------------------------------------------------- |
 | `/userinfo`   | Display detailed information about a user             |
 | `/serverinfo` | Display detailed information about the current server |
+| `/diag`       | Owner-only private diagnostics (`live:true` pings the API) |
 
 ### Reminder Commands (NEW in v1.7.0)
 
