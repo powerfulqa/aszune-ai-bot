@@ -666,6 +666,11 @@
     <script src="layout.js"></script>
     <script src="dashboard.js"></script>
     <script>
+      // PM2 reports 'Running'/'online', systemd 'Active'; anything else is shown as down
+      function isServiceUp(status) {
+        return ['active', 'running', 'online'].includes(String(status).toLowerCase());
+      }
+
       function loadServices() {
         const dashboardSocket = window.dashboard?.socket;
         if (!dashboardSocket) {
@@ -697,7 +702,7 @@
                     <div class="service-header">
                         <span class="service-name">${escapeHtml(service.icon)} ${escapeHtml(service.name)}</span>
                         <div class="service-status">
-                            <span class="status-badge status-${service.status === 'Active' ? 'active' : 'inactive'}">${escapeHtml(service.status)}</span>
+                            <span class="status-badge status-${isServiceUp(service.status) ? 'active' : 'inactive'}">${escapeHtml(service.status)}</span>
                             <span class="enabled-indicator ${service.enabledOnBoot ? 'yes' : 'no'}">● ${service.enabledOnBoot ? 'Enabled' : 'Disabled'} on boot</span>
                         </div>
                     </div>
