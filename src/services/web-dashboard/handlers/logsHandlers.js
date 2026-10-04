@@ -12,14 +12,19 @@ const { sendErrorWithEmptyArray, sendClearError } = require('./callbackHelpers')
  * @param {Socket} socket - Socket.IO socket instance
  * @param {WebDashboardService} dashboard - Dashboard service instance
  */
-function registerLogsHandlers(socket, dashboard) {
+function registerLogsHandlers(socket, dashboard, options = {}) {
+  const { allowWrite = true } = options;
+
   socket.on('request_logs', (data, callback) => {
     handleRequestLogs(dashboard, data, callback);
   });
 
-  socket.on('clear_logs', (data, callback) => {
-    handleClearLogs(dashboard, callback);
-  });
+  // Clearing wipes the log buffers for every viewer; only register when writes are allowed
+  if (allowWrite) {
+    socket.on('clear_logs', (data, callback) => {
+      handleClearLogs(dashboard, callback);
+    });
+  }
 }
 
 /**

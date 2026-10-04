@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const crypto = require('crypto');
@@ -40,6 +41,35 @@ const DASHBOARD_TABLES = ['user_stats', 'user_messages', 'conversation_history',
 
 /** HTTP methods allowed on /api when no DASHBOARD_TOKEN is configured */
 const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/** Bind addresses that only accept connections from this machine */
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
+const NETWORK_TOKEN_REQUIRED =
+  'Dashboard is reachable from the network: set DASHBOARD_TOKEN to enable access';
+
+/**
+ * Response headers for every dashboard request. The pages still use inline
+ * scripts and styles, so the CSP allows those, but everything (scripts,
+ * fetch/WebSocket, images) must come from this origin, which stops injected
+ * markup from loading remote code or sending the stored token elsewhere.
+ */
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+};
 
 // Extracted handler modules
 const {
@@ -94,6 +124,15 @@ class WebDashboardService {
   }
 
   /**
+   * Whether the dashboard only listens on a loopback address.
+   * @private
+   * @returns {boolean}
+   */
+  _isLoopbackBind() {
+    return LOOPBACK_HOSTS.has(this.bindHost);
+  }
+
+  /**
    * Constant-time comparison of a provided token against the configured one.
    * Returns true when no token is configured (auth disabled).
    * @private
@@ -137,8 +176,15 @@ class WebDashboardService {
     return (req, res, next) => {
       // No token configured → read-only, the same rule the Socket.IO side
       // applies (destructive handlers are only registered with a token).
-      // Reads are allowed; anything that changes state is refused.
+      // Reads are allowed only on a loopback bind: the API exposes chat
+      // history and logs, so a LAN-reachable dashboard must have a token.
       if (!this.authToken) {
+        if (!this._isLoopbackBind()) {
+          return res.status(403).json({
+            error: NETWORK_TOKEN_REQUIRED,
+            timestamp: new Date().toISOString(),
+          });
+        }
         if (READ_ONLY_METHODS.has(req.method)) {
           return next();
         }
@@ -169,7 +215,11 @@ class WebDashboardService {
    */
   _authorizeSocket(socket, next) {
     if (!this.authToken) {
-      return next();
+      if (this._isLoopbackBind()) {
+        return next();
+      }
+      logger.warn(`Dashboard socket rejected (no DASHBOARD_TOKEN on a network bind): ${socket.id}`);
+      return next(new Error(NETWORK_TOKEN_REQUIRED));
     }
     const token =
       socket.handshake?.auth?.token ||
@@ -312,7 +362,12 @@ class WebDashboardService {
       this.isRunning = true;
 
       // Log security configuration for awareness
-      const securityInfo = this.authToken ? 'token auth enabled' : 'no token auth (localhost-only)';
+      let securityInfo = 'token auth enabled';
+      if (!this.authToken) {
+        securityInfo = this._isLoopbackBind()
+          ? 'no token auth, read-only (localhost-only)'
+          : 'no DASHBOARD_TOKEN on a network bind, API and live data disabled';
+      }
       logger.info(`Web dashboard started on ${this.bindHost}:${boundPort} (${securityInfo})`);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'starting web dashboard');
@@ -551,36 +606,28 @@ class WebDashboardService {
    * Setup Express middleware
    */
   setupMiddleware() {
+    this.app.disable('x-powered-by');
+
+    // Security headers on every response, including the static pages
+    this.app.use((req, res, next) => {
+      res.set(SECURITY_HEADERS);
+      next();
+    });
+
     // Serve static files from dashboard directory
     this.app.use(express.static(path.join(__dirname, '../../dashboard/public')));
 
     // JSON parsing
     this.app.use(express.json());
 
-    // CORS headers with security-conscious defaults
-    const corsOrigin = this._getCorsOrigin();
-    this.app.use((req, res, next) => {
-      // Set CORS origin based on configuration
-      if (typeof corsOrigin === 'string') {
-        res.header('Access-Control-Allow-Origin', corsOrigin);
-      } else if (corsOrigin instanceof RegExp) {
-        // For regex origins, check if request origin matches
-        const requestOrigin = req.headers.origin;
-        if (requestOrigin && corsOrigin.test(requestOrigin)) {
-          res.header('Access-Control-Allow-Origin', requestOrigin);
-        }
-      }
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-      );
-      if (req.method === 'OPTIONS') {
-        res.sendStatus(200);
-      } else {
-        next();
-      }
-    });
+    // CORS with security-conscious defaults (localhost unless DASHBOARD_CORS_ORIGIN is set)
+    this.app.use(
+      cors({
+        origin: this._getCorsOrigin(),
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+      })
+    );
 
     // Apply token auth middleware to all API routes when DASHBOARD_TOKEN is set
     this.app.use('/api', this._createAuthMiddleware());
@@ -1311,12 +1358,12 @@ class WebDashboardService {
         this._emitMetricsToSocket(socket, 'sending requested metrics');
       });
 
-      // Read-only handler groups are always available
-      registerLogsHandlers(socket, this);
+      // Read-only handler group is always available
       registerNetworkHandlers(socket, this);
 
       // Handler groups with mixed read/write register their destructive events
       // only when destructive operations are allowed
+      registerLogsHandlers(socket, this, { allowWrite: allowDestructive });
       registerConfigHandlers(socket, this, { allowWrite: allowDestructive });
       registerReminderHandlers(socket, this, { allowWrite: allowDestructive });
       registerServiceHandlers(socket, this, { allowControl: allowDestructive });

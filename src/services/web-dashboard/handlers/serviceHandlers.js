@@ -5,7 +5,7 @@
  */
 
 const logger = require('../../../utils/logger');
-const { execPromise } = require('../../../utils/shell-exec-helper');
+const { execFileAsync, assertSafeServiceName } = require('../../../utils/safe-exec');
 const {
   runPm2ServiceAction,
   runPm2QuickAction,
@@ -88,7 +88,10 @@ async function checkUnixBootStatus(serviceName) {
   if (isRunningUnderPm2()) return true;
 
   try {
-    const { stdout } = await execPromise(`systemctl is-enabled ${serviceName}`, { timeout: 5000 });
+    assertSafeServiceName(serviceName);
+    const { stdout } = await execFileAsync('systemctl', ['is-enabled', serviceName], {
+      timeout: 5000,
+    });
     return stdout.trim() === 'enabled';
   } catch {
     return false;
@@ -102,10 +105,11 @@ async function checkUnixBootStatus(serviceName) {
  */
 async function checkWindowsBootStatus(serviceName) {
   try {
-    const { stdout } = await execPromise(`sc query ${serviceName} | findstr START_TYPE`, {
-      timeout: 5000,
-    });
-    return stdout && (stdout.includes('AUTO') || stdout.includes('BOOT'));
+    assertSafeServiceName(serviceName);
+    // `sc qc` (not `sc query`) is the one that reports START_TYPE
+    const { stdout } = await execFileAsync('sc', ['qc', serviceName], { timeout: 5000 });
+    const startType = stdout.split(/\r?\n/).find((line) => line.includes('START_TYPE')) || '';
+    return startType.includes('AUTO') || startType.includes('BOOT');
   } catch (error) {
     logger.debug(`Windows service check failed: ${error.message}`);
     return false;

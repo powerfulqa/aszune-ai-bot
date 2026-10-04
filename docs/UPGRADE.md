@@ -54,7 +54,7 @@ On the Pi, start via `start-pi-optimized.sh` if you are doing a full restart rat
   so `data/bot.db` and `data/instances.db` are read as-is. No migration step is required.
 - **Dashboard is read-only by default.** Destructive dashboard operations (service control, config
   editor, reminder edits) now require `DASHBOARD_TOKEN`. Set it, then open the dashboard once as
-  `http://<host>:3000/?token=YOUR_TOKEN` (the token is saved in the browser).
+  `http://<host>:3000/#token=YOUR_TOKEN` (the token is saved in the browser).
 - **Perplexity Agent API** is the only chat path (Sonar Chat Completions was retired on 2026-09-27).
   `USE_AGENT_API` is no longer read and can be deleted from `.env`.
 - **Optional env vars:** `AGENT_PRESET` (`fast`/`low`/`medium`/`high`/`xhigh`, default `medium`),

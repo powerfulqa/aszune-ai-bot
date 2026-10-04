@@ -19,6 +19,9 @@ const {
 const {
   registerConfigHandlers,
 } = require('../../../../src/services/web-dashboard/handlers/configHandlers');
+const {
+  registerLogsHandlers,
+} = require('../../../../src/services/web-dashboard/handlers/logsHandlers');
 
 function makeFakeSocket() {
   const events = new Set();
@@ -60,6 +63,17 @@ describe('WebDashboardService token verification', () => {
     const next = jest.fn();
     service._authorizeSocket(makeFakeSocket(), next);
     expect(next).toHaveBeenCalledWith();
+  });
+
+  it('_authorizeSocket rejects every socket on a network bind without a token', () => {
+    service.authToken = null;
+    service.bindHost = '0.0.0.0';
+    const next = jest.fn();
+    service._authorizeSocket({ id: 's', handshake: { auth: {}, headers: {} } }, next);
+    expect(next).toHaveBeenCalledWith(
+      new Error('Dashboard is reachable from the network: set DASHBOARD_TOKEN to enable access')
+    );
+    service.bindHost = '127.0.0.1';
   });
 
   it('_authorizeSocket rejects a socket without the token', () => {
@@ -127,6 +141,17 @@ describe('destructive handler gating', () => {
     const writable = makeFakeSocket();
     registerReminderHandlers(writable, {}, { allowWrite: true });
     expect(writable.events.has('create_reminder')).toBe(true);
+  });
+
+  it('logs handlers omit clear_logs when writes are disallowed', () => {
+    const readonly = makeFakeSocket();
+    registerLogsHandlers(readonly, {}, { allowWrite: false });
+    expect(readonly.events.has('request_logs')).toBe(true);
+    expect(readonly.events.has('clear_logs')).toBe(false);
+
+    const writable = makeFakeSocket();
+    registerLogsHandlers(writable, {}, { allowWrite: true });
+    expect(writable.events.has('clear_logs')).toBe(true);
   });
 
   it('handlers default to registering destructive events (backward compatible)', () => {

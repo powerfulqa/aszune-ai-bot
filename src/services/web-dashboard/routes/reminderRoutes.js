@@ -17,7 +17,7 @@ function handleGetReminders(service) {
 
 function handleCreateReminder(service) {
   return wrapAsyncHandler(async (req, res) => {
-    const { message, scheduledTime, userId, reminderType } = req.body;
+    const { message, scheduledTime, userId, reminderType } = req.body ?? {};
 
     if (!message || !scheduledTime || !userId) {
       sendValidationError(res, 'Message, scheduledTime, and userId are required');
@@ -30,9 +30,15 @@ function handleCreateReminder(service) {
 }
 
 function handleUpdateReminder(service) {
-  return wrapAsyncHandler(async (req) => {
+  return wrapAsyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { message, scheduledTime } = req.body;
+    const { message, scheduledTime } = req.body ?? {};
+
+    if (!message && !scheduledTime) {
+      sendValidationError(res, 'Message or scheduledTime is required');
+      return;
+    }
+
     const reminder = await service.updateReminder(id, message, scheduledTime);
     return { reminder, message: 'Reminder updated successfully' };
   }, 'updating reminder');

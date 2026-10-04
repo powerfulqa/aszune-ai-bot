@@ -125,6 +125,22 @@ describe('Web Dashboard Route Modules', () => {
         expect(res.json).toHaveBeenCalledWith({ success: true });
       });
 
+      it('should return 400, not 500, when Express 5 leaves req.body undefined', async () => {
+        const mockService = { updateConfigFile: jest.fn() };
+        const mockApp = { get: jest.fn(), post: jest.fn() };
+        registerConfigRoutes(mockApp, mockService);
+
+        const handler = mockApp.post.mock.calls[0][1];
+        const req = createMockReq({ params: { file: 'test.json' } });
+        req.body = undefined;
+        const res = createMockRes();
+
+        await handler(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(mockService.updateConfigFile).not.toHaveBeenCalled();
+      });
+
       it('should return error if content is missing', async () => {
         const mockService = {};
         const mockApp = { get: jest.fn(), post: jest.fn() };
@@ -754,12 +770,28 @@ describe('Web Dashboard Route Modules', () => {
         registerReminderRoutes(mockApp, mockService);
 
         const handler = mockApp.put.mock.calls[0][1];
-        const req = createMockReq({ params: { id: '1' }, body: {} });
+        const req = createMockReq({ params: { id: '1' }, body: { message: 'Updated' } });
         const res = createMockRes();
 
         await handler(req, res);
 
         expect(res.status).toHaveBeenCalledWith(500);
+      });
+
+      it.each([{}, undefined])('should reject a body without changes (%p) with 400', async (body) => {
+        const mockService = { updateReminder: jest.fn() };
+        const mockApp = { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() };
+        registerReminderRoutes(mockApp, mockService);
+
+        const handler = mockApp.put.mock.calls[0][1];
+        const req = createMockReq({ params: { id: '1' } });
+        req.body = body;
+        const res = createMockRes();
+
+        await handler(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(mockService.updateReminder).not.toHaveBeenCalled();
       });
     });
 

@@ -14,7 +14,7 @@ function handleGetServices(service) {
 function handleManageService(service) {
   return wrapAsyncHandler(async (req, res) => {
     const { action } = req.params;
-    const { service: serviceName } = req.body;
+    const { service: serviceName } = req.body ?? {};
 
     if (!['start', 'stop', 'restart'].includes(action)) {
       sendValidationError(res, 'Invalid action. Must be start, stop, or restart');

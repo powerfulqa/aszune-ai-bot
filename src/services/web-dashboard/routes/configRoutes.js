@@ -17,7 +17,7 @@ function handleGetConfig(service) {
 function handleUpdateConfig(service) {
   return wrapAsyncHandler(async (req, res) => {
     const { file } = req.params;
-    const { content, createBackup = true } = req.body;
+    const { content, createBackup = true } = req.body ?? {};
 
     if (!content) {
       sendValidationError(res, 'Content is required');
@@ -32,7 +32,7 @@ function handleUpdateConfig(service) {
 function handleValidateConfig(service) {
   return wrapAsyncHandler(async (req, res) => {
     const { file } = req.params;
-    const { content } = req.body;
+    const { content } = req.body ?? {};
 
     if (!content) {
       sendValidationError(res, 'Content is required for validation');

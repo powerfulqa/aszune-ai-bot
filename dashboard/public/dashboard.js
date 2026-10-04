@@ -130,20 +130,22 @@ class Dashboard {
   }
 
   /**
-   * Resolve the dashboard auth token. A token supplied via ?token=... in the
+   * Resolve the dashboard auth token. A token supplied via #token=... in the
    * URL is persisted to localStorage (and stripped from the address bar) so it
-   * only needs to be provided once. Returns null when no token is available.
+   * only needs to be provided once. The fragment is never sent to the server,
+   * so the token stays out of request lines and proxy logs. Returns null when
+   * no token is available.
    * @private
    */
   _resolveAuthToken() {
     try {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(window.location.hash.slice(1));
       const fromUrl = params.get('token');
       if (fromUrl) {
         localStorage.setItem('dashboardToken', fromUrl);
         params.delete('token');
-        const query = params.toString();
-        const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
+        const hash = params.toString();
+        const newUrl = window.location.pathname + window.location.search + (hash ? `#${hash}` : '');
         window.history.replaceState({}, document.title, newUrl);
         return fromUrl;
       }
