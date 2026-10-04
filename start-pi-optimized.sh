@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Aszune AI Bot - Raspberry Pi Optimized Startup Script
-# This script applies various system-level optimizations for running on Raspberry Pi
+# Sets the bot's Raspberry Pi settings (per-model limits, overridable from .env)
+# and (re)starts both PM2 apps. One-shot: run it by hand, never as a systemd
+# service with Restart=always (it exits after starting PM2, so that loops).
 
 # =========================================
 # Configuration variables - adjust as needed
@@ -59,50 +61,41 @@ fi
 ENABLE_PI_OPTIMIZATIONS=true
 PI_LOG_LEVEL="WARN"
 
-# Node.js settings
-NODE_OPTIONS="--max-old-space-size=$MEMORY_LIMIT"
-NODE_ENV="production"
-
 # =========================================
 # Load environment variables
 # =========================================
 
+# Read .env line by line instead of `export $(... | xargs)`, which breaks on
+# values with spaces. Strips one pair of surrounding quotes, like dotenv.
 if [ -f .env ]; then
   echo "Loading environment variables from .env file..."
-  export $(grep -v '^#' .env | xargs)
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    if [[ "$value" =~ ^\"(.*)\"$ || "$value" =~ ^\'(.*)\'$ ]]; then
+      value="${BASH_REMATCH[1]}"
+    fi
+    export "$key=$value"
+  done < .env
 else
   echo "No .env file found. Make sure DISCORD_BOT_TOKEN and PERPLEXITY_API_KEY are set!"
   exit 1
 fi
 
-# =========================================
-# System optimizations
-# =========================================
+# .env wins over the detected memory limits, so the heap cap and the memory
+# monitor always agree
+MEMORY_LIMIT=${PI_MEMORY_LIMIT:-$MEMORY_LIMIT}
+MEMORY_CRITICAL=${PI_MEMORY_CRITICAL:-$MEMORY_CRITICAL}
 
-echo "Applying system optimizations for Raspberry Pi $PI_VERSION..."
+# Node.js settings
+NODE_OPTIONS="--max-old-space-size=$MEMORY_LIMIT"
+NODE_ENV="production"
 
-# Check if running as root/sudo (required for some optimizations)
-if [ "$EUID" -eq 0 ]; then
-  # Set CPU governor to conservative for better power/performance balance
-  echo "Setting CPU governor to conservative mode..."
-  for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-    echo "conservative" > "$cpu" 2>/dev/null || true
-  done
-
-  # Drop disk cache to free memory before starting
-  echo "Dropping disk cache to free memory..."
-  sync
-  echo 1 > /proc/sys/vm/drop_caches
-  
-  # Reduce swappiness to prefer keeping processes in RAM
-  echo "Configuring memory settings..."
-  echo 10 > /proc/sys/vm/swappiness
-  
-  echo "System-level optimizations applied."
-else
-  echo "Warning: Not running as root. Some system optimizations were skipped."
-  echo "For full optimization, run with sudo."
-fi
+# No system-wide tweaks here (CPU governor, swappiness, drop_caches): they
+# override the OS defaults for everything else on the Pi (Pi-hole, etc.) and
+# do nothing for a network-bound bot. Tune the OS with dietpi-config instead.
 
 # =========================================
 # Process optimizations
