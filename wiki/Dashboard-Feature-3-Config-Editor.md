@@ -41,7 +41,7 @@ Debug Mode: DEBUG=true|false
 ```javascript
 // API endpoints
 API.PERPLEXITY.BASE_URL;
-API.PERPLEXITY.DEFAULT_MODEL;
+API.PERPLEXITY.AGENT_PRESET;
 
 // Cache settings
 CACHE.MAX_SIZE;
@@ -183,7 +183,7 @@ New: DEBUG=true
 ```
 API Settings
 ├── Perplexity Base URL
-├── Default Model
+├── Agent Preset
 └── Rate Limiting
 
 Cache Configuration
@@ -270,7 +270,7 @@ GET /api/config
       "API": {
         "PERPLEXITY": {
           "BASE_URL": "https://api.perplexity.ai",
-          "DEFAULT_MODEL": "sonar"
+          "AGENT_PRESET": "medium"
         }
       }
     },

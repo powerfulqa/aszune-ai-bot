@@ -6,7 +6,7 @@ This guide will walk you through setting up Aszune AI Bot for your Discord serve
 
 Before you begin, make sure you have:
 
-- Node.js v20.18.1 or later
+- Node.js v22.19.0 or later (v24 recommended, see `.nvmrc`)
 - A Discord bot token (from the
   [Discord Developer Portal](https://discord.com/developers/applications))
 - A valid [Perplexity AI API key](https://www.perplexity.ai/)
@@ -48,6 +48,14 @@ Follow these steps to set up the Aszune AI Bot:
    ```
 
    Replace the placeholder values with your actual tokens and keys.
+
+   Optional AI settings (defaults shown in `.env.example`):
+   - `AGENT_PRESET`: Perplexity Agent API preset, `fast` | `low` | `medium` | `high` | `xhigh`
+     (default `medium`)
+   - `AGENT_MODEL` / `AGENT_REASONING_EFFORT`: pin a model or reasoning effort on top of the preset
+   - `AGENT_FETCH_URL`: let the bot read links people paste (default `true`)
+   - `SEARCH_DOMAIN_FILTER`: comma-separated allowlist for web search
+   - `BOT_OWNER_IDS`: your Discord user ID, to use the private `/diag` command
 
 4. **Database Setup (Automatic)**
 

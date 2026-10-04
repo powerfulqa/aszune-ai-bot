@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-04
+
+Conversation-focused upgrade after Perplexity retired Sonar Chat Completions: the Agent API is the
+only chat path, tuned for small-group back-and-forth use, plus an owner-only `/diag` command for
+checking what the deployed bot is really running.
+
 ### Added
 
 - `/diag` owner-only diagnostics command, visible only to the caller. It reports the version and
@@ -38,6 +44,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Source footer is numbered and linked, and lists the sources the answer actually cites
 - API timeout raised from 30s to 120s; agent runs with search and page fetches often take longer
   than 30s
+- Documentation refreshed for this release (README, wiki, docs): Agent API settings, the PM2
+  environment gotcha, `/diag`, and command examples now use slash commands (text `!` commands were
+  removed earlier and no longer work)
 - Dependencies: dotenv 18, undici 8.11 (security fixes), socket.io 4.8.4, chrono-node, dev tooling
 
 ### Fixed
@@ -51,6 +60,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - An empty agent answer (step or token budget exhausted) produced an empty embed that Discord
   rejected; it now raises a clear error ("The AI could not finish an answer")
 - Timeouts were reported to users as a network problem with their connection
+- `/help` listed a `/newconversation` command that does not exist; it now also lists `/cache` and
+  `/diag`
+- Reminder cancellation and timer preservation corrected; recent history restored in chronological
+  order
+- Dashboard config saves mask exported and multi-line `.env` secrets and fail closed on unsafe
+  saves; shared Pi request throttling restored with bounded queue deadlines
+- Dashboard port conflicts fall back to an alternative port without killing other processes
 
 ## [2.2.1] - 2026-09-27
 
@@ -678,9 +694,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Enhanced error handling and environment variable validation
 
 <!-- Note: v1.11.0 and v2.0.0 are documented above but were never git-tagged, so they have no
-     compare links. The latest tag is v1.10.0. -->
+     compare links. -->
 
-[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.2.1...v2.3.0
+[2.2.1]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.10.0...v2.1.0
 [1.10.0]: https://github.com/powerfulqa/aszune-ai-bot/compare/v1.9.0...v1.10.0

@@ -100,18 +100,19 @@ const commands = {
         `**Aszai Bot Commands:**
 \`/help\` - Show this help message
 \`/clearhistory\` - Clear your conversation history (keeps your stats)
-\`/newconversation\` - Start fresh on a new topic
 \`/summary\` - Summarise your current conversation
 \`/summarise <text>\` - Summarise provided text
 \`/stats\` - Show your usage stats
 \`/analytics\` - Show Discord server analytics
 \`/dashboard\` - Show performance dashboard
 \`/resources\` - Show resource optimization status
+\`/cache\` - Show cache statistics
 \`/remind <time> <message>\` - Set a reminder
 \`/reminders\` - List your active reminders
 \`/cancelreminder <id>\` - Cancel a specific reminder
 \`/userinfo [user]\` - Show detailed user information
 \`/serverinfo\` - Show detailed server information
+\`/diag [live]\` - Bot diagnostics (owner only, private)
 Simply chat as normal to talk to the bot!`
       );
     },

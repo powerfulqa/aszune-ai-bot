@@ -1,11 +1,11 @@
-# Aszune AI Bot (v2.0.0)
+# Aszune AI Bot (v2.3.0)
 
 [![CI/CD](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml/badge.svg)](https://github.com/powerfulqa/aszune-ai-bot/actions/workflows/unified-ci.yml)
 [![Codecov](https://codecov.io/gh/powerfulqa/aszune-ai-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/powerfulqa/aszune-ai-bot)
 [![Maintainability](https://qlty.sh/badges/89f58366-59f3-43bb-8a8a-6b02c47c7ad9/maintainability.svg)](https://qlty.sh/gh/powerfulqa/projects/aszune-ai-bot)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](./LICENSE)
 
-[Release Notes](./docs/RELEASE-NOTES-v2.0.0.md) |
+[Changelog](./CHANGELOG.md) | [Releases](https://github.com/powerfulqa/aszune-ai-bot/releases) |
 [Dashboard Overview](./wiki/Dashboard-Features-Complete.md) | [Documentation Wiki](./wiki/Home.md)
 
 **Aszune AI Bot** is a professional Discord bot that combines advanced AI conversation capabilities
@@ -17,13 +17,17 @@ offering real-time performance dashboards and server analytics directly within D
 
 - 🤖 **AI-Powered Conversations** - Context-aware chat via the Perplexity Agent API (`/v1/agent`)
   with web search and link reading, selectable by preset (`AGENT_PRESET`, default `medium`)
-- 📎 **Source Citations** - Responses include source domains so users can verify information
+- 🧠 **Conversation Memory** - The last 30 messages are replayed each turn and persisted in SQLite,
+  so back-and-forth threads survive restarts and pauses of up to 2 hours
+- 📎 **Source Citations** - Numbered inline citations with a linked source footer
+- 🩺 **Diagnostics** - Owner-only `/diag` shows the running build, AI settings, model and last API
+  call
 - 📊 **Web Dashboard** - Real-time monitoring with logs, services, network status, and configuration
 - ⏰ **Smart Reminders** - Natural language reminder scheduling with Discord notifications
 - 📈 **Analytics** - Server analytics, user engagement metrics, and performance monitoring
 - 🍓 **Raspberry Pi Optimised** - Specialised optimisations for resource-constrained devices
 
-**Current Status**: 1,896 tests passing – 70% coverage gate (enforced in `jest.config.js`)
+**Current Status**: 2,036 tests passing – 70% coverage gate (enforced in `jest.config.js`)
 
 ## Table of Contents
 
@@ -114,7 +118,13 @@ For detailed API reference and technical specifications, see
    ```env
    DISCORD_BOT_TOKEN=your_discord_bot_token_here
    PERPLEXITY_API_KEY=your_perplexity_api_key_here
+   # Optional: who may run /diag (your Discord user ID; /diag tells you it)
+   BOT_OWNER_IDS=
    ```
+
+   Everything else is optional; see `.env.example` for the full list, including the Agent API
+   tuning (`AGENT_PRESET`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`, `AGENT_FETCH_URL`,
+   `SEARCH_DOMAIN_FILTER`).
 
 4. **Database Setup (Automatic)**
 
@@ -186,6 +196,11 @@ starting the bot, and enables automatic restart after a reboot.
 
 **Note:** Running `pm2 start src/index.js` will NOT apply Pi optimisations.
 
+**Changing settings later:** PM2 keeps its own copy of the environment from when the bot was
+started, and `.env` never overrides a variable that is already set. After editing `.env`, apply
+the change with `VAR=value pm2 restart aszune-ai --update-env` and then `pm2 save`. `/diag` shows
+a warning under **Config source** when the running value and `.env` disagree.
+
 ---
 
 ### Web Dashboard Access
@@ -214,7 +229,17 @@ starting the bot, and enables automatic restart after a reboot.
 | ------------- | ----------------------------------------------------- |
 | `/userinfo`   | Display detailed information about a user             |
 | `/serverinfo` | Display detailed information about the current server |
-| `/diag`       | Owner-only private diagnostics (`live:true` pings the API) |
+
+### Owner Commands (NEW in v2.3.0)
+
+| Command        | Description                                                              |
+| -------------- | ------------------------------------------------------------------------ |
+| `/diag [live]` | Private report of build, AI settings, config source and last API call    |
+
+The report also shows your conversation state; `live:true` additionally sends a tiny real request.
+
+Only users listed in `BOT_OWNER_IDS` can run `/diag`; anyone else gets a private reply with their
+own user ID.
 
 ### Reminder Commands (NEW in v1.7.0)
 
@@ -293,7 +318,8 @@ aszune-ai-bot/
 │   ├── index.js                    # Main entry point
 │   ├── commands/                   # Command handlers (slash commands only)
 │   │   ├── index.js               # Unified command handler
-│   │   └── reminder.js             # Reminder command handler
+│   │   ├── diag.js                 # Owner-only /diag diagnostics
+│   │   └── embeds/                 # Embed builders for analytics/info commands
 │   ├── config/                     # Configuration settings
 │   │   └── config.js              # Global configuration
 │   ├── services/                   # API and core services
@@ -302,6 +328,7 @@ aszune-ai-bot/
 │   │   ├── chat.js                 # Chat message handler
 │   │   ├── database.js             # SQLite database service with reminder support
 │   │   ├── perplexity-secure.js    # Perplexity API service
+│   │   ├── perplexity-secure/helpers/agentApiAdapter.js # Agent API request/response mapping
 │   │   ├── reminder-service.js     # Reminder scheduling and management
 │   │   ├── response-processor.js   # API response processing and formatting
 │   │   ├── storage.js              # Data storage service
@@ -314,7 +341,6 @@ aszune-ai-bot/
 │       ├── discord-analytics.js   # Discord analytics utilities
 │       ├── emoji.js               # Emoji processing
 │       ├── enhanced-cache.js      # Enhanced caching
-│       ├── enhanced-conversation-context.js # Conversation context
 │       ├── error-handler.js       # Error handling utilities
 │       ├── input-validator.js     # Input validation and sanitization
 │       ├── lazy-loader.js         # Lazy loading utilities
@@ -338,8 +364,7 @@ aszune-ai-bot/
 │       └── time-parser.js         # Advanced time parsing for reminders
 ├── data/                           # Persistent data storage
 │   ├── bot.db                     # SQLite database (auto-created)
-│   ├── question_cache.json        # Response cache
-│   ├── test.db                    # Test database
+│   ├── question_cache.json        # Response cache (when caching is enabled)
 │   └── user_stats.json            # User statistics (legacy)
 ├── docs/                          # Version-specific documentation
 ├── scripts/                       # Development and utility scripts
@@ -388,7 +413,7 @@ linting, formatting, security scanning, and maintainability analysis.
 
 ### Quality Standards
 
-- **Test Coverage:** 1,896 tests passing – global 70% gate (`jest.config.js`) plus stricter
+- **Test Coverage:** 2,036 tests passing – global 70% gate (`jest.config.js`) plus stricter
   per-file gates on critical files (`config/jest.critical-coverage.config.js`)
 - **Code Quality:** ESLint 10 flat config (`eslint.config.js`), complexity budget ≤ 15
 - **Security:** Zero tolerance for secrets, timing-safe authentication, `npm audit` gating in CI
@@ -457,7 +482,14 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 - Validate your API key is current and supports the Agent API `/v1/agent` endpoint
 - The bot uses the Perplexity Agent API (the Sonar Chat Completions path was retired 2026-09-27)
   with `AGENT_PRESET` (default `medium`); optionally pin `AGENT_MODEL` or `AGENT_REASONING_EFFORT`
+- Run `/diag live:true`: it sends a tiny real request and shows the error, latency, model and cost
 - Test the same key using a tool like Postman or curl
+
+### 🔴 A setting change in `.env` has no effect
+
+- PM2 is still running the old value (see **Changing settings later** above). `/diag` lists the
+  mismatch under **Config source**; restart with `VAR=value pm2 restart aszune-ai --update-env`
+  and `pm2 save`
 
 ---
 
@@ -468,6 +500,9 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 - [ ] Populate `SEARCH_DOMAIN_FILTER` with gaming-specific domains (wowpedia, wowhead, icy-veins)
 - [ ] Implement AI-powered content moderation for safer interactions
 - [ ] Further decompose `web-dashboard.js` (~2,600 lines remaining)
+- [ ] Long-term memory: rolling summaries of older turns, per-user facts and SQLite FTS recall
+- [ ] Home-lab awareness: answer game-server status/player-count questions from local data
+- [ ] Optional mention or channel gating (the bot currently answers every readable message)
 
 ---
 
@@ -516,7 +551,8 @@ Permission is granted at my sole discretion.
 
 See [CHANGELOG.md](./CHANGELOG.md) for full version history.
 
-For detailed release notes:
+For release notes from v2.1.0 onwards see
+[GitHub Releases](https://github.com/powerfulqa/aszune-ai-bot/releases). Older release notes:
 
 - [v2.0.0](./docs/RELEASE-NOTES-v2.0.0.md) - Security, Perplexity API Enhancements, Architecture
 - [v1.11.0](./docs/release-notes/RELEASE-NOTES-v1.11.0.md) - Enhanced Utility Commands (/userinfo,
