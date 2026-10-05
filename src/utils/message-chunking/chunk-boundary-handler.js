@@ -21,9 +21,6 @@ function preprocessMessage(message) {
     // Ensure proper indentation for numbered lists (especially in summaries)
     processedMessage = processedMessage.replace(/^(\d+)\.\s*(\S)/gm, '$1. $2');
 
-    // Fix missing spaces after numbered list periods
-    processedMessage = processedMessage.replace(/(\d+\.)(\S)/g, '$1 $2');
-
     // Add newlines before numbered lists for better formatting
     processedMessage = processedMessage.replace(/([^\n])(\n\d+\.\s+)/g, '$1\n$2');
 
