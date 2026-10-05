@@ -141,6 +141,31 @@ describe('PerplexitySecure - Search Features', () => {
       expect(formatCitationFooter('Text', [])).toBe('');
       expect(formatCitationFooter('Text', undefined)).toBe('');
     });
+
+    it('leaves out sources the answer already links itself', () => {
+      const content =
+        'Plays very differently [1][2].\n\n' +
+        '[1] [Changeling guide](https://a.com/guide) · [2] [Faction guide](https://b.com/faction)';
+      expect(formatCitationFooter(content, ['https://a.com/guide', 'https://b.com/faction'])).toBe(
+        ''
+      );
+      expect(
+        formatCitationFooter('See [1][2] and [Faction guide](https://b.com/faction)', [
+          'https://a.com/guide',
+          'https://b.com/faction',
+        ])
+      ).toBe('\n\n*Sources: [1] [a.com](https://a.com/guide)*');
+    });
+
+    it('lists a URL once when the same source appears under two numbers', () => {
+      expect(
+        formatCitationFooter('Cult mechanics [1][2][3].', [
+          'https://a.com/x',
+          'https://b.com/y',
+          'https://a.com/x',
+        ])
+      ).toBe('\n\n*Sources: [1] [a.com](https://a.com/x) · [2] [b.com](https://b.com/y)*');
+    });
   });
 
   describe('Recency filter detection in _processChatResponse', () => {

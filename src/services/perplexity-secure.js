@@ -63,17 +63,26 @@ const getCachePruner = lazyLoadModule('../utils/cache-pruner');
 /**
  * Build a numbered source footer matching the inline [N] markers.
  * Lists the sources the answer actually cites; when it cites none, the first
- * few sources the agent used.
+ * few sources the agent used. A URL is listed once: sources the answer already
+ * links itself, or that repeat an earlier number, are left out.
  * @param {string} content - Answer text (with [N] markers)
  * @param {Array<string>} citations - Source URLs in result order (1-based ids)
  * @returns {string} Footer to append, or '' when there are no sources
  */
 function formatCitationFooter(content, citations) {
   if (!Array.isArray(citations) || citations.length === 0) return '';
-  const cited = new Set([...String(content).matchAll(/\[(\d{1,2})\]/g)].map((m) => Number(m[1])));
+  const text = String(content);
+  const cited = new Set([...text.matchAll(/\[(\d{1,2})\]/g)].map((m) => Number(m[1])));
   const numbers = cited.size > 0 ? [...cited].sort((a, b) => a - b) : [1, 2, 3, 4, 5];
+  const seen = new Set();
   const links = numbers
     .filter((n) => n >= 1 && n <= citations.length)
+    .filter((n) => {
+      const url = citations[n - 1];
+      if (!url || seen.has(url) || text.includes(url)) return false;
+      seen.add(url);
+      return true;
+    })
     .slice(0, 8)
     .map((n) => {
       try {
