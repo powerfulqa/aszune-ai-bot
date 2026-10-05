@@ -245,6 +245,24 @@ describe('extractCitations', () => {
   it('returns [] when absent', () => {
     expect(extractCitations({})).toEqual([]);
   });
+
+  it('places results by their global id so [web:N] maps to the right url', () => {
+    expect(
+      extractCitations({
+        output: [
+          {
+            type: 'search_results',
+            results: [
+              { id: 1, url: 'https://a.com' },
+              { id: 2, url: 'https://b.com' },
+            ],
+          },
+          { type: 'search_results', results: [{ id: 4, url: 'https://d.com' }] },
+          { type: 'message', content: [{ text: 'x', annotations: [{ url: 'https://z.com' }] }] },
+        ],
+      })
+    ).toEqual(['https://a.com', 'https://b.com', null, 'https://d.com']);
+  });
 });
 
 describe('summarizeUsageDetails', () => {

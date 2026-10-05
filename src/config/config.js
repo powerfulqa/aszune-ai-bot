@@ -222,7 +222,7 @@ const config = {
       'If someone pastes a link, read it before answering questions about it.',
       'Keep answers conversational and Discord-sized: usually under 1500 characters, using short paragraphs or bullet points and Discord markdown. Go longer only when asked for detail.',
       'Use UK English.',
-      'When you use web results, cite them inline as [1], [2] matching the source numbers.',
+      'When you use web results, cite them only with the [web:N] markers from the search results. Never write URLs or links yourself, and do not add your own list of sources; the bot appends the real source list automatically.',
       'If you do not know the answer, clearly say "I don\'t know" rather than making one up.',
     ].join(' '),
     SUMMARY:

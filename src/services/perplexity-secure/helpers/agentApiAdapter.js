@@ -162,7 +162,29 @@ function urlsFromOutputItem(item) {
   return out;
 }
 
+/**
+ * Place search results by their own 1-based `id`, which is what the model's
+ * `[web:N]` markers point at. Ids are global across every search in the turn,
+ * so list order is NOT the same thing once the agent searches twice.
+ * @param {Object} body
+ * @returns {Array<string>} Sparse array (index id-1 = url); [] when no ids
+ */
+function citationsById(body) {
+  const byId = [];
+  for (const item of Array.isArray(body?.output) ? body.output : []) {
+    for (const r of Array.isArray(item?.results) ? item.results : []) {
+      if (Number.isInteger(r?.id) && r.id >= 1 && typeof r.url === 'string' && r.url) {
+        byId[r.id - 1] = r.url;
+      }
+    }
+  }
+  return byId;
+}
+
 function extractCitations(body) {
+  const byId = citationsById(body);
+  if (byId.length > 0) return Array.from(byId, (u) => u || null);
+
   const urls = new Set();
   const add = (u) => {
     if (typeof u === 'string' && u) urls.add(u);
