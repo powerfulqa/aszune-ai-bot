@@ -61,6 +61,25 @@ const lazyLoadModule = (importPath) => {
 const getCachePruner = lazyLoadModule('../utils/cache-pruner');
 
 /**
+ * Remove a source list the model wrote itself (lines that start with a [N]
+ * marker, or a "Sources:"/"References:" heading). The bot appends the real
+ * list; the model's own one repeats it or carries invented links.
+ * @param {string} content - Answer text
+ * @returns {string} Answer without model-written source lines
+ */
+function stripModelSourceList(content) {
+  if (typeof content !== 'string') return content;
+  return content
+    .split('\n')
+    .filter(
+      (line) => !/^\s*(?:[-*•]\s*)?(?:\[\d{1,2}\]|[*_]*(?:sources|references)\s*:)/i.test(line)
+    )
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd();
+}
+
+/**
  * Build a numbered source footer matching the inline [N] markers.
  * Lists the sources the answer actually cites; when it cites none, the first
  * few sources the agent used. A URL is listed once: sources the answer already
@@ -609,7 +628,7 @@ class PerplexityService {
     const requestFn = () => this.sendChatRequest(history, requestOptions);
     const response = await this.responseProcessor.generateResponseWithRetry(requestFn, opts);
 
-    let content = this.responseProcessor.extractResponseContent(response);
+    let content = stripModelSourceList(this.responseProcessor.extractResponseContent(response));
 
     content += formatCitationFooter(content, response.citations);
 
@@ -1120,3 +1139,4 @@ class PerplexityService {
 
 module.exports = new PerplexityService();
 module.exports.formatCitationFooter = formatCitationFooter;
+module.exports.stripModelSourceList = stripModelSourceList;

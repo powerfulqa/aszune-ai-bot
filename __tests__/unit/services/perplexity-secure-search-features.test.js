@@ -157,6 +157,19 @@ describe('PerplexitySecure - Search Features', () => {
       ).toBe('\n\n*Sources: [1] [a.com](https://a.com/guide)*');
     });
 
+    it('strips a source list the model wrote itself but keeps inline markers', () => {
+      const { stripModelSourceList } = require('../../../src/services/perplexity-secure');
+      expect(
+        stripModelSourceList(
+          'Hotfix 9.0.2 is current [1].\n\n[1] [1]\n\n' +
+            '- [2] [Faction guide](https://b.com/f)\n**Sources:** a.com, b.com\n'
+        )
+      ).toBe('Hotfix 9.0.2 is current [1].');
+      expect(stripModelSourceList('Pick Cathay [1].\nIt is forgiving [2].')).toBe(
+        'Pick Cathay [1].\nIt is forgiving [2].'
+      );
+    });
+
     it('lists a URL once when the same source appears under two numbers', () => {
       expect(
         formatCitationFooter('Cult mechanics [1][2][3].', [

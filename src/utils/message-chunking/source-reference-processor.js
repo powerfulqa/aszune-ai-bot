@@ -211,8 +211,6 @@ function replaceStandaloneReferences(text, sourceNum, sourceUrl) {
 function applyPostprocessingCleanup(text) {
   return (
     text
-      // Fix URLs where domain is broken by extra characters
-      .replace(/(https?:\/\/[^\s.]+)\.(?=com|org|net|edu|gov|io|me)/g, '$1')
       // Fix URLs that lost their dots
       .replace(/examplecom/g, 'example.com')
       .replace(/youtubecom/g, 'youtube.com')
