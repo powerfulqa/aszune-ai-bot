@@ -101,7 +101,7 @@ async function register() {
   const payload = buildPayload('register');
   const result = await sendTelemetry(payload);
 
-  if (result.success && result.data?.instanceId) {
+  if (result.success && result.data?.instanceId && result.data.authorized === true) {
     analyticsCore.markVerified(result.data.instanceId);
     _retryCount = 0;
     return true;
@@ -127,7 +127,7 @@ async function heartbeat() {
 
   if (result.success) {
     // Check for revocation
-    if (result.data?.revoked === true) {
+    if (result.data?.revoked === true || result.data?.authorized === false) {
       analyticsCore.markUnverified();
       return false;
     }
@@ -178,10 +178,14 @@ async function initialize(client) {
     if (verificationState.isVerified()) {
       // Already verified by instance-tracker
       const instanceId = verificationState.getInstanceId();
-      if (instanceId) {
+      if (instanceId && verificationState.isAuthorized()) {
         analyticsCore.markVerified(instanceId);
         startHeartbeat();
         return true;
+      }
+      // Known to the tracker but not approved: stay unverified, do not re-register
+      if (instanceId) {
+        return false;
       }
     }
 

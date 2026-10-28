@@ -215,6 +215,10 @@ class InstanceTracker {
 
     try {
       const response = await sendBeacon(TRACKING_CONFIG.server, payload);
+      if (!response) {
+        logger.warn('Heartbeat got no valid response from tracking server');
+        return false;
+      }
       this.lastHeartbeat = new Date();
 
       if (response?.revoked) {

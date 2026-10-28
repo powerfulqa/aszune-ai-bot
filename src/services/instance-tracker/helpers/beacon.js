@@ -61,6 +61,11 @@ async function attemptSendBeacon(serverUrl, payload) {
 
     if (!response.ok) {
       logger.warn('Beacon request failed', { status: response.status });
+      // Keep an explicit revocation signal even on an error status (e.g. 404 unknown instance)
+      const body = await response.json().catch(() => null);
+      if (body && (body.revoked === true || body.authorized === false)) {
+        return { success: true, data: body };
+      }
       return { success: false, data: null };
     }
 

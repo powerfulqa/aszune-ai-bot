@@ -125,4 +125,40 @@ describe('InstanceTracker', () => {
       expect(status).toHaveProperty('trackingServer');
     });
   });
+
+  describe('heartbeat revocation', () => {
+    it('should shut down when the tracker answers 404 revoked', async () => {
+      jest.resetModules();
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: jest.fn().mockResolvedValue({
+          error: 'Instance not found',
+          revoked: true,
+          authorized: false,
+        }),
+      });
+      const instanceTracker = require('../../../src/services/instance-tracker');
+      instanceTracker.isVerified = true;
+      instanceTracker.instanceId = 'inst_test';
+      const revokeSpy = jest
+        .spyOn(instanceTracker, '_handleRevocation')
+        .mockImplementation(() => {});
+
+      const result = await instanceTracker._sendHeartbeat(null);
+
+      expect(result).toBe(false);
+      expect(revokeSpy).toHaveBeenCalledWith(null, 'Instance has been REVOKED');
+    });
+
+    it('should not report success when the tracker gives no valid response', async () => {
+      jest.resetModules();
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 503 });
+      const instanceTracker = require('../../../src/services/instance-tracker');
+      instanceTracker.isVerified = true;
+      instanceTracker.instanceId = 'inst_test';
+
+      await expect(instanceTracker._sendHeartbeat(null)).resolves.toBe(false);
+    });
+  });
 });

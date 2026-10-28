@@ -83,6 +83,17 @@ describe('ReminderService command parsing', () => {
     });
   });
 
+  describe('cancelReminder', () => {
+    it('should clear the numeric-keyed timer when cancelled with a string id', async () => {
+      reminderService.activeTimers.set(1, { type: 'timeout', timer: setTimeout(() => {}, 1000) });
+
+      const result = await reminderService.cancelReminder('1', 'user1');
+
+      expect(result).toBe(true);
+      expect(reminderService.activeTimers.has(1)).toBe(false);
+    });
+  });
+
   describe('deleteReminder', () => {
     it('should delete reminder and clear timer', async () => {
       reminderService.activeTimers.set(1, { type: 'timeout', timer: setTimeout(() => {}, 1000) });
