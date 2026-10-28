@@ -54,7 +54,7 @@ function getDueReminders(db) {
 
 function completeReminder(db, reminderId) {
   const stmt = db.prepare(`
-    UPDATE reminders SET status = 'completed' WHERE id = ?
+    UPDATE reminders SET status = 'completed' WHERE id = ? AND status = 'active'
   `);
   const result = stmt.run(reminderId);
   return result.changes > 0;

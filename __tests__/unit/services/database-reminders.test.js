@@ -130,6 +130,15 @@ describe('DatabaseService - Reminders', () => {
       expect(activeReminders.length).toBe(0);
     });
 
+    it('should not complete a cancelled reminder', () => {
+      const userId = 'test-user';
+      const futureTime = new Date(Date.now() + 3600000);
+      const reminder = dbService.createReminder(userId, 'Test reminder', futureTime);
+      dbService.cancelReminder(reminder.id, userId);
+
+      expect(dbService.completeReminder(reminder.id)).toBe(false);
+    });
+
     it('should return false for non-existent reminder', () => {
       const result = dbService.completeReminder(999);
       expect(result).toBe(false);

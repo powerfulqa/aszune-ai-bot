@@ -764,6 +764,22 @@ async function handleTextCommand(message) {
   return null;
 }
 
+// Slash commands that call the paid Perplexity API
+const PAID_COMMANDS = new Set(['summary', 'summarise']);
+
+/**
+ * Apply the chat path's per-user rate limit to paid commands
+ * @param {Object} interaction - Discord.js interaction object
+ * @returns {boolean} - true if the user must wait
+ */
+function isPaidCommandRateLimited(interaction) {
+  if (!PAID_COMMANDS.has(interaction.commandName)) return false;
+  const userId = interaction.user.id;
+  if (conversationManager.isRateLimited(userId)) return true;
+  conversationManager.updateTimestamp(userId);
+  return false;
+}
+
 /**
  * Handle slash command interactions
  * @param {Object} interaction - Discord.js interaction object
@@ -781,6 +797,13 @@ async function handleSlashCommand(interaction) {
   // Don't execute if already replied
   if (interaction.replied) {
     return;
+  }
+
+  if (isPaidCommandRateLimited(interaction)) {
+    return interaction.reply({
+      content: 'Please wait a few seconds before sending another request.',
+      ephemeral: true,
+    });
   }
 
   try {

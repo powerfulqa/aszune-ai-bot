@@ -29,6 +29,8 @@ jest.mock('../../src/utils/conversation', () => {
     getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
     updateUserStats: jest.fn(),
     addMessage: jest.fn(),
+    isRateLimited: jest.fn().mockReturnValue(false),
+    updateTimestamp: jest.fn(),
   };
 
   return jest.fn().mockImplementation(() => mockInstance);
@@ -137,6 +139,34 @@ describe('Commands - Slash Command Handler', () => {
         true
       );
       expect(interaction.deferReply).toHaveBeenCalled();
+    });
+
+    it('should rate limit /summarise like chat and not call Perplexity', async () => {
+      conversationManager.isRateLimited.mockReturnValueOnce(true);
+      const interaction = createMockInteraction({
+        commandName: 'summarise',
+        options: {
+          getString: jest.fn().mockReturnValue('Hello world'),
+        },
+      });
+
+      await handleSlashCommand(interaction);
+
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: 'Please wait a few seconds before sending another request.',
+        ephemeral: true,
+      });
+      expect(perplexityService.generateSummary).not.toHaveBeenCalled();
+      expect(conversationManager.updateTimestamp).not.toHaveBeenCalled();
+    });
+
+    it('should record the rate-limit timestamp for an allowed /summary', async () => {
+      const interaction = createMockInteraction({ commandName: 'summary' });
+
+      await handleSlashCommand(interaction);
+
+      expect(conversationManager.isRateLimited).toHaveBeenCalledWith(interaction.user.id);
+      expect(conversationManager.updateTimestamp).toHaveBeenCalledWith(interaction.user.id);
     });
 
     it('should handle /summarise command without text', async () => {

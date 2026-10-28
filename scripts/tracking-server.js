@@ -23,14 +23,25 @@ const CONFIG = {
   port: process.env.PORT || 3001,
   adminKey: process.env.TRACKING_ADMIN_KEY || null,
   dbPath: process.env.INSTANCE_DB_PATH || './data/instances.db',
+  // Optional bind address (e.g. 127.0.0.1). Unset keeps the old all-interfaces bind.
+  bindHost: process.env.TRACKING_BIND_HOST || undefined,
+  // Forwarding headers are ignored unless the operator names a trusted proxy
+  // (Express 'trust proxy' value: hop count, or address/subnet list such as 'loopback').
+  trustProxy: process.env.TRACKING_TRUST_PROXY || null,
   onlineThresholdMs: 2 * 60 * 60 * 1000, // 2 hours
-  // Auto-authorize first instance (your Pi) or instances from same IP
+  // Auto-authorize first instance (your Pi, connecting over loopback) or instances from same IP
   autoAuthorizeFirstInstance: true,
   autoAuthorizeSameIp: true,
 };
 
 // Initialize Express
 const app = express();
+if (CONFIG.trustProxy) {
+  app.set(
+    'trust proxy',
+    /^\d+$/.test(CONFIG.trustProxy) ? Number(CONFIG.trustProxy) : CONFIG.trustProxy
+  );
+}
 app.use(cors());
 app.use(express.json());
 
@@ -166,8 +177,8 @@ function findInstanceByKey(instanceKey) {
  * Determine if an instance should be auto-authorized
  */
 function determineAutoAuthorization(clientIp) {
-  // Auto-authorize first instance
-  if (CONFIG.autoAuthorizeFirstInstance && instances.size === 0) {
+  // Auto-authorize first instance, but only from the tracker's own host
+  if (CONFIG.autoAuthorizeFirstInstance && instances.size === 0 && isLoopback(clientIp)) {
     // eslint-disable-next-line no-console
     console.log(`[AUTO-AUTH] First instance - auto-authorizing`);
     return true;
@@ -336,7 +347,12 @@ function updateInstanceStats(instance, stats) {
 }
 
 function getClientIp(req) {
-  return req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  // req.ip is the TCP peer unless a trusted proxy is configured (CONFIG.trustProxy)
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+function isLoopback(ip) {
+  return ip === '::1' || /^(::ffff:)?127\./.test(ip);
 }
 
 function isOnline(lastSeen) {
@@ -454,7 +470,7 @@ function start() {
 
   loadPersistedInstances();
 
-  app.listen(CONFIG.port, () => {
+  app.listen(CONFIG.port, CONFIG.bindHost, () => {
     // eslint-disable-next-line no-console
     console.log(`Instance Tracking Server running on port ${CONFIG.port}`);
     // eslint-disable-next-line no-console

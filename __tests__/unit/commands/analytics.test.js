@@ -63,6 +63,8 @@ jest.mock('../../../src/utils/conversation', () => {
     getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
     updateUserStats: jest.fn(),
     addMessage: jest.fn(),
+    isRateLimited: jest.fn().mockReturnValue(false),
+    updateTimestamp: jest.fn(),
   };
   return jest.fn(() => mockInstance);
 });

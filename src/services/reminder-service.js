@@ -138,7 +138,9 @@ class ReminderService extends EventEmitter {
   }
 
   clearReminderTimer(reminderId) {
-    const existingTimer = this.activeTimers.get(reminderId);
+    // Timers are keyed by the numeric DB id; slash-command ids arrive as strings
+    const key = Number(reminderId);
+    const existingTimer = this.activeTimers.get(key);
     if (existingTimer) {
       if (existingTimer.type === 'interval') {
         clearInterval(existingTimer.timer);
@@ -148,7 +150,7 @@ class ReminderService extends EventEmitter {
         // Legacy support for direct timer objects
         clearTimeout(existingTimer);
       }
-      this.activeTimers.delete(reminderId);
+      this.activeTimers.delete(key);
     }
   }
 
