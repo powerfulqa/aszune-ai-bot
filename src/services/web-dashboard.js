@@ -15,7 +15,7 @@ const { execPromise } = require('../utils/shell-exec-helper');
 const { execFileAsync, assertSafeServiceName, clampInt } = require('../utils/safe-exec');
 const { cached } = require('../utils/cached');
 const { wrapAsyncHandler } = require('./web-dashboard/routes/routeHelper');
-const { isValidAction } = require('../utils/pm2-service');
+const { isValidAction, runPm2ServiceAction, BOT_PM2_APP_NAME } = require('../utils/pm2-service');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -1200,70 +1200,22 @@ class WebDashboardService {
     }
   }
 
-  async _attemptRestart() {
-    const serviceName = process.env.SERVICE_NAME || 'aszune-ai-bot';
-    const pm2AppName = process.env.name || 'aszune-ai';
-
-    const pm2Result = await this._tryPm2Restart(pm2AppName);
-    if (pm2Result) return pm2Result;
-
-    const systemctlResult = await this._trySystemctlRestart(serviceName);
-    if (systemctlResult) return systemctlResult;
-
-    const sudoResult = await this._trySystemctlWithSudo(serviceName);
-    if (sudoResult) return sudoResult;
-
-    return this._fallbackRestart();
-  }
-
   /**
-   * Generic restart command executor to reduce duplication
-   * @private
+   * Restart through PM2 only (the canonical app from pm2-service.js). There is
+   * no systemctl path: running the bot under both PM2 and systemd causes a
+   * restart loop. If PM2 is unavailable the process exits and whatever
+   * supervises it brings it back.
    */
-  async _executeRestartCommand(command, logPrefix, successMessage, logLevel = 'info') {
+  async _attemptRestart() {
     try {
-      logger.info(`Attempting ${logPrefix}: ${command}`);
-      await execPromise(command, { timeout: 10000 });
-      logger.info(successMessage);
-      return {
-        success: true,
-        message: successMessage,
-        timestamp: new Date().toISOString(),
-      };
+      await runPm2ServiceAction(BOT_PM2_APP_NAME, 'restart');
+      const message = `Bot restart initiated via PM2 ${BOT_PM2_APP_NAME}`;
+      logger.info(message);
+      return { success: true, message, timestamp: new Date().toISOString() };
     } catch (error) {
-      logger[logLevel](`${logPrefix} failed: ${error.message}`);
-      return null;
+      logger.warn(`PM2 restart failed: ${error.message}`);
+      return this._fallbackRestart();
     }
-  }
-
-  async _tryPm2Restart(pm2AppName) {
-    return this._executeRestartCommand(
-      `pm2 restart ${pm2AppName}`,
-      'PM2 restart',
-      `Bot restart initiated via PM2 ${pm2AppName}`,
-      'debug'
-    );
-  }
-
-  async _trySystemctlRestart(serviceName) {
-    return this._executeRestartCommand(
-      `systemctl restart ${serviceName}`,
-      'restart with systemctl',
-      `Bot restart initiated via systemctl ${serviceName}`,
-      'warn'
-    );
-  }
-
-  async _trySystemctlWithSudo(serviceName) {
-    logger.info('Attempting with sudo...');
-    const result = await this._executeRestartCommand(
-      `sudo systemctl restart ${serviceName}`,
-      'systemctl with sudo',
-      'Bot restart initiated via systemctl (with sudo)',
-      'warn'
-    );
-    if (result) logger.info('Bot restart succeeded with sudo');
-    return result;
   }
 
   _fallbackRestart() {
