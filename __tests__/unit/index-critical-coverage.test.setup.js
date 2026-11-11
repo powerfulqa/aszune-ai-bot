@@ -77,7 +77,6 @@ function setupIndexCriticalMocks() {
       FILE: 0o644,
       DIRECTORY: 0o755,
     },
-    initializePiOptimizations: jest.fn().mockResolvedValue(),
   }));
 
   jest.doMock('discord.js', () => ({

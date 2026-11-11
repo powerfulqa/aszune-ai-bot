@@ -44,13 +44,10 @@ const originalProcessExit = process.exit;
 const originalEnv = { ...process.env };
 
 function resetConfig() {
-  const previousInitialize = mockConfigData.initializePiOptimizations;
   Object.keys(mockConfigData).forEach((key) => {
     delete mockConfigData[key];
   });
   Object.assign(mockConfigData, JSON.parse(JSON.stringify(baseConfig)));
-  mockConfigData.initializePiOptimizations =
-    previousInitialize || jest.fn().mockResolvedValue(mockConfigData);
 }
 
 function resetMockClient() {

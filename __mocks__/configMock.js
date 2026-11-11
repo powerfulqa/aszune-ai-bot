@@ -97,5 +97,4 @@ module.exports = {
   },
 
   // Mock function for Pi optimizations initialization
-  initializePiOptimizations: jest.fn().mockResolvedValue(module.exports),
 };

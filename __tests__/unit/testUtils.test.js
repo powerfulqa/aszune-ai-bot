@@ -12,7 +12,7 @@ const {
   mockReply,
   mockReact,
   mockSendTyping,
-} = require('../../src/utils/testUtils');
+} = require('../utils/testUtils');
 
 describe('Test Utilities', () => {
   beforeEach(() => {

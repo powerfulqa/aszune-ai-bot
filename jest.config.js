@@ -33,6 +33,7 @@ module.exports = {
     '/__tests__/__mocks__/loggerMock.test.js',
     '/__tests__/utils/undici-mock.js',
     '/__tests__/utils/undici-mock-helpers.js',
+    '/__tests__/utils/testUtils.js',
     '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',
     '/bot-shutdown.test.js/',

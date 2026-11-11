@@ -39,7 +39,7 @@ jest.mock('../../src/utils/conversation', () => {
 const { handleSlashCommand } = require('../../src/commands');
 const ConversationManager = require('../../src/utils/conversation');
 const perplexityService = require('../../src/services/perplexity-secure');
-const { createMockInteraction, resetMocks } = require('../../src/utils/testUtils');
+const { createMockInteraction, resetMocks } = require('../utils/testUtils');
 
 describe('Commands - Slash Command Handler', () => {
   let conversationManager;

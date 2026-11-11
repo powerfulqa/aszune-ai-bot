@@ -22,18 +22,6 @@ try {
 // Set up logger early
 const logger = require('./utils/logger');
 
-// Helper function to get config inside functions to avoid circular dependencies
-function getConfig() {
-  return require('./config/config');
-}
-
-// Initialize Pi-specific optimizations if enabled
-async function bootWithOptimizations() {
-  const _currentConfig = getConfig();
-  logger.info('Bot initialization started...');
-  // Pi optimizations are now initialized at module load time in production mode
-}
-
 // Core dependencies
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
@@ -224,8 +212,6 @@ function _setupDiscordEventHandlers() {
       logger.error('Failed to connect Discord client to dashboard:', error);
     }
 
-    // Initialize Pi optimizations after connection is established
-    await bootWithOptimizations();
     await registerSlashCommands();
   });
 
@@ -470,6 +456,5 @@ module.exports = {
   shutdown, // Export shutdown function for testing
   unhandledRejectionHandler, // Export for direct testing
   uncaughtExceptionHandler, // Export for direct testing
-  bootWithOptimizations, // Export for branch coverage testing
   registerSlashCommands, // Export for branch coverage testing
 };

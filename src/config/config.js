@@ -21,7 +21,6 @@ if (
   throw new Error(`SEARCH_DOMAIN_FILTER allows at most ${MAX_SEARCH_DOMAINS} domains.`);
 }
 
-// Export the basic config first - Pi optimizations will be initialized later dynamically
 /**
  * Helper function to parse integer environment variables with fallback
  * Safely parses environment variables as integers, returning a default value
@@ -162,7 +161,8 @@ const config = {
     ROTATION_CHECK_INTERVAL_MS: 60000,
   },
 
-  // Raspberry Pi optimizations (default values, will be overridden by pi-detector)
+  // Raspberry Pi optimizations, set from the environment (start-pi-optimized.sh
+  // detects the Pi model and exports the PI_* variables)
   PI_OPTIMIZATIONS: {
     ENABLED: process.env.ENABLE_PI_OPTIMIZATIONS === 'true',
     LOG_LEVEL: process.env.PI_LOG_LEVEL || 'ERROR',
@@ -267,35 +267,4 @@ const config = {
   },
 };
 
-/**
- * Initialize Pi-specific optimizations and update config
- * This function should be called when the bot starts
- */
-async function initializePiOptimizations() {
-  // Import pi-detector only when needed to avoid circular dependency
-  const piDetector = require('../utils/pi-detector');
-  try {
-    // Only attempt to initialize if optimizations are enabled
-    if (config.PI_OPTIMIZATIONS.ENABLED) {
-      const optimizedSettings = await piDetector.initPiOptimizations();
-
-      // Update the configuration with optimized settings
-      config.PI_OPTIMIZATIONS = {
-        ...config.PI_OPTIMIZATIONS,
-        ...optimizedSettings,
-      };
-
-      // Store Pi information for reference
-      config.PI_INFO = optimizedSettings.PI_INFO;
-    }
-    return config;
-  } catch (error) {
-    // Silently continue without Pi optimizations if initialization fails
-    // Logger may not be available during config init phase
-    return config;
-  }
-}
-
-// Export the config and initialization function
 module.exports = config;
-module.exports.initializePiOptimizations = initializePiOptimizations;

@@ -1,6 +1,6 @@
 /**
  * Additional tests for src/config/config.js Pi optimization branches
- * Part 2: Pi Optimization Configuration and initializePiOptimizations Function
+ * Part 2: Pi Optimization Configuration
  */
 
 describe('Config - Pi Optimization Branch Coverage', () => {
@@ -57,90 +57,6 @@ describe('Config - Pi Optimization Branch Coverage', () => {
       expect(config.PI_OPTIMIZATIONS.DEBOUNCE_MS).toBe(300);
       expect(config.PI_OPTIMIZATIONS.MEMORY_LIMITS.RAM_THRESHOLD_MB).toBe(200);
       expect(config.PI_OPTIMIZATIONS.MAX_CONNECTIONS).toBe(2);
-    });
-  });
-
-  describe('initializePiOptimizations Function Branches', () => {
-    let mockPiDetector;
-
-    beforeEach(() => {
-      mockPiDetector = {
-        initPiOptimizations: jest.fn(),
-      };
-      jest.doMock('../../src/utils/pi-detector', () => mockPiDetector);
-    });
-
-    afterEach(() => {
-      jest.dontMock('../../src/utils/pi-detector');
-    });
-
-    it('should return config when pi-detector succeeds', async () => {
-      const expectedOptimizations = {
-        ENABLED: true,
-        MAX_CONNECTIONS: 1,
-        LOW_CPU_MODE: true,
-      };
-      mockPiDetector.initPiOptimizations.mockResolvedValue(expectedOptimizations);
-
-      // Enable Pi optimizations for this test
-      process.env.ENABLE_PI_OPTIMIZATIONS = 'true';
-
-      const config = require('../../src/config/config');
-      const result = await config.initializePiOptimizations();
-
-      expect(result).toBe(config); // Returns entire config object
-      expect(result.PI_OPTIMIZATIONS.MAX_CONNECTIONS).toBe(1);
-      expect(mockPiDetector.initPiOptimizations).toHaveBeenCalled();
-    });
-
-    it('should handle pi-detector errors gracefully', async () => {
-      mockPiDetector.initPiOptimizations.mockRejectedValue(new Error('Pi detection failed'));
-
-      const config = require('../../src/config/config');
-      const result = await config.initializePiOptimizations();
-
-      // Should return the config object even when error occurs
-      expect(result).toBe(config);
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('MAX_CONNECTIONS');
-    });
-
-    it('should handle missing pi-detector module gracefully', async () => {
-      // Mock pi-detector to simulate module loading failure during function call
-      mockPiDetector.initPiOptimizations.mockImplementation(() => {
-        throw new Error('Module not found');
-      });
-
-      const config = require('../../src/config/config');
-
-      // Function should handle missing module gracefully
-      const result = await config.initializePiOptimizations();
-      expect(result).toBe(config);
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
-    });
-
-    it('should handle pi-detector returning null', async () => {
-      mockPiDetector.initPiOptimizations.mockResolvedValue(null);
-
-      const config = require('../../src/config/config');
-      const result = await config.initializePiOptimizations();
-
-      // Should return config when pi-detector returns null
-      expect(result).toBe(config);
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('MAX_CONNECTIONS');
-    });
-
-    it('should handle pi-detector returning undefined', async () => {
-      mockPiDetector.initPiOptimizations.mockResolvedValue(undefined);
-
-      const config = require('../../src/config/config');
-      const result = await config.initializePiOptimizations();
-
-      // Should return config when pi-detector returns undefined
-      expect(result).toBe(config);
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('ENABLED');
-      expect(result.PI_OPTIMIZATIONS).toHaveProperty('MAX_CONNECTIONS');
     });
   });
 

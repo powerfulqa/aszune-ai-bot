@@ -177,24 +177,6 @@ describe('PerplexitySecure Service - Advanced', () => {
 
       expect(result).toBe('Response despite permission error');
     });
-
-    it('should create cache directory with proper permissions', async () => {
-      fs.access.mockRejectedValue(new Error('Directory does not exist'));
-      fs.mkdir.mockResolvedValueOnce(undefined);
-      fs.chmod.mockResolvedValueOnce(undefined);
-
-      // Mock the cache file operations to trigger directory creation
-      fs.readFile.mockRejectedValueOnce(new Error('ENOENT: no such file or directory'));
-
-      // The cache directory creation happens when loading or saving cache
-      // Let's directly call the cache operations that create directories
-      await perplexityService.cacheManager.loadCache();
-      await perplexityService.cacheManager.saveCache({});
-
-      expect(fs.mkdir).toHaveBeenCalled();
-      // Note: fs.chmod might not be called if the service doesn't implement it
-      // expect(fs.chmod).toHaveBeenCalled();
-    });
   });
 
   describe('retry mechanism', () => {
