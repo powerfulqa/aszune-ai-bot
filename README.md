@@ -337,7 +337,6 @@ aszune-ai-bot/
 │       ├── cache-pruner.js        # Cache cleanup utilities
 │       ├── connection-throttler.js # Connection throttling
 │       ├── conversation.js        # Conversation management
-│       ├── debouncer.js           # Function debouncing
 │       ├── discord-analytics.js   # Discord analytics utilities
 │       ├── emoji.js               # Emoji processing
 │       ├── enhanced-cache.js      # Enhanced caching
@@ -357,9 +356,7 @@ aszune-ai-bot/
 │       ├── performance-dashboard.js # Performance dashboard
 │       ├── performance-monitor.js # Performance tracking
 │       ├── performance-tracker.js # Performance metrics
-│       ├── pi-detector.js         # Raspberry Pi detection
 │       ├── resource-optimizer.js  # Resource optimization
-│       ├── security-monitor.js    # Security monitoring
 │       ├── testUtils.js           # Test utilities
 │       └── time-parser.js         # Advanced time parsing for reminders
 ├── data/                           # Persistent data storage

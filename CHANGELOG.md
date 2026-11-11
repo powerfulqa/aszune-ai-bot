@@ -25,6 +25,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   SortableJS 1.15.7 is vendored in `dashboard/public/vendor/`, not loaded from a CDN
 - The one-time dashboard token link is now `http://<host>:3000/#token=…` (was `?token=`), so the
   token never reaches request lines or proxy logs
+- The dashboard restart button restarts the bot through PM2 only. The `systemctl` and `sudo`
+  fallbacks are gone and `SERVICE_NAME` is no longer read (`PM2_APP_NAME` overrides the app name)
+- SQLite runs in WAL mode to cut SD-card writes. Backups of a running bot must include `bot.db-wal`
+  and `bot.db-shm`
+- CI runs the coverage gate and the per-file critical gate on pull requests
 
 ### Fixed
 
@@ -43,11 +48,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   no longer advertise Express; CORS uses the `cors` package instead of hand-rolled headers
 - Service boot-status checks run without a shell
 - The Database page shows its preselected table on open
+- Reminders are marked completed only after they were sent. A failed send is retried (every 60s,
+  five attempts, then on the next start), and reminders that fell due while the bot was down are
+  delivered late instead of being dropped
+- The logger no longer runs `mkdir` and `stat` for every line and keeps lines in order
 
 ### Removed
 
 - About 550 lines of unreachable code in `perplexity-secure.js` (a second file cache, duplicate
   retry logic, header helpers) and the tests that only covered it
+- Unused modules `pi-detector.js`, `debouncer.js` and `security-monitor.js`; the test helper
+  `testUtils.js` moved from `src/utils` to `__tests__/utils`
 
 ## [2.3.0] - 2026-10-04
 
