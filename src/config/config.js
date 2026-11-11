@@ -11,6 +11,16 @@ if (missingEnvVars.length > 0) {
   throw new Error(`Missing ${missingEnvVars.join(', ')} in environment variables.`);
 }
 
+// Perplexity accepts at most 20 entries in search_domain_filter and rejects the
+// request otherwise, so fail at boot instead of on every chat message.
+const MAX_SEARCH_DOMAINS = 20;
+if (
+  (process.env.SEARCH_DOMAIN_FILTER || '').split(',').filter((d) => d.trim()).length >
+  MAX_SEARCH_DOMAINS
+) {
+  throw new Error(`SEARCH_DOMAIN_FILTER allows at most ${MAX_SEARCH_DOMAINS} domains.`);
+}
+
 // Export the basic config first - Pi optimizations will be initialized later dynamically
 /**
  * Helper function to parse integer environment variables with fallback
@@ -181,7 +191,10 @@ const config = {
       // Agent API preset: supplies the model, reasoning effort, step budget and
       // default tools. 'medium' suits multi-turn conversation; 'fast' and 'low'
       // trade answer quality for latency/cost, 'high'/'xhigh' go deeper.
-      AGENT_PRESET: process.env.AGENT_PRESET || 'medium',
+      // Perplexity renamed `preset` to `effort` in October 2026; AGENT_PRESET
+      // is still read so existing .env files keep working. A value may pin a
+      // version, e.g. medium@2026-10-22.1.
+      AGENT_PRESET: process.env.AGENT_EFFORT || process.env.AGENT_PRESET || 'medium',
       // Optional overrides on top of the preset, e.g.
       //   AGENT_MODEL=anthropic/claude-sonnet-5-5  AGENT_REASONING_EFFORT=low
       // Leave unset to follow whatever model Perplexity puts behind the preset.

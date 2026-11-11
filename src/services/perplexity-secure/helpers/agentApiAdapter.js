@@ -3,18 +3,23 @@
  *
  * The Agent API is the bot's only chat path: Perplexity retired Sonar Chat
  * Completions on 2026-09-27. Request shape per
- * https://docs.perplexity.ai/docs/agent-api/presets and /conversation-state:
+ * https://docs.perplexity.ai/api-reference/agent-post,
+ * https://docs.perplexity.ai/docs/agent-api/effort and /conversation-state
+ * (verified 2026-11-11):
  *   request:
  *     - `input` is the replayed conversation (`{type:'message', role, content}`
  *       items); the system message is lifted into top-level `instructions`,
  *       prefixed with today's date so web-search answers are anchored in time
- *     - `preset` supplies defaults (model, reasoning, steps, tools); `model`
- *       and `reasoning.effort` override it when configured
- *     - `tools` merge per tool with the preset's own set: we list `web_search`
+ *     - `effort` (named `preset` until October 2026, still accepted as a
+ *       deprecated alias) supplies defaults (model, reasoning, steps, tools);
+ *       `model` and `reasoning.effort` override it when configured
+ *     - `tools` merge per tool with the effort level's own set: we list `web_search`
  *       (with any domain/recency filters) and `fetch_url` so pasted links can
  *       be read mid-conversation
- *     - no `temperature`: the API rejects it alongside a preset
+ *     - no `temperature`: several model families ignore it
  *   response:
+ *     - `status` is `completed` for a usable answer; `failed` carries `error`,
+ *       `incomplete` means the run hit its step or output budget
  *     - assistant text lives in `output[]` message items at `content[].text`,
  *       with `output_text` as a shortcut when present
  *     - citations come from `output[]` items' `results[].url` and from
@@ -100,7 +105,7 @@ function buildAgentRequest(messages, options = {}, perplexityConfig = {}) {
   const preset = perplexityConfig.AGENT_PRESET || 'medium';
   const runtime = describeRuntime(preset, perplexityConfig.AGENT_MODEL || options.lastModel);
   const request = {
-    preset,
+    effort: preset,
     input,
     instructions: buildInstructions(list, new Date(), runtime),
     tools: buildTools(options, perplexityConfig),
@@ -227,7 +232,10 @@ function summarizeUsageDetails(usage) {
     toolCalls[name] = detail?.invocation ?? 0;
   }
   return {
-    cachedTokens: usage.input_tokens_details?.cached_tokens ?? 0,
+    cachedTokens:
+      usage.input_tokens_details?.cache_read_input_tokens ??
+      usage.input_tokens_details?.cached_tokens ??
+      0,
     costUsd: usage.cost?.total_cost,
     toolCalls,
   };
@@ -256,6 +264,8 @@ function normalizeAgentResponse(body) {
     usage: normalizeUsage(body?.usage),
   };
   if (typeof body?.model === 'string' && body.model) normalized.model = body.model;
+  if (typeof body?.status === 'string') normalized.status = body.status;
+  if (body?.error?.message) normalized.error = body.error;
   const details = summarizeUsageDetails(body?.usage);
   if (details) normalized.usage_details = details;
   const citations = extractCitations(body);

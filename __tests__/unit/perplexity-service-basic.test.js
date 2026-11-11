@@ -63,7 +63,7 @@ describe('Perplexity Service - Basic', () => {
         'Content-Type': 'application/json',
       });
       expect(JSON.parse(init.body)).toEqual({
-        preset: 'medium',
+        effort: 'medium',
         input: [{ type: 'message', role: 'user', content: 'Hello' }],
         instructions:
           'Today is 2026-10-04.\n\n' +

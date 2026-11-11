@@ -5,12 +5,14 @@
 const config = require('../config/config');
 const { ErrorHandler, ERROR_TYPES } = require('../utils/error-handler');
 
+// Longest wait before the single 429 retry.
+const MAX_RETRY_WAIT_MS = 10000;
+
 /**
  * Response Processor class for handling API responses
  */
 class ResponseProcessor {
   constructor() {
-    this.maxRetries = config.RATE_LIMITS?.MAX_RETRIES || 3;
     this.retryDelay = config.RATE_LIMITS?.RETRY_DELAY_MS || 1000;
   }
 
@@ -88,66 +90,32 @@ class ResponseProcessor {
   }
 
   /**
-   * Determine if an error is retryable
+   * Determine if an error is retryable. Only an HTTP 429 qualifies: Perplexity
+   * rejects it before the run starts and does not bill it. Timeouts and 5xx
+   * are not retried because the run may already have been billed.
    * @param {Error} error - The error to check
    * @returns {boolean} - True if the error is retryable
    */
   isRetryableError(error) {
-    if (!error || !error.message) return false;
-
-    const message = error.message.toLowerCase();
-
-    // Retry on temporary/network errors
-    if (
-      message.includes('temporary') ||
-      message.includes('network') ||
-      message.includes('timeout') ||
-      message.includes('429')
-    ) {
-      return true;
-    }
-
-    // Don't retry on permanent errors
-    if (
-      message.includes('permanent') ||
-      message.includes('invalid') ||
-      message.includes('unauthorized') ||
-      message.includes('forbidden')
-    ) {
-      return false;
-    }
-
-    // Default to not retryable for unknown errors
-    return false;
+    return error?.statusCode === 429;
   }
 
   /**
-   * Generate response with retry logic
+   * Generate response, retrying once after a 429
    * @param {Function} requestFn - Function to execute the request
    * @param {Object} options - Retry options
    * @returns {Promise<Object>} API response
    */
   async generateResponseWithRetry(requestFn, options = {}) {
-    let retries = options.retryOnRateLimit ? this.maxRetries : 0;
-    let retryDelay = this.retryDelay;
-
     try {
       return await requestFn();
     } catch (apiError) {
-      // Check if it's a retryable error and we should retry
-      const isRetryableError = this.isRetryableError(apiError);
+      if (!options.retryOnRateLimit || !this.isRetryableError(apiError)) throw apiError;
 
-      if (isRetryableError && retries > 0) {
-        ErrorHandler.handleError(apiError, 'API retry', { retries });
-
-        // Wait before retrying
-        await this.delay(retryDelay);
-
-        // Retry the request
-        return await requestFn();
-      } else {
-        throw apiError; // Not a retryable error or out of retries
-      }
+      ErrorHandler.handleError(apiError, 'API retry');
+      // Honour Retry-After, capped so a Discord user is not left waiting.
+      await this.delay(Math.min(apiError.retryAfterMs || this.retryDelay, MAX_RETRY_WAIT_MS));
+      return await requestFn();
     }
   }
 
@@ -184,7 +152,7 @@ class ResponseProcessor {
 
     return {
       caching: true,
-      retryOnRateLimit: false,
+      retryOnRateLimit: true,
       ...normalizedOptions,
     };
   }

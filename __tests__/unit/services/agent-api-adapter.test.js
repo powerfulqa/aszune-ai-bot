@@ -44,9 +44,9 @@ describe('buildAgentRequest', () => {
     jest.useRealTimers();
   });
 
-  it('builds the full preset request with dated instructions and both tools', () => {
+  it('builds the full effort request with dated instructions and both tools', () => {
     expect(buildAgentRequest(messages, {}, PERPLEXITY)).toEqual({
-      preset: 'medium',
+      effort: 'medium',
       input: [
         { type: 'message', role: 'user', content: 'what is the drop rate' },
         { type: 'message', role: 'assistant', content: 'about 1%' },
@@ -58,7 +58,7 @@ describe('buildAgentRequest', () => {
     });
   });
 
-  it('never sends temperature with a preset (the Agent API rejects the combination)', () => {
+  it('never sends temperature (several model families ignore it)', () => {
     const req = buildAgentRequest(messages, { temperature: 0.5 }, PERPLEXITY);
     expect(req).not.toHaveProperty('temperature');
   });
@@ -80,9 +80,9 @@ describe('buildAgentRequest', () => {
     expect(req.reasoning).toEqual({ effort: 'low' });
   });
 
-  it('defaults the preset to medium when unset', () => {
+  it('defaults the effort level to medium when unset', () => {
     const req = buildAgentRequest(messages, {}, { MAX_TOKENS: { CHAT: 100 } });
-    expect(req.preset).toBe('medium');
+    expect(req.effort).toBe('medium');
     expect(req.max_output_tokens).toBe(100);
     expect(req.model).toBeUndefined();
     expect(req.reasoning).toBeUndefined();
@@ -275,6 +275,12 @@ describe('summarizeUsageDetails', () => {
         tool_calls_details: { search_web: { invocation: 2 }, fetch_url: {} },
       })
     ).toEqual({ cachedTokens: 1200, costUsd: 0.03282, toolCalls: { search_web: 2, fetch_url: 0 } });
+  });
+
+  it('reads cached tokens from the documented cache_read_input_tokens field', () => {
+    expect(
+      summarizeUsageDetails({ input_tokens_details: { cache_read_input_tokens: 800 } })
+    ).toEqual({ cachedTokens: 800, costUsd: undefined, toolCalls: {} });
   });
 
   it('defaults missing parts and returns undefined without usage', () => {

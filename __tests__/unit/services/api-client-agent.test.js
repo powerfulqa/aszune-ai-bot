@@ -40,7 +40,7 @@ describe('ApiClient - Agent API', () => {
 
     it('builds the default medium-preset payload with web search and fetch_url', () => {
       expect(client.buildRequestPayload(messages, {})).toEqual({
-        preset: 'medium',
+        effort: 'medium',
         input: [{ type: 'message', role: 'user', content: 'What is the latest WoW patch?' }],
         instructions:
           'Today is 2026-10-04.\n\nBe helpful.\n\n' +
@@ -130,6 +130,41 @@ describe('ApiClient - Agent API', () => {
       const result = client.handleRequestError(error);
       expect(result.message).toBe('Invalid response: the model returned an empty answer');
       expect(result.type).toBe(ERROR_TYPES.API_ERROR);
+    });
+
+    it('rejects a 200 whose run failed upstream', async () => {
+      const mockResponse = {
+        statusCode: 200,
+        body: {
+          json: jest.fn().mockResolvedValue({
+            status: 'failed',
+            error: { message: 'model overloaded' },
+            output: [],
+          }),
+        },
+      };
+      const error = await client.handleResponse(mockResponse).catch((e) => e);
+      expect(error.message).toBe('Agent run failed upstream: model overloaded');
+      expect(error.type).toBe(ERROR_TYPES.API_ERROR);
+    });
+
+    it('keeps the upstream error body out of the thrown message', async () => {
+      const body = {
+        text: jest.fn().mockResolvedValue('{"error":{"message":"please try again"}}'),
+      };
+      const error = await client.handleErrorResponse(400, body).catch((e) => e);
+      expect(error.message).toBe('API request failed with status 400');
+      expect(error.statusCode).toBe(400);
+      expect(error.retryAfterMs).toBeUndefined();
+    });
+
+    it('carries Retry-After from a 429 as milliseconds', async () => {
+      const body = { text: jest.fn().mockResolvedValue('{}') };
+      const error = await client
+        .handleErrorResponse(429, body, { 'retry-after': '3' })
+        .catch((e) => e);
+      expect(error.statusCode).toBe(429);
+      expect(error.retryAfterMs).toBe(3000);
     });
 
     it('still wraps malformed JSON as a parse failure', async () => {

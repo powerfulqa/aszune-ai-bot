@@ -6,7 +6,7 @@ const { request } = require('undici');
 const fs = require('fs').promises;
 
 const PerplexityService = require('../../../src/services/perplexity-secure');
-const { mockSuccessResponse } = require('../../utils/undici-mock-helpers');
+const { mockSuccessResponse, mockErrorResponse } = require('../../utils/undici-mock-helpers');
 
 jest.mock('undici', () => ({
   request: jest.fn(),
@@ -198,49 +198,50 @@ describe('PerplexitySecure Service - Advanced', () => {
   });
 
   describe('retry mechanism', () => {
-    it('should retry on temporary failures', async () => {
-      // First call fails, second succeeds
-      request.mockRejectedValueOnce(new Error('Temporary network error')).mockResolvedValueOnce(
-        mockSuccessResponse({
-          choices: [{ message: { content: 'Success after retry' } }],
-        })
-      );
+    const messages = [{ role: 'user', content: 'Hello' }];
 
-      const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages, {
-        retryOnRateLimit: true,
-      });
+    beforeEach(() => {
+      perplexityService.responseProcessor.retryDelay = 0;
+    });
+
+    it('retries once after a 429 and returns the answer', async () => {
+      request
+        .mockResolvedValueOnce(mockErrorResponse({ error: 'Rate limit exceeded' }, 429))
+        .mockResolvedValueOnce(
+          mockSuccessResponse({ choices: [{ message: { content: 'Success after retry' } }] })
+        );
+
+      const result = await perplexityService.generateChatResponse(messages);
 
       expect(result).toBe('Success after retry');
       expect(request).toHaveBeenCalledTimes(2);
     });
 
-    it('should not retry on permanent failures', async () => {
-      request.mockRejectedValueOnce(new Error('Permanent API error'));
+    it('gives up after the second 429', async () => {
+      request.mockResolvedValue(mockErrorResponse({ error: 'Rate limit exceeded' }, 429));
 
-      const messages = [{ role: 'user', content: 'Hello' }];
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'API request failed with status 429'
+      );
+      expect(request).toHaveBeenCalledTimes(2);
+    });
 
-      await expect(
-        perplexityService.generateChatResponse(messages, { retryOnRateLimit: true })
-      ).rejects.toThrow('Permanent API error');
+    it('does not retry a server error (the run may have been billed)', async () => {
+      request.mockResolvedValueOnce(mockErrorResponse({ error: 'boom' }, 500));
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'API request failed with status 500'
+      );
       expect(request).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle timeout errors', async () => {
-      // First call fails with timeout, second succeeds
-      request.mockRejectedValueOnce(new Error('Request timeout')).mockResolvedValueOnce(
-        mockSuccessResponse({
-          choices: [{ message: { content: 'Fresh response' } }],
-        })
+    it('does not retry a network failure or timeout', async () => {
+      request.mockRejectedValueOnce(new Error('Request timeout'));
+
+      await expect(perplexityService.generateChatResponse(messages)).rejects.toThrow(
+        'Request failed: Request timeout'
       );
-
-      const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateChatResponse(messages, {
-        retryOnRateLimit: true,
-      });
-
-      expect(result).toBe('Fresh response');
-      expect(request).toHaveBeenCalledTimes(2);
+      expect(request).toHaveBeenCalledTimes(1);
     });
   });
 });
