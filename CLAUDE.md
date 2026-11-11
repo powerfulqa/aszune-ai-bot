@@ -97,7 +97,7 @@ delegate through it (`this.cacheManager.getStats()`). Never reach past a service
 
 - Enforced by ESLint (`eslint.config.js`): **complexity ≤ 15**, `max-lines-per-function` 50 (200 in
   tests), `max-depth` 4, `max-statements` 25. This is the single source of truth for the budget.
-- Lint the whole tree: `npx eslint src __tests__ --max-warnings=0` (CI runs this).
+- Lint the whole tree: `npx eslint . --max-warnings=0` (CI runs this).
 
 ## Commands
 
@@ -107,7 +107,7 @@ npm run dev               # nodemon
 npm test                  # full Jest suite
 npm run coverage          # suite + coverage report
 npm run test:critical:ci  # per-file critical-coverage gate (precommit)
-npm run lint              # eslint src __tests__      (lint:fix to autofix)
+npm run lint              # eslint .                  (lint:fix to autofix)
 npm run format            # prettier --write
 npm run quality:check     # lint + critical coverage
 npm audit --audit-level=high   # security (CI gates on this, prod deps)

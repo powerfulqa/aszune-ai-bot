@@ -55,7 +55,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint src __tests__ --max-warnings=0
+        run: npx eslint . --max-warnings=0
 
       - name: Security audit
         run: npm audit --audit-level=high --omit=dev

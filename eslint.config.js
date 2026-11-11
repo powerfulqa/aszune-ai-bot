@@ -12,6 +12,7 @@ module.exports = [
       'dashboard/public/**/*.html',
       'dashboard/public/vendor/**',
       'node_modules/**',
+      '.claude/**',
       'coverage/**',
       'test-results/**',
       'data/**',
