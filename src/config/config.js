@@ -93,13 +93,11 @@ const config = {
   // pause before the bot treats the next message as a fresh topic.
   CONVERSATION_INACTIVITY_TIMEOUT_MS: 2 * 60 * 60 * 1000, // 2 hours - auto-clear context
   SESSION_TIMEOUT_MS: 2 * 60 * 60 * 1000, // 2 hours - reload persisted history after a restart within this window
-  CONVERSATION_CONTEXT_WARNING_THRESHOLD: 10, // Warn user approaching limit
   STATS_SAVE_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes - flush user stats to disk
 
   // Message and UI Limits
   MESSAGE_LIMITS: {
     DISCORD_MAX_LENGTH: 2000,
-    EMBED_MAX_LENGTH: 1400,
     SAFE_CHUNK_OVERHEAD: 50,
     MAX_PARAGRAPH_LENGTH: 300,
     EMBED_DESCRIPTION_MAX_LENGTH: 1400,
@@ -112,25 +110,14 @@ const config = {
     DEFAULT_MAX_ENTRIES: 100,
     MAX_MEMORY_MB: 50, // In-memory response cache memory cap
     DEFAULT_TTL_MS: 60 * 60 * 1000, // 1 hour default entry TTL
-    CLEANUP_PERCENTAGE: 0.2,
-    MAX_AGE_DAYS: 7,
-    MAX_AGE_MS: 7 * 24 * 60 * 60 * 1000,
-    CLEANUP_INTERVAL_DAYS: 1,
     CLEANUP_INTERVAL_MS: 24 * 60 * 60 * 1000,
   },
 
   // Rate Limiting and Retry
   RATE_LIMITS: {
-    DEFAULT_WINDOW_MS: 5000,
     RETRY_DELAY_MS: 1000,
     MAX_RETRIES: 1,
     API_TIMEOUT_MS: 120000, // Agent runs with search + page fetches take 10-60s
-  },
-
-  // File Permissions
-  FILE_PERMISSIONS: {
-    FILE: 0o644, // Owner can read/write, group/others can read only
-    DIRECTORY: 0o755, // Owner can read/write/execute, group/others can read/execute
   },
 
   // Memory and Performance
@@ -165,20 +152,16 @@ const config = {
   // detects the Pi model and exports the PI_* variables)
   PI_OPTIMIZATIONS: {
     ENABLED: process.env.ENABLE_PI_OPTIMIZATIONS === 'true',
-    LOG_LEVEL: process.env.PI_LOG_LEVEL || 'ERROR',
     CACHE_ENABLED: true,
     CACHE_MAX_ENTRIES: 100,
     CLEANUP_INTERVAL_MINUTES: 30,
-    DEBOUNCE_MS: parseInt(process.env.PI_DEBOUNCE_MS || '300', 10),
     MAX_CONNECTIONS: parseInt(process.env.PI_MAX_CONNECTIONS || '2', 10),
     MEMORY_LIMITS: {
       RAM_THRESHOLD_MB: parseInt(process.env.PI_MEMORY_LIMIT || '200', 10),
       RAM_CRITICAL_MB: parseInt(process.env.PI_MEMORY_CRITICAL || '250', 10),
     },
     COMPACT_MODE: process.env.PI_COMPACT_MODE === 'true',
-    REACTION_LIMIT: parseInt(process.env.PI_REACTION_LIMIT || '3', 10),
     LOW_CPU_MODE: process.env.PI_LOW_CPU_MODE === 'true',
-    STREAM_RESPONSES: process.env.PI_STREAM_RESPONSES !== 'false',
   },
 
   // API Configuration

@@ -103,9 +103,7 @@ describe('Config - Branch Coverage', () => {
       const config = require('../../src/config/config');
 
       expect(config.MESSAGE_LIMITS).toHaveProperty('DISCORD_MAX_LENGTH');
-      expect(config.MESSAGE_LIMITS).toHaveProperty('EMBED_MAX_LENGTH');
       expect(config.CACHE).toHaveProperty('DEFAULT_MAX_ENTRIES');
-      expect(config.CACHE).toHaveProperty('CLEANUP_PERCENTAGE');
       expect(config.SYSTEM_MESSAGES).toHaveProperty('CHAT');
       expect(config.SYSTEM_MESSAGES).toHaveProperty('SUMMARY');
     });

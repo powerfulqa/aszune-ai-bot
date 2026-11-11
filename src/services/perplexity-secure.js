@@ -513,7 +513,10 @@ class PerplexityService {
         ? this._extractTextContent(history)
         : this._formatConversationForSummary(history);
 
-      return await this.generateTextSummary(textToSummarize);
+      return await this.generateTextSummary(
+        textToSummarize,
+        isText ? config.SYSTEM_MESSAGES.TEXT_SUMMARY : config.SYSTEM_MESSAGES.SUMMARY
+      );
     } catch (error) {
       return this._handleSummaryError(error, history, isText);
     }
@@ -573,12 +576,12 @@ class PerplexityService {
   /**
    * Generate summary of a text
    * @param {string} text - Text to summarize
+   * @param {string} [systemPrompt] - Instruction for the model
    * @returns {Promise<string>} - The summary
    */
-  async generateTextSummary(text) {
-    // Create a system message instructing to summarize
+  async generateTextSummary(text, systemPrompt = config.SYSTEM_MESSAGES.TEXT_SUMMARY) {
     const messages = [
-      { role: 'system', content: 'Please provide a concise summary of the following text.' },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: text },
     ];
 
