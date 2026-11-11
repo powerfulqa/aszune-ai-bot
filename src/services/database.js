@@ -46,7 +46,11 @@ class DatabaseService {
     }
 
     this.db = new Database(this.dbPath);
-    this.db.pragma('journal_mode = DELETE');
+    // WAL appends to one log file instead of creating and deleting a rollback
+    // journal for every write, which matters on SD-card storage. synchronous
+    // stays FULL so a power cut cannot lose a committed reminder. Copy
+    // bot.db-wal and bot.db-shm along with bot.db when backing up a running bot.
+    this.db.pragma('journal_mode = WAL');
     this.db.pragma('synchronous = FULL');
     this.initTables();
   }
