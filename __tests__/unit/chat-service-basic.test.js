@@ -261,9 +261,14 @@ describe('Chat Service - Basic', () => {
 
     await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(
-      'Please wait a few seconds before sending another message.'
-    );
+    expect(message.reply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: '#FEE75C',
+          description: 'Please wait a few seconds before sending another message.',
+        },
+      ],
+    });
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
 

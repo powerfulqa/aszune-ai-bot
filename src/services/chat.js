@@ -27,6 +27,16 @@ const processingMessages = new Set();
 const usersInFlight = new Set();
 
 /**
+ * Build the reply payload for a short notice (validation, rate limit, busy).
+ * User-facing notices are embeds, never plain text.
+ * @param {string} description - Notice text
+ * @returns {{embeds: Array<Object>}} Discord reply payload
+ */
+function noticeEmbed(description) {
+  return { embeds: [{ color: require('../config/config').COLORS.WARNING, description }] };
+}
+
+/**
  * Check if a message should be ignored by the bot
  * @param {Object} message - Discord.js message object
  * @returns {boolean} - True if the message should be ignored
@@ -96,14 +106,9 @@ async function processUserMessage(message) {
   await loadConversationHistory(userId, pipelineResult.sanitizedContent);
 
   if (usersInFlight.has(userId)) {
-    await message.reply({
-      embeds: [
-        {
-          color: require('../config/config').COLORS.WARNING,
-          description: "I'm still working on your previous message. Ask again once I've replied.",
-        },
-      ],
-    });
+    await message.reply(
+      noticeEmbed("I'm still working on your previous message. Ask again once I've replied.")
+    );
     return null;
   }
   usersInFlight.add(userId);
@@ -162,7 +167,7 @@ async function processMessageContent(message, userId) {
   });
 
   if (!contentValidation.valid) {
-    await message.reply(`❌ ${contentValidation.error}`);
+    await message.reply(noticeEmbed(`❌ ${contentValidation.error}`));
     return { success: false };
   }
 
@@ -177,7 +182,7 @@ async function processMessageContent(message, userId) {
 async function handleRateLimiting(message, userId) {
   // Check for rate limiting
   if (conversationManager.isRateLimited(userId)) {
-    await message.reply('Please wait a few seconds before sending another message.');
+    await message.reply(noticeEmbed('Please wait a few seconds before sending another message.'));
     return { success: false };
   }
   conversationManager.updateTimestamp(userId);

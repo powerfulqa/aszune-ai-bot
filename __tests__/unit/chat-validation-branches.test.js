@@ -77,6 +77,7 @@ const mockConfig = {
   COLORS: {
     PRIMARY: '#5865F2',
     ERROR: '#ED4245',
+    WARNING: '#FEE75C',
   },
   PI_OPTIMIZATIONS: {
     LOW_CPU_MODE: false,
@@ -233,9 +234,14 @@ describe('Chat Service - Message Validation Branch Coverage', () => {
 
       await chatService(mockMessage);
 
-      expect(mockMessage.reply).toHaveBeenCalledWith(
-        'Please wait a few seconds before sending another message.'
-      );
+      expect(mockMessage.reply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: '#FEE75C',
+            description: 'Please wait a few seconds before sending another message.',
+          },
+        ],
+      });
       expect(mockPerplexityService.generateChatResponse).not.toHaveBeenCalled();
     });
 
