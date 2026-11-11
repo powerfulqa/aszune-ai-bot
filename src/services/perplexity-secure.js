@@ -1,15 +1,7 @@
 /**
- * Modified version of perplexity-improved.js with secure file permissions
- * This file adds secure file permissions to fix the security issues
+ * Service for interacting with the Perplexity Agent API.
+ * Composes ApiClient, CacheManager, ResponseProcessor and ThrottlingService.
  */
-
-/**
- * Service for interacting with the Perplexity API
- * Version 1.4.0 - Refactored for better maintainability and reduced complexity
- */
-const fs = require('fs').promises;
-const path = require('path');
-const crypto = require('crypto');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
@@ -19,46 +11,7 @@ const { ResponseProcessor } = require('./response-processor');
 const { ThrottlingService } = require('./throttling-service');
 const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
 const { getPiSettings } = require('./perplexity-secure/helpers/requestBuilder');
-const {
-  handleApiResponse,
-  extractResponseContent,
-  handleErrorResponse,
-} = require('./perplexity-secure/helpers/responseValidator');
-
-// Test mock definitions for lazy loading
-const TEST_MOCKS = {
-  '../utils/connection-throttler': { executeRequest: async (fn) => await fn() },
-  '../utils/cache-pruner': { pruneCache: () => {} },
-};
-
-/**
- * Get test mock for import path if in test environment
- * @param {string} importPath - Module path
- * @returns {Object|null} Mock object or null
- */
-function getTestMock(importPath) {
-  return process.env.NODE_ENV === 'test' ? TEST_MOCKS[importPath] || null : null;
-}
-
-// Simplified lazy loader for tests
-const lazyLoadModule = (importPath) => {
-  let module;
-  return function () {
-    if (!module) {
-      try {
-        module = require(importPath);
-      } catch (e) {
-        const mock = getTestMock(importPath);
-        if (mock) return mock;
-        throw e;
-      }
-    }
-    return module;
-  };
-};
-
-// Lazy load optimization utilities
-const getCachePruner = lazyLoadModule('../utils/cache-pruner');
+const { extractResponseContent } = require('./perplexity-secure/helpers/responseValidator');
 
 /**
  * Remove a source list the model wrote itself (lines that start with a [N]
@@ -123,32 +76,11 @@ class PerplexityService {
     this.apiKey = config.PERPLEXITY_API_KEY;
     this.baseUrl = config.API.PERPLEXITY.BASE_URL;
 
-    // File permission constants
-    this.FILE_PERMISSIONS = config.FILE_PERMISSIONS;
-
     // Initialize service components
     this.apiClient = new ApiClient(this.apiKey, this.baseUrl);
     this.cacheManager = new CacheManager();
     this.responseProcessor = new ResponseProcessor();
     this.throttlingService = new ThrottlingService();
-
-    // Track active intervals for proper cleanup
-    this.activeIntervals = new Set();
-  }
-
-  /**
-   * Set up cache cleanup routine
-   * @private
-   */
-  _setupCacheCleanup() {
-    if (process.env.NODE_ENV !== 'test') {
-      // Clean cache every day
-      this.cacheCleanupInterval = setInterval(
-        () => this._cleanupCache(),
-        config.CACHE.CLEANUP_INTERVAL_MS
-      );
-      this.activeIntervals.add(this.cacheCleanupInterval);
-    }
   }
 
   /**
@@ -195,18 +127,10 @@ class PerplexityService {
   }
 
   /**
-   * Shut down the service, clearing any intervals
+   * Shut down the service, logging final cache statistics
    */
   shutdown() {
-    // Clear all intervals
-    for (const interval of this.activeIntervals) {
-      clearInterval(interval);
-    }
-    this.activeIntervals.clear();
-
-    // Log final cache statistics
-    const finalStats = this.getCacheStats();
-    logger.info('Final cache statistics:', finalStats);
+    logger.info('Final cache statistics:', this.getCacheStats());
   }
 
   /**
@@ -228,53 +152,6 @@ class PerplexityService {
   }
 
   /**
-   * Extract header value from headers object
-   * @param {Object|Headers} headers - Headers object
-   * @param {string} key - Header key
-   * @returns {string} Header value or empty string
-   * @private
-   */
-  /**
-   * Safely extract header value with multiple fallback strategies
-   * @private
-   */
-  _safeGetHeader(headers, key) {
-    if (!headers || !key) return '';
-
-    // Try Headers.get() method first (for Fetch API Headers)
-    const getMethodResult = this._tryHeadersGetMethod(headers, key);
-    if (getMethodResult) return getMethodResult;
-
-    // Try object property access with case variations
-    return this._tryHeaderPropertyAccess(headers, key);
-  }
-
-  /**
-   * Try to get header using Headers.get() method
-   * @private
-   */
-  _tryHeadersGetMethod(headers, key) {
-    if (typeof headers.get !== 'function') return '';
-    try {
-      return headers.get(key) || '';
-    } catch (_e) {
-      return '';
-    }
-  }
-
-  /**
-   * Try to get header via direct property access with case variations
-   * @private
-   */
-  _tryHeaderPropertyAccess(headers, key) {
-    return headers[key] || headers[key.toLowerCase()] || headers[key.toUpperCase()] || '';
-  }
-
-  _extractHeader(headers, key) {
-    return this._safeGetHeader(headers, key);
-  }
-
-  /**
    * Track API performance metric
    * @param {string} metricName - Metric name
    * @param {number} value - Metric value
@@ -288,40 +165,6 @@ class PerplexityService {
     } catch (error) {
       logger.warn(`Failed to log ${metricName}: ${error.message}`);
     }
-  }
-
-  /**
-   * Create headers for API requests
-   * @returns {Object} Headers object
-   */
-  _getHeaders() {
-    return {
-      Authorization: `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json',
-    };
-  }
-
-  /**
-   * Determine if caching should be used based on options and configuration
-   * @param {Object} options - The cache options
-   * @param {Object} cacheConfig - The cache configuration
-   * @returns {boolean} - Whether to use cache or not
-   * @private
-   */
-  _shouldUseCache(options, cacheConfig) {
-    return options.caching !== false && (process.env.NODE_ENV === 'test' || cacheConfig.enabled);
-  }
-
-  async _handleApiResponse(response) {
-    return handleApiResponse(response);
-  }
-
-  _getPiOptimizationSettings() {
-    return getPiSettings();
-  }
-
-  async _handleErrorResponse(statusCode, body) {
-    return handleErrorResponse(statusCode, body);
   }
 
   _extractResponseContent(response) {
@@ -369,75 +212,6 @@ class PerplexityService {
       logger.error(`API request failed: ${errorResponse.message}`);
       throw error;
     }
-  }
-
-  /**
-   * Generate chat response for user query
-   * @param {Array} history - Chat history
-   * @param {Object} options - Options object with caching and other settings
-   * @returns {Promise<String>} - The response content
-   */
-  /**
-   * Helper function to generate user-friendly error messages
-   * @param {Error} error - The error object
-   * @param {Object} errorResponse - Error response from ErrorHandler
-   * @returns {string} User-friendly error message
-   * @private
-   */
-  _generateErrorMessage(error, errorResponse) {
-    // Error message mappings - ordered by specificity
-    const errorMappings = [
-      {
-        condition: () => error.statusCode === 400,
-        message:
-          'The service is temporarily unavailable due to configuration issues. Please try again later.',
-      },
-      {
-        condition: () => error.statusCode === 401,
-        message: 'Authentication error with the AI service. Please try again later.',
-      },
-      {
-        condition: () => error.statusCode === 429,
-        message: 'Rate limit exceeded. Please try again later.',
-      },
-      {
-        condition: () => error.statusCode >= 500,
-        message: 'The service is temporarily unavailable. Please try again later.',
-      },
-      {
-        condition: () => error.message?.includes('timed out'),
-        message: 'The AI took too long to answer. Please try again.',
-      },
-      {
-        condition: () => error.message?.includes('empty answer'),
-        message: 'The AI could not finish an answer. Try rephrasing or asking again.',
-      },
-      {
-        condition: () => error.message?.includes('Network'),
-        message: 'Network connection issue. Please check your connection and try again.',
-      },
-      {
-        condition: () => error.message?.includes('Empty response'),
-        message: 'Empty response received from the service.',
-      },
-      {
-        condition: () => error.message?.includes('invalid'),
-        message: 'Unexpected response format received.',
-      },
-    ];
-
-    const matchedMapping = errorMappings.find((mapping) => mapping.condition());
-    return matchedMapping ? matchedMapping.message : errorResponse.message;
-  }
-
-  /**
-   * Track performance metrics for API operations (LEGACY - use _trackMetric directly)
-   * @param {string} metricName - Name of the metric
-   * @param {number} value - Metric value
-   * @param {Object} metadata - Additional metadata
-   */
-  async _trackApiPerformance(metricName, value, metadata = {}) {
-    return this._trackMetric(metricName, value, metadata);
   }
 
   /**
@@ -728,167 +502,6 @@ class PerplexityService {
   }
 
   /**
-   * Generate response with retry logic for rate limits
-   * @param {Array} history - Conversation history
-   * @param {Object} opts - Options including retry settings
-   * @returns {Object} API response
-   * @private
-   */
-  async _generateResponseWithRetry(history, opts) {
-    let retries = opts.retryOnRateLimit ? config.RATE_LIMITS.MAX_RETRIES : 0;
-    let retryDelay = config.RATE_LIMITS.RETRY_DELAY_MS;
-
-    try {
-      return await this.sendChatRequest(history);
-    } catch (apiError) {
-      // Check if it's a retryable error and we should retry
-      const isRetryableError = this._isRetryableError(apiError);
-
-      if (isRetryableError && retries > 0) {
-        const errorResponse = ErrorHandler.handleError(apiError, 'API retry', { retries });
-        logger.info(`Retryable error, retrying after ${retryDelay}ms: ${errorResponse.message}`);
-
-        // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-
-        // Retry the request
-        return await this.sendChatRequest(history);
-      } else {
-        throw apiError; // Not a retryable error or out of retries
-      }
-    }
-  }
-
-  /**
-   * Determine if an error is retryable
-   * @param {Error} error - The error to check
-   * @returns {boolean} - True if the error is retryable
-   * @private
-   */
-  _isRetryableError(error) {
-    if (!error || !error.message) return false;
-
-    const message = error.message.toLowerCase();
-    return this._isTemporaryError(message) && !this._isPermanentError(message);
-  }
-
-  /**
-   * Check if error message indicates temporary issue
-   * @param {string} message - Error message
-   * @returns {boolean} - True if temporary error
-   * @private
-   */
-  _isTemporaryError(message) {
-    return (
-      message.includes('temporary') ||
-      message.includes('network') ||
-      message.includes('timeout') ||
-      message.includes('429')
-    );
-  }
-
-  /**
-   * Check if error message indicates permanent issue
-   * @param {string} message - Error message
-   * @returns {boolean} - True if permanent error
-   * @private
-   */
-  _isPermanentError(message) {
-    return (
-      message.includes('permanent') ||
-      message.includes('invalid') ||
-      message.includes('unauthorized') ||
-      message.includes('forbidden')
-    );
-  }
-
-  /**
-   * Get cache configuration from config
-   * @returns {Object} Cache configuration object
-   * @private
-   */
-  _getCacheConfiguration() {
-    const defaultConfig = {
-      enabled: false,
-      maxEntries: config.CACHE.DEFAULT_MAX_ENTRIES,
-    };
-
-    try {
-      if (
-        config &&
-        typeof config.PI_OPTIMIZATIONS === 'object' &&
-        config.PI_OPTIMIZATIONS !== null
-      ) {
-        const piOptEnabled = Boolean(config.PI_OPTIMIZATIONS.ENABLED);
-        if (piOptEnabled) {
-          const cacheEnabled = Boolean(config.PI_OPTIMIZATIONS.CACHE_ENABLED);
-          const maxEntries =
-            typeof config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES === 'number'
-              ? config.PI_OPTIMIZATIONS.CACHE_MAX_ENTRIES
-              : defaultConfig.maxEntries;
-
-          return {
-            enabled: cacheEnabled,
-            maxEntries: maxEntries,
-          };
-        }
-      }
-    } catch (configError) {
-      const errorResponse = ErrorHandler.handleError(
-        configError,
-        'accessing PI_OPTIMIZATIONS config'
-      );
-      logger.warn(`Config access error: ${errorResponse.message}`);
-    }
-
-    return defaultConfig;
-  }
-
-  /**
-   * Try to save response to cache
-   * @param {Array} history - Conversation history
-   * @param {string} content - Response content to cache
-   * @param {number} maxEntries - Maximum number of cache entries to keep
-   * @returns {Promise<void>}
-   * @private
-   */
-  async _trySaveToCache(history, content, maxEntries) {
-    try {
-      const cacheKey = this._generateCacheKey(history);
-      const cache = (await this._loadCache()) || {};
-      cache[cacheKey] = content;
-
-      // Prune cache if it exceeds max entries
-      this._pruneCache(cache, maxEntries);
-
-      await this._saveCache(cache);
-    } catch (cacheError) {
-      const errorResponse = ErrorHandler.handleFileError(
-        cacheError,
-        'saving to cache',
-        'question_cache.json'
-      );
-      logger.warn(`Cache save error: ${errorResponse.message}`);
-    }
-  }
-
-  /**
-   * Prune cache to keep it under the maximum size
-   * @param {Object} cache - Cache object
-   * @param {number} maxEntries - Maximum number of entries to keep
-   * @private
-   */
-  _pruneCache(cache, maxEntries) {
-    const keys = Object.keys(cache);
-    if (keys.length > maxEntries) {
-      // Remove oldest entries based on configured percentage
-      const removeCount = Math.ceil(maxEntries * config.CACHE.CLEANUP_PERCENTAGE);
-      const keysToRemove = keys.slice(0, removeCount);
-      keysToRemove.forEach((key) => delete cache[key]);
-    }
-  }
-
-  /**
    * Generate summary of conversation or text
    * @param {Array} history - Conversation history or text to summarize
    * @param {boolean} isText - Whether this is text or conversation history
@@ -972,168 +585,6 @@ class PerplexityService {
     const options = { maxTokens: config.API.PERPLEXITY.MAX_TOKENS.SUMMARY };
     const response = await this.sendChatRequest(messages, options);
     return this._extractResponseContent(response);
-  }
-
-  /**
-   * Ensure cache directory exists with secure permissions
-   * @param {string} cacheDir - Directory path
-   * @returns {Promise<void>}
-   * @private
-   */
-  async _ensureCacheDirectory(cacheDir) {
-    try {
-      await fs.mkdir(cacheDir, {
-        recursive: true,
-        mode: this.FILE_PERMISSIONS.DIRECTORY,
-      });
-    } catch (mkdirError) {
-      if (mkdirError.code !== 'EEXIST') {
-        throw mkdirError;
-      }
-    }
-  }
-
-  /**
-   * Load the cache from disk
-   * @returns {Promise<Object>} The loaded cache object
-   */
-  async _loadCache() {
-    const cacheDir = path.join(process.cwd(), 'data');
-    const cachePath = path.join(cacheDir, 'question_cache.json');
-
-    try {
-      await this._ensureCacheDirectory(cacheDir);
-
-      // Read and parse cache file
-      try {
-        const cacheData = await fs.readFile(cachePath, 'utf8');
-        return JSON.parse(cacheData);
-      } catch (readError) {
-        if (readError.code === 'ENOENT') {
-          // Cache file doesn't exist yet
-          return {};
-        }
-        throw readError;
-      }
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleFileError(error, 'loading cache', cachePath);
-      logger.error(`Failed to load cache: ${errorResponse.message}`);
-      return {};
-    }
-  }
-
-  /**
-   * Format a cache entry with metadata
-   * @param {string|Object} entry - The cache entry
-   * @param {number} timestamp - The timestamp
-   * @returns {Object} Formatted cache entry
-   * @private
-   */
-  _formatCacheEntry(entry, timestamp) {
-    // If entry is already an object with content, just ensure it has a timestamp
-    if (typeof entry === 'object' && entry !== null && entry.content) {
-      return {
-        ...entry,
-        timestamp: entry.timestamp || timestamp,
-      };
-    }
-
-    // Otherwise, create a new object with content and timestamp
-    return {
-      content: entry,
-      timestamp,
-    };
-  }
-
-  /**
-   * Save the cache to disk
-   * @param {Object} cache - The cache object to save
-   * @returns {Promise<void>}
-   */
-  async _saveCache(cache) {
-    const cacheDir = path.join(process.cwd(), 'data');
-    const cachePath = path.join(cacheDir, 'question_cache.json');
-
-    try {
-      await this._ensureCacheDirectory(cacheDir);
-
-      // Format entries with timestamps if needed
-      const timestamp = Date.now();
-      const formattedCache = {};
-
-      for (const [key, value] of Object.entries(cache)) {
-        formattedCache[key] = this._formatCacheEntry(value, timestamp);
-      }
-
-      // Write cache file with secure permissions
-      await fs.writeFile(
-        cachePath,
-        JSON.stringify(formattedCache, null, 2),
-        { mode: this.FILE_PERMISSIONS.FILE } // Set secure file permissions (read/write for owner, read for others)
-      );
-
-      // Apply secure file permissions
-      await fs.chmod(cachePath, this.FILE_PERMISSIONS.FILE);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleFileError(error, 'saving cache', cachePath);
-      logger.error(`Failed to save cache: ${errorResponse.message}`);
-    }
-  }
-
-  /**
-   * Generate a cache key for the given history
-   * @param {Array} history - The conversation history
-   * @returns {string} - A unique hash for this conversation
-   */
-  _generateCacheKey(history) {
-    const historyString = JSON.stringify(history);
-    return crypto.createHash('md5').update(historyString).digest('hex');
-  }
-
-  /**
-   * Prune expired entries from cache
-   * @private
-   */
-  _pruneExpiredEntries(cache, maxAgeMs) {
-    const now = Date.now();
-    let modified = false;
-
-    for (const [key, entry] of Object.entries(cache)) {
-      const timestamp = entry && typeof entry === 'object' ? entry.timestamp : 0;
-      if (timestamp && now - timestamp > maxAgeMs) {
-        delete cache[key];
-        modified = true;
-      }
-    }
-
-    return modified;
-  }
-
-  /**
-   * Clean up old cache entries
-   * @returns {Promise<void>}
-   */
-  async _cleanupCache() {
-    try {
-      // Try to get cache pruner
-      const pruner = getCachePruner();
-      if (pruner && typeof pruner.pruneCache === 'function') {
-        await pruner.pruneCache();
-        return;
-      }
-
-      // Fallback to basic cache pruning
-      const cache = await this._loadCache();
-      if (!cache) return;
-
-      const modified = this._pruneExpiredEntries(cache, config.CACHE.MAX_AGE_MS);
-      if (modified) {
-        await this._saveCache(cache);
-      }
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'cleaning up cache');
-      logger.warn(`Cache cleanup error: ${errorResponse.message}`);
-    }
   }
 }
 

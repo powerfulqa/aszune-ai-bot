@@ -47,34 +47,3 @@ describe('generateTextSummary method', () => {
     await expect(perplexityService.generateTextSummary(text)).rejects.toThrow('Summary API error');
   });
 });
-
-describe('shutdown method', () => {
-  it('should clear all active intervals', () => {
-    const mockInterval1 = setInterval(() => {}, 1000);
-    const mockInterval2 = setInterval(() => {}, 2000);
-
-    perplexityService.activeIntervals = new Set([mockInterval1, mockInterval2]);
-
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-
-    perplexityService.shutdown();
-
-    expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval1);
-    expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval2);
-    expect(perplexityService.activeIntervals.size).toBe(0);
-
-    clearIntervalSpy.mockRestore();
-  });
-
-  it('should handle shutdown when no intervals exist', () => {
-    perplexityService.activeIntervals = new Set();
-
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-
-    perplexityService.shutdown();
-
-    expect(clearIntervalSpy).not.toHaveBeenCalled();
-
-    clearIntervalSpy.mockRestore();
-  });
-});
