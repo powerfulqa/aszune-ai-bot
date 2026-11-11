@@ -16,7 +16,7 @@ A Discord bot providing gaming lore, guides, and advice using the **Perplexity A
 (`/v1/agent`). Features include:
 
 - 🤖 **AI Chat** – Back-and-forth conversations with web search, link reading and numbered source
-  citations; the model comes from a configurable preset (`AGENT_PRESET`, default `medium`)
+  citations; the model comes from a configurable preset (`AGENT_EFFORT`, default `medium`)
 - ⏰ **Reminders** – Natural language scheduling
 - 📊 **Analytics** – Server insights via Discord commands
 - 🌐 **Dashboard** – Real-time web monitoring at `http://localhost:3000`

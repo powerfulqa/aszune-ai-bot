@@ -359,7 +359,8 @@ Sonar Chat Completions was retired on 2026-09-27. `ApiClient` (undici) builds th
 ```javascript
 // Simplified example of the request the bot sends
 const payload = {
-  preset: process.env.AGENT_PRESET || 'medium', // picks model, reasoning, steps, default tools
+  // `effort` was named `preset` until October 2026 (still a deprecated alias)
+  effort: process.env.AGENT_EFFORT || process.env.AGENT_PRESET || 'medium', // picks model, reasoning, steps, default tools
   // model: 'anthropic/claude-sonnet-5-5',        // only when AGENT_MODEL is set
   // reasoning: { effort: 'low' },                // only when AGENT_REASONING_EFFORT is set
   instructions: 'Today is 2026-10-04.\n\n<system prompt>\n\n<which API/preset/model it runs on>',
@@ -378,7 +379,7 @@ const response = await request('https://api.perplexity.ai/v1/agent', {
 
 Notes:
 
-- No `temperature`: the API rejects it alongside a preset.
+- No `temperature`: several model families ignore it.
 - Answer text comes from `output_text` or the `output[]` message items; source URLs come from
   `search_results`/`fetch_url` results and annotations, rendered as a numbered, linked footer.
 - The client keeps the model Perplexity reports (so the bot can say what it runs on) and a summary
@@ -718,8 +719,8 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 PERPLEXITY_API_KEY=your_perplexity_api_key_here
 
 # Optional Perplexity Agent API tuning
-AGENT_PRESET=medium          # fast | low | medium | high | xhigh
-AGENT_MODEL=                 # pin a model on top of the preset
+AGENT_EFFORT=medium          # fast | low | medium | high | xhigh | ultra (AGENT_PRESET still read)
+AGENT_MODEL=                 # pin a model on top of the effort level
 AGENT_REASONING_EFFORT=      # minimal | low | medium | high
 AGENT_FETCH_URL=true         # let the agent read pasted links
 SEARCH_DOMAIN_FILTER=        # comma-separated allowlist for web search

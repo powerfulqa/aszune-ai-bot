@@ -21,8 +21,9 @@ Discord bot specialising in gaming lore, guides, and advice via the Perplexity A
 primary target a Raspberry Pi 5 (PM2). Node.js, CommonJS, no build step.
 
 - AI chat via the Perplexity Agent API (`/v1/agent`, the only chat path since Sonar Chat Completions
-  was retired 2026-09-27). `AGENT_PRESET` (default `medium`) plus optional `AGENT_MODEL` /
-  `AGENT_REASONING_EFFORT` overrides; tools `web_search` + `fetch_url`; per-user conversation
+  was retired 2026-09-27). `AGENT_EFFORT` (default `medium`; sent as `effort`, which
+  Perplexity called `preset` until October 2026 — `AGENT_PRESET` is still read as a fallback) plus
+  optional `AGENT_MODEL` / `AGENT_REASONING_EFFORT` overrides; tools `web_search` + `fetch_url`; per-user conversation
   history (30 messages, 2h session window) replayed each turn; numbered citations.
 - Natural-language reminders (chrono-node) persisted in SQLite (`better-sqlite3`)
 - Express + Socket.IO admin dashboard (`src/services/web-dashboard.js`, bound to `127.0.0.1:3000`)
@@ -133,6 +134,6 @@ command string. On the Pi, start via `start-pi-optimized.sh` to apply optimisati
 
 Key env vars: `DISCORD_BOT_TOKEN`, `PERPLEXITY_API_KEY` (required); `DASHBOARD_TOKEN` (enables the
 dashboard's destructive operations — without it the dashboard is read-only); `TRACKING_ADMIN_KEY`
-(required to start the tracking server); `AGENT_PRESET`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
+(required to start the tracking server); `AGENT_EFFORT`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
 `AGENT_FETCH_URL` (Perplexity Agent API tuning); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
 Perplexity allowlist). See `.env.example`.
