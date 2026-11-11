@@ -309,6 +309,8 @@ describe('diag command', () => {
     });
     const interaction = makeInteraction(OWNER);
     await diagCommand.execute(interaction, deps);
-    expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Diagnostics failed: boom' });
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      content: 'Diagnostics failed. The cause is in the bot log.',
+    });
   });
 });

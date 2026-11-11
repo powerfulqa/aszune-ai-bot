@@ -235,7 +235,7 @@ const diagCommand = {
       return interaction.editReply({ embeds: [embed] });
     } catch (error) {
       logger.error(`/diag failed: ${error.message}`);
-      return interaction.editReply({ content: `Diagnostics failed: ${error.message}` });
+      return interaction.editReply({ content: 'Diagnostics failed. The cause is in the bot log.' });
     }
   },
 };

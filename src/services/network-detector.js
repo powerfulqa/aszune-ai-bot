@@ -2,6 +2,7 @@ const logger = require('../utils/logger');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const dns = require('dns').promises;
+const { pingOnce } = require('../utils/shell-exec-helper');
 
 const execPromise = promisify(exec);
 
@@ -281,9 +282,7 @@ class NetworkDetector {
 
   static async _testDns(dnsServer) {
     try {
-      const pingCmd =
-        process.platform === 'win32' ? `ping -n 1 ${dnsServer}` : `ping -c 1 ${dnsServer}`;
-      await execPromise(pingCmd, { timeout: 3000 });
+      await pingOnce(dnsServer);
       try {
         await dns.resolve4('google.com');
         return true;
