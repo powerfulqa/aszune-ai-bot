@@ -21,7 +21,7 @@ class ThrottlingService {
     try {
       this.connectionThrottler = require('../utils/connection-throttler');
     } catch (error) {
-      // Throttler not available, continue without it
+      logger.warn(`Connection throttler unavailable, requests run unthrottled: ${error.message}`);
       this.connectionThrottler = null;
     }
   }

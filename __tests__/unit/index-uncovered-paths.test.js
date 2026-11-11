@@ -165,12 +165,7 @@ describe('Index Uncovered Paths', () => {
 
       index.unhandledRejectionHandler(reason, promise);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        'Unhandled Rejection at:',
-        promise,
-        'reason:',
-        reason
-      );
+      expect(logger.error).toHaveBeenCalledWith('Unhandled Rejection:', reason);
     });
 
     it('should handle uncaught exceptions', () => {

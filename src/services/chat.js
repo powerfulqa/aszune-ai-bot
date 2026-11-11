@@ -21,6 +21,10 @@ const naturalLanguageReminderProcessor = require('../utils/natural-language-remi
 const sessionValidator = require('../utils/metrics/session-validator');
 
 const processingMessages = new Set();
+// Users with an agent run in flight. A run takes 10-60s, far longer than the
+// 5s rate-limit window, and a second message during it would interleave the
+// history (question A, question B, answer A, answer B).
+const usersInFlight = new Set();
 
 /**
  * Check if a message should be ignored by the bot
@@ -90,6 +94,19 @@ async function processUserMessage(message) {
   if (!pipelineResult.success) return null;
 
   await loadConversationHistory(userId, pipelineResult.sanitizedContent);
+
+  if (usersInFlight.has(userId)) {
+    await message.reply({
+      embeds: [
+        {
+          color: require('../config/config').COLORS.WARNING,
+          description: "I'm still working on your previous message. Ask again once I've replied.",
+        },
+      ],
+    });
+    return null;
+  }
+  usersInFlight.add(userId);
 
   // Add sanitized message to history
   conversationManager.addMessage(userId, 'user', pipelineResult.sanitizedContent);
@@ -471,10 +488,11 @@ async function handleChatMessage(message) {
   processingMessages.add(message.id);
   const startTime = Date.now();
   let stopTyping = () => {};
+  let processedData = null;
 
   try {
     // Process the incoming message
-    const processedData = await processUserMessage(message);
+    processedData = await processUserMessage(message);
     if (!processedData) return null;
 
     // Keep the typing indicator alive for the whole agent run (it lapses
@@ -504,6 +522,7 @@ async function handleChatMessage(message) {
     await handleChatError(error, startTime, null, message);
   } finally {
     stopTyping();
+    if (processedData) usersInFlight.delete(processedData.userId);
     // Always remove message from processing set
     processingMessages.delete(message.id);
   }
@@ -555,7 +574,16 @@ async function handleChatError(error, startTime, processedData, message) {
     footer: { text: 'Aszai Bot' },
   });
 
-  await message.reply({ embeds: [embed] });
+  // The reply itself can fail (message deleted, Send Messages or Embed Links
+  // revoked). Throwing from here would escape the messageCreate handler as an
+  // unhandled rejection.
+  try {
+    await message.reply({ embeds: [embed] });
+  } catch (replyError) {
+    logger.error(
+      `Could not deliver error reply in channel ${message.channel?.id}: ${replyError.message}`
+    );
+  }
 }
 
 async function handleReminderRequests(message, messageContent, userId) {
@@ -620,10 +648,14 @@ async function processAIResponse(message, processedData, userId) {
     }
 
     // Send the response as embed (handles chunking if needed)
-    const chunks = chunkMessage(finalResponse);
+    // Compact mode truncates each embed at EMBED_DESCRIPTION_MAX_LENGTH, so
+    // chunk at that size there or the tail of every long chunk is dropped.
+    const config = require('../config/config');
+    const chunks = messageFormatter.compact
+      ? chunkMessage(finalResponse, config.MESSAGE_LIMITS.EMBED_DESCRIPTION_MAX_LENGTH)
+      : chunkMessage(finalResponse);
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const config = require('../config/config');
       const embed = messageFormatter.createCompactEmbed({
         color: config.COLORS.PRIMARY,
         description: chunk,
@@ -634,7 +666,6 @@ async function processAIResponse(message, processedData, userId) {
     }
 
     // Add emoji reactions to the message (skip in low CPU mode)
-    const config = require('../config/config');
     if (!config.PI_OPTIMIZATIONS?.LOW_CPU_MODE) {
       await emojiManager.addReactionsToMessage(message);
     }

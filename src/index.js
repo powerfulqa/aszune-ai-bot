@@ -110,6 +110,9 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
   ],
+  // Model output and user text must never ping @everyone, @here or a role.
+  // User mentions stay on: reminders ping their owner.
+  allowedMentions: { parse: ['users'], repliedUser: true },
 });
 
 /**
@@ -333,6 +336,12 @@ const shutdownSteps = [
     },
   },
   {
+    name: 'database',
+    handler: () => {
+      require('./services/database').close();
+    },
+  },
+  {
     name: 'Discord client',
     handler: async () => {
       await client.destroy();
@@ -391,8 +400,9 @@ function handleShutdownCompletion(errors) {
 }
 
 // Handle unhandled promise rejections
-function unhandledRejectionHandler(reason, promise) {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+function unhandledRejectionHandler(reason) {
+  // logger.error takes (message, error): passing the promise first dropped the reason.
+  logger.error('Unhandled Rejection:', reason);
   // Don't exit here, just log
 }
 
