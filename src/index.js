@@ -52,13 +52,21 @@ const instanceTracker = require('./services/instance-tracker');
 const telemetry = require('./utils/metrics/telemetry');
 const analyticsCore = require('./utils/metrics/analytics-core');
 
-// Set up reminder due handler
+// Set up reminder due handler. It throws when the send fails: the reminder
+// service retries, and only marks the reminder completed after a real send.
 reminderService.on('reminderDue', async (reminder) => {
-  try {
-    // Send the reminder message to the channel
-    const channel = await client.channels.fetch(reminder.channel_id);
-    if (channel) {
-      const embed = {
+  const channel = await client.channels.fetch(reminder.channel_id);
+  if (!channel) {
+    const error = new Error(`Could not find channel ${reminder.channel_id}`);
+    error.permanent = true;
+    throw error;
+  }
+
+  // Send with user mention to trigger notification
+  await channel.send({
+    content: `<@${reminder.user_id}>`,
+    embeds: [
+      {
         color: 0x00ff00,
         title: '⏰ Reminder!',
         description: reminder.message,
@@ -66,20 +74,10 @@ reminderService.on('reminderDue', async (reminder) => {
           text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot`,
         },
         timestamp: new Date().toISOString(),
-      };
-
-      // Send with user mention to trigger notification
-      await channel.send({
-        content: `<@${reminder.user_id}>`,
-        embeds: [embed],
-      });
-      logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
-    } else {
-      logger.error(`Could not find channel ${reminder.channel_id} for reminder ${reminder.id}`);
-    }
-  } catch (error) {
-    logger.error(`Failed to handle reminder due for ${reminder.id}:`, error);
-  }
+      },
+    ],
+  });
+  logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
 });
 
 // Conditionally load optimizations - don't load in test environment for easier testing

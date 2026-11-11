@@ -9,6 +9,12 @@ const databaseService = require('./database');
 const logger = require('../utils/logger');
 const EventEmitter = require('events');
 
+// A send can fail while Discord is down or reconnecting, so a due reminder is
+// retried before it is given up on.
+const MAX_DELIVERY_ATTEMPTS = 5;
+const DELIVERY_RETRY_DELAY_MS = 60 * 1000;
+const DISCORD_UNKNOWN_CHANNEL = 10003;
+
 class ReminderService extends EventEmitter {
   constructor() {
     super();
@@ -92,10 +98,11 @@ class ReminderService extends EventEmitter {
       const scheduledTime = new Date(reminder.scheduled_time);
       const delay = scheduledTime.getTime() - Date.now();
 
-      // Don't schedule reminders that are already past
+      // Already past (it fell due while the bot was down, or an earlier send
+      // failed): deliver it late rather than dropping it.
       if (delay <= 0) {
-        logger.warn(`Reminder ${reminder.id} is already past due, marking as completed`);
-        await databaseService.completeReminder(reminder.id);
+        logger.warn(`Reminder ${reminder.id} is past due, delivering it now`);
+        await this.executeReminder(reminder);
         return;
       }
 
@@ -116,25 +123,66 @@ class ReminderService extends EventEmitter {
     }
   }
 
-  async executeReminder(reminder) {
-    try {
-      // Remove from active timers
-      this.clearReminderTimer(reminder.id);
+  /**
+   * Deliver a due reminder, then mark it completed. Completion comes second so
+   * a failed send is retried instead of losing the reminder.
+   * @param {Object} reminder - Reminder row
+   * @param {number} [attempt] - Delivery attempt, starting at 1
+   */
+  async executeReminder(reminder, attempt = 1) {
+    this.clearReminderTimer(reminder.id);
 
-      // Mark as completed in database
-      const completed = databaseService.completeReminder(reminder.id);
-      if (!completed) {
+    try {
+      await Promise.all(this.emit('reminderDue', reminder));
+    } catch (error) {
+      this._handleDeliveryFailure(reminder, attempt, error);
+      return;
+    }
+
+    try {
+      if (!databaseService.completeReminder(reminder.id)) {
         logger.warn(`Failed to mark reminder ${reminder.id} as completed`);
         return;
       }
-
-      // Emit reminder event for the bot to handle
-      this.emit('reminderDue', reminder);
-
       logger.info(`Executed reminder ${reminder.id} for user ${reminder.user_id}`);
     } catch (error) {
       logger.error(`Failed to execute reminder ${reminder.id}:`, error);
     }
+  }
+
+  /**
+   * Retry a failed delivery, or stop when retrying cannot help.
+   * @private
+   */
+  _handleDeliveryFailure(reminder, attempt, error) {
+    // The channel is gone for good: completing it stops a retry on every start.
+    if (error?.permanent || error?.code === DISCORD_UNKNOWN_CHANNEL) {
+      logger.error(`Reminder ${reminder.id} cannot be delivered, giving up: ${error.message}`);
+      try {
+        databaseService.completeReminder(reminder.id);
+      } catch (dbError) {
+        logger.warn(`Failed to mark reminder ${reminder.id} as completed: ${dbError.message}`);
+      }
+      return;
+    }
+
+    if (attempt >= MAX_DELIVERY_ATTEMPTS) {
+      // Left active on purpose: the next start delivers it as past due.
+      logger.error(
+        `Reminder ${reminder.id} not delivered after ${attempt} attempts, will retry on next start: ${error.message}`
+      );
+      return;
+    }
+
+    logger.warn(
+      `Reminder ${reminder.id} delivery failed (attempt ${attempt}/${MAX_DELIVERY_ATTEMPTS}), retrying: ${error.message}`
+    );
+    const timer = setTimeout(
+      () => this.executeReminder(reminder, attempt + 1),
+      DELIVERY_RETRY_DELAY_MS
+    );
+    timer.unref?.();
+    this.activeTimers.set(Number(reminder.id), { type: 'timeout', timer });
   }
 
   clearReminderTimer(reminderId) {
@@ -270,16 +318,24 @@ class ReminderService extends EventEmitter {
     this.eventListeners.get(event).push(listener);
   }
 
+  /**
+   * Call every listener. Returns what each returned, so a caller can await
+   * async listeners; a listener that throws is logged and becomes a rejected
+   * promise (pre-handled, so ignoring the return value stays safe).
+   * @returns {Array<*>}
+   */
   emit(event, ...args) {
-    if (this.eventListeners && this.eventListeners.has(event)) {
-      this.eventListeners.get(event).forEach((listener) => {
-        try {
-          listener(...args);
-        } catch (error) {
-          logger.error(`Error in event listener for ${event}:`, error);
-        }
-      });
-    }
+    const listeners = this.eventListeners?.get(event) || [];
+    return listeners.map((listener) => {
+      try {
+        return listener(...args);
+      } catch (error) {
+        logger.error(`Error in event listener for ${event}:`, error);
+        const failed = Promise.reject(error);
+        failed.catch(() => {});
+        return failed;
+      }
+    });
   }
 
   // Cleanup method

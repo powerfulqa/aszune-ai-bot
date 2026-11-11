@@ -11,14 +11,16 @@ describe('ReminderService scheduling', () => {
   });
 
   describe('scheduleReminder', () => {
-    it('should complete past due reminders immediately', async () => {
+    it('should deliver past due reminders immediately', async () => {
       const pastTime = new Date(Date.now() - 10000).toISOString();
       const reminder = { id: 1, scheduled_time: pastTime };
 
       await reminderService.scheduleReminder(reminder);
 
       expect(databaseService.completeReminder).toHaveBeenCalledWith(1);
-      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('already past due'));
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('is past due, delivering it now')
+      );
     });
 
     it('should schedule future reminders with setTimeout', async () => {
@@ -31,7 +33,7 @@ describe('ReminderService scheduling', () => {
       expect(reminderService.activeTimers.has(1)).toBe(true);
       expect(reminderService.activeTimers.get(1).type).toBe('timeout');
 
-      jest.runAllTimers();
+      await jest.runAllTimersAsync();
 
       expect(databaseService.completeReminder).toHaveBeenCalledWith(1);
       jest.useRealTimers();
@@ -52,7 +54,7 @@ describe('ReminderService scheduling', () => {
       expect(databaseService.completeReminder).not.toHaveBeenCalled();
 
       jest.setSystemTime(new Date(futureTime.getTime() + 1000));
-      jest.advanceTimersByTime(60000);
+      await jest.advanceTimersByTimeAsync(60000);
 
       expect(databaseService.completeReminder).toHaveBeenCalledWith(1);
       jest.useRealTimers();
