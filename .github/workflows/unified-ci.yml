@@ -2,7 +2,8 @@ name: Aszune AI Bot CI/CD
 
 # Optimized CI workflow with parallel test sharding and separate coverage
 # - Tests run in 3 parallel shards for faster execution (NO coverage = speed)
-# - Coverage run separately as FULL suite (no sharding = accuracy)
+# - Coverage run separately as FULL suite (no sharding = accuracy), on PRs and main,
+#   followed by the per-file critical coverage gate
 # - Quality and security checks run in parallel with tests
 # - QLTY analysis runs to trigger maintainability checks
 
@@ -89,11 +90,12 @@ jobs:
           NODE_ENV: test
           FORCE_COLOR: '1'
 
-  # Full coverage run (main branch only, no sharding for accurate coverage)
+  # Full coverage run (no sharding for accurate coverage). Runs on pull requests
+  # too, so the gates block a merge instead of failing on main afterwards.
+  # Jest enforces the global 70% threshold from jest.config.js.
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write # Required for QLTY OIDC authentication
@@ -117,36 +119,13 @@ jobs:
           NODE_ENV: test
           FORCE_COLOR: '1'
 
-      - name: Validate coverage thresholds
-        run: |
-          echo "Validating coverage thresholds..."
-          node -e "
-            const fs = require('fs');
-            const coverageSummary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
-            const { statements, branches, functions, lines } = coverageSummary.total;
-            
-            console.log('Coverage Summary:');
-            console.log(\`  Statements: \${statements.pct}%\`);
-            console.log(\`  Branches:   \${branches.pct}%\`);
-            console.log(\`  Functions:  \${functions.pct}%\`);
-            console.log(\`  Lines:      \${lines.pct}%\`);
-            
-            const threshold = 70;
-            const failures = [];
-            
-            if (statements.pct < threshold) failures.push(\`Statements: \${statements.pct}% < \${threshold}%\`);
-            if (branches.pct < threshold) failures.push(\`Branches: \${branches.pct}% < \${threshold}%\`);
-            if (functions.pct < threshold) failures.push(\`Functions: \${functions.pct}% < \${threshold}%\`);
-            if (lines.pct < threshold) failures.push(\`Lines: \${lines.pct}% < \${threshold}%\`);
-            
-            if (failures.length > 0) {
-              console.error('\\n❌ Coverage thresholds not met:');
-              failures.forEach(f => console.error(\`  - \${f}\`));
-              process.exit(1);
-            }
-            
-            console.log('\\n✅ All coverage thresholds met!');
-          "
+      # Stricter per-file gates for the critical files
+      # (config/jest.critical-coverage.config.js)
+      - name: Critical-file coverage gate
+        run: npm run test:critical:ci
+        env:
+          CI: true
+          NODE_ENV: test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
@@ -176,7 +155,7 @@ jobs:
             echo "❌ CI failed"
             exit 1
           fi
-          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ needs.coverage.result }}" == "failure" ]]; then
+          if [[ "${{ needs.coverage.result }}" == "failure" ]]; then
             echo "❌ Coverage check failed"
             exit 1
           fi
