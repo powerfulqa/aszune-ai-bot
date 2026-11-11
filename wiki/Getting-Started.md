@@ -104,7 +104,7 @@ Follow these steps to set up the Aszune AI Bot:
 
    # Production (with PM2)
    npm install pm2 -g
-   pm2 start src/index.js --name aszune-ai
+   pm2 start ecosystem.config.js --update-env   # starts the bot (aszune-ai) and the tracking server
    ```
 
 ## Verification

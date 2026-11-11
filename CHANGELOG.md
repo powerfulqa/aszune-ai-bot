@@ -30,6 +30,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - SQLite runs in WAL mode to cut SD-card writes. Backups of a running bot must include `bot.db-wal`
   and `bot.db-shm`
 - CI runs the coverage gate and the per-file critical gate on pull requests
+- `/summary` and `/summarise` use the configured UK-English summary prompts
+- Validation and rate-limit notices are embeds, like every other bot reply
+- `npm run lint` and CI lint the whole repository, not only `src` and `__tests__`
+- `.env.example`: `PI_LOG_LEVEL` defaults to `INFO` (`ERROR` hid info and warning lines), and the
+  unread `PI_DEBOUNCE_MS`, `PI_REACTION_LIMIT` and `PI_STREAM_RESPONSES` are gone
 
 ### Fixed
 
@@ -52,6 +57,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   five attempts, then on the next start), and reminders that fell due while the bot was down are
   delivered late instead of being dropped
 - The logger no longer runs `mkdir` and `stat` for every line and keeps lines in order
+- Tracking server admin key is compared in constant time
+- Network diagnostics run `ping` without a shell
+- `/diag` no longer shows a raw error message when it fails
 
 ### Removed
 
@@ -59,6 +67,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   retry logic, header helpers) and the tests that only covered it
 - Unused modules `pi-detector.js`, `debouncer.js` and `security-monitor.js`; the test helper
   `testUtils.js` moved from `src/utils` to `__tests__/utils`
+- Config keys that nothing read (`FILE_PERMISSIONS`, `CACHE.MAX_AGE_*`, `CACHE.CLEANUP_PERCENTAGE`,
+  `PI_OPTIMIZATIONS.DEBOUNCE_MS` / `REACTION_LIMIT` / `STREAM_RESPONSES` / `LOG_LEVEL` and others)
 
 ## [2.3.0] - 2026-10-04
 
