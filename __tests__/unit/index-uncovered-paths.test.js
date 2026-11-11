@@ -101,6 +101,67 @@ describe('Index Uncovered Paths', () => {
     index = require('../../src/index');
   });
 
+  describe('reminderDue listener', () => {
+    const reminder = {
+      id: 5,
+      user_id: '42',
+      channel_id: '99',
+      message: 'Raid starts',
+      created_at: '2026-11-10T10:00:00.000Z',
+    };
+    const getListener = () => {
+      const reminderService = require('../../src/services/reminder-service');
+      return reminderService.on.mock.calls.find(([event]) => event === 'reminderDue')[1];
+    };
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now: new Date('2026-11-11T10:00:00.000Z') });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('sends the reminder with a mention of its owner', async () => {
+      const channel = { send: jest.fn().mockResolvedValue({}) };
+      mockClient.channels.fetch.mockResolvedValue(channel);
+
+      await getListener()(reminder);
+
+      expect(mockClient.channels.fetch).toHaveBeenCalledWith('99');
+      expect(channel.send).toHaveBeenCalledWith({
+        content: '<@42>',
+        embeds: [
+          {
+            color: 0x00ff00,
+            title: '⏰ Reminder!',
+            description: 'Raid starts',
+            footer: {
+              text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot`,
+            },
+            timestamp: '2026-11-11T10:00:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('rejects when the send fails, so the reminder service retries', async () => {
+      const channel = { send: jest.fn().mockRejectedValue(new Error('Discord unavailable')) };
+      mockClient.channels.fetch.mockResolvedValue(channel);
+
+      await expect(getListener()(reminder)).rejects.toThrow('Discord unavailable');
+    });
+
+    it('rejects with a permanent error when the channel does not exist', async () => {
+      mockClient.channels.fetch.mockResolvedValue(null);
+
+      const error = await getListener()(reminder).catch((e) => e);
+
+      expect(error.message).toBe('Could not find channel 99');
+      expect(error.permanent).toBe(true);
+    });
+  });
+
   describe('registerSlashCommands', () => {
     it('should handle client not ready', async () => {
       mockClient.user = null;
