@@ -2,8 +2,6 @@
  * Cache Manager for handling response caching
  * Manages cache operations, configuration, and cleanup
  */
-const fs = require('fs').promises;
-const path = require('path');
 const crypto = require('crypto');
 const config = require('../config/config');
 const logger = require('../utils/logger');
@@ -13,8 +11,6 @@ const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
 
 // Cache management constants
 const CACHE_EVICTION_PERCENTAGE = 0.1; // Remove 10% when cache full
-const FILE_PERMISSIONS_SECURE = 0o600; // Secure file permissions (owner read/write only)
-const JSON_INDENT_LEVEL = 2; // JSON indentation for readability
 
 /**
  * Cache Manager class for handling response caching
@@ -203,52 +199,6 @@ class CacheManager {
       return null;
     } catch {
       return null; // Cache pruner not available
-    }
-  }
-
-  /**
-   * Load cache from file
-   * @returns {Promise<Object>} Cache object
-   */
-  async loadCache() {
-    const cacheDir = path.join(process.cwd(), 'data');
-    const cachePath = path.join(cacheDir, 'question_cache.json');
-
-    try {
-      // Ensure cache directory exists
-      await fs.mkdir(cacheDir, { recursive: true });
-
-      const data = await fs.readFile(cachePath, 'utf8');
-      return JSON.parse(data);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        return {}; // Return empty cache if file doesn't exist
-      }
-
-      const errorResponse = ErrorHandler.handleError(error, 'loading cache');
-      logger.warn(`Cache load error: ${errorResponse.message}`);
-      return {};
-    }
-  }
-
-  /**
-   * Save cache to file
-   * @param {Object} cache - Cache object to save
-   */
-  async saveCache(cache) {
-    const cacheDir = path.join(process.cwd(), 'data');
-    const cachePath = path.join(cacheDir, 'question_cache.json');
-
-    try {
-      // Ensure cache directory exists
-      await fs.mkdir(cacheDir, { recursive: true });
-
-      await fs.writeFile(cachePath, JSON.stringify(cache, null, JSON_INDENT_LEVEL), {
-        mode: FILE_PERMISSIONS_SECURE,
-      });
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'saving cache');
-      logger.error(`Cache save error: ${errorResponse.message}`);
     }
   }
 

@@ -3,16 +3,6 @@
  */
 jest.mock('../../src/utils/logger');
 jest.mock('discord.js', () => require('../__mocks__/discord.mock.module.js'));
-jest.mock('../../src/utils/pi-detector', () => ({
-  detectPiModel: jest.fn().mockResolvedValue({
-    model: 'Pi 4 Model B',
-    totalMemoryMB: 4096,
-    cpuCores: 4,
-    cpuType: 'ARMv7',
-    isRaspberryPi: true,
-  }),
-  optimizeSettings: jest.fn(),
-}));
 
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 

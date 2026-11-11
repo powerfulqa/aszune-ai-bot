@@ -16,11 +16,6 @@ class Logger {
     // Setup log file path
     this.logDir = path.join(__dirname, '../../logs');
     this.logFile = path.join(this.logDir, 'bot.log');
-
-    // Create log directory if not in test environment
-    if (process.env.NODE_ENV !== 'test') {
-      this._ensureLogDirectory();
-    }
   }
 
   /**
@@ -62,25 +57,36 @@ class Logger {
   }
 
   /**
-   * Write log to file if not in test mode
+   * Write log to file if not in test mode. Writes are queued so lines keep
+   * their order and two writes cannot both rotate the file. The directory is
+   * created once and the size check runs at most once per
+   * LOGGING.ROTATION_CHECK_INTERVAL_MS, not on every line.
    * @param {string} formattedMessage - Formatted log message
    * @private
    */
-  async _writeToFile(formattedMessage) {
-    if (process.env.NODE_ENV === 'test') return;
+  _writeToFile(formattedMessage) {
+    if (process.env.NODE_ENV === 'test') return Promise.resolve();
 
-    try {
-      // Ensure log directory exists
-      await this._ensureLogDirectory();
+    this._writeQueue = (this._writeQueue || Promise.resolve()).then(async () => {
+      try {
+        this._dirReady = this._dirReady || this._ensureLogDirectory();
+        await this._dirReady;
 
-      // Check if log file needs rotation
-      await this._rotateLogFileIfNeeded();
+        const now = Date.now();
+        if (
+          now - (this._lastRotationCheck || 0) >=
+          (config.LOGGING.ROTATION_CHECK_INTERVAL_MS || 60000)
+        ) {
+          this._lastRotationCheck = now;
+          await this._rotateLogFileIfNeeded();
+        }
 
-      // Append to log file
-      await fs.appendFile(this.logFile, formattedMessage + '\n');
-    } catch (error) {
-      this._logToConsole('error', 'Failed to write to log file:', error);
-    }
+        await fs.appendFile(this.logFile, formattedMessage + '\n');
+      } catch (error) {
+        this._logToConsole('error', 'Failed to write to log file:', error);
+      }
+    });
+    return this._writeQueue;
   }
 
   /**

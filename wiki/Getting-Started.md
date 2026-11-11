@@ -50,7 +50,7 @@ Follow these steps to set up the Aszune AI Bot:
    Replace the placeholder values with your actual tokens and keys.
 
    Optional AI settings (defaults shown in `.env.example`):
-   - `AGENT_PRESET`: Perplexity Agent API preset, `fast` | `low` | `medium` | `high` | `xhigh`
+   - `AGENT_EFFORT`: Perplexity Agent API preset, `fast` | `low` | `medium` | `high` | `xhigh`
      (default `medium`)
    - `AGENT_MODEL` / `AGENT_REASONING_EFFORT`: pin a model or reasoning effort on top of the preset
    - `AGENT_FETCH_URL`: let the bot read links people paste (default `true`)
@@ -104,7 +104,7 @@ Follow these steps to set up the Aszune AI Bot:
 
    # Production (with PM2)
    npm install pm2 -g
-   pm2 start src/index.js --name aszune-ai
+   pm2 start ecosystem.config.js --update-env   # starts the bot (aszune-ai) and the tracking server
    ```
 
 ## Verification

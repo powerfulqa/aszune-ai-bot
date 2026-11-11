@@ -3,16 +3,6 @@
  */
 jest.mock('../../src/utils/logger');
 jest.mock('discord.js', () => require('../__mocks__/discord.mock.module.js'));
-jest.mock('../../src/utils/pi-detector', () => ({
-  detectPiModel: jest.fn().mockResolvedValue({
-    model: 'Pi 4 Model B',
-    totalMemoryMB: 4096,
-    cpuCores: 4,
-    cpuType: 'ARMv7',
-    isRaspberryPi: true,
-  }),
-  optimizeSettings: jest.fn(),
-}));
 
 jest.mock('../../src/config/config', () => require('../../__mocks__/configMock'));
 
@@ -59,31 +49,11 @@ describe('Main Index - Advanced', () => {
     jest.resetModules();
   });
 
-  it('should handle bootWithOptimizations function', () => {
-    mainIndex = require('../../src/index');
-
-    expect(mainIndex).toHaveProperty('bootWithOptimizations');
-    expect(typeof mainIndex.bootWithOptimizations).toBe('function');
-  });
-
   it('should handle registerSlashCommands function', () => {
     mainIndex = require('../../src/index');
 
     expect(mainIndex).toHaveProperty('registerSlashCommands');
     expect(typeof mainIndex.registerSlashCommands).toBe('function');
-  });
-
-  it('should handle Pi optimization detection', async () => {
-    const piDetector = require('../../src/utils/pi-detector');
-
-    const result = await piDetector.detectPiModel();
-
-    expect(result).toHaveProperty('model');
-    expect(result).toHaveProperty('totalMemoryMB');
-    expect(result).toHaveProperty('cpuCores');
-    expect(result).toHaveProperty('cpuType');
-    expect(result).toHaveProperty('isRaspberryPi');
-    expect(result.isRaspberryPi).toBe(true);
   });
 
   it('should handle enhanced cache initialization', () => {

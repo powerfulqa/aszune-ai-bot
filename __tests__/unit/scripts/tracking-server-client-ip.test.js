@@ -82,4 +82,17 @@ describe('tracking server client address', () => {
     expect(res.authorized).toBe(false);
     expect(instance.location.actualIp).toBe('203.0.113.9');
   });
+
+  it('accepts only the exact admin key', async () => {
+    let base;
+    ({ server, base } = await startServer({}));
+    const status = async (key) =>
+      (await fetch(`${base}/api/instances`, { headers: { Authorization: `Bearer ${key}` } }))
+        .status;
+
+    expect(await status(ADMIN_KEY)).toBe(200);
+    expect(await status(`${ADMIN_KEY}x`)).toBe(403);
+    expect(await status(ADMIN_KEY.slice(0, -1))).toBe(403);
+    expect(await status('')).toBe(401);
+  });
 });

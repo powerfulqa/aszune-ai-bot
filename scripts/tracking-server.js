@@ -14,6 +14,7 @@
  * @module tracking-server
  */
 
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const InstanceStore = require('./instance-store');
@@ -408,7 +409,10 @@ function authenticateAdmin(req, res, next) {
 
   const token = authHeader.split(' ')[1];
 
-  if (token !== CONFIG.adminKey) {
+  // Constant-time comparison: `!==` leaks how much of the key matched through
+  // response timing. Hashing first gives timingSafeEqual equal-length inputs.
+  const digest = (value) => crypto.createHash('sha256').update(String(value)).digest();
+  if (!crypto.timingSafeEqual(digest(token), digest(CONFIG.adminKey))) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

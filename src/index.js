@@ -22,18 +22,6 @@ try {
 // Set up logger early
 const logger = require('./utils/logger');
 
-// Helper function to get config inside functions to avoid circular dependencies
-function getConfig() {
-  return require('./config/config');
-}
-
-// Initialize Pi-specific optimizations if enabled
-async function bootWithOptimizations() {
-  const _currentConfig = getConfig();
-  logger.info('Bot initialization started...');
-  // Pi optimizations are now initialized at module load time in production mode
-}
-
 // Core dependencies
 const handleChatMessage = require('./services/chat');
 const commandHandler = require('./commands');
@@ -52,13 +40,21 @@ const instanceTracker = require('./services/instance-tracker');
 const telemetry = require('./utils/metrics/telemetry');
 const analyticsCore = require('./utils/metrics/analytics-core');
 
-// Set up reminder due handler
+// Set up reminder due handler. It throws when the send fails: the reminder
+// service retries, and only marks the reminder completed after a real send.
 reminderService.on('reminderDue', async (reminder) => {
-  try {
-    // Send the reminder message to the channel
-    const channel = await client.channels.fetch(reminder.channel_id);
-    if (channel) {
-      const embed = {
+  const channel = await client.channels.fetch(reminder.channel_id);
+  if (!channel) {
+    const error = new Error(`Could not find channel ${reminder.channel_id}`);
+    error.permanent = true;
+    throw error;
+  }
+
+  // Send with user mention to trigger notification
+  await channel.send({
+    content: `<@${reminder.user_id}>`,
+    embeds: [
+      {
         color: 0x00ff00,
         title: '⏰ Reminder!',
         description: reminder.message,
@@ -66,20 +62,10 @@ reminderService.on('reminderDue', async (reminder) => {
           text: `Reminder set ${new Date(reminder.created_at).toLocaleDateString()} • Aszai Bot`,
         },
         timestamp: new Date().toISOString(),
-      };
-
-      // Send with user mention to trigger notification
-      await channel.send({
-        content: `<@${reminder.user_id}>`,
-        embeds: [embed],
-      });
-      logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
-    } else {
-      logger.error(`Could not find channel ${reminder.channel_id} for reminder ${reminder.id}`);
-    }
-  } catch (error) {
-    logger.error(`Failed to handle reminder due for ${reminder.id}:`, error);
-  }
+      },
+    ],
+  });
+  logger.info(`Sent reminder ${reminder.id} to channel ${reminder.channel_id}`);
 });
 
 // Conditionally load optimizations - don't load in test environment for easier testing
@@ -110,6 +96,9 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
   ],
+  // Model output and user text must never ping @everyone, @here or a role.
+  // User mentions stay on: reminders ping their owner.
+  allowedMentions: { parse: ['users'], repliedUser: true },
 });
 
 /**
@@ -223,8 +212,6 @@ function _setupDiscordEventHandlers() {
       logger.error('Failed to connect Discord client to dashboard:', error);
     }
 
-    // Initialize Pi optimizations after connection is established
-    await bootWithOptimizations();
     await registerSlashCommands();
   });
 
@@ -333,6 +320,12 @@ const shutdownSteps = [
     },
   },
   {
+    name: 'database',
+    handler: () => {
+      require('./services/database').close();
+    },
+  },
+  {
     name: 'Discord client',
     handler: async () => {
       await client.destroy();
@@ -391,8 +384,9 @@ function handleShutdownCompletion(errors) {
 }
 
 // Handle unhandled promise rejections
-function unhandledRejectionHandler(reason, promise) {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+function unhandledRejectionHandler(reason) {
+  // logger.error takes (message, error): passing the promise first dropped the reason.
+  logger.error('Unhandled Rejection:', reason);
   // Don't exit here, just log
 }
 
@@ -462,6 +456,5 @@ module.exports = {
   shutdown, // Export shutdown function for testing
   unhandledRejectionHandler, // Export for direct testing
   uncaughtExceptionHandler, // Export for direct testing
-  bootWithOptimizations, // Export for branch coverage testing
   registerSlashCommands, // Export for branch coverage testing
 };

@@ -3,6 +3,11 @@ jest.mock('child_process', () => ({
   execFile: jest.fn(),
 }));
 
+jest.mock('../../../src/utils/pm2-service', () => ({
+  ...jest.requireActual('../../../src/utils/pm2-service'),
+  runPm2ServiceAction: jest.fn(),
+}));
+
 jest.mock('../../../src/utils/logger', () => ({
   debug: jest.fn(),
   info: jest.fn(),
@@ -96,50 +101,33 @@ describe('WebDashboardService - Restart Handling', () => {
     );
   });
 
-  it('attempts PM2 restart first and returns success response when it works', async () => {
-    const { exec } = require('child_process');
-    exec.mockImplementation((command, options, callback) => callback(null, 'ok', ''));
-
+  it('restarts through pm2-service and returns a success response', async () => {
+    const pm2Service = require('../../../src/utils/pm2-service');
+    pm2Service.runPm2ServiceAction.mockResolvedValue('ok');
     const { WebDashboardService } = require('../../../src/services/web-dashboard');
     const service = new WebDashboardService();
-
-    process.env.name = 'aszune-ai';
 
     const result = await service._attemptRestart();
 
-    expect(exec).toHaveBeenCalledWith(
-      'pm2 restart aszune-ai',
-      expect.objectContaining({ timeout: 10000 }),
-      expect.any(Function)
-    );
-    expect(result).toEqual(
-      expect.objectContaining({
-        success: true,
-        message: 'Bot restart initiated via PM2 aszune-ai',
-      })
-    );
+    expect(pm2Service.runPm2ServiceAction).toHaveBeenCalledWith('aszune-ai', 'restart');
+    expect(result.success).toBe(true);
+    expect(result.message).toBe('Bot restart initiated via PM2 aszune-ai');
   });
 
-  it('falls back to process exit when restart commands fail', async () => {
+  it('never shells out to systemctl and exits when PM2 fails', async () => {
     const { exec } = require('child_process');
-    exec.mockImplementation((command, options, callback) => callback(new Error('nope')));
-
+    const pm2Service = require('../../../src/utils/pm2-service');
+    pm2Service.runPm2ServiceAction.mockRejectedValue(new Error('pm2 not found'));
     const { WebDashboardService } = require('../../../src/services/web-dashboard');
     const service = new WebDashboardService();
-
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
     jest.useFakeTimers();
     try {
       const result = await service._attemptRestart();
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          success: true,
-          message: 'Bot restart initiated (fallback mode)',
-        })
-      );
-
+      expect(result.message).toBe('Bot restart initiated (fallback mode)');
+      expect(exec).not.toHaveBeenCalled();
       expect(exitSpy).not.toHaveBeenCalled();
 
       jest.advanceTimersByTime(1000);

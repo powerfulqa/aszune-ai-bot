@@ -144,54 +144,6 @@ describe('CacheManager - File Operations & Stats', () => {
     });
   });
 
-  describe('loadCache', () => {
-    it('should load cache from file', async () => {
-      mockFsPromises.readFile.mockResolvedValue('{"key": "value"}');
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({ key: 'value' });
-      expect(mockFsPromises.mkdir).toHaveBeenCalled();
-    });
-
-    it('should return empty object when file does not exist', async () => {
-      const error = new Error('File not found');
-      error.code = 'ENOENT';
-      mockFsPromises.readFile.mockRejectedValue(error);
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({});
-    });
-
-    it('should handle other read errors gracefully', async () => {
-      mockFsPromises.readFile.mockRejectedValue(new Error('Read error'));
-
-      const result = await cacheManager.loadCache();
-      expect(result).toEqual({});
-      expect(logger.warn).toHaveBeenCalled();
-    });
-  });
-
-  describe('saveCache', () => {
-    it('should save cache to file with secure permissions', async () => {
-      const cache = { key: 'value' };
-
-      await cacheManager.saveCache(cache);
-      expect(mockFsPromises.mkdir).toHaveBeenCalled();
-      expect(mockFsPromises.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('question_cache.json'),
-        JSON.stringify(cache, null, 2),
-        { mode: 0o600 }
-      );
-    });
-
-    it('should handle save errors gracefully', async () => {
-      mockFsPromises.writeFile.mockRejectedValue(new Error('Write error'));
-
-      await cacheManager.saveCache({ key: 'value' });
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
   describe('getStats', () => {
     it('should return cache statistics', () => {
       mockEnhancedCache.getStats.mockReturnValue(mockCacheStats);

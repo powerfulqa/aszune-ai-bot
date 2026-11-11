@@ -15,8 +15,10 @@ This directory contains the GitHub Actions workflows for the Aszune AI Bot proje
 
 The unified workflow includes the following features:
 
-- **Build and Test**: Runs tests with coverage and uploads results to QLTY and Codecov
-- **Simple Test**: A faster test job for feature branches that doesn't generate coverage
+- **Test**: Runs the suite in three shards on Node 22 and 24, without coverage
+- **Coverage**: Runs the full suite with coverage on pull requests and `main` (global 70% gate),
+  then the per-file critical coverage gate, and uploads results to QLTY and Codecov
+- **Quality & Security**: ESLint and `npm audit` for production dependencies
 - **Deploy** (commented out): Placeholder for future deployment automation
 
 ## Notes

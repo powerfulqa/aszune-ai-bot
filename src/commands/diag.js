@@ -15,6 +15,7 @@ const logger = require('../utils/logger');
 // Settings whose running value can silently differ from .env when PM2 holds an
 // older copy of the environment (dotenv never overrides an existing variable).
 const ENV_KEYS_TO_COMPARE = [
+  'AGENT_EFFORT',
   'AGENT_PRESET',
   'AGENT_MODEL',
   'AGENT_REASONING_EFFORT',
@@ -234,7 +235,7 @@ const diagCommand = {
       return interaction.editReply({ embeds: [embed] });
     } catch (error) {
       logger.error(`/diag failed: ${error.message}`);
-      return interaction.editReply({ content: `Diagnostics failed: ${error.message}` });
+      return interaction.editReply({ content: 'Diagnostics failed. The cause is in the bot log.' });
     }
   },
 };

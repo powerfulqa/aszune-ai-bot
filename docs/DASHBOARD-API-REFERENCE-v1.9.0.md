@@ -275,7 +275,8 @@ Get current configuration.
       "API": {
         "PERPLEXITY": {
           "BASE_URL": "https://api.perplexity.ai",
-          "DEFAULT_MODEL": "sonar"
+          "ENDPOINTS": { "AGENT": "/v1/agent" },
+          "AGENT_PRESET": "medium"
         }
       }
     },

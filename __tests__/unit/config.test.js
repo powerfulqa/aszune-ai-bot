@@ -1,13 +1,6 @@
 /**
  * Tests for config module
  */
-jest.mock('../../src/utils/pi-detector', () => ({
-  initPiOptimizations: jest.fn().mockResolvedValue({
-    ENABLED: true,
-    COMPACT_MODE: true,
-    MAX_CONNECTIONS: 2,
-  }),
-}));
 
 describe('Config', () => {
   let originalEnv;
@@ -16,14 +9,6 @@ describe('Config', () => {
     originalEnv = { ...process.env };
     process.env.PERPLEXITY_API_KEY = 'test-api-key';
     process.env.DISCORD_BOT_TOKEN = 'test-discord-token';
-
-    const piDetector = require('../../src/utils/pi-detector');
-    piDetector.initPiOptimizations.mockClear();
-    piDetector.initPiOptimizations.mockResolvedValue({
-      ENABLED: true,
-      COMPACT_MODE: true,
-      MAX_CONNECTIONS: 2,
-    });
 
     jest.resetModules();
   });
@@ -71,19 +56,6 @@ describe('Config', () => {
       expect(config.REACTIONS).toBeDefined();
       expect(config.REACTIONS).toHaveProperty('hello', '👋');
       expect(config.REACTIONS).toHaveProperty('happy', '😊');
-    });
-  });
-
-  describe('initializePiOptimizations', () => {
-    it('should have initializePiOptimizations function available', () => {
-      const config = require('../../src/config/config');
-      expect(typeof config.initializePiOptimizations).toBe('function');
-    });
-
-    it('should return a promise when initializePiOptimizations is called', async () => {
-      const config = require('../../src/config/config');
-      const result = await config.initializePiOptimizations();
-      expect(result).toBeDefined();
     });
   });
 });

@@ -16,6 +16,18 @@ beforeEach(() => {
 });
 
 describe('generateTextSummary method', () => {
+  it('uses the configured prompt for conversation and for text summaries', async () => {
+    const config = require('../../../src/config/config');
+    const spy = jest.spyOn(perplexityService, 'generateTextSummary').mockResolvedValue('ok');
+
+    await perplexityService.generateSummary([{ role: 'user', content: 'hello' }]);
+    await perplexityService.generateSummary('some text', true);
+
+    expect(spy).toHaveBeenNthCalledWith(1, 'USER: hello', config.SYSTEM_MESSAGES.SUMMARY);
+    expect(spy).toHaveBeenNthCalledWith(2, 'some text', config.SYSTEM_MESSAGES.TEXT_SUMMARY);
+    spy.mockRestore();
+  });
+
   it('should generate text summary with correct options', async () => {
     const mockResponse = {
       choices: [
@@ -45,36 +57,5 @@ describe('generateTextSummary method', () => {
 
     const text = 'Text to summarize';
     await expect(perplexityService.generateTextSummary(text)).rejects.toThrow('Summary API error');
-  });
-});
-
-describe('shutdown method', () => {
-  it('should clear all active intervals', () => {
-    const mockInterval1 = setInterval(() => {}, 1000);
-    const mockInterval2 = setInterval(() => {}, 2000);
-
-    perplexityService.activeIntervals = new Set([mockInterval1, mockInterval2]);
-
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-
-    perplexityService.shutdown();
-
-    expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval1);
-    expect(clearIntervalSpy).toHaveBeenCalledWith(mockInterval2);
-    expect(perplexityService.activeIntervals.size).toBe(0);
-
-    clearIntervalSpy.mockRestore();
-  });
-
-  it('should handle shutdown when no intervals exist', () => {
-    perplexityService.activeIntervals = new Set();
-
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-
-    perplexityService.shutdown();
-
-    expect(clearIntervalSpy).not.toHaveBeenCalled();
-
-    clearIntervalSpy.mockRestore();
   });
 });

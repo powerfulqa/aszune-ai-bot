@@ -9,6 +9,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Perplexity Agent API: `preset` is now sent as `effort`**, following Perplexity's October 2026
+  rename (`preset` is a deprecated alias). Set `AGENT_EFFORT` in `.env`; `AGENT_PRESET` is still
+  read when `AGENT_EFFORT` is unset, so no change is required today
+- One agent run per user at a time: a second message sent while the bot is still answering gets a
+  "still working" notice instead of interleaving the conversation history
+- An HTTP 429 from Perplexity is retried once after the `Retry-After` interval (at most 10s)
+- Bot replies can no longer ping `@everyone`, `@here` or roles; reminder pings are unchanged
+- `SEARCH_DOMAIN_FILTER` with more than 20 entries (the API limit) now stops the bot at startup
 - **Dashboard redesign** to match the homelab dashboard: a slim sticky header with the version,
   live-connection chip, icon buttons and a row of page chips; frosted cards over a lit background;
   dark and light themes (OS default until toggled). Every page is split into sections that collapse
@@ -17,9 +25,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   SortableJS 1.15.7 is vendored in `dashboard/public/vendor/`, not loaded from a CDN
 - The one-time dashboard token link is now `http://<host>:3000/#token=…` (was `?token=`), so the
   token never reaches request lines or proxy logs
+- The dashboard restart button restarts the bot through PM2 only. The `systemctl` and `sudo`
+  fallbacks are gone and `SERVICE_NAME` is no longer read (`PM2_APP_NAME` overrides the app name)
+- SQLite runs in WAL mode to cut SD-card writes. Backups of a running bot must include `bot.db-wal`
+  and `bot.db-shm`
+- CI runs the coverage gate and the per-file critical gate on pull requests
+- `/summary` and `/summarise` use the configured UK-English summary prompts
+- Validation and rate-limit notices are embeds, like every other bot reply
+- `npm run lint` and CI lint the whole repository, not only `src` and `__tests__`
+- `.env.example`: `PI_LOG_LEVEL` defaults to `INFO` (`ERROR` hid info and warning lines), and the
+  unread `PI_DEBOUNCE_MS`, `PI_REACTION_LIMIT` and `PI_STREAM_RESPONSES` are gone
 
 ### Fixed
 
+- Upstream API error bodies could be shown to Discord users; they are now only logged (truncated)
+- A 200 response whose run had failed upstream was reported as an "empty answer"
+- Long answers in compact (Pi) mode lost the end of each chunk over 1400 characters
+- A failed error reply (deleted message, missing permission) became an unhandled rejection
+- The SQLite database is now closed on shutdown
+- `undici` updated for a TLS certificate validation bypass and several DoS advisories
 - Dashboard API and live data now require `DASHBOARD_TOKEN` whenever the dashboard listens on a
   non-loopback address (read-only access without a token is localhost-only), and clearing logs needs
   write access
@@ -29,6 +53,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   no longer advertise Express; CORS uses the `cors` package instead of hand-rolled headers
 - Service boot-status checks run without a shell
 - The Database page shows its preselected table on open
+- Reminders are marked completed only after they were sent. A failed send is retried (every 60s,
+  five attempts, then on the next start), and reminders that fell due while the bot was down are
+  delivered late instead of being dropped
+- The logger no longer runs `mkdir` and `stat` for every line and keeps lines in order
+- Tracking server admin key is compared in constant time
+- Network diagnostics run `ping` without a shell
+- `/diag` no longer shows a raw error message when it fails
+
+### Removed
+
+- About 550 lines of unreachable code in `perplexity-secure.js` (a second file cache, duplicate
+  retry logic, header helpers) and the tests that only covered it
+- Unused modules `pi-detector.js`, `debouncer.js` and `security-monitor.js`; the test helper
+  `testUtils.js` moved from `src/utils` to `__tests__/utils`
+- Config keys that nothing read (`FILE_PERMISSIONS`, `CACHE.MAX_AGE_*`, `CACHE.CLEANUP_PERCENTAGE`,
+  `PI_OPTIMIZATIONS.DEBOUNCE_MS` / `REACTION_LIMIT` / `STREAM_RESPONSES` / `LOG_LEVEL` and others)
 
 ## [2.3.0] - 2026-10-04
 

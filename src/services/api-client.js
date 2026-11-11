@@ -60,7 +60,7 @@ class ApiClient {
     // Validate message format
     const invalidMessages = messages.filter((msg) => !msg.role || !msg.content);
     if (invalidMessages.length > 0) {
-      logger.error('Invalid message format detected:', JSON.stringify(invalidMessages));
+      logger.error(`Invalid message format detected in ${invalidMessages.length} message(s)`);
       throw ErrorHandler.createError(
         'All messages must have role and content fields',
         ERROR_TYPES.VALIDATION_ERROR
@@ -73,7 +73,7 @@ class ApiClient {
       config.API.PERPLEXITY
     );
     logger.info(
-      `API Request: preset="${payload.preset}", model="${payload.model || 'preset default'}", turns=${payload.input.length}, max_output_tokens=${payload.max_output_tokens}`
+      `API Request: effort="${payload.effort}", model="${payload.model || 'preset default'}", turns=${payload.input.length}, max_output_tokens=${payload.max_output_tokens}`
     );
     if (process.env.DEBUG === 'true') {
       logger.debug('Full request payload:', JSON.stringify(payload, null, 2));
@@ -130,7 +130,7 @@ class ApiClient {
       at: new Date(startedAt).toISOString(),
       durationMs: Date.now() - startedAt,
       ok: !error,
-      preset: payload?.preset,
+      preset: payload?.effort,
       model: body?.model || payload?.model || '',
       turns: Array.isArray(payload?.input) ? payload.input.length : 0,
       usage: body?.usage,
@@ -164,7 +164,7 @@ class ApiClient {
     const statusCode = response.statusCode || response.status;
 
     if (statusCode >= 400) {
-      await this.handleErrorResponse(statusCode, response.body);
+      await this.handleErrorResponse(statusCode, response.body, response.headers);
     }
 
     try {
@@ -174,6 +174,15 @@ class ApiClient {
       // rest of the pipeline is unchanged.
       const body = normalizeAgentResponse(raw);
       if (body.model) this.lastModel = body.model;
+
+      // A 200 can still carry a failed run; the upstream message is logged by
+      // the caller and never shown to Discord users.
+      if (body.status === 'failed') {
+        throw ErrorHandler.createError(
+          `Agent run failed upstream: ${body.error?.message || 'no error detail'}`,
+          ERROR_TYPES.API_ERROR
+        );
+      }
 
       // Validate response structure
       this._validateResponseStructure(body);
@@ -238,8 +247,9 @@ class ApiClient {
    * Handle error responses
    * @param {number} statusCode - HTTP status code
    * @param {Object} body - Response body
+   * @param {Object} [headers] - Response headers (lower-case keys)
    */
-  async handleErrorResponse(statusCode, body) {
+  async handleErrorResponse(statusCode, body, headers = {}) {
     let responseText = 'Could not read response body';
 
     if (body && typeof body.text === 'function') {
@@ -250,18 +260,19 @@ class ApiClient {
       }
     }
 
-    // Log 400 errors with more detail for troubleshooting
-    if (statusCode === 400) {
-      logger.error(`API 400 Error - Bad Request. Response: ${responseText}`);
-    }
+    // The upstream body stays in the log (truncated: it can echo prompt text).
+    // It is kept out of the thrown message because that can reach Discord.
+    const maxLength = config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH;
+    logger.error(`API error ${statusCode}. Response: ${responseText.substring(0, maxLength)}`);
 
-    const errorMessage = `API request failed with status ${statusCode}: ${responseText.substring(
-      0,
-      config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH
-    )}${responseText.length > config.MESSAGE_LIMITS.ERROR_MESSAGE_MAX_LENGTH ? '...' : ''}`;
-
-    const error = ErrorHandler.createError(errorMessage, ERROR_TYPES.API_ERROR);
+    const error = ErrorHandler.createError(
+      `API request failed with status ${statusCode}`,
+      ERROR_TYPES.API_ERROR
+    );
     error.statusCode = statusCode;
+    // Perplexity sends Retry-After (seconds) on 429; rejected 429s are not billed.
+    const retryAfter = Number(headers?.['retry-after']);
+    if (retryAfter > 0) error.retryAfterMs = retryAfter * 1000;
     throw error;
   }
 

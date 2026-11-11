@@ -84,11 +84,9 @@ aszune-ai-bot/
 │       │   ├── chunk-boundary-handler.js
 │       │   ├── source-reference-processor.js
 │       │   └── url-formatter.js
-│       ├── pi-detector.js          # Raspberry Pi detection
 │       ├── performance-monitor.js  # Performance tracking
 │       ├── cache-pruner.js         # Cache management
 │       ├── connection-throttler.js # Connection limiting
-│       ├── debouncer.js            # Message debouncing
 │       ├── lazy-loader.js          # Lazy loading utilities
 │       ├── discord-analytics.js    # Discord server analytics
 │       ├── performance-dashboard.js # Real-time performance dashboard
@@ -274,7 +272,6 @@ The bot now includes a comprehensive set of utility modules for enhanced functio
 #### Connection Management
 
 - **`connection-throttler.js`**: Network connection limiting
-- **`debouncer.js`**: Message debouncing to prevent spam
 - Adaptive throttling based on system load
 - Resource-constrained device optimization
 
@@ -359,7 +356,8 @@ Sonar Chat Completions was retired on 2026-09-27. `ApiClient` (undici) builds th
 ```javascript
 // Simplified example of the request the bot sends
 const payload = {
-  preset: process.env.AGENT_PRESET || 'medium', // picks model, reasoning, steps, default tools
+  // `effort` was named `preset` until October 2026 (still a deprecated alias)
+  effort: process.env.AGENT_EFFORT || process.env.AGENT_PRESET || 'medium', // picks model, reasoning, steps, default tools
   // model: 'anthropic/claude-sonnet-5-5',        // only when AGENT_MODEL is set
   // reasoning: { effort: 'low' },                // only when AGENT_REASONING_EFFORT is set
   instructions: 'Today is 2026-10-04.\n\n<system prompt>\n\n<which API/preset/model it runs on>',
@@ -378,7 +376,7 @@ const response = await request('https://api.perplexity.ai/v1/agent', {
 
 Notes:
 
-- No `temperature`: the API rejects it alongside a preset.
+- No `temperature`: several model families ignore it.
 - Answer text comes from `output_text` or the `output[]` message items; source URLs come from
   `search_results`/`fetch_url` results and annotations, rendered as a numbered, linked footer.
 - The client keeps the model Perplexity reports (so the bot can say what it runs on) and a summary
@@ -641,73 +639,10 @@ class ResourceOptimizer {
 
 ### 8. Pi Optimization System
 
-Detects Raspberry Pi hardware and applies appropriate optimizations based on the model and available
-resources.
-
-```javascript
-// Simplified example from pi-detector.js
-async function detectPiModel() {
-  try {
-    // Default values if detection fails
-    let result = {
-      isPi: false,
-      model: 'unknown',
-      ram: os.totalmem() / (1024 * 1024 * 1024), // RAM in GB
-      cores: os.cpus().length,
-    };
-
-    // Look for Raspberry Pi specific files
-    if (os.platform() === 'linux') {
-      const cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
-
-      // Check if this is a Pi
-      if (cpuInfo.includes('Raspberry Pi')) {
-        result.isPi = true;
-
-        // Extract model information
-        if (cpuInfo.includes('BCM2835')) {
-          result.model = result.ram < 1 ? 'pi3' : 'pi4';
-        } else if (cpuInfo.includes('BCM2711')) {
-          result.model = 'pi4';
-        } else if (cpuInfo.includes('BCM2712')) {
-          result.model = 'pi5';
-        }
-      }
-    }
-
-    return result;
-  } catch (error) {
-    return { isPi: false, model: 'unknown' };
-  }
-}
-
-// Apply optimizations based on detected model
-function generateOptimizedConfig(detectedPi) {
-  // Base configuration
-  const config = { ENABLED: true, MAX_CONNECTIONS: 2 };
-
-  // Model-specific optimizations
-  switch (detectedPi.model) {
-    case 'pi3':
-      // Most conservative settings
-      config.LOW_CPU_MODE = true;
-      config.MAX_CONNECTIONS = 1;
-      break;
-    case 'pi4':
-      // Balanced settings based on RAM
-      if (detectedPi.ram >= 4) {
-        config.MAX_CONNECTIONS = 5;
-      }
-      break;
-    case 'pi5':
-      // Most performant settings
-      config.MAX_CONNECTIONS = detectedPi.ram >= 8 ? 10 : 8;
-      break;
-  }
-
-  return config;
-}
-```
+`start-pi-optimized.sh` detects the Raspberry Pi model and exports the `PI_*` environment variables
+(memory limits, connection limit, compact mode, low-CPU mode). `src/config/config.js` reads them
+into `PI_OPTIMIZATIONS` when `ENABLE_PI_OPTIMIZATIONS=true`. There is no detection inside the bot
+process.
 
 ## Environment Configuration
 
@@ -718,8 +653,8 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 PERPLEXITY_API_KEY=your_perplexity_api_key_here
 
 # Optional Perplexity Agent API tuning
-AGENT_PRESET=medium          # fast | low | medium | high | xhigh
-AGENT_MODEL=                 # pin a model on top of the preset
+AGENT_EFFORT=medium          # fast | low | medium | high | xhigh | ultra (AGENT_PRESET still read)
+AGENT_MODEL=                 # pin a model on top of the effort level
 AGENT_REASONING_EFFORT=      # minimal | low | medium | high
 AGENT_FETCH_URL=true         # let the agent read pasted links
 SEARCH_DOMAIN_FILTER=        # comma-separated allowlist for web search

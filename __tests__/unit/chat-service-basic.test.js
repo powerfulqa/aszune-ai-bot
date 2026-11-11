@@ -44,6 +44,61 @@ jest.mock('../../src/utils/conversation', () => {
 jest.mock('../../src/utils/emoji');
 jest.mock('../../src/commands');
 
+function registerInFlightTests(createMessage) {
+  describe('One run per user', () => {
+    it('turns away a second message while the first is still being answered', async () => {
+      let finishFirst;
+      perplexityService.generateChatResponse.mockReturnValueOnce(
+        new Promise((resolve) => {
+          finishFirst = resolve;
+        })
+      );
+      const first = createMessage('first question');
+      first.id = 'm1';
+      const second = createMessage('second question');
+      second.id = 'm2';
+
+      const firstRun = handleChatMessage(first);
+      await handleChatMessage(second);
+
+      expect(second.reply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: '#FEE75C',
+            description: "I'm still working on your previous message. Ask again once I've replied.",
+          },
+        ],
+      });
+
+      finishFirst('AI response');
+      await firstRun;
+      expect(perplexityService.generateChatResponse).toHaveBeenCalledTimes(1);
+
+      // The guard is released once the first run ends.
+      const third = createMessage('third question');
+      third.id = 'm3';
+      await handleChatMessage(third);
+      expect(perplexityService.generateChatResponse).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not throw when the error reply itself cannot be delivered', async () => {
+      perplexityService.generateChatResponse.mockRejectedValue(new Error('API down'));
+      const message = createMessage('Hello');
+      message.id = 'm4';
+      message.reply.mockRejectedValue(new Error('Unknown Message'));
+
+      await expect(handleChatMessage(message)).resolves.toBeUndefined();
+
+      // And the user is not left locked out by the in-flight guard.
+      perplexityService.generateChatResponse.mockResolvedValue('AI response');
+      const next = createMessage('Hello again');
+      next.id = 'm5';
+      await handleChatMessage(next);
+      expect(next.reply).toHaveBeenCalledTimes(1);
+    });
+  });
+}
+
 function registerHistoryTests(createMessage, getConversationManager) {
   describe('Persisted conversation history', () => {
     const currentMessage = 'What was my code word?';
@@ -206,12 +261,18 @@ describe('Chat Service - Basic', () => {
 
     await handleChatMessage(message);
 
-    expect(message.reply).toHaveBeenCalledWith(
-      'Please wait a few seconds before sending another message.'
-    );
+    expect(message.reply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: '#FEE75C',
+          description: 'Please wait a few seconds before sending another message.',
+        },
+      ],
+    });
     expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
 
+  registerInFlightTests(createMessage);
   registerHistoryTests(createMessage, () => mockConversationManager);
 
   // Test the new simple reminder detection function for coverage

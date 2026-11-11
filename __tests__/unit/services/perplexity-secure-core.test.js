@@ -45,7 +45,8 @@ describe('PerplexitySecure Service - Core', () => {
 
   describe('generateChatResponse', () => {
     it('should handle rate limiting with 429 status code', async () => {
-      request.mockResolvedValueOnce(mockErrorResponse({ error: 'Rate limit exceeded' }, 429));
+      perplexityService.responseProcessor.retryDelay = 0;
+      request.mockResolvedValue(mockErrorResponse({ error: 'Rate limit exceeded' }, 429));
 
       const messages = [{ role: 'user', content: 'Hello' }];
 

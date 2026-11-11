@@ -27,7 +27,7 @@ cp .env.example .env
 - `DISCORD_BOT_TOKEN`
 - `PERPLEXITY_API_KEY`
 
-Optional: `AGENT_PRESET` (default `medium`), `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
+Optional: `AGENT_EFFORT` (default `medium`), `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
 `AGENT_FETCH_URL`, `SEARCH_DOMAIN_FILTER` and `BOT_OWNER_IDS` (who may run `/diag`). See
 `.env.example`.
 
@@ -75,7 +75,7 @@ variable that is already set. So editing `.env` and running a plain `pm2 restart
 value in effect. To change a setting:
 
 ```bash
-AGENT_PRESET=high pm2 restart aszune-ai --update-env
+AGENT_EFFORT=high pm2 restart aszune-ai --update-env
 pm2 save
 ```
 

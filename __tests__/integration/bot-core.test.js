@@ -198,10 +198,6 @@ jest.mock('../../src/utils/performance-monitor', () => ({
   getMetrics: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('../../src/utils/pi-detector', () => ({
-  isRunningOnPi: jest.fn().mockReturnValue(false),
-}));
-
 jest.mock('../../src/utils/memory-monitor', () => ({
   getMemoryUsage: jest.fn().mockReturnValue({
     heapUsed: 50 * 1024 * 1024,
@@ -215,10 +211,6 @@ jest.mock('../../src/utils/memory-monitor', () => ({
 
 jest.mock('../../src/utils/cache-pruner', () => ({
   pruneCache: jest.fn(),
-}));
-
-jest.mock('../../src/utils/debouncer', () => ({
-  debounce: jest.fn().mockImplementation((fn) => fn),
 }));
 
 jest.mock('../../src/utils/lazy-loader', () => ({
@@ -249,7 +241,7 @@ jest.mock('../../src/services/storage', () => ({
   loadData: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('../../src/utils/testUtils', () => ({
+jest.mock('../utils/testUtils', () => ({
   createMockMessage: jest.fn(),
   createMockInteraction: jest.fn(),
   resetMocks: jest.fn(),
@@ -317,7 +309,6 @@ jest.mock('../../src/config/config', () => ({
     ERROR: 0xff0000,
     WARNING: 0xffff00,
   },
-  initializePiOptimizations: jest.fn(),
 }));
 
 jest.mock('discord.js', () => ({
@@ -417,7 +408,7 @@ describe('Bot Integration - Core', () => {
     // ConversationManager is already mocked globally
 
     // Mock testUtils
-    const { createMockMessage } = require('../../src/utils/testUtils');
+    const { createMockMessage } = require('../utils/testUtils');
     createMockMessage.mockImplementation((options = {}) => ({
       ...message,
       ...options,

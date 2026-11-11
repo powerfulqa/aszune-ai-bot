@@ -143,110 +143,6 @@ describe('PerplexitySecure - Message Formatting', () => {
     });
   });
 
-  describe('_safeGetHeader', () => {
-    it('should return empty string for null headers', () => {
-      const result = service._safeGetHeader(null, 'Content-Type');
-      expect(result).toBe('');
-    });
-
-    it('should return empty string for null key', () => {
-      const result = service._safeGetHeader({ 'Content-Type': 'application/json' }, null);
-      expect(result).toBe('');
-    });
-
-    it('should return empty string for undefined headers', () => {
-      const result = service._safeGetHeader(undefined, 'Content-Type');
-      expect(result).toBe('');
-    });
-
-    it('should use Headers.get method when available', () => {
-      const headers = {
-        get: jest.fn().mockReturnValue('application/json'),
-      };
-
-      const result = service._safeGetHeader(headers, 'Content-Type');
-      expect(result).toBe('application/json');
-      expect(headers.get).toHaveBeenCalledWith('Content-Type');
-    });
-
-    it('should fallback to direct property access', () => {
-      const headers = { 'Content-Type': 'application/json' };
-
-      const result = service._safeGetHeader(headers, 'Content-Type');
-      expect(result).toBe('application/json');
-    });
-
-    it('should handle case-insensitive lookups', () => {
-      const headers = { 'content-type': 'application/json' };
-
-      const result = service._safeGetHeader(headers, 'Content-Type');
-      expect(result).toBe('application/json');
-    });
-
-    it('should handle uppercase fallback', () => {
-      const headers = { 'CONTENT-TYPE': 'application/json' };
-
-      const result = service._safeGetHeader(headers, 'content-type');
-      expect(result).toBe('application/json');
-    });
-
-    it('should handle Headers.get throwing error', () => {
-      const headers = {
-        get: jest.fn().mockImplementation(() => {
-          throw new Error('Get failed');
-        }),
-        'Content-Type': 'application/json',
-      };
-
-      const result = service._safeGetHeader(headers, 'Content-Type');
-      expect(result).toBe('application/json');
-    });
-
-    it('should return empty string when key not found', () => {
-      const headers = { 'Other-Header': 'value' };
-
-      const result = service._safeGetHeader(headers, 'Content-Type');
-      expect(result).toBe('');
-    });
-  });
-
-  describe('_extractHeader', () => {
-    it('should delegate to _safeGetHeader', () => {
-      const headers = { 'Content-Type': 'text/plain' };
-
-      const result = service._extractHeader(headers, 'Content-Type');
-      expect(result).toBe('text/plain');
-    });
-  });
-
-  describe('_getHeaders', () => {
-    it('should return authorization and content-type headers', () => {
-      const result = service._getHeaders();
-
-      expect(result).toHaveProperty('Authorization');
-      expect(result.Authorization).toContain('Bearer');
-      expect(result['Content-Type']).toBe('application/json');
-    });
-  });
-
-  describe('_shouldUseCache', () => {
-    it('should return true when caching is enabled in options and config', () => {
-      const result = service._shouldUseCache({}, { enabled: true });
-      expect(result).toBe(true);
-    });
-
-    it('should return false when caching is explicitly disabled in options', () => {
-      const result = service._shouldUseCache({ caching: false }, { enabled: true });
-      expect(result).toBe(false);
-    });
-
-    it('should return true in test environment even if config disabled', () => {
-      const result = service._shouldUseCache({}, { enabled: false });
-      // In test environment, returns true
-      expect(typeof result).toBe('boolean');
-    });
-  });
-
   describe('_executeWithErrorHandling', () => {
     it('should return operation result on success', () => {
       const operation = () => 'success';
@@ -276,20 +172,6 @@ describe('PerplexitySecure - Message Formatting', () => {
   });
 
   describe('shutdown', () => {
-    it('should clear all active intervals', () => {
-      // Add some mock intervals
-      const interval1 = setInterval(() => {}, 1000);
-      const interval2 = setInterval(() => {}, 1000);
-      service.activeIntervals.add(interval1);
-      service.activeIntervals.add(interval2);
-
-      service.shutdown();
-
-      expect(service.activeIntervals.size).toBe(0);
-      clearInterval(interval1);
-      clearInterval(interval2);
-    });
-
     it('should log final cache statistics', () => {
       service.shutdown();
 

@@ -1,64 +1,36 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * Test script to verify Perplexity API connection
- * Run with: node test-perplexity-api.js
+ * Smoke test for the Perplexity Agent API connection, using the bot's own
+ * client and configuration. This makes ONE real, billable request.
+ * Run with: node scripts/test-perplexity-api.js
  */
 
-require('dotenv').config();
-const { request } = require('undici');
-
 async function testPerplexityAPI() {
-  const apiKey = process.env.PERPLEXITY_API_KEY;
-
-  if (!apiKey) {
-    console.error('❌ PERPLEXITY_API_KEY not found in environment variables');
+  let config;
+  try {
+    config = require('../src/config/config');
+  } catch (error) {
+    console.error(`❌ ${error.message}`);
     process.exit(1);
   }
+  const { ApiClient } = require('../src/services/api-client');
+  const client = new ApiClient(config.PERPLEXITY_API_KEY, config.API.PERPLEXITY.BASE_URL);
 
-  console.log('✅ API Key found (length:', apiKey.length, ')');
-  console.log('🔑 API Key starts with:', apiKey.substring(0, 10) + '...');
-
-  const payload = {
-    model: 'sonar',
-    messages: [
-      {
-        role: 'user',
-        content: 'Hi, say hello!',
-      },
-    ],
-    max_tokens: 100,
-    temperature: 0.2,
-  };
-
-  console.log('\n📤 Sending request to Perplexity API...');
-  console.log('Payload:', JSON.stringify(payload, null, 2));
+  const payload = client.buildRequestPayload([{ role: 'user', content: 'Hi, say hello!' }], {
+    maxTokens: 200,
+  });
+  console.log(`📤 POST ${client.getChatEndpoint()} with effort "${payload.effort}"...`);
 
   try {
-    const response = await request('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    console.log('\n📊 Response Status:', response.statusCode);
-    console.log('Response Headers:', response.headers);
-
-    const body = await response.body.json();
-
-    if (response.statusCode === 200) {
-      console.log('\n✅ SUCCESS! API is working!');
-      console.log('Response:', JSON.stringify(body, null, 2));
-    } else {
-      console.log('\n❌ API Error:', response.statusCode);
-      console.log('Error Response:', JSON.stringify(body, null, 2));
-    }
+    const body = await client.makeRequest(client.getChatEndpoint(), payload);
+    console.log('✅ SUCCESS! API is working.');
+    console.log('Model:', body.model);
+    console.log('Answer:', body.choices[0].message.content);
+    console.log('Usage:', body.usage);
   } catch (error) {
-    console.error('\n❌ Request failed:', error.message);
-    console.error('Error details:', error);
+    console.error('❌ Request failed:', error.message);
+    process.exit(1);
   }
 }
 

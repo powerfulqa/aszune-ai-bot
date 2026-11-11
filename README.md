@@ -16,7 +16,7 @@ offering real-time performance dashboards and server analytics directly within D
 ## Key Features
 
 - 🤖 **AI-Powered Conversations** - Context-aware chat via the Perplexity Agent API (`/v1/agent`)
-  with web search and link reading, selectable by preset (`AGENT_PRESET`, default `medium`)
+  with web search and link reading, selectable by preset (`AGENT_EFFORT`, default `medium`)
 - 🧠 **Conversation Memory** - The last 30 messages are replayed each turn and persisted in SQLite,
   so back-and-forth threads survive restarts and pauses of up to 2 hours
 - 📎 **Source Citations** - Numbered inline citations with a linked source footer
@@ -123,7 +123,7 @@ For detailed API reference and technical specifications, see
    ```
 
    Everything else is optional; see `.env.example` for the full list, including the Agent API
-   tuning (`AGENT_PRESET`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`, `AGENT_FETCH_URL`,
+   tuning (`AGENT_EFFORT`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`, `AGENT_FETCH_URL`,
    `SEARCH_DOMAIN_FILTER`).
 
 4. **Database Setup (Automatic)**
@@ -337,7 +337,6 @@ aszune-ai-bot/
 │       ├── cache-pruner.js        # Cache cleanup utilities
 │       ├── connection-throttler.js # Connection throttling
 │       ├── conversation.js        # Conversation management
-│       ├── debouncer.js           # Function debouncing
 │       ├── discord-analytics.js   # Discord analytics utilities
 │       ├── emoji.js               # Emoji processing
 │       ├── enhanced-cache.js      # Enhanced caching
@@ -357,9 +356,7 @@ aszune-ai-bot/
 │       ├── performance-dashboard.js # Performance dashboard
 │       ├── performance-monitor.js # Performance tracking
 │       ├── performance-tracker.js # Performance metrics
-│       ├── pi-detector.js         # Raspberry Pi detection
 │       ├── resource-optimizer.js  # Resource optimization
-│       ├── security-monitor.js    # Security monitoring
 │       ├── testUtils.js           # Test utilities
 │       └── time-parser.js         # Advanced time parsing for reminders
 ├── data/                           # Persistent data storage
@@ -481,7 +478,7 @@ View the CI/CD workflow in `.github/workflows/unified-ci.yml`
 
 - Validate your API key is current and supports the Agent API `/v1/agent` endpoint
 - The bot uses the Perplexity Agent API (the Sonar Chat Completions path was retired 2026-09-27)
-  with `AGENT_PRESET` (default `medium`); optionally pin `AGENT_MODEL` or `AGENT_REASONING_EFFORT`
+  with `AGENT_EFFORT` (default `medium`); optionally pin `AGENT_MODEL` or `AGENT_REASONING_EFFORT`
 - Run `/diag live:true`: it sends a tiny real request and shows the error, latency, model and cost
 - Test the same key using a tool like Postman or curl
 

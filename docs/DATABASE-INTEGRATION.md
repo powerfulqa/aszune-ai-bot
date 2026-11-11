@@ -252,7 +252,8 @@ npm test -- --testPathPattern="database" --coverage
 
 ### Production Deployment
 
-- Database file should be included in backup strategies
+- Database file should be included in backup strategies. The database runs in WAL mode: stop the bot
+  before copying `bot.db`, or copy `bot.db-wal` and `bot.db-shm` with it
 - `data/` directory should be persistent across deployments
 - Monitor disk space usage for high-traffic servers
 

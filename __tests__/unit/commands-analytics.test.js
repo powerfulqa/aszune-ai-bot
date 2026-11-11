@@ -53,7 +53,7 @@ const mockDatabaseService = {
 jest.mock('../../src/services/database', () => mockDatabaseService);
 
 const { handleSlashCommand } = require('../../src/commands');
-const { createMockInteraction, resetMocks } = require('../../src/utils/testUtils');
+const { createMockInteraction, resetMocks } = require('../utils/testUtils');
 
 describe('Commands - Analytics Commands', () => {
   beforeEach(() => {
