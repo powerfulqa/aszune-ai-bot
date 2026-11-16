@@ -46,11 +46,11 @@
   },
   "homepage": "https://github.com/powerfulqa/aszune-ai-bot#readme",
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^13.1.1",
     "chrono-node": "^2.10.3",
     "cors": "^2.8.6",
     "discord.js": "^14.28.1",
-    "dotenv": "^18.0.9",
+    "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "socket.io": "^4.8.4",
     "undici": "^8.12.4"
@@ -62,7 +62,7 @@
     "jest": "^30.5.2",
     "jest-junit": "^17.0.0",
     "nodemon": "^3.1.14",
-    "prettier": "^3.9.10"
+    "prettier": "^3.10.1"
   },
   "engines": {
     "node": ">=22.19.0"
