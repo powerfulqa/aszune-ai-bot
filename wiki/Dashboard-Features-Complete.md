@@ -8,7 +8,8 @@ inside the bot process (`src/services/web-dashboard.js`) that serves the static 
 
 - URL: `http://<host>:3000/`.
 - By default it listens on `127.0.0.1` only. Set `DASHBOARD_BIND_HOST` to reach it from another
-  machine.
+  machine. On a non-loopback bind `DASHBOARD_TOKEN` is required even to read; without it every API
+  call and socket connection is refused.
 - **Without `DASHBOARD_TOKEN` the dashboard is read-only** and answers only a browser on the same
   machine (add other hostnames with `DASHBOARD_ALLOWED_HOSTS`). Restart, git pull, service control,
   saving configuration, clearing logs and changing reminders all need the token.
@@ -47,7 +48,7 @@ there is no demo data. A value the dashboard cannot read is shown as unavailable
 - Read-only by default; a token unlocks changes.
 - The configuration editor can touch only `.env`, masks secrets, and refuses keys that would let an
   editor run code on the host.
-- Service control accepts only allowlisted PM2 app names and never builds a shell command.
+- Service control accepts only the bot's PM2 app and never builds a shell command.
 - The database view is limited to four fixed tables and cannot write.
 
 ## API

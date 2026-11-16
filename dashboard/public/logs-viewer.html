@@ -488,7 +488,7 @@
           loadLogsFromServer();
 
           // Live log lines
-          socket.on('new_log', (logEntry) => {
+          socket.on('log:new', (logEntry) => {
             if (!isPaused) {
               allLogs.push(logEntry);
               // Keep only last 500 logs

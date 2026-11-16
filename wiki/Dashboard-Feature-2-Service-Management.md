@@ -16,8 +16,8 @@ restart it through PM2.
 
 All of these need `DASHBOARD_TOKEN`.
 
-- **Start, Stop, Restart** the bot's PM2 app. Only allowlisted app names are accepted; anything else
-  is refused before PM2 is called.
+- **Start, Stop, Restart** the bot's PM2 app. Only the bot can be controlled this way; any other
+  name, including the tracking server's, is refused before PM2 is called.
 - **Quick Actions:** "Restart all" and "Start all" run the matching `pm2` command for every app.
 - **Approve or Revoke** an instance. The dashboard forwards the request to the tracking server using
   `TRACKING_ADMIN_KEY`. A revoked instance is not authorised again automatically.
@@ -30,8 +30,10 @@ dependencies, follow [the upgrade guide](../docs/UPGRADE.md) instead.
 ## Access
 
 Open `http://<host>:3000/` and pick **Services** in the header. The dashboard listens on `127.0.0.1`
-unless `DASHBOARD_BIND_HOST` is set. Without `DASHBOARD_TOKEN` the dashboard is read-only: the
-actions above only work with a token. Set the token, then open
+unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for example
+`DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every API
+call and socket connection is refused and the page stays disconnected. Without `DASHBOARD_TOKEN` the
+dashboard is read-only: the actions above only work with a token. Set the token, then open
 `http://<host>:3000/#token=YOUR_TOKEN` once; the browser remembers it.
 
 ## How it works
@@ -48,8 +50,10 @@ internal parts (cache, database, reminders).
 ## Troubleshooting
 
 - **A button does nothing or is missing.** No token is set, so the dashboard is read-only.
-- **"Unknown or disallowed service".** The name is not one of the PM2 apps in `ecosystem.config.js`
-  (`aszune-ai`, `Aszune-analytics`), or `PM2_APP_NAME` points elsewhere.
+- **"Unknown or disallowed service".** Start, Stop and Restart accept only the bot, under the names
+  `aszune-ai`, `aszune-ai-bot` or `aszune-bot` (`src/utils/pm2-service.js`). All three map to the
+  bot's PM2 app, `aszune-ai` unless `PM2_APP_NAME` overrides it. `Aszune-analytics` cannot be
+  controlled on its own from the dashboard; "Restart all" restarts it with everything else.
 - **Restart returns 409.** The bot was started with `node` or `npm start`, not PM2.
 - **The bot restarts every 15 seconds.** It is running under PM2 and systemd at once; keep one. See
   `scripts/diagnose-restart-loop.sh`.

@@ -13,7 +13,9 @@ Page: `dashboard/public/config-editor.html`. Edits the bot's `.env` file from th
 - **Validate** checks the text before you save: every non-comment line must have the form
   `KEY=value`.
 - **Diff preview** shows your unsaved changes against the loaded file, and **Revert** discards them.
-- **Export** downloads the text shown in the editor, with secrets still masked.
+- **Export** downloads the editor text exactly as shown. Stored secrets appear as `********`, but
+  anything you have typed into the editor, such as a replacement API key, is exported in clear text.
+  Check the file before sharing it.
 - **Save** (needs `DASHBOARD_TOKEN`) first copies the current file to `.env.backup.<timestamp>`
   beside it, then writes the new one.
 
@@ -32,9 +34,11 @@ A saved change takes effect after the bot restarts.
 ## Access
 
 Open `http://<host>:3000/` and pick **Config** in the header. The dashboard listens on `127.0.0.1`
-unless `DASHBOARD_BIND_HOST` is set. Without `DASHBOARD_TOKEN` the dashboard is read-only: saving
-only works with a token. Set the token, then open `http://<host>:3000/#token=YOUR_TOKEN` once; the
-browser remembers it.
+unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for example
+`DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every API
+call and socket connection is refused and the page stays disconnected. Without `DASHBOARD_TOKEN` the
+dashboard is read-only: saving only works with a token. Set the token, then open
+`http://<host>:3000/#token=YOUR_TOKEN` once; the browser remembers it.
 
 ## How it works
 

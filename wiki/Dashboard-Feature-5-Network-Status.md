@@ -31,7 +31,10 @@ There is no latency, packet-loss or bandwidth measurement and no history.
 ## Access
 
 Open `http://<host>:3000/` and pick **Network** in the header. The dashboard listens on `127.0.0.1`
-unless `DASHBOARD_BIND_HOST` is set. This page only reads, so it works without a token.
+unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for example
+`DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every API
+call and socket connection is refused and the page stays disconnected. This page only reads, so on a
+loopback bind it works without a token.
 
 ## How it works
 

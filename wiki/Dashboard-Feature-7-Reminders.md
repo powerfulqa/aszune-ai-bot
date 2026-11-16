@@ -22,7 +22,9 @@ All of these need `DASHBOARD_TOKEN`.
 
 - **Create.** Fill in the message, the Discord user ID to ping, the Discord channel ID to post in,
   and the date and time. The picker uses your browser's local time.
-- **Edit** the message or the time of an active reminder.
+- **Edit** the message of an active reminder. The page cannot change the time; to reschedule, delete
+  the reminder and create a new one. (The `edit_reminder` socket event does accept a
+  `scheduledTime`.)
 - **Delete** a reminder.
 
 Changes go through the bot's reminder service, so the running timer is updated straight away.
@@ -44,8 +46,10 @@ delivers any that came due while it was down.
 ## Access
 
 Open `http://<host>:3000/` and pick **Reminders** in the header. The dashboard listens on
-`127.0.0.1` unless `DASHBOARD_BIND_HOST` is set. Without `DASHBOARD_TOKEN` the dashboard is
-read-only: create, edit and delete only work with a token. Set the token, then open
+`127.0.0.1` unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for
+example `DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every
+API call and socket connection is refused and the page stays disconnected. Without `DASHBOARD_TOKEN`
+the dashboard is read-only: create, edit and delete only work with a token. Set the token, then open
 `http://<host>:3000/#token=YOUR_TOKEN` once; the browser remembers it.
 
 ## How it works

@@ -23,14 +23,19 @@ the in-memory buffer for every open dashboard; it does not touch the log files o
 ## Access
 
 Open `http://<host>:3000/` and pick **Logs** in the header. The dashboard listens on `127.0.0.1`
-unless `DASHBOARD_BIND_HOST` is set. This page only reads, so it works without a token.
+unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for example
+`DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every API
+call and socket connection is refused and the page stays disconnected. This page only reads, so on a
+loopback bind it works without a token.
 
 ## How it works
 
 The page requests entries with the `request_logs` Socket.IO event (optional `level` and `limit`,
-default 100) and receives each new line as a `new_log` event. `clear_logs` empties the buffer and
-tells every client with `logs_cleared`. There is no REST or raw WebSocket log API. The handlers are
-in `src/services/web-dashboard/handlers/logsHandlers.js`.
+default 100) when it opens and again every 5 seconds while the tab is visible and not paused. The
+server also pushes each new line to every client as a `log:new` event (`timestamp`, `level`,
+`message`), which the page appends at once. `clear_logs` empties the buffer and tells every client
+with `logs_cleared`. There is no REST or raw WebSocket log API. The handlers are in
+`src/services/web-dashboard/handlers/logsHandlers.js`.
 
 ## Troubleshooting
 
