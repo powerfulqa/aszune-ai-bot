@@ -93,9 +93,14 @@ describe('Commands - Slash Command Handler', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.editReply).toHaveBeenCalledWith(
-        expect.stringContaining('service is temporarily unavailable')
-      );
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 15548997,
+            description: 'The service is temporarily unavailable. Please try again later.',
+          },
+        ],
+      });
     });
 
     it('should handle /summary command with only assistant messages in history', async () => {
@@ -219,9 +224,14 @@ describe('Commands - Slash Command Handler', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.editReply).toHaveBeenCalledWith(
-        expect.stringContaining('service is temporarily unavailable')
-      );
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 15548997,
+            description: 'The service is temporarily unavailable. Please try again later.',
+          },
+        ],
+      });
     });
 
     it('should handle command execution error when not deferred', async () => {

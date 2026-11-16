@@ -96,6 +96,21 @@ function deleteReminder(db, reminderId, userId) {
   return result.changes > 0;
 }
 
+/**
+ * Change the message and/or time of an active reminder.
+ * @returns {Object|null} The updated row, or null when no active reminder matched
+ */
+function updateReminder(db, reminderId, userId, { message = null, scheduledTime = null } = {}) {
+  const result = db
+    .prepare(
+      `UPDATE reminders
+       SET message = COALESCE(?, message), scheduled_time = COALESCE(?, scheduled_time)
+       WHERE id = ? AND user_id = ? AND status = 'active'`
+    )
+    .run(message, normalizeScheduledTime(scheduledTime), reminderId, userId);
+  return result.changes > 0 ? getReminder(db, reminderId) : null;
+}
+
 function getUserReminderCount(db, userId) {
   const stmt = db.prepare(`
     SELECT COUNT(*) as count
@@ -203,6 +218,7 @@ module.exports = {
   cancelReminder,
   getUserReminders,
   deleteReminder,
+  updateReminder,
   getUserReminderCount,
   getReminderStats,
   getDefaultReminderStats,

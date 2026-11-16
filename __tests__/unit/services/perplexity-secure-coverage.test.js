@@ -27,21 +27,8 @@ const fs = require('fs').promises;
 const mockCachePruner = {
   pruneCache: jest.fn().mockResolvedValue(undefined),
 };
-const mockGetCachePruner = jest.fn().mockReturnValue(mockCachePruner);
-
 // Mock the cache-pruner module directly
 jest.mock('../../../src/utils/cache-pruner', () => mockCachePruner);
-
-// Mock the lazy-loader to control getCachePruner behavior
-jest.mock('../../../src/utils/lazy-loader', () => ({
-  lazyLoadModule: jest.fn((modulePath) => {
-    if (modulePath === '../utils/cache-pruner') {
-      return mockGetCachePruner;
-    }
-    // For other modules, return a function that returns the actual module
-    return () => require(modulePath);
-  }),
-}));
 
 const PerplexityService = require('../../../src/services/perplexity-secure');
 

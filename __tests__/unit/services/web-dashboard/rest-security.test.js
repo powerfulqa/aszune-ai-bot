@@ -59,15 +59,36 @@ describe('dashboard REST security', () => {
     it.each(['GET', 'HEAD', 'OPTIONS'])('allows %s', (method) => {
       const next = jest.fn();
       const res = makeRes();
-      service._createAuthMiddleware()({ method, headers: {} }, res, next);
+      service._createAuthMiddleware()({ method, headers: { host: 'localhost:3000' } }, res, next);
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a rebound Host', { host: 'evil.example:3000' }],
+      ['a cross-site Origin', { host: 'localhost:3000', origin: 'https://evil.example' }],
+      ['no Host', {}],
+    ])('refuses GET with %s', (_name, headers) => {
+      const next = jest.fn();
+      const res = makeRes();
+      service._createAuthMiddleware()({ method: 'GET', headers }, res, next);
+      expect(next).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('accepts a hostname listed in DASHBOARD_ALLOWED_HOSTS', () => {
+      process.env.DASHBOARD_ALLOWED_HOSTS = 'pi.lan';
+      const next = jest.fn();
+      const req = { method: 'GET', headers: { host: 'pi.lan' } };
+      service._createAuthMiddleware()(req, makeRes(), next);
+      delete process.env.DASHBOARD_ALLOWED_HOSTS;
+      expect(next).toHaveBeenCalledTimes(1);
     });
 
     it.each(['POST', 'PUT', 'DELETE', 'PATCH'])('refuses %s with 403', (method) => {
       const next = jest.fn();
       const res = makeRes();
-      service._createAuthMiddleware()({ method, headers: {} }, res, next);
+      service._createAuthMiddleware()({ method, headers: { host: 'localhost:3000' } }, res, next);
       expect(next).not.toHaveBeenCalled();
       expect(res.statusCode).toBe(403);
       expect(res.body.error).toBe('Dashboard is read-only: set DASHBOARD_TOKEN to enable changes');
@@ -87,7 +108,7 @@ describe('dashboard REST security', () => {
     it.each(['GET', 'POST'])('refuses %s with 403', (method) => {
       const next = jest.fn();
       const res = makeRes();
-      service._createAuthMiddleware()({ method, headers: {} }, res, next);
+      service._createAuthMiddleware()({ method, headers: { host: 'localhost:3000' } }, res, next);
       expect(next).not.toHaveBeenCalled();
       expect(res.statusCode).toBe(403);
       expect(res.body.error).toBe(
@@ -161,6 +182,13 @@ describe('dashboard REST security', () => {
         expect.any(Function)
       );
     });
+  });
+
+  it('refuses to control or read the journal of a unit outside the managed set', async () => {
+    const refused = 'Unknown or disallowed service: sshd';
+    await expect(service.manageService('stop', 'sshd')).rejects.toThrow(refused);
+    await expect(service.getServiceLogs('sshd', 10)).rejects.toThrow(refused);
+    expect(childProcess.execFile).not.toHaveBeenCalled();
   });
 
   describe('getServiceLogs', () => {

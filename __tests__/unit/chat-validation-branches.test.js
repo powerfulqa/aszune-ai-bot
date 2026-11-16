@@ -60,7 +60,6 @@ jest.mock('../../src/utils/message-formatter', () => mockMessageFormatter);
 const mockChunkMessage = jest.fn();
 jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: mockChunkMessage,
-  formatTablesForDiscord: jest.fn().mockImplementation((text) => text),
 }));
 
 jest.mock('../../src/utils/logger', () => ({

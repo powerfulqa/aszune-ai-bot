@@ -26,35 +26,6 @@ describe('DatabaseService - Performance', function () {
     }
   });
 
-  describe('getPerformanceMetrics', () => {
-    it('should return empty array when no performance metrics exist', () => {
-      const metrics = dbService.getPerformanceMetrics('response_time', 24);
-      expect(metrics).toEqual([]);
-    });
-
-    it('should return performance metrics correctly', () => {
-      dbService.logPerformanceMetric('response_time', 150, { userId: '123' });
-      dbService.logPerformanceMetric('response_time', 200, { userId: '456' });
-      dbService.logPerformanceMetric('response_time', 100, { userId: '789' });
-
-      const metrics = dbService.getPerformanceMetrics('response_time', 24);
-      expect(metrics.length).toBe(3);
-      const values = metrics.map((m) => m.value).sort((a, b) => a - b);
-      expect(values).toEqual([100, 150, 200]);
-    });
-
-    it('should handle database errors gracefully', () => {
-      // Force a database error by closing the database
-      if (dbService.db && !dbService.isDisabled) {
-        dbService.close();
-      }
-
-      // Should return empty array instead of throwing
-      const metrics = dbService.getPerformanceMetrics('response_time', 24);
-      expect(metrics).toEqual([]);
-    });
-  });
-
   describe('logPerformanceMetric', () => {
     it('should log performance metrics without throwing', () => {
       expect(() => {

@@ -137,7 +137,9 @@ describe('Dashboard Command', () => {
     expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'dashboard_command');
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.',
+      embeds: [
+        { color: '#ED4245', description: 'An unexpected error occurred. Please try again later.' },
+      ],
     });
   });
 

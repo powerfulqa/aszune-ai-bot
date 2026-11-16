@@ -181,41 +181,6 @@ describe('ResourceOptimizer - monitorResources', () => {
   });
 });
 
-describe('ResourceOptimizer - applyDynamicScaling', () => {
-  it('should apply scaling for increasing load', () => {
-    const currentConfig = { memoryAllocation: 200, cacheSize: 100, maxConcurrentRequests: 50 };
-    const metrics = { avgResponseTime: 4500, errorRate: 7, serverCount: 75 };
-
-    const result = ResourceOptimizer.applyDynamicScaling(currentConfig, metrics);
-
-    expect(result.scaled).toBe(true);
-    expect(result.adjustments).toBeDefined();
-    expect(result.newConfig.memoryAllocation).toBeGreaterThanOrEqual(
-      currentConfig.memoryAllocation
-    );
-  });
-
-  it('should not scale when performance is good', () => {
-    const currentConfig = { memoryAllocation: 200, cacheSize: 100, maxConcurrentRequests: 50 };
-    const metrics = { avgResponseTime: 1500, errorRate: 2, serverCount: 25 };
-
-    const result = ResourceOptimizer.applyDynamicScaling(currentConfig, metrics);
-
-    expect(result.scaled).toBe(false);
-    expect(result.reason).toContain('performance is within acceptable limits');
-  });
-
-  it('should handle missing metrics gracefully', () => {
-    const currentConfig = { memoryAllocation: 200, cacheSize: 100, maxConcurrentRequests: 50 };
-    const incompleteMetrics = { avgResponseTime: 2000 };
-
-    const result = ResourceOptimizer.applyDynamicScaling(currentConfig, incompleteMetrics);
-
-    expect(result).toBeDefined();
-    expect(result.scaled).toBeDefined();
-  });
-});
-
 describe('ResourceOptimizer - generateOptimizationRecommendations', () => {
   let mockAnalytics, mockPerformance;
 

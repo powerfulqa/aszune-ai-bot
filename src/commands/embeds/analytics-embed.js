@@ -4,42 +4,21 @@
  */
 
 /**
- * Build the analytics embed
- * @param {Object} analyticsData - Analytics data from DiscordAnalytics
- * @param {Object} serverInsights - Server insights data
- * @param {number} onlineCount - Number of online users
+ * Build the analytics embed from live guild numbers. Nothing records command
+ * usage, so the embed shows only what Discord reports now.
+ * @param {number} onlineCount - Members currently online
+ * @param {number} humanMembers - Members that are not bots
  * @param {number} botCount - Number of bots
  * @returns {Object} Discord embed object
  */
-function buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount) {
+function buildAnalyticsEmbed(onlineCount, humanMembers, botCount) {
   return {
     color: 0x5865f2,
-    title: '📊 Discord Analytics Dashboard',
+    title: '📊 Server Overview',
     fields: [
-      {
-        name: '🏢 Server Overview',
-        value: `Servers: ${analyticsData.summary.totalServers}\nActive Users: ${analyticsData.summary.totalUsers}\nTotal Commands: ${analyticsData.summary.totalCommands}`,
-        inline: true,
-      },
-      {
-        name: '📈 Performance',
-        value: `Success Rate: ${analyticsData.summary.successRate}%\nError Rate: ${analyticsData.summary.errorRate}%\nAvg Response: ${analyticsData.summary.avgResponseTime}ms`,
-        inline: true,
-      },
-      {
-        name: '🎯 Top Commands',
-        value:
-          analyticsData?.commandStats
-            ?.slice(0, 3)
-            .map((cmd, i) => `${i + 1}. ${cmd.command} (${cmd.count})`)
-            .join('\n') || 'No data yet',
-        inline: true,
-      },
-      {
-        name: '💡 Server Insights',
-        value: `🟢 Currently Online: ${serverInsights.uniqueUsers}\n👥 Total Members: ${analyticsData.summary.totalUsers}\n🤖 Bots: ${botCount}\n📊 Server Health: Excellent`,
-        inline: false,
-      },
+      { name: '🟢 Online now', value: String(onlineCount), inline: true },
+      { name: '👥 Members', value: String(humanMembers), inline: true },
+      { name: '🤖 Bots', value: String(botCount), inline: true },
     ],
     footer: { text: 'Aszai Bot Analytics' },
     timestamp: new Date().toISOString(),

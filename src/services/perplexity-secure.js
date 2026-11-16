@@ -114,19 +114,6 @@ class PerplexityService {
   }
 
   /**
-   * Invalidate cache entries by tag
-   * @param {string} tag - Tag to invalidate
-   * @returns {number} Number of entries invalidated
-   */
-  invalidateCacheByTag(tag) {
-    return this._executeWithErrorHandling(
-      () => this.cacheManager.invalidateByTag(tag),
-      'invalidating cache by tag',
-      0
-    );
-  }
-
-  /**
    * Shut down the service, logging final cache statistics
    */
   shutdown() {
@@ -406,9 +393,9 @@ class PerplexityService {
 
     content += formatCitationFooter(content, response.citations);
 
-    // Save to cache if enabled
-    if (shouldUseCache) {
-      await this.cacheManager.trySaveToCache(history, content, cacheConfig.maxEntries);
+    // Save to cache if enabled (never a cut-off answer)
+    if (shouldUseCache && response.status !== 'incomplete') {
+      await this.cacheManager.trySaveToCache(history, content);
     }
 
     return content;
@@ -508,18 +495,16 @@ class PerplexityService {
    * @returns {Promise<string>} - The summary content
    */
   async generateSummary(history, isText = false) {
-    try {
-      const textToSummarize = isText
-        ? this._extractTextContent(history)
-        : this._formatConversationForSummary(history);
+    // Errors propagate (services throw, they do not return error text): the
+    // commands turn them into an error reply instead of posting them as a summary.
+    const textToSummarize = isText
+      ? this._extractTextContent(history)
+      : this._formatConversationForSummary(history);
 
-      return await this.generateTextSummary(
-        textToSummarize,
-        isText ? config.SYSTEM_MESSAGES.TEXT_SUMMARY : config.SYSTEM_MESSAGES.SUMMARY
-      );
-    } catch (error) {
-      return this._handleSummaryError(error, history, isText);
-    }
+    return this.generateTextSummary(
+      textToSummarize,
+      isText ? config.SYSTEM_MESSAGES.TEXT_SUMMARY : config.SYSTEM_MESSAGES.SUMMARY
+    );
   }
 
   /**
@@ -540,37 +525,6 @@ class PerplexityService {
    */
   _formatConversationForSummary(history) {
     return history.map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n\n');
-  }
-
-  /**
-   * Handle summary generation errors
-   * @param {Error} error - The error
-   * @param {Array} history - Original history
-   * @param {boolean} isText - Whether text mode
-   * @returns {string} - Error message
-   * @private
-   */
-  _handleSummaryError(error, history, isText) {
-    const errorResponse = ErrorHandler.handleError(error, 'generate summary', {
-      historyLength: history?.length || 0,
-      isText: isText,
-    });
-    logger.error(`Failed to generate summary: ${errorResponse.message}`);
-
-    // Error message mapping
-    const errorMessages = [
-      {
-        condition: () => history.length === 0,
-        message: 'No conversation history provided to summarize.',
-      },
-      {
-        condition: () => error.message?.includes('Summary generation failed'),
-        message: 'Unable to generate summary at this time.',
-      },
-    ];
-
-    const matchedError = errorMessages.find((e) => e.condition());
-    return matchedError ? matchedError.message : errorResponse.message;
   }
 
   /**

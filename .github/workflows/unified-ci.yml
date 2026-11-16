@@ -16,6 +16,10 @@ on:
     branches:
       - main
 
+# Least privilege by default; jobs that need more (OIDC) ask for it.
+permissions:
+  contents: read
+
 jobs:
   # QLTY code analysis (triggers maintainability checks)
   qlty:
@@ -31,7 +35,7 @@ jobs:
           fetch-depth: 0 # Full history for accurate analysis
 
       - name: Install QLTY CLI
-        uses: qltysh/qlty-action/install@v2
+        uses: qltysh/qlty-action/install@0ff2178667bf8eb28ed0013a7ef54857a24d4056 # v2.7.0
 
       - name: Run QLTY check
         run: qlty check --all --no-progress
@@ -127,16 +131,31 @@ jobs:
           CI: true
           NODE_ENV: test
 
+      # Status checks and thresholds are set in codecov.yml. The upload itself
+      # never fails the job: the Jest thresholds above are the hard gate, and
+      # fork pull requests have no token.
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        continue-on-error: true
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: coverage/
+          files: coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+
+      # jest-junit writes test-results/junit.xml (see jest.config.js); Codecov
+      # Test Analytics uses it to report failed and flaky tests on the PR.
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: test-results/junit.xml
+          disable_search: true
           fail_ci_if_error: false
 
       - name: Upload coverage to QLTY
-        uses: qltysh/qlty-action/coverage@v2
+        uses: qltysh/qlty-action/coverage@0ff2178667bf8eb28ed0013a7ef54857a24d4056 # v2.7.0
         continue-on-error: true
         with:
           oidc: true

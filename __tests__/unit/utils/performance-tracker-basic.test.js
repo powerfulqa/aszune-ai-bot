@@ -12,64 +12,8 @@ jest.mock('../../../src/utils/logger', () => ({
 }));
 
 describe('PerformanceTracker - API Call Tracking', () => {
-  let logger;
-
   beforeEach(() => {
-    logger = require('../../../src/utils/logger');
     jest.clearAllMocks();
-  });
-
-  describe('trackApiCall', () => {
-    it('should track successful API call', () => {
-      const result = PerformanceTracker.trackApiCall('test_operation', 1000, true, {
-        test: 'data',
-      });
-
-      expect(result).toEqual({
-        operation: 'test_operation',
-        duration: 1000,
-        success: true,
-        metadata: { test: 'data' },
-        timestamp: expect.any(String),
-        memoryUsage: expect.any(Object),
-      });
-
-      expect(result.memoryUsage).toHaveProperty('heapUsed');
-      expect(result.memoryUsage).toHaveProperty('heapTotal');
-    });
-
-    it('should log slow operations', () => {
-      PerformanceTracker.trackApiCall('slow_operation', 6000, true);
-
-      expect(logger.info).toHaveBeenCalledWith(
-        'Slow operation detected: slow_operation took 6000ms',
-        {}
-      );
-    });
-
-    it('should log very slow operations', () => {
-      PerformanceTracker.trackApiCall('very_slow_operation', 12000, false);
-
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Very slow operation detected: very_slow_operation took 12000ms',
-        {}
-      );
-    });
-
-    it('should track failed API call', () => {
-      const result = PerformanceTracker.trackApiCall('failed_operation', 500, false);
-
-      expect(result.success).toBe(false);
-      expect(result.operation).toBe('failed_operation');
-      expect(result.duration).toBe(500);
-    });
-
-    it('should include metadata in tracking', () => {
-      const metadata = { userId: 'user123', feature: 'chat' };
-      const result = PerformanceTracker.trackApiCall('chat_request', 2000, true, metadata);
-
-      expect(result.metadata).toEqual(metadata);
-    });
   });
 
   describe('analyzePerformanceTrends - Basic Cases', () => {

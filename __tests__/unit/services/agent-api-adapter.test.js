@@ -20,7 +20,7 @@ const {
 } = require('../../../src/services/perplexity-secure/helpers/agentApiAdapter');
 
 const RUNTIME_UNKNOWN =
-  'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) with the "medium" preset, and the preset picks the model (not reported yet).';
+  'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) at the "medium" effort level, and the effort level picks the model (not reported yet).';
 
 const PERPLEXITY = {
   AGENT_PRESET: 'medium',
@@ -97,7 +97,7 @@ describe('buildAgentRequest', () => {
   it('names the model Perplexity reported last time', () => {
     const req = buildAgentRequest(messages, { lastModel: 'openai/gpt-6-luna' }, PERPLEXITY);
     expect(
-      req.instructions.endsWith('the "medium" preset, and the model is openai/gpt-6-luna.')
+      req.instructions.endsWith('the "medium" effort level, and the model is openai/gpt-6-luna.')
     ).toBe(true);
   });
 
@@ -109,7 +109,7 @@ describe('buildAgentRequest', () => {
     );
     expect(
       req.instructions.endsWith(
-        'the "medium" preset, and the model is anthropic/claude-sonnet-5-5.'
+        'the "medium" effort level, and the model is anthropic/claude-sonnet-5-5.'
       )
     ).toBe(true);
   });
@@ -119,12 +119,25 @@ describe('describeRuntime', () => {
   it('describes a known model', () => {
     expect(describeRuntime('high', 'openai/gpt-6-sol')).toBe(
       'If someone asks what model, AI or API you use, tell them: you run on the Perplexity ' +
-        'Agent API (/v1/agent) with the "high" preset, and the model is openai/gpt-6-sol.'
+        'Agent API (/v1/agent) at the "high" effort level, and the model is openai/gpt-6-sol.'
     );
   });
 
-  it('says the preset picks the model when none is known', () => {
+  it('says the effort level picks the model when none is known', () => {
     expect(describeRuntime('medium')).toBe(RUNTIME_UNKNOWN);
+  });
+});
+
+describe('max_output_tokens', () => {
+  // It budgets the whole run, so it is only sent when asked for.
+  it('is left out when no cap is configured', () => {
+    const req = buildAgentRequest([{ role: 'user', content: 'hi' }], {}, { MAX_TOKENS: {} });
+    expect('max_output_tokens' in req).toBe(false);
+  });
+
+  it('is sent when the caller asks for a cap', () => {
+    const req = buildAgentRequest([{ role: 'user', content: 'hi' }], { maxTokens: 512 }, {});
+    expect(req.max_output_tokens).toBe(512);
   });
 });
 

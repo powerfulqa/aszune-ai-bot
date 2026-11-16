@@ -110,8 +110,6 @@ jest.mock('../../src/utils/message-chunking', () => ({
 jest.mock('../../src/utils/input-validator', () => ({
   InputValidator: {
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateInput: jest.fn().mockReturnValue({ valid: true }),
-    sanitizeInput: jest.fn().mockImplementation((input) => input),
     validateAndSanitize: jest
       .fn()
       .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
@@ -226,15 +224,9 @@ jest.mock('../../src/utils/cache-pruner', () => ({
   pruneCache: jest.fn(),
 }));
 
-jest.mock('../../src/utils/lazy-loader', () => ({
-  loadModule: jest.fn().mockImplementation((moduleName) => require(moduleName)),
-}));
-
 jest.mock('../../src/utils/input-validator', () => ({
   InputValidator: {
     validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateInput: jest.fn().mockReturnValue({ valid: true }),
-    sanitizeInput: jest.fn().mockImplementation((input) => input),
     validateAndSanitize: jest
       .fn()
       .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),

@@ -16,7 +16,6 @@ const databaseService = require('../services/database');
 const reminderService = require('../services/reminder-service');
 const { getGuildMemberStats } = require('../utils/guild-member-stats');
 const { diagCommand } = require('./diag');
-const os = require('os');
 
 // Embed builders (extracted for maintainability)
 const {
@@ -89,6 +88,16 @@ function validateAndPrepareHistory(userId) {
 }
 
 // Command definitions
+/**
+ * Reply payload for a failed command. User-facing errors are embeds, never
+ * plain text.
+ * @param {string} description - Error text for the user
+ * @returns {{embeds: Array<Object>}} Discord reply payload
+ */
+function errorEmbed(description) {
+  return { embeds: [{ color: config.COLORS.ERROR, description }] };
+}
+
 const commands = {
   help: {
     data: {
@@ -116,7 +125,6 @@ const commands = {
 Simply chat as normal to talk to the bot!`
       );
     },
-    textCommand: '!help',
   },
 
   clearhistory: {
@@ -126,12 +134,11 @@ Simply chat as normal to talk to the bot!`
     },
     async execute(interaction) {
       const userId = interaction.user.id;
-      databaseService.clearUserData(userId);
+      databaseService.clearUserConversationData(userId);
       conversationManager.clearHistory(userId);
 
       return interaction.reply('Conversation history cleared! Your stats have been preserved.');
     },
-    textCommand: '!clearhistory',
   },
 
   summary: {
@@ -168,10 +175,9 @@ Simply chat as normal to talk to the bot!`
           userId: userId,
           historyLength: historyResult.cleanHistory?.length || 0,
         });
-        return interaction.editReply(errorResponse.message);
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!summary',
   },
   cache: {
     data: {
@@ -204,8 +210,6 @@ Simply chat as normal to talk to the bot!`
         );
       }
     },
-
-    textCommand: '!cache',
   },
   stats: {
     data: {
@@ -223,51 +227,27 @@ Simply chat as normal to talk to the bot!`
           `Active reminders: ${stats.reminders || 0}`
       );
     },
-    textCommand: '!stats',
   },
 
   analytics: {
     data: {
       name: 'analytics',
-      description: 'Show Discord server analytics and insights',
+      description: 'Show how many members and bots are in this server and online',
     },
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const serverId = interaction.guild?.id;
-        const guild = interaction.guild;
-        const { onlineCount, botCount, _totalMembers, humanMembers } =
-          await getGuildMemberStats(guild);
-        const analyticsData = {
-          summary: {
-            totalServers: 1,
-            totalUsers: humanMembers,
-            totalCommands: 0,
-            successRate: 100,
-            errorRate: 0,
-            avgResponseTime: 0,
-          },
-          commandStats: [],
-        };
-        const serverInsights = {
-          serverId,
-          uniqueUsers: onlineCount,
-          commandsExecuted: 0,
-          errorRate: 0,
-          totalActivities: 0,
-          averageResponseTime: 0,
-          mostActiveUser: null,
-          popularCommands: [],
-        };
-        const embed = buildAnalyticsEmbed(analyticsData, serverInsights, onlineCount, botCount);
+        const { onlineCount, botCount, humanMembers } = await getGuildMemberStats(
+          interaction.guild
+        );
+        const embed = buildAnalyticsEmbed(onlineCount, humanMembers, botCount);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching analytics:', error);
         const errorResponse = ErrorHandler.handleError(error, 'analytics_command');
-        return interaction.editReply({ content: errorResponse.message });
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!analytics',
   },
 
   dashboard: {
@@ -288,10 +268,9 @@ Simply chat as normal to talk to the bot!`
       } catch (error) {
         logger.error('Error fetching dashboard:', error);
         const errorResponse = ErrorHandler.handleError(error, 'dashboard_command');
-        return interaction.editReply({ content: errorResponse.message });
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!dashboard',
   },
 
   resources: {
@@ -309,21 +288,14 @@ Simply chat as normal to talk to the bot!`
           { averageResponseTime: resourceStatus.performance.responseTime }
         );
         const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
-        const hostname = os.hostname();
-        const embed = buildResourcesEmbed(
-          resourceStatus,
-          actualServerCount,
-          hostname,
-          recommendations
-        );
+        const embed = buildResourcesEmbed(resourceStatus, actualServerCount, recommendations);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching resource data:', error);
         const errorResponse = ErrorHandler.handleError(error, 'resources_command');
-        return interaction.editReply({ content: errorResponse.message });
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!resources',
   },
 
   summarise: {
@@ -450,13 +422,11 @@ Simply chat as normal to talk to the bot!`
           textLength: sanitizedText?.length || 0,
           warnings: warnings,
         });
-        return interaction.editReply(errorResponse.message);
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
     // Support both spellings as text commands
-    textCommand: '!summarise',
     // Add alias commands that will be recognized
-    aliases: ['!summerise'],
   },
 
   remind: {
@@ -523,7 +493,7 @@ Simply chat as normal to talk to the bot!`
           time,
           messageLength: message.length,
         });
-        return interaction.editReply(errorResponse.message);
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
   },
@@ -571,7 +541,7 @@ Simply chat as normal to talk to the bot!`
         });
       } catch (error) {
         const errorResponse = ErrorHandler.handleError(error, 'reminder listing', { userId });
-        return interaction.reply(errorResponse.message);
+        return interaction.reply(errorEmbed(errorResponse.message));
       }
     },
   },
@@ -624,7 +594,7 @@ Simply chat as normal to talk to the bot!`
           userId,
           reminderId,
         });
-        return interaction.reply(errorResponse.message);
+        return interaction.reply(errorEmbed(errorResponse.message));
       }
     },
   },
@@ -660,10 +630,9 @@ Simply chat as normal to talk to the bot!`
       } catch (error) {
         logger.error('Error fetching user info:', error);
         const errorResponse = ErrorHandler.handleError(error, 'userinfo_command');
-        return interaction.editReply({ content: errorResponse.message });
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!userinfo',
   },
 
   serverinfo: {
@@ -689,80 +658,14 @@ Simply chat as normal to talk to the bot!`
       } catch (error) {
         logger.error('Error fetching server info:', error);
         const errorResponse = ErrorHandler.handleError(error, 'serverinfo_command');
-        return interaction.editReply({ content: errorResponse.message });
+        return interaction.editReply(errorEmbed(errorResponse.message));
       }
     },
-    textCommand: '!serverinfo',
   },
 
   // Owner-only diagnostics (slash only, ephemeral) - see ./diag.js
   diag: diagCommand,
 };
-
-/**
- * Check if command text matches a command's trigger
- * @param {string} commandPrefix - The command prefix from message
- * @param {Object} command - Command object to check
- * @returns {boolean} Whether command matches
- */
-function isCommandMatch(commandPrefix, command) {
-  const isMainCommand = commandPrefix === command.textCommand;
-  const hasAliases = command.aliases && Array.isArray(command.aliases);
-  return isMainCommand || (hasAliases && command.aliases.includes(commandPrefix));
-}
-
-/**
- * Create mock interaction for text commands
- * @param {Object} message - Discord message object
- * @returns {Object} Mock interaction object
- */
-function createMockInteraction(message) {
-  return {
-    user: message.author,
-    channel: message.channel,
-    content: message.content,
-    reply: (content) => message.reply(content),
-    deferReply: async () => message.channel.sendTyping(),
-    editReply: (content) => message.reply(content),
-  };
-}
-
-/**
- * Handle text commands from messages
- *
- * @deprecated This function is maintained for testing compatibility only.
- * Text commands (messages starting with !) are no longer processed by chat.js.
- * All user-facing commands should use slash commands (/help, /remind, etc.)
- *
- * @param {Object} message - Discord.js message object
- * @returns {Promise<Object|null>} - Command result or null if no command matched
- */
-async function handleTextCommand(message) {
-  const commandText = message.content.trim();
-  const commandPrefix = commandText.split(/\s+/)[0].toLowerCase();
-
-  for (const [name, command] of Object.entries(commands)) {
-    if (!isCommandMatch(commandPrefix, command)) continue;
-
-    try {
-      return await command.execute(createMockInteraction(message));
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, `text command ${name}`, {
-        userId: message.author.id,
-        command: name,
-        content: message.content,
-      });
-      logger.error(`Error executing text command ${name}: ${errorResponse.message}`);
-      try {
-        return await message.reply(errorResponse.message);
-      } catch (replyError) {
-        logger.error(`Failed to send error reply for text command ${name}: ${replyError.message}`);
-      }
-    }
-  }
-
-  return null;
-}
 
 // Slash commands that call the paid Perplexity API
 const PAID_COMMANDS = new Set(['summary', 'summarise']);
@@ -853,7 +756,6 @@ function getSlashCommandsData() {
 }
 
 module.exports = {
-  handleTextCommand,
   handleSlashCommand,
   getSlashCommandsData,
 };

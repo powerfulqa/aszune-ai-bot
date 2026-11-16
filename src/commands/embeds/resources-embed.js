@@ -3,17 +3,14 @@
  * Generates Discord embed for /resources command
  */
 
-const os = require('os');
-
 /**
  * Build the resources embed
  * @param {Object} resourceStatus - Resource status from ResourceOptimizer
  * @param {number} actualServerCount - Actual server count
- * @param {string} hostname - System hostname
  * @param {Array} recommendations - Optimization recommendations
  * @returns {Object} Discord embed object
  */
-function buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recommendations) {
+function buildResourcesEmbed(resourceStatus, actualServerCount, recommendations) {
   return {
     color:
       resourceStatus.memory.status === 'good'
@@ -24,11 +21,6 @@ function buildResourcesEmbed(resourceStatus, actualServerCount, hostname, recomm
     title: '🔧 Resource Optimization',
     description: '📊 Node.js process memory (heap) - see /cache for cached responses',
     fields: [
-      {
-        name: '🖥️ System Info',
-        value: `Host: \`${hostname}\`\nPID: \`${process.pid}\`\nUser: \`${os.userInfo().username}\``,
-        inline: false,
-      },
       {
         name: '💾 Memory Status',
         value: `Status: ${resourceStatus.memory.status.toUpperCase()}\nUsed: ${resourceStatus.memory.used}MB\nFree: ${resourceStatus.memory.free}MB\nUsage: ${Math.round(resourceStatus.memory.percentage)}%`,

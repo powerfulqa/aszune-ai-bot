@@ -201,14 +201,14 @@ describe('ConversationManager - Memory and Performance', () => {
     it('should preserve user stats during cleanup', () => {
       const userId = 'user-with-stats';
 
-      conversationManager.updateUserStats(userId, 'messages');
+      conversationManager.updateUserStats(userId, 'summaries');
       conversationManager.lastMessageTimestamps.set(userId, Date.now() - 2000000); // Old
 
       conversationManager.cleanupOldConversations();
 
       // Stats should be preserved even after cleanup
       const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(1);
+      expect(stats.summaries).toBe(1);
     });
   });
 });

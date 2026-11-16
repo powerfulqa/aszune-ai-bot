@@ -770,6 +770,10 @@ No rate limiting currently enforced. For production, implement:
 
 ## Testing API
 
+> Reminders are read-only over REST (`GET /api/reminders`). Creating, editing and deleting a
+> reminder goes over the dashboard socket (`create_reminder`, `edit_reminder`, `delete_reminder`),
+> which needs `DASHBOARD_TOKEN`, a Discord user ID and a channel ID.
+
 ### Using cURL
 
 ```bash
@@ -779,10 +783,6 @@ curl http://localhost:3000/api/logs?level=ERROR&limit=10
 # Get service status
 curl http://localhost:3000/api/services
 
-# Create reminder
-curl -X POST http://localhost:3000/api/reminders \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Test","type":"one-time","scheduledTime":"2024-01-20T14:00:00Z"}'
 ```
 
 ### Using Postman
@@ -799,19 +799,6 @@ curl -X POST http://localhost:3000/api/reminders \
 const response = await fetch('http://localhost:3000/api/logs?level=ERROR');
 const data = await response.json();
 console.log(data.data.logs);
-
-// Create reminder
-const reminderResponse = await fetch('http://localhost:3000/api/reminders', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    message: 'Test reminder',
-    type: 'one-time',
-    scheduledTime: '2024-01-20T14:00:00Z',
-  }),
-});
-const reminderData = await reminderResponse.json();
-console.log(reminderData.data.reminder);
 ```
 
 ---

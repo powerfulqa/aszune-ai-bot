@@ -15,7 +15,12 @@ const { execPromise } = require('../utils/shell-exec-helper');
 const { execFileAsync, assertSafeServiceName, clampInt } = require('../utils/safe-exec');
 const { cached } = require('../utils/cached');
 const { wrapAsyncHandler } = require('./web-dashboard/routes/routeHelper');
-const { isValidAction, runPm2ServiceAction, BOT_PM2_APP_NAME } = require('../utils/pm2-service');
+const {
+  isValidAction,
+  resolvePm2AppName,
+  runPm2ServiceAction,
+  BOT_PM2_APP_NAME,
+} = require('../utils/pm2-service');
 const configRoutes = require('./web-dashboard/routes/configRoutes');
 const logRoutes = require('./web-dashboard/routes/logRoutes');
 const networkRoutes = require('./web-dashboard/routes/networkRoutes');
@@ -45,6 +50,8 @@ const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /** Bind addresses that only accept connections from this machine */
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
+const UNTRUSTED_HOST =
+  'Forbidden: open the dashboard at http://localhost, or list this hostname in DASHBOARD_ALLOWED_HOSTS';
 const NETWORK_TOKEN_REQUIRED =
   'Dashboard is reachable from the network: set DASHBOARD_TOKEN to enable access';
 
@@ -133,6 +140,38 @@ class WebDashboardService {
   }
 
   /**
+   * With no token, "bound to loopback" is the only protection, and a browser
+   * defeats it: any web page can open a WebSocket to 127.0.0.1, and a DNS
+   * rebinding page can send same-origin HTTP. Both show up as a Host or Origin
+   * that is not this dashboard, so those requests are refused.
+   * DASHBOARD_ALLOWED_HOSTS (comma-separated hostnames) adds names, e.g. the
+   * one a reverse proxy forwards.
+   * @private
+   * @param {Object} headers - Request or handshake headers
+   * @returns {boolean}
+   */
+  _isLocalBrowserRequest(headers = {}) {
+    const allowed = new Set([
+      'localhost',
+      '127.0.0.1',
+      '[::1]',
+      ...(process.env.DASHBOARD_ALLOWED_HOSTS || '')
+        .split(',')
+        .map((h) => h.trim().toLowerCase())
+        .filter(Boolean),
+    ]);
+    const hostOf = (value) => {
+      try {
+        return new URL(value.includes('://') ? value : `http://${value}`).hostname;
+      } catch {
+        return '';
+      }
+    };
+    if (!allowed.has(hostOf(headers.host || ''))) return false;
+    return !headers.origin || allowed.has(hostOf(headers.origin));
+  }
+
+  /**
    * Constant-time comparison of a provided token against the configured one.
    * Returns true when no token is configured (auth disabled).
    * @private
@@ -185,6 +224,12 @@ class WebDashboardService {
             timestamp: new Date().toISOString(),
           });
         }
+        if (!this._isLocalBrowserRequest(req.headers)) {
+          return res.status(403).json({
+            error: UNTRUSTED_HOST,
+            timestamp: new Date().toISOString(),
+          });
+        }
         if (READ_ONLY_METHODS.has(req.method)) {
           return next();
         }
@@ -216,7 +261,9 @@ class WebDashboardService {
   _authorizeSocket(socket, next) {
     if (!this.authToken) {
       if (this._isLoopbackBind()) {
-        return next();
+        if (this._isLocalBrowserRequest(socket.handshake?.headers)) return next();
+        logger.warn(`Dashboard socket rejected (foreign Host or Origin): ${socket.id}`);
+        return next(new Error(UNTRUSTED_HOST));
       }
       logger.warn(`Dashboard socket rejected (no DASHBOARD_TOKEN on a network bind): ${socket.id}`);
       return next(new Error(NETWORK_TOKEN_REQUIRED));
@@ -836,48 +883,47 @@ class WebDashboardService {
   }
 
   /**
+   * Only the bot's own PM2 app and the units listed in DASHBOARD_SERVICES may
+   * be controlled or have their journal read; any other unit name is refused.
+   * @private
+   */
+  _assertManagedService(service) {
+    assertSafeServiceName(service);
+    if (!resolvePm2AppName(service) && !this._getMonitoredServices().includes(service)) {
+      const error = new Error(`Unknown or disallowed service: ${service}`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  /**
    * Manage service (start/stop/restart)
    * @param {string} action - Action (start, stop, restart)
    * @param {string} service - Service name
    * @returns {Promise<Object>} Result object
    * @private
    */
-  /**
-   * Get PM2 candidate names for a service
-   * @private
-   */
-  _getPm2Candidates(service) {
-    const candidateMap = {
-      'aszune-ai': ['aszune-ai'],
-      'aszune-bot': ['aszune-ai', 'aszune-bot'],
-      'aszune-ai-bot': ['aszune-ai', 'aszune-bot'],
-    };
-    return candidateMap[service] || null;
-  }
+  async manageService(action, service) {
+    // Both values reach a child process: allowlist the action and the name,
+    // then run without a shell (execFile) so nothing is interpreted.
+    if (!isValidAction(action)) {
+      const error = new Error('Invalid action. Must be start, stop, or restart');
+      error.statusCode = 400;
+      throw error;
+    }
+    this._assertManagedService(service);
 
-  /**
-   * Try PM2 command for a service
-   * @private
-   */
-  async _tryPm2Command(action, pm2AppName) {
-    const pm2Command = `pm2 ${action} ${pm2AppName}`;
-    logger.debug(`Executing: ${pm2Command}`);
-    await execFileAsync('pm2', [action, pm2AppName], { timeout: 10000 });
-    logger.info(`PM2 shell succeeded: ${pm2Command}`);
-    return {
-      success: true,
-      message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
-      service: pm2AppName,
-      action,
-      timestamp: new Date().toISOString(),
-    };
-  }
+    logger.info(`Service management: ${action} ${service}`);
 
-  /**
-   * Build service action result
-   * @private
-   */
-  _buildServiceResult(service, action) {
+    // The bot runs under PM2 only: falling back to systemctl for it is what
+    // causes the PM2/systemd restart loop.
+    if (resolvePm2AppName(service)) {
+      await runPm2ServiceAction(service, action);
+    } else {
+      await execFileAsync('systemctl', [action, service], { timeout: 10000 });
+    }
+
+    logger.info(`Service ${action} succeeded: ${service}`);
     return {
       success: true,
       message: `Service ${service} ${action}ed successfully`,
@@ -885,38 +931,6 @@ class WebDashboardService {
       action,
       timestamp: new Date().toISOString(),
     };
-  }
-
-  async manageService(action, service) {
-    // Both values reach a child process: allowlist the action and validate the
-    // name, then run without a shell (execFile) so nothing is interpreted.
-    if (!isValidAction(action)) {
-      const error = new Error('Invalid action. Must be start, stop, or restart');
-      error.statusCode = 400;
-      throw error;
-    }
-    assertSafeServiceName(service);
-
-    logger.info(`Service management: ${action} ${service}`);
-
-    // Try PM2 for bot services
-    const pm2Candidates = this._getPm2Candidates(service);
-    if (pm2Candidates) {
-      for (const pm2AppName of pm2Candidates) {
-        try {
-          return await this._tryPm2Command(action, pm2AppName);
-        } catch (pm2Error) {
-          logger.warn(`PM2 command failed for ${pm2AppName}: ${pm2Error.message}`);
-        }
-      }
-    }
-
-    // Fallback to systemctl
-    logger.debug(`Executing: systemctl ${action} ${service}`);
-    await execFileAsync('systemctl', [action, service], { timeout: 10000 });
-
-    logger.info(`Service ${action} succeeded: ${service}`);
-    return this._buildServiceResult(service, action);
   }
 
   /**
@@ -927,7 +941,7 @@ class WebDashboardService {
    * @private
    */
   async getServiceLogs(service, lines = 50) {
-    assertSafeServiceName(service);
+    this._assertManagedService(service);
     const lineCount = clampInt(lines, { def: 50, min: 1, max: 1000 });
 
     try {
@@ -949,9 +963,9 @@ class WebDashboardService {
    * @private
    */
   async readConfigFile(filename) {
-    const allowedFiles = ['.env', 'config.js', '.env.example'];
+    const { READABLE_FILES } = require('./web-dashboard/handlers/configHandlers');
 
-    if (!allowedFiles.includes(filename)) {
+    if (!READABLE_FILES.includes(filename)) {
       throw new Error(`Access denied: ${filename} is not in the allowed file list`);
     }
 
@@ -977,22 +991,16 @@ class WebDashboardService {
    * @private
    */
   async updateConfigFile(filename, content, createBackup = true) {
-    const allowedFiles = ['.env', 'config.js'];
-
-    if (!allowedFiles.includes(filename)) {
-      throw new Error(`Access denied: ${filename} cannot be modified`);
-    }
-
-    const filepath = path.join(process.cwd(), filename);
-
-    if (!filepath.startsWith(process.cwd())) {
-      throw new Error('Path traversal attempt detected');
-    }
-
     const {
       restoreMaskedSecrets,
       readExistingConfig,
+      validateConfigSaveInput,
     } = require('./web-dashboard/handlers/configHandlers');
+
+    const invalid = validateConfigSaveInput({ filename, content });
+    if (invalid) throw new Error(invalid);
+
+    const filepath = path.join(process.cwd(), filename);
     const existing = await readExistingConfig(filepath);
     const restored = restoreMaskedSecrets(filename, content, existing ?? '');
     if (createBackup && existing !== null) {
@@ -1101,80 +1109,25 @@ class WebDashboardService {
    * @private
    */
   async getReminders(status = 'all') {
-    try {
-      if (status === 'active') {
-        return databaseService.getActiveReminders();
-      } else if (status === 'completed') {
-        return databaseService.getCompletedReminders?.() || [];
-      }
-      return databaseService.getReminders?.() || databaseService.getActiveReminders();
-    } catch (error) {
-      logger.warn('Failed to get reminders:', error.message);
-      return [];
-    }
-  }
-
-  /**
-   * Create a new reminder
-   * @private
-   */
-  async createReminder(message, scheduledTime, userId, reminderType = 'general') {
-    try {
-      const reminder = {
-        id: `reminder_${Date.now()}`,
-        user_id: userId,
-        message,
-        scheduled_time: new Date(scheduledTime).toISOString(),
-        created_at: new Date().toISOString(),
-        reminder_type: reminderType,
-        status: 'active',
-      };
-
-      databaseService.addReminder?.(reminder);
-      return reminder;
-    } catch (error) {
-      logger.warn('Failed to create reminder:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Update an existing reminder
-   * @private
-   */
-  async updateReminder(id, message, scheduledTime) {
-    try {
-      const updated = {
-        id,
-        message: message || undefined,
-        scheduled_time: scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
-        updated_at: new Date().toISOString(),
-      };
-
-      databaseService.updateReminder?.(id, updated);
-      return updated;
-    } catch (error) {
-      logger.warn('Failed to update reminder:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Delete a reminder
-   * @private
-   */
-  async deleteReminder(id) {
-    try {
-      databaseService.deleteReminder?.(id);
-    } catch (error) {
-      logger.warn('Failed to delete reminder:', error.message);
-      throw error;
-    }
+    const reminders = databaseService.getAllReminders();
+    return status === 'all' ? reminders : reminders.filter((r) => r.status === status);
   }
 
   async _handleRestartRequest(res) {
     try {
       logger.info('Restart command received from dashboard');
+
+      // Only PM2 brings the process back. Without it a "restart" would just
+      // stop the bot while reporting success.
+      if (process.env.pm_id === undefined) {
+        res.status(409).json({
+          success: false,
+          error:
+            'The bot is not running under PM2, so it cannot restart itself. Restart it on the host.',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
 
       // Step 1: Explicitly disconnect Discord client to show offline status
       if (this.discordClient) {
@@ -1301,6 +1254,18 @@ class WebDashboardService {
       logger.debug(`Dashboard client connected: ${socket.id}`);
 
       this._emitMetricsToSocket(socket, 'sending initial metrics');
+
+      // Socket.IO only passes an ack function when the client asked for one;
+      // otherwise the last argument is whatever the client sent. Handlers take
+      // (data, callback), so drop a trailing non-function instead of letting
+      // them call it and crash the process.
+      socket.use((packet, next) => {
+        const last = packet[packet.length - 1];
+        if (packet.length > 2) {
+          packet.splice(2, Infinity, ...(typeof last === 'function' ? [last] : []));
+        }
+        next();
+      });
 
       socket.on('disconnect', () => {
         logger.debug(`Dashboard client disconnected: ${socket.id}`);

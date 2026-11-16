@@ -141,29 +141,11 @@ describe('Analytics Command', () => {
       embeds: [
         {
           color: 0x5865f2,
-          title: '📊 Discord Analytics Dashboard',
+          title: '📊 Server Overview',
           fields: [
-            {
-              name: '🏢 Server Overview',
-              value: 'Servers: 1\nActive Users: 149\nTotal Commands: 0',
-              inline: true,
-            },
-            {
-              name: '📈 Performance',
-              value: 'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms',
-              inline: true,
-            },
-            {
-              name: '🎯 Top Commands',
-              value: 'No data yet',
-              inline: true,
-            },
-            {
-              name: '💡 Server Insights',
-              value:
-                '🟢 Currently Online: 3\n👥 Total Members: 149\n🤖 Bots: 1\n📊 Server Health: Excellent',
-              inline: false,
-            },
+            { name: '🟢 Online now', value: '3', inline: true },
+            { name: '👥 Members', value: '149', inline: true },
+            { name: '🤖 Bots', value: '1', inline: true },
           ],
           footer: { text: 'Aszai Bot Analytics' },
           timestamp: expect.any(String),
@@ -190,7 +172,9 @@ describe('Analytics Command', () => {
     expect(mockInteractionWithError.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(expect.any(Error), 'analytics_command');
     expect(mockInteractionWithError.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.',
+      embeds: [
+        { color: 15548997, description: 'An unexpected error occurred. Please try again later.' },
+      ],
     });
   });
 
@@ -217,38 +201,17 @@ describe('Analytics Command', () => {
 
     expect(mockInteractionFallback.editReply).toHaveBeenCalledWith({
       embeds: [
-        expect.objectContaining({
+        {
           color: 0x5865f2,
-          title: '📊 Discord Analytics Dashboard',
-          fields: expect.arrayContaining([
-            expect.objectContaining({
-              name: '🏢 Server Overview',
-              value: expect.stringContaining('Servers: 1\nActive Users: 95\nTotal Commands: 0'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '📈 Performance',
-              value: expect.stringContaining(
-                'Success Rate: 100%\nError Rate: 0%\nAvg Response: 0ms'
-              ),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '🎯 Top Commands',
-              value: expect.stringContaining('No data yet'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '💡 Server Insights',
-              value: expect.stringContaining(
-                '🟢 Currently Online: 20\n👥 Total Members: 95\n🤖 Bots: 5\n📊 Server Health: Excellent'
-              ),
-              inline: false,
-            }),
-          ]),
+          title: '📊 Server Overview',
+          fields: [
+            { name: '🟢 Online now', value: '20', inline: true },
+            { name: '👥 Members', value: '95', inline: true },
+            { name: '🤖 Bots', value: '5', inline: true },
+          ],
           footer: { text: 'Aszai Bot Analytics' },
           timestamp: expect.any(String),
-        }),
+        },
       ],
     });
   });

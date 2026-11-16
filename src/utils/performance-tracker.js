@@ -14,45 +14,6 @@ class PerformanceTracker {
   }
 
   /**
-   * Tracks an API call or operation performance
-   * @param {string} operation - Operation name
-   * @param {number} duration - Duration in milliseconds
-   * @param {boolean} success - Whether operation succeeded
-   * @param {Object} metadata - Additional metadata
-   * @returns {Object} - Performance metrics
-   */
-  static trackApiCall(operation, duration, success, metadata = {}) {
-    const metrics = {
-      operation,
-      duration,
-      success,
-      metadata,
-      timestamp: new Date().toISOString(),
-      memoryUsage: process.memoryUsage(),
-    };
-
-    // Log performance issues
-    const logger = require('./logger');
-
-    if (duration > 10000) {
-      // 10 second threshold
-      logger.warn(`Very slow operation detected: ${operation} took ${duration}ms`, metadata);
-    } else if (duration > 5000) {
-      // 5 second threshold
-      logger.info(`Slow operation detected: ${operation} took ${duration}ms`, metadata);
-    }
-
-    // Log memory issues
-    const memMB = metrics.memoryUsage.heapUsed / 1024 / 1024;
-    if (memMB > 100) {
-      // 100MB threshold
-      logger.warn(`High memory usage detected: ${memMB.toFixed(2)}MB during ${operation}`);
-    }
-
-    return metrics;
-  }
-
-  /**
    * Analyzes performance trends over time
    * @param {Array} metricsList - List of performance metrics
    * @returns {Object} - Performance analysis

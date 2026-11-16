@@ -48,15 +48,32 @@ app.use(express.json());
 
 // In-process working store, mirrored to SQLite for durability across restarts
 const instances = new Map();
-// Set of authorized IPs (populated from first authorized instance)
-const authorizedIps = new Set();
 const store = new InstanceStore(CONFIG.dbPath);
 
 /**
  * Persist an instance to SQLite (write-through from the in-memory Map).
+ * @returns {boolean} False when persistence is on and the write failed
  */
 function persistInstance(instance) {
-  store.upsert(instance);
+  return store.upsert(instance);
+}
+
+// The beacon is unauthenticated, so bound what one address can do and how many
+// instances can exist: each registration is a Map entry and a database row.
+const BEACON_LIMIT_PER_MINUTE = 30;
+const MAX_INSTANCES = 1000;
+const beaconHits = new Map();
+
+function beaconRateLimited(clientIp) {
+  const now = Date.now();
+  const hit = beaconHits.get(clientIp);
+  if (!hit || now - hit.windowStart >= 60000) {
+    if (beaconHits.size > 10000) beaconHits.clear();
+    beaconHits.set(clientIp, { windowStart: now, count: 1 });
+    return false;
+  }
+  hit.count += 1;
+  return hit.count > BEACON_LIMIT_PER_MINUTE;
 }
 
 /**
@@ -66,9 +83,6 @@ function persistInstance(instance) {
 function loadPersistedInstances() {
   for (const instance of store.loadAll()) {
     instances.set(instance.instanceId, instance);
-    if (instance.authorized && !instance.revoked && instance.location?.actualIp) {
-      authorizedIps.add(instance.location.actualIp);
-    }
   }
   if (instances.size > 0) {
     // eslint-disable-next-line no-console
@@ -83,6 +97,10 @@ function loadPersistedInstances() {
 app.post('/api/beacon', (req, res) => {
   const { action } = req.body;
   const clientIp = getClientIp(req);
+
+  if (beaconRateLimited(clientIp)) {
+    return res.status(429).json({ error: 'Too many requests' });
+  }
 
   if (action === 'register') {
     return handleRegistration(req, res, clientIp);
@@ -127,6 +145,10 @@ function handleRegistration(req, res, clientIp) {
     });
   }
 
+  if (instances.size >= MAX_INSTANCES) {
+    return res.status(503).json({ error: 'Instance limit reached' });
+  }
+
   const instanceId = generateInstanceId();
 
   // Determine if this instance should be auto-authorized
@@ -143,11 +165,6 @@ function handleRegistration(req, res, clientIp) {
 
   instances.set(instanceId, instanceData);
   persistInstance(instanceData);
-
-  // If auto-authorized, add this IP to authorized IPs
-  if (shouldAutoAuthorize) {
-    authorizedIps.add(clientIp);
-  }
 
   logRegistration(instanceData);
 
@@ -185,8 +202,18 @@ function determineAutoAuthorization(clientIp) {
     return true;
   }
 
+  // Decided from the current records, not from a remembered list of addresses:
+  // an address stops qualifying when its instance is revoked, and an address
+  // that has a revoked instance never qualifies (a revoked instance could
+  // otherwise register again under a new key and be authorized). Such
+  // registrations stay pending until an admin approves them.
+  const fromThisIp = [...instances.values()].filter((i) => i.location?.actualIp === clientIp);
+  if (fromThisIp.some((i) => i.revoked)) {
+    return false;
+  }
+
   // Auto-authorize instances from same IP as an authorized instance
-  if (CONFIG.autoAuthorizeSameIp && authorizedIps.has(clientIp)) {
+  if (CONFIG.autoAuthorizeSameIp && fromThisIp.some((i) => i.authorized)) {
     // eslint-disable-next-line no-console
     console.log(`[AUTO-AUTH] Same IP as authorized instance - auto-authorizing`);
     return true;
@@ -255,7 +282,13 @@ app.post('/api/revoke', authenticateAdmin, (req, res) => {
   instance.revoked = true;
   instance.authorized = false;
   instance.revokedAt = new Date().toISOString();
-  persistInstance(instance);
+  // A revocation that is not on disk is lost at the next restart; say so
+  // instead of reporting success.
+  if (!persistInstance(instance)) {
+    return res
+      .status(500)
+      .json({ success: false, error: 'Instance revoked in memory only: it could not be saved' });
+  }
 
   // eslint-disable-next-line no-console
   console.log(`[REVOKED] Instance ${instanceId}`);
@@ -275,12 +308,11 @@ app.post('/api/approve', authenticateAdmin, (req, res) => {
   instance.authorized = true;
   instance.revoked = false;
   instance.approvedAt = new Date().toISOString();
-
-  // Add this IP to authorized IPs for future auto-authorization
-  if (instance.location?.actualIp) {
-    authorizedIps.add(instance.location.actualIp);
+  if (!persistInstance(instance)) {
+    return res
+      .status(500)
+      .json({ success: false, error: 'Instance approved in memory only: it could not be saved' });
   }
-  persistInstance(instance);
 
   // eslint-disable-next-line no-console
   console.log(`[APPROVED] Instance ${instanceId}`);
@@ -376,13 +408,13 @@ function countActiveInstances(instanceList) {
 
 function sumGuildCounts(instanceList) {
   return instanceList.reduce((sum, i) => {
-    return sum + (i.stats?.guildCount || i.client?.guildCount || 0);
+    return sum + (Number(i.stats?.guildCount || i.client?.guildCount) || 0);
   }, 0);
 }
 
 function sumUserCounts(instanceList) {
   return instanceList.reduce((sum, i) => {
-    return sum + (i.stats?.userCount || i.client?.userCount || 0);
+    return sum + (Number(i.stats?.userCount || i.client?.userCount) || 0);
   }, 0);
 }
 
@@ -423,17 +455,23 @@ function authenticateAdmin(req, res, next) {
 // Logging
 // ============================================================================
 
+// Client-supplied text goes to the log: drop control characters so it cannot
+// forge log lines.
+function printable(value) {
+  return String(value || 'unknown').replace(/\p{Cc}/gu, '');
+}
+
 function logRegistration(instanceData) {
   const { client, location, instanceId, authorized } = instanceData;
   const authStatus = authorized ? '✓ AUTHORIZED' : '⚠ PENDING';
   // eslint-disable-next-line no-console
   console.log(`[REGISTER] New instance: ${instanceId} [${authStatus}]`);
   // eslint-disable-next-line no-console
-  console.log(`  - Bot: ${client?.botTag || 'unknown'}`);
+  console.log(`  - Bot: ${printable(client?.botTag)}`);
   // eslint-disable-next-line no-console
   console.log(`  - IP: ${location?.actualIp || 'unknown'}`);
   // eslint-disable-next-line no-console
-  console.log(`  - Location: ${location?.city || 'unknown'}, ${location?.country || 'unknown'}`);
+  console.log(`  - Location: ${printable(location?.city)}, ${printable(location?.country)}`);
   // eslint-disable-next-line no-console
   console.log(`  - Guilds: ${client?.guildCount || 0}`);
 }
@@ -472,13 +510,26 @@ function start() {
     process.exit(1);
   }
 
+  // The value shipped in .env.example is public: with it anyone who can reach
+  // the port could approve or revoke instances.
+  if (CONFIG.adminKey === 'your-secret-admin-key') {
+    // eslint-disable-next-line no-console
+    console.error(
+      'FATAL: TRACKING_ADMIN_KEY is still the example value. Set a long random key ' +
+        '(for example: openssl rand -hex 32).'
+    );
+    process.exit(1);
+  }
+  if (CONFIG.adminKey.length < 16) {
+    // eslint-disable-next-line no-console
+    console.warn('WARNING: TRACKING_ADMIN_KEY is short; use at least 32 random characters.');
+  }
+
   loadPersistedInstances();
 
   app.listen(CONFIG.port, CONFIG.bindHost, () => {
     // eslint-disable-next-line no-console
     console.log(`Instance Tracking Server running on port ${CONFIG.port}`);
-    // eslint-disable-next-line no-console
-    console.log(`Admin key: ${CONFIG.adminKey.substring(0, 4)}...`);
     // eslint-disable-next-line no-console
     console.log(`Persistence: ${store.persistent ? CONFIG.dbPath : 'in-memory only'}`);
   });

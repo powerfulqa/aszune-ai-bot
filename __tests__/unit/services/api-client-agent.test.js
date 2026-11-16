@@ -44,9 +44,8 @@ describe('ApiClient - Agent API', () => {
         input: [{ type: 'message', role: 'user', content: 'What is the latest WoW patch?' }],
         instructions:
           'Today is 2026-10-04.\n\nBe helpful.\n\n' +
-          'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) with the "medium" preset, and the preset picks the model (not reported yet).',
+          'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) at the "medium" effort level, and the effort level picks the model (not reported yet).',
         tools: [{ type: 'web_search' }, { type: 'fetch_url' }],
-        max_output_tokens: 4096,
       });
     });
 
@@ -190,7 +189,9 @@ describe('ApiClient - Agent API', () => {
 
       const payload = client.buildRequestPayload([{ role: 'user', content: 'what model?' }], {});
       expect(
-        payload.instructions.endsWith('the "medium" preset, and the model is openai/gpt-6-luna.')
+        payload.instructions.endsWith(
+          'the "medium" effort level, and the model is openai/gpt-6-luna.'
+        )
       ).toBe(true);
       expect(payload.model).toBeUndefined();
     });
@@ -230,5 +231,22 @@ describe('ApiClient - Agent API', () => {
       expect(usageCalls).toHaveLength(0);
       infoSpy.mockRestore();
     });
+  });
+});
+
+describe('ApiClient - incomplete runs', () => {
+  it('marks the answer so a cut-off reply is not passed as complete', async () => {
+    const client = new ApiClient('test-key', 'https://api.perplexity.ai');
+    const raw = { output_text: 'The answer is cut', status: 'incomplete' };
+
+    const body = await client.handleResponse({
+      statusCode: 200,
+      body: { json: jest.fn().mockResolvedValue(raw) },
+    });
+
+    expect(body.status).toBe('incomplete');
+    expect(body.choices[0].message.content).toBe(
+      'The answer is cut\n\n*(This answer was cut short.)*'
+    );
   });
 });

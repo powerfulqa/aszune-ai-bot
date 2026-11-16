@@ -185,10 +185,12 @@ const config = {
       AGENT_REASONING_EFFORT: process.env.AGENT_REASONING_EFFORT || '',
       // Let the agent read links people paste into the conversation.
       FETCH_URL: process.env.AGENT_FETCH_URL !== 'false',
-      // Output budgets. Reasoning models spend part of this on thinking, so
-      // keep headroom; the system prompt asks for Discord-length answers.
+      // Output budgets, sent as max_output_tokens. That is a total for the whole
+      // agent run (all steps, reasoning included), so a chat cap is off unless
+      // AGENT_MAX_OUTPUT_TOKENS is set; the system prompt asks for
+      // Discord-length answers. A run that hits the cap ends `incomplete`.
       MAX_TOKENS: {
-        CHAT: 4096,
+        CHAT: Number(process.env.AGENT_MAX_OUTPUT_TOKENS) || undefined,
         SUMMARY: 1024,
       },
       // Perplexity search_domain_filter is an ALLOWLIST: when non-empty, search

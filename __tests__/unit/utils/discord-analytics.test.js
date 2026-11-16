@@ -55,68 +55,6 @@ const mockActivityHistory = [
   },
 ];
 
-describe('DiscordAnalytics - trackServerActivity', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should track server activity correctly', () => {
-    const activity = {
-      serverId: 'test-server',
-      userId: 'test-user',
-      action: 'command_executed',
-      command: 'test',
-    };
-
-    const result = DiscordAnalytics.trackServerActivity(activity);
-
-    expect(result.tracked).toBe(true);
-    expect(result.serverId).toBe('test-server');
-    expect(result.action).toBe('command_executed');
-    expect(result.timestamp).toBeDefined();
-  });
-
-  it('should handle missing serverId', () => {
-    const activity = {
-      userId: 'test-user',
-      action: 'command_executed',
-      command: 'test',
-    };
-
-    const result = DiscordAnalytics.trackServerActivity(activity);
-
-    expect(result.tracked).toBe(true);
-    expect(result.serverId).toBe('unknown');
-  });
-
-  it('should handle missing action', () => {
-    const activity = {
-      serverId: 'test-server',
-      userId: 'test-user',
-      command: 'test',
-    };
-
-    const result = DiscordAnalytics.trackServerActivity(activity);
-
-    expect(result.tracked).toBe(true);
-    expect(result.action).toBe('unknown');
-  });
-
-  it('should include metadata when provided', () => {
-    const activity = {
-      serverId: 'test-server',
-      userId: 'test-user',
-      action: 'command_executed',
-      command: 'test',
-      metadata: { custom: 'data' },
-    };
-
-    const result = DiscordAnalytics.trackServerActivity(activity);
-
-    expect(result.metadata).toEqual({ custom: 'data' });
-  });
-});
-
 describe('DiscordAnalytics - analyzeUsagePatterns', () => {
   it('should analyze usage patterns correctly', () => {
     const patterns = DiscordAnalytics.analyzeUsagePatterns(mockActivityHistory);

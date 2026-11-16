@@ -70,11 +70,26 @@ describe('WebDashboardService - Restart Handling', () => {
     jest.clearAllMocks();
     delete process.env.SERVICE_NAME;
     delete process.env.name;
+    delete process.env.pm_id;
+  });
+
+  it('refuses to restart when the bot is not running under PM2', async () => {
+    const { WebDashboardService } = require('../../../src/services/web-dashboard');
+    const service = new WebDashboardService();
+    service.discordClient = { destroy: jest.fn() };
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+    delete process.env.pm_id;
+
+    await service._handleRestartRequest(res);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(service.discordClient.destroy).not.toHaveBeenCalled();
   });
 
   it('destroys Discord client connection if present', async () => {
     const { WebDashboardService } = require('../../../src/services/web-dashboard');
     const service = new WebDashboardService();
+    process.env.pm_id = '0';
 
     service.discordClient = {
       destroy: jest.fn().mockResolvedValue(undefined),

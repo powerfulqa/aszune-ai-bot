@@ -229,9 +229,14 @@ describe('Reminder Commands', () => {
       const interaction = createCancelReminderInteraction();
       await handleSlashCommand(interaction);
       expect(ErrorHandler.handleError).toHaveBeenCalled();
-      expect(interaction.reply).toHaveBeenCalledWith(
-        'An unexpected error occurred. Please try again later.'
-      );
+      expect(interaction.reply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 15548997,
+            description: 'An unexpected error occurred. Please try again later.',
+          },
+        ],
+      });
     });
   });
 });

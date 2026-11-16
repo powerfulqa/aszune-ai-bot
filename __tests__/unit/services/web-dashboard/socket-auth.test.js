@@ -25,10 +25,13 @@ const {
 
 function makeFakeSocket() {
   const events = new Set();
+  const middleware = [];
   return {
     id: 'sock-1',
-    handshake: { auth: {}, headers: {} },
+    handshake: { auth: {}, headers: { host: 'localhost:3000' } },
     on: (event) => events.add(event),
+    use: (fn) => middleware.push(fn),
+    middleware,
     events,
   };
 }
@@ -63,6 +66,19 @@ describe('WebDashboardService token verification', () => {
     const next = jest.fn();
     service._authorizeSocket(makeFakeSocket(), next);
     expect(next).toHaveBeenCalledWith();
+  });
+
+  it('_authorizeSocket rejects a cross-site WebSocket when no token configured', () => {
+    service.authToken = null;
+    const next = jest.fn();
+    const socket = makeFakeSocket();
+    socket.handshake.headers.origin = 'https://evil.example';
+    service._authorizeSocket(socket, next);
+    expect(next).toHaveBeenCalledWith(
+      new Error(
+        'Forbidden: open the dashboard at http://localhost, or list this hostname in DASHBOARD_ALLOWED_HOSTS'
+      )
+    );
   });
 
   it('_authorizeSocket rejects every socket on a network bind without a token', () => {

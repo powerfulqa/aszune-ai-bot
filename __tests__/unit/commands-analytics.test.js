@@ -84,15 +84,17 @@ describe('Commands - Analytics Commands', () => {
       expect(interaction.deferReply).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalledWith({
         embeds: [
-          expect.objectContaining({
-            title: '📊 Discord Analytics Dashboard',
-            fields: expect.arrayContaining([
-              expect.objectContaining({ name: '🏢 Server Overview' }),
-              expect.objectContaining({ name: '📈 Performance' }),
-              expect.objectContaining({ name: '🎯 Top Commands' }),
-              expect.objectContaining({ name: '💡 Server Insights' }),
-            ]),
-          }),
+          {
+            color: 0x5865f2,
+            title: '📊 Server Overview',
+            fields: [
+              { name: '🟢 Online now', value: '30', inline: true },
+              { name: '👥 Members', value: '120', inline: true },
+              { name: '🤖 Bots', value: '30', inline: true },
+            ],
+            footer: { text: 'Aszai Bot Analytics' },
+            timestamp: expect.any(String),
+          },
         ],
       });
     });
@@ -114,14 +116,17 @@ describe('Commands - Analytics Commands', () => {
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         embeds: [
-          expect.objectContaining({
-            fields: expect.arrayContaining([
-              expect.objectContaining({
-                name: '💡 Server Insights',
-                value: expect.stringContaining('30'), // fallback online count
-              }),
-            ]),
-          }),
+          {
+            color: 0x5865f2,
+            title: '📊 Server Overview',
+            fields: [
+              { name: '🟢 Online now', value: '30', inline: true },
+              { name: '👥 Members', value: '143', inline: true },
+              { name: '🤖 Bots', value: '7', inline: true },
+            ],
+            footer: { text: 'Aszai Bot Analytics' },
+            timestamp: expect.any(String),
+          },
         ],
       });
     });

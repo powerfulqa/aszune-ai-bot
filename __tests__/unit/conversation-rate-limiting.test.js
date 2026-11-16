@@ -240,16 +240,6 @@ describe('ConversationManager - Rate Limiting and Validation', () => {
       });
     });
 
-    it('should update message count correctly', () => {
-      const userId = 'message-user';
-
-      conversationManager.updateUserStats(userId, 'messages');
-      conversationManager.updateUserStats(userId, 'messages');
-
-      const stats = conversationManager.getUserStats(userId);
-      expect(stats.messages).toBe(2);
-    });
-
     it('should handle invalid stat types gracefully', () => {
       const userId = 'invalid-stat-user';
 

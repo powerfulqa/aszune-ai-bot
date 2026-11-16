@@ -31,7 +31,6 @@ const mockEnhancedCache = {
   set: jest.fn(),
   getStats: jest.fn().mockReturnValue(mockCacheStats),
   getDetailedInfo: jest.fn().mockReturnValue({ stats: mockCacheStats, entries: [] }),
-  invalidateByTag: jest.fn().mockReturnValue(3),
   evictOldest: jest.fn(),
 };
 

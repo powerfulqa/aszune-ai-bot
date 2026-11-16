@@ -7,7 +7,6 @@ const logger = require('../logger');
 const { ErrorHandler } = require('../error-handler');
 const originalChunker = require('../message-chunker');
 const { processSourceReferences } = require('./source-reference-processor');
-const { formatAllUrls } = require('./url-formatter');
 const {
   preprocessMessage,
   fixChunkBoundaries,
@@ -75,68 +74,7 @@ function enhancedChunkMessage(message, maxLength = config.MESSAGE_LIMITS.DISCORD
 
 // processSourceReferences is already imported from './source-reference-processor'
 
-/**
- * Format URLs in text (standalone function for external use)
- * @param {string} text - The text to process
- * @returns {string} - Text with formatted URLs
- */
-function formatUrls(text) {
-  try {
-    return formatAllUrls(text);
-  } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'formatting URLs', {
-      textLength: text?.length || 0,
-    });
-    logger.error(`URL formatting error: ${errorResponse.message}`);
-    return text;
-  }
-}
-
-/**
- * Get chunking statistics for monitoring and debugging
- * @param {string[]} chunks - Array of message chunks
- * @returns {Object} - Statistics about the chunking process
- */
-function getChunkingStats(chunks) {
-  try {
-    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-    const avgChunkLength = chunks.length > 0 ? totalLength / chunks.length : 0;
-    const maxChunkLength = Math.max(...chunks.map((chunk) => chunk.length));
-    const minChunkLength = Math.min(...chunks.map((chunk) => chunk.length));
-
-    return {
-      chunkCount: chunks.length,
-      totalLength,
-      avgChunkLength: Math.round(avgChunkLength),
-      maxChunkLength,
-      minChunkLength,
-      isBalanced: maxChunkLength - minChunkLength < avgChunkLength * 0.5, // Rough balance check
-    };
-  } catch (error) {
-    const errorResponse = ErrorHandler.handleError(error, 'getting chunking stats', {
-      chunkCount: chunks?.length || 0,
-    });
-    logger.error(`Chunking stats error: ${errorResponse.message}`);
-    return {
-      chunkCount: 0,
-      totalLength: 0,
-      avgChunkLength: 0,
-      maxChunkLength: 0,
-      minChunkLength: 0,
-      isBalanced: false,
-    };
-  }
-}
-
-// Export both the enhanced chunker and original functions for backward compatibility
 module.exports = {
   chunkMessage: enhancedChunkMessage,
   processSourceReferences,
-  formatUrls,
-  getChunkingStats,
-  formatTablesForDiscord: originalChunker.formatTablesForDiscord,
-  // Re-export original chunker functions for backward compatibility
-  _processParagraph: originalChunker._processParagraph,
-  _processSentence: originalChunker._processSentence,
-  _processLongSentence: originalChunker._processLongSentence,
 };

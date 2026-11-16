@@ -45,7 +45,6 @@ jest.mock('../../src/services/perplexity-secure', () => ({
   generateSummary: jest.fn(),
   getCacheStats: jest.fn(),
   getDetailedCacheInfo: jest.fn(),
-  invalidateCacheByTag: jest.fn(),
 }));
 
 describe('Main Index - Basic', () => {

@@ -10,7 +10,6 @@ const { EnhancedCache, EVICTION_STRATEGIES } = require('../utils/enhanced-cache'
 const { getCacheStatsErrorResponse } = require('../utils/cache-stats-helper');
 
 // Cache management constants
-const CACHE_EVICTION_PERCENTAGE = 0.1; // Remove 10% when cache full
 
 /**
  * Cache Manager class for handling response caching
@@ -18,7 +17,9 @@ const CACHE_EVICTION_PERCENTAGE = 0.1; // Remove 10% when cache full
 class CacheManager {
   constructor() {
     this.cache = new EnhancedCache({
-      maxSize: config.CACHE.DEFAULT_MAX_ENTRIES,
+      maxEntries: config.CACHE.DEFAULT_MAX_ENTRIES,
+      // Per-entry byte limit; a full answer with its source footer is a few KB.
+      maxSize: 64 * 1024,
       maxMemory: config.CACHE.MAX_MEMORY_MB * 1024 * 1024,
       evictionStrategy: EVICTION_STRATEGIES.HYBRID,
       defaultTtl: config.CACHE.DEFAULT_TTL_MS,
@@ -125,36 +126,16 @@ class CacheManager {
    * Try to save response to cache
    * @param {Array} history - Conversation history
    * @param {string} content - Response content
-   * @param {number} maxEntries - Maximum cache entries
    */
-  async trySaveToCache(history, content, maxEntries) {
+  async trySaveToCache(history, content) {
     try {
       const cacheKey = this.generateCacheKey(history);
       if (!cacheKey || !content) return;
-
-      // Check cache size and cleanup if needed
-      await this.ensureCacheSize(maxEntries);
 
       this.cache.set(cacheKey, content);
     } catch (error) {
       const errorResponse = ErrorHandler.handleError(error, 'saving to cache');
       logger.warn(`Cache save error: ${errorResponse.message}`);
-    }
-  }
-
-  /**
-   * Ensure cache doesn't exceed max entries
-   * @param {number} maxEntries - Maximum entries allowed
-   */
-  async ensureCacheSize(maxEntries) {
-    const cacheStats = this.cache.getStats();
-
-    if (cacheStats.totalEntries >= maxEntries) {
-      // Remove oldest entries to make room
-      const entriesToRemove = Math.floor(maxEntries * CACHE_EVICTION_PERCENTAGE);
-      for (let i = 0; i < entriesToRemove; i++) {
-        this.cache.evictOldest();
-      }
     }
   }
 
@@ -231,21 +212,6 @@ class CacheManager {
         stats: this.getStats(),
         entries: [],
       };
-    }
-  }
-
-  /**
-   * Invalidate cache entries by tag
-   * @param {string} tag - Tag to invalidate
-   * @returns {number} Number of entries invalidated
-   */
-  invalidateByTag(tag) {
-    try {
-      return this.cache.invalidateByTag(tag);
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'invalidating cache by tag', { tag });
-      logger.error(`Cache tag invalidation error: ${errorResponse.message}`);
-      return 0;
     }
   }
 

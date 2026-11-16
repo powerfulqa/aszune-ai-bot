@@ -107,9 +107,6 @@ function setupIndexCriticalMocks() {
     initializeIntervals: jest.fn(),
     resetForTests: jest.fn(),
   }));
-  jest.doMock('../../src/utils/lazy-loader', () => ({
-    lazyLoad: jest.fn((fn) => fn),
-  }));
   jest.doMock('../../src/utils/memory-monitor', () => mockMemoryMonitor);
   jest.doMock('../../src/utils/performance-monitor', () => mockPerformanceMonitor);
   jest.doMock('../../src/services/web-dashboard', () => ({

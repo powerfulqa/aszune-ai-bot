@@ -119,33 +119,6 @@ describe('DatabaseService - Conversations', () => {
     });
   });
 
-  describe('clearAllData', () => {
-    it('should clear all data from all tables', () => {
-      // Add data for multiple users
-      dbService.addUserMessage('user1', 'Message 1');
-      dbService.addUserMessage('user2', 'Message 2');
-      dbService.updateUserStats('user1', { message_count: 10 });
-
-      // Verify data exists
-      expect(dbService.getConversationHistory('user1').length).toBe(1);
-      expect(dbService.getConversationHistory('user2').length).toBe(1);
-      expect(dbService.getUserStats('user1').message_count).toBe(11); // 1 from addUserMessage + 10 from updateUserStats
-
-      // Clear all data
-      dbService.clearAllData();
-
-      // Verify all data is cleared
-      expect(dbService.getConversationHistory('user1').length).toBe(0);
-      expect(dbService.getConversationHistory('user2').length).toBe(0);
-      expect(dbService.getUserStats('user1').message_count).toBe(0); // User deleted, returns default
-    });
-
-    it('should handle database errors gracefully', () => {
-      dbService.isDisabled = true;
-      expect(() => dbService.clearAllData()).not.toThrow();
-    });
-  });
-
   describe('clearUserConversationData', () => {
     it('should clear only conversation data for specific user', () => {
       const userId = 'test-user';

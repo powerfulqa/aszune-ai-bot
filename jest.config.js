@@ -34,9 +34,7 @@ module.exports = {
     '/__tests__/utils/undici-mock.js',
     '/__tests__/utils/undici-mock-helpers.js',
     '/__tests__/utils/testUtils.js',
-    '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',
-    '/bot-shutdown.test.js/',
     '/__tests__/unit/.*[.]test[.]setup[.]js',
   ],
   // Generate JUnit XML test report for CodeCov
@@ -54,13 +52,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Configure coverage thresholds - 70% to prevent regression
+  // Coverage gate: a few points under what the suite measures (about 82%
+  // statements, 85% branches, 81% functions), so a real drop fails the build.
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 80,
+      functions: 78,
+      lines: 78,
+      statements: 78,
     },
   },
   // Output verbose coverage info

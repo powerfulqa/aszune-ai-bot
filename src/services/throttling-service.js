@@ -45,25 +45,6 @@ class ThrottlingService {
       throw error;
     }
   }
-
-  /**
-   * Check if throttling is enabled
-   * @returns {boolean} True if throttling is enabled
-   */
-  isThrottlingEnabled() {
-    return this.connectionThrottler !== null;
-  }
-
-  /**
-   * Get throttler status
-   * @returns {Object} Throttler status information
-   */
-  getThrottlerStatus() {
-    return {
-      enabled: this.isThrottlingEnabled(),
-      available: this.connectionThrottler !== null,
-    };
-  }
 }
 
 module.exports = { ThrottlingService };

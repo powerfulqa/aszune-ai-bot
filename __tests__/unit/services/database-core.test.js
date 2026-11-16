@@ -77,23 +77,4 @@ describe('DatabaseService - Core', function () {
       expect(() => newService.close()).not.toThrow();
     });
   });
-
-  describe('clearAllData', () => {
-    it('should clear all data from all tables', () => {
-      // Add data for multiple users
-      dbService.updateUserStats('user1', { message_count: 1 });
-      dbService.updateUserStats('user2', { message_count: 2 });
-      dbService.addUserMessage('user1', 'Message 1');
-      dbService.addUserMessage('user2', 'Message 2');
-
-      // Clear all data
-      dbService.clearAllData();
-
-      // Verify all data is gone
-      expect(dbService.getUserStats('user1').message_count).toBe(0);
-      expect(dbService.getUserStats('user2').message_count).toBe(0);
-      expect(dbService.getUserMessages('user1')).toEqual([]);
-      expect(dbService.getUserMessages('user2')).toEqual([]);
-    });
-  });
 });

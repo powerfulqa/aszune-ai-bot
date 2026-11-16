@@ -5,6 +5,18 @@ const fs = require('fs').promises;
 const path = require('path');
 const config = require('../config/config');
 
+/**
+ * JSON.stringify that cannot throw: a circular or BigInt value passed to a log
+ * call must not replace the error being reported with a new one.
+ */
+function safeStringify(data, indent) {
+  try {
+    return JSON.stringify(data, null, indent);
+  } catch (error) {
+    return '[Circular Reference]';
+  }
+}
+
 class Logger {
   constructor() {
     this.levels = {
@@ -145,11 +157,7 @@ class Logger {
 
       dataArgs.forEach((data) => {
         if (data === undefined || data === null) return;
-        try {
-          this._writeToFile(JSON.stringify(data));
-        } catch (error) {
-          this._writeToFile('[Circular Reference]');
-        }
+        this._writeToFile(safeStringify(data));
       });
       this._logDataArgs('log', dataArgs);
     }
@@ -167,7 +175,7 @@ class Logger {
       this._writeToFile(formattedMessage);
       this._logToConsole('log', formattedMessage);
       if (data !== undefined && data !== null) {
-        this._writeToFile(JSON.stringify(data));
+        this._writeToFile(safeStringify(data));
         this._logToConsole('log', data);
       }
     }
@@ -185,7 +193,7 @@ class Logger {
       this._writeToFile(formattedMessage);
       this._logToConsole('warn', formattedMessage);
       if (data !== undefined && data !== null) {
-        this._writeToFile(JSON.stringify(data));
+        this._writeToFile(safeStringify(data));
         this._logToConsole('warn', data);
       }
     }
@@ -206,7 +214,7 @@ class Logger {
     if (!error) return;
 
     const errorDetails = this._formatErrorDetails(error);
-    this._writeToFile(JSON.stringify(errorDetails, null, 2));
+    this._writeToFile(safeStringify(errorDetails, 2));
     this._logErrorToConsole(errorDetails);
   }
 

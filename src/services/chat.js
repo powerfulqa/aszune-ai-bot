@@ -212,11 +212,14 @@ async function checkForSimpleReminderRequest(messageContent, userId, channelId, 
 }
 
 function findSimpleReminderMatch(messageContent) {
+  // Named groups: the message sits before the time in some phrasings and after
+  // it in others, so positional groups cannot be mapped the same way for all.
+  const time = '(?<amount>\\d+) (?<unit>minutes?|hours?|days?)';
   const simpleReminderPatterns = [
-    /(?:can you |please )?remind me (?:to |about )?(.+?) in (\d+) (minute|minutes|hour|hours|day|days)/i,
-    /(?:can you |please )?remind me in (\d+) (minute|minutes|hour|hours|day|days)(?: to | about | that | )(.+)?/i,
-    /set (?:a )?reminder (?:for |to )?(.+?) (?:in |for )(\d+) (minute|minutes|hour|hours|day|days)/i,
-    /remind me in (\d+) (minute|minutes|hour|hours|day|days)/i,
+    new RegExp(`(?:can you |please )?remind me (?:to |about )?(?<msg>.+?) in ${time}`, 'i'),
+    new RegExp(`(?:can you |please )?remind me in ${time}(?: to | about | that | )(?<msg>.+)`, 'i'),
+    new RegExp(`set (?:a )?reminder (?:for |to )?(?<msg>.+?) (?:in |for )${time}`, 'i'),
+    new RegExp(`remind me in ${time}`, 'i'),
   ];
 
   for (const pattern of simpleReminderPatterns) {
@@ -240,20 +243,8 @@ async function createSimpleReminder(match, userId, channelId, serverId) {
   // Use canonical reminder service directly instead of legacy command module
   const reminderService = require('./reminder-service');
 
-  // Extract time and message components from regex match
-  let timeAmount, timeUnit, reminderMessage;
-
-  if (match[2] && match[3]) {
-    // Pattern: "remind me about X in Y Z"
-    reminderMessage = match[1] || 'Reminder';
-    timeAmount = match[2];
-    timeUnit = match[3];
-  } else if (match[1] && match[2]) {
-    // Pattern: "remind me in Y Z to/about X"
-    timeAmount = match[1];
-    timeUnit = match[2];
-    reminderMessage = match[3] || 'Reminder';
-  }
+  const { amount: timeAmount, unit: timeUnit } = match.groups;
+  const reminderMessage = match.groups.msg?.trim() || 'Reminder';
 
   // Build time string for reminderService.setReminder
   const timeString = `in ${timeAmount} ${timeUnit}`;
@@ -369,10 +360,8 @@ async function processUserMessageStorage(userId, messageContent, username = null
 
   try {
     databaseService.addUserMessage(userId, messageContent, 0, username);
-    databaseService.updateUserStats(userId, {
-      message_count: 1,
-      last_active: new Date().toISOString(),
-    });
+    // addUserMessage already counts the message; counting it here too tripled /stats.
+    databaseService.updateUserStats(userId, { last_active: new Date().toISOString() });
   } catch (dbError) {
     logger.warn('Database operation failed:', dbError.message);
     // Continue processing even if database fails

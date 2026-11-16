@@ -14,6 +14,9 @@ const EventEmitter = require('events');
 const MAX_DELIVERY_ATTEMPTS = 5;
 const DELIVERY_RETRY_DELAY_MS = 60 * 1000;
 const DISCORD_UNKNOWN_CHANNEL = 10003;
+// Each reminder holds a timer and a row; cap them so one user cannot pile up
+// thousands on a Raspberry Pi.
+const MAX_ACTIVE_REMINDERS_PER_USER = 25;
 
 class ReminderService extends EventEmitter {
   constructor() {
@@ -39,13 +42,23 @@ class ReminderService extends EventEmitter {
 
   async loadAndScheduleReminders() {
     try {
-      const activeReminders = databaseService.getActiveReminders();
+      // getActiveReminders() only returns future reminders; the ones that fell
+      // due while the bot was down (or whose send kept failing) come from
+      // getDueReminders() and are delivered late.
+      const reminders = [
+        ...databaseService.getDueReminders(),
+        ...databaseService.getActiveReminders(),
+      ];
 
-      for (const reminder of activeReminders) {
-        await this.scheduleReminder(reminder);
+      for (const reminder of reminders) {
+        try {
+          await this.scheduleReminder(reminder);
+        } catch (error) {
+          // Already logged by scheduleReminder; one bad row must not stop the rest.
+        }
       }
 
-      logger.info(`Loaded and scheduled ${activeReminders.length} active reminders`);
+      logger.info(`Loaded and scheduled ${reminders.length} active reminders`);
     } catch (error) {
       logger.error('Failed to load and schedule reminders:', error);
       throw error;
@@ -216,6 +229,12 @@ class ReminderService extends EventEmitter {
         throw new Error('Scheduled time must be in the future');
       }
 
+      if (databaseService.getUserReminderCount(userId) >= MAX_ACTIVE_REMINDERS_PER_USER) {
+        throw new Error(
+          `You already have ${MAX_ACTIVE_REMINDERS_PER_USER} active reminders. Cancel one first.`
+        );
+      }
+
       // Create reminder in database
       const reminder = databaseService.createReminder(userId, message, scheduledTime, {
         timezone,
@@ -255,6 +274,27 @@ class ReminderService extends EventEmitter {
       logger.error(`Failed to cancel reminder ${reminderId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Change an active reminder's message and/or time, and re-arm its timer.
+   * @returns {Promise<Object|null>} The updated row, or null when not found
+   */
+  async updateReminder(reminderId, userId, { message, scheduledTime } = {}) {
+    const changes = { message: message || null, scheduledTime: null };
+    if (scheduledTime) {
+      const scheduledDate = new Date(scheduledTime);
+      if (isNaN(scheduledDate.getTime())) throw new Error('Invalid scheduled time format');
+      if (scheduledDate <= new Date()) throw new Error('Scheduled time must be in the future');
+      changes.scheduledTime = scheduledDate.toISOString();
+    }
+
+    const reminder = databaseService.updateReminder(reminderId, userId, changes);
+    if (!reminder) return null;
+
+    await this.scheduleReminder(reminder);
+    logger.info(`Updated reminder ${reminderId} for user ${userId}`);
+    return reminder;
   }
 
   getUserReminders(userId, includeCompleted = false) {

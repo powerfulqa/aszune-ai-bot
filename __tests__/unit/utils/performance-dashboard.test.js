@@ -199,126 +199,6 @@ describe('PerformanceDashboard - getRealTimeStatus', () => {
   });
 });
 
-describe('PerformanceDashboard - generateAlerts', () => {
-  it('should generate memory alerts for high usage', () => {
-    const metrics = { memoryUsage: 450, avgResponseTime: 2000, errorRate: 2 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    const memoryAlert = alerts.find((a) => a.type === 'memory');
-    expect(memoryAlert).toBeDefined();
-    expect(memoryAlert.severity).toBe('critical');
-    expect(memoryAlert.message).toContain('Memory usage is critically high');
-  });
-
-  it('should generate performance alerts for slow response times', () => {
-    const metrics = { memoryUsage: 100, avgResponseTime: 6000, errorRate: 2 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    const performanceAlert = alerts.find((a) => a.type === 'performance');
-    expect(performanceAlert).toBeDefined();
-    expect(performanceAlert.severity).toBe('critical');
-    expect(performanceAlert.message).toContain('Response time is very slow');
-  });
-
-  it('should generate reliability alerts for high error rates', () => {
-    const metrics = { memoryUsage: 100, avgResponseTime: 2000, errorRate: 12 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    const reliabilityAlert = alerts.find((a) => a.type === 'reliability');
-    expect(reliabilityAlert).toBeDefined();
-    expect(reliabilityAlert.severity).toBe('critical');
-    expect(reliabilityAlert.message).toContain('Error rate is critically high');
-  });
-
-  it('should not generate alerts for good metrics', () => {
-    const metrics = { memoryUsage: 100, avgResponseTime: 1500, errorRate: 2 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    expect(alerts).toHaveLength(0);
-  });
-
-  it('should generate warning alerts for elevated metrics', () => {
-    const metrics = { memoryUsage: 250, avgResponseTime: 3500, errorRate: 7 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    expect(alerts).toHaveLength(3);
-    alerts.forEach((alert) => {
-      expect(alert.severity).toBe('warning');
-    });
-  });
-
-  it('should include timestamp in alerts', () => {
-    const metrics = { memoryUsage: 450, avgResponseTime: 2000, errorRate: 2 };
-    const alerts = PerformanceDashboard.generateAlerts(metrics);
-
-    alerts.forEach((alert) => {
-      expect(alert.timestamp).toBeDefined();
-      expect(new Date(alert.timestamp)).toBeInstanceOf(Date);
-    });
-  });
-});
-
-describe('PerformanceDashboard - exportDashboardData', () => {
-  let mockDashboardData;
-
-  beforeEach(() => {
-    mockDashboardData = {
-      timestamp: '2024-01-15T10:00:00.000Z',
-      overview: {
-        status: 'healthy',
-        serverCount: 5,
-        activeUsers: 50,
-        totalCommands: 100,
-        errorRate: '3%',
-        averageResponseTime: '250ms',
-        memoryUsage: '150MB',
-        optimizationTier: 'small',
-      },
-    };
-  });
-
-  it('should export as JSON by default', () => {
-    const exported = PerformanceDashboard.exportDashboardData(mockDashboardData);
-    const parsed = JSON.parse(exported);
-
-    expect(parsed.timestamp).toBe(mockDashboardData.timestamp);
-    expect(parsed.overview.status).toBe('healthy');
-  });
-
-  it('should export as JSON when explicitly specified', () => {
-    const exported = PerformanceDashboard.exportDashboardData(mockDashboardData, 'json');
-    const parsed = JSON.parse(exported);
-
-    expect(parsed.overview.serverCount).toBe(5);
-  });
-
-  it('should export as CSV format', () => {
-    const exported = PerformanceDashboard.exportDashboardData(mockDashboardData, 'csv');
-
-    expect(exported).toContain(
-      'Status,Server Count,Active Users,Commands,Error Rate,Response Time,Memory Usage'
-    );
-    expect(exported).toContain('healthy,5,50,100,3%,250ms,150MB');
-  });
-
-  it('should export as text format', () => {
-    const exported = PerformanceDashboard.exportDashboardData(mockDashboardData, 'text');
-
-    expect(exported).toContain('Discord Bot Performance Dashboard');
-    expect(exported).toContain('Status: healthy');
-    expect(exported).toContain('Servers: 5');
-    expect(exported).toContain('Active Users: 50');
-    expect(exported).toContain('Error Rate: 3%');
-  });
-
-  it('should fallback to JSON for unknown formats', () => {
-    const exported = PerformanceDashboard.exportDashboardData(mockDashboardData, 'unknown');
-    const parsed = JSON.parse(exported);
-
-    expect(parsed.overview.status).toBe('healthy');
-  });
-});
-
 describe('PerformanceDashboard - Private Methods', () => {
   it('should calculate overall status correctly for healthy system', () => {
     const analytics = { summary: { errorRate: 2, totalCommands: 100 } };
@@ -378,14 +258,6 @@ describe('PerformanceDashboard - Error Handling', () => {
     expect(() => {
       PerformanceDashboard.generateDashboardReport(null, null);
     }).not.toThrow();
-
-    expect(() => {
-      PerformanceDashboard.generateAlerts(null);
-    }).not.toThrow();
-
-    expect(() => {
-      PerformanceDashboard.exportDashboardData(null);
-    }).not.toThrow();
   });
 
   it('should provide fallback values when services fail', () => {
@@ -410,22 +282,5 @@ describe('PerformanceDashboard - Performance', () => {
 
     const endTime = Date.now();
     expect(endTime - startTime).toBeLessThan(2000); // Should complete in under 2 seconds
-  });
-
-  it('should handle large alert datasets efficiently', () => {
-    const largeMetrics = {
-      memoryUsage: 500,
-      avgResponseTime: 6000,
-      errorRate: 15,
-    };
-
-    const startTime = Date.now();
-
-    for (let i = 0; i < 1000; i++) {
-      PerformanceDashboard.generateAlerts(largeMetrics);
-    }
-
-    const endTime = Date.now();
-    expect(endTime - startTime).toBeLessThan(1000); // Should complete in under 1 second
   });
 });

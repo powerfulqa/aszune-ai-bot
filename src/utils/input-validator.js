@@ -8,7 +8,6 @@ const {
   checkRequired,
   checkStringType,
   checkArrayType,
-  checkMaxLength,
   checkNotEmpty,
   wrapValidation,
 } = require('./validation-helpers');
@@ -25,14 +24,6 @@ const VALIDATION_PATTERNS = {
   // Content patterns
   TEXT: /^[\s\S]{1,4000}$/,
   MESSAGE_CONTENT: /^[\s\S]{1,4000}$/, // 1-4000 characters (Discord limit is 2000, but we allow more for processing)
-  URL: /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
-  URL_PATTERN: /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
-  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  EMAIL_PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-
-  // Command patterns
-  COMMAND_PREFIX: /^[!/]/,
-  COMMAND_NAME: /^[a-zA-Z0-9_-]{1,32}$/,
 
   // File patterns
   FILENAME: /^[a-zA-Z0-9._-]{1,255}$/,
@@ -46,20 +37,15 @@ const VALIDATION_PATTERNS = {
   // Text patterns
   ALPHANUMERIC: /^[a-zA-Z0-9]+$/,
   ALPHANUMERIC_WITH_SPACES: /^[a-zA-Z0-9\s]+$/,
-  SAFE_TEXT: /^[a-zA-Z0-9\s.,!?@#$%^&*()_+\-=[\]{};':"\\|,.<>/~`]+$/,
 };
 
 /**
  * Validation limits and constraints
  */
 const VALIDATION_LIMITS = {
-  TEXT_MAX_LENGTH: 4000,
   MAX_MESSAGE_LENGTH: 4000,
-  EMAIL_MAX_LENGTH: 254,
-  URL_MAX_LENGTH: 2048,
   USER_ID_LENGTH: 18,
   MAX_USERNAME_LENGTH: 32,
-  MAX_COMMAND_LENGTH: 100,
   MAX_FILENAME_LENGTH: 255,
   MAX_PATH_LENGTH: 500,
   MAX_HISTORY_LENGTH: (() => {
@@ -116,18 +102,6 @@ const DANGEROUS_SECURITY_PATTERNS = [
 ];
 
 /**
- * Extended security patterns for JavaScript execution detection
- * Used for stricter text input validation
- */
-const DANGEROUS_JS_EXECUTION_PATTERNS = [
-  ...DANGEROUS_SECURITY_PATTERNS,
-  /eval\s*\(/i,
-  /expression\s*\(/i,
-  /setTimeout\s*\(/i,
-  /setInterval\s*\(/i,
-];
-
-/**
  * Input validation class
  */
 class InputValidator {
@@ -162,17 +136,6 @@ class InputValidator {
   }
 
   /**
-   * Common validation helper - checks string length
-   * @param {string} value - Value to check
-   * @param {number} maxLength - Maximum allowed length
-   * @param {string} fieldName - Name of the field for error message
-   * @returns {Object|null} - Error object if invalid, null if valid
-   */
-  static _validateStringLength(value, maxLength, fieldName) {
-    return checkMaxLength(value, maxLength, fieldName);
-  }
-
-  /**
    * Common validation helper - checks if string is empty
    * @param {string} value - Value to check
    * @param {string} fieldName - Name of the field for error message
@@ -180,27 +143,6 @@ class InputValidator {
    */
   static _validateNotEmpty(value, fieldName) {
     return checkNotEmpty(value, fieldName);
-  }
-
-  /**
-   * Generic basic input validation helper
-   * Consolidates common pattern: required + string type + max length checks
-   * @param {any} value - Value to validate
-   * @param {string} fieldName - Name of the field for error messages
-   * @param {number} maxLength - Maximum allowed length
-   * @returns {Object} - Validation result {valid: boolean, error?: string}
-   */
-  static _validateBasicInput(value, fieldName, maxLength) {
-    const requiredCheck = this._validateRequired(value, fieldName);
-    if (requiredCheck) return requiredCheck;
-
-    const stringCheck = this._validateStringType(value, fieldName);
-    if (stringCheck) return stringCheck;
-
-    const lengthCheck = this._validateStringLength(value, maxLength, fieldName);
-    if (lengthCheck) return lengthCheck;
-
-    return { valid: true };
   }
   /**
    * Validate a Discord user ID
@@ -307,69 +249,6 @@ class InputValidator {
   }
 
   /**
-   * Validate command input
-   * @param {string} command - Command to validate
-   * @returns {Object} - Validation result
-   */
-  static validateCommand(command) {
-    return wrapValidation(
-      () => this._performCommandValidation(command),
-      'validating command',
-      { commandLength: command?.length || 0 },
-      ErrorHandler
-    );
-  }
-
-  /**
-   * Generic validation pipeline helper
-   * Runs a series of validation functions and returns first failure or success
-   * @param {Array<Function>} validators - Array of validation functions
-   * @returns {Object} - Validation result
-   * @private
-   */
-  static _runValidationPipeline(validators) {
-    for (const validator of validators) {
-      const result = validator();
-      if (!result.valid) return result;
-    }
-    return { valid: true };
-  }
-
-  /**
-   * Perform the actual command validation logic
-   * @param {string} command - Command to validate
-   * @returns {Object} - Validation result
-   */
-  static _performCommandValidation(command) {
-    return this._runValidationPipeline([
-      () => this._validateBasicCommand(command),
-      () => this._validateCommandStructure(command),
-    ]);
-  }
-
-  /**
-   * Validate basic command properties using generic helper
-   */
-  static _validateBasicCommand(command) {
-    return this._validateBasicInput(command, 'Command', VALIDATION_LIMITS.MAX_COMMAND_LENGTH);
-  }
-
-  static _validateCommandStructure(command) {
-    // Check if command starts with valid prefix
-    if (!VALIDATION_PATTERNS.COMMAND_PREFIX.test(command)) {
-      return { valid: false, error: 'Command must start with ! or /' };
-    }
-
-    // Extract command name (everything after prefix until first space)
-    const commandName = command.substring(1).split(' ')[0];
-    if (!VALIDATION_PATTERNS.COMMAND_NAME.test(commandName)) {
-      return { valid: false, error: 'Invalid command name format' };
-    }
-
-    return { valid: true };
-  }
-
-  /**
    * Validate conversation history
    * @param {Array} history - Conversation history to validate
    * @returns {Object} - Validation result
@@ -445,57 +324,6 @@ class InputValidator {
   }
 
   /**
-   * Validate URL
-   * @param {string} url - URL to validate
-   * @returns {Object} - Validation result
-   */
-  static validateUrl(url) {
-    return wrapValidation(
-      () => this._performUrlValidation(url),
-      'validating URL',
-      { urlLength: url?.length || 0 },
-      ErrorHandler
-    );
-  }
-
-  /**
-   * Perform the actual URL validation logic
-   * @param {string} url - URL to validate
-   * @returns {Object} - Validation result
-   */
-  static _performUrlValidation(url) {
-    return this._runValidationPipeline([
-      () => this._validateBasicUrl(url),
-      () => this._validateUrlFormatAndSafety(url),
-    ]);
-  }
-
-  /**
-   * Validate basic URL properties using generic helper
-   */
-  static _validateBasicUrl(url) {
-    return this._validateBasicInput(url, 'URL', VALIDATION_LIMITS.MAX_URL_LENGTH);
-  }
-
-  static _validateUrlFormatAndSafety(url) {
-    if (!VALIDATION_PATTERNS.URL_PATTERN.test(url)) {
-      return { valid: false, error: 'Invalid URL format' };
-    }
-
-    // Check for dangerous protocols
-    const lowerUrl = url.toLowerCase();
-    if (
-      lowerUrl.startsWith('javascript:') ||
-      lowerUrl.startsWith('data:') ||
-      lowerUrl.startsWith('vbscript:')
-    ) {
-      return { valid: false, error: 'Dangerous URL protocol detected' };
-    }
-
-    return { valid: true };
-  }
-
-  /**
    * Sanitize content by removing or escaping dangerous patterns
    * @param {string} content - Content to sanitize
    * @returns {Object} - Sanitization result with warnings
@@ -509,11 +337,7 @@ class InputValidator {
       const sanitizationResult = this._performSanitization(content);
       return { content: sanitizationResult.content.trim(), warnings: sanitizationResult.warnings };
     } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'sanitizing content', {
-        contentLength: content?.length || 0,
-      });
-      ErrorHandler.logError(errorResponse, {
-        operation: 'sanitizeContent',
+      ErrorHandler.handleError(error, 'sanitizing content', {
         contentLength: content?.length || 0,
       });
       return { content: content || '', warnings: ['Sanitization failed'] };
@@ -538,36 +362,6 @@ class InputValidator {
   }
 
   /**
-   * Escape HTML characters
-   * @param {string} text - Text to escape
-   * @returns {string} - Escaped text
-   */
-  static escapeHtml(text) {
-    try {
-      if (!text || typeof text !== 'string') {
-        return '';
-      }
-
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;')
-        .replace(/\//g, '&#x2F;');
-    } catch (error) {
-      const errorResponse = ErrorHandler.handleError(error, 'escaping HTML', {
-        textLength: text?.length || 0,
-      });
-      ErrorHandler.logError(errorResponse, {
-        operation: 'escapeHtml',
-        textLength: text?.length || 0,
-      });
-      return text || '';
-    }
-  }
-
-  /**
    * Validate and sanitize input with comprehensive checks
    * @param {string} input - Input to validate and sanitize
    * @param {Object} options - Validation options
@@ -576,7 +370,7 @@ class InputValidator {
   static validateAndSanitize(input, options = {}) {
     try {
       const {
-        type = 'text',
+        type = 'message',
         maxLength = VALIDATION_LIMITS.MAX_MESSAGE_LENGTH,
         strict = false,
       } = options;
@@ -668,11 +462,7 @@ class InputValidator {
   static _validateByType(input, type) {
     const typeValidators = {
       userId: (input) => InputValidator.validateUserId(input),
-      url: (input) => InputValidator.validateUrl(input),
-      command: (input) => InputValidator.validateCommand(input),
       message: (input) => InputValidator.validateMessageContent(input),
-      text: (input) => InputValidator._validateTextType(input),
-      email: (input) => InputValidator._validateEmailType(input),
     };
 
     if (typeValidators[type]) {
@@ -683,41 +473,6 @@ class InputValidator {
       valid: false,
       error: `Unknown input type: ${type}`,
     };
-  }
-
-  static _validateTextType(input) {
-    // Check length limits first
-    if (input.length > VALIDATION_LIMITS.TEXT_MAX_LENGTH) {
-      return {
-        valid: false,
-        error: 'Input is too long',
-      };
-    }
-
-    // Check for dangerous patterns (including JS execution patterns)
-    if (this._containsJsExecutionPatterns(input)) {
-      return {
-        valid: false,
-        error: 'Input contains potentially unsafe content',
-      };
-    }
-
-    // Sanitize content
-    const sanitizedResult = this.sanitizeContent(input);
-    const sanitizedInput = sanitizedResult.content;
-
-    // Allow empty strings
-    if (sanitizedInput.length === 0) {
-      return { valid: true };
-    }
-
-    if (!VALIDATION_PATTERNS.SAFE_TEXT.test(sanitizedInput)) {
-      return {
-        valid: false,
-        error: 'Input contains unsafe characters',
-      };
-    }
-    return { valid: true };
   }
 
   /**
@@ -776,50 +531,6 @@ class InputValidator {
     }
     return DANGEROUS_SECURITY_PATTERNS.some((pattern) => pattern.test(content));
   }
-
-  /**
-   * Check if content contains JavaScript execution patterns
-   * @param {string} content - Content to check
-   * @returns {boolean} True if JS execution patterns detected
-   * @private
-   */
-  static _containsJsExecutionPatterns(content) {
-    if (!content || typeof content !== 'string') {
-      return false;
-    }
-    return DANGEROUS_JS_EXECUTION_PATTERNS.some((pattern) => pattern.test(content));
-  }
-
-  static _validateEmailType(input) {
-    if (!VALIDATION_PATTERNS.EMAIL_PATTERN.test(input)) {
-      return {
-        valid: false,
-        error: 'Invalid email format',
-      };
-    }
-    return { valid: true };
-  }
-
-  /**
-   * General input validation method
-   * @param {string} input - Input to validate
-   * @param {string} type - Type of input to validate
-   * @returns {Object} - Validation result
-   */
-  static validateInput(input, type) {
-    // For validation without sanitization, use _validateByType directly
-    return this._validateByType(input, type);
-  }
-
-  /**
-   * Sanitize input by removing dangerous patterns
-   * @param {string} input - Input to sanitize
-   * @returns {string} - Sanitized input
-   */
-  static sanitizeInput(input) {
-    const result = this.sanitizeContent(input);
-    return result.content;
-  }
 }
 
 // Export validation patterns and limits for external use
@@ -829,5 +540,4 @@ module.exports = {
   VALIDATION_LIMITS,
   DANGEROUS_PATTERNS,
   DANGEROUS_SECURITY_PATTERNS,
-  DANGEROUS_JS_EXECUTION_PATTERNS,
 };

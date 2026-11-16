@@ -7,11 +7,6 @@ const DiscordAnalytics = require('./discord-analytics');
 const ResourceOptimizer = require('./resource-optimizer');
 const PerformanceTracker = require('./performance-tracker');
 const logger = require('./logger');
-const {
-  checkMemoryAlerts,
-  checkPerformanceAlerts,
-  checkReliabilityAlerts,
-} = require('./alert-factory');
 
 class PerformanceDashboard {
   constructor() {
@@ -351,59 +346,6 @@ class PerformanceDashboard {
   }
 
   /**
-   * Generates alerts based on current metrics
-   * Uses shared alert-factory utilities for threshold checking
-   * @param {Object} currentMetrics - Current system metrics
-   * @returns {Array} - Active alerts
-   */
-  static generateAlerts(currentMetrics) {
-    const timestamp = new Date().toISOString();
-
-    // Collect all alert types using shared utilities
-    return [
-      ...checkMemoryAlerts(currentMetrics, timestamp),
-      ...checkPerformanceAlerts(currentMetrics, timestamp),
-      ...checkReliabilityAlerts(currentMetrics, timestamp),
-    ];
-  }
-
-  // Alert helper methods now delegate to shared alert-factory utility
-  // Keeping private methods for backwards compatibility with any internal calls
-  static _checkMemoryAlerts(currentMetrics, timestamp) {
-    return checkMemoryAlerts(currentMetrics, timestamp);
-  }
-
-  static _checkPerformanceResponseAlerts(currentMetrics, timestamp) {
-    return checkPerformanceAlerts(currentMetrics, timestamp);
-  }
-
-  static _checkReliabilityAlerts(currentMetrics, timestamp) {
-    return checkReliabilityAlerts(currentMetrics, timestamp);
-  }
-
-  /**
-   * Exports dashboard data for external monitoring
-   * @param {Object} dashboardData - Dashboard report data
-   * @param {string} format - Export format (json, csv, text)
-   * @returns {string} - Formatted export data
-   */
-  static exportDashboardData(dashboardData, format = 'json') {
-    switch (format.toLowerCase()) {
-      case 'json':
-        return JSON.stringify(dashboardData, null, 2);
-
-      case 'csv':
-        return this._exportToCSV(dashboardData);
-
-      case 'text':
-        return this._exportToText(dashboardData);
-
-      default:
-        return JSON.stringify(dashboardData, null, 2);
-    }
-  }
-
-  /**
    * Calculates overall system status
    * @param {Object} analytics - Analytics data
    * @param {Object} performance - Performance data
@@ -712,42 +654,6 @@ class PerformanceDashboard {
     const minutes = Math.floor((uptime % 3600) / 60);
 
     return `${days}d ${hours}h ${minutes}m`;
-  }
-
-  /**
-   * Exports dashboard data to CSV format
-   * @param {Object} dashboardData - Dashboard data
-   * @returns {string} - CSV formatted data
-   * @private
-   */
-  static _exportToCSV(dashboardData) {
-    const overview = dashboardData.overview;
-    return (
-      'Status,Server Count,Active Users,Commands,Error Rate,Response Time,Memory Usage\n' +
-      `${overview.status},${overview.serverCount},${overview.activeUsers},${overview.totalCommands},${overview.errorRate},${overview.averageResponseTime},${overview.memoryUsage}`
-    );
-  }
-
-  /**
-   * Exports dashboard data to text format
-   * @param {Object} dashboardData - Dashboard data
-   * @returns {string} - Text formatted data
-   * @private
-   */
-  static _exportToText(dashboardData) {
-    const overview = dashboardData.overview;
-    return (
-      'Discord Bot Performance Dashboard\n' +
-      `Generated: ${dashboardData.timestamp}\n\n` +
-      `Status: ${overview.status}\n` +
-      `Servers: ${overview.serverCount}\n` +
-      `Active Users: ${overview.activeUsers}\n` +
-      `Commands Today: ${overview.totalCommands}\n` +
-      `Error Rate: ${overview.errorRate}\n` +
-      `Avg Response Time: ${overview.averageResponseTime}\n` +
-      `Memory Usage: ${overview.memoryUsage}\n` +
-      `Optimization Tier: ${overview.optimizationTier}`
-    );
   }
 }
 

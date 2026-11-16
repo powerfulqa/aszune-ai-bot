@@ -10,7 +10,7 @@
     "test": "jest",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
     "test:critical": "jest --config=config/jest.critical-coverage.config.js --coverage",
-    "test:critical:ci": "jest --config=config/jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci",
+    "test:critical:ci": "jest --config=config/jest.critical-coverage.config.js --coverage --silent --ci",
     "coverage:critical": "jest --config=config/jest.critical-coverage.config.js --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "precommit": "npm run test:critical:ci",
     "security": "npm audit --audit-level=high",

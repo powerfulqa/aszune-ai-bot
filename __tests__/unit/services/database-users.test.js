@@ -93,49 +93,6 @@ describe('DatabaseService - User Management', () => {
     });
   });
 
-  describe('getUserMessages', () => {
-    it('should return empty array for non-existent user', () => {
-      const messages = dbService.getUserMessages('nonexistent');
-      expect(messages).toEqual([]);
-    });
-
-    it('should return user messages in chronological order', () => {
-      const userId = 'test-user';
-
-      // Add messages
-      dbService.addUserMessage(userId, 'First message');
-      dbService.addBotResponse(userId, 'First response');
-      dbService.addUserMessage(userId, 'Second message');
-
-      const messages = dbService.getConversationHistory(userId);
-      expect(messages.length).toBe(3);
-      expect(messages[0].message).toBe('First message');
-      expect(messages[0].role).toBe('user');
-      expect(messages[1].message).toBe('First response');
-      expect(messages[1].role).toBe('assistant');
-      expect(messages[2].message).toBe('Second message');
-      expect(messages[2].role).toBe('user');
-    });
-
-    it('should limit results when limit is specified', () => {
-      const userId = 'test-user';
-
-      // Add multiple messages
-      for (let i = 0; i < 5; i++) {
-        dbService.addUserMessage(userId, `Message ${i}`);
-      }
-
-      const messages = dbService.getUserMessages(userId, 3);
-      expect(messages.length).toBe(3);
-    });
-
-    it('should handle database errors gracefully', () => {
-      dbService.isDisabled = true;
-      const messages = dbService.getUserMessages('test-user');
-      expect(messages).toEqual([]);
-    });
-  });
-
   describe('addUserMessage', () => {
     it('should add user message and create user if needed', () => {
       const userId = 'test-user';

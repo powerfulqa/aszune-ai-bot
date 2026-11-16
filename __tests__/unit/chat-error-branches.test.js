@@ -47,10 +47,8 @@ const mockMessageFormatter = {
 jest.mock('../../src/utils/message-formatter', () => mockMessageFormatter);
 
 const mockChunkMessage = jest.fn();
-const mockFormatTablesForDiscord = jest.fn();
 jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: mockChunkMessage,
-  formatTablesForDiscord: mockFormatTablesForDiscord,
 }));
 
 const mockCommandHandler = {
@@ -91,7 +89,6 @@ describe('Chat Service - Error Handling Branch Coverage', () => {
     mockConversationManager.isRateLimited.mockReturnValue(false);
     mockConversationManager.getHistory.mockReturnValue([]);
     mockChunkMessage.mockResolvedValue(['Response chunk']);
-    mockFormatTablesForDiscord.mockImplementation((content) => content);
     mockErrorHandler.handleError.mockReturnValue({
       type: 'ERROR',
       message: 'An error occurred',

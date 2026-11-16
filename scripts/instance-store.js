@@ -50,7 +50,17 @@ class InstanceStore {
     if (!this.db) return [];
     try {
       const rows = this.db.prepare('SELECT data FROM instances').all();
-      return rows.map((row) => JSON.parse(row.data));
+      // One unreadable row must not hide every other instance (and with them
+      // every revocation), so rows are parsed one at a time.
+      return rows.flatMap((row) => {
+        try {
+          return [JSON.parse(row.data)];
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn(`[STORE] Skipping an unreadable instance row: ${error.message}`);
+          return [];
+        }
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn(`[STORE] Failed to load instances: ${error.message}`);
@@ -61,9 +71,10 @@ class InstanceStore {
   /**
    * Insert or update an instance record.
    * @param {Object} instance - Instance data (must have instanceId)
+   * @returns {boolean} False only when persistence is on and the write failed
    */
   upsert(instance) {
-    if (!this.db || !instance?.instanceId) return;
+    if (!this.db || !instance?.instanceId) return true;
     try {
       this.db
         .prepare(
@@ -71,9 +82,11 @@ class InstanceStore {
             'ON CONFLICT(instance_id) DO UPDATE SET data = excluded.data'
         )
         .run(instance.instanceId, JSON.stringify(instance));
+      return true;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn(`[STORE] Failed to persist instance ${instance.instanceId}: ${error.message}`);
+      return false;
     }
   }
 

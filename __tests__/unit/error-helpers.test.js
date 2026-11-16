@@ -7,14 +7,12 @@ jest.mock('../../src/utils/logger');
 jest.mock('../../src/utils/error-handler', () => ({
   ErrorHandler: {
     handleError: jest.fn().mockReturnValue({ message: 'Test error message' }),
-    logError: jest.fn(),
   },
 }));
 
 const {
   handleTextProcessingError,
   handleChunkProcessingError,
-  isValidString,
 } = require('../../src/utils/message-chunking/error-helpers');
 const logger = require('../../src/utils/logger');
 const { ErrorHandler } = require('../../src/utils/error-handler');
@@ -78,7 +76,6 @@ describe('error-helpers', () => {
       expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'chunk context', {
         chunkCount: 2,
       });
-      expect(ErrorHandler.logError).toHaveBeenCalled();
       expect(result).toBe(chunks);
     });
 
@@ -112,36 +109,6 @@ describe('error-helpers', () => {
         chunkCount: 3,
         safeMaxLength: 1000,
       });
-    });
-
-    it('should format operation name without spaces', () => {
-      const error = new Error('Chunk error');
-      const chunks = ['test'];
-      handleChunkProcessingError(error, 'fixing chunk boundaries', chunks);
-
-      expect(ErrorHandler.logError).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          operation: 'fixingchunkboundaries',
-        })
-      );
-    });
-  });
-
-  describe('isValidString', () => {
-    it('should return true for valid strings', () => {
-      expect(isValidString('hello')).toBe(true);
-      expect(isValidString('')).toBe(true);
-      expect(isValidString('a longer string with spaces')).toBe(true);
-    });
-
-    it('should return false for non-string types', () => {
-      expect(isValidString(null)).toBe(false);
-      expect(isValidString(undefined)).toBe(false);
-      expect(isValidString(123)).toBe(false);
-      expect(isValidString({})).toBe(false);
-      expect(isValidString([])).toBe(false);
-      expect(isValidString(true)).toBe(false);
     });
   });
 });

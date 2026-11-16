@@ -35,9 +35,45 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `npm run lint` and CI lint the whole repository, not only `src` and `__tests__`
 - `.env.example`: `PI_LOG_LEVEL` defaults to `INFO` (`ERROR` hid info and warning lines), and the
   unread `PI_DEBOUNCE_MS`, `PI_REACTION_LIMIT` and `PI_STREAM_RESPONSES` are gone
+- **Perplexity: no default output cap.** `max_output_tokens` budgets a whole agent run (every step,
+  reasoning included), so the fixed 4096 could cut answers short. It is now sent only when
+  `AGENT_MAX_OUTPUT_TOKENS` is set. A run that still ends `incomplete` is marked "answer was cut
+  short" and is not cached
+- At most 25 active reminders per user
+- The dashboard without `DASHBOARD_TOKEN` only answers requests addressed to `localhost` /
+  `127.0.0.1` (plus `DASHBOARD_ALLOWED_HOSTS`), which stops other web pages and DNS-rebinding sites
+  from reading it. **If you reach a token-less dashboard through a reverse proxy, set
+  `DASHBOARD_ALLOWED_HOSTS` or a token**
+- Dashboard reminders: creating one needs a Discord user ID and channel ID (it is delivered as a
+  ping); the REST `POST`/`PUT`/`DELETE /api/reminders` routes are gone (they reported success
+  without doing anything)
+- The dashboard config editor only handles `.env`, refuses keys that change how spawned programs
+  load code (`NODE_OPTIONS`, `LD_*`, `GIT_*`, `PATH`, …) and masks secrets left in comment lines
+- Dashboard service control and service logs are limited to the bot's PM2 app and the units in
+  `DASHBOARD_SERVICES`; the restart button answers 409 when the bot is not running under PM2
+- `/resources` no longer shows the host name, process ID and OS user
+- Tracking server: refuses to start with the example admin key, rate limits the beacon, and an
+  address with a revoked instance is no longer auto-authorized (new registrations from it wait for
+  approval). `.env.example` ships `TRACKING_ADMIN_KEY` blank
+- CI: third-party actions pinned to commit SHAs, read-only default token, test results uploaded to
+  Codecov; `codecov.yml` adds project and patch (80%) status checks
 
 ### Fixed
 
+- Reminders that fell due while the bot was down were never delivered (the startup load skipped
+  them)
+- "remind me in 2 hours to …" failed: the time and the message were read the wrong way round
+- `/clearhistory` deleted the user's stats and reminders while saying stats were kept
+- Editing a reminder on the dashboard changed nothing; creating one did not schedule it and deleting
+  one did not stop it firing
+- The response cache rejected every entry (an entry-count limit was applied as a byte limit)
+- The 2-hour conversation window was never applied on the chat path, so old context was replayed
+- `/stats` counted each message three times
+- A malformed dashboard socket event could crash the bot
+- `/summary` could post an error message as the summary
+- A Discord session-limit login failure left the bot offline until restarted; it now retries
+- A failed `better-sqlite3` load was silent; logging a circular value could throw from the logger
+- Dashboard config backups (`.env.backup.*`) are git-ignored
 - Upstream API error bodies could be shown to Discord users; they are now only logged (truncated)
 - A 200 response whose run had failed upstream was reported as an "empty answer"
 - Long answers in compact (Pi) mode lost the end of each chunk over 1400 characters

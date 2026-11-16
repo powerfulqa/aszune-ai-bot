@@ -84,8 +84,8 @@ delegate through it (`this.cacheManager.getStats()`). Never reach past a service
 ## Testing
 
 - Framework Jest 30, `testEnvironment: node`, v8 coverage. Run: `npm test`.
-- Coverage gate — **single source of truth is `jest.config.js`: global 70%** on
-  branches/functions/lines/statements. `config/jest.critical-coverage.config.js` adds stricter
+- Coverage gate — **single source of truth is `jest.config.js`: global 78%** on
+  functions/lines/statements and 80% on branches. `config/jest.critical-coverage.config.js` adds stricter
   per-file gates used by `test:critical`/`precommit`.
 - **Assert exact values** — `toHaveBeenCalledWith({ … exact … })`, not `expect.objectContaining`
   / `expect.any()`.
@@ -135,5 +135,5 @@ command string. On the Pi, start via `start-pi-optimized.sh` to apply optimisati
 Key env vars: `DISCORD_BOT_TOKEN`, `PERPLEXITY_API_KEY` (required); `DASHBOARD_TOKEN` (enables the
 dashboard's destructive operations — without it the dashboard is read-only); `TRACKING_ADMIN_KEY`
 (required to start the tracking server); `AGENT_EFFORT`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
-`AGENT_FETCH_URL` (Perplexity Agent API tuning); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
+`AGENT_FETCH_URL`, `AGENT_MAX_OUTPUT_TOKENS` (Perplexity Agent API tuning); `DASHBOARD_ALLOWED_HOSTS` (extra hostnames for a token-less dashboard); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
 Perplexity allowlist). See `.env.example`.

@@ -22,7 +22,6 @@ describe('Throttling service integration', () => {
 
     expect(service.connectionThrottler).toBe(throttler);
     expect(otherService.connectionThrottler).toBe(throttler);
-    expect(service.getThrottlerStatus()).toEqual({ enabled: true, available: true });
 
     const firstResult = service.executeWithThrottling(() => first.promise);
     const secondResult = service.executeWithThrottling(() => second.promise);
@@ -130,25 +129,6 @@ describe('Connection Throttler', () => {
       // Second request should now execute and complete
       const secondResult = await secondPromise;
       expect(secondResult).toBe('second');
-    });
-  });
-
-  describe('clearQueue', () => {
-    it('should reject all queued requests without executing them', async () => {
-      connectionThrottler.activeConnections = 2;
-      const request = jest.fn();
-      const pending = Array.from({ length: 3 }, () => connectionThrottler.executeRequest(request));
-      const settled = Promise.allSettled(pending);
-
-      connectionThrottler.clearQueue();
-
-      const results = await settled;
-      expect(results.map((result) => result.status)).toEqual(['rejected', 'rejected', 'rejected']);
-      expect(request).not.toHaveBeenCalled();
-      expect(connectionThrottler.connectionQueue).toHaveLength(0);
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Cleared 3 pending requests')
-      );
     });
   });
 

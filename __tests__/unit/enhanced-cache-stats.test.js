@@ -19,7 +19,6 @@ describe('EnhancedCache - Statistics', () => {
   afterEach(() => {
     if (cache) {
       cache.clear();
-      cache.stopCleanup();
     }
   });
 

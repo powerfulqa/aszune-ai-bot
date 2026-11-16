@@ -80,9 +80,8 @@ describe('Index Uncovered Paths', () => {
       stop: jest.fn().mockResolvedValue(true),
       setDiscordClient: jest.fn(),
     }));
-    jest.doMock('../../src/utils/lazy-loader', () => ({
-      lazyLoad: jest.fn().mockReturnValue(() => ({ initialize: jest.fn() })),
-    }));
+    jest.doMock('../../src/utils/memory-monitor', () => ({ initialize: jest.fn() }));
+    jest.doMock('../../src/utils/performance-monitor', () => ({ initialize: jest.fn() }));
 
     mockClient = {
       on: jest.fn(),

@@ -7,8 +7,6 @@ const {
   checkRequired,
   checkStringType,
   checkArrayType,
-  checkMaxLength,
-  checkMinLength,
   checkNotEmpty,
 } = require('../../src/utils/validation-helpers');
 
@@ -83,53 +81,6 @@ describe('Validation Helpers - Check Functions', () => {
     it('should use default field name', () => {
       const result = checkArrayType('not array');
       expect(result.error).toBe('Value must be an array');
-    });
-  });
-
-  describe('checkMaxLength', () => {
-    it('should return null when within limit', () => {
-      expect(checkMaxLength('hello', 10)).toBeNull();
-      expect(checkMaxLength('hello', 5)).toBeNull();
-      expect(checkMaxLength('', 5)).toBeNull();
-    });
-
-    it('should return error when exceeding limit', () => {
-      const result = checkMaxLength('hello world', 5, 'Message');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Message too long. Maximum length is 5 characters');
-    });
-
-    it('should handle non-string values gracefully', () => {
-      expect(checkMaxLength(123, 5)).toBeNull();
-      expect(checkMaxLength(null, 5)).toBeNull();
-    });
-
-    it('should use default field name', () => {
-      const result = checkMaxLength('hello world', 5);
-      expect(result.error).toBe('Value too long. Maximum length is 5 characters');
-    });
-  });
-
-  describe('checkMinLength', () => {
-    it('should return null when meeting minimum', () => {
-      expect(checkMinLength('hello', 3)).toBeNull();
-      expect(checkMinLength('hello', 5)).toBeNull();
-    });
-
-    it('should return error when below minimum', () => {
-      const result = checkMinLength('hi', 3, 'Password');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Password must be at least 3 characters');
-    });
-
-    it('should handle non-string values gracefully', () => {
-      expect(checkMinLength(123, 5)).toBeNull();
-      expect(checkMinLength(null, 5)).toBeNull();
-    });
-
-    it('should use default field name', () => {
-      const result = checkMinLength('hi', 5);
-      expect(result.error).toBe('Value must be at least 5 characters');
     });
   });
 
