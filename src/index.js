@@ -409,7 +409,9 @@ function _handleDiscordLogin(token, isTestMode = false) {
         logger.warn('Discord session limit reached. Dashboard will remain running.');
         // Nothing else reconnects: log in again once the limit has reset (or
         // in 15 minutes when the reset time cannot be read).
-        const resetAt = Date.parse(error.message.match(/resets at (.+?)(?:\.|$)/)?.[1]);
+        // The timestamp itself contains a period (…:00.000Z): take the whole
+        // token and drop only a sentence-ending one, or the zone is lost.
+        const resetAt = Date.parse(error.message.match(/resets at (\S+)/)?.[1].replace(/\.$/, ''));
         const delayMs = Number.isNaN(resetAt)
           ? 15 * 60 * 1000
           : Math.max(resetAt - Date.now(), 60 * 1000);

@@ -287,6 +287,13 @@ describe('config handlers - save failure safety', () => {
       );
     });
 
+    it('masks the first key of a file that starts with a UTF-8 BOM, and restores it on save', () => {
+      const onDisk = '\uFEFFDISCORD_BOT_TOKEN=live-token\nPORT=3000\n';
+      const masked = maskSecrets('.env', onDisk);
+      expect(masked).toBe('\uFEFFDISCORD_BOT_TOKEN=********\nPORT=3000\n');
+      expect(restoreMaskedSecrets('.env', masked, onDisk)).toBe(onDisk);
+    });
+
     it('masks secrets left behind in comment lines', () => {
       expect(
         maskSecrets(
