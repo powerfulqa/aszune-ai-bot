@@ -33,9 +33,12 @@ const SECRET_KEY_PATTERN =
   /(TOKEN|KEY|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL|AUTH|DSN|COOKIE|BEARER|WEBHOOK)/i;
 // A rotated key is often left behind as a comment; mask those lines too.
 const COMMENTED_ASSIGNMENT_PATTERN =
-  /^([ \t]*#[ \t]*(?:export[ \t]+)?([\w.-]+)[ \t]*=[ \t]*)\S.*$/gm;
+  /^([^\S\r\n]*#[ \t]*(?:export[ \t]+)?([\w.-]+)[ \t]*=[ \t]*)\S.*$/gm;
+// Leading whitespace is anything but a line break: that includes a UTF-8 BOM
+// (so the first key of a BOM-prefixed file is still masked) without letting the
+// match run across blank lines, which made it quadratic.
 const ENV_ASSIGNMENT_PATTERN =
-  /^([ \t]*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?))(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?$/gm;
+  /^([^\S\r\n]*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?))(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?$/gm;
 
 async function readExistingConfig(configPath) {
   try {
