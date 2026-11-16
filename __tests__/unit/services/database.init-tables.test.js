@@ -11,12 +11,13 @@ describe('initTables', () => {
     context.dbService.getDb();
 
     expect(context.mockDb.exec).toHaveBeenCalled();
-    expect(context.mockDb.exec).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE TABLE IF NOT EXISTS user_stats')
-    );
-    expect(context.mockDb.exec).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE TABLE IF NOT EXISTS user_messages')
-    );
+    const statements = context.mockDb.exec.mock.calls.map(([sql]) => sql);
+    expect(
+      statements.filter((sql) => /CREATE TABLE IF NOT EXISTS user_stats \(/.test(sql))
+    ).toHaveLength(1);
+    expect(
+      statements.filter((sql) => /CREATE TABLE IF NOT EXISTS user_messages \(/.test(sql))
+    ).toHaveLength(1);
   });
 
   it('should throw if table creation fails', () => {

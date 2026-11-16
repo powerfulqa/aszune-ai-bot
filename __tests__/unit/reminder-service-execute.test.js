@@ -19,7 +19,7 @@ describe('ReminderService execution', () => {
 
       expect(databaseService.completeReminder).toHaveBeenCalledWith(1);
       expect(emitSpy).toHaveBeenCalledWith('reminderDue', reminder);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Executed reminder'));
+      expect(logger.info).toHaveBeenCalledWith('Executed reminder 1 for user user1');
     });
 
     it('should warn if database completion fails after delivery', async () => {
@@ -30,7 +30,7 @@ describe('ReminderService execution', () => {
       await reminderService.executeReminder(reminder);
 
       expect(emitSpy).toHaveBeenCalledWith('reminderDue', reminder);
-      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Failed to mark reminder'));
+      expect(logger.warn).toHaveBeenCalledWith('Failed to mark reminder 1 as completed');
     });
 
     it('should handle execution errors', async () => {
@@ -42,10 +42,7 @@ describe('ReminderService execution', () => {
 
       await reminderService.executeReminder(reminder);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to execute reminder'),
-        error
-      );
+      expect(logger.error).toHaveBeenCalledWith('Failed to execute reminder 1:', error);
     });
   });
 

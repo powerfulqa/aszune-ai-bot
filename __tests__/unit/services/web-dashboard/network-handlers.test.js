@@ -18,6 +18,7 @@ jest.mock('child_process', () => ({
 jest.mock('dns', () => ({ promises: { resolve4: jest.fn() } }));
 jest.mock('../../../../src/services/network-detector', () => ({
   detectGateway: jest.fn(),
+  detectDnsServers: jest.fn(),
   getNetworkStatus: jest.fn(),
 }));
 
@@ -190,12 +191,11 @@ describe('handleNetworkTest', () => {
     '\n=== TEST SUITE COMPLETE ===',
   ];
 
-  const dashboard = (overrides) => ({
-    detectDnsServers: jest.fn().mockResolvedValue(['192.168.1.1', '9.9.9.9']),
-    ...overrides,
-  });
+  // The dashboard has no DNS detection of its own; the handler must ask the detector.
+  const dashboard = () => ({});
 
   beforeEach(() => {
+    NetworkDetector.detectDnsServers.mockResolvedValue(['192.168.1.1', '9.9.9.9']);
     NetworkDetector.detectGateway.mockResolvedValue({ gatewayIp: '192.168.1.1', reachable: true });
     dns.promises.resolve4.mockResolvedValue(['142.250.1.1']);
     // Everything answers except 9.9.9.9 and 1.1.1.1
@@ -237,21 +237,35 @@ describe('handleNetworkTest', () => {
     dns.promises.resolve4.mockRejectedValue(new Error('ESERVFAIL'));
     const callback = jest.fn();
 
-    await handlers.handleNetworkTest(
-      dashboard({ detectDnsServers: jest.fn().mockRejectedValue(new Error('no resolv.conf')) }),
-      {},
-      callback
-    );
+    NetworkDetector.detectDnsServers.mockRejectedValue(new Error('no resolv.conf'));
+    await handlers.handleNetworkTest(dashboard(), {}, callback);
 
     const { success, results } = callback.mock.calls[0][0];
     expect(success).toBe(true);
-    expect(results.split('\n')).toEqual(
-      expect.arrayContaining([
-        '✗ Gateway not detected',
-        '✗ DNS detection failed: no resolv.conf',
-        '✗ DNS resolution failed: ESERVFAIL',
-      ])
-    );
+    expect(results.split('\n')).toEqual([
+      '=== NETWORK CONNECTIVITY TEST SUITE ===',
+      '',
+      'Test 1: Gateway Connectivity',
+      '✗ Gateway not detected',
+      '',
+      'Test 2: DNS Server Detection & Testing',
+      '✗ DNS detection failed: no resolv.conf',
+      '',
+      'Test 3: DNS Resolution Test',
+      '✗ DNS resolution failed: ESERVFAIL',
+      '',
+      'Test 4: Internet Connectivity',
+      '✓ Google DNS (8.8.8.8) is reachable',
+      '✗ Cloudflare DNS (1.1.1.1) not reachable',
+      '',
+      'Test 5: Network Configuration',
+      '  Hostname: pi-test',
+      '  Platform: linux',
+      '  Architecture: arm64',
+      '  Active Interfaces: eth0',
+      '',
+      '=== TEST SUITE COMPLETE ===',
+    ]);
   });
 
   it('reports a failed gateway ping inside the report and still succeeds', async () => {

@@ -43,31 +43,34 @@ describe('DatabaseService - Conversations', () => {
 
       const history = dbService.getConversationHistory(userId);
       expect(history.length).toBe(4);
+      history.forEach((row) => {
+        expect(row.timestamp).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+      });
       expect(history[0]).toEqual({
         role: 'user',
         message: 'Hello',
-        timestamp: expect.any(String),
+        timestamp: history[0].timestamp,
         message_length: 5,
         response_time_ms: 0,
       });
       expect(history[1]).toEqual({
         role: 'assistant',
         message: 'Hi there!',
-        timestamp: expect.any(String),
+        timestamp: history[1].timestamp,
         message_length: 9,
         response_time_ms: 0,
       });
       expect(history[2]).toEqual({
         role: 'user',
         message: 'How are you?',
-        timestamp: expect.any(String),
+        timestamp: history[2].timestamp,
         message_length: 12,
         response_time_ms: 0,
       });
       expect(history[3]).toEqual({
         role: 'assistant',
         message: 'I am doing well, thank you!',
-        timestamp: expect.any(String),
+        timestamp: history[3].timestamp,
         message_length: 27,
         response_time_ms: 0,
       });

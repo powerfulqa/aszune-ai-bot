@@ -17,7 +17,7 @@ module.exports = {
     // This run measures the global figure about two points lower than the main
     // config does (82.9% statements, 81.6% functions on 2026-11-16), so its
     // floor is set against its own numbers. The main gate is jest.config.js.
-    global: { branches: 84, functions: 80, lines: 81, statements: 81 },
+    global: { branches: 86, functions: 88, lines: 88, statements: 88 },
     './src/index.js': { branches: 82, functions: 98, lines: 76, statements: 76 },
     './src/config/config.js': { branches: 90, functions: 100, lines: 96, statements: 96 },
     './src/commands/index.js': { branches: 83, functions: 93, lines: 92, statements: 92 },

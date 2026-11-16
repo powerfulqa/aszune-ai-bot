@@ -65,9 +65,10 @@ describe('DatabaseService - Reminders', () => {
 
       const reminders = dbService.getActiveReminders(userId);
       expect(reminders.length).toBe(2);
-      expect(reminders.map((r) => r.id)).toEqual(
-        expect.arrayContaining([reminder1.id, reminder2.id])
-      );
+      expect(reminders.map((r) => r.id).sort((a, b) => a - b)).toEqual([
+        reminder1.id,
+        reminder2.id,
+      ]);
     });
 
     it('should not return completed reminders', () => {
@@ -187,9 +188,10 @@ describe('DatabaseService - Reminders', () => {
 
       const userReminders = dbService.getUserReminders(userId);
       expect(userReminders.length).toBe(2);
-      expect(userReminders.map((r) => r.id)).toEqual(
-        expect.arrayContaining([reminder1.id, reminder2.id])
-      );
+      expect(userReminders.map((r) => r.id).sort((a, b) => a - b)).toEqual([
+        reminder1.id,
+        reminder2.id,
+      ]);
     });
 
     it('should return empty array for user with no reminders', () => {

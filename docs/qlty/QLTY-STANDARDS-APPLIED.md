@@ -311,7 +311,6 @@ npm run lint
 - **QLTY Standards Definition:** See copilot-instructions.md
 - **Test Results:** 1,228 tests (1,228 passing) locally
 - **Configuration Files:**
-  - `.eslintrc.json` - ESLint rules
   - `.prettierrc` (implicit) - 2-space indentation
   - `jest.config.js` - Test configuration
 

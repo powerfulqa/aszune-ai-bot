@@ -18,9 +18,7 @@ describe('ReminderService scheduling', () => {
       await reminderService.scheduleReminder(reminder);
 
       expect(databaseService.completeReminder).toHaveBeenCalledWith(1);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is past due, delivering it now')
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Reminder 1 is past due, delivering it now');
     });
 
     it('should schedule future reminders with setTimeout', async () => {
@@ -76,11 +74,15 @@ describe('ReminderService scheduling', () => {
     it('should handle scheduling errors', async () => {
       const reminder = { id: 1, scheduled_time: 'invalid-date' };
 
-      await expect(reminderService.scheduleReminder(reminder)).rejects.toThrow();
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to schedule reminder'),
-        expect.any(Error)
+      await expect(reminderService.scheduleReminder(reminder)).rejects.toThrow(
+        'Invalid scheduled time: invalid-date'
       );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to schedule reminder 1:',
+        new Error('Invalid scheduled time: invalid-date')
+      );
+      // No timer may be left behind for a reminder that failed to schedule.
+      expect(reminderService.activeTimers.has(1)).toBe(false);
     });
   });
 });

@@ -95,7 +95,6 @@ aszune-ai-bot/
 ├── .qlty/                          # Code quality configuration (qlty tooling)
 │   ├── qlty.toml                  # Main qlty configuration with all plugins
 │   └── configs/                   # Tool-specific configurations
-│       ├── .eslintrc.json         # JavaScript linting rules
 │       ├── .prettierrc            # Code formatting preferences
 │       ├── .markdownlint.json     # Documentation formatting rules
 │       └── .gitleaks.toml         # Secret detection patterns

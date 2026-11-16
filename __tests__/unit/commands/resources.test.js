@@ -45,6 +45,7 @@ describe('Resources Command', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
       type: 'GENERAL_ERROR',
@@ -85,7 +86,7 @@ describe('Resources Command', () => {
             },
           ],
           footer,
-          timestamp: expect.any(String),
+          timestamp: '2026-11-16T12:00:00.000Z',
         },
       ],
     });
@@ -120,7 +121,7 @@ describe('Resources Command', () => {
             { name: '💡 Recommendations', value: 'one\ntwo\nthree', inline: false },
           ],
           footer,
-          timestamp: expect.any(String),
+          timestamp: '2026-11-16T12:00:00.000Z',
         },
       ],
     });

@@ -97,11 +97,17 @@ describe('DataStorage', () => {
 
     it('should return empty object and log warning if JSON parsing fails', async () => {
       fs.readFile.mockResolvedValue('invalid json');
+      let parseMessage;
+      try {
+        JSON.parse('invalid json');
+      } catch (parseError) {
+        parseMessage = parseError.message;
+      }
       const result = await storage.loadUserStats();
       expect(result).toEqual({});
       // SyntaxError now logs as warn (corrupted file auto-fix), not error
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Corrupted user stats file')
+        `Corrupted user stats file (${parseMessage}), resetting to empty stats`
       );
     });
   });

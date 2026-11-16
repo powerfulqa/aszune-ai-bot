@@ -4,12 +4,12 @@ Last updated: 2026-11-16 (v2.3.0, unreleased changes)
 
 ## Current Local Metrics
 
-- Tests: 1,695 total / 1,695 passing / 0 skipped
-- Test Suites: 176 total
-- Statements: 85.1%
-- Branches: 86.6%
-- Functions: 84.4%
-- Lines: 85.1%
+- Tests: 1,832 total / 1,832 passing / 0 skipped
+- Test Suites: 185 total
+- Statements: 90.2%
+- Branches: 88.2%
+- Functions: 90.3%
+- Lines: 90.2%
 
 The test count fell from 2,036 because about 3,000 lines of unreachable code were deleted together
 with the tests that only covered them.
@@ -26,7 +26,7 @@ These reflect the latest full `npm test` execution on the `main` branch.
 
 | Tier           | Gate                                                 | Source                                    |
 | -------------- | ---------------------------------------------------- | ----------------------------------------- |
-| Global Minimum | ≥83% lines/statements, ≥82% functions, ≥84% branches | `jest.config.js`                          |
+| Global Minimum | ≥88% lines/statements, ≥88% functions, ≥86% branches | `jest.config.js`                          |
 | Critical Gate  | Per-file thresholds, about 2 points under measured   | `config/jest.critical-coverage.config.js` |
 | Pull requests  | Project may not drop over 1 point; patch ≥80%        | `codecov.yml`                             |
 

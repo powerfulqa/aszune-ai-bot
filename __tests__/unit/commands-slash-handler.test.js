@@ -41,6 +41,26 @@ const ConversationManager = require('../../src/utils/conversation');
 const perplexityService = require('../../src/services/perplexity-secure');
 const { createMockInteraction, resetMocks } = require('../utils/testUtils');
 
+const HELP_TEXT = [
+  '**Aszai Bot Commands:**',
+  '`/help` - Show this help message',
+  '`/clearhistory` - Clear your conversation history (keeps your stats)',
+  '`/summary` - Summarise your current conversation',
+  '`/summarise <text>` - Summarise provided text',
+  '`/stats` - Show your usage stats',
+  '`/analytics` - Show Discord server analytics',
+  '`/dashboard` - Show performance dashboard',
+  '`/resources` - Show resource optimization status',
+  '`/cache` - Show cache statistics',
+  '`/remind <time> <message>` - Set a reminder',
+  '`/reminders` - List your active reminders',
+  '`/cancelreminder <id>` - Cancel a specific reminder',
+  '`/userinfo [user]` - Show detailed user information',
+  '`/serverinfo` - Show detailed server information',
+  '`/diag [live]` - Bot diagnostics (owner only, private)',
+  'Simply chat as normal to talk to the bot!',
+].join('\n');
+
 describe('Commands - Slash Command Handler', () => {
   let conversationManager;
 
@@ -59,8 +79,7 @@ describe('Commands - Slash Command Handler', () => {
       const interaction = createMockInteraction({ commandName: 'help' });
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Commands'));
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Aszai Bot'));
+      expect(interaction.reply).toHaveBeenCalledWith(HELP_TEXT);
     });
 
     it('should handle /clearhistory command', async () => {
@@ -126,7 +145,9 @@ describe('Commands - Slash Command Handler', () => {
       await handleSlashCommand(interaction);
 
       expect(conversationManager.getUserStats).toHaveBeenCalledWith(interaction.user.id);
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Messages sent'));
+      expect(interaction.reply).toHaveBeenCalledWith(
+        '**Your Aszai Bot Stats:**\nMessages sent: 10\nSummaries requested: 2\nActive reminders: 0'
+      );
     });
 
     it('should handle /summarise command with text', async () => {
@@ -210,7 +231,9 @@ describe('Commands - Slash Command Handler', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid text input'));
+      expect(interaction.reply).toHaveBeenCalledWith(
+        '❌ Invalid text input: Content contains unsafe elements that were removed.'
+      );
     });
 
     it('should handle /summarise command API error', async () => {
@@ -268,7 +291,7 @@ describe('Commands - Slash Command Handler', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Commands'));
+      expect(interaction.reply).toHaveBeenCalledWith(HELP_TEXT);
     });
 
     it('should handle slash command when already replied', async () => {

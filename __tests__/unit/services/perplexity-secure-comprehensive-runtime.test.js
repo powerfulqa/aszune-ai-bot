@@ -39,17 +39,30 @@ describe('generateTextSummary method', () => {
       ],
     };
     request.mockResolvedValueOnce(mockSuccessResponse(mockResponse));
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
 
     const text = 'Long text to be summarized...';
     const result = await perplexityService.generateTextSummary(text);
 
     expect(result).toBe('This is a summary of the text.');
-    expect(request).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        body: expect.stringContaining('Long text to be summarized...'),
-      })
-    );
+    expect(request).toHaveBeenCalledTimes(1);
+    const [url, { signal, body, ...options }] = request.mock.calls[0];
+    expect(url).toBe('https://api.perplexity.ai/v1/agent');
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(options).toEqual({
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-key', 'Content-Type': 'application/json' },
+    });
+    expect(JSON.parse(body)).toEqual({
+      effort: 'medium',
+      input: [{ type: 'message', role: 'user', content: text }],
+      instructions:
+        'Today is 2026-11-16.\n\n' +
+        'Summarise the following text in a concise paragraph, using UK English.\n\n' +
+        'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) at the "medium" effort level, and the effort level picks the model (not reported yet).',
+      tools: [{ type: 'web_search' }, { type: 'fetch_url' }],
+      max_output_tokens: 1024,
+    });
   });
 
   it('should handle text summary errors', async () => {

@@ -31,6 +31,7 @@ describe('Logger - Data Logging and Error Handling', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
 
     originalEnv = { ...process.env };
     originalConsole = { ...console };
@@ -88,13 +89,13 @@ describe('Logger - Data Logging and Error Handling', () => {
     it('should handle null data gracefully', async () => {
       await logger.info('test message', null);
 
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+      expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
     });
 
     it('should handle undefined data gracefully', async () => {
       await logger.info('test message', undefined);
 
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+      expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
     });
   });
 
@@ -109,14 +110,11 @@ describe('Logger - Data Logging and Error Handling', () => {
 
       await logger.error('API call failed', mockError);
 
-      expect(console.error).toHaveBeenCalledWith(
-        'API Error Response:',
-        expect.objectContaining({
-          type: 'API Error Response',
-          status: 500,
-          data: { error: 'Server error' },
-        })
-      );
+      expect(console.error).toHaveBeenCalledWith('API Error Response:', {
+        type: 'API Error Response',
+        status: 500,
+        data: { error: 'Server error' },
+      });
     });
 
     it('should handle errors without response', async () => {

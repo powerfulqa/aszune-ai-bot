@@ -42,9 +42,9 @@ describe('config handlers - filename allowlist', () => {
     await handleRequestConfig({ filename: 'src/index.js' }, callback);
 
     expect(fsPromises.readFile).not.toHaveBeenCalled();
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({ error: expect.stringContaining('Access denied') })
-    );
+    expect(callback).toHaveBeenCalledWith({
+      error: 'Access denied: src/index.js is not a readable config file',
+    });
   });
 
   it('rejects reading via a traversal filename', async () => {
@@ -52,9 +52,9 @@ describe('config handlers - filename allowlist', () => {
     await handleRequestConfig({ filename: '../../etc/passwd' }, callback);
 
     expect(fsPromises.readFile).not.toHaveBeenCalled();
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({ error: expect.stringContaining('Access denied') })
-    );
+    expect(callback).toHaveBeenCalledWith({
+      error: 'Access denied: ../../etc/passwd is not a readable config file',
+    });
   });
 
   it('rejects saving a non-allowlisted file before any write', async () => {
@@ -62,9 +62,10 @@ describe('config handlers - filename allowlist', () => {
     await handleSaveConfig({ filename: 'package.json', content: '{"malicious":true}' }, callback);
 
     expect(fsPromises.writeFile).not.toHaveBeenCalled();
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({ error: expect.stringContaining('Access denied') })
-    );
+    expect(callback).toHaveBeenCalledWith({
+      saved: false,
+      error: 'Access denied: package.json cannot be modified',
+    });
   });
 
   it('validateConfigSaveInput rejects non-allowlisted filenames', () => {
@@ -83,9 +84,13 @@ describe('config handlers - filename allowlist', () => {
     await handleRequestConfig({ filename: '.env' }, callback);
 
     expect(fsPromises.readFile).toHaveBeenCalled();
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({ filename: '.env', error: null })
-    );
+    expect(callback).toHaveBeenCalledWith({
+      filename: '.env',
+      content: 'SOME_SETTING=value',
+      size: 18,
+      lastModified: '1970-01-01T00:00:00.000Z',
+      error: null,
+    });
   });
 });
 
@@ -140,6 +145,7 @@ describe('config handlers - secret masking', () => {
     fsPromises.readFile.mockResolvedValue('DISCORD_BOT_TOKEN=real-token');
     fsPromises.copyFile.mockResolvedValue();
     fsPromises.writeFile.mockResolvedValue();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
 
     const callback = jest.fn();
     await handleSaveConfig(
@@ -149,7 +155,11 @@ describe('config handlers - secret masking', () => {
 
     const written = fsPromises.writeFile.mock.calls[0][1];
     expect(written).toBe('DISCORD_BOT_TOKEN=real-token');
-    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ saved: true }));
+    expect(callback).toHaveBeenCalledWith({
+      filename: '.env',
+      saved: true,
+      timestamp: '2026-11-16T12:00:00.000Z',
+    });
   });
 });
 

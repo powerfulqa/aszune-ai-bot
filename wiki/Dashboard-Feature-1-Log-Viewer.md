@@ -1,275 +1,52 @@
-# Dashboard Feature 1: Real-Time Log Viewer
+# Dashboard: Log Viewer
 
-**Version:** v1.9.0 | **Status:** Production Ready | **Last Updated:** 2024
+Page: `dashboard/public/logs-viewer.html`. Shows the bot's recent log lines and adds new ones as
+they are written.
 
-## Overview
+## What it shows
 
-The Real-Time Log Viewer is a powerful web-based tool for streaming, filtering, and analyzing bot
-logs in real-time. It provides enterprise-grade logging capabilities with advanced search,
-filtering, and export functionality.
+- The last **500** log entries of the running bot process, held in memory. The buffer starts empty
+  after every restart; older history is in `logs/bot.log` on the host.
+- Each row has a timestamp, a level (Debug, Info, Warnings, Errors) and the message.
+- Counters for total entries, errors and warnings, and the time of the last update.
 
-## Features
+## What you can do
 
-### Core Capabilities
+- **Filter by level** with the level drop-down.
+- **Search** the loaded entries by text. The search runs in the browser.
+- **Pause** and resume auto-scrolling while new entries arrive.
+- **Export** the loaded entries, at the selected level, as a CSV file.
 
-- **Live Log Streaming:** WebSocket-based real-time log tail with automatic updates
-- **Multi-Level Filtering:** Filter by severity level (ERROR, WARN, INFO, DEBUG)
-- **Service-Based Filtering:** View logs from specific services (chat, perplexity, cache, database,
-  reminders, etc.)
-- **Timestamp Range Filtering:** Select specific time ranges for analysis
-- **Full-Text Search:** Search across log messages and service names
-- **Syntax Highlighting:** Color-coded severity levels for quick visual scanning
-- **Export Functionality:** Download filtered logs as CSV or JSON for external analysis
-- **Memory Efficient:** Maintains only last 10,000 log entries to prevent memory bloat
-- **Auto-Scrolling:** Automatically scrolls to latest entries (with pause for readability)
+The page has no clear button. The server accepts a `clear_logs` event (token required) that empties
+the in-memory buffer for every open dashboard; it does not touch the log files on disk.
 
-## Usage Guide
+## Access
 
-### Accessing the Log Viewer
+Open `http://<host>:3000/` and pick **Logs** in the header. The dashboard listens on `127.0.0.1`
+unless `DASHBOARD_BIND_HOST` is set. If it is bound to anything other than loopback (for example
+`DASHBOARD_BIND_HOST=0.0.0.0`), `DASHBOARD_TOKEN` is required even to read: without it every API
+call and socket connection is refused and the page stays disconnected. This page only reads, so on a
+loopback bind it works without a token.
 
-1. Start the bot with dashboard enabled: `npm start` or `npm run dev`
-2. Navigate to `http://localhost:3000/dashboard`
-3. Click on **Real-Time Log Viewer** or navigate to `/logs`
+## How it works
 
-### Filtering Logs
-
-#### By Severity Level
-
-```
-Click severity badges: ERROR | WARN | INFO | DEBUG
-- ERROR (Red): Critical errors and failures
-- WARN (Yellow): Warnings and non-fatal issues
-- INFO (Blue): General informational messages
-- DEBUG (Gray): Debug messages for development
-```
-
-#### By Service Name
-
-```
-Enter service name in filter field:
-- chat: Chat message handling logs
-- perplexity: AI API interaction logs
-- cache: Cache operation logs
-- database: SQLite database operation logs
-- reminders: Reminder scheduling logs
-- api: Web API request logs
-```
-
-#### By Time Range
-
-```
-Select start and end timestamps:
-- Last 1 hour (default)
-- Last 24 hours
-- Custom date/time range
-```
-
-### Searching Logs
-
-```
-Use full-text search to find:
-- Error messages: "connection timeout"
-- Specific users: "user#12345"
-- API endpoints: "/api/logs"
-- Stack traces: "TypeError", "ReferenceError"
-```
-
-### Export Logs
-
-#### Export as CSV
-
-```
-Click "Export as CSV" button
-File format:
-  timestamp,severity,service,message
-  2024-01-15T10:30:45.123Z,ERROR,perplexity,"API timeout: 5000ms"
-```
-
-#### Export as JSON
-
-```
-Click "Export as JSON" button
-File format:
-{
-  "logs": [
-    {
-      "timestamp": "2024-01-15T10:30:45.123Z",
-      "severity": "ERROR",
-      "service": "perplexity",
-      "message": "API timeout: 5000ms"
-    }
-  ],
-  "exportedAt": "2024-01-15T10:35:00.000Z",
-  "totalEntries": 1527
-}
-```
-
-## API Reference
-
-### WebSocket Connection
-
-**Endpoint:** `ws://localhost:3000/ws/logs` **Authentication:** None (local dashboard)
-
-### Message Format
-
-```javascript
-// Client → Server: Subscribe to logs
-{
-  type: "subscribe",
-  filters: {
-    severity: ["ERROR", "WARN"],
-    service: "perplexity",
-    startTime: "2024-01-15T10:00:00Z",
-    endTime: "2024-01-15T11:00:00Z"
-  }
-}
-
-// Server → Client: Log entry
-{
-  type: "log",
-  data: {
-    timestamp: "2024-01-15T10:30:45.123Z",
-    severity: "ERROR",
-    service: "perplexity",
-    message: "API timeout: 5000ms",
-    metadata: { duration: 5000, retries: 3 }
-  }
-}
-```
-
-### REST Endpoints
-
-#### Get Recent Logs
-
-```http
-GET /api/logs?limit=100&severity=ERROR&service=perplexity
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "logs": [
-    {
-      "timestamp": "2024-01-15T10:30:45.123Z",
-      "severity": "ERROR",
-      "service": "perplexity",
-      "message": "API timeout: 5000ms"
-    }
-  ],
-  "total": 1527,
-  "limit": 100
-}
-```
-
-#### Export Logs
-
-```http
-POST /api/logs/export
-Content-Type: application/json
-
-{
-  "format": "csv",
-  "severity": ["ERROR", "WARN"],
-  "service": "perplexity",
-  "startTime": "2024-01-15T10:00:00Z",
-  "endTime": "2024-01-15T11:00:00Z"
-}
-```
+The page requests entries with the `request_logs` Socket.IO event (optional `level` and `limit`,
+default 100) when it opens and again every 5 seconds while the tab is visible and not paused. The
+server also pushes each new line to every client as a `log:new` event (`timestamp`, `level`,
+`message`), which the page appends at once. `clear_logs` empties the buffer and tells every client
+with `logs_cleared`. There is no REST or raw WebSocket log API. The handlers are in
+`src/services/web-dashboard/handlers/logsHandlers.js`.
 
 ## Troubleshooting
 
-### Logs Not Appearing
-
-1. Verify bot is running: `npm start`
-2. Check dashboard is accessible: `http://localhost:3000/dashboard`
-3. Verify WebSocket connection in browser DevTools (F12 → Network → WS)
-4. Check bot console for connection errors
-
-### Performance Issues
-
-- If viewer is slow, reduce time range selection
-- Export logs to local file for bulk analysis
-- Clear browser cache (Ctrl+Shift+Delete)
-
-### Export Not Working
-
-- Verify file system permissions (write access to temp directory)
-- Check browser console for JavaScript errors (F12)
-- Try exporting smaller log ranges
-
-## Integration Examples
-
-### Monitor Production Issues
-
-```
-1. Filter by severity: ERROR
-2. Filter by service: perplexity
-3. Search for: "API error"
-4. Export last 24 hours
-5. Analyze patterns to identify recurring issues
-```
-
-### Debug User Issues
-
-```
-1. Get user ID from Discord
-2. Search for user ID in logs
-3. Filter by time when issue occurred
-4. Export relevant logs for analysis
-```
-
-### Performance Analysis
-
-```
-1. Filter by service: cache
-2. Search for: "miss rate"
-3. Analyze hit rate trends
-4. Identify optimization opportunities
-```
-
-## Backend Implementation
-
-**File:** `src/services/web-dashboard.js`
-
-**Key Methods:**
-
-- `setupLogViewerRoutes()` - Initialize log viewer endpoints
-- `streamLogs()` - WebSocket log streaming handler
-- `filterLogs()` - Apply filters to log entries
-- `exportLogs()` - Generate CSV/JSON exports
-- `pruneLogs()` - Maintain memory by pruning old entries
-
-**Configuration:**
-
-```javascript
-LOG_VIEWER: {
-  MAX_ENTRIES: 10000,
-  EXPORT_FORMAT: ['csv', 'json'],
-  TIMESTAMP_FORMAT: 'ISO',
-  AUTO_PRUNE_INTERVAL: 3600000 // 1 hour
-}
-```
-
-## Best Practices
-
-1. **Regular Monitoring:** Check logs daily for ERROR entries
-2. **Archive Important Logs:** Export critical logs for historical analysis
-3. **Set Alerts:** Monitor specific error patterns for early detection
-4. **Optimize Filters:** Use specific service names to reduce noise
-5. **Performance:** Don't keep viewer open for extended periods with high-volume logging
+- **The viewer is empty.** The bot has just restarted, or someone cleared the buffer. Read
+  `logs/bot.log` or run `pm2 logs aszune-ai` for older lines.
+- **No new lines appear.** Check the live-connection chip in the header; reload the page if it shows
+  disconnected.
+- **Debug lines are missing.** The bot only produces them when its log level allows it (see
+  `PI_LOG_LEVEL` and `DEBUG` in `.env.example`).
 
 ## See Also
 
-- [Dashboard Feature 2: Service Management](Dashboard-Feature-2-Service-Management.md)
-- [Dashboard Feature 3: Configuration Editor](Dashboard-Feature-3-Config-Editor.md)
-- [Technical Documentation](Technical-Documentation.md)
-- [Troubleshooting Guide](Troubleshooting.md)
-
-## Demo
-
-Interactive page: [`logs-viewer.html`](../dashboard/public/logs-viewer.html)
-
-Launch with: `npm start` → Navigate to `http://localhost:3000/dashboard` → Select "Real-Time Log
-Viewer"
+- [Dashboard overview](Dashboard-Features-Complete)
+- [Dashboard API reference](../docs/DASHBOARD-API-REFERENCE-v1.9.0.md)

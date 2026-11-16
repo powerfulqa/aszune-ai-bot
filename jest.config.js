@@ -53,10 +53,10 @@ module.exports = {
   // statements, 86% branches, 84% functions), so a real drop fails the build.
   coverageThreshold: {
     global: {
-      branches: 84,
-      functions: 82,
-      lines: 83,
-      statements: 83,
+      branches: 86,
+      functions: 88,
+      lines: 88,
+      statements: 88,
     },
   },
   // Output verbose coverage info

@@ -153,10 +153,7 @@ describe('ReminderService - Uncovered Paths', () => {
       reminderService.emit('reminderDue', { id: 1 });
 
       expect(faultyListener).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error in event listener'),
-        error
-      );
+      expect(logger.error).toHaveBeenCalledWith('Error in event listener for reminderDue:', error);
     });
 
     it('should call all listeners even if one fails', () => {
@@ -206,7 +203,7 @@ describe('ReminderService - Uncovered Paths', () => {
 
       expect(databaseService.getActiveReminders).toHaveBeenCalled();
       expect(scheduleSpy).toHaveBeenCalledTimes(2);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Loaded and scheduled 2'));
+      expect(logger.info).toHaveBeenCalledWith('Loaded and scheduled 2 active reminders');
     });
 
     it('should handle database errors during load', async () => {
@@ -216,10 +213,7 @@ describe('ReminderService - Uncovered Paths', () => {
       });
 
       await expect(reminderService.loadAndScheduleReminders()).rejects.toThrow('Database error');
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load and schedule reminders'),
-        error
-      );
+      expect(logger.error).toHaveBeenCalledWith('Failed to load and schedule reminders:', error);
     });
   });
 
@@ -230,9 +224,7 @@ describe('ReminderService - Uncovered Paths', () => {
 
       await reminderService.executeReminder(reminder);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to mark reminder 1 as completed')
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Failed to mark reminder 1 as completed');
     });
 
     it('should emit reminderDue event on successful execution', async () => {
@@ -243,7 +235,7 @@ describe('ReminderService - Uncovered Paths', () => {
       await reminderService.executeReminder(reminder);
 
       expect(emitSpy).toHaveBeenCalledWith('reminderDue', reminder);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Executed reminder 1'));
+      expect(logger.info).toHaveBeenCalledWith('Executed reminder 1 for user user1');
     });
 
     it('should handle errors during execution', async () => {
@@ -256,10 +248,7 @@ describe('ReminderService - Uncovered Paths', () => {
       // Should not throw, should log error
       await reminderService.executeReminder(reminder);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to execute reminder 1'),
-        error
-      );
+      expect(logger.error).toHaveBeenCalledWith('Failed to execute reminder 1:', error);
     });
   });
 });

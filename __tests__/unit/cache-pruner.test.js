@@ -95,7 +95,9 @@ describe('Cache Pruner', () => {
         expect(mockPruneQuestions).toHaveBeenCalledTimes(1);
         expect(mockPruneUserStats).toHaveBeenCalledTimes(1);
         expect(cachePruner.lastPruneTime).toBe(mockNow);
-        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('completed successfully'));
+        expect(logger.info).toHaveBeenCalledWith(
+          '[CachePruner] Cache pruning completed successfully'
+        );
       } finally {
         // Restore originals
         cachePruner._pruneQuestionCache = origPruneQuestions;
@@ -113,7 +115,7 @@ describe('Cache Pruner', () => {
       try {
         await expect(cachePruner.pruneCache()).rejects.toThrow(testError);
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Error during cache pruning'),
+          '[CachePruner] Error during cache pruning:',
           testError
         );
       } finally {
@@ -141,7 +143,9 @@ describe('Cache Pruner', () => {
       const writeCall = fs.writeFile.mock.calls[0];
       const writtenData = JSON.parse(writeCall[1]);
       expect(Object.keys(writtenData).length).toBe(80);
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Pruned 20 entries'));
+      expect(logger.info).toHaveBeenCalledWith(
+        '[CachePruner] Pruned 20 entries from question cache'
+      );
     });
 
     it('should not prune when under max entries', async () => {
@@ -158,7 +162,7 @@ describe('Cache Pruner', () => {
 
       expect(fs.writeFile).not.toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('within limits, no pruning needed')
+        '[CachePruner] Question cache size (40) within limits, no pruning needed'
       );
     });
 
@@ -170,7 +174,7 @@ describe('Cache Pruner', () => {
       await cachePruner._pruneQuestionCache();
 
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('not found, nothing to prune')
+        '[CachePruner] Question cache file not found, nothing to prune'
       );
     });
   });

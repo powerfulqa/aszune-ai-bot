@@ -74,6 +74,7 @@ describe('Index Uncovered Paths', () => {
     }));
     jest.doMock('../../src/services/database', () => ({
       logBotEvent: jest.fn(),
+      close: jest.fn(),
     }));
     jest.doMock('../../src/services/web-dashboard', () => ({
       start: jest.fn().mockResolvedValue(true),
@@ -198,7 +199,7 @@ describe('Index Uncovered Paths', () => {
         'Error shutting down web dashboard service:',
         stopError
       );
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Shutdown completed with'));
+      expect(logger.error).toHaveBeenCalledWith('Shutdown completed with 1 error(s)');
 
       exitSpy.mockRestore();
     });
@@ -212,7 +213,7 @@ describe('Index Uncovered Paths', () => {
       await Promise.all([p1, p2]);
 
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Shutdown already in progress')
+        'Shutdown already in progress. Ignoring additional SIGTERM signal.'
       );
     });
   });
@@ -234,7 +235,7 @@ describe('Index Uncovered Paths', () => {
 
       expect(logger.error).toHaveBeenCalledWith('Uncaught Exception:', error);
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Received uncaughtException')
+        'Received uncaughtException. Shutting down gracefully...'
       );
     });
   });

@@ -179,7 +179,7 @@ describe('Logger - Branch Coverage Tests', () => {
     // Verify correct log was made
     expect(consoleMock.error).toHaveBeenCalledWith(
       'No response received from API:',
-      expect.anything()
+      mockError.request
     );
   });
 

@@ -65,6 +65,7 @@ describe('Dashboard Command', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
     jest.spyOn(process, 'uptime').mockReturnValue(19800);
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
@@ -100,7 +101,7 @@ describe('Dashboard Command', () => {
             { name: '📊 Activity', value: 'Servers: 5\nMembers: 150', inline: true },
           ],
           footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-          timestamp: expect.any(String),
+          timestamp: '2026-11-16T12:00:00.000Z',
         },
       ],
     });

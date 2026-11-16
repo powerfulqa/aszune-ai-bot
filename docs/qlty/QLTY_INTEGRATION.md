@@ -141,7 +141,6 @@ markdownlint = "latest"
 
 Tool configurations are stored in `.qlty/configs/`:
 
-- `.eslintrc.json` - ESLint rules
 - `.prettierrc` - Prettier formatting options
 - `.markdownlint.json` - Markdown linting rules
 - `.gitleaks.toml` - Secret detection patterns

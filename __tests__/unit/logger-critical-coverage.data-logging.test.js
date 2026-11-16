@@ -5,6 +5,7 @@ describe('Data Logging', () => {
 
   beforeEach(() => {
     context = prepareLoggerTest();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
   });
 
   afterEach(() => {
@@ -41,13 +42,13 @@ describe('Data Logging', () => {
   it('should handle null data gracefully', async () => {
     await context.logger.info('test message', null);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle undefined data gracefully', async () => {
     await context.logger.info('test message', undefined);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle circular reference data gracefully', async () => {
@@ -56,7 +57,7 @@ describe('Data Logging', () => {
 
     await context.logger.debug('test message', circular);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[DEBUG] test message'));
-    expect(console.log).toHaveBeenCalledWith(expect.objectContaining({ self: expect.anything() }));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [DEBUG] test message');
+    expect(console.log).toHaveBeenCalledWith(circular);
   });
 });
