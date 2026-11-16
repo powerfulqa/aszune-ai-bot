@@ -1,10 +1,9 @@
 describe('Text Commands Removal', () => {
   describe('Migration to Slash Commands Only', () => {
-    it('should verify that both handleTextCommand and handleSlashCommand exist', () => {
+    it('should verify that handleSlashCommand exists and handleTextCommand is gone', () => {
       const commands = require('../../src/commands');
 
-      // Verify both command handlers exist (supporting both slash and text commands)
-      expect(commands.handleTextCommand).toBeDefined();
+      expect(commands.handleTextCommand).toBeUndefined();
       expect(commands.handleSlashCommand).toBeDefined();
       expect(commands.getSlashCommandsData).toBeDefined();
     });

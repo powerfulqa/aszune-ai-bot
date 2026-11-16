@@ -5,6 +5,13 @@ jest.mock('../../../src/config/config', () => ({
 
 const { DatabaseService } = require('../../../src/services/database');
 
+const userMessages = (svc, id, limit = 10) =>
+  svc
+    .getDb()
+    .prepare('SELECT message FROM user_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?')
+    .all(id, limit)
+    .map((row) => row.message);
+
 describe('DatabaseService - User Stats', function () {
   let dbService;
 
@@ -137,7 +144,7 @@ describe('DatabaseService - User Stats', function () {
 
       // Verify it's gone
       const stats = dbService.getUserStats('123');
-      const messages = dbService.getUserMessages('123');
+      const messages = userMessages(dbService, '123');
 
       expect(stats.message_count).toBe(0);
       expect(messages).toEqual([]);
@@ -164,8 +171,8 @@ describe('DatabaseService - User Stats', function () {
       expect(dbService.getUserStats(userId).message_count).toBe(7); // 5 + 2 messages
       expect(dbService.getUserStats(userId).total_summaries).toBe(2);
       expect(dbService.getUserStats(userId).total_commands).toBe(3);
-      expect(dbService.getUserMessages(userId)).toContain('Test message 1');
-      expect(dbService.getUserMessages(userId)).toContain('Test message 2');
+      expect(userMessages(dbService, userId)).toContain('Test message 1');
+      expect(userMessages(dbService, userId)).toContain('Test message 2');
       expect(dbService.getConversationHistory(userId).length).toBe(3); // 2 user + 1 bot
 
       // Clear conversation data only
@@ -175,36 +182,8 @@ describe('DatabaseService - User Stats', function () {
       expect(dbService.getUserStats(userId).message_count).toBe(7);
       expect(dbService.getUserStats(userId).total_summaries).toBe(2);
       expect(dbService.getUserStats(userId).total_commands).toBe(3);
-      expect(dbService.getUserMessages(userId)).toEqual([]);
+      expect(userMessages(dbService, userId)).toEqual([]);
       expect(dbService.getConversationHistory(userId)).toEqual([]);
-    });
-  });
-
-  describe('exportUserData', () => {
-    it('should export user data successfully', () => {
-      const userId = 'export_test_user';
-
-      // Add some data for the user
-      dbService.updateUserStats(userId, { total_summaries: 1 });
-      dbService.addUserMessage(userId, 'Test message');
-      dbService.trackCommandUsage(userId, 'help', 'server123', true, 500);
-
-      const exportData = dbService.exportUserData(userId);
-
-      expect(exportData).toBeDefined();
-      expect(exportData.userId).toBe(userId);
-      expect(exportData.userStats.user_id).toBe(userId);
-      expect(exportData.userStats.message_count).toBe(1); // addUserMessage increments this
-      expect(exportData.conversationHistory.length).toBe(1);
-      expect(exportData.commandUsage.length).toBe(1);
-    });
-
-    it('should return null for database errors', () => {
-      const newService = new DatabaseService();
-      newService.isDisabled = true;
-
-      const exportData = newService.exportUserData('user');
-      expect(exportData).toBeNull();
     });
   });
 });

@@ -5,6 +5,13 @@ jest.mock('../../../src/config/config', () => ({
 
 const { DatabaseService } = require('../../../src/services/database');
 
+const userMessages = (svc, id, limit = 10) =>
+  svc
+    .getDb()
+    .prepare('SELECT message FROM user_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?')
+    .all(id, limit)
+    .map((row) => row.message);
+
 describe('DatabaseService - Messages', function () {
   let dbService;
 
@@ -28,7 +35,7 @@ describe('DatabaseService - Messages', function () {
 
   describe('getUserMessages', () => {
     it('should return empty array for user with no messages', () => {
-      const result = dbService.getUserMessages('123');
+      const result = userMessages(dbService, '123');
       expect(result).toEqual([]);
     });
 
@@ -57,7 +64,7 @@ describe('DatabaseService - Messages', function () {
 
       dbService.addUserMessage('123', 'Second message');
 
-      const result = dbService.getUserMessages('123');
+      const result = userMessages(dbService, '123');
       expect(result.length).toBe(2);
       expect(result).toContain('Hello world');
       expect(result).toContain('Second message');
@@ -74,11 +81,11 @@ describe('DatabaseService - Messages', function () {
       }
 
       // Get all messages and verify total count is limited by trigger
-      const allMessages = dbService.getUserMessages('123', 30); // Ask for more than should exist
+      const allMessages = userMessages(dbService, '123', 30); // Ask for more than should exist
       expect(allMessages.length).toBeLessThanOrEqual(20); // Trigger should limit to 20
 
       // Test query limit
-      const result = dbService.getUserMessages('123', 5);
+      const result = userMessages(dbService, '123', 5);
       expect(result.length).toBe(5);
 
       // The first message should be the most recent (highest number)
@@ -95,7 +102,7 @@ describe('DatabaseService - Messages', function () {
 
       const _dbConn2 = dbService.getDb();
 
-      const messages = dbService.getUserMessages('123');
+      const messages = userMessages(dbService, '123');
 
       // Try raw SQL query
       const dbConn = dbService.getDb();
@@ -109,7 +116,7 @@ describe('DatabaseService - Messages', function () {
     it('should add bot response with prefix', () => {
       dbService.addBotResponse('123', 'Bot response');
 
-      const messages = dbService.getUserMessages('123');
+      const messages = userMessages(dbService, '123');
       expect(messages).toContain('[BOT] Bot response');
     });
   });

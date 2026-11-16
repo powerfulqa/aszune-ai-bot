@@ -55,25 +55,6 @@ class ConversationManager {
   }
 
   /**
-   * Start cleanup interval (for testing)
-   */
-  startCleanupInterval() {
-    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), _getCleanupInterval());
-    this.activeIntervals.add(this.cleanupInterval);
-  }
-
-  /**
-   * Start save stats interval (for testing)
-   */
-  startSaveStatsInterval() {
-    this.saveStatsInterval = setInterval(
-      () => this.saveUserStats(),
-      config.STATS_SAVE_INTERVAL_MS || 5 * 60 * 1000
-    );
-    this.activeIntervals.add(this.saveStatsInterval);
-  }
-
-  /**
    * Load user stats from disk
    */
   async loadUserStats() {
@@ -214,9 +195,6 @@ class ConversationManager {
       const excessCount = history.length - maxLength;
       history.splice(0, excessCount);
     }
-
-    // Update user stats
-    this.updateUserStats(userId, role === 'user' ? 'messages' : null);
   }
 
   /**
@@ -254,6 +232,9 @@ class ConversationManager {
    * @param {string} userId - The user's ID
    */
   updateTimestamp(userId) {
+    // Check inactivity against the previous timestamp before overwriting it;
+    // done afterwards, the gap is always zero and nothing is ever cleared.
+    this.checkAndClearInactiveConversation(userId);
     this.lastMessageTimestamps.set(userId, Date.now());
   }
 
@@ -293,9 +274,7 @@ class ConversationManager {
     );
 
     try {
-      if (statType === 'messages') {
-        databaseService.updateUserStats(userId, { message_count: 1 });
-      } else if (statType === 'summaries') {
+      if (statType === 'summaries') {
         databaseService.updateUserStats(userId, { total_summaries: 1 });
       }
     } catch (error) {

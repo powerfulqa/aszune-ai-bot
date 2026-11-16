@@ -19,7 +19,6 @@ describe('EnhancedCache - Eviction', () => {
   afterEach(() => {
     if (cache) {
       cache.clear();
-      cache.stopCleanup();
     }
   });
 
@@ -76,33 +75,6 @@ describe('EnhancedCache - Eviction', () => {
       // key2 should be evicted (least recently used)
       expect(cache.get('key1')).toBe('value1'); // Should still be there
       expect(cache.get('key2')).toBeNull(); // Should be evicted
-    });
-
-    it('should use LFU eviction strategy', () => {
-      const lfuCache = new EnhancedCache({
-        maxSize: 1000,
-        maxEntries: 5,
-        evictionStrategy: 'lfu',
-        defaultTtl: 60000,
-      });
-
-      lfuCache.set('key1', 'value1');
-      lfuCache.set('key2', 'value2');
-      lfuCache.set('key3', 'value3');
-
-      // Access key1 multiple times to increase frequency
-      lfuCache.get('key1');
-      lfuCache.get('key1');
-      lfuCache.get('key1');
-
-      // Add more entries to trigger eviction
-      lfuCache.set('key4', 'value4');
-      lfuCache.set('key5', 'value5');
-      lfuCache.set('key6', 'value6');
-
-      // key2 should be evicted (least frequently used)
-      expect(lfuCache.get('key1')).toBe('value1'); // Should still be there
-      expect(lfuCache.get('key2')).toBeNull(); // Should be evicted
     });
 
     it('should use TTL eviction strategy', () => {

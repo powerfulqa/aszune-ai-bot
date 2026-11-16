@@ -14,17 +14,31 @@ const { validateEnvContent, validateJsContent } = require('../../../utils/config
 // Only these files may be read or written through the dashboard. Without this
 // allowlist the handlers accept any path under cwd, which allows overwriting
 // source files (remote code execution) and reading arbitrary files.
-const READABLE_FILES = ['.env', 'config.js', '.env.example'];
-const WRITABLE_FILES = ['.env', 'config.js'];
+const READABLE_FILES = ['.env', '.env.example'];
+const WRITABLE_FILES = ['.env'];
+
+// .env is loaded into the process environment at boot and inherited by the
+// processes the bot spawns (pm2, git). Keys that change how those programs
+// load or run code would turn "may edit config" into "may run code on the host".
+const FORBIDDEN_ENV_KEY =
+  /^(NODE_(OPTIONS|PATH|EXTRA_CA_CERTS|TLS_REJECT_UNAUTHORIZED|REPL_EXTERNAL_MODULE)|LD_.*|DYLD_.*|PM2_HOME|npm_config_.*|GIT_.*|SSH_.*|PATH|BASH_ENV|ENV)$/i;
+const MAX_CONFIG_BYTES = 64 * 1024;
 
 // Placeholder shown to the dashboard in place of a secret value. A save that
 // still carries this sentinel is treated as "leave the secret unchanged".
 const SECRET_MASK = '********';
 
 // Env keys whose values must never be sent to the browser.
-const SECRET_KEY_PATTERN = /(TOKEN|KEY|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL)/i;
+const SECRET_KEY_PATTERN =
+  /(TOKEN|KEY|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL|AUTH|DSN|COOKIE|BEARER|WEBHOOK)/i;
+// A rotated key is often left behind as a comment; mask those lines too.
+const COMMENTED_ASSIGNMENT_PATTERN =
+  /^([^\S\r\n]*#[ \t]*(?:export[ \t]+)?([\w.-]+)[ \t]*=[ \t]*)\S.*$/gm;
+// Leading whitespace is anything but a line break: that includes a UTF-8 BOM
+// (so the first key of a BOM-prefixed file is still masked) without letting the
+// match run across blank lines, which made it quadratic.
 const ENV_ASSIGNMENT_PATTERN =
-  /^(\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?))(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?$/gm;
+  /^([^\S\r\n]*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?))(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?$/gm;
 
 async function readExistingConfig(configPath) {
   try {
@@ -192,6 +206,14 @@ function validateConfigSaveInput(data) {
     logger.warn(`Security: Rejected config save for non-allowlisted file "${filename}"`);
     return `Access denied: ${filename} cannot be modified`;
   }
+  if (typeof content !== 'string' || Buffer.byteLength(content) > MAX_CONFIG_BYTES) {
+    return `Config content must be text of at most ${MAX_CONFIG_BYTES} bytes`;
+  }
+  const forbidden = Object.keys(parse(content)).find((key) => FORBIDDEN_ENV_KEY.test(key));
+  if (forbidden) {
+    logger.warn(`Security: Rejected config save setting "${forbidden}"`);
+    return `Access denied: ${forbidden} cannot be set from the dashboard`;
+  }
   return null;
 }
 
@@ -208,6 +230,8 @@ function maskSecrets(filename, content) {
   }
   return transformEnvValues(content, (key, value, rawValue) =>
     value && SECRET_KEY_PATTERN.test(key) ? SECRET_MASK : rawValue
+  ).replace(COMMENTED_ASSIGNMENT_PATTERN, (line, prefix, key) =>
+    SECRET_KEY_PATTERN.test(key) ? prefix + SECRET_MASK : line
   );
 }
 

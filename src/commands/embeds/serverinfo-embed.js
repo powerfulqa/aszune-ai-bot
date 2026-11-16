@@ -139,9 +139,9 @@ function getStickerStats(guild) {
 function buildCoreFields(guild, memberStats) {
   const createdAt = guild.createdAt;
   const totalMembers = guild.memberCount || 0;
-  const onlineMembers = memberStats.onlineCount || Math.floor(totalMembers * 0.2);
-  const botCount = memberStats.botCount || 0;
-  const humanCount = memberStats.humanMembers || totalMembers - botCount;
+  // Null means the member list could not be fetched; say so instead of guessing.
+  const botCount = memberStats.botCount ?? 'Unavailable';
+  const humanCount = memberStats.humanMembers ?? 'Unavailable';
 
   return [
     { name: '👑 Owner', value: `<@${guild.ownerId}>`, inline: true },
@@ -153,7 +153,7 @@ function buildCoreFields(guild, memberStats) {
     { name: '🆔 Server ID', value: `\`${guild.id}\``, inline: true },
     {
       name: `👥 Members [${totalMembers}]`,
-      value: `👤 Humans: ${humanCount}\n🤖 Bots: ${botCount}\n🟢 Online: ~${onlineMembers}`,
+      value: `👤 Humans: ${humanCount}\n🤖 Bots: ${botCount}`,
       inline: true,
     },
   ];

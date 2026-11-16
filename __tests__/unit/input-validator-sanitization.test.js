@@ -31,21 +31,6 @@ describe('InputValidator - Sanitization', () => {
       expect(result.sanitized).toContain('Hello world!');
     });
 
-    it('should reject dangerous content', () => {
-      const input = '<script>alert("xss")</script>';
-      const result = InputValidator.validateAndSanitize(input, 'text');
-
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('unsafe');
-    });
-
-    it('should handle empty input', () => {
-      const result = InputValidator.validateAndSanitize('', 'text');
-
-      expect(result.valid).toBe(true);
-      expect(result.sanitized).toBe('');
-    });
-
     it('should handle null input', () => {
       const result = InputValidator.validateAndSanitize(null, 'text');
 
@@ -55,11 +40,7 @@ describe('InputValidator - Sanitization', () => {
 
     it('should validate different input types', () => {
       const testCases = [
-        { input: 'user@example.com', type: 'email', expected: true },
-        { input: 'https://example.com', type: 'url', expected: true },
         { input: '123456789012345678', type: 'userId', expected: true },
-        { input: 'invalid-email', type: 'email', expected: false },
-        { input: 'not-a-url', type: 'url', expected: false },
         { input: '123', type: 'userId', expected: false },
       ];
 
@@ -140,15 +121,11 @@ describe('InputValidator - Sanitization', () => {
   describe('validation patterns', () => {
     it('should have correct validation patterns', () => {
       expect(VALIDATION_PATTERNS).toHaveProperty('USER_ID');
-      expect(VALIDATION_PATTERNS).toHaveProperty('EMAIL');
-      expect(VALIDATION_PATTERNS).toHaveProperty('URL');
       expect(VALIDATION_PATTERNS).toHaveProperty('TEXT');
     });
 
     it('should have correct validation limits', () => {
-      expect(VALIDATION_LIMITS).toHaveProperty('TEXT_MAX_LENGTH');
-      expect(VALIDATION_LIMITS).toHaveProperty('EMAIL_MAX_LENGTH');
-      expect(VALIDATION_LIMITS).toHaveProperty('URL_MAX_LENGTH');
+      expect(VALIDATION_LIMITS).toHaveProperty('MAX_MESSAGE_LENGTH');
       expect(VALIDATION_LIMITS).toHaveProperty('USER_ID_LENGTH');
     });
 

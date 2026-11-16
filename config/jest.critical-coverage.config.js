@@ -1,7 +1,6 @@
 /**
  * Jest configuration for critical files coverage enforcement
- * This configuration enforces 80%+ coverage on the most critical files
- * following QLTY guidelines and aszuneai.mdc standards
+ * Adds per-file thresholds for the most critical files on top of the global gate
  */
 module.exports = {
   // Extend from main configuration
@@ -10,83 +9,29 @@ module.exports = {
   // Override rootDir to point to project root instead of config folder
   rootDir: '../',
 
-  // Override coverage thresholds for critical files - 64% global to match Jest's measurement
+  // Per-file gates for the files that can take the whole bot down. Each is set
+  // about two points under the measured value (2026-11-16), so they catch a
+  // regression in that file even when the global figure hardly moves. Raise
+  // them when coverage rises; do not lower them to make a build pass.
   coverageThreshold: {
-    // Global thresholds - Realistic target of 64% (matches Jest's threshold calculation)
-    global: {
-      branches: 64,
-      functions: 64,
-      lines: 64,
-      statements: 64,
-    },
-
-    // Critical Files - MUST maintain 80%+ coverage for build to pass
-    // These are the most important files that could break the entire application
-
-    // 🎯 Tier 1: Core Critical Files (Main Entry & Configuration) - Adjusted to current coverage
-    './src/index.js': {
-      branches: 72, // Current: 72.3% (was 78%)
-      functions: 80, // Current: 85.71%
-      lines: 76, // Current: 76.94% (was 80%)
-      statements: 76, // Current: 76.94% (was 80%)
-    },
-    './src/config/config.js': {
-      branches: 80, // Target: 80%
-      functions: 100, // Already exceeds
-      lines: 80, // Target: 80%
-      statements: 80, // Target: 80%
-    },
-
-    // 🎯 Tier 2: Service Layer Critical Files - 80% target
-    './src/commands/index.js': {
-      branches: 80, // Target: 80%
-      functions: 80, // Target: 80%
-      lines: 80, // Target: 80%
-      statements: 80, // Target: 80%
-    },
+    // This run measures the global figure about two points lower than the main
+    // config does (82.9% statements, 81.6% functions on 2026-11-16), so its
+    // floor is set against its own numbers. The main gate is jest.config.js.
+    global: { branches: 84, functions: 80, lines: 81, statements: 81 },
+    './src/index.js': { branches: 82, functions: 98, lines: 76, statements: 76 },
+    './src/config/config.js': { branches: 90, functions: 100, lines: 96, statements: 96 },
+    './src/commands/index.js': { branches: 83, functions: 93, lines: 92, statements: 92 },
     './src/services/perplexity-secure.js': {
-      branches: 80, // Target: 80%
-      functions: 76, // Current: 76.47% (many private methods have limited test coverage)
-      lines: 78, // Current: 78.4% (adjusted from 79% after refactoring)
-      statements: 78, // Current: 78.4% (adjusted from 79% after refactoring)
-    },
-    './src/services/chat.js': {
-      branches: 75, // Adjusted to match current coverage: 78.3%
-      functions: 85, // Current: 87.5%
-      lines: 77, // Current: 77.51%
-      statements: 77, // Current: 77.51%
-    },
-
-    // 🎯 Tier 3: Utility Layer Critical Files - 80% target
-    './src/utils/logger.js': {
-      branches: 80, // Target: 80%
-      functions: 90, // Current: 90.9%
-      lines: 80, // Target: 80%
-      statements: 80, // Target: 80%
-    },
-    './src/utils/error-handler.js': {
-      branches: 80, // Target: 80%
-      functions: 100, // Already exceeds
-      lines: 92, // Current: 93.53%
-      statements: 92, // Current: 93.53%
-    },
-    './src/utils/conversation.js': {
-      branches: 80, // Target: 80%
-      // Jest 30's v8 provider counts the interval-callback arrows inside
-      // initializeIntervals(), which are guarded by NODE_ENV !== 'test' and so
-      // never run under test — 94.11% (16/17). Jest 29 did not count them.
+      branches: 82,
       functions: 94,
-      lines: 80, // Target: 80%
-      statements: 80, // Target: 80%
+      lines: 92,
+      statements: 92,
     },
-
-    // 🎯 Database Integration (v1.7.0) - New Critical File - 80% target
-    './src/services/database.js': {
-      branches: 75, // Adjusted to match current coverage: 79.58%
-      functions: 80, // Target: 80%
-      lines: 80, // Target: 80%
-      statements: 80, // Target: 80%
-    },
+    './src/services/chat.js': { branches: 92, functions: 98, lines: 91, statements: 91 },
+    './src/utils/logger.js': { branches: 91, functions: 93, lines: 96, statements: 96 },
+    './src/utils/error-handler.js': { branches: 90, functions: 100, lines: 95, statements: 95 },
+    './src/utils/conversation.js': { branches: 84, functions: 98, lines: 90, statements: 90 },
+    './src/services/database.js': { branches: 95, functions: 79, lines: 89, statements: 89 },
   },
 
   // Enhanced reporting for critical coverage failures

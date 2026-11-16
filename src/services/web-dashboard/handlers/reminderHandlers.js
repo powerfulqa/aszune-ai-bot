@@ -6,8 +6,10 @@
 
 const logger = require('../../../utils/logger');
 const databaseService = require('../../database');
+const reminderService = require('../../reminder-service');
 const {
   sendError,
+  sendSuccess,
   sendCreateError,
   sendUpdateError,
   sendDeleteError,
@@ -58,7 +60,7 @@ function registerReminderHandlers(socket, _dashboard, options = {}) {
 function handleRequestReminders(data, callback) {
   try {
     const result = processReminderRequest(databaseService, data);
-    if (callback) callback(result);
+    sendSuccess(callback, result);
     logger.debug(`Reminders requested: ${result.total} found`);
   } catch (error) {
     logger.error('Error retrieving reminders:', error);
@@ -66,33 +68,38 @@ function handleRequestReminders(data, callback) {
   }
 }
 
+const SNOWFLAKE = /^\d{17,20}$/;
+
 /**
- * Handle create reminder request
+ * Handle create reminder request. Goes through the reminder service so the
+ * reminder is scheduled as well as stored.
  * @param {Object} data - Reminder data
  * @param {Function} callback - Response callback
  */
-function handleCreateReminder(data, callback) {
+async function handleCreateReminder(data, callback) {
   try {
-    const { userId, message, scheduledTime, channelId } = data;
+    const { userId, message, scheduledTime, channelId } = data || {};
 
-    if (!userId || !message || !scheduledTime) {
-      const error = new Error('Missing required fields: userId, message, scheduledTime');
-      sendCreateError(callback, error.message);
+    if (!userId || !message || !scheduledTime || !channelId) {
+      sendCreateError(
+        callback,
+        'Missing required fields: userId, channelId, message, scheduledTime'
+      );
+      return;
+    }
+    // A reminder is delivered as a ping in a channel, so both must be real Discord ids.
+    if (!SNOWFLAKE.test(userId) || !SNOWFLAKE.test(channelId)) {
+      sendCreateError(callback, 'userId and channelId must be Discord ids');
       return;
     }
 
-    const reminder = databaseService.createReminder(userId, message, scheduledTime, {
+    const reminder = await reminderService.createReminder(userId, {
+      message,
+      scheduledTime,
       channelId,
     });
 
-    if (callback) {
-      callback({
-        created: true,
-        reminder,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
+    sendSuccess(callback, { created: true, reminder, timestamp: new Date().toISOString() });
     logger.info(`Reminder created: ${reminder.id} for user ${userId}`);
   } catch (error) {
     logger.error('Error creating reminder:', error);
@@ -105,37 +112,27 @@ function handleCreateReminder(data, callback) {
  * @param {Object} data - Reminder update data
  * @param {Function} callback - Response callback
  */
-function handleEditReminder(data, callback) {
+async function handleEditReminder(data, callback) {
   try {
-    const { reminderId, userId, message, scheduledTime } = data;
+    const { reminderId, userId, message, scheduledTime } = data || {};
 
     if (!reminderId || !userId) {
-      const error = new Error('Missing required fields: reminderId, userId');
-      sendUpdateError(callback, error.message);
+      sendUpdateError(callback, 'Missing required fields: reminderId, userId');
       return;
     }
 
-    const allReminders = databaseService.getActiveReminders(userId);
-    const reminder = allReminders?.find((r) => r.id === reminderId);
+    const reminder = await reminderService.updateReminder(reminderId, userId, {
+      message,
+      scheduledTime,
+    });
 
     if (!reminder) {
-      const error = new Error(`Reminder not found: ${reminderId}`);
-      sendUpdateError(callback, error.message);
+      sendUpdateError(callback, `Reminder not found: ${reminderId}`);
       return;
     }
 
-    if (message) reminder.message = message;
-    if (scheduledTime) reminder.scheduled_time = scheduledTime;
-
     logger.info(`Reminder ${reminderId} updated`);
-
-    if (callback) {
-      callback({
-        updated: true,
-        reminder,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    sendSuccess(callback, { updated: true, reminder, timestamp: new Date().toISOString() });
   } catch (error) {
     logger.error('Error editing reminder:', error);
     sendUpdateError(callback, error.message);
@@ -143,37 +140,29 @@ function handleEditReminder(data, callback) {
 }
 
 /**
- * Handle delete reminder request
+ * Handle delete reminder request. Goes through the reminder service so the
+ * pending timer is cleared too.
  * @param {Object} data - Delete request data
  * @param {Function} callback - Response callback
  */
-function handleDeleteReminder(data, callback) {
+async function handleDeleteReminder(data, callback) {
   try {
-    const { reminderId, userId } = data;
+    const { reminderId, userId } = data || {};
 
     if (!reminderId || !userId) {
-      const error = new Error('Missing required fields: reminderId, userId');
-      sendDeleteError(callback, error.message);
+      sendDeleteError(callback, 'Missing required fields: reminderId, userId');
       return;
     }
 
-    const deleted = databaseService.deleteReminder(reminderId, userId);
+    const deleted = await reminderService.deleteReminder(reminderId, userId);
 
     if (!deleted) {
-      const error = new Error(`Reminder not found or already deleted: ${reminderId}`);
-      sendDeleteError(callback, error.message);
+      sendDeleteError(callback, `Reminder not found or already deleted: ${reminderId}`);
       return;
     }
 
     logger.info(`Reminder deleted: ${reminderId}`);
-
-    if (callback) {
-      callback({
-        deleted: true,
-        reminderId,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    sendSuccess(callback, { deleted: true, reminderId, timestamp: new Date().toISOString() });
   } catch (error) {
     logger.error('Error deleting reminder:', error);
     sendDeleteError(callback, error.message);
@@ -188,7 +177,7 @@ function handleDeleteReminder(data, callback) {
 function handleFilterReminders(data, callback) {
   try {
     const result = processFilterReminders(databaseService, data);
-    if (callback) callback(result);
+    sendSuccess(callback, result);
     logger.debug(`Reminders filtered: ${result.total} results`);
   } catch (error) {
     logger.error('Error filtering reminders:', error);

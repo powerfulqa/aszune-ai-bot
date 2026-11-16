@@ -72,15 +72,17 @@ function handleClearLogs(dashboard, callback) {
 
     logger.info(`Logs cleared by dashboard (${count} entries removed)`);
 
-    if (callback) {
+    // Broadcast first: if it throws, the client gets one error reply, not a
+    // success followed by an error.
+    dashboard.io.emit('logs_cleared', { count, timestamp: new Date().toISOString() });
+
+    if (typeof callback === 'function') {
       callback({
         cleared: true,
         count,
         timestamp: new Date().toISOString(),
       });
     }
-
-    dashboard.io.emit('logs_cleared', { count, timestamp: new Date().toISOString() });
   } catch (error) {
     logger.error('Error clearing logs:', error);
     sendClearError(callback, error.message);

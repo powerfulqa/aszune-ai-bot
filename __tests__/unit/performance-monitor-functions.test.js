@@ -65,53 +65,6 @@ describe('Performance Monitor - Functions', () => {
     }
   });
 
-  describe('throttle functions', () => {
-    it('should throttle function calls based on interval', (done) => {
-      const mockFunction = jest.fn();
-      const throttledFunction = performanceMonitor.throttle(mockFunction, 100);
-
-      // Call function multiple times quickly
-      throttledFunction();
-      throttledFunction();
-      throttledFunction();
-
-      // Should only be called once due to throttling
-      setTimeout(() => {
-        expect(mockFunction).toHaveBeenCalledTimes(1);
-        done();
-      }, 150);
-    });
-
-    it('should allow function calls after throttle interval', (done) => {
-      const mockFunction = jest.fn();
-      const throttledFunction = performanceMonitor.throttle(mockFunction, 50);
-
-      throttledFunction();
-
-      setTimeout(() => {
-        throttledFunction();
-        expect(mockFunction).toHaveBeenCalledTimes(2);
-        done();
-      }, 100);
-    });
-
-    it('should debounce function calls', (done) => {
-      const mockFunction = jest.fn();
-      const debouncedFunction = performanceMonitor.debounce(mockFunction, 100);
-
-      // Call function multiple times quickly
-      debouncedFunction();
-      debouncedFunction();
-      debouncedFunction();
-
-      // Should only be called once after debounce delay
-      setTimeout(() => {
-        expect(mockFunction).toHaveBeenCalledTimes(1);
-        done();
-      }, 150);
-    });
-  });
-
   describe('_getCpuInfo', () => {
     it('should return CPU information', () => {
       const cpuInfo = performanceMonitor._getCpuInfo();

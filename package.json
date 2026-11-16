@@ -10,7 +10,7 @@
     "test": "jest",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
     "test:critical": "jest --config=config/jest.critical-coverage.config.js --coverage",
-    "test:critical:ci": "jest --config=config/jest.critical-coverage.config.js --coverage --silent --passWithNoTests --ci",
+    "test:critical:ci": "jest --config=config/jest.critical-coverage.config.js --coverage --silent --ci",
     "coverage:critical": "jest --config=config/jest.critical-coverage.config.js --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "precommit": "npm run test:critical:ci",
     "security": "npm audit --audit-level=high",
@@ -58,11 +58,9 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.12.0",
-    "eslint-config-prettier": "^10.1.8",
     "globals": "^17.14.0",
     "jest": "^30.5.2",
     "jest-junit": "^17.0.0",
-    "markdownlint-cli": "^0.50.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.10"
   },

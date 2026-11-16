@@ -3,48 +3,37 @@
  * Generates Discord embed for /dashboard command
  */
 
+const STATUS_COLORS = { healthy: 0x00ff00, warning: 0xffa500 };
+
 /**
- * Build the dashboard embed
- * @param {Object} dashboardData - Dashboard data from PerformanceDashboard
- * @param {Object} realTimeStatus - Real-time status data
- * @param {number} humanMembers - Number of human members
+ * Build the dashboard embed from live readings only (process memory, uptime,
+ * guild counts). Nothing records command usage or response times.
+ * @param {Object} resourceStatus - Result of ResourceOptimizer.monitorResources()
+ * @param {string} uptime - Formatted process uptime
+ * @param {number} memberCount - Members in this guild, bots included
+ * @param {number} serverCount - Number of guilds the bot is in
  * @returns {Object} Discord embed object
  */
-function buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers) {
+function buildDashboardEmbed(resourceStatus, uptime, memberCount, serverCount) {
+  const status = resourceStatus.overall.status;
   return {
-    color:
-      dashboardData.overview.status === 'healthy'
-        ? 0x00ff00
-        : dashboardData.overview.status === 'warning'
-          ? 0xffa500
-          : 0xff0000,
+    color: STATUS_COLORS[status] ?? 0xff0000,
     title: '🖥️ Performance Dashboard',
     fields: [
       {
         name: '🚦 System Status',
-        value: `Status: ${dashboardData.overview.status.toUpperCase()}\nUptime: ${realTimeStatus.uptime.formatted}\nMemory: ${dashboardData.overview.memoryUsage}`,
+        value: `Status: ${status.toUpperCase()}\nUptime: ${uptime}\nMemory: ${resourceStatus.memory.used}MB`,
         inline: true,
       },
       {
-        name: '⚡ Performance',
-        value: `Response Time: ${dashboardData.overview.responseTime}\nError Rate: ${dashboardData.overview.errorRate}\nOptimization: ${dashboardData.overview.optimizationTier}`,
+        name: '⚡ Optimization',
+        value: `Tier: ${resourceStatus.optimizationTier}`,
         inline: true,
       },
       {
         name: '📊 Activity',
-        value: `Servers: 1\nActive Users: ${humanMembers}\nCommands: 0`,
+        value: `Servers: ${serverCount}\nMembers: ${memberCount}`,
         inline: true,
-      },
-      {
-        name: '🚨 Active Alerts',
-        value:
-          dashboardData.alerts && dashboardData.alerts.length > 0
-            ? dashboardData.alerts
-                .slice(0, 3)
-                .map((alert) => `${alert.severity === 'critical' ? '🔴' : '🟡'} ${alert.message}`)
-                .join('\n')
-            : '✅ No active alerts',
-        inline: false,
       },
     ],
     footer: { text: 'Aszai Bot Dashboard • Real-time data' },

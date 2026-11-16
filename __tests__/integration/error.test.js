@@ -1,98 +1,132 @@
-const { request } = require('undici');
+/**
+ * Error handling - slash commands
+ *
+ * Drives the real command router (src/commands/index.js) with the real
+ * conversation manager and error handler. Only the edges are doubled: the
+ * Discord interaction, the Perplexity service, the database, the reminder
+ * service, file storage and the logger. The chat-message error path is covered
+ * the same way in bot-features.test.js.
+ */
 
-// Mock the commands module
-jest.mock('../../src/commands', () => ({
-  handleTextCommand: jest.fn().mockImplementation(async (message) => {
-    if (message.content === '!summary') {
-      message.channel.sendTyping();
-      message.reply('An error occurred during summary generation.');
-      return;
-    }
-    return null;
-  }),
-  handleSlashCommand: jest.fn(),
-  getSlashCommandsData: jest.fn().mockReturnValue([{ name: 'test', description: 'Test command' }]),
+jest.mock('../../src/services/perplexity-secure', () => ({
+  generateChatResponse: jest.fn(),
+  generateSummary: jest.fn(),
 }));
-
-const handleChatMessage = require('../../src/services/chat');
-const { handleTextCommand } = require('../../src/commands');
-const conversationManager = require('../../src/state/conversationManager');
-const logger = require('../../src/utils/logger');
-
-jest.mock('undici', () => ({
-  request: jest.fn(),
-}));
-jest.mock('../../src/utils/conversation');
-jest.mock('../../src/utils/logger');
 jest.mock('../../src/services/database', () => ({
-  addUserMessage: jest.fn(),
+  ensureUserExists: jest.fn(),
+  updateUsername: jest.fn(),
   updateUserStats: jest.fn(),
-  getUserMessages: jest.fn().mockReturnValue([]),
-  getConversationHistory: jest.fn().mockReturnValue([]),
+  addUserMessage: jest.fn(),
   addBotResponse: jest.fn(),
+  getConversationHistory: jest.fn().mockReturnValue([]),
+}));
+jest.mock('../../src/services/reminder-service', () => ({
+  isInitialized: true,
+  initialize: jest.fn(),
+  setReminder: jest.fn(),
+}));
+jest.mock('../../src/services/storage', () => ({
+  loadUserStats: jest.fn().mockResolvedValue({}),
+  saveUserStats: jest.fn().mockResolvedValue(),
+}));
+jest.mock('../../src/utils/logger', () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 }));
 
-describe('Error handling', () => {
+const USER_ID = '123456789012345678';
+const PRIMARY = 0x0099ff;
+const ERROR = 0xed4245;
+
+function createInteraction(commandName) {
+  return {
+    commandName,
+    user: { id: USER_ID, username: 'tester' },
+    guild: { id: '555555555555555555' },
+    replied: false,
+    deferred: false,
+    reply: jest.fn().mockResolvedValue(),
+    deferReply: jest.fn().mockResolvedValue(),
+    editReply: jest.fn().mockResolvedValue(),
+  };
+}
+
+describe('Error handling - /summary', () => {
+  let handleSlashCommand;
+  let perplexityService;
+  let databaseService;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock the logger to return a simple error message
-    logger.handleError.mockImplementation((error, context) => {
-      return `An error occurred during ${context}.`;
-    });
-    // Mock instance methods
-    conversationManager.isRateLimited = jest.fn();
-    conversationManager.getHistory = jest.fn();
+    ({ handleSlashCommand } = require('../../src/commands'));
+    perplexityService = require('../../src/services/perplexity-secure');
+    databaseService = require('../../src/services/database');
+
+    const conversationManager = require('../../src/state/conversationManager');
+    conversationManager.addMessage(USER_ID, 'user', 'Who is Malenia?');
+    conversationManager.addMessage(USER_ID, 'assistant', 'The Blade of Miquella.');
   });
 
-  it('handles failed Perplexity API response during chat', async () => {
-    // Arrange
-    request.mockRejectedValueOnce(new Error('API Error'));
-    conversationManager.isRateLimited.mockReturnValue(false);
-    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'test' }]);
-    conversationManager.updateTimestamp = jest.fn();
-    conversationManager.addMessage = jest.fn();
+  it.each([
+    [
+      'a 429',
+      Object.assign(new Error('Too many'), { statusCode: 429 }),
+      'The service is currently busy. Please wait a moment and try again.',
+    ],
+    [
+      'a 503',
+      Object.assign(new Error('Unavailable'), { statusCode: 503 }),
+      'Network connection issue. Please check your connection and try again.',
+    ],
+    [
+      'an error that names the API',
+      new Error('Summary API Error'),
+      'The service is temporarily unavailable. Please try again later.',
+    ],
+    [
+      'an unclassified error',
+      new Error('socket hang up'),
+      'An unexpected error occurred. Please try again later.',
+    ],
+  ])('replies with an error embed when the API fails with %s', async (_label, error, text) => {
+    perplexityService.generateSummary.mockRejectedValue(error);
+    const interaction = createInteraction('summary');
 
-    const fakeMessage = {
-      content: 'test',
-      author: { bot: false, id: '123456789012345678' },
-      reply: jest.fn(),
-      channel: { sendTyping: jest.fn() },
-    };
+    await handleSlashCommand(interaction);
 
-    // Act
-    await handleChatMessage(fakeMessage);
+    // The trailing assistant turn is dropped before summarising.
+    expect(perplexityService.generateSummary).toHaveBeenCalledWith([
+      { role: 'user', content: 'Who is Malenia?' },
+    ]);
+    expect(interaction.deferReply).toHaveBeenCalledTimes(1);
+    expect(interaction.reply).not.toHaveBeenCalled();
+    expect(interaction.editReply).toHaveBeenCalledTimes(1);
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      embeds: [{ color: ERROR, description: text }],
+    });
+    // A failed summary is not counted in the user's stats.
+    expect(databaseService.updateUserStats).not.toHaveBeenCalled();
+  });
 
-    // Assert
-    expect(request).toHaveBeenCalledTimes(1);
-    expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
-    expect(fakeMessage.reply).toHaveBeenCalledWith({
+  it('replies with the summary embed and counts it when the API succeeds', async () => {
+    perplexityService.generateSummary.mockResolvedValue('You asked about Malenia.');
+    const interaction = createInteraction('summary');
+
+    await handleSlashCommand(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledTimes(1);
+    expect(interaction.editReply).toHaveBeenCalledWith({
       embeds: [
         {
-          description: 'The service is temporarily unavailable. Please try again later.',
-          color: 39423,
+          color: PRIMARY,
+          title: 'Conversation Summary',
+          description: 'You asked about Malenia.',
           footer: { text: 'Aszai Bot' },
         },
       ],
     });
-  });
-
-  it('handles failed summary API response', async () => {
-    // Arrange
-    request.mockRejectedValueOnce(new Error('Summary API Error'));
-    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'hello' }]);
-
-    const fakeMessage = {
-      content: '!summary',
-      author: { bot: false, id: '123456789012345678' },
-      reply: jest.fn(),
-      channel: { sendTyping: jest.fn() },
-    };
-
-    // Act
-    await handleTextCommand(fakeMessage);
-
-    // Assert
-    expect(fakeMessage.channel.sendTyping).toHaveBeenCalled();
-    expect(fakeMessage.reply).toHaveBeenCalledWith('An error occurred during summary generation.');
+    expect(databaseService.updateUserStats).toHaveBeenCalledWith(USER_ID, { total_summaries: 1 });
   });
 });

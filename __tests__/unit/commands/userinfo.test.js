@@ -28,84 +28,85 @@ jest.mock('../../../src/utils/conversation', () => {
 
 const { handleSlashCommand } = require('../../../src/commands/index');
 
-describe('UserInfo Command', () => {
-  const mockMember = {
-    id: 'target-user-123',
-    displayColor: 0x5865f2,
-    displayHexColor: '#5865F2',
-    nickname: 'TestNick',
-    joinedAt: new Date('2022-06-15'),
-    joinedTimestamp: new Date('2022-06-15').getTime(),
-    roles: {
-      cache: {
-        filter: jest.fn().mockReturnValue({
-          sort: jest.fn().mockReturnValue({
-            map: jest.fn().mockReturnValue(['<@&role1>', '<@&role2>']),
-            slice: jest.fn().mockReturnValue(['<@&role1>', '<@&role2>']),
-          }),
+const mockMember = {
+  id: 'target-user-123',
+  displayColor: 0x5865f2,
+  displayHexColor: '#5865F2',
+  nickname: 'TestNick',
+  joinedAt: new Date('2022-06-15'),
+  joinedTimestamp: new Date('2022-06-15').getTime(),
+  roles: {
+    cache: {
+      filter: jest.fn().mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          map: jest.fn().mockReturnValue(['<@&role1>', '<@&role2>']),
+          slice: jest.fn().mockReturnValue(['<@&role1>', '<@&role2>']),
         }),
-        size: 3,
+      }),
+      size: 3,
+    },
+  },
+  permissions: {
+    toArray: jest.fn().mockReturnValue(['Administrator', 'ManageGuild']),
+  },
+  presence: {
+    status: 'online',
+    activities: [
+      {
+        type: 0,
+        name: 'Valorant',
       },
-    },
-    permissions: {
-      toArray: jest.fn().mockReturnValue(['Administrator', 'ManageGuild']),
-    },
-    presence: {
-      status: 'online',
-      activities: [
-        {
-          type: 0,
-          name: 'Valorant',
-        },
-      ],
-    },
-    guild: {
-      id: 'test-guild-123',
-    },
-  };
+    ],
+  },
+  guild: {
+    id: 'test-guild-123',
+  },
+};
 
-  const mockUser = {
-    id: 'target-user-123',
-    tag: 'TestUser#1234',
-    username: 'TestUser',
+const mockUser = {
+  id: 'target-user-123',
+  tag: 'TestUser#1234',
+  username: 'TestUser',
+  bot: false,
+  toString: () => '<@target-user-123>',
+  createdAt: new Date('2020-01-15'),
+  displayAvatarURL: jest.fn().mockReturnValue('https://cdn.discord.com/avatar.png'),
+  flags: {
+    toArray: jest.fn().mockReturnValue(['HypeSquadOnlineHouse1', 'ActiveDeveloper']),
+  },
+};
+
+const mockInteraction = {
+  commandName: 'userinfo',
+  reply: jest.fn(),
+  deferReply: jest.fn().mockResolvedValue(),
+  editReply: jest.fn().mockResolvedValue(),
+  user: {
+    id: 'test-user-123',
+    tag: 'RequestingUser#5678',
+    username: 'RequestingUser',
     bot: false,
-    createdAt: new Date('2020-01-15'),
-    displayAvatarURL: jest.fn().mockReturnValue('https://cdn.discord.com/avatar.png'),
+    createdAt: new Date('2019-03-20'),
+    displayAvatarURL: jest.fn().mockReturnValue('https://cdn.discord.com/avatar2.png'),
     flags: {
-      toArray: jest.fn().mockReturnValue(['HypeSquadOnlineHouse1', 'ActiveDeveloper']),
+      toArray: jest.fn().mockReturnValue([]),
     },
-  };
-
-  const mockInteraction = {
-    commandName: 'userinfo',
-    reply: jest.fn(),
-    deferReply: jest.fn().mockResolvedValue(),
-    editReply: jest.fn().mockResolvedValue(),
-    user: {
-      id: 'test-user-123',
-      tag: 'RequestingUser#5678',
-      username: 'RequestingUser',
-      bot: false,
-      createdAt: new Date('2019-03-20'),
-      displayAvatarURL: jest.fn().mockReturnValue('https://cdn.discord.com/avatar2.png'),
-      flags: {
-        toArray: jest.fn().mockReturnValue([]),
+  },
+  options: {
+    getUser: jest.fn().mockReturnValue(mockUser),
+  },
+  guild: {
+    id: 'test-guild-123',
+    members: {
+      fetch: jest.fn().mockResolvedValue(mockMember),
+      cache: {
+        values: jest.fn().mockReturnValue([mockMember]),
       },
     },
-    options: {
-      getUser: jest.fn().mockReturnValue(mockUser),
-    },
-    guild: {
-      id: 'test-guild-123',
-      members: {
-        fetch: jest.fn().mockResolvedValue(mockMember),
-        cache: {
-          values: jest.fn().mockReturnValue([mockMember]),
-        },
-      },
-    },
-  };
+  },
+};
 
+describe('UserInfo Command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -143,23 +144,59 @@ describe('UserInfo Command', () => {
     });
 
     it('should reply with embed containing user information', async () => {
-      await handleSlashCommand(mockInteraction);
+      jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
+      // fetch(id) returns the member; fetch() returns the whole guild for the join position.
+      const members = new Map([
+        ['older-member', { id: 'older-member', joinedTimestamp: 1 }],
+        [mockMember.id, mockMember],
+      ]);
+      const interaction = {
+        ...mockInteraction,
+        guild: {
+          id: 'test-guild-123',
+          members: { fetch: jest.fn(async (id) => (id ? mockMember : members)) },
+        },
+      };
 
-      expect(mockInteraction.editReply).toHaveBeenCalledWith(
-        expect.objectContaining({
-          embeds: expect.arrayContaining([
-            expect.objectContaining({
-              author: expect.objectContaining({
-                name: mockUser.tag,
-              }),
-              fields: expect.any(Array),
-              footer: expect.objectContaining({
-                text: 'Aszai Bot • User Info',
-              }),
-            }),
-          ]),
-        })
-      );
+      await handleSlashCommand(interaction);
+
+      expect(interaction.editReply).toHaveBeenCalledTimes(1);
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 0x5865f2,
+            author: { name: 'TestUser#1234', icon_url: 'https://cdn.discord.com/avatar.png' },
+            thumbnail: { url: 'https://cdn.discord.com/avatar.png' },
+            fields: [
+              { name: '👤 User', value: '<@target-user-123>\n`target-user-123`', inline: true },
+              { name: '🟢 Status', value: 'Online', inline: true },
+              { name: '🤖 Bot', value: 'No', inline: true },
+              {
+                name: '📅 Account Created',
+                value: '<t:1579046400:F>\n(6 years ago)',
+                inline: true,
+              },
+              { name: '📥 Joined Server', value: '<t:1655251200:F>\n(4 years ago)', inline: true },
+              { name: '🏅 Join Position', value: '#2', inline: true },
+              { name: '📝 Nickname', value: 'TestNick', inline: true },
+              { name: '🎮 Activity', value: 'Playing **Valorant**', inline: true },
+              {
+                name: '🎖️ Badges',
+                value: '🏠 HypeSquad Bravery\n💻 Active Developer',
+                inline: false,
+              },
+              { name: '🎭 Roles [2]', value: '<@&role1>, <@&role2>', inline: false },
+              {
+                name: '🔑 Key Permissions',
+                value: '`Administrator`, `ManageGuild`',
+                inline: false,
+              },
+            ],
+            footer: { text: 'Aszai Bot • User Info' },
+            timestamp: '2026-11-16T12:00:00.000Z',
+          },
+        ],
+      });
     });
   });
 

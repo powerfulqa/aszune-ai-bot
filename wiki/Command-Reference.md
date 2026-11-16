@@ -255,7 +255,8 @@ member statistics, channels, roles, boost status, and security settings.
 **Output:** Shows detailed server information embed with:
 
 - **Server Overview**: Server name, ID, owner, creation date
-- **Members**: Total count with breakdown (humans, bots, online estimate)
+- **Members**: Total count with breakdown (humans, bots; "Unavailable" if the member list cannot be
+  fetched)
 - **Channels**: Count by type (text, voice, category, forum, stage, announcement)
 - **Roles**: Total roles with hoisted and managed (bot) role counts
 - **Boost Status**: Tier level, boost count, and unlocked features
@@ -282,8 +283,7 @@ member statistics, channels, roles, boost status, and security settings.
 
 - `/analytics`
 
-**Description:** Displays comprehensive Discord server analytics including user engagement
-statistics, command usage patterns, and system performance metrics.
+**Description:** Shows how many members, humans and bots are in the server.
 
 **Example:**
 
@@ -293,17 +293,14 @@ statistics, command usage patterns, and system performance metrics.
 
 **Output:** Shows real-time Discord server analytics with:
 
-- **Active Users**: Live count of online/idle/dnd members (e.g., "Active Users: 102")
-- **Server Statistics**: Total members, bot count, human member ratio
-- **Activity Summary**: Member engagement patterns and presence distribution
-- **Performance Metrics**: System resource usage and response times
+- **Server Statistics**: Total members, human count and bot count
 - **Data Source**: Real Discord server data with 5-second timeout protection
 
 **Technical Details:**
 
 - Uses Discord API `guild.members.fetch()` for live member data
-- Filters members by presence (online, idle, dnd vs offline)
-- Includes timeout protection with fallback estimates for large servers
+- If the fetch fails or times out, the human and bot counts read "Unavailable"; nothing is estimated
+- No online count: the bot does not request the presences intent
 - Requires "View Server Members" and "Server Members Intent" permissions
 
 ---

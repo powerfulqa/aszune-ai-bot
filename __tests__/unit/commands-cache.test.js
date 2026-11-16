@@ -32,9 +32,16 @@ const { handleSlashCommand } = require('../../src/commands');
 const perplexityService = require('../../src/services/perplexity-secure');
 const { createMockInteraction, resetMocks } = require('../utils/testUtils');
 
+const NOW = '2026-11-16T12:00:00.000Z';
+const FOOTER = {
+  text: 'Cache memory tracks stored responses only - see /resources for total bot memory',
+};
+
 describe('Commands - Cache Command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // jest.setup.js restores real timers after every test, so pin the clock per test.
+    jest.useFakeTimers({ now: new Date(NOW) });
   });
 
   afterEach(() => {
@@ -70,19 +77,24 @@ describe('Commands - Cache Command', () => {
       expect(interaction.deferReply).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalledWith({
         embeds: [
-          expect.objectContaining({
+          {
+            color: 0x0099ff,
             title: 'Cache Statistics',
-            fields: expect.arrayContaining([
-              expect.objectContaining({
-                name: 'Performance',
-                value: expect.stringContaining('Hit Rate: 90%'),
-              }),
-              expect.objectContaining({
-                name: 'Cache Memory Usage', // Updated name to match v1.7.0 changes
-                value: expect.stringContaining('50MB / 100MB'),
-              }),
-            ]),
-          }),
+            description: null,
+            fields: [
+              { name: 'Performance', value: 'Hit Rate: 90%\nHits: 180\nMisses: 20', inline: true },
+              { name: 'Operations', value: 'Sets: 150\nDeletes: 15\nEvictions: 5', inline: true },
+              {
+                name: 'Cache Memory Usage',
+                value: '50MB / 100MB\nEntries: 75 / 100',
+                inline: true,
+              },
+              { name: 'Configuration', value: 'Strategy: LRU\nUptime: 2h 30m', inline: true },
+              { name: 'Recent Entries', value: 'No recent entries', inline: false },
+            ],
+            footer: FOOTER,
+            timestamp: new Date(NOW),
+          },
         ],
       });
     });
@@ -117,14 +129,29 @@ describe('Commands - Cache Command', () => {
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         embeds: [
-          expect.objectContaining({
-            fields: expect.arrayContaining([
-              expect.objectContaining({
+          {
+            color: 0x0099ff,
+            title: 'Cache Statistics',
+            description: null,
+            fields: [
+              { name: 'Performance', value: 'Hit Rate: 85%\nHits: 170\nMisses: 30', inline: true },
+              { name: 'Operations', value: 'Sets: 100\nDeletes: 20\nEvictions: 10', inline: true },
+              {
+                name: 'Cache Memory Usage',
+                value: '75MB / 100MB\nEntries: 50 / 100',
+                inline: true,
+              },
+              { name: 'Configuration', value: 'Strategy: LRU\nUptime: 3h 45m', inline: true },
+              {
                 name: 'Recent Entries',
-                value: expect.stringContaining('entry1'),
-              }),
-            ]),
-          }),
+                value:
+                  '• entry1: value1 (TTL: 300s)\n• entry2: value2 (TTL: 600s)\n• entry3: value3 (TTL: 900s)',
+                inline: false,
+              },
+            ],
+            footer: FOOTER,
+            timestamp: new Date(NOW),
+          },
         ],
       });
     });
@@ -142,9 +169,15 @@ describe('Commands - Cache Command', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.editReply).toHaveBeenCalledWith(
-        expect.stringContaining('Error retrieving cache statistics')
-      );
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 15548997,
+            description:
+              'Error retrieving cache statistics: An unexpected error occurred. Please try again later.',
+          },
+        ],
+      });
     });
 
     it('should handle /cache command with invalid user ID', async () => {
@@ -155,7 +188,12 @@ describe('Commands - Cache Command', () => {
 
       await handleSlashCommand(interaction);
 
-      expect(interaction.reply).toHaveBeenCalledWith(expect.stringContaining('Invalid user ID'));
+      expect(interaction.reply).toHaveBeenCalledWith({
+        embeds: [
+          { color: 15548997, description: 'Invalid user ID: Invalid Discord user ID format' },
+        ],
+      });
+      expect(interaction.deferReply).not.toHaveBeenCalled();
     });
   });
 });

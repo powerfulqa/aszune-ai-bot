@@ -78,12 +78,9 @@ if (isProd && enablePiOptimizations) {
   logger.info('Initializing Pi optimizations');
 
   try {
-    // Lazy-load optimization modules only when needed
-    const { lazyLoad } = require('./utils/lazy-loader');
-
-    // Initialize monitors directly with lazy loading
-    lazyLoad(() => require('./utils/memory-monitor'))().initialize();
-    lazyLoad(() => require('./utils/performance-monitor'))().initialize();
+    // Required here, not at the top, so the monitors only load when Pi optimizations are on
+    require('./utils/memory-monitor').initialize();
+    require('./utils/performance-monitor').initialize();
   } catch (error) {
     logger.warn('Failed to initialize Pi optimizations:', error);
   }
@@ -409,14 +406,17 @@ function _handleDiscordLogin(token, isTestMode = false) {
 
       // Don't exit if it's a session limit error - keep dashboard running
       if (error.message && error.message.includes('Not enough sessions remaining')) {
-        logger.warn(
-          'Discord session limit reached. Dashboard will remain running. Discord will reconnect when limit resets.'
-        );
-        // Set up retry after the reset time if possible
-        const resetMatch = error.message.match(/resets at (.+?)(?:\.|$)/);
-        if (resetMatch) {
-          logger.info(`Discord sessions will reset at: ${resetMatch[1]}`);
-        }
+        logger.warn('Discord session limit reached. Dashboard will remain running.');
+        // Nothing else reconnects: log in again once the limit has reset (or
+        // in 15 minutes when the reset time cannot be read).
+        // The timestamp itself contains a period (…:00.000Z): take the whole
+        // token and drop only a sentence-ending one, or the zone is lost.
+        const resetAt = Date.parse(error.message.match(/resets at (\S+)/)?.[1].replace(/\.$/, ''));
+        const delayMs = Number.isNaN(resetAt)
+          ? 15 * 60 * 1000
+          : Math.max(resetAt - Date.now(), 60 * 1000);
+        logger.info(`Retrying Discord login in ${Math.round(delayMs / 60000)} minutes`);
+        setTimeout(() => _handleDiscordLogin(token, isTestMode), delayMs).unref();
       } else if (!isTestMode) {
         process.exit(1);
       }

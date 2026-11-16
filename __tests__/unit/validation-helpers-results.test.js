@@ -1,13 +1,9 @@
 /**
  * Validation Helpers - Result Creators Tests
- * Tests for validResult, invalidResult, createValidationResult
+ * Tests for invalidResult, createValidationResult
  */
 
-const {
-  createValidationResult,
-  validResult,
-  invalidResult,
-} = require('../../src/utils/validation-helpers');
+const { createValidationResult, invalidResult } = require('../../src/utils/validation-helpers');
 
 describe('Validation Helpers - Result Creators', () => {
   describe('createValidationResult', () => {
@@ -34,27 +30,6 @@ describe('Validation Helpers - Result Creators', () => {
     it('should include additional metadata', () => {
       const result = createValidationResult(true, null, 'value', { extra: 'data' });
       expect(result.extra).toBe('data');
-    });
-  });
-
-  describe('validResult', () => {
-    it('should create a success result', () => {
-      const result = validResult('cleaned value');
-      expect(result.valid).toBe(true);
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeNull();
-      expect(result.sanitized).toBe('cleaned value');
-    });
-
-    it('should handle null sanitized value', () => {
-      const result = validResult();
-      expect(result.valid).toBe(true);
-      expect(result.sanitized).toBeNull();
-    });
-
-    it('should include metadata', () => {
-      const result = validResult('value', { fieldName: 'test' });
-      expect(result.fieldName).toBe('test');
     });
   });
 

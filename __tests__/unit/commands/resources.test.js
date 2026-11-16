@@ -1,25 +1,19 @@
 /**
  * Resources Command Tests
- * Tests the Discord resources command functionality
+ * /resources shows process memory and the recommendations computed from it
  */
 
 jest.useFakeTimers();
 
-// Mock dependencies
 jest.mock('../../../src/config/config', () => require('../../../__mocks__/configMock'));
 jest.mock('../../../src/utils/logger');
 jest.mock('../../../src/utils/resource-optimizer', () => ({
   monitorResources: jest.fn(),
-  generateOptimizationRecommendations: jest.fn(),
-}));
-jest.mock('../../../src/utils/discord-analytics', () => ({
-  generateDailyReport: jest.fn(),
 }));
 jest.mock('../../../src/utils/error-handler');
 
 const { handleSlashCommand } = require('../../../src/commands/index');
 const ResourceOptimizer = require('../../../src/utils/resource-optimizer');
-const DiscordAnalytics = require('../../../src/utils/discord-analytics');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
 
 // Mock the conversation module
@@ -40,90 +34,92 @@ describe('Resources Command', () => {
     reply: jest.fn(),
     deferReply: jest.fn(),
     editReply: jest.fn(),
-    user: {
-      id: 'test-user-123',
-      username: 'testuser',
-    },
-    guild: {
-      id: 'test-guild-123',
-    },
+    user: { id: 'test-user-123', username: 'testuser' },
+    client: { guilds: { cache: { size: 5 } } },
+    guild: { id: 'test-guild-123' },
+  };
+
+  const footer = {
+    text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Setup default successful mocks
-    ResourceOptimizer.monitorResources.mockResolvedValue({
-      memory: {
-        status: 'good',
-        used: 245,
-        free: 755,
-        percentage: 24.5,
-      },
-      performance: {
-        status: 'good',
-        responseTime: 120,
-        load: 'light',
-      },
-      optimizationTier: 'Standard',
-    });
-
-    DiscordAnalytics.generateDailyReport.mockResolvedValue({
-      summary: {
-        totalServers: 5,
-      },
-    });
-
-    ResourceOptimizer.generateOptimizationRecommendations.mockResolvedValue([
-      '✅ Memory usage is optimal',
-      '✅ Performance is good',
-      '⚠️ Consider auto-scaling',
-    ]);
-
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
       type: 'GENERAL_ERROR',
     });
   });
 
-  test('should handle resources command successfully', async () => {
+  test('shows a healthy status and the default recommendation', async () => {
+    ResourceOptimizer.monitorResources.mockReturnValue({
+      memory: { status: 'good', used: 245, free: 755, percentage: 24.5 },
+      optimizationTier: 'Optimal',
+      recommendations: [],
+    });
+
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.deferReply).toHaveBeenCalled();
-    expect(ResourceOptimizer.monitorResources).toHaveBeenCalled();
-    expect(DiscordAnalytics.generateDailyReport).toHaveBeenCalled();
-    expect(ResourceOptimizer.generateOptimizationRecommendations).toHaveBeenCalled();
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [
         {
-          color: expect.any(Number),
+          color: 0x00ff00,
           title: '🔧 Resource Optimization',
           description: '📊 Node.js process memory (heap) - see /cache for cached responses',
-          fields: expect.arrayContaining([
-            expect.objectContaining({
+          fields: [
+            {
               name: '💾 Memory Status',
-              value: expect.stringContaining('Status:'),
+              value: 'Status: GOOD\nUsed: 245MB\nFree: 755MB\nUsage: 25%',
               inline: true,
-            }),
-            expect.objectContaining({
-              name: '⚙️ Performance',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
+            },
+            {
               name: '📈 Optimization Tier',
-              value: expect.stringContaining('Current:'),
+              value: 'Current: Optimal\nServer Count: 5',
               inline: true,
-            }),
-            expect.objectContaining({
+            },
+            {
               name: '💡 Recommendations',
-              value: expect.any(String),
+              value: '✅ Memory usage is healthy - continue monitoring',
               inline: false,
-            }),
-          ]),
-          footer: {
-            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
-          },
+            },
+          ],
+          footer,
+          timestamp: expect.any(String),
+        },
+      ],
+    });
+  });
+
+  test('lists at most three memory recommendations on a critical status', async () => {
+    ResourceOptimizer.monitorResources.mockReturnValue({
+      memory: { status: 'critical', used: 450, free: 50, percentage: 90 },
+      optimizationTier: 'Critical',
+      recommendations: ['one', 'two', 'three', 'four'],
+    });
+
+    await handleSlashCommand(mockInteraction);
+
+    expect(mockInteraction.editReply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: 0xff0000,
+          title: '🔧 Resource Optimization',
+          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
+          fields: [
+            {
+              name: '💾 Memory Status',
+              value: 'Status: CRITICAL\nUsed: 450MB\nFree: 50MB\nUsage: 90%',
+              inline: true,
+            },
+            {
+              name: '📈 Optimization Tier',
+              value: 'Current: Critical\nServer Count: 5',
+              inline: true,
+            },
+            { name: '💡 Recommendations', value: 'one\ntwo\nthree', inline: false },
+          ],
+          footer,
           timestamp: expect.any(String),
         },
       ],
@@ -132,74 +128,16 @@ describe('Resources Command', () => {
 
   test('should handle resources command error', async () => {
     const error = new Error('Resource monitoring unavailable');
-    ResourceOptimizer.monitorResources.mockRejectedValue(error);
+    ResourceOptimizer.monitorResources.mockImplementation(() => {
+      throw error;
+    });
 
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'resources_command');
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.',
-    });
-  });
-
-  test('should handle resources with warning status', async () => {
-    ResourceOptimizer.monitorResources.mockResolvedValue({
-      memory: {
-        status: 'warning',
-        used: 850,
-        free: 150,
-        percentage: 85.0,
-      },
-      performance: {
-        status: 'warning',
-        responseTime: 850,
-        load: 'heavy',
-      },
-      optimizationTier: 'High',
-    });
-
-    ResourceOptimizer.generateOptimizationRecommendations.mockResolvedValue([
-      '⚠️ Memory usage high',
-      '🔴 Response time degraded',
-      '💡 Consider upgrading resources',
-    ]);
-
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.editReply).toHaveBeenCalledWith({
       embeds: [
-        {
-          color: 0xffa500,
-          title: '🔧 Resource Optimization',
-          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
-          fields: expect.arrayContaining([
-            expect.objectContaining({
-              name: '💾 Memory Status',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '⚙️ Performance',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '📈 Optimization Tier',
-              value: expect.stringContaining('Current:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '💡 Recommendations',
-              value: expect.any(String),
-              inline: false,
-            }),
-          ]),
-          footer: {
-            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
-          },
-          timestamp: expect.any(String),
-        },
+        { color: '#ED4245', description: 'An unexpected error occurred. Please try again later.' },
       ],
     });
   });

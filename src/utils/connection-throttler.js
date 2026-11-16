@@ -115,19 +115,6 @@ class ConnectionThrottler {
       next.task();
     }
   }
-
-  /**
-   * Clear the queue in case of shutdown or emergency
-   */
-  clearQueue() {
-    const queueLength = this.connectionQueue.length;
-    for (const queued of this.connectionQueue) {
-      clearTimeout(queued.timer);
-      queued.reject(new Error('Request cancelled before execution. Please try again shortly.'));
-    }
-    this.connectionQueue = [];
-    logger.info(`[ConnectionThrottler] Cleared ${queueLength} pending requests`);
-  }
 }
 
 module.exports = new ConnectionThrottler();

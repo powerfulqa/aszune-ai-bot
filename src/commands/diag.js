@@ -86,7 +86,7 @@ function aiSettingsSection(config, runtime) {
     `Endpoint \`${p.ENDPOINTS.AGENT}\` · preset \`${p.AGENT_PRESET}\``,
     `Model: ${describeModel(p, runtime)}`,
     `Reasoning: ${p.AGENT_REASONING_EFFORT || 'preset default'} · tools: ${tools.join(', ')}`,
-    `Max output ${p.MAX_TOKENS.CHAT} tok · timeout ${timeoutS}s`,
+    `Max output ${p.MAX_TOKENS.CHAT ? `${p.MAX_TOKENS.CHAT} tok` : 'effort default'} · timeout ${timeoutS}s`,
     `History ${config.MAX_HISTORY} msgs · session ${sessionMin} min · domain filter: ${filter}`,
   ].join('\n');
 }

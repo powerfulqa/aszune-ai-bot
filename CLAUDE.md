@@ -84,8 +84,8 @@ delegate through it (`this.cacheManager.getStats()`). Never reach past a service
 ## Testing
 
 - Framework Jest 30, `testEnvironment: node`, v8 coverage. Run: `npm test`.
-- Coverage gate — **single source of truth is `jest.config.js`: global 70%** on
-  branches/functions/lines/statements. `config/jest.critical-coverage.config.js` adds stricter
+- Coverage gate — **single source of truth is `jest.config.js`: global 83%** on
+  lines/statements, 82% functions and 84% branches. `config/jest.critical-coverage.config.js` adds stricter
   per-file gates used by `test:critical`/`precommit`.
 - **Assert exact values** — `toHaveBeenCalledWith({ … exact … })`, not `expect.objectContaining`
   / `expect.any()`.
@@ -120,8 +120,8 @@ npm audit --audit-level=high   # security (CI gates on this, prod deps)
   "Received has type: function". Register mocks with `jest.mock(...)` at file scope and
   `jest.clearAllMocks()` in `beforeEach`. Prefer verifying handler registration over executing
   complex mock chains.
-- **Discord fetches** must be timeout-guarded (`Promise.race` with a ~5s timeout) with fallback
-  estimates — see `src/utils/guild-member-stats.js`.
+- **Discord fetches** must be timeout-guarded (`Promise.race` with a ~5s timeout) and report
+  the value as unavailable on failure, never an estimate — see `src/utils/guild-member-stats.js`.
 - **PM2 vs systemd:** running the bot under both simultaneously causes a ~15s restart loop. Pick
   one. Diagnostics: `scripts/diagnose-restart-loop.sh`, `scripts/find-sigint-source.sh`.
 
@@ -135,5 +135,5 @@ command string. On the Pi, start via `start-pi-optimized.sh` to apply optimisati
 Key env vars: `DISCORD_BOT_TOKEN`, `PERPLEXITY_API_KEY` (required); `DASHBOARD_TOKEN` (enables the
 dashboard's destructive operations — without it the dashboard is read-only); `TRACKING_ADMIN_KEY`
 (required to start the tracking server); `AGENT_EFFORT`, `AGENT_MODEL`, `AGENT_REASONING_EFFORT`,
-`AGENT_FETCH_URL` (Perplexity Agent API tuning); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
+`AGENT_FETCH_URL`, `AGENT_MAX_OUTPUT_TOKENS` (Perplexity Agent API tuning); `DASHBOARD_ALLOWED_HOSTS` (extra hostnames for a token-less dashboard); `BOT_OWNER_IDS` (who may run `/diag`); `SEARCH_DOMAIN_FILTER` (optional comma-separated
 Perplexity allowlist). See `.env.example`.

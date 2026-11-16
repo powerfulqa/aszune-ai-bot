@@ -5,25 +5,19 @@ const socketIo = require('socket.io');
 const crypto = require('crypto');
 const path = require('path');
 const os = require('os');
-const fsPromises = require('fs').promises;
 const databaseService = require('./database');
 const logger = require('../utils/logger');
 const { ErrorHandler } = require('../utils/error-handler');
 const NetworkDetector = require('./network-detector');
 const { getEmptyCacheStats } = require('../utils/cache-stats-helper');
 const { execPromise } = require('../utils/shell-exec-helper');
-const { execFileAsync, assertSafeServiceName, clampInt } = require('../utils/safe-exec');
+const { clampInt } = require('../utils/safe-exec');
 const { cached } = require('../utils/cached');
 const { wrapAsyncHandler } = require('./web-dashboard/routes/routeHelper');
-const { isValidAction, runPm2ServiceAction, BOT_PM2_APP_NAME } = require('../utils/pm2-service');
-const configRoutes = require('./web-dashboard/routes/configRoutes');
-const logRoutes = require('./web-dashboard/routes/logRoutes');
-const networkRoutes = require('./web-dashboard/routes/networkRoutes');
+const { runPm2ServiceAction, BOT_PM2_APP_NAME } = require('../utils/pm2-service');
 const reminderRoutes = require('./web-dashboard/routes/reminderRoutes');
-const serviceRoutes = require('./web-dashboard/routes/serviceRoutes');
 const recommendationRoutes = require('./web-dashboard/routes/recommendationRoutes');
 const controlRoutes = require('./web-dashboard/routes/controlRoutes');
-const { validateEnvContent, validateJsContent } = require('../utils/config-validators');
 
 /** Metrics are shared between tabs, the broadcast and REST for this long */
 const METRICS_CACHE_MS = 5000;
@@ -32,9 +26,6 @@ const METRICS_CACHE_MS = 5000;
 const EXTERNAL_IP_TTL_MS = 60 * 60 * 1000;
 const EXTERNAL_IP_ERROR_TTL_MS = 5 * 60 * 1000;
 const EXTERNAL_IP_TIMEOUT_MS = 5000;
-
-/** systemd units shown on the Services page (override with DASHBOARD_SERVICES) */
-const DEFAULT_MONITORED_SERVICES = ['aszune-ai-bot', 'nginx', 'postgresql'];
 
 /** Tables the dashboard may read (schema listing and table viewer) */
 const DASHBOARD_TABLES = ['user_stats', 'user_messages', 'conversation_history', 'reminders'];
@@ -45,6 +36,8 @@ const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /** Bind addresses that only accept connections from this machine */
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
+const UNTRUSTED_HOST =
+  'Forbidden: open the dashboard at http://localhost, or list this hostname in DASHBOARD_ALLOWED_HOSTS';
 const NETWORK_TOKEN_REQUIRED =
   'Dashboard is reachable from the network: set DASHBOARD_TOKEN to enable access';
 
@@ -133,6 +126,38 @@ class WebDashboardService {
   }
 
   /**
+   * With no token, "bound to loopback" is the only protection, and a browser
+   * defeats it: any web page can open a WebSocket to 127.0.0.1, and a DNS
+   * rebinding page can send same-origin HTTP. Both show up as a Host or Origin
+   * that is not this dashboard, so those requests are refused.
+   * DASHBOARD_ALLOWED_HOSTS (comma-separated hostnames) adds names, e.g. the
+   * one a reverse proxy forwards.
+   * @private
+   * @param {Object} headers - Request or handshake headers
+   * @returns {boolean}
+   */
+  _isLocalBrowserRequest(headers = {}) {
+    const allowed = new Set([
+      'localhost',
+      '127.0.0.1',
+      '[::1]',
+      ...(process.env.DASHBOARD_ALLOWED_HOSTS || '')
+        .split(',')
+        .map((h) => h.trim().toLowerCase())
+        .filter(Boolean),
+    ]);
+    const hostOf = (value) => {
+      try {
+        return new URL(value.includes('://') ? value : `http://${value}`).hostname;
+      } catch {
+        return '';
+      }
+    };
+    if (!allowed.has(hostOf(headers.host || ''))) return false;
+    return !headers.origin || allowed.has(hostOf(headers.origin));
+  }
+
+  /**
    * Constant-time comparison of a provided token against the configured one.
    * Returns true when no token is configured (auth disabled).
    * @private
@@ -185,6 +210,12 @@ class WebDashboardService {
             timestamp: new Date().toISOString(),
           });
         }
+        if (!this._isLocalBrowserRequest(req.headers)) {
+          return res.status(403).json({
+            error: UNTRUSTED_HOST,
+            timestamp: new Date().toISOString(),
+          });
+        }
         if (READ_ONLY_METHODS.has(req.method)) {
           return next();
         }
@@ -199,7 +230,11 @@ class WebDashboardService {
         return res.status(401).json({ error: 'Unauthorized - Bearer token required' });
       }
 
+      if (this._tooManyFailedTokens(req.ip)) {
+        return res.status(429).json({ error: 'Too many failed attempts - try again in a minute' });
+      }
       if (!this._verifyToken(token)) {
+        this._recordFailedToken(req.ip);
         return res.status(401).json({ error: 'Unauthorized - Invalid token' });
       }
 
@@ -216,7 +251,9 @@ class WebDashboardService {
   _authorizeSocket(socket, next) {
     if (!this.authToken) {
       if (this._isLoopbackBind()) {
-        return next();
+        if (this._isLocalBrowserRequest(socket.handshake?.headers)) return next();
+        logger.warn(`Dashboard socket rejected (foreign Host or Origin): ${socket.id}`);
+        return next(new Error(UNTRUSTED_HOST));
       }
       logger.warn(`Dashboard socket rejected (no DASHBOARD_TOKEN on a network bind): ${socket.id}`);
       return next(new Error(NETWORK_TOKEN_REQUIRED));
@@ -224,11 +261,36 @@ class WebDashboardService {
     const token =
       socket.handshake?.auth?.token ||
       this._extractBearer(socket.handshake?.headers?.authorization);
-    if (this._verifyToken(token)) {
+    const address = socket.handshake?.address;
+    if (!this._tooManyFailedTokens(address) && this._verifyToken(token)) {
       return next();
     }
+    // Only a wrong token counts: a page that connects before the token is
+    // entered must not lock its own address out.
+    if (token) this._recordFailedToken(address);
     logger.warn(`Dashboard socket rejected (invalid/missing token): ${socket.id}`);
     next(new Error('Unauthorized'));
+  }
+
+  /**
+   * Guessing guard for the token: after 10 wrong tokens from one address in a
+   * minute, further attempts from it are refused until the minute is over.
+   * @private
+   */
+  _tooManyFailedTokens(address) {
+    const entry = this._failedTokens?.get(address);
+    return !!entry && Date.now() - entry.since < 60000 && entry.count >= 10;
+  }
+
+  _recordFailedToken(address) {
+    this._failedTokens ??= new Map();
+    if (this._failedTokens.size > 1000) this._failedTokens.clear();
+    const entry = this._failedTokens.get(address);
+    if (!entry || Date.now() - entry.since >= 60000) {
+      this._failedTokens.set(address, { since: Date.now(), count: 1 });
+    } else {
+      entry.count += 1;
+    }
   }
 
   /**
@@ -550,50 +612,6 @@ class WebDashboardService {
   }
 
   /**
-   * Get filtered logs with pagination
-   * @param {string} levelFilter - Filter by log level (DEBUG, INFO, WARN, ERROR, or null for all)
-   * @param {number} limit - Number of logs to return
-   * @param {number} offset - Offset for pagination
-   * @returns {Array} Filtered logs
-   */
-  getFilteredLogs(levelFilter = null, limit = 100, offset = 0) {
-    let filtered = this.allLogs;
-
-    if (levelFilter && levelFilter !== 'ALL') {
-      filtered = filtered.filter((log) => log.level === levelFilter.toUpperCase());
-    }
-
-    // Return most recent first
-    return filtered
-      .slice()
-      .reverse()
-      .slice(offset, offset + limit);
-  }
-
-  /**
-   * Search logs by keyword
-   * @param {string} keyword - Search term
-   * @param {number} limit - Number of results to return
-   * @returns {Array} Matching logs
-   */
-  searchLogs(keyword, limit = 50) {
-    if (!keyword || keyword.trim().length === 0) {
-      return [];
-    }
-
-    const searchTerm = keyword.toLowerCase();
-    return this.allLogs
-      .filter(
-        (log) =>
-          log.message.toLowerCase().includes(searchTerm) ||
-          (log.error && log.error.toLowerCase().includes(searchTerm))
-      )
-      .slice()
-      .reverse()
-      .slice(0, limit);
-  }
-
-  /**
    * Get recent error logs
    * @param {number} limit - Number of recent errors to return
    * @returns {Array} Array of recent errors
@@ -658,11 +676,7 @@ class WebDashboardService {
 
     this.setupDatabaseRoutes();
     this.setupVersionRoutes();
-    configRoutes.registerConfigRoutes(this.app, this);
-    logRoutes.registerLogRoutes(this.app, this);
-    networkRoutes.registerNetworkRoutes(this.app, this);
     reminderRoutes.registerReminderRoutes(this.app, this);
-    serviceRoutes.registerServiceRoutes(this.app, this);
     recommendationRoutes.registerRecommendationRoutes(this.app, this);
     controlRoutes.registerControlRoutes(this.app, this);
 
@@ -714,380 +728,6 @@ class WebDashboardService {
   }
 
   /**
-   * Export logs as CSV
-   * @private
-   */
-  exportLogsAsCSV(res, logs) {
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="logs.csv"');
-    res.write('Timestamp,Level,Message,Error\n');
-
-    logs.forEach((log) => {
-      const escapedMsg = `"${(log.message || '').replace(/"/g, '""')}"`;
-      const escapedErr = `"${(log.error || '').replace(/"/g, '""')}"`;
-      res.write(`${log.timestamp},${log.level},${escapedMsg},${escapedErr}\n`);
-    });
-  }
-
-  /**
-   * Export logs as JSON
-   * @private
-   */
-  exportLogsAsJSON(res, logs) {
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', 'attachment; filename="logs.json"');
-    res.write(JSON.stringify(logs, null, 2));
-  }
-
-  /**
-   * Get status of systemd services
-   * @returns {Promise<Array>} Array of service status objects
-   * @private
-   */
-  async getServiceStatus() {
-    // Short cache + shared in-flight: the Services page and socket requests
-    // don't each spawn 3 systemctl calls per unit.
-    return cached('dashboard:service-status', 10000, () =>
-      Promise.all(this._getMonitoredServices().map((name) => this._getOneServiceStatus(name)))
-    );
-  }
-
-  /**
-   * systemd units to report on (DASHBOARD_SERVICES, comma-separated)
-   * @private
-   * @returns {string[]} Unit names
-   */
-  _getMonitoredServices() {
-    const configured = (process.env.DASHBOARD_SERVICES || '')
-      .split(',')
-      .map((name) => name.trim())
-      .filter(Boolean);
-    return configured.length > 0 ? configured : DEFAULT_MONITORED_SERVICES;
-  }
-
-  /**
-   * Status, uptime and boot-enabled flag for one unit, queried in parallel.
-   * @private
-   * @param {string} service - Unit name
-   * @returns {Promise<Object>} Service status
-   */
-  async _getOneServiceStatus(service) {
-    try {
-      assertSafeServiceName(service);
-      const [active, uptime, enabled] = await Promise.all([
-        execFileAsync('systemctl', ['is-active', service], { timeout: 5000 }).catch((err) => {
-          logger.debug(`Service status check failed for ${service}: ${err.message}`);
-          return { stdout: 'inactive' };
-        }),
-        this.getServiceUptime(service),
-        this.isServiceEnabled(service),
-      ]);
-      return { name: service, status: active.stdout.trim() || 'unknown', uptime, enabled };
-    } catch (error) {
-      return { name: service, status: 'error', uptime: null, enabled: false };
-    }
-  }
-
-  /**
-   * Get service uptime
-   * @param {string} service - Service name
-   * @returns {Promise<string|null>} Formatted uptime or null
-   * @private
-   */
-  async getServiceUptime(service) {
-    try {
-      const { stdout } = await execFileAsync(
-        'systemctl',
-        ['show', service, '--property=ActiveEnterTimestamp', '--value'],
-        { timeout: 5000 }
-      );
-
-      if (!stdout.trim() || stdout.includes('n/a')) return null;
-
-      const startTime = new Date(stdout.trim());
-      const now = new Date();
-      const diff = now - startTime;
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      if (days > 0) return `${days}d ${hours}h`;
-      if (hours > 0) return `${hours}h ${minutes}m`;
-      return `${minutes}m`;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
-   * Check if service is enabled
-   * @param {string} service - Service name
-   * @returns {Promise<boolean>} True if enabled
-   * @private
-   */
-  async isServiceEnabled(service) {
-    try {
-      await execFileAsync('systemctl', ['is-enabled', service], { timeout: 5000 });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Manage service (start/stop/restart)
-   * @param {string} action - Action (start, stop, restart)
-   * @param {string} service - Service name
-   * @returns {Promise<Object>} Result object
-   * @private
-   */
-  /**
-   * Get PM2 candidate names for a service
-   * @private
-   */
-  _getPm2Candidates(service) {
-    const candidateMap = {
-      'aszune-ai': ['aszune-ai'],
-      'aszune-bot': ['aszune-ai', 'aszune-bot'],
-      'aszune-ai-bot': ['aszune-ai', 'aszune-bot'],
-    };
-    return candidateMap[service] || null;
-  }
-
-  /**
-   * Try PM2 command for a service
-   * @private
-   */
-  async _tryPm2Command(action, pm2AppName) {
-    const pm2Command = `pm2 ${action} ${pm2AppName}`;
-    logger.debug(`Executing: ${pm2Command}`);
-    await execFileAsync('pm2', [action, pm2AppName], { timeout: 10000 });
-    logger.info(`PM2 shell succeeded: ${pm2Command}`);
-    return {
-      success: true,
-      message: `Service ${pm2AppName} ${action}ed successfully (PM2)`,
-      service: pm2AppName,
-      action,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Build service action result
-   * @private
-   */
-  _buildServiceResult(service, action) {
-    return {
-      success: true,
-      message: `Service ${service} ${action}ed successfully`,
-      service,
-      action,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  async manageService(action, service) {
-    // Both values reach a child process: allowlist the action and validate the
-    // name, then run without a shell (execFile) so nothing is interpreted.
-    if (!isValidAction(action)) {
-      const error = new Error('Invalid action. Must be start, stop, or restart');
-      error.statusCode = 400;
-      throw error;
-    }
-    assertSafeServiceName(service);
-
-    logger.info(`Service management: ${action} ${service}`);
-
-    // Try PM2 for bot services
-    const pm2Candidates = this._getPm2Candidates(service);
-    if (pm2Candidates) {
-      for (const pm2AppName of pm2Candidates) {
-        try {
-          return await this._tryPm2Command(action, pm2AppName);
-        } catch (pm2Error) {
-          logger.warn(`PM2 command failed for ${pm2AppName}: ${pm2Error.message}`);
-        }
-      }
-    }
-
-    // Fallback to systemctl
-    logger.debug(`Executing: systemctl ${action} ${service}`);
-    await execFileAsync('systemctl', [action, service], { timeout: 10000 });
-
-    logger.info(`Service ${action} succeeded: ${service}`);
-    return this._buildServiceResult(service, action);
-  }
-
-  /**
-   * Get service logs via journalctl
-   * @param {string} service - Service name
-   * @param {number} lines - Number of lines to retrieve
-   * @returns {Promise<Array>} Array of log lines
-   * @private
-   */
-  async getServiceLogs(service, lines = 50) {
-    assertSafeServiceName(service);
-    const lineCount = clampInt(lines, { def: 50, min: 1, max: 1000 });
-
-    try {
-      const { stdout } = await execFileAsync(
-        'journalctl',
-        ['-u', service, '-n', String(lineCount), '--no-pager', '--output=short-iso'],
-        { timeout: 10000 }
-      );
-
-      return stdout.split('\n').filter((line) => line.trim().length > 0);
-    } catch (error) {
-      logger.debug(`Failed to get service logs for ${service}: ${error.message}`);
-      return [];
-    }
-  }
-
-  /**
-   * Read configuration file with access control
-   * @private
-   */
-  async readConfigFile(filename) {
-    const allowedFiles = ['.env', 'config.js', '.env.example'];
-
-    if (!allowedFiles.includes(filename)) {
-      throw new Error(`Access denied: ${filename} is not in the allowed file list`);
-    }
-
-    const filepath = path.join(process.cwd(), filename);
-
-    if (!filepath.startsWith(process.cwd())) {
-      throw new Error('Path traversal attempt detected');
-    }
-
-    try {
-      await fsPromises.access(filepath);
-    } catch {
-      throw new Error(`File not found: ${filename}`);
-    }
-
-    // Never send credentials to the browser (same masking as the socket path)
-    const { maskSecrets } = require('./web-dashboard/handlers/configHandlers');
-    return maskSecrets(filename, await fsPromises.readFile(filepath, 'utf-8'));
-  }
-
-  /**
-   * Update configuration file with automatic backup
-   * @private
-   */
-  async updateConfigFile(filename, content, createBackup = true) {
-    const allowedFiles = ['.env', 'config.js'];
-
-    if (!allowedFiles.includes(filename)) {
-      throw new Error(`Access denied: ${filename} cannot be modified`);
-    }
-
-    const filepath = path.join(process.cwd(), filename);
-
-    if (!filepath.startsWith(process.cwd())) {
-      throw new Error('Path traversal attempt detected');
-    }
-
-    const {
-      restoreMaskedSecrets,
-      readExistingConfig,
-    } = require('./web-dashboard/handlers/configHandlers');
-    const existing = await readExistingConfig(filepath);
-    const restored = restoreMaskedSecrets(filename, content, existing ?? '');
-    if (createBackup && existing !== null) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      await fsPromises.copyFile(filepath, `${filepath}.backup.${timestamp}`);
-    }
-    await fsPromises.writeFile(filepath, restored, 'utf-8');
-
-    return {
-      file: filename,
-      updated: true,
-      message: `Configuration file ${filename} updated successfully`,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Validate configuration file syntax
-   * @private
-   */
-  async validateConfigFile(filename, content) {
-    let validationResult = { valid: true, errors: [], warnings: [] };
-
-    if (filename === '.env') {
-      validationResult = validateEnvContent(content);
-    } else if (filename === 'config.js') {
-      validationResult = validateJsContent(content);
-    }
-
-    return {
-      file: filename,
-      isValid: validationResult.errors.length === 0,
-      errors: validationResult.errors,
-      warnings: validationResult.warnings,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Get network interfaces information
-   * @returns {Promise<Array>} Network interfaces with status
-   * @private
-   */
-  async getNetworkInterfaces() {
-    const interfaces = os.networkInterfaces();
-    const result = [];
-
-    for (const [name, addrs] of Object.entries(interfaces)) {
-      const ipv4 = addrs.find((a) => a.family === 'IPv4');
-      const ipv6 = addrs.find((a) => a.family === 'IPv6');
-
-      result.push({
-        name,
-        status: name.includes('lo') ? 'loopback' : 'active',
-        ipv4: ipv4 ? ipv4.address : null,
-        ipv6: ipv6 ? ipv6.address : null,
-        mac: addrs[0]?.mac || null,
-      });
-    }
-
-    return result;
-  }
-
-  /**
-   * Get local and external IP addresses
-   * @returns {Promise<Object>} Local and external IP info
-   * @private
-   */
-  async getIPAddresses() {
-    const local = os.networkInterfaces();
-    let localIP = 'localhost';
-
-    for (const addrs of Object.values(local)) {
-      const ipv4 = addrs.find((a) => a.family === 'IPv4' && !a.internal);
-      if (ipv4) {
-        localIP = ipv4.address;
-        break;
-      }
-    }
-
-    let externalIP = 'Unable to determine';
-    try {
-      externalIP = await this.getExternalIp();
-    } catch (error) {
-      logger.debug(`External IP lookup failed: ${error.message}`);
-    }
-
-    return {
-      local: localIP,
-      external: externalIP,
-      hostname: os.hostname(),
-    };
-  }
-
-  /**
    * Get network connectivity status - delegates to NetworkDetector service
    * @returns {Promise<Object>} Network status with connectivity info
    * @private
@@ -1101,80 +741,25 @@ class WebDashboardService {
    * @private
    */
   async getReminders(status = 'all') {
-    try {
-      if (status === 'active') {
-        return databaseService.getActiveReminders();
-      } else if (status === 'completed') {
-        return databaseService.getCompletedReminders?.() || [];
-      }
-      return databaseService.getReminders?.() || databaseService.getActiveReminders();
-    } catch (error) {
-      logger.warn('Failed to get reminders:', error.message);
-      return [];
-    }
-  }
-
-  /**
-   * Create a new reminder
-   * @private
-   */
-  async createReminder(message, scheduledTime, userId, reminderType = 'general') {
-    try {
-      const reminder = {
-        id: `reminder_${Date.now()}`,
-        user_id: userId,
-        message,
-        scheduled_time: new Date(scheduledTime).toISOString(),
-        created_at: new Date().toISOString(),
-        reminder_type: reminderType,
-        status: 'active',
-      };
-
-      databaseService.addReminder?.(reminder);
-      return reminder;
-    } catch (error) {
-      logger.warn('Failed to create reminder:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Update an existing reminder
-   * @private
-   */
-  async updateReminder(id, message, scheduledTime) {
-    try {
-      const updated = {
-        id,
-        message: message || undefined,
-        scheduled_time: scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
-        updated_at: new Date().toISOString(),
-      };
-
-      databaseService.updateReminder?.(id, updated);
-      return updated;
-    } catch (error) {
-      logger.warn('Failed to update reminder:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Delete a reminder
-   * @private
-   */
-  async deleteReminder(id) {
-    try {
-      databaseService.deleteReminder?.(id);
-    } catch (error) {
-      logger.warn('Failed to delete reminder:', error.message);
-      throw error;
-    }
+    const reminders = databaseService.getAllReminders();
+    return status === 'all' ? reminders : reminders.filter((r) => r.status === status);
   }
 
   async _handleRestartRequest(res) {
     try {
       logger.info('Restart command received from dashboard');
+
+      // Only PM2 brings the process back. Without it a "restart" would just
+      // stop the bot while reporting success.
+      if (process.env.pm_id === undefined) {
+        res.status(409).json({
+          success: false,
+          error:
+            'The bot is not running under PM2, so it cannot restart itself. Restart it on the host.',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
 
       // Step 1: Explicitly disconnect Discord client to show offline status
       if (this.discordClient) {
@@ -1289,6 +874,9 @@ class WebDashboardService {
     // instance actions) require a configured token. Without one the dashboard
     // is read-only, so it is never "secure only by accident of bind address".
     const allowDestructive = !!this.authToken;
+    if (this.authToken && this.authToken.length < 16) {
+      logger.warn('DASHBOARD_TOKEN is short; use at least 32 random characters.');
+    }
     if (!allowDestructive) {
       logger.warn(
         'DASHBOARD_TOKEN is not set — dashboard is read-only. Config saves, ' +
@@ -1301,6 +889,18 @@ class WebDashboardService {
       logger.debug(`Dashboard client connected: ${socket.id}`);
 
       this._emitMetricsToSocket(socket, 'sending initial metrics');
+
+      // Socket.IO only passes an ack function when the client asked for one;
+      // otherwise the last argument is whatever the client sent. Handlers take
+      // (data, callback), so drop a trailing non-function instead of letting
+      // them call it and crash the process.
+      socket.use((packet, next) => {
+        const last = packet[packet.length - 1];
+        if (packet.length > 2) {
+          packet.splice(2, Infinity, ...(typeof last === 'function' ? [last] : []));
+        }
+        next();
+      });
 
       socket.on('disconnect', () => {
         logger.debug(`Dashboard client disconnected: ${socket.id}`);
@@ -1697,20 +1297,11 @@ class WebDashboardService {
       }),
       this._safeCollectMetric(() => this.getResourceData(), 'Resource data', {
         memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
-        performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
         optimizationTier: 'unknown',
       }),
       this._safeCollectMetric(() => this.getAnalyticsData(), 'Analytics data', {
-        summary: {
-          totalServers: 0,
-          totalUsers: 0,
-          successRate: 0,
-          errorRate: 0,
-          avgResponseTime: 0,
-          totalCommands: 0,
-        },
+        summary: { totalUsers: 0 },
         recentErrors: [],
-        recommendations: [],
       }),
     ]);
   }
@@ -1902,7 +1493,7 @@ class WebDashboardService {
   }
 
   /**
-   * Get resource optimization data (similar to /resources command)
+   * Get resource data (similar to /resources command): process memory only
    * @returns {Promise<Object>} Resource data
    */
   async getResourceData() {
@@ -1917,72 +1508,33 @@ class WebDashboardService {
           free: resourceStatus.memory.free,
           percentage: Math.round(resourceStatus.memory.percentage),
         },
-        performance: {
-          status: resourceStatus.performance.status,
-          responseTime: resourceStatus.performance.responseTime,
-          load: resourceStatus.performance.load,
-        },
-        optimizationTier: resourceStatus.optimizationTier || 'Standard',
+        optimizationTier: resourceStatus.optimizationTier,
       };
     } catch (error) {
       logger.warn(`Failed to get resource data: ${error.message}`);
       return {
         memory: { status: 'unknown', used: 0, free: 0, percentage: 0 },
-        performance: { status: 'unknown', responseTime: 0, load: 'unknown' },
-        optimizationTier: 'Standard',
+        optimizationTier: 'unknown',
       };
     }
   }
 
   /**
-   * Get analytics data (similar to /analytics command)
+   * Get analytics data: user count from the database and recent errors. Nothing
+   * records command usage, so no command or success-rate figures are reported.
    * @returns {Promise<Object>} Analytics data
    */
   async getAnalyticsData() {
     try {
       const databaseStats = await this.getDatabaseStats();
-
-      // Get optimization recommendations
-      let recommendations = [];
-      try {
-        const ResourceOptimizer = require('../utils/resource-optimizer');
-        const DiscordAnalytics = require('../utils/discord-analytics');
-        const analyticsData = await DiscordAnalytics.generateDailyReport();
-        const resourceStatus = await ResourceOptimizer.monitorResources();
-
-        recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
-          analyticsData,
-          { averageResponseTime: resourceStatus.performance.responseTime }
-        );
-      } catch (err) {
-        logger.debug(`Could not generate recommendations: ${err.message}`);
-        recommendations = ['System monitoring active'];
-      }
-
       return {
-        summary: {
-          totalServers: 1,
-          totalUsers: databaseStats.userCount,
-          totalCommands: 0,
-          successRate: 100,
-          errorRate: 0,
-          avgResponseTime: 0,
-        },
-        recommendations: recommendations.slice(0, 3),
+        summary: { totalUsers: databaseStats.userCount },
         recentErrors: this.getRecentErrors(10),
       };
     } catch (error) {
       logger.warn(`Failed to get analytics data: ${error.message}`);
       return {
-        summary: {
-          totalServers: 1,
-          totalUsers: 0,
-          totalCommands: 0,
-          successRate: 100,
-          errorRate: 0,
-          avgResponseTime: 0,
-        },
-        recommendations: ['System monitoring active'],
+        summary: { totalUsers: 0 },
         recentErrors: this.getRecentErrors(10),
       };
     }

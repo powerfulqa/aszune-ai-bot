@@ -127,23 +127,56 @@ describe('ServerInfo Command', () => {
     });
 
     it('should reply with embed containing server information', async () => {
+      jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
+
       await handleSlashCommand(mockInteraction);
 
-      expect(mockInteraction.editReply).toHaveBeenCalledWith(
-        expect.objectContaining({
-          embeds: expect.arrayContaining([
-            expect.objectContaining({
-              author: expect.objectContaining({
-                name: mockGuild.name,
-              }),
-              fields: expect.any(Array),
-              footer: expect.objectContaining({
-                text: 'Aszai Bot • Server Info',
-              }),
-            }),
-          ]),
-        })
-      );
+      expect(mockInteraction.editReply).toHaveBeenCalledTimes(1);
+      expect(mockInteraction.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 0x5865f2,
+            author: { name: 'Test Server', icon_url: 'https://cdn.discord.com/icon.png' },
+            thumbnail: { url: 'https://cdn.discord.com/icon.png' },
+            description: '*A test Discord server*\n\n',
+            image: undefined,
+            fields: [
+              { name: '👑 Owner', value: '<@owner-123>', inline: true },
+              { name: '📅 Created', value: '<t:1560556800:D>\n(7 years ago)', inline: true },
+              { name: '🆔 Server ID', value: '`test-guild-123`', inline: true },
+              {
+                name: '👥 Members [200]',
+                value: '👤 Humans: 190\n🤖 Bots: 10',
+                inline: true,
+              },
+              {
+                name: '💬 Channels [50]',
+                value: '📝 Text: 2\n🔊 Voice: 1\n📂 Categories: 1',
+                inline: true,
+              },
+              { name: '🎭 Roles [14]', value: '📌 Hoisted: 1\n🔗 Managed: 1', inline: true },
+              {
+                name: '💜 Boost Status',
+                value: 'Tier: Level 2\nBoosts: 15\n✅ Animated Icon',
+                inline: true,
+              },
+              {
+                name: '😀 Emojis [25]',
+                value: 'Static: 2\nAnimated: 1\n🏷️ Stickers: 5',
+                inline: true,
+              },
+              {
+                name: '🔒 Security',
+                value: 'Verification: Medium\nContent Filter: Members without roles',
+                inline: true,
+              },
+              { name: '✨ Features', value: '🏘️ Community • 👋 Welcome Screen', inline: false },
+            ],
+            footer: { text: 'Aszai Bot • Server Info' },
+            timestamp: '2026-11-16T12:00:00.000Z',
+          },
+        ],
+      });
     });
   });
 
@@ -545,7 +578,16 @@ describe('ServerInfo Embed Builder - Stats', () => {
       });
 
       const memberField = embed.fields.find((f) => f.name.includes('Members'));
-      expect(memberField).toBeDefined();
+      expect(memberField.value).toBe('👤 Humans: 90\n🤖 Bots: 10');
+    });
+
+    it('should show member stats as unavailable when the fetch failed', () => {
+      const embed = buildServerInfoEmbed(mockGuild, {
+        memberStats: { botCount: null, humanMembers: null },
+      });
+
+      const memberField = embed.fields.find((f) => f.name.includes('Members'));
+      expect(memberField.value).toBe('👤 Humans: Unavailable\n🤖 Bots: Unavailable');
     });
 
     it('should show features when present', () => {

@@ -12,7 +12,7 @@
  * @returns {void}
  */
 function sendError(callback, errorMessage, defaults = {}) {
-  if (callback) {
+  if (typeof callback === 'function') {
     callback({ error: errorMessage, ...defaults });
   }
 }
@@ -24,7 +24,7 @@ function sendError(callback, errorMessage, defaults = {}) {
  * @returns {void}
  */
 function sendSuccess(callback, data) {
-  if (callback) {
+  if (typeof callback === 'function') {
     callback(data);
   }
 }

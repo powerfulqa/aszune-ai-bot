@@ -1,11 +1,3 @@
-let chrono;
-try {
-  chrono = require('chrono-node');
-} catch (error) {
-  // Graceful fallback when chrono-node is not available
-  chrono = null;
-}
-
 class TimeParser {
   constructor() {
     this.timezoneOffsets = {
@@ -28,71 +20,6 @@ class TimeParser {
       AEDT: 11,
       AEST: 10,
     };
-  }
-
-  /**
-   * Parse natural language time expression and return scheduled time
-   * @param {string} timeExpression - Natural language time expression
-   * @param {string} userTimezone - User's timezone (default: UTC)
-   * @returns {Object} - { scheduledTime: Date, timezone: string, originalExpression: string }
-   */
-  parseTimeExpression(timeExpression, userTimezone = 'UTC') {
-    // Check if chrono-node is available, use fallback if not
-    if (!chrono) {
-      return this.parseBasicTimeExpression(timeExpression, userTimezone);
-    }
-
-    try {
-      // Parse the time expression using chrono
-      const results = chrono.parse(timeExpression, new Date(), { forwardDate: true });
-
-      if (results.length === 0) {
-        throw new Error(
-          'Unable to parse time expression. Try formats like "in 5 minutes", "tomorrow at 3pm", "next Monday 2:30 PM"'
-        );
-      }
-
-      // Use the first (most likely) result
-      const result = results[0];
-      const scheduledTime = result.date();
-
-      // Determine timezone
-      let timezone = userTimezone;
-
-      // Check if timezone was specified in the expression
-      const timezoneMatch = timeExpression.match(
-        /\b(UTC|EST|EDT|CST|CDT|MST|MDT|PST|PDT|GMT|BST|CET|CEST|JST|KST|IST|AEDT|AEST)\b/i
-      );
-      if (timezoneMatch) {
-        timezone = timezoneMatch[1].toUpperCase();
-      }
-
-      // Validate the scheduled time is in the future
-      if (scheduledTime <= new Date()) {
-        throw new Error('Scheduled time must be in the future');
-      }
-
-      return {
-        scheduledTime,
-        timezone,
-        originalExpression: timeExpression,
-        parsedText: result.text,
-      };
-    } catch (error) {
-      throw new Error(`Time parsing failed: ${error.message}`, { cause: error });
-    }
-  }
-
-  /**
-   * Convert timezone-aware time to UTC for storage
-   * @param {Date} localTime - Time in local timezone
-   * @param {string} timezone - Timezone identifier
-   * @returns {Date} - UTC time
-   */
-  convertToUTC(localTime, timezone) {
-    const offset = this.timezoneOffsets[timezone.toUpperCase()] || 0;
-    const utcTime = new Date(localTime.getTime() - offset * 60 * 60 * 1000);
-    return utcTime;
   }
 
   /**
@@ -275,70 +202,6 @@ class TimeParser {
     const diffDays = Math.floor(diffHours / 24);
 
     return this._formatTimeDiff(diffSeconds, diffMinutes, diffHours, diffDays);
-  }
-
-  /**
-   * Validate timezone
-   * @param {string} timezone - Timezone to validate
-   * @returns {boolean} - Whether timezone is valid
-   */
-  isValidTimezone(timezone) {
-    return timezone.toUpperCase() in this.timezoneOffsets;
-  }
-
-  /**
-   * Get list of supported timezones
-   * @returns {string[]} - Array of supported timezone codes
-   */
-  getSupportedTimezones() {
-    return Object.keys(this.timezoneOffsets);
-  }
-
-  /**
-   * Fallback parser for basic time expressions when chrono-node is unavailable
-   * @param {string} timeExpression - Simple time expression
-   * @param {string} userTimezone - User's timezone
-   * @returns {Object} - Parsed time result
-   */
-  parseBasicTimeExpression(timeExpression, userTimezone = 'UTC') {
-    const now = new Date();
-    let scheduledTime = null;
-
-    // Try to parse ISO format (YYYY-MM-DD HH:MM:SS)
-    const isoMatch = timeExpression.match(/(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2}(?::\d{2})?)/);
-    if (isoMatch) {
-      scheduledTime = new Date(`${isoMatch[1]}T${isoMatch[2]}`);
-    }
-
-    // Try to parse relative time (e.g., "in 30 minutes", "in 2 hours")
-    const relativeMatch = timeExpression.match(/in\s+(\d+)\s+(minute|hour|day)s?/i);
-    if (relativeMatch && !scheduledTime) {
-      const amount = parseInt(relativeMatch[1]);
-      const unit = relativeMatch[2].toLowerCase();
-
-      scheduledTime = new Date(now);
-      if (unit === 'minute') {
-        scheduledTime.setMinutes(scheduledTime.getMinutes() + amount);
-      } else if (unit === 'hour') {
-        scheduledTime.setHours(scheduledTime.getHours() + amount);
-      } else if (unit === 'day') {
-        scheduledTime.setDate(scheduledTime.getDate() + amount);
-      }
-    }
-
-    if (!scheduledTime || scheduledTime <= now) {
-      throw new Error(
-        'Unable to parse time expression. Try "YYYY-MM-DD HH:MM:SS" or "in X minutes/hours/days"'
-      );
-    }
-
-    return {
-      scheduledTime,
-      timezone: userTimezone,
-      originalExpression: timeExpression,
-      parsedText: timeExpression,
-      fallbackUsed: true,
-    };
   }
 }
 

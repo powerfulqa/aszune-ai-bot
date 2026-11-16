@@ -1,16 +1,20 @@
+const path = require('path');
+const logger = require('../utils/logger');
+
 let Database;
 try {
   Database = require('better-sqlite3');
 } catch (error) {
-  // Graceful fallback for tests or when better-sqlite3 is not installed
+  // The bot runs without it (history, stats and reminders are then off), but
+  // say so: a native module that no longer loads after a Node upgrade would
+  // otherwise look like an empty database.
   Database = null;
+  logger.error(`better-sqlite3 failed to load, database features are disabled: ${error.message}`);
 }
-const path = require('path');
-const logger = require('../utils/logger');
+
 const schema = require('./database/schema');
 const reminderOperations = require('./database/reminder-operations');
 const userOperations = require('./database/user-operations');
-const { getUserHistory } = require('../utils/db-query-helpers');
 
 class DatabaseService {
   constructor() {
@@ -53,6 +57,9 @@ class DatabaseService {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('synchronous = FULL');
     this.initTables();
+    // Several rows are written per chat message and nothing reads them back
+    // beyond the dashboard table view; keep a week.
+    this.db.exec("DELETE FROM performance_metrics WHERE timestamp < datetime('now', '-7 days')");
   }
 
   /**
@@ -83,19 +90,6 @@ class DatabaseService {
   }
 
   /**
-   * Generic data clearing for tables
-   * @private
-   */
-  _clearTableData(tableNames) {
-    return this._executeSql((db) => {
-      const tables = Array.isArray(tableNames) ? tableNames : [tableNames];
-      tables.forEach((table) => {
-        db.prepare(`DELETE FROM ${table}`).run();
-      });
-    });
-  }
-
-  /**
    * Get default return value for stats
    * @private
    */
@@ -111,10 +105,6 @@ class DatabaseService {
         preferences: '{}',
         username: null,
       },
-      commands: { totalCommands: 0, commandBreakdown: [], successRate: 100 },
-      uptime: { totalUptime: 0, totalDowntime: 0, restartCount: 0 },
-      analytics: [],
-      metrics: [],
     };
     return defaults[statsType] || null;
   }
@@ -156,54 +146,6 @@ class DatabaseService {
     }, `Failed to get user stats for ${userId}`);
   }
 
-  // Analytics methods
-  trackCommandUsage(userId, commandName, serverId = null, success = true, responseTimeMs = 0) {
-    return this._executeSql((db) => {
-      this.ensureUserExists(userId);
-      db.prepare(
-        `
-        INSERT INTO command_usage (user_id, command_name, server_id, success, response_time_ms)
-        VALUES (?, ?, ?, ?, ?)
-      `
-      ).run(userId, commandName, serverId, success ? 1 : 0, responseTimeMs);
-      this.updateUserStats(userId, { total_commands: 1 });
-    });
-  }
-
-  getCommandUsageStats(days = 7) {
-    return this._executeSql((db) => {
-      const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-
-      const total = db
-        .prepare('SELECT COUNT(*) as total FROM command_usage WHERE timestamp >= ?')
-        .get(cutoffDate).total;
-      const breakdown = db
-        .prepare(
-          `
-          SELECT command_name, COUNT(*) as count FROM command_usage WHERE timestamp >= ? 
-          GROUP BY command_name ORDER BY count DESC LIMIT 10
-        `
-        )
-        .all(cutoffDate);
-
-      const successData = db
-        .prepare(
-          `
-          SELECT COUNT(CASE WHEN success = 1 THEN 1 END) as successful, COUNT(*) as total 
-          FROM command_usage WHERE timestamp >= ?
-        `
-        )
-        .get(cutoffDate);
-
-      const successRate =
-        successData.total > 0
-          ? Math.round((successData.successful / successData.total) * 10000) / 100
-          : 100;
-
-      return { totalCommands: total, commandBreakdown: breakdown, successRate };
-    }, this._getDefaultStats('commands'));
-  }
-
   logPerformanceMetric(metricType, value, metadata = {}) {
     return this._executeSql((db) => {
       db.prepare(
@@ -213,86 +155,6 @@ class DatabaseService {
       `
       ).run(metricType, value, JSON.stringify(metadata));
     });
-  }
-
-  getPerformanceMetrics(metricType, hours = 24) {
-    const hoursNum = Math.max(1, Math.floor(Number(hours) || 24));
-    const hoursStr = `-${hoursNum} hours`;
-    return this._executeSql(
-      (db) =>
-        db
-          .prepare(
-            `
-        SELECT value, timestamp, metadata
-        FROM performance_metrics
-        WHERE metric_type = ? AND timestamp >= datetime('now', ?)
-        ORDER BY timestamp DESC
-      `
-          )
-          .all(metricType, hoursStr),
-      []
-    );
-  }
-
-  logError(errorType, errorMessage, userId = null, commandName = null, stackTrace = null) {
-    return this._executeSql((db) => {
-      db.prepare(
-        `
-        INSERT INTO error_logs (error_type, error_message, user_id, command_name, stack_trace)
-        VALUES (?, ?, ?, ?, ?)
-      `
-      ).run(errorType, errorMessage, userId, commandName, stackTrace);
-    });
-  }
-
-  getErrorStats(days = 7) {
-    return this._executeSql(
-      (db) => {
-        const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-        const total = db
-          .prepare('SELECT COUNT(*) as total FROM error_logs WHERE timestamp >= ?')
-          .get(cutoffDate).total;
-        const breakdown = db
-          .prepare(
-            `
-        SELECT error_type, COUNT(*) as count FROM error_logs WHERE timestamp >= ? GROUP BY error_type ORDER BY count DESC LIMIT 10
-      `
-          )
-          .all(cutoffDate);
-        const resolved = db
-          .prepare(
-            'SELECT COUNT(*) as resolved FROM error_logs WHERE resolved = 1 AND timestamp >= ?'
-          )
-          .get(cutoffDate).resolved;
-        return { totalErrors: total, errorBreakdown: breakdown, resolvedCount: resolved };
-      },
-      { totalErrors: 0, errorBreakdown: [], resolvedCount: 0 }
-    );
-  }
-
-  trackServerMetric(serverId, metricType, value) {
-    return this._executeSql((db) => {
-      db.prepare(
-        `
-        INSERT OR REPLACE INTO server_analytics (server_id, metric_type, value, timestamp)
-        VALUES (?, ?, ?, ?)
-      `
-      ).run(serverId, metricType, value, new Date().toISOString());
-    });
-  }
-
-  getServerAnalytics(serverId, days = 30) {
-    return this._executeSql((db) => {
-      const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      return db
-        .prepare(
-          `
-          SELECT server_id, metric_type, value, timestamp FROM server_analytics
-          WHERE server_id = ? AND timestamp >= ? ORDER BY timestamp DESC
-        `
-        )
-        .all(serverId, cutoffDate);
-    }, []);
   }
 
   logBotEvent(eventType, uptimeSeconds = 0, reason = null) {
@@ -306,42 +168,6 @@ class DatabaseService {
     });
   }
 
-  getUptimeStats() {
-    return this._executeSql(
-      (db) => {
-        const uptime =
-          db
-            .prepare(
-              'SELECT SUM(uptime_seconds) as total_uptime FROM bot_uptime WHERE event_type = ?'
-            )
-            .get('stop').total_uptime || 0;
-        const restarts = db
-          .prepare('SELECT COUNT(*) as restarts FROM bot_uptime WHERE event_type = ?')
-          .get('restart').restarts;
-        const events = db
-          .prepare(
-            `
-        SELECT strftime('%s', timestamp) as timestamp_unix FROM bot_uptime
-        WHERE event_type IN ('start', 'stop') ORDER BY timestamp DESC LIMIT 20
-      `
-          )
-          .all();
-        let downtime = 0;
-        for (let i = 0; i < events.length - 1; i += 2) {
-          if (events[i].timestamp_unix && events[i + 1]?.timestamp_unix) {
-            downtime += events[i].timestamp_unix - events[i + 1].timestamp_unix;
-          }
-        }
-        return {
-          totalUptime: uptime,
-          totalDowntime: Math.max(0, downtime),
-          restartCount: restarts,
-        };
-      },
-      { totalUptime: 0, totalDowntime: 0, restartCount: 0 }
-    );
-  }
-
   // Enhanced user stats methods
   updateUserStats(userId, updates) {
     return this._executeSqlStrict(
@@ -352,17 +178,6 @@ class DatabaseService {
 
   updateUsername(userId, username) {
     return this._executeSql((db) => userOperations.updateUsername(db, userId, username));
-  }
-
-  getUserMessages(userId, limit = 10) {
-    return this._executeSql((db) => {
-      const rows = db
-        .prepare(
-          'SELECT message FROM user_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
-        )
-        .all(userId, limit);
-      return rows.map((row) => row.message);
-    }, []);
   }
 
   addUserMessage(userId, message, responseTimeMs = 0, username = null) {
@@ -396,50 +211,6 @@ class DatabaseService {
     userOperations.ensureUserExists(db, userId, username);
   }
 
-  // Data export functionality
-  exportUserData(userId) {
-    try {
-      if (this.isDisabled) return null;
-
-      const exportData = {
-        userId,
-        exportDate: new Date().toISOString(),
-        userStats: this.getUserStats(userId),
-        conversationHistory: this.getConversationHistory(userId, 1000), // Last 1000 messages
-        commandUsage: this._getUserCommandHistory(userId),
-        errorLogs: this._getUserErrorHistory(userId),
-      };
-
-      return exportData;
-    } catch (error) {
-      if (this.isDisabled) return null;
-      logger.warn(`Failed to export user data for ${userId}: ${error.message}`);
-      return null;
-    }
-  }
-
-  _getUserCommandHistory(userId, limit = 100) {
-    return getUserHistory({
-      getDb: () => this.getDb(),
-      isDisabled: this.isDisabled,
-      tableName: 'command_usage',
-      columns: 'command_name, server_id, timestamp, success, response_time_ms',
-      userId,
-      limit,
-    });
-  }
-
-  _getUserErrorHistory(userId, limit = 50) {
-    return getUserHistory({
-      getDb: () => this.getDb(),
-      isDisabled: this.isDisabled,
-      tableName: 'error_logs',
-      columns: 'error_type, error_message, command_name, timestamp',
-      userId,
-      limit,
-    });
-  }
-
   clearUserData(userId) {
     return this._executeSqlStrict((db) => {
       const tables = [
@@ -460,22 +231,6 @@ class DatabaseService {
     return this._executeSql((db) => {
       db.prepare('DELETE FROM user_messages WHERE user_id = ?').run(userId);
       db.prepare('DELETE FROM conversation_history WHERE user_id = ?').run(userId);
-    });
-  }
-
-  clearAllData() {
-    return this._executeSql(() => {
-      this._clearTableData([
-        'user_stats',
-        'user_messages',
-        'conversation_history',
-        'command_usage',
-        'performance_metrics',
-        'error_logs',
-        'server_analytics',
-        'bot_uptime',
-        'reminders',
-      ]);
     });
   }
 
@@ -547,6 +302,13 @@ class DatabaseService {
     );
   }
 
+  updateReminder(reminderId, userId, changes) {
+    return this._executeSqlStrict(
+      (db) => reminderOperations.updateReminder(db, reminderId, userId, changes),
+      `Failed to update reminder ${reminderId}`
+    );
+  }
+
   /**
    * Get reminder count for a specific user
    * @param {string} userId - User ID
@@ -565,17 +327,6 @@ class DatabaseService {
       (db) => reminderOperations.getReminderStats(db),
       reminderOperations.getDefaultReminderStats()
     );
-  }
-
-  /**
-   * Expose default reminder stats for legacy tests
-   */
-  _getDefaultReminderStats() {
-    return reminderOperations.getDefaultReminderStats();
-  }
-
-  _mapStatusCounts(statusResults, stats) {
-    reminderOperations._test.mapStatusCounts(statusResults, stats);
   }
 
   /**

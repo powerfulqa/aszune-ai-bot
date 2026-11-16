@@ -18,3 +18,6 @@ commit_msg.txt
 .qlty/logs/
 .qlty/out/
 .qlty/tmp/
+.env.backup.*
+*.backup.*
+.claude/settings.local.json

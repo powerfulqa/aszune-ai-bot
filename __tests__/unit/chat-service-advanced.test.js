@@ -45,7 +45,6 @@ jest.mock('../../src/utils/input-validator', () => ({
 }));
 jest.mock('../../src/utils/message-chunking', () => ({
   chunkMessage: jest.fn().mockReturnValue(['Mocked response']),
-  formatTablesForDiscord: jest.fn().mockImplementation((content) => content),
 }));
 jest.mock('../../src/services/database', () => ({
   addUserMessage: jest.fn(),

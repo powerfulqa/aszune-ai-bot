@@ -14,18 +14,47 @@ const EventEmitter = require('events');
 const MAX_DELIVERY_ATTEMPTS = 5;
 const DELIVERY_RETRY_DELAY_MS = 60 * 1000;
 const DISCORD_UNKNOWN_CHANNEL = 10003;
+// Each reminder holds a timer and a row; cap them so one user cannot pile up
+// thousands on a Raspberry Pi.
+const MAX_ACTIVE_REMINDERS_PER_USER = 25;
+
+// A reminder is delivered as an embed description, which Discord caps at 4096
+// characters; a longer one would fail on every delivery attempt.
+const MAX_MESSAGE_LENGTH = 4096;
+
+function assertValidMessage(message) {
+  if (typeof message !== 'string' || message.trim() === '') {
+    throw new Error('Reminder message must not be empty');
+  }
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    throw new Error(`Reminder message must be at most ${MAX_MESSAGE_LENGTH} characters`);
+  }
+}
 
 class ReminderService extends EventEmitter {
   constructor() {
     super();
     /** @type {Map<number, {type: string, timer: NodeJS.Timeout|NodeJS.Timer}>} */
     this.activeTimers = new Map();
+    /** @type {Set<number>} Reminders whose send is in flight */
+    this.delivering = new Set();
     this.isInitialized = false;
   }
 
-  async initialize() {
-    if (this.isInitialized) return;
+  /**
+   * Load and schedule the stored reminders once. Callers that arrive while a
+   * load is running (a chat reminder during startup) share it, so the same
+   * rows are never loaded and delivered twice. A failed load can be retried.
+   */
+  initialize() {
+    if (this.isInitialized) return Promise.resolve();
+    this._initializing ??= this._initialize().finally(() => {
+      this._initializing = null;
+    });
+    return this._initializing;
+  }
 
+  async _initialize() {
     try {
       // Load all active reminders from database and schedule them
       await this.loadAndScheduleReminders();
@@ -39,13 +68,25 @@ class ReminderService extends EventEmitter {
 
   async loadAndScheduleReminders() {
     try {
-      const activeReminders = databaseService.getActiveReminders();
+      // getActiveReminders() only returns future reminders; the ones that fell
+      // due while the bot was down (or whose send kept failing) come from
+      // getDueReminders() and are delivered late. Future ones go first: arming
+      // a timer is instant, while each overdue one waits for its Discord send,
+      // and a backlog must not make an on-time reminder late.
+      const reminders = [
+        ...databaseService.getActiveReminders(),
+        ...databaseService.getDueReminders(),
+      ];
 
-      for (const reminder of activeReminders) {
-        await this.scheduleReminder(reminder);
+      for (const reminder of reminders) {
+        try {
+          await this.scheduleReminder(reminder);
+        } catch (error) {
+          // Already logged by scheduleReminder; one bad row must not stop the rest.
+        }
       }
 
-      logger.info(`Loaded and scheduled ${activeReminders.length} active reminders`);
+      logger.info(`Loaded and scheduled ${reminders.length} active reminders`);
     } catch (error) {
       logger.error('Failed to load and schedule reminders:', error);
       throw error;
@@ -132,11 +173,16 @@ class ReminderService extends EventEmitter {
   async executeReminder(reminder, attempt = 1) {
     this.clearReminderTimer(reminder.id);
 
+    // Marked while the send is in flight so an edit cannot slip in between
+    // the send and the completion (see updateReminder).
+    this.delivering.add(Number(reminder.id));
     try {
       await Promise.all(this.emit('reminderDue', reminder));
     } catch (error) {
       this._handleDeliveryFailure(reminder, attempt, error);
       return;
+    } finally {
+      this.delivering.delete(Number(reminder.id));
     }
 
     try {
@@ -215,6 +261,13 @@ class ReminderService extends EventEmitter {
       if (scheduledDate <= new Date()) {
         throw new Error('Scheduled time must be in the future');
       }
+      assertValidMessage(message);
+
+      if (databaseService.getUserReminderCount(userId) >= MAX_ACTIVE_REMINDERS_PER_USER) {
+        throw new Error(
+          `You already have ${MAX_ACTIVE_REMINDERS_PER_USER} active reminders. Cancel one first.`
+        );
+      }
 
       // Create reminder in database
       const reminder = databaseService.createReminder(userId, message, scheduledTime, {
@@ -255,6 +308,33 @@ class ReminderService extends EventEmitter {
       logger.error(`Failed to cancel reminder ${reminderId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Change an active reminder's message and/or time, and re-arm its timer.
+   * @returns {Promise<Object|null>} The updated row, or null when not found
+   */
+  async updateReminder(reminderId, userId, { message, scheduledTime } = {}) {
+    // The send in flight would mark the edited row completed, or retry with
+    // the old text; the edit can be made again once it has finished.
+    if (this.delivering.has(Number(reminderId))) {
+      throw new Error('This reminder is being delivered right now. Try again in a moment.');
+    }
+    if (message !== undefined && message !== null) assertValidMessage(message);
+    const changes = { message: message || null, scheduledTime: null };
+    if (scheduledTime) {
+      const scheduledDate = new Date(scheduledTime);
+      if (isNaN(scheduledDate.getTime())) throw new Error('Invalid scheduled time format');
+      if (scheduledDate <= new Date()) throw new Error('Scheduled time must be in the future');
+      changes.scheduledTime = scheduledDate.toISOString();
+    }
+
+    const reminder = databaseService.updateReminder(reminderId, userId, changes);
+    if (!reminder) return null;
+
+    await this.scheduleReminder(reminder);
+    logger.info(`Updated reminder ${reminderId} for user ${userId}`);
+    return reminder;
   }
 
   getUserReminders(userId, includeCompleted = false) {

@@ -1,21 +1,19 @@
 /**
  * Dashboard Command Tests
- * Tests the Discord dashboard command functionality
+ * /dashboard shows only live readings: process memory, uptime, guild counts
  */
 
 jest.useFakeTimers();
 
-// Mock dependencies
 jest.mock('../../../src/config/config', () => require('../../../__mocks__/configMock'));
 jest.mock('../../../src/utils/logger');
-jest.mock('../../../src/utils/performance-dashboard', () => ({
-  generateDashboardReport: jest.fn(),
-  getRealTimeStatus: jest.fn(),
+jest.mock('../../../src/utils/resource-optimizer', () => ({
+  monitorResources: jest.fn(),
 }));
 jest.mock('../../../src/utils/error-handler');
 
 const { handleSlashCommand } = require('../../../src/commands/index');
-const PerformanceDashboard = require('../../../src/utils/performance-dashboard');
+const ResourceOptimizer = require('../../../src/utils/resource-optimizer');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
 
 // Mock the conversation module
@@ -36,10 +34,8 @@ describe('Dashboard Command', () => {
     reply: jest.fn(),
     deferReply: jest.fn(),
     editReply: jest.fn(),
-    user: {
-      id: 'test-user-123',
-      username: 'testuser',
-    },
+    user: { id: 'test-user-123', username: 'testuser' },
+    client: { guilds: { cache: { size: 5 } } },
     guild: {
       id: 'test-guild-123',
       memberCount: 150,
@@ -61,145 +57,68 @@ describe('Dashboard Command', () => {
     },
   };
 
+  const resourceStatus = (overall, used, optimizationTier) => ({
+    memory: { used },
+    overall: { status: overall },
+    optimizationTier,
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Setup default successful mocks
-    PerformanceDashboard.generateDashboardReport.mockResolvedValue({
-      overview: {
-        status: 'healthy',
-        memoryUsage: '245 MB',
-        responseTime: '1.2s',
-        errorRate: '2.1%',
-        optimizationTier: 'Standard',
-        serverCount: 5,
-        activeUsers: 150,
-        totalCommands: 1250,
-      },
-      alerts: [],
-    });
-
-    PerformanceDashboard.getRealTimeStatus.mockReturnValue({
-      uptime: {
-        formatted: '5d 12h 30m',
-      },
-    });
-
+    jest.spyOn(process, 'uptime').mockReturnValue(19800);
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
       type: 'GENERAL_ERROR',
     });
   });
 
-  test('should handle dashboard command successfully', async () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  test.each([
+    ['healthy', 0x00ff00, 245, 'Optimal'],
+    ['warning', 0xffa500, 150, 'Standard'],
+    ['degraded', 0xff0000, 250, 'High'],
+    ['critical', 0xff0000, 450, 'Critical'],
+  ])('shows %s status with live values only', async (status, color, used, tier) => {
+    ResourceOptimizer.monitorResources.mockReturnValue(resourceStatus(status, used, tier));
+
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.deferReply).toHaveBeenCalled();
-
-    // Use flexible matching to avoid emoji encoding issues
-    expect(mockInteraction.editReply).toHaveBeenCalledWith(
-      expect.objectContaining({
-        embeds: expect.arrayContaining([
-          expect.objectContaining({
-            color: 0x00ff00,
-            title: expect.stringContaining('Performance Dashboard'),
-            fields: expect.arrayContaining([
-              expect.objectContaining({
-                name: expect.stringContaining('System Status'),
-                value: expect.stringContaining('HEALTHY'),
-                inline: true,
-              }),
-              expect.objectContaining({
-                name: expect.stringContaining('Performance'),
-                value: expect.stringContaining('Response Time:'),
-                inline: true,
-              }),
-              expect.objectContaining({
-                name: expect.stringContaining('Activity'),
-                value: expect.stringContaining('Servers: 1'),
-                inline: true,
-              }),
-            ]),
-            footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-            timestamp: expect.any(String),
-          }),
-        ]),
-      })
-    );
+    expect(mockInteraction.editReply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color,
+          title: '🖥️ Performance Dashboard',
+          fields: [
+            {
+              name: '🚦 System Status',
+              value: `Status: ${status.toUpperCase()}\nUptime: 5h 30m\nMemory: ${used}MB`,
+              inline: true,
+            },
+            { name: '⚡ Optimization', value: `Tier: ${tier}`, inline: true },
+            { name: '📊 Activity', value: 'Servers: 5\nMembers: 150', inline: true },
+          ],
+          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
+          timestamp: expect.any(String),
+        },
+      ],
+    });
   });
 
   test('should handle dashboard command error', async () => {
     const error = new Error('Dashboard service unavailable');
-    PerformanceDashboard.generateDashboardReport.mockRejectedValue(error);
+    ResourceOptimizer.monitorResources.mockImplementation(() => {
+      throw error;
+    });
 
     await handleSlashCommand(mockInteraction);
 
-    expect(mockInteraction.deferReply).toHaveBeenCalled();
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(error, 'dashboard_command');
     expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      content: 'An unexpected error occurred. Please try again later.',
-    });
-  });
-
-  test('should handle dashboard with degraded performance', async () => {
-    PerformanceDashboard.generateDashboardReport.mockResolvedValue({
-      overview: {
-        status: 'warning',
-        memoryUsage: '890 MB',
-        responseTime: '5.7s',
-        errorRate: '15.2%',
-        optimizationTier: 'High',
-        serverCount: 12,
-        activeUsers: 450,
-        totalCommands: 2500,
-      },
-      alerts: [
-        { severity: 'critical', message: 'High memory usage detected' },
-        { severity: 'warning', message: 'Response time degraded' },
+      embeds: [
+        { color: '#ED4245', description: 'An unexpected error occurred. Please try again later.' },
       ],
     });
-
-    PerformanceDashboard.getRealTimeStatus.mockReturnValue({
-      uptime: {
-        formatted: '1d 2h 15m',
-      },
-    });
-
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.editReply).toHaveBeenCalledWith(
-      expect.objectContaining({
-        embeds: expect.arrayContaining([
-          expect.objectContaining({
-            color: 0xffa500,
-            title: expect.stringContaining('Performance Dashboard'),
-            fields: expect.arrayContaining([
-              expect.objectContaining({
-                name: expect.stringContaining('System Status'),
-                value: expect.stringContaining('WARNING'),
-                inline: true,
-              }),
-              expect.objectContaining({
-                name: expect.stringContaining('Performance'),
-                value: expect.stringContaining('Response Time'),
-                inline: true,
-              }),
-              expect.objectContaining({
-                name: expect.stringContaining('Activity'),
-                value: expect.stringContaining('Servers: 1'),
-                inline: true,
-              }),
-              expect.objectContaining({
-                name: expect.stringContaining('Active Alerts'),
-                value: expect.stringContaining('High memory usage detected'),
-                inline: false,
-              }),
-            ]),
-            footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-            timestamp: expect.any(String),
-          }),
-        ]),
-      })
-    );
   });
 });

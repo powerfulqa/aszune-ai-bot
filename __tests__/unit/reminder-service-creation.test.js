@@ -99,4 +99,49 @@ describe('ReminderService creation', () => {
       await expect(reminderService.cancelReminder(1, 'user1')).rejects.toThrow(error);
     });
   });
+
+  describe('per-user cap and updateReminder', () => {
+    it('refuses a new reminder once the user has 25 active ones', async () => {
+      databaseService.getUserReminderCount.mockReturnValue(25);
+
+      await expect(
+        reminderService.createReminder('user1', {
+          message: 'one too many',
+          scheduledTime: new Date(Date.now() + 60000).toISOString(),
+        })
+      ).rejects.toThrow('You already have 25 active reminders. Cancel one first.');
+      expect(databaseService.createReminder).not.toHaveBeenCalled();
+    });
+
+    it('stores an edit and re-arms the timer for the new time', async () => {
+      const scheduledTime = new Date(Date.now() + 60000).toISOString();
+      const row = { id: 9, user_id: 'user1', message: 'new', scheduled_time: scheduledTime };
+      databaseService.updateReminder.mockReturnValue(row);
+
+      const result = await reminderService.updateReminder(9, 'user1', {
+        message: 'new',
+        scheduledTime,
+      });
+
+      expect(databaseService.updateReminder).toHaveBeenCalledWith(9, 'user1', {
+        message: 'new',
+        scheduledTime,
+      });
+      expect(result).toBe(row);
+      expect(reminderService.activeTimers.has(9)).toBe(true);
+      reminderService.shutdown();
+    });
+
+    it('returns null and arms nothing when no active reminder matched', async () => {
+      databaseService.updateReminder.mockReturnValue(null);
+      expect(await reminderService.updateReminder(9, 'user1', { message: 'x' })).toBeNull();
+      expect(reminderService.activeTimers.size).toBe(0);
+    });
+
+    it('rejects an edit that moves the reminder into the past', async () => {
+      await expect(
+        reminderService.updateReminder(9, 'user1', { scheduledTime: '2020-01-01T00:00:00Z' })
+      ).rejects.toThrow('Scheduled time must be in the future');
+    });
+  });
 });

@@ -25,10 +25,13 @@ const {
 
 function makeFakeSocket() {
   const events = new Set();
+  const middleware = [];
   return {
     id: 'sock-1',
-    handshake: { auth: {}, headers: {} },
+    handshake: { auth: {}, headers: { host: 'localhost:3000' } },
     on: (event) => events.add(event),
+    use: (fn) => middleware.push(fn),
+    middleware,
     events,
   };
 }
@@ -63,6 +66,19 @@ describe('WebDashboardService token verification', () => {
     const next = jest.fn();
     service._authorizeSocket(makeFakeSocket(), next);
     expect(next).toHaveBeenCalledWith();
+  });
+
+  it('_authorizeSocket rejects a cross-site WebSocket when no token configured', () => {
+    service.authToken = null;
+    const next = jest.fn();
+    const socket = makeFakeSocket();
+    socket.handshake.headers.origin = 'https://evil.example';
+    service._authorizeSocket(socket, next);
+    expect(next).toHaveBeenCalledWith(
+      new Error(
+        'Forbidden: open the dashboard at http://localhost, or list this hostname in DASHBOARD_ALLOWED_HOSTS'
+      )
+    );
   });
 
   it('_authorizeSocket rejects every socket on a network bind without a token', () => {
@@ -158,5 +174,33 @@ describe('destructive handler gating', () => {
     const socket = makeFakeSocket();
     registerServiceHandlers(socket, {});
     expect(socket.events.has('service_action')).toBe(true);
+  });
+});
+
+describe('dashboard token guessing guard', () => {
+  it('refuses further attempts after 10 wrong tokens from one address in a minute', () => {
+    jest.resetModules();
+    process.env.DASHBOARD_TOKEN = 'correct-token-0123456789';
+    const service = require('../../../../src/services/web-dashboard');
+    service.authToken = 'correct-token-0123456789';
+    const middleware = service._createAuthMiddleware();
+    const call = (token) => {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+      middleware(
+        { method: 'GET', ip: '10.0.0.9', headers: { authorization: `Bearer ${token}` } },
+        res,
+        next
+      );
+      return { res, next };
+    };
+
+    for (let i = 0; i < 10; i++) expect(call('wrong').res.status).toHaveBeenCalledWith(401);
+
+    // Even the right token is refused until the minute is over
+    const blocked = call('correct-token-0123456789');
+    expect(blocked.res.status).toHaveBeenCalledWith(429);
+    expect(blocked.next).not.toHaveBeenCalled();
+    delete process.env.DASHBOARD_TOKEN;
   });
 });

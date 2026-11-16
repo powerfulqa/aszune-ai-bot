@@ -12,6 +12,7 @@ function initializeReminderServiceTestDefaults() {
   reminderService.eventListeners = new Map();
 
   databaseService.getActiveReminders.mockReturnValue([]);
+  databaseService.getDueReminders.mockReturnValue([]);
   databaseService.createReminder.mockImplementation(
     (userId, message, time, timezone, channelId, serverId) => ({
       id: 1,

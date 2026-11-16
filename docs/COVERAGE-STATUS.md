@@ -1,15 +1,18 @@
 # Coverage Status (Single Source of Truth)
 
-Last updated: 2026-10-04 (v2.3.0)
+Last updated: 2026-11-16 (v2.3.0, unreleased changes)
 
 ## Current Local Metrics
 
-- Tests: 2,036 total / 2,036 passing / 0 skipped
-- Test Suites: 193 total
-- Statements: 81.9%
-- Branches: 86.1%
-- Functions: 78.3%
-- Lines: 81.9%
+- Tests: 1,695 total / 1,695 passing / 0 skipped
+- Test Suites: 176 total
+- Statements: 85.1%
+- Branches: 86.6%
+- Functions: 84.4%
+- Lines: 85.1%
+
+The test count fell from 2,036 because about 3,000 lines of unreachable code were deleted together
+with the tests that only covered them.
 
 These reflect the latest full `npm test` execution on the `main` branch.
 
@@ -23,8 +26,9 @@ These reflect the latest full `npm test` execution on the `main` branch.
 
 | Tier           | Gate                                                 | Source                                    |
 | -------------- | ---------------------------------------------------- | ----------------------------------------- |
-| Global Minimum | ≥70% statements, branches, functions and lines       | `jest.config.js`                          |
-| Critical Gate  | Per-file thresholds on critical files (76-80% stmts) | `config/jest.critical-coverage.config.js` |
+| Global Minimum | ≥83% lines/statements, ≥82% functions, ≥84% branches | `jest.config.js`                          |
+| Critical Gate  | Per-file thresholds, about 2 points under measured   | `config/jest.critical-coverage.config.js` |
+| Pull requests  | Project may not drop over 1 point; patch ≥80%        | `codecov.yml`                             |
 
 ## Update Procedure
 

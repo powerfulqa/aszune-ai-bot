@@ -11,6 +11,8 @@ const {
   normalizeAgentResponse,
 } = require('./perplexity-secure/helpers/agentApiAdapter');
 
+const INCOMPLETE_NOTE = '\n\n*(This answer was cut short.)*';
+
 /**
  * API Client class for handling HTTP requests
  */
@@ -73,7 +75,7 @@ class ApiClient {
       config.API.PERPLEXITY
     );
     logger.info(
-      `API Request: effort="${payload.effort}", model="${payload.model || 'preset default'}", turns=${payload.input.length}, max_output_tokens=${payload.max_output_tokens}`
+      `API Request: effort="${payload.effort}", model="${payload.model || 'preset default'}", turns=${payload.input.length}, max_output_tokens=${payload.max_output_tokens ?? 'effort default'}`
     );
     if (process.env.DEBUG === 'true') {
       logger.debug('Full request payload:', JSON.stringify(payload, null, 2));
@@ -187,6 +189,13 @@ class ApiClient {
       // Validate response structure
       this._validateResponseStructure(body);
       this._validateChoiceContent(body.choices[0]);
+
+      // The run hit its step or output budget: the text stops part-way. Say so
+      // instead of passing a cut-off answer as a complete one.
+      if (body.status === 'incomplete') {
+        logger.warn('Agent run ended incomplete: the answer was cut short');
+        body.choices[0].message.content += INCOMPLETE_NOTE;
+      }
 
       // Log token usage if available
       if (body.usage) {

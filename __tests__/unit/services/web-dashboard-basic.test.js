@@ -100,20 +100,8 @@ jest.mock('../../../src/utils/cache-stats-helper', () => ({
 }));
 
 // Mock route modules - they export objects with register functions
-jest.mock('../../../src/services/web-dashboard/routes/configRoutes', () => ({
-  registerConfigRoutes: jest.fn(),
-}));
-jest.mock('../../../src/services/web-dashboard/routes/logRoutes', () => ({
-  registerLogRoutes: jest.fn(),
-}));
-jest.mock('../../../src/services/web-dashboard/routes/networkRoutes', () => ({
-  registerNetworkRoutes: jest.fn(),
-}));
 jest.mock('../../../src/services/web-dashboard/routes/reminderRoutes', () => ({
   registerReminderRoutes: jest.fn(),
-}));
-jest.mock('../../../src/services/web-dashboard/routes/serviceRoutes', () => ({
-  registerServiceRoutes: jest.fn(),
 }));
 jest.mock('../../../src/services/web-dashboard/routes/recommendationRoutes', () => ({
   registerRecommendationRoutes: jest.fn(),

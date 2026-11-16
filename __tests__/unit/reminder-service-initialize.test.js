@@ -56,6 +56,35 @@ describe('ReminderService initialize', () => {
       expect(logger.info).toHaveBeenCalledWith('Loaded and scheduled 2 active reminders');
     });
 
+    it('delivers reminders that fell due while the bot was down', async () => {
+      const pastDue = { id: 7, scheduled_time: '2020-01-01T00:00:00.000Z', user_id: 'user1' };
+      databaseService.getDueReminders.mockReturnValue([pastDue]);
+      databaseService.completeReminder.mockReturnValue(true);
+      const listener = jest.fn().mockResolvedValue(undefined);
+      reminderService.on('reminderDue', listener);
+
+      await reminderService.loadAndScheduleReminders();
+
+      expect(listener).toHaveBeenCalledWith(pastDue);
+      expect(databaseService.completeReminder).toHaveBeenCalledWith(7);
+    });
+
+    it('keeps scheduling after one reminder fails to schedule', async () => {
+      const futureTime = new Date(Date.now() + 10000).toISOString();
+      databaseService.getActiveReminders.mockReturnValue([
+        { id: 1, scheduled_time: futureTime, user_id: 'user1' },
+        { id: 2, scheduled_time: futureTime, user_id: 'user2' },
+      ]);
+      jest
+        .spyOn(reminderService, 'scheduleReminder')
+        .mockRejectedValueOnce(new Error('bad row'))
+        .mockResolvedValueOnce(undefined);
+
+      await reminderService.loadAndScheduleReminders();
+
+      expect(reminderService.scheduleReminder).toHaveBeenCalledTimes(2);
+    });
+
     it('should handle errors during loading', async () => {
       const error = new Error('Load Error');
       databaseService.getActiveReminders.mockImplementation(() => {

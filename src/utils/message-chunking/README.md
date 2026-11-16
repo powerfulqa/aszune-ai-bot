@@ -1,13 +1,11 @@
 # Message Chunking Module
 
-This module provides enhanced message chunking functionality with intelligent boundary handling and
-URL formatting.
+This module provides enhanced message chunking functionality with intelligent boundary handling.
 
 ## Structure
 
 - **`index.js`** - Main module that coordinates all chunking functionality
 - **`source-reference-processor.js`** - Handles collection and formatting of source references
-- **`url-formatter.js`** - Formats and fixes various URL types (YouTube, Reddit, GitHub, etc.)
 - **`chunk-boundary-handler.js`** - Handles intelligent chunking to avoid breaking content
 
 ## Features
@@ -18,13 +16,6 @@ URL formatting.
 - Formats source references with proper markdown links
 - Handles broken or incomplete source references
 
-### URL Formatting
-
-- **Social Media**: Reddit, Imgur, GitHub, Twitter/X
-- **YouTube**: Handles various YouTube URL formats with descriptive text
-- **Starsector**: Specialized formatting for fractalsoftworks.com forum links
-- **General**: Fixes common markdown link formatting issues
-
 ### Intelligent Chunking
 
 - Preprocesses messages to fix formatting issues
@@ -34,21 +25,17 @@ URL formatting.
   - Incomplete markdown links
   - Incomplete numbered lists
 - Validates chunk boundaries
-- Provides chunking statistics
 
 ## Usage
 
 ```javascript
-const { chunkMessage, processSourceReferences, formatUrls } = require('./message-chunking');
+const { chunkMessage, processSourceReferences } = require('./message-chunking');
 
 // Enhanced chunking with all features
 const chunks = chunkMessage(longMessage, maxLength);
 
 // Process source references only
 const processedText = processSourceReferences(text);
-
-// Format URLs only
-const formattedText = formatUrls(text);
 ```
 
 ## Error Handling

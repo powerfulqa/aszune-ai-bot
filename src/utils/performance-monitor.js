@@ -97,44 +97,6 @@ class PerformanceMonitor {
   }
 
   /**
-   * Get current throttle factor for operations
-   * @returns {number} - Current throttle factor (1 = normal, >1 = throttled)
-   */
-  getThrottleFactor() {
-    return this.enabled ? this.throttleFactor : 1;
-  }
-
-  /**
-   * Apply throttling to a time value
-   * @param {number} ms - Original time in milliseconds
-   * @returns {number} - Throttled time in milliseconds
-   */
-  throttleTime(ms) {
-    if (!this.enabled || ms < this.minValidInterval) return ms;
-    return Math.min(ms * this.throttleFactor, this.backoffMax);
-  }
-
-  /**
-   * Apply throttling to a task - delays execution based on current system load
-   * @param {Function} task - The task function to execute
-   * @returns {Promise} - Promise resolving to the task result
-   */
-  async throttleTask(task) {
-    if (!this.enabled) return task();
-
-    const delay = this.currentBackoff * (this.throttleFactor - 1);
-
-    if (delay > 0) {
-      logger.debug(
-        `[PerformanceMonitor] Throttling task by ${delay}ms (factor: ${this.throttleFactor.toFixed(1)})`
-      );
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-
-    return task();
-  }
-
-  /**
    * Check the current performance metrics and adjust throttling
    * @private
    */
@@ -254,37 +216,6 @@ class PerformanceMonitor {
     const used = process.memoryUsage().rss;
     const total = os.totalmem();
     return used / total;
-  }
-
-  /**
-   * Throttle function calls to limit execution frequency
-   * @param {Function} func - Function to throttle
-   * @param {number} delay - Delay in milliseconds
-   * @returns {Function} Throttled function
-   */
-  throttle(func, delay) {
-    let lastCall = 0;
-    return function (...args) {
-      const now = Date.now();
-      if (now - lastCall >= delay) {
-        lastCall = now;
-        return func.apply(this, args);
-      }
-    };
-  }
-
-  /**
-   * Debounce function calls to delay execution until after calls have stopped
-   * @param {Function} func - Function to debounce
-   * @param {number} delay - Delay in milliseconds
-   * @returns {Function} Debounced function
-   */
-  debounce(func, delay) {
-    let timeoutId;
-    return function (...args) {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
   }
 }
 

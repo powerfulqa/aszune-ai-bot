@@ -9,11 +9,7 @@ const { ErrorHandler } = require('./error-handler');
  * Cache eviction strategies
  */
 const EVICTION_STRATEGIES = {
-  LRU: 'lru', // Least Recently Used
-  LFU: 'lfu', // Least Frequently Used
-  TTL: 'ttl', // Time To Live
-  SIZE_BASED: 'size', // Size-based eviction
-  HYBRID: 'hybrid', // Combination of strategies
+  HYBRID: 'hybrid', // Expired entries first, then least recently used
 };
 
 /**
@@ -28,7 +24,6 @@ class CacheEntry {
     this.accessCount = 0;
     this.ttl = ttl; // Time to live in milliseconds
     this.size = this.calculateSize();
-    this.tags = new Set(); // For tag-based invalidation
   }
 
   /**
@@ -62,22 +57,6 @@ class CacheEntry {
   touch() {
     this.lastAccessed = Date.now();
     this.accessCount++;
-  }
-
-  /**
-   * Add tag to entry
-   * @param {string} tag - Tag to add
-   */
-  addTag(tag) {
-    this.tags.add(tag);
-  }
-
-  /**
-   * Remove tag from entry
-   * @param {string} tag - Tag to remove
-   */
-  removeTag(tag) {
-    this.tags.delete(tag);
   }
 }
 
@@ -118,7 +97,6 @@ class EnhancedCache {
     // Cache storage
     this.entries = new Map();
     this.accessOrder = new Map(); // For LRU tracking
-    this.frequencyMap = new Map(); // For LFU tracking
     this.cleanupTimer = null; // Store cleanup interval ID
 
     // Metrics
@@ -162,7 +140,6 @@ class EnhancedCache {
       // Update access statistics
       entry.touch();
       this.updateAccessOrder(key);
-      this.updateFrequency(key);
 
       this.metrics.hits++;
       return entry.value;
@@ -183,7 +160,6 @@ class EnhancedCache {
   set(key, value, options = {}) {
     try {
       const ttl = options.ttl !== undefined ? options.ttl : this.defaultTtl;
-      const tags = options.tags || [];
 
       // Remove existing entry if present
       if (this.entries.has(key)) {
@@ -192,9 +168,6 @@ class EnhancedCache {
 
       // Create new entry
       const entry = new CacheEntry(key, value, ttl);
-
-      // Add tags
-      tags.forEach((tag) => entry.addTag(tag));
 
       // Check if entry exceeds per-entry size limit
       if (this.maxSize && entry.size > this.maxSize) {
@@ -214,7 +187,6 @@ class EnhancedCache {
       // Add to cache
       this.entries.set(key, entry);
       this.updateAccessOrder(key);
-      this.updateFrequency(key);
       this.updateMemoryMetrics();
 
       this.metrics.sets++;
@@ -241,7 +213,6 @@ class EnhancedCache {
 
       this.entries.delete(key);
       this.accessOrder.delete(key);
-      this.frequencyMap.delete(key);
       this.updateMemoryMetrics();
 
       this.metrics.deletes++;
@@ -259,33 +230,9 @@ class EnhancedCache {
     try {
       this.entries.clear();
       this.accessOrder.clear();
-      this.frequencyMap.clear();
       this.metrics.totalMemory = 0;
     } catch (error) {
       ErrorHandler.handleError(error, 'cache clear operation');
-    }
-  }
-
-  /**
-   * Invalidate entries by tag
-   * @param {string} tag - Tag to invalidate
-   * @returns {number} Number of entries invalidated
-   */
-  invalidateByTag(tag) {
-    try {
-      let invalidated = 0;
-
-      for (const [key, entry] of this.entries.entries()) {
-        if (entry.tags.has(tag)) {
-          this.delete(key);
-          invalidated++;
-        }
-      }
-
-      return invalidated;
-    } catch (error) {
-      ErrorHandler.handleError(error, 'cache tag invalidation', { tag });
-      return 0;
     }
   }
 
@@ -333,7 +280,6 @@ class EnhancedCache {
         lastAccessed: entry.lastAccessed,
         accessCount: entry.accessCount,
         size: entry.size,
-        tags: Array.from(entry.tags),
         isExpired: entry.isExpired(),
       });
     }
@@ -356,27 +302,12 @@ class EnhancedCache {
   }
 
   /**
-   * Execute eviction based on current strategy
-   * @private
-   */
-  _executeEviction() {
-    const evictionMethods = {
-      [EVICTION_STRATEGIES.LRU]: () => this.evictLRU(),
-      [EVICTION_STRATEGIES.LFU]: () => this.evictLFU(),
-      [EVICTION_STRATEGIES.TTL]: () => this.evictExpired(),
-      [EVICTION_STRATEGIES.SIZE_BASED]: () => this.evictBySize(),
-    };
-    const method = evictionMethods[this.evictionStrategy] || (() => this.evictHybrid());
-    method();
-  }
-
-  /**
    * Ensure there's space for a new entry
    * @param {CacheEntry} newEntry - New entry to add
    */
   ensureSpace(newEntry) {
     if (this._isUnderLimits(newEntry.size)) return;
-    this._executeEviction();
+    this.evictHybrid();
   }
 
   /**
@@ -389,20 +320,6 @@ class EnhancedCache {
 
     for (let i = 0; i < entriesToEvict && i < sortedByAccess.length; i++) {
       const key = sortedByAccess[i][0];
-      this.delete(key);
-      this.metrics.evictions++;
-    }
-  }
-
-  /**
-   * Evict least frequently used entries
-   */
-  evictLFU() {
-    const entriesToEvict = Math.ceil(this.maxEntries * 0.1); // Evict 10%
-    const sortedByFrequency = Array.from(this.frequencyMap.entries()).sort((a, b) => a[1] - b[1]);
-
-    for (let i = 0; i < entriesToEvict && i < sortedByFrequency.length; i++) {
-      const key = sortedByFrequency[i][0];
       this.delete(key);
       this.metrics.evictions++;
     }
@@ -427,59 +344,6 @@ class EnhancedCache {
   }
 
   /**
-   * Evict by memory size
-   */
-  evictBySize() {
-    const targetMemory = this.maxMemory * 0.8; // Reduce to 80% of max
-
-    while (this._shouldContinueEviction(targetMemory)) {
-      const evicted = this._evictLargestEntry();
-      if (!evicted) break; // Prevent infinite loop
-    }
-  }
-
-  /**
-   * Check if eviction should continue
-   * @private
-   */
-  _shouldContinueEviction(targetMemory) {
-    return this.metrics.totalMemory > targetMemory && this.entries.size > 0;
-  }
-
-  /**
-   * Find and evict the largest cache entry
-   * @returns {boolean} True if an entry was evicted
-   * @private
-   */
-  _evictLargestEntry() {
-    const largestKey = this._findLargestEntryKey();
-    if (!largestKey) return false;
-
-    this.delete(largestKey);
-    this.metrics.evictions++;
-    return true;
-  }
-
-  /**
-   * Find the key of the largest entry in the cache
-   * @returns {string|null} The key of the largest entry, or null
-   * @private
-   */
-  _findLargestEntryKey() {
-    let largestKey = null;
-    let largestSize = 0;
-
-    for (const [key, entry] of this.entries.entries()) {
-      if (entry.size > largestSize) {
-        largestSize = entry.size;
-        largestKey = key;
-      }
-    }
-
-    return largestKey;
-  }
-
-  /**
    * Hybrid eviction strategy
    */
   evictHybrid() {
@@ -487,7 +351,7 @@ class EnhancedCache {
     this.evictExpired();
 
     // If still over limits, use LRU
-    if (this.entries.size >= this.maxSize || this.metrics.totalMemory >= this.maxMemory) {
+    if (this.entries.size >= this.maxEntries || this.metrics.totalMemory >= this.maxMemory) {
       this.evictLRU();
     }
   }
@@ -500,15 +364,6 @@ class EnhancedCache {
     // Use a counter to ensure proper ordering for LRU
     this.accessCounter = (this.accessCounter || 0) + 1;
     this.accessOrder.set(key, this.accessCounter);
-  }
-
-  /**
-   * Update frequency map for LFU
-   * @param {string} key - Cache key
-   */
-  updateFrequency(key) {
-    const current = this.frequencyMap.get(key) || 0;
-    this.frequencyMap.set(key, current + 1);
   }
 
   /**
@@ -539,16 +394,6 @@ class EnhancedCache {
       if (this.cleanupTimer && typeof this.cleanupTimer.unref === 'function') {
         this.cleanupTimer.unref();
       }
-    }
-  }
-
-  /**
-   * Stop cleanup interval
-   */
-  stopCleanup() {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = null;
     }
   }
 

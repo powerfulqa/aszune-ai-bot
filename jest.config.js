@@ -28,15 +28,10 @@ module.exports = {
     '/__mocks__/discord.js',
     '/__mocks__/discord.mock.module.js',
     '/__mocks__/loggerMock.js',
-    '/__tests__/__mocks__/discord.test.js',
-    '/__tests__/__mocks__/discord.mock.test.js',
-    '/__tests__/__mocks__/loggerMock.test.js',
     '/__tests__/utils/undici-mock.js',
     '/__tests__/utils/undici-mock-helpers.js',
     '/__tests__/utils/testUtils.js',
-    '/__tests__/utils/undici-mock-helpers.test.ignore.js',
     '/node_modules/',
-    '/bot-shutdown.test.js/',
     '/__tests__/unit/.*[.]test[.]setup[.]js',
   ],
   // Generate JUnit XML test report for CodeCov
@@ -54,13 +49,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Configure coverage thresholds - 70% to prevent regression
+  // Coverage gate: a few points under what the suite measures (about 85%
+  // statements, 86% branches, 84% functions), so a real drop fails the build.
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 84,
+      functions: 82,
+      lines: 83,
+      statements: 83,
     },
   },
   // Output verbose coverage info

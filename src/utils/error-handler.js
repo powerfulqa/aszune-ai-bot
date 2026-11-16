@@ -3,7 +3,6 @@
  * Provides consistent error handling patterns across the application
  */
 const logger = require('./logger');
-const config = require('../config/config');
 
 /**
  * Error types for categorization
@@ -254,24 +253,6 @@ class ErrorHandler {
   }
 
   /**
-   * Handle validation errors
-   * @param {Error} error - The validation error
-   * @param {string} field - The field that failed validation
-   * @param {*} value - The invalid value
-   * @returns {Object} - Standardized error response
-   */
-  static handleValidationError(error, field = '', value = null) {
-    const context = `Validation for ${field}`;
-    const additionalData = {
-      field: field,
-      value: typeof value === 'string' ? value.substring(0, 100) : value,
-      validationType: error.name || 'ValidationError',
-    };
-
-    return this.handleError(error, context, additionalData);
-  }
-
-  /**
    * Create a standardized error object
    * @param {string} message - Error message
    * @param {string} type - Error type
@@ -284,47 +265,6 @@ class ErrorHandler {
     error.code = code;
     error.timestamp = new Date().toISOString();
     return error;
-  }
-
-  /**
-   * Retry logic for transient errors
-   * @param {Function} operation - The operation to retry
-   * @param {Object} options - Retry options
-   * @returns {Promise} - Result of the operation
-   */
-  static async withRetry(operation, options = {}) {
-    const {
-      maxRetries = config.RATE_LIMITS.MAX_RETRIES,
-      delay = config.RATE_LIMITS.RETRY_DELAY_MS,
-      backoffMultiplier = 2,
-      retryableErrors = [ERROR_TYPES.RATE_LIMIT_ERROR, ERROR_TYPES.NETWORK_ERROR],
-    } = options;
-
-    let lastError;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await operation();
-      } catch (error) {
-        lastError = error;
-        const errorType = this.categorizeError(error);
-
-        // Don't retry if error is not retryable or we've exhausted retries
-        if (!retryableErrors.includes(errorType) || attempt === maxRetries) {
-          throw error;
-        }
-
-        // Calculate delay with exponential backoff
-        const currentDelay = delay * Math.pow(backoffMultiplier, attempt);
-        logger.warn(
-          `Retry attempt ${attempt + 1}/${maxRetries + 1} after ${currentDelay}ms for ${errorType}`
-        );
-
-        await new Promise((resolve) => setTimeout(resolve, currentDelay));
-      }
-    }
-
-    throw lastError;
   }
 }
 

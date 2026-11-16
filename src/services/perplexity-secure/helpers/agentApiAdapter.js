@@ -17,6 +17,8 @@
  *       (with any domain/recency filters) and `fetch_url` so pasted links can
  *       be read mid-conversation
  *     - no `temperature`: several model families ignore it
+ *     - `max_output_tokens` only when configured: it caps the whole run, and
+ *       since November 2026 it may be omitted on every model
  *   response:
  *     - `status` is `completed` for a usable answer; `failed` carries `error`,
  *       `incomplete` means the run hit its step or output budget
@@ -43,10 +45,10 @@
 function describeRuntime(preset, model) {
   const modelText = model
     ? `the model is ${model}`
-    : 'the preset picks the model (not reported yet)';
+    : 'the effort level picks the model (not reported yet)';
   return (
     `If someone asks what model, AI or API you use, tell them: you run on the Perplexity ` +
-    `Agent API (/v1/agent) with the "${preset}" preset, and ${modelText}.`
+    `Agent API (/v1/agent) at the "${preset}" effort level, and ${modelText}.`
   );
 }
 
@@ -109,8 +111,12 @@ function buildAgentRequest(messages, options = {}, perplexityConfig = {}) {
     input,
     instructions: buildInstructions(list, new Date(), runtime),
     tools: buildTools(options, perplexityConfig),
-    max_output_tokens: options.maxTokens || perplexityConfig.MAX_TOKENS?.CHAT,
   };
+  // max_output_tokens is a budget for the WHOLE run (every step, reasoning
+  // included), not per answer. Left out by default so the effort level's own
+  // limit applies; a small value makes runs end `incomplete`.
+  const maxOutputTokens = options.maxTokens || perplexityConfig.MAX_TOKENS?.CHAT;
+  if (maxOutputTokens) request.max_output_tokens = maxOutputTokens;
   if (perplexityConfig.AGENT_MODEL) request.model = perplexityConfig.AGENT_MODEL;
   const effort = options.reasoningEffort || perplexityConfig.AGENT_REASONING_EFFORT;
   if (effort) request.reasoning = { effort };

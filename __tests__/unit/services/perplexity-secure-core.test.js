@@ -177,18 +177,20 @@ describe('PerplexitySecure Service - Core', () => {
       expect(result).toBe('This conversation covered topics about programming and development.');
     });
 
-    it('should handle empty conversation history', async () => {
-      const result = await perplexityService.generateSummary([]);
-      expect(result).toContain('No conversation');
+    // Services throw; the commands turn the error into an error reply. A
+    // returned string was posted to the channel as if it were the summary.
+    it('throws for an empty conversation history', async () => {
+      await expect(perplexityService.generateSummary([])).rejects.toThrow(
+        'All messages must have role and content fields'
+      );
     });
 
-    it('should handle summary generation errors', async () => {
+    it('throws when the request fails', async () => {
       request.mockRejectedValueOnce(new Error('Summary generation failed'));
 
-      const messages = [{ role: 'user', content: 'Hello' }];
-      const result = await perplexityService.generateSummary(messages);
-
-      expect(result).toContain('Unable to generate summary');
+      await expect(
+        perplexityService.generateSummary([{ role: 'user', content: 'Hello' }])
+      ).rejects.toThrow('Summary generation failed');
     });
   });
 });

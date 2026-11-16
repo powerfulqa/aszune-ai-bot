@@ -1,505 +1,336 @@
 /**
- * Bot Integration - Features Tests
- * Tests bot features like emoji reactions, rate limiting, and error handling
+ * Bot Integration - Features
+ *
+ * Drives the real chat handler (src/services/chat.js) with its real
+ * collaborators and covers the behaviour around a normal answer: the in-flight
+ * guard, API failures, the simple-reminder path, emoji reactions and chunking.
+ * Only the edges are doubled: the Discord message, the Perplexity service, the
+ * database, the reminder service, file storage, the logger and the session
+ * validator.
  */
 
-// Mock dependencies (same as bot-core.test.js)
-jest.mock('../../src/commands', () => ({
-  handleTextCommand: jest.fn().mockImplementation(async (message) => {
-    if (!message.content.startsWith('!')) return null;
-    if (message.content.startsWith('!help')) {
-      await message.reply('Help message');
-      return true;
-    }
-    if (message.content.startsWith('!summary')) {
-      await message.reply('Summary message');
-      return true;
-    }
-    return null;
-  }),
-  handleSlashCommand: jest.fn(),
-}));
-
-jest.mock('../../src/utils/conversation', () => {
-  const mockInstance = {
-    clearHistory: jest.fn(),
-    getHistory: jest.fn().mockReturnValue([]),
-    getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
-    updateUserStats: jest.fn(),
-    updateTimestamp: jest.fn(),
-    addMessage: jest.fn(),
-    initializeIntervals: jest.fn(),
-    isRateLimited: jest.fn().mockReturnValue(false),
-    destroy: jest.fn(),
-  };
-  return jest.fn().mockImplementation(() => mockInstance);
-});
-
 jest.mock('../../src/services/perplexity-secure', () => ({
-  generateChatResponse: jest.fn().mockResolvedValue('Mock response'),
-  generateSummary: jest.fn().mockResolvedValue('Mock summary'),
+  generateChatResponse: jest.fn(),
+  generateSummary: jest.fn(),
 }));
-
-jest.mock('../../src/services/chat', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(async (message) => {
-    try {
-      // Check rate limiting first
-      const ConversationManager = require('../../src/utils/conversation');
-      const mockInstance = ConversationManager.mock.results[0].value;
-      if (mockInstance.isRateLimited && mockInstance.isRateLimited()) {
-        return; // Don't process if rate limited
-      }
-
-      // Simulate the actual message handling logic
-      if (message.content.startsWith('!')) {
-        const commandHandler = require('../../src/commands');
-        await commandHandler.handleTextCommand(message);
-      } else if (message.content.trim() === '') {
-        // Empty message - don't reply
-        return;
-      } else {
-        // Simulate chat message handling
-        await message.reply('Mock response');
-      }
-
-      // Simulate emoji reactions (this is what the test is checking for)
-      const emojiManager = require('../../src/utils/emoji');
-      await emojiManager.addReactionsToMessage(message);
-    } catch (error) {
-      // Handle errors gracefully - don't throw
-    }
-  }),
+jest.mock('../../src/services/database', () => ({
+  addUserMessage: jest.fn(),
+  updateUserStats: jest.fn(),
+  addBotResponse: jest.fn(),
+  getConversationHistory: jest.fn().mockReturnValue([]),
+  logPerformanceMetric: jest.fn(),
 }));
-
+jest.mock('../../src/services/reminder-service', () => ({
+  isInitialized: true,
+  initialize: jest.fn(),
+  setReminder: jest.fn(),
+}));
+jest.mock('../../src/services/storage', () => ({
+  loadUserStats: jest.fn().mockResolvedValue({}),
+  saveUserStats: jest.fn().mockResolvedValue(),
+}));
 jest.mock('../../src/utils/logger', () => ({
+  debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
-  debug: jest.fn(),
+}));
+// Unverified sessions randomly degrade answers; pin the validator so replies are deterministic.
+jest.mock('../../src/utils/metrics/session-validator', () => ({
+  validateRequest: jest.fn().mockReturnValue({ valid: true, degraded: false }),
+  processResponse: jest.fn((response) => response),
 }));
 
-jest.mock('../../src/utils/emoji', () => ({
-  getEmojiForKeyword: jest.fn().mockReturnValue('😊'),
-  getEmojisForKeywords: jest.fn().mockReturnValue(['😊', '👍']),
-  addEmojisToResponse: jest.fn().mockImplementation((text) => text),
-  addReactionsToMessage: jest.fn().mockImplementation(async (message) => {
-    // Simulate adding emoji reactions based on message content
-    if (message.content.includes('happy')) {
-      await message.react('😊');
-    }
-    if (message.content.includes('great')) {
-      await message.react('👍');
-    }
-  }),
-}));
+const USER_ID = '123456789012345678';
+const CHANNEL_ID = '987654321098765432';
+const GUILD_ID = '555555555555555555';
+const PRIMARY = 0x0099ff;
+const SUCCESS = 0x57f287;
+const WARNING = 0xfee75c;
+const START = new Date('2026-11-16T12:00:00.000Z');
+const FOOTER = { text: 'Aszai Bot' };
 
-jest.mock('../../src/utils/message-formatter', () => ({
-  formatResponse: jest.fn().mockImplementation((text) => text),
-}));
+let nextMessageId = 0;
+function createMessage(content, overrides = {}) {
+  nextMessageId += 1;
+  return {
+    id: `msg-${nextMessageId}`,
+    content,
+    author: { bot: false, id: USER_ID, username: 'tester' },
+    client: { user: { id: '999999999999999999' } },
+    channel: { id: CHANNEL_ID, sendTyping: jest.fn() },
+    guild: { id: GUILD_ID },
+    reply: jest.fn().mockResolvedValue({}),
+    react: jest.fn().mockResolvedValue({}),
+    ...overrides,
+  };
+}
 
-jest.mock('../../src/utils/enhanced-cache', () => ({
-  get: jest.fn().mockReturnValue(null),
-  set: jest.fn(),
-}));
+// Let the handler run up to its next real wait (the pending API call).
+const flush = () => new Promise((resolve) => setImmediate(resolve));
 
-jest.mock('../../src/utils/message-chunking', () => ({
-  chunkMessage: jest.fn().mockImplementation((message) => [message]),
-}));
+function embedReply(color, description) {
+  return { embeds: [{ color, description, footer: FOOTER }] };
+}
 
-jest.mock('../../src/utils/input-validator', () => ({
-  InputValidator: {
-    validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateInput: jest.fn().mockReturnValue({ valid: true }),
-    sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest
-      .fn()
-      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
-  },
-}));
+let handleChatMessage;
+let perplexityService;
+let reminderService;
+let databaseService;
 
-jest.mock('../../src/utils/error-handler', () => ({
-  ErrorHandler: {
-    handleError: jest.fn().mockReturnValue({ message: 'Test error message' }),
-  },
-}));
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.useFakeTimers({ now: START, doNotFake: ['nextTick', 'queueMicrotask', 'setImmediate'] });
+  handleChatMessage = require('../../src/services/chat');
+  perplexityService = require('../../src/services/perplexity-secure');
+  reminderService = require('../../src/services/reminder-service');
+  databaseService = require('../../src/services/database');
+  perplexityService.generateChatResponse.mockResolvedValue('Malenia is the Blade of Miquella.');
+  reminderService.isInitialized = true;
+  reminderService.setReminder.mockResolvedValue({ id: 42 });
+});
 
-jest.mock('../../src/services/storage', () => ({
-  saveData: jest.fn().mockResolvedValue(),
-  loadData: jest.fn().mockResolvedValue({}),
-}));
+describe('Bot Integration - one run per user', () => {
+  it('tells the user it is still working when a second message arrives mid-run', async () => {
+    let finishFirst;
+    perplexityService.generateChatResponse.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishFirst = resolve;
+      })
+    );
+    const first = createMessage('Who is Malenia?');
+    const firstRun = handleChatMessage(first);
+    await flush();
 
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  PERPLEXITY_API_KEY: 'test-perplexity-key',
-  PI_OPTIMIZATIONS: { ENABLED: false, LOW_CPU_MODE: false },
-  MAX_HISTORY: 20,
-  RATE_LIMIT_WINDOW: 5000,
-  CONVERSATION_MAX_LENGTH: 50,
-  MESSAGE_LIMITS: {
-    DISCORD_MAX_LENGTH: 2000,
-    EMBED_MAX_LENGTH: 1400,
-    SAFE_CHUNK_OVERHEAD: 50,
-    MAX_PARAGRAPH_LENGTH: 300,
-    EMBED_DESCRIPTION_MAX_LENGTH: 1400,
-    ERROR_MESSAGE_MAX_LENGTH: 200,
-    CHUNK_DELAY_MS: 800,
-  },
-  CACHE: {
-    DEFAULT_MAX_ENTRIES: 100,
-    CLEANUP_PERCENTAGE: 0.2,
-    MAX_AGE_DAYS: 7,
-    MAX_AGE_MS: 7 * 24 * 60 * 60 * 1000,
-    CLEANUP_INTERVAL_DAYS: 1,
-    CLEANUP_INTERVAL_MS: 24 * 60 * 60 * 1000,
-  },
-  RATE_LIMITS: {
-    DEFAULT_WINDOW_MS: 5000,
-    RETRY_DELAY_MS: 1000,
-    MAX_RETRIES: 1,
-    API_TIMEOUT_MS: 30000,
-  },
-  FILE_PERMISSIONS: {
-    FILE: 0o644,
-    DIRECTORY: 0o755,
-  },
-  MEMORY: {
-    DEFAULT_LIMIT_MB: 200,
-    DEFAULT_CRITICAL_MB: 250,
-    GC_COOLDOWN_MS: 30000,
-    CHECK_INTERVAL_MS: 60000,
-    PRESSURE_TEST_SIZE: 1000000,
-  },
-  PERFORMANCE: {
-    MIN_VALID_INTERVAL_MS: 250,
-    BACKOFF_MAX_MS: 10000,
-    BACKOFF_MIN_MS: 500,
-    CHECK_INTERVAL_MS: 5000,
-    CPU_THRESHOLD_PERCENT: 80,
-    MEMORY_THRESHOLD_PERCENT: 85,
-  },
-  LOGGING: {
-    DEFAULT_MAX_SIZE_MB: 5,
-    MAX_LOG_FILES: 5,
-    ROTATION_CHECK_INTERVAL_MS: 60000,
-  },
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai',
-      ENDPOINTS: {
-        AGENT: '/v1/agent',
-      },
-      AGENT_PRESET: 'medium',
-    },
-  },
-  COLORS: {
-    PRIMARY: 39423,
-    SUCCESS: 3066993,
-    ERROR: 15158332,
-    WARNING: 16763904,
-    INFO: 3447003,
-  },
-}));
+    // Past the 5s rate-limit window, so only the in-flight guard can stop it.
+    jest.setSystemTime(START.getTime() + 6000);
+    const second = createMessage('And Radahn?');
+    await handleChatMessage(second);
 
-jest.mock('../../src/utils/connection-throttler', () => ({
-  shouldThrottle: jest.fn().mockReturnValue(false),
-  recordRequest: jest.fn(),
-}));
+    expect(second.reply).toHaveBeenCalledTimes(1);
+    expect(second.reply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: WARNING,
+          description: "I'm still working on your previous message. Ask again once I've replied.",
+        },
+      ],
+    });
+    expect(perplexityService.generateChatResponse).toHaveBeenCalledTimes(1);
+    expect(databaseService.addUserMessage).toHaveBeenCalledTimes(1);
 
-jest.mock('../../src/utils/performance-monitor', () => ({
-  recordMetric: jest.fn(),
-  getMetrics: jest.fn().mockReturnValue({}),
-}));
+    finishFirst('Malenia is the Blade of Miquella.');
+    await firstRun;
+    expect(first.reply).toHaveBeenCalledWith(
+      embedReply(PRIMARY, 'Malenia is the Blade of Miquella.')
+    );
 
-jest.mock('../../src/utils/memory-monitor', () => ({
-  getMemoryUsage: jest.fn().mockReturnValue({
-    heapUsed: 50 * 1024 * 1024,
-    heapUsedPercent: 25,
-  }),
-  getStatus: jest.fn().mockReturnValue({
-    initialized: true,
-    isLowMemory: false,
-  }),
-}));
-
-jest.mock('../../src/utils/cache-pruner', () => ({
-  pruneCache: jest.fn(),
-}));
-
-jest.mock('../../src/utils/lazy-loader', () => ({
-  loadModule: jest.fn().mockImplementation((moduleName) => require(moduleName)),
-}));
-
-jest.mock('../../src/utils/input-validator', () => ({
-  InputValidator: {
-    validateUserId: jest.fn().mockReturnValue({ valid: true }),
-    validateInput: jest.fn().mockReturnValue({ valid: true }),
-    sanitizeInput: jest.fn().mockImplementation((input) => input),
-    validateAndSanitize: jest
-      .fn()
-      .mockReturnValue({ valid: true, sanitized: 'test content', warnings: [] }),
-  },
-}));
-
-jest.mock('../../src/utils/error-handler', () => ({
-  ErrorHandler: {
-    handleError: jest.fn().mockReturnValue({ message: 'Test error message' }),
-  },
-}));
-
-jest.mock('../../src/services/storage', () => ({
-  saveData: jest.fn(),
-  loadData: jest.fn().mockReturnValue({}),
-}));
-
-jest.mock('../utils/testUtils', () => ({
-  createMockMessage: jest.fn(),
-  createMockInteraction: jest.fn(),
-  resetMocks: jest.fn(),
-}));
-
-jest.mock('../../src/config/config', () => ({
-  DISCORD_BOT_TOKEN: 'test-token',
-  PERPLEXITY_API_KEY: 'test-key',
-  MAX_HISTORY: 20,
-  RATE_LIMIT_WINDOW: 5000,
-  CONVERSATION_MAX_LENGTH: 50,
-  MESSAGE_LIMITS: {
-    DISCORD_MAX_LENGTH: 2000,
-    EMBED_MAX_LENGTH: 1400,
-    SAFE_CHUNK_OVERHEAD: 50,
-    MAX_PARAGRAPH_LENGTH: 300,
-    EMBED_DESCRIPTION_MAX_LENGTH: 1400,
-    ERROR_MESSAGE_MAX_LENGTH: 200,
-    CHUNK_DELAY_MS: 800,
-  },
-  CACHE: {
-    DEFAULT_MAX_ENTRIES: 100,
-    CLEANUP_PERCENTAGE: 0.2,
-    MAX_AGE_DAYS: 7,
-    MAX_AGE_MS: 7 * 24 * 60 * 60 * 1000,
-    CLEANUP_INTERVAL_DAYS: 1,
-    CLEANUP_INTERVAL_MS: 24 * 60 * 60 * 1000,
-  },
-  RATE_LIMITS: {
-    DEFAULT_WINDOW_MS: 5000,
-    RETRY_DELAY_MS: 1000,
-    MAX_RETRIES: 1,
-    API_TIMEOUT_MS: 30000,
-  },
-  PI_OPTIMIZATIONS: {
-    ENABLED: false,
-    LOG_LEVEL: 'ERROR',
-    CACHE_ENABLED: true,
-    CACHE_MAX_ENTRIES: 100,
-    CLEANUP_INTERVAL_MINUTES: 30,
-    DEBOUNCE_MS: 300,
-    MAX_CONNECTIONS: 2,
-    MEMORY_LIMITS: {
-      RAM_THRESHOLD_MB: 200,
-      RAM_CRITICAL_MB: 250,
-    },
-    COMPACT_MODE: false,
-    REACTION_LIMIT: 3,
-    EMBEDDED_REACTION_LIMIT: 3,
-    LOW_CPU_MODE: false,
-    STREAM_RESPONSES: true,
-  },
-  API: {
-    PERPLEXITY: {
-      BASE_URL: 'https://api.perplexity.ai',
-      ENDPOINTS: {
-        AGENT: '/v1/agent',
-      },
-      AGENT_PRESET: 'medium',
-    },
-  },
-  COLORS: {
-    PRIMARY: 0x0099ff,
-    SUCCESS: 0x00ff00,
-    ERROR: 0xff0000,
-    WARNING: 0xffff00,
-  },
-}));
-
-jest.mock('discord.js', () => ({
-  Client: jest.fn().mockImplementation(() => ({
-    on: jest.fn(),
-    once: jest.fn(),
-    login: jest.fn().mockResolvedValue(),
-    destroy: jest.fn().mockResolvedValue(),
-    user: { tag: 'MockBot#0000', id: '123456789' },
-  })),
-  GatewayIntentBits: {
-    Guilds: 1,
-    GuildMessages: 2,
-    MessageContent: 3,
-  },
-  REST: jest.fn(() => ({
-    setToken: jest.fn().mockReturnThis(),
-    put: jest.fn().mockResolvedValue(),
-  })),
-  Routes: {
-    applicationCommands: jest.fn().mockReturnValue('mock-route'),
-  },
-}));
-
-jest.spyOn(process, 'exit').mockImplementation(() => {});
-
-describe('Bot Integration - Features', () => {
-  let mockClientInstance;
-  let mockOn;
-  let messageCreateHandler;
-  let message;
-  let conversationManager;
-  let consoleLogSpy, consoleErrorSpy;
-
-  beforeAll(() => {
-    process.on = jest.fn();
+    // The guard is released once the first run ends.
+    jest.setSystemTime(START.getTime() + 12000);
+    const third = createMessage('And Radahn?');
+    await handleChatMessage(third);
+    expect(perplexityService.generateChatResponse).toHaveBeenCalledTimes(2);
   });
 
-  beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('refreshes the typing indicator every 8 seconds until the answer arrives', async () => {
+    let finish;
+    perplexityService.generateChatResponse.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    );
+    const message = createMessage('Who is Malenia?');
+    const run = handleChatMessage(message);
+    await flush();
+    expect(message.channel.sendTyping).toHaveBeenCalledTimes(1);
 
-    jest.resetModules();
+    jest.advanceTimersByTime(16000);
+    expect(message.channel.sendTyping).toHaveBeenCalledTimes(3);
 
-    mockOn = jest.fn();
+    finish('Malenia is the Blade of Miquella.');
+    await run;
+    jest.advanceTimersByTime(16000);
+    expect(message.channel.sendTyping).toHaveBeenCalledTimes(3);
+  });
+});
 
-    mockClientInstance = {
-      on: mockOn,
-      once: jest.fn(),
-      login: jest.fn().mockResolvedValue('Logged in'),
-      destroy: jest.fn().mockResolvedValue(),
-      user: { tag: 'MockBot#0000', id: '123456789' },
+describe('Bot Integration - API failures', () => {
+  it.each([
+    [
+      'a 429',
+      { statusCode: 429 },
+      'The service is currently busy. Please wait a moment and try again.',
+    ],
+    [
+      'a 500',
+      { statusCode: 500 },
+      'Network connection issue. Please check your connection and try again.',
+    ],
+    ['an unclassified error', {}, 'An unexpected error occurred. Please try again later.'],
+  ])('replies with an error embed for %s', async (_label, props, description) => {
+    perplexityService.generateChatResponse.mockRejectedValue(
+      Object.assign(new Error('Perplexity failed'), props)
+    );
+    const message = createMessage('Who is Malenia?');
+
+    await expect(handleChatMessage(message)).resolves.toBeUndefined();
+
+    expect(message.reply).toHaveBeenCalledTimes(1);
+    expect(message.reply).toHaveBeenCalledWith(embedReply(PRIMARY, description));
+    expect(databaseService.addBotResponse).not.toHaveBeenCalled();
+    expect(message.react).not.toHaveBeenCalled();
+  });
+
+  it('releases the in-flight guard after a failure', async () => {
+    perplexityService.generateChatResponse.mockRejectedValueOnce(new Error('Perplexity failed'));
+    await handleChatMessage(createMessage('Who is Malenia?'));
+
+    jest.setSystemTime(START.getTime() + 6000);
+    const retry = createMessage('Who is Malenia?');
+    await handleChatMessage(retry);
+
+    expect(retry.reply).toHaveBeenCalledWith(
+      embedReply(PRIMARY, 'Malenia is the Blade of Miquella.')
+    );
+  });
+
+  it('carries on when the database is down', async () => {
+    const dbDown = () => {
+      throw new Error('SQLITE_BUSY');
     };
+    databaseService.addUserMessage.mockImplementation(dbDown);
+    databaseService.addBotResponse.mockImplementation(dbDown);
+    databaseService.logPerformanceMetric.mockImplementation(dbDown);
+    const message = createMessage('Who is Malenia?');
 
-    const { Client } = require('discord.js');
-    Client.mockImplementation(() => mockClientInstance);
+    await handleChatMessage(message);
 
-    message = {
-      content: 'Hello bot!',
-      author: {
-        id: '123456789012345678',
-        bot: false,
-        tag: 'TestUser#1234',
-      },
-      channel: {
-        id: '987654321098765432',
-        sendTyping: jest.fn(),
-      },
-      reply: jest.fn().mockResolvedValue({}),
-      react: jest.fn().mockResolvedValue({}),
-    };
+    expect(message.reply).toHaveBeenCalledWith(
+      embedReply(PRIMARY, 'Malenia is the Blade of Miquella.')
+    );
+  });
+});
 
-    conversationManager = {
-      clearHistory: jest.fn(),
-      getHistory: jest.fn().mockReturnValue([]),
-      getUserStats: jest.fn().mockReturnValue({ messages: 10, summaries: 2 }),
-      updateUserStats: jest.fn(),
-      addMessage: jest.fn(),
-    };
+describe('Bot Integration - simple reminders', () => {
+  it('sets a guild reminder and confirms it without calling the AI', async () => {
+    const message = createMessage('remind me in 5 minutes to check the oven');
 
-    // ConversationManager is already mocked globally
+    await handleChatMessage(message);
 
-    const { createMockMessage } = require('../utils/testUtils');
-    createMockMessage.mockImplementation((options = {}) => ({
-      ...message,
-      ...options,
-    }));
-
-    require('../../src/index');
-
-    // Get the mocked handleChatMessage function
-    const handleChatMessage = require('../../src/services/chat').default;
-    messageCreateHandler = handleChatMessage;
+    expect(reminderService.setReminder).toHaveBeenCalledTimes(1);
+    expect(reminderService.setReminder).toHaveBeenCalledWith(
+      USER_ID,
+      'in 5 minutes',
+      'check the oven',
+      CHANNEL_ID,
+      GUILD_ID
+    );
+    expect(reminderService.initialize).not.toHaveBeenCalled();
+    expect(message.reply).toHaveBeenCalledTimes(1);
+    expect(message.reply).toHaveBeenCalledWith(
+      embedReply(
+        SUCCESS,
+        '✅ **Reminder Set!**\n\nI\'ll remind you about "check the oven" in 5 minutes.\n\n*Reminder ID: 42*'
+      )
+    );
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
   });
 
-  afterEach(() => {
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-    jest.clearAllMocks();
+  it('passes a null server for a DM and handles the message-first phrasing', async () => {
+    const message = createMessage('please remind me to call mum in 2 hours', {
+      guild: null,
+    });
+
+    await handleChatMessage(message);
+
+    expect(reminderService.setReminder).toHaveBeenCalledWith(
+      USER_ID,
+      'in 2 hours',
+      'call mum',
+      CHANNEL_ID,
+      null
+    );
+    expect(message.reply).toHaveBeenCalledWith(
+      embedReply(
+        SUCCESS,
+        '✅ **Reminder Set!**\n\nI\'ll remind you about "call mum" in 2 hours.\n\n*Reminder ID: 42*'
+      )
+    );
   });
 
-  it('adds emoji reactions for keywords', async () => {
-    message.content = 'Hello happy world!';
+  it('initialises the reminder service first when it is not ready', async () => {
+    reminderService.isInitialized = false;
 
-    await messageCreateHandler(message);
+    await handleChatMessage(createMessage('remind me in 1 day'));
 
-    expect(message.react).toHaveBeenCalledWith('😊');
+    expect(reminderService.initialize).toHaveBeenCalledTimes(1);
+    expect(reminderService.setReminder).toHaveBeenCalledWith(
+      USER_ID,
+      'in 1 day',
+      'Reminder',
+      CHANNEL_ID,
+      GUILD_ID
+    );
   });
 
-  it('adds multiple emoji reactions for multiple keywords', async () => {
-    message.content = 'Hello happy world! This is great!';
+  it('replies with a warning embed when the reminder cannot be set', async () => {
+    reminderService.setReminder.mockRejectedValue(new Error('disk full'));
+    const message = createMessage('remind me in 5 minutes to check the oven');
 
-    await messageCreateHandler(message);
+    await handleChatMessage(message);
 
-    expect(message.react).toHaveBeenCalledWith('😊');
-    expect(message.react).toHaveBeenCalledWith('👍');
+    expect(message.reply).toHaveBeenCalledWith(
+      embedReply(
+        WARNING,
+        'Sorry, I couldn\'t set that reminder. Please try using the /remind command or say "remind me in 5 minutes to check the oven".'
+      )
+    );
+    expect(perplexityService.generateChatResponse).not.toHaveBeenCalled();
+  });
+});
+
+describe('Bot Integration - emoji and chunking', () => {
+  it('reacts to keywords in the question and appends emoji for keywords in the answer', async () => {
+    perplexityService.generateChatResponse.mockResolvedValue('That boss is awesome.');
+    const message = createMessage('hello, thanks for the tip');
+
+    await handleChatMessage(message);
+
+    expect(message.reply).toHaveBeenCalledWith(embedReply(PRIMARY, 'That boss is awesome. 😎'));
+    expect(message.react.mock.calls).toEqual([['👋'], ['🙏']]);
+    // History keeps the answer without the display emoji.
+    expect(databaseService.addBotResponse).toHaveBeenCalledWith(USER_ID, 'That boss is awesome.');
   });
 
-  it('rate limits user messages', async () => {
-    // Mock conversation manager to return rate limited
-    const ConversationManager = require('../../src/utils/conversation');
-    const mockInstance = ConversationManager.mock.results[0].value;
-    mockInstance.isRateLimited.mockReturnValue(true);
+  it('still answers when a reaction is rejected by Discord', async () => {
+    const message = createMessage('hello there');
+    message.react.mockRejectedValue(new Error('Missing Permissions'));
 
-    await messageCreateHandler(message);
+    await expect(handleChatMessage(message)).resolves.toBeUndefined();
 
-    expect(message.reply).not.toHaveBeenCalled();
+    expect(message.reply).toHaveBeenCalledWith(
+      embedReply(PRIMARY, 'Malenia is the Blade of Miquella.')
+    );
   });
 
-  it('handles API error when replying', async () => {
-    // Create a new message object with the mock rejection
-    const errorMessage = {
-      ...message,
-      reply: jest.fn().mockRejectedValue(new Error('API Error')),
-    };
+  it('splits a long answer into numbered embeds that together carry the whole answer', async () => {
+    const paragraphs = Array.from(
+      { length: 6 },
+      (_, i) => `Part ${i + 1}. ${'lore '.repeat(120).trim()}.`
+    );
+    perplexityService.generateChatResponse.mockResolvedValue(paragraphs.join('\n\n'));
+    const message = createMessage('Tell me everything');
 
-    // The test should not throw an error
-    await expect(messageCreateHandler(errorMessage)).resolves.not.toThrow();
+    await handleChatMessage(message);
 
-    expect(errorMessage.reply).toHaveBeenCalled();
-  });
-
-  it('handles API error when summarising', async () => {
-    message.content = '!summary';
-    conversationManager.getHistory.mockReturnValue([{ role: 'user', content: 'Hello' }]);
-
-    const perplexityService = require('../../src/services/perplexity-secure');
-    perplexityService.generateSummary.mockRejectedValue(new Error('API Error'));
-
-    await messageCreateHandler(message);
-
-    expect(message.reply).toHaveBeenCalled();
-  });
-
-  it('handles empty message gracefully', async () => {
-    message.content = '';
-    await messageCreateHandler(message);
-
-    expect(message.reply).not.toHaveBeenCalled();
-  });
-
-  it('truncates very long conversation history', async () => {
-    message.content = '!summary';
-    const longHistory = Array(1000)
-      .fill()
-      .map((_, i) => ({
-        role: 'user',
-        content: `Message ${i}`,
-      }));
-    conversationManager.getHistory.mockReturnValue(longHistory);
-
-    await messageCreateHandler(message);
-
-    expect(message.reply).toHaveBeenCalled();
-  });
-
-  it('handles missing environment variables gracefully', () => {
-    // This test ensures the bot can start even with missing env vars
-    expect(() => {
-      require('../../src/index');
-    }).not.toThrow();
+    const descriptions = message.reply.mock.calls.map(([payload]) => payload.embeds[0].description);
+    expect(descriptions).toHaveLength(2);
+    descriptions.forEach((description, index) => {
+      expect(description.startsWith(`[${index + 1}/2] `)).toBe(true);
+      expect(description.length).toBeLessThanOrEqual(2000);
+    });
+    expect(descriptions.map((d) => d.replace(/^\[\d\/2\] /, '')).join('\n\n')).toBe(
+      paragraphs.join('\n\n')
+    );
   });
 });

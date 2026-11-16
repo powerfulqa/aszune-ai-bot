@@ -59,8 +59,10 @@ describe('Conversation Manager - Advanced Features', () => {
   describe('destroy', () => {
     it('clears all intervals', () => {
       // Start intervals
-      conversationManager.startCleanupInterval();
-      conversationManager.startSaveStatsInterval();
+      conversationManager.cleanupInterval = setInterval(() => {}, 1000);
+      conversationManager.saveStatsInterval = setInterval(() => {}, 1000);
+      conversationManager.activeIntervals.add(conversationManager.cleanupInterval);
+      conversationManager.activeIntervals.add(conversationManager.saveStatsInterval);
 
       expect(conversationManager.cleanupInterval).toBeDefined();
       expect(conversationManager.saveStatsInterval).toBeDefined();

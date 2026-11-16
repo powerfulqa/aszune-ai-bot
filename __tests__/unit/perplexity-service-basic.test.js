@@ -67,9 +67,8 @@ describe('Perplexity Service - Basic', () => {
         input: [{ type: 'message', role: 'user', content: 'Hello' }],
         instructions:
           'Today is 2026-10-04.\n\n' +
-          'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) with the "medium" preset, and the preset picks the model (not reported yet).',
+          'If someone asks what model, AI or API you use, tell them: you run on the Perplexity Agent API (/v1/agent) at the "medium" effort level, and the effort level picks the model (not reported yet).',
         tools: [{ type: 'web_search' }, { type: 'fetch_url' }],
-        max_output_tokens: 4096,
       });
 
       expect(response).toEqual(NORMALIZED_MOCK);

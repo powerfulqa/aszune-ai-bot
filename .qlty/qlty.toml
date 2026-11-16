@@ -34,9 +34,10 @@ threshold = 80
 enabled = true
 threshold = 15
 
+# Same limit as ESLint's complexity rule (eslint.config.js), the source of truth
 [smells.function_complexity]
 enabled = true
-threshold = 10
+threshold = 15
 
 [smells.function_parameters]
 enabled = true

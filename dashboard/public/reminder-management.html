@@ -432,17 +432,18 @@
             </div>
             <div class="form-group">
               <div class="form-field">
-                <label class="form-label" for="reminder-datetime">Scheduled Date & Time</label>
-                <input type="datetime-local" class="form-control" id="reminder-datetime" />
+                <label class="form-label" for="reminder-user">Discord User ID (who to ping)</label>
+                <input type="text" class="form-control" inputmode="numeric" id="reminder-user" />
               </div>
               <div class="form-field">
-                <label class="form-label" for="reminder-type">Reminder Type</label>
-                <select class="form-control" id="reminder-type">
-                  <option value="general">General Reminder</option>
-                  <option value="important">Important</option>
-                  <option value="follow-up">Follow-up</option>
-                  <option value="maintenance">Maintenance</option>
-                </select>
+                <label class="form-label" for="reminder-channel">Discord Channel ID (where)</label>
+                <input type="text" class="form-control" inputmode="numeric" id="reminder-channel" />
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label" for="reminder-datetime">Scheduled Date & Time</label>
+                <input type="datetime-local" class="form-control" id="reminder-datetime" />
               </div>
             </div>
             <div class="form-actions">
@@ -532,9 +533,6 @@
             <div class="legend-title">📡 API Endpoints</div>
             <ul class="api-list">
               <li>GET /api/reminders?status=all|active|completed - List reminders</li>
-              <li>POST /api/reminders - Create new reminder</li>
-              <li>PUT /api/reminders/:id - Update reminder</li>
-              <li>DELETE /api/reminders/:id - Delete reminder</li>
             </ul>
           </div>
         </div>
@@ -651,21 +649,24 @@
 
         const message = document.getElementById('reminder-message').value;
         const datetime = document.getElementById('reminder-datetime').value;
-        const type = document.getElementById('reminder-type').value;
 
-        if (!message || !datetime) {
-          showToast('Please fill in all required fields (message and date/time)', 'warning');
+        const userId = document.getElementById('reminder-user').value.trim();
+        const channelId = document.getElementById('reminder-channel').value.trim();
+
+        if (!message || !datetime || !userId || !channelId) {
+          showToast('Please fill in the message, user ID, channel ID and date/time', 'warning');
           return;
         }
 
         dashboardSocket.emit(
           'create_reminder',
           {
-            userId: 'dashboard-user', // Default user for dashboard-created reminders
+            userId: userId,
             message: message,
-            scheduledTime: datetime,
-            reminderType: type,
-            channelId: null,
+            // datetime-local has no timezone; convert here so the server does
+            // not read it in its own.
+            scheduledTime: new Date(datetime).toISOString(),
+            channelId: channelId,
           },
           (response) => {
             console.log('Create reminder response:', response);
@@ -775,7 +776,12 @@
         if (datetimeInput) {
           const now = new Date();
           now.setHours(now.getHours() + 1); // Default to 1 hour from now
-          const localDateTime = now.toISOString().slice(0, 16);
+          // datetime-local wants local clock fields; toISOString() gives UTC,
+          // which put the default hours off (and in the past) outside UTC.
+          const pad = (n) => String(n).padStart(2, '0');
+          const localDateTime =
+            `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
+            `T${pad(now.getHours())}:${pad(now.getMinutes())}`;
           datetimeInput.value = localDateTime;
         }
 

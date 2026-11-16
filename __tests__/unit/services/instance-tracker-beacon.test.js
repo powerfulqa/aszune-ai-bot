@@ -98,7 +98,10 @@ describe('beacon helper', () => {
 
       expect(result).toEqual({ verified: true });
       expect(global.fetch).toHaveBeenCalledTimes(2);
-      expect(logger.info).toHaveBeenCalledWith('Beacon failed, retrying', expect.any(Object));
+      expect(logger.info).toHaveBeenCalledWith('Beacon failed, retrying', {
+        attempt: 1,
+        maxRetries: 2,
+      });
     });
 
     it('should return null after all retries fail', async () => {
@@ -112,10 +115,9 @@ describe('beacon helper', () => {
 
       expect(result).toBeNull();
       expect(global.fetch).toHaveBeenCalledTimes(3);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Beacon failed after all retries',
-        expect.any(Object)
-      );
+      expect(logger.error).toHaveBeenCalledWith('Beacon failed after all retries', {
+        maxRetries: 3,
+      });
     });
 
     it('should handle network errors', async () => {
@@ -128,10 +130,9 @@ describe('beacon helper', () => {
       );
 
       expect(result).toBeNull();
-      expect(logger.debug).toHaveBeenCalledWith(
-        'Beacon request failed',
-        expect.objectContaining({ error: 'Network error' })
-      );
+      expect(logger.debug).toHaveBeenCalledWith('Beacon request failed', {
+        error: 'Network error',
+      });
       expect(logger.error).toHaveBeenCalledWith('Beacon failed after all retries', {
         maxRetries: 1,
       });
@@ -176,10 +177,7 @@ describe('beacon helper', () => {
 
       await sendBeacon('https://tracking.example.com', { action: 'register' }, { maxRetries: 1 });
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Beacon request failed',
-        expect.objectContaining({ status: 500 })
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Beacon request failed', { status: 500 });
     });
   });
 });

@@ -31,7 +31,6 @@ const mockEnhancedCache = {
   set: jest.fn(),
   getStats: jest.fn().mockReturnValue(mockCacheStats),
   getDetailedInfo: jest.fn().mockReturnValue({ stats: mockCacheStats, entries: [] }),
-  invalidateByTag: jest.fn().mockReturnValue(3),
   evictOldest: jest.fn(),
 };
 
@@ -95,23 +94,6 @@ describe('CacheManager - File Operations & Stats', () => {
     if (cacheManager) {
       cacheManager.shutdown();
     }
-  });
-
-  describe('ensureCacheSize', () => {
-    it('should evict entries when cache is full', async () => {
-      mockEnhancedCache.getStats.mockReturnValue({ totalEntries: 100 });
-
-      await cacheManager.ensureCacheSize(100);
-      // Should evict 10% = 10 entries
-      expect(mockEnhancedCache.evictOldest).toHaveBeenCalledTimes(10);
-    });
-
-    it('should not evict when cache is below limit', async () => {
-      mockEnhancedCache.getStats.mockReturnValue({ totalEntries: 50 });
-
-      await cacheManager.ensureCacheSize(100);
-      expect(mockEnhancedCache.evictOldest).not.toHaveBeenCalled();
-    });
   });
 
   describe('cleanupCache', () => {
@@ -181,26 +163,6 @@ describe('CacheManager - File Operations & Stats', () => {
       expect(result).toHaveProperty('error');
       expect(result).toHaveProperty('stats');
       expect(result).toHaveProperty('entries');
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('invalidateByTag', () => {
-    it('should invalidate cache entries by tag', () => {
-      mockEnhancedCache.invalidateByTag.mockReturnValue(5);
-
-      const result = cacheManager.invalidateByTag('test-tag');
-      expect(result).toBe(5);
-      expect(mockEnhancedCache.invalidateByTag).toHaveBeenCalledWith('test-tag');
-    });
-
-    it('should handle errors and return 0', () => {
-      mockEnhancedCache.invalidateByTag.mockImplementation(() => {
-        throw new Error('Invalidation error');
-      });
-
-      const result = cacheManager.invalidateByTag('test-tag');
-      expect(result).toBe(0);
       expect(logger.error).toHaveBeenCalled();
     });
   });

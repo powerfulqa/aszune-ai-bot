@@ -1,0 +1,37 @@
+# Codecov configuration. Validate after editing:
+#   curl -X POST --data-binary @codecov.yml https://codecov.io/validate
+#
+# The hard coverage gate is Jest (jest.config.js global threshold, plus the
+# per-file gates in config/jest.critical-coverage.config.js). Codecov adds what
+# Jest cannot: a check on the lines a pull request changes.
+
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  status:
+    # Whole project: must not drop by more than 1 point against the base commit.
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    # Changed lines in a pull request: at least 80% covered.
+    patch:
+      default:
+        target: 80%
+        threshold: 0%
+
+# Same scope as collectCoverageFrom in jest.config.js (src/ only).
+ignore:
+  - '__tests__/**'
+  - '__mocks__/**'
+  - 'scripts/**'
+  - 'dashboard/**'
+  - 'coverage/**'
+
+comment:
+  layout: 'diff, files'
+  behavior: default
+  require_changes: true

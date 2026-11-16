@@ -40,14 +40,6 @@ describe('PerplexityService - Edge Cases', () => {
     });
   });
 
-  describe('invalidateCacheByTag', () => {
-    it('should handle tag invalidation', () => {
-      const result = service.invalidateCacheByTag('test-tag');
-
-      expect(typeof result).toBe('number');
-    });
-  });
-
   describe('shutdown', () => {
     it('should handle shutdown gracefully', () => {
       expect(() => service.shutdown()).not.toThrow();

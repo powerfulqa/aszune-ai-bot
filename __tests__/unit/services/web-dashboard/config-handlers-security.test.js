@@ -258,4 +258,49 @@ describe('config handlers - save failure safety', () => {
       'utf-8'
     );
   });
+
+  describe('env editor cannot be used to run code or leak old keys', () => {
+    it.each(['NODE_OPTIONS', 'LD_PRELOAD', 'GIT_SSH_COMMAND', 'PATH', 'PM2_HOME'])(
+      'refuses a save that sets %s',
+      (key) => {
+        expect(validateConfigSaveInput({ filename: '.env', content: `A=1\n${key}=x\n` })).toBe(
+          `Access denied: ${key} cannot be set from the dashboard`
+        );
+      }
+    );
+
+    it('still accepts ordinary keys, including NODE_ENV and PM2_APP_NAME', () => {
+      expect(
+        validateConfigSaveInput({
+          filename: '.env',
+          content: 'NODE_ENV=production\nPM2_APP_NAME=aszune-ai\nPI_LOG_LEVEL=INFO\n',
+        })
+      ).toBeNull();
+    });
+
+    it('refuses config.js and oversized content', () => {
+      expect(validateConfigSaveInput({ filename: 'config.js', content: 'x' })).toBe(
+        'Access denied: config.js cannot be modified'
+      );
+      expect(validateConfigSaveInput({ filename: '.env', content: 'A=1\n'.repeat(20000) })).toBe(
+        'Config content must be text of at most 65536 bytes'
+      );
+    });
+
+    it('masks the first key of a file that starts with a UTF-8 BOM, and restores it on save', () => {
+      const onDisk = '\uFEFFDISCORD_BOT_TOKEN=live-token\nPORT=3000\n';
+      const masked = maskSecrets('.env', onDisk);
+      expect(masked).toBe('\uFEFFDISCORD_BOT_TOKEN=********\nPORT=3000\n');
+      expect(restoreMaskedSecrets('.env', masked, onDisk)).toBe(onDisk);
+    });
+
+    it('masks secrets left behind in comment lines', () => {
+      expect(
+        maskSecrets(
+          '.env',
+          '# DISCORD_BOT_TOKEN=oldleak\n#PERPLEXITY_API_KEY=old\n# a note = fine\n'
+        )
+      ).toBe('# DISCORD_BOT_TOKEN=********\n#PERPLEXITY_API_KEY=********\n# a note = fine\n');
+    });
+  });
 });
