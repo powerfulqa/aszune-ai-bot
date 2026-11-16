@@ -104,8 +104,8 @@ describe('Analytics Command', () => {
           color: 0x5865f2,
           title: '📊 Server Overview',
           fields: [
-            { name: '🟢 Online now', value: '3', inline: true },
-            { name: '👥 Members', value: '149', inline: true },
+            { name: '👥 Members', value: '150', inline: true },
+            { name: '👤 Humans', value: '149', inline: true },
             { name: '🤖 Bots', value: '1', inline: true },
           ],
           footer: { text: 'Aszai Bot Analytics' },
@@ -116,13 +116,13 @@ describe('Analytics Command', () => {
   });
 
   test('should handle analytics command error', async () => {
-    // Simulate error in guild member fetching
+    // The fetch succeeds but counting the members throws
     const mockInteractionWithError = {
       ...mockInteraction,
       guild: {
         ...mockInteraction.guild,
         members: {
-          fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
+          fetch: jest.fn().mockResolvedValue(),
           cache: null, // This will cause an error
         },
       },
@@ -143,48 +143,41 @@ describe('Analytics Command', () => {
     });
   });
 
-  // Fetch fails and the cache holds no presences: 20% are assumed online, and
-  // 5% are assumed bots only above 10 members.
-  test.each([
-    [150, '30', '143', '7'],
-    [100, '20', '95', '5'],
-    [10, '2', '10', '0'],
-  ])(
-    'estimates from a member count of %i when nothing is cached',
-    async (memberCount, online, humans, bots) => {
-      const mockInteractionFallback = {
-        ...mockInteraction,
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-        guild: {
-          id: 'test-guild-123',
-          memberCount,
-          members: {
-            fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
-            cache: { filter: jest.fn().mockReturnValue({ size: 0 }), size: memberCount },
-          },
+  // A failed fetch must not turn into guessed counts: only the member total,
+  // which Discord supplies with the guild, is shown as a number.
+  test('shows bot and human counts as unavailable when the fetch fails', async () => {
+    const mockInteractionFallback = {
+      ...mockInteraction,
+      deferReply: jest.fn(),
+      editReply: jest.fn(),
+      guild: {
+        id: 'test-guild-123',
+        memberCount: 100,
+        members: {
+          fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
+          cache: { filter: jest.fn().mockReturnValue({ size: 3 }), size: 3 },
         },
-      };
+      },
+    };
 
-      await handleSlashCommand(mockInteractionFallback);
+    await handleSlashCommand(mockInteractionFallback);
 
-      expect(mockInteractionFallback.editReply).toHaveBeenCalledWith({
-        embeds: [
-          {
-            color: 0x5865f2,
-            title: '📊 Server Overview',
-            fields: [
-              { name: '🟢 Online now', value: online, inline: true },
-              { name: '👥 Members', value: humans, inline: true },
-              { name: '🤖 Bots', value: bots, inline: true },
-            ],
-            footer: { text: 'Aszai Bot Analytics' },
-            timestamp: NOW,
-          },
-        ],
-      });
-    }
-  );
+    expect(mockInteractionFallback.editReply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: 0x5865f2,
+          title: '📊 Server Overview',
+          fields: [
+            { name: '👥 Members', value: '100', inline: true },
+            { name: '👤 Humans', value: 'Unavailable', inline: true },
+            { name: '🤖 Bots', value: 'Unavailable', inline: true },
+          ],
+          footer: { text: 'Aszai Bot Analytics' },
+          timestamp: NOW,
+        },
+      ],
+    });
+  });
 });
 
 describe('Stats Command', () => {

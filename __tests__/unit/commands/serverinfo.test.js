@@ -146,7 +146,7 @@ describe('ServerInfo Command', () => {
               { name: '🆔 Server ID', value: '`test-guild-123`', inline: true },
               {
                 name: '👥 Members [200]',
-                value: '👤 Humans: 190\n🤖 Bots: 10\n🟢 Online: ~50',
+                value: '👤 Humans: 190\n🤖 Bots: 10',
                 inline: true,
               },
               {
@@ -578,7 +578,16 @@ describe('ServerInfo Embed Builder - Stats', () => {
       });
 
       const memberField = embed.fields.find((f) => f.name.includes('Members'));
-      expect(memberField).toBeDefined();
+      expect(memberField.value).toBe('👤 Humans: 90\n🤖 Bots: 10');
+    });
+
+    it('should show member stats as unavailable when the fetch failed', () => {
+      const embed = buildServerInfoEmbed(mockGuild, {
+        memberStats: { botCount: null, humanMembers: null },
+      });
+
+      const memberField = embed.fields.find((f) => f.name.includes('Members'));
+      expect(memberField.value).toBe('👤 Humans: Unavailable\n🤖 Bots: Unavailable');
     });
 
     it('should show features when present', () => {

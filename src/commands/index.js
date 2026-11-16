@@ -231,15 +231,12 @@ Simply chat as normal to talk to the bot!`
   analytics: {
     data: {
       name: 'analytics',
-      description: 'Show how many members and bots are in this server and online',
+      description: 'Show how many members and bots are in this server',
     },
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const { onlineCount, botCount, humanMembers } = await getGuildMemberStats(
-          interaction.guild
-        );
-        const embed = buildAnalyticsEmbed(onlineCount, humanMembers, botCount);
+        const embed = buildAnalyticsEmbed(await getGuildMemberStats(interaction.guild));
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching analytics:', error);
@@ -257,11 +254,15 @@ Simply chat as normal to talk to the bot!`
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const { humanMembers } = await getGuildMemberStats(interaction.guild);
         const resourceStatus = ResourceOptimizer.monitorResources();
         const serverCount = interaction.client?.guilds?.cache?.size || 1;
         const uptime = formatUptime(process.uptime()).formatted;
-        const embed = buildDashboardEmbed(resourceStatus, uptime, humanMembers, serverCount);
+        const embed = buildDashboardEmbed(
+          resourceStatus,
+          uptime,
+          interaction.guild?.memberCount ?? 0,
+          serverCount
+        );
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching dashboard:', error);
@@ -643,8 +644,7 @@ Simply chat as normal to talk to the bot!`
         }
 
         // Get member stats
-        const { onlineCount, botCount, humanMembers } = await getGuildMemberStats(guild);
-        const memberStats = { onlineCount, botCount, humanMembers };
+        const memberStats = await getGuildMemberStats(guild);
 
         const embed = buildServerInfoEmbed(guild, { memberStats });
         return interaction.editReply({ embeds: [embed] });

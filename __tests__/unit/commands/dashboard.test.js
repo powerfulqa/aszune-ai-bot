@@ -97,7 +97,7 @@ describe('Dashboard Command', () => {
               inline: true,
             },
             { name: '⚡ Optimization', value: `Tier: ${tier}`, inline: true },
-            { name: '📊 Activity', value: 'Servers: 5\nActive Users: 149', inline: true },
+            { name: '📊 Activity', value: 'Servers: 5\nMembers: 150', inline: true },
           ],
           footer: { text: 'Aszai Bot Dashboard • Real-time data' },
           timestamp: expect.any(String),

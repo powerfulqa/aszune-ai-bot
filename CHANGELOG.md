@@ -9,6 +9,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `/analytics` and `/serverinfo` no longer guess. When the member list cannot be fetched the human
+  and bot counts read "Unavailable" (they used to be estimated as 5% bots), and the online count is
+  gone: without the presences intent it was always 0 or an assumed 20%. `/dashboard` shows the
+  guild's member total as "Members" instead of "Active Users"
 - **Perplexity Agent API: `preset` is now sent as `effort`**, following Perplexity's October 2026
   rename (`preset` is a deprecated alias). Set `AGENT_EFFORT` in `.env`; `AGENT_PRESET` is still
   read when `AGENT_EFFORT` is unset, so no change is required today

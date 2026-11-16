@@ -271,10 +271,10 @@ Version 1.6.0 introduces comprehensive analytics accessible directly within Disc
 #### `/analytics` - Real-time Discord Server Analytics
 
 - **Live Member Data**: Real Discord server statistics with timeout protection (v1.6.1)
-- **Active User Counts**: Live online/idle/dnd member filtering (e.g., "Active Users: 102")
-- **Server Statistics**: Total members, bot counts, human member ratios
-- **Presence Detection**: Real-time member activity status from Discord API
-- **Fallback Protection**: Intelligent estimates when Discord API is slow or unavailable
+- **Server Statistics**: Total members, plus human and bot counts
+- **No guesses**: If Discord is slow or the member list is unavailable, the human and bot counts
+  read "Unavailable" instead of an estimate. Online counts are not shown, because the bot does not
+  request the presences intent
 
 #### `/dashboard` - Synchronized Performance Monitoring
 

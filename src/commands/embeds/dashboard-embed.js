@@ -10,11 +10,11 @@ const STATUS_COLORS = { healthy: 0x00ff00, warning: 0xffa500 };
  * guild counts). Nothing records command usage or response times.
  * @param {Object} resourceStatus - Result of ResourceOptimizer.monitorResources()
  * @param {string} uptime - Formatted process uptime
- * @param {number} humanMembers - Number of human members
+ * @param {number} memberCount - Members in this guild, bots included
  * @param {number} serverCount - Number of guilds the bot is in
  * @returns {Object} Discord embed object
  */
-function buildDashboardEmbed(resourceStatus, uptime, humanMembers, serverCount) {
+function buildDashboardEmbed(resourceStatus, uptime, memberCount, serverCount) {
   const status = resourceStatus.overall.status;
   return {
     color: STATUS_COLORS[status] ?? 0xff0000,
@@ -32,7 +32,7 @@ function buildDashboardEmbed(resourceStatus, uptime, humanMembers, serverCount) 
       },
       {
         name: '📊 Activity',
-        value: `Servers: ${serverCount}\nActive Users: ${humanMembers}`,
+        value: `Servers: ${serverCount}\nMembers: ${memberCount}`,
         inline: true,
       },
     ],

@@ -120,8 +120,8 @@ npm audit --audit-level=high   # security (CI gates on this, prod deps)
   "Received has type: function". Register mocks with `jest.mock(...)` at file scope and
   `jest.clearAllMocks()` in `beforeEach`. Prefer verifying handler registration over executing
   complex mock chains.
-- **Discord fetches** must be timeout-guarded (`Promise.race` with a ~5s timeout) with fallback
-  estimates — see `src/utils/guild-member-stats.js`.
+- **Discord fetches** must be timeout-guarded (`Promise.race` with a ~5s timeout) and report
+  the value as unavailable on failure, never an estimate — see `src/utils/guild-member-stats.js`.
 - **PM2 vs systemd:** running the bot under both simultaneously causes a ~15s restart loop. Pick
   one. Diagnostics: `scripts/diagnose-restart-loop.sh`, `scripts/find-sigint-source.sh`.
 
