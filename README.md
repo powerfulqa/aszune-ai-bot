@@ -527,6 +527,7 @@ without asking first. Ideas and bug reports are welcome:
 - ❌ **No Use** — You cannot use this code in your own projects
 - ❌ **No Distribution** — You cannot share or redistribute this code
 - ❌ **No Running** — You cannot deploy or run this software
+- ❌ **No AI Use** — You cannot use this code to train or feed AI models, or have AI agents copy or port it
 
 ### Want to use this code?
 

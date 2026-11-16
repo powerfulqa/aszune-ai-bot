@@ -45,6 +45,22 @@ TERMS AND CONDITIONS
    Any use of this software without explicit permission constitutes copyright
    infringement and may result in legal action.
 
+7. ARTIFICIAL INTELLIGENCE AND AUTOMATED AGENTS
+   Without prior written permission from the copyright holder, no one may
+   use this software, in whole or in part, or allow anyone else to use it:
+   (a) to train, fine-tune or evaluate any machine-learning model or other
+       artificial-intelligence system, or to build or add to a dataset
+       intended for one;
+   (b) as input to an AI agent, code assistant or other automated tool for
+       the purpose of copying, adapting, translating or porting its code,
+       design, text or images into other work;
+   (c) in a retrieval, search or indexing system that supplies it to such
+       a model, agent or tool.
+   This section does not apply to the copyright holder or anyone acting
+   on their behalf. The copyright holder expressly reserves all rights of
+   text and data mining in this software, including for the purposes of
+   Article 4(3) of Directive (EU) 2019/790 and any equivalent law.
+
 ---
 
 For inquiries: Open an issue at https://github.com/powerfulqa/aszune-ai-bot
