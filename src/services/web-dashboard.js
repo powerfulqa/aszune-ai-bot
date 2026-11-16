@@ -244,7 +244,11 @@ class WebDashboardService {
         return res.status(401).json({ error: 'Unauthorized - Bearer token required' });
       }
 
+      if (this._tooManyFailedTokens(req.ip)) {
+        return res.status(429).json({ error: 'Too many failed attempts - try again in a minute' });
+      }
       if (!this._verifyToken(token)) {
+        this._recordFailedToken(req.ip);
         return res.status(401).json({ error: 'Unauthorized - Invalid token' });
       }
 
@@ -271,11 +275,36 @@ class WebDashboardService {
     const token =
       socket.handshake?.auth?.token ||
       this._extractBearer(socket.handshake?.headers?.authorization);
-    if (this._verifyToken(token)) {
+    const address = socket.handshake?.address;
+    if (!this._tooManyFailedTokens(address) && this._verifyToken(token)) {
       return next();
     }
+    // Only a wrong token counts: a page that connects before the token is
+    // entered must not lock its own address out.
+    if (token) this._recordFailedToken(address);
     logger.warn(`Dashboard socket rejected (invalid/missing token): ${socket.id}`);
     next(new Error('Unauthorized'));
+  }
+
+  /**
+   * Guessing guard for the token: after 10 wrong tokens from one address in a
+   * minute, further attempts from it are refused until the minute is over.
+   * @private
+   */
+  _tooManyFailedTokens(address) {
+    const entry = this._failedTokens?.get(address);
+    return !!entry && Date.now() - entry.since < 60000 && entry.count >= 10;
+  }
+
+  _recordFailedToken(address) {
+    this._failedTokens ??= new Map();
+    if (this._failedTokens.size > 1000) this._failedTokens.clear();
+    const entry = this._failedTokens.get(address);
+    if (!entry || Date.now() - entry.since >= 60000) {
+      this._failedTokens.set(address, { since: Date.now(), count: 1 });
+    } else {
+      entry.count += 1;
+    }
   }
 
   /**
@@ -1242,6 +1271,9 @@ class WebDashboardService {
     // instance actions) require a configured token. Without one the dashboard
     // is read-only, so it is never "secure only by accident of bind address".
     const allowDestructive = !!this.authToken;
+    if (this.authToken && this.authToken.length < 16) {
+      logger.warn('DASHBOARD_TOKEN is short; use at least 32 random characters.');
+    }
     if (!allowDestructive) {
       logger.warn(
         'DASHBOARD_TOKEN is not set — dashboard is read-only. Config saves, ' +

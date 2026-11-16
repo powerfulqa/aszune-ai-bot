@@ -9,18 +9,6 @@ const logger = require('./logger');
  */
 class NaturalLanguageReminderProcessor {
   constructor() {
-    // Patterns to detect reminder requests
-    this.reminderPatterns = [
-      // Direct reminder requests
-      /\b(remind me|set a reminder|create a reminder|schedule a reminder)\b/i,
-      /\b(when|what time|when will|when does)\b.*\b(come out|release|launch|be released|be available)\b/i,
-      /\b(let me know|notify me|tell me)\b.*\b(when|what time)\b/i,
-      /\b(remind me about|remind me when)\b/i,
-
-      // Future event inquiries that might imply reminders
-      /\b(when is|when will|what's the date for|when does)\b.*\b(release|launch|come out|be out)\b/i,
-    ];
-
     // Patterns to extract event names/topics
     this.eventExtractionPatterns = [
       // "when does X come out" or "when will X be released"
@@ -35,10 +23,12 @@ class NaturalLanguageReminderProcessor {
       /\b(when is|when will|what's the date for)\s+(.+?)\s+(?:released?|coming out|launching|available|out)\b/i,
     ];
 
-    // Patterns to detect if user wants a reminder set
+    // A reminder is only created when the user asks for one. A plain question
+    // ("when does X come out?") is answered normally: treating it as a request
+    // spent an API call and set a reminder nobody asked for.
     this.explicitReminderPatterns = [
       /\b(remind me|set a reminder|create a reminder|schedule a reminder)\b/i,
-      /\b(let me know|notify me|tell me)\b.*\b(when|what time)\b/i,
+      /\b(let me know|notify me)\b.*\bwhen\b/i,
     ];
   }
 
@@ -48,7 +38,7 @@ class NaturalLanguageReminderProcessor {
    * @returns {boolean} - Whether this looks like a reminder request
    */
   isReminderRequest(message) {
-    return this.reminderPatterns.some((pattern) => pattern.test(message));
+    return this.explicitReminderPatterns.some((pattern) => pattern.test(message));
   }
 
   /**
@@ -84,15 +74,6 @@ class NaturalLanguageReminderProcessor {
       .trim();
 
     return cleaned;
-  }
-
-  /**
-   * Check if the user explicitly wants a reminder set
-   * @param {string} message - The user's message
-   * @returns {boolean} - Whether user wants an explicit reminder
-   */
-  wantsExplicitReminder(message) {
-    return this.explicitReminderPatterns.some((pattern) => pattern.test(message));
   }
 
   /**
@@ -193,15 +174,7 @@ class NaturalLanguageReminderProcessor {
         if (!isNaN(date.getTime())) return date;
       }
 
-      // Fallback: try to parse year-only dates
-      if (dateInfo.type === 'year') {
-        const year = parseInt(dateInfo.text);
-        if (year >= 2024 && year <= 2030) {
-          // Assume January 1st of that year
-          return new Date(year, 0, 1);
-        }
-      }
-
+      // A bare year ("2027") is not a release date: it used to become 1 January.
       return null;
     } catch (error) {
       logger.warn(`Failed to parse extracted date "${dateInfo.text}":`, error.message);
@@ -232,16 +205,10 @@ class NaturalLanguageReminderProcessor {
 
       logger.info(`Processing reminder request for event: "${event}" from user ${userId}`);
 
-      // Check if this is an explicit reminder request
-      const wantsReminder = this.wantsExplicitReminder(message);
-
-      // For now, we'll assume all detected requests want reminders
-      // In the future, we could ask for confirmation for implicit requests
-
       return {
         success: true,
         event: event,
-        wantsReminder: wantsReminder || true, // Default to true for detected requests
+        wantsReminder: true,
         message: message,
         userId: userId,
         channelId: channelId,
