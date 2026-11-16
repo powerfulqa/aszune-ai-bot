@@ -63,7 +63,9 @@ describe('Connection Throttler', () => {
 
       expect(result).toBe('success');
       expect(mockRequest).toHaveBeenCalledTimes(1);
-      expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Starting TEST request'));
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[ConnectionThrottler] Starting TEST request (1/2 active)'
+      );
     });
 
     it('should queue requests when at max connections', async () => {
@@ -77,7 +79,9 @@ describe('Connection Throttler', () => {
 
       // The request should be queued, not executed yet
       expect(mockRequest).not.toHaveBeenCalled();
-      expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Queueing QUEUED request'));
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[ConnectionThrottler] Queueing QUEUED request (queue length: 1)'
+      );
 
       // Simulate a connection finishing
       connectionThrottler.activeConnections = 1;
@@ -100,7 +104,7 @@ describe('Connection Throttler', () => {
 
       expect(mockRequest).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error in ERROR request'),
+        '[ConnectionThrottler] Error in ERROR request:',
         testError
       );
       expect(connectionThrottler.activeConnections).toBe(0);

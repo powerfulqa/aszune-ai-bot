@@ -38,8 +38,8 @@ describe('database schema helper', () => {
     schema.createIndexes(db);
 
     expect(db.exec).toHaveBeenCalledTimes(1);
-    expect(db.exec).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp')
+    expect(db.exec.mock.calls[0][0]).toContain(
+      'CREATE INDEX IF NOT EXISTS idx_user_messages_user_id_timestamp ON user_messages (user_id, timestamp);'
     );
   });
 
@@ -60,8 +60,8 @@ describe('database schema helper', () => {
       schema.runMigrations(db);
 
       expect(db.exec).toHaveBeenCalledTimes(1);
-      expect(db.exec).toHaveBeenCalledWith(
-        expect.stringContaining('ALTER TABLE user_stats ADD COLUMN username TEXT')
+      expect(db.exec.mock.calls[0][0].trim()).toBe(
+        'ALTER TABLE user_stats ADD COLUMN username TEXT;'
       );
     });
 

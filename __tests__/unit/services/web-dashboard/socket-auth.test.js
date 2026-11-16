@@ -96,7 +96,7 @@ describe('WebDashboardService token verification', () => {
     service.authToken = 'secret';
     const next = jest.fn();
     service._authorizeSocket(makeFakeSocket(), next);
-    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next).toHaveBeenCalledWith(new Error('Unauthorized'));
   });
 
   it('_authorizeSocket accepts a socket with the token in handshake auth', () => {

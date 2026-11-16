@@ -5,6 +5,7 @@ describe('Message Formatting Edge Cases', () => {
 
   beforeEach(() => {
     context = prepareLoggerTest();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
   });
 
   afterEach(() => {
@@ -17,7 +18,7 @@ describe('Message Formatting Edge Cases', () => {
 
     await context.logger.info(longMessage);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining(longMessage));
+    expect(console.log).toHaveBeenCalledWith(`[2026-11-16T12:00:00.000Z] [INFO] ${longMessage}`);
   });
 
   it('should handle messages with special characters', async () => {
@@ -25,20 +26,18 @@ describe('Message Formatting Edge Cases', () => {
 
     await context.logger.info(specialMessage);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining(specialMessage));
+    expect(console.log).toHaveBeenCalledWith(`[2026-11-16T12:00:00.000Z] [INFO] ${specialMessage}`);
   });
 
   it('should handle empty string messages', async () => {
     await context.logger.info('');
 
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] /)
-    );
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] ');
   });
 
   it('should handle numeric messages', async () => {
     await context.logger.info(12345);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('12345'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] 12345');
   });
 });

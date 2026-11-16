@@ -139,6 +139,7 @@ describe('DatabaseService - Reminder Statistics', () => {
     });
 
     it('should return correct stats with mixed reminder statuses', () => {
+      jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
       const userId1 = 'user1';
       const userId2 = 'user2';
       const futureTime = new Date(Date.now() + 3600000).toISOString();
@@ -165,11 +166,12 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 3,
         completedReminders: 2,
         cancelledReminders: 1,
-        nextDue: expect.any(String),
+        nextDue: '1h',
       });
     });
 
     it('should handle stats with only active reminders', () => {
+      jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
       const userId = 'user123';
       const futureTime = new Date(Date.now() + 3600000).toISOString();
 
@@ -184,7 +186,7 @@ describe('DatabaseService - Reminder Statistics', () => {
         activeReminders: 2,
         completedReminders: 0,
         cancelledReminders: 0,
-        nextDue: expect.any(String),
+        nextDue: '1h',
       });
     });
 

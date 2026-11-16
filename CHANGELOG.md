@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard network test: the DNS-server step always reported "DNS detection failed" because it
+  called a method the dashboard no longer has. It now asks the network detector
+- A reminder with an unreadable scheduled time reported a scheduling failure but still left a timer
+  that fired after 1 ms. It now fails before any timer is set
+- Dashboard: an `instance_action` socket event sent without an acknowledgement or payload no longer
+  throws; a failed dashboard start no longer leaves the metrics timer running; sizes of 1 TB and
+  above are formatted correctly
+
 ### Changed
 
 - `/analytics` and `/serverinfo` no longer guess. When the member list cannot be fetched the human

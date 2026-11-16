@@ -5,6 +5,7 @@ describe('File Write Error Handling', () => {
 
   beforeEach(() => {
     context = prepareLoggerTest();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
   });
 
   afterEach(() => {
@@ -15,7 +16,7 @@ describe('File Write Error Handling', () => {
   it('should handle file write errors gracefully', async () => {
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should continue logging to console when file write fails', async () => {
@@ -23,7 +24,7 @@ describe('File Write Error Handling', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle directory creation failure', async () => {
@@ -31,6 +32,6 @@ describe('File Write Error Handling', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 });

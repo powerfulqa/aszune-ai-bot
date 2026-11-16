@@ -5,6 +5,7 @@ describe('Log Rotation', () => {
 
   beforeEach(() => {
     context = prepareLoggerTest();
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
   });
 
   afterEach(() => {
@@ -18,7 +19,7 @@ describe('Log Rotation', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle stat errors during rotation check', async () => {
@@ -26,7 +27,7 @@ describe('Log Rotation', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle readdir errors during cleanup', async () => {
@@ -35,7 +36,7 @@ describe('Log Rotation', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should handle unlink errors during log cleanup', async () => {
@@ -52,7 +53,7 @@ describe('Log Rotation', () => {
 
     await context.logger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should not rotate when file size is under limit', async () => {
@@ -80,7 +81,7 @@ describe('Log Rotation', () => {
 
     await testLogger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 
   it('should use default size when custom size is invalid', async () => {
@@ -92,6 +93,6 @@ describe('Log Rotation', () => {
 
     await testLogger.info('test message');
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[INFO] test message'));
+    expect(console.log).toHaveBeenCalledWith('[2026-11-16T12:00:00.000Z] [INFO] test message');
   });
 });

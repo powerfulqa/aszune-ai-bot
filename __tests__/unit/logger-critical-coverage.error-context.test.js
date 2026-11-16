@@ -22,14 +22,11 @@ describe('Error Method Context', () => {
 
     await context.logger.error('API call failed', mockError);
 
-    expect(console.error).toHaveBeenCalledWith(
-      'API Error Response:',
-      expect.objectContaining({
-        type: 'API Error Response',
-        status: 500,
-        data: { error: 'Server error' },
-      })
-    );
+    expect(console.error).toHaveBeenCalledWith('API Error Response:', {
+      type: 'API Error Response',
+      status: 500,
+      data: { error: 'Server error' },
+    });
   });
 
   it('should handle errors without response', async () => {

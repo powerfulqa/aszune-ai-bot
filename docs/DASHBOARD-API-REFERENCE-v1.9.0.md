@@ -4,10 +4,9 @@
 > dashboard UI uses Socket.IO events for them (`request_logs`, `clear_logs`, `request_services`,
 > `service_action`, `request_config`, `save_config`, `request_network_status`, ... see
 > `src/services/web-dashboard/handlers/`). The only REST endpoints now are `GET /api/health`,
-> `/api/metrics`, `/api/system`, `/api/version`, `/api/database/*`, `/api/recommendations`,
-> `GET /api/reminders`, `POST /api/control/restart` and `POST /api/control/git-pull`. Reminders are
-> created, edited and deleted over the socket, not REST. Sections below that describe other
-> endpoints are historical.
+> `/api/metrics`, `/api/system`, `/api/version`, `/api/database/*`, `/api/database-schema`,
+> `/api/recommendations`, `GET /api/reminders`, `POST /api/control/restart` and
+> `POST /api/control/git-pull`. Reminders are created, edited and deleted over the socket, not REST.
 
 **Status:** Production Ready | **Version:** v1.9.0 | **Last Updated:** 2025-01-15
 
@@ -48,7 +47,8 @@ When `DASHBOARD_TOKEN` is set, all API endpoints require Bearer token authentica
 Authorization: Bearer <your-token>
 ```
 
-If `DASHBOARD_TOKEN` is not set, authentication is disabled (safe for localhost-only access).
+If `DASHBOARD_TOKEN` is not set, the dashboard is read-only and answers only on a loopback bind:
+`POST /api/control/*` and every socket event that changes something are refused.
 
 ## Response Format
 
@@ -84,211 +84,6 @@ Authentication error (when token auth is enabled):
 
 ---
 
-## Feature 7: Reminder Management API
-
-### GET /reminders
-
-Get all reminders.
-
-**Query Parameters:**
-
-- `status` (string): Filter by status - active, paused, disabled
-- `type` (string): Filter by type - one-time, recurring
-- `limit` (number): Max entries (default: 50)
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "reminders": [
-      {
-        "id": "rem_123abc",
-        "message": "Team meeting",
-        "nextExecution": "2024-01-20T14:00:00Z",
-        "type": "recurring",
-        "recurrence": "daily",
-        "status": "active",
-        "createdAt": "2024-01-15T08:30:00Z"
-      }
-    ],
-    "total": 5,
-    "active": 3,
-    "paused": 2
-  }
-}
-```
-
-### GET /reminders/:id
-
-Get reminder details.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "reminder": {
-      "id": "rem_123abc",
-      "message": "Team meeting",
-      "scheduledTime": "14:00",
-      "timezone": "America/New_York",
-      "type": "recurring",
-      "recurrence": "weekly",
-      "status": "active",
-      "executionHistory": [
-        {
-          "executedAt": "2024-01-19T18:00:00Z",
-          "status": "success"
-        }
-      ]
-    }
-  }
-}
-```
-
-### POST /reminders
-
-Create new reminder.
-
-**Request Body:**
-
-```json
-{
-  "message": "Team meeting",
-  "type": "one-time",
-  "scheduledTime": "2024-01-20T14:00:00Z",
-  "timezone": "America/New_York",
-  "channel": "general"
-}
-```
-
-### PUT /reminders/:id
-
-Update reminder.
-
-**Request Body:**
-
-```json
-{
-  "message": "Updated meeting",
-  "scheduledTime": "15:00",
-  "status": "active"
-}
-```
-
-### DELETE /reminders/:id
-
-Delete reminder.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Reminder deleted successfully"
-}
-```
-
-### POST /reminders/:id/pause
-
-Pause reminder.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "reminder": {
-      "id": "rem_123abc",
-      "status": "paused"
-    }
-  }
-}
-```
-
-### POST /reminders/:id/resume
-
-Resume reminder.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "reminder": {
-      "id": "rem_123abc",
-      "status": "active"
-    }
-  }
-}
-```
-
-### GET /reminders/:id/history
-
-Get reminder execution history.
-
-**Query Parameters:**
-
-- `limit` (number): Max entries (default: 50)
-
----
-
-## WebSocket Endpoints
-
-### ws://localhost:3000/ws/logs
-
-Real-time log stream.
-
-**Subscribe Message:**
-
-```json
-{
-  "type": "subscribe",
-  "filters": {
-    "level": "ALL",
-    "service": "perplexity"
-  }
-}
-```
-
-**Data Message:**
-
-```json
-{
-  "type": "log",
-  "data": {
-    "timestamp": "2024-01-15T10:30:45.123Z",
-    "level": "INFO",
-    "service": "perplexity",
-    "message": "API request successful"
-  }
-}
-```
-
-### ws://localhost:3000/ws/network
-
-Real-time network updates (every 5 seconds).
-
-**Data Message:**
-
-```json
-{
-  "type": "network_update",
-  "data": {
-    "connectivity": "connected",
-    "latency": 45,
-    "publicIp": "203.0.113.42"
-  }
-}
-```
-
----
-
 ## Error Codes
 
 | Code             | HTTP | Description                |
@@ -303,16 +98,6 @@ Real-time network updates (every 5 seconds).
 
 ---
 
-## Rate Limiting
-
-No rate limiting currently enforced. For production, implement:
-
-- 100 requests per minute for dashboard users
-- 1000 requests per minute for service-to-service API calls
-- WebSocket connections limited to 10 per client
-
----
-
 ## Testing API
 
 > Reminders are read-only over REST (`GET /api/reminders`). Creating, editing and deleting a
@@ -322,28 +107,11 @@ No rate limiting currently enforced. For production, implement:
 ### Using cURL
 
 ```bash
-# Get logs
-curl http://localhost:3000/api/logs?level=ERROR&limit=10
+# Health check
+curl http://localhost:3000/api/health
 
-# Get service status
-curl http://localhost:3000/api/services
-
-```
-
-### Using Postman
-
-1. Import the API collection from
-   [dashboard/postman-collection.json](../dashboard/postman-collection.json)
-2. Set base URL: `http://localhost:3000/api`
-3. Run requests and review responses
-
-### Using JavaScript/Fetch
-
-```javascript
-// Get logs
-const response = await fetch('http://localhost:3000/api/logs?level=ERROR');
-const data = await response.json();
-console.log(data.data.logs);
+# Reminder list (read-only)
+curl -H "Authorization: Bearer $DASHBOARD_TOKEN" http://localhost:3000/api/reminders
 ```
 
 ---

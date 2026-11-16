@@ -84,8 +84,8 @@ delegate through it (`this.cacheManager.getStats()`). Never reach past a service
 ## Testing
 
 - Framework Jest 30, `testEnvironment: node`, v8 coverage. Run: `npm test`.
-- Coverage gate — **single source of truth is `jest.config.js`: global 83%** on
-  lines/statements, 82% functions and 84% branches. `config/jest.critical-coverage.config.js` adds stricter
+- Coverage gate — **single source of truth is `jest.config.js`: global 88%** on
+  lines/statements, 88% functions and 86% branches. `config/jest.critical-coverage.config.js` adds stricter
   per-file gates used by `test:critical`/`precommit`.
 - **Assert exact values** — `toHaveBeenCalledWith({ … exact … })`, not `expect.objectContaining`
   / `expect.any()`.

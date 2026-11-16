@@ -138,6 +138,10 @@ class ReminderService extends EventEmitter {
     try {
       const scheduledTime = new Date(reminder.scheduled_time);
       const delay = scheduledTime.getTime() - Date.now();
+      // NaN passes both comparisons below and Node would fire the timer after 1ms.
+      if (Number.isNaN(delay)) {
+        throw new Error(`Invalid scheduled time: ${reminder.scheduled_time}`);
+      }
 
       // Already past (it fell due while the bot was down, or an earlier send
       // failed): deliver it late rather than dropping it.

@@ -95,11 +95,8 @@ describe('WebDashboardService - Restart Handling', () => {
       destroy: jest.fn().mockResolvedValue(undefined),
     };
 
-    jest.spyOn(service, '_attemptRestart').mockResolvedValue({
-      success: true,
-      message: 'ok',
-      timestamp: new Date().toISOString(),
-    });
+    const restartResult = { success: true, message: 'ok', timestamp: new Date().toISOString() };
+    jest.spyOn(service, '_attemptRestart').mockResolvedValue(restartResult);
 
     const res = {
       json: jest.fn(),
@@ -109,11 +106,7 @@ describe('WebDashboardService - Restart Handling', () => {
     await service._handleRestartRequest(res);
 
     expect(service.discordClient.destroy).toHaveBeenCalled();
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(restartResult);
   });
 
   it('restarts through pm2-service and returns a success response', async () => {

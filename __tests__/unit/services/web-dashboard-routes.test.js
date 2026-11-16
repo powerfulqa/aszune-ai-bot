@@ -50,8 +50,10 @@ describe('Web Dashboard Route Modules', () => {
 
       registerControlRoutes(mockApp, mockService);
 
-      expect(mockApp.post).toHaveBeenCalledWith('/api/control/restart', expect.any(Function));
-      expect(mockApp.post).toHaveBeenCalledWith('/api/control/git-pull', expect.any(Function));
+      expect(mockApp.post.mock.calls.map(([path, handler]) => [path, typeof handler])).toEqual([
+        ['/api/control/restart', 'function'],
+        ['/api/control/git-pull', 'function'],
+      ]);
     });
 
     it('should call restart handler', () => {
@@ -100,7 +102,9 @@ describe('Web Dashboard Route Modules', () => {
 
       registerRecommendationRoutes(mockApp, mockService);
 
-      expect(mockApp.get).toHaveBeenCalledWith('/api/recommendations', expect.any(Function));
+      expect(mockApp.get.mock.calls.map(([path, handler]) => [path, typeof handler])).toEqual([
+        ['/api/recommendations', 'function'],
+      ]);
     });
 
     describe('handleRecommendations', () => {
@@ -153,7 +157,9 @@ describe('Web Dashboard Route Modules', () => {
       registerReminderRoutes(mockApp, mockService);
 
       // Read-only: writes go over the socket, through the reminder service
-      expect(mockApp.get).toHaveBeenCalledWith('/api/reminders', expect.any(Function));
+      expect(mockApp.get.mock.calls.map(([path, handler]) => [path, typeof handler])).toEqual([
+        ['/api/reminders', 'function'],
+      ]);
       expect(mockApp.post).not.toHaveBeenCalled();
       expect(mockApp.put).not.toHaveBeenCalled();
       expect(mockApp.delete).not.toHaveBeenCalled();
@@ -168,6 +174,7 @@ describe('Web Dashboard Route Modules', () => {
         const mockApp = { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() };
         registerReminderRoutes(mockApp, mockService);
 
+        jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
         const handler = mockApp.get.mock.calls[0][1];
         const req = createMockReq({ query: { status: 'active' } });
         const res = createMockRes();
@@ -178,7 +185,7 @@ describe('Web Dashboard Route Modules', () => {
         expect(res.json).toHaveBeenCalledWith({
           reminders: mockReminders,
           total: 1,
-          timestamp: expect.any(String),
+          timestamp: '2026-11-16T12:00:00.000Z',
         });
       });
 

@@ -105,7 +105,7 @@ async function handleNetworkTest(dashboard, data, callback) {
     const results = ['=== NETWORK CONNECTIVITY TEST SUITE ===\n'];
 
     await addGatewayTest(dashboard, results);
-    await addDnsTests(dashboard, results);
+    await addDnsTests(results);
     await addInternetTests(results);
     await addConfigurationTests(results);
 
@@ -143,15 +143,14 @@ async function addGatewayTest(dashboard, results) {
 
 /**
  * Add DNS test results
- * @param {WebDashboardService} dashboard - Dashboard service
  * @param {Array} results - Results array to append to
  */
-async function addDnsTests(dashboard, results) {
+async function addDnsTests(results) {
   const dns = require('dns').promises;
 
   results.push('Test 2: DNS Server Detection & Testing');
   try {
-    const dnsServers = await dashboard.detectDnsServers();
+    const dnsServers = await NetworkDetector.detectDnsServers();
     results.push(`  Detected DNS Servers: ${dnsServers.join(', ')}`);
 
     // Ping all servers at once; report in the detected order

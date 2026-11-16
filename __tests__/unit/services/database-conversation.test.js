@@ -71,38 +71,41 @@ describe('DatabaseService - Conversation History', function () {
       expect(history.length).toBe(5);
 
       // Verify the conversation flow
+      history.forEach((row) => {
+        expect(row.timestamp).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+      });
       expect(history[0]).toEqual({
         role: 'user',
         message: 'What is AI?',
-        timestamp: expect.any(String),
+        timestamp: history[0].timestamp,
         message_length: 11,
         response_time_ms: 0,
       });
       expect(history[1]).toEqual({
         role: 'assistant',
         message: 'AI stands for Artificial Intelligence...',
-        timestamp: expect.any(String),
+        timestamp: history[1].timestamp,
         message_length: 40,
         response_time_ms: 0,
       });
       expect(history[2]).toEqual({
         role: 'user',
         message: 'Can you give examples?',
-        timestamp: expect.any(String),
+        timestamp: history[2].timestamp,
         message_length: 22,
         response_time_ms: 0,
       });
       expect(history[3]).toEqual({
         role: 'assistant',
         message: 'Sure! Examples include machine learning...',
-        timestamp: expect.any(String),
+        timestamp: history[3].timestamp,
         message_length: 42,
         response_time_ms: 0,
       });
       expect(history[4]).toEqual({
         role: 'user',
         message: 'Thank you',
-        timestamp: expect.any(String),
+        timestamp: history[4].timestamp,
         message_length: 9,
         response_time_ms: 0,
       });

@@ -70,10 +70,15 @@ describe('Performance Monitor - Core', () => {
       process.env.NODE_ENV = 'production';
       performanceMonitor.initialize();
 
-      expect(mockSetInterval).toHaveBeenCalledWith(
-        expect.any(Function),
-        config.PERFORMANCE.CHECK_INTERVAL_MS
-      );
+      expect(mockSetInterval).toHaveBeenCalledTimes(1);
+      const [tick, interval] = mockSetInterval.mock.calls[0];
+      expect(interval).toBe(config.PERFORMANCE.CHECK_INTERVAL_MS);
+      const checkSpy = jest
+        .spyOn(performanceMonitor, '_checkPerformance')
+        .mockImplementation(() => {});
+      tick();
+      expect(checkSpy).toHaveBeenCalledTimes(1);
+      checkSpy.mockRestore();
       expect(performanceMonitor.intervalId).toBe(intervalId);
     });
 

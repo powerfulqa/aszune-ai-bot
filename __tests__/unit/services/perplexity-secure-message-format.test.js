@@ -178,7 +178,7 @@ describe('PerplexitySecure - Message Formatting', () => {
     it('should log final cache statistics', () => {
       service.shutdown();
 
-      expect(logger.info).toHaveBeenCalledWith('Final cache statistics:', expect.any(Object));
+      expect(logger.info).toHaveBeenCalledWith('Final cache statistics:', { hits: 10, misses: 5 });
     });
   });
 
@@ -198,9 +198,7 @@ describe('PerplexitySecure - Message Formatting', () => {
 
       await service._trackMetric('test_metric', 100);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to log test_metric')
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Failed to log test_metric: DB error');
     });
   });
 });
