@@ -106,18 +106,22 @@ describe('Memory Monitor - Checking', () => {
 
   it('should handle memory check errors gracefully', () => {
     // Setup memory usage to throw error
+    const memoryError = new Error('Memory check failed');
     process.memoryUsage.mockImplementation(() => {
-      throw new Error('Memory check failed');
+      throw memoryError;
     });
+    memoryMonitor.memoryLimit = 200 * 1024 * 1024;
+    memoryMonitor.criticalMemory = 250 * 1024 * 1024;
 
     const errorSpy = jest.spyOn(ErrorHandler, 'handleError');
     memoryMonitor.checkMemoryUsage();
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.any(Error),
-      'checking memory usage',
-      expect.any(Object)
-    );
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toBe(memoryError);
+    expect(errorSpy).toHaveBeenCalledWith(memoryError, 'checking memory usage', {
+      memoryLimit: 200 * 1024 * 1024,
+      criticalMemory: 250 * 1024 * 1024,
+    });
   });
 
   it('should force garbage collection when not recently called', () => {
@@ -148,17 +152,24 @@ describe('Memory Monitor - Checking', () => {
 
   it('should handle garbage collection errors', () => {
     memoryMonitor.lastGcTime = 0;
+    memoryMonitor.isLowMemory = true;
+    const gcError = new Error('GC failed');
     global.gc = jest.fn().mockImplementation(() => {
-      throw new Error('GC failed');
+      throw gcError;
     });
+
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1794830400000);
 
     const errorSpy = jest.spyOn(ErrorHandler, 'handleError');
     memoryMonitor.forceGarbageCollection();
+    nowSpy.mockRestore();
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.any(Error),
-      'garbage collection',
-      expect.any(Object)
-    );
+    // The attempt is stamped before gc() runs, so a failed attempt still starts the cooldown.
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toBe(gcError);
+    expect(errorSpy).toHaveBeenCalledWith(gcError, 'garbage collection', {
+      lastGcTime: 1794830400000,
+      isLowMemory: true,
+    });
   });
 });

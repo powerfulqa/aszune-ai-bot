@@ -65,22 +65,42 @@ describe('Bot Initialization', () => {
   });
 
   it('should create a Discord client and log in', async () => {
-    // Allow async operations to complete
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Startup is a promise chain with no timers: flush it without a real wait.
+    jest.useFakeTimers();
+    await jest.advanceTimersByTimeAsync(0);
 
-    // Verify the client was created and logged in
-    expect(discordMock.Client).toHaveBeenCalled();
-    expect(discordMock.Client().login).toHaveBeenCalled();
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringMatching(/Logged in to Discord/));
+    expect(discordMock.Client).toHaveBeenCalledTimes(1);
+    expect(discordMock.mockClient.login).toHaveBeenCalledTimes(1);
+    expect(discordMock.mockClient.login).toHaveBeenCalledWith('test-token');
+    expect(mockLogger.info).toHaveBeenCalledWith('Logged in to Discord (test mode)');
   });
 
-  it('should register event handlers', () => {
-    // Verify that critical event handlers are registered
-    expect(discordMock.Client).toHaveBeenCalled();
-    const mockClientInstance = discordMock.Client.mock.results[0].value;
-    expect(mockClientInstance.once).toHaveBeenCalled();
-    expect(mockClientInstance.on).toHaveBeenCalledWith('messageCreate', expect.any(Function));
-    expect(mockClientInstance.on).toHaveBeenCalledWith('interactionCreate', expect.any(Function));
-    expect(mockClientInstance.on).toHaveBeenCalledWith('error', expect.any(Function));
+  it('should register event handlers', async () => {
+    const handleChatMessage = require('../../src/services/chat');
+    const commandHandler = require('../../src/commands');
+    const client = discordMock.mockClient;
+    const handlers = Object.fromEntries(client.on.mock.calls);
+
+    expect(client.once.mock.calls.map(([event]) => event)).toEqual(['clientReady']);
+    expect(Object.keys(handlers)).toEqual(['messageCreate', 'interactionCreate', 'error', 'warn']);
+
+    // Chat messages go straight to the chat service.
+    expect(handlers.messageCreate).toBe(handleChatMessage);
+
+    // Only chat-input interactions reach the command router.
+    const button = { isChatInputCommand: () => false };
+    await handlers.interactionCreate(button);
+    expect(commandHandler.handleSlashCommand).not.toHaveBeenCalled();
+    const slash = { isChatInputCommand: () => true };
+    await handlers.interactionCreate(slash);
+    expect(commandHandler.handleSlashCommand).toHaveBeenCalledTimes(1);
+    expect(commandHandler.handleSlashCommand).toHaveBeenCalledWith(slash);
+
+    // Client errors and warnings are logged, not thrown.
+    const clientError = new Error('gateway closed');
+    handlers.error(clientError);
+    expect(mockLogger.error).toHaveBeenCalledWith('Discord client error:', clientError);
+    handlers.warn('heartbeat late');
+    expect(mockLogger.warn).toHaveBeenCalledWith('Discord client warning:', 'heartbeat late');
   });
 });

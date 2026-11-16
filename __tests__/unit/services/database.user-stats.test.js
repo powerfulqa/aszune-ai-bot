@@ -47,6 +47,12 @@ describe('User Stats Queries', () => {
   });
 
   describe('updateUserStats', () => {
+    const NOW = '2026-11-16T12:00:00.000Z';
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now: new Date(NOW) });
+    });
+
     it('updates stats when changes are provided', () => {
       context.mockStmt.run.mockReturnValue({ changes: 1 });
 
@@ -59,7 +65,7 @@ describe('User Stats Queries', () => {
         '123',
         1,
         '2023-01-02',
-        expect.any(String),
+        NOW,
         0,
         0,
         '{}',
@@ -78,14 +84,14 @@ describe('User Stats Queries', () => {
       expect(context.mockStmt.run).toHaveBeenCalledWith(
         '123',
         0,
-        expect.any(String),
-        expect.any(String),
+        NOW,
+        NOW,
         0,
         0,
         '{}',
         null,
         0,
-        expect.any(String),
+        NOW,
         0,
         0,
         null

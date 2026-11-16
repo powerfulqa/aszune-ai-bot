@@ -28,9 +28,6 @@ module.exports = {
     '/__mocks__/discord.js',
     '/__mocks__/discord.mock.module.js',
     '/__mocks__/loggerMock.js',
-    '/__tests__/__mocks__/discord.test.js',
-    '/__tests__/__mocks__/discord.mock.test.js',
-    '/__tests__/__mocks__/loggerMock.test.js',
     '/__tests__/utils/undici-mock.js',
     '/__tests__/utils/undici-mock-helpers.js',
     '/__tests__/utils/testUtils.js',
@@ -52,14 +49,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Use v8 coverage provider for better reporting
   coverageProvider: 'v8',
-  // Coverage gate: a few points under what the suite measures (about 82%
-  // statements, 85% branches, 81% functions), so a real drop fails the build.
+  // Coverage gate: a few points under what the suite measures (about 85%
+  // statements, 86% branches, 84% functions), so a real drop fails the build.
   coverageThreshold: {
     global: {
-      branches: 80,
-      functions: 78,
-      lines: 78,
-      statements: 78,
+      branches: 84,
+      functions: 82,
+      lines: 83,
+      statements: 83,
     },
   },
   // Output verbose coverage info

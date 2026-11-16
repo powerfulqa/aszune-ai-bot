@@ -139,7 +139,10 @@ describe('PerplexitySecure - Message Formatting', () => {
 
       const result = service._formatMessagesForAPI(history);
 
-      expect(result).toContainEqual(expect.objectContaining({ role: 'user' }));
+      expect(result).toEqual([
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: 'Test message' },
+      ]);
     });
   });
 

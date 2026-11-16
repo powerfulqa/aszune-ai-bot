@@ -4,12 +4,12 @@ Last updated: 2026-11-16 (v2.3.0, unreleased changes)
 
 ## Current Local Metrics
 
-- Tests: 1,667 total / 1,667 passing / 0 skipped
-- Test Suites: 177 total
-- Statements: 82.5%
-- Branches: 85.3%
-- Functions: 81.5%
-- Lines: 82.5%
+- Tests: 1,695 total / 1,695 passing / 0 skipped
+- Test Suites: 176 total
+- Statements: 85.1%
+- Branches: 86.6%
+- Functions: 84.4%
+- Lines: 85.1%
 
 The test count fell from 2,036 because about 3,000 lines of unreachable code were deleted together
 with the tests that only covered them.
@@ -24,11 +24,11 @@ These reflect the latest full `npm test` execution on the `main` branch.
 
 ## Acceptance Thresholds (current)
 
-| Tier           | Gate                                                | Source                                    |
-| -------------- | --------------------------------------------------- | ----------------------------------------- |
-| Global Minimum | ≥78% statements, functions and lines; ≥80% branches | `jest.config.js`                          |
-| Critical Gate  | Per-file thresholds, about 2 points under measured  | `config/jest.critical-coverage.config.js` |
-| Pull requests  | Project may not drop over 1 point; patch ≥80%       | `codecov.yml`                             |
+| Tier           | Gate                                                 | Source                                    |
+| -------------- | ---------------------------------------------------- | ----------------------------------------- |
+| Global Minimum | ≥83% lines/statements, ≥82% functions, ≥84% branches | `jest.config.js`                          |
+| Critical Gate  | Per-file thresholds, about 2 points under measured   | `config/jest.critical-coverage.config.js` |
+| Pull requests  | Project may not drop over 1 point; patch ≥80%        | `codecov.yml`                             |
 
 ## Update Procedure
 

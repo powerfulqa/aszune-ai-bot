@@ -7,10 +7,9 @@
  * Build the resources embed
  * @param {Object} resourceStatus - Resource status from ResourceOptimizer
  * @param {number} actualServerCount - Actual server count
- * @param {Array} recommendations - Optimization recommendations
  * @returns {Object} Discord embed object
  */
-function buildResourcesEmbed(resourceStatus, actualServerCount, recommendations) {
+function buildResourcesEmbed(resourceStatus, actualServerCount) {
   return {
     color:
       resourceStatus.memory.status === 'good'
@@ -27,20 +26,15 @@ function buildResourcesEmbed(resourceStatus, actualServerCount, recommendations)
         inline: true,
       },
       {
-        name: '⚙️ Performance',
-        value: `Status: ${resourceStatus.performance.status.toUpperCase()}\nResponse Time: ${resourceStatus.performance.responseTime}ms\nLoad: ${resourceStatus.performance.load}`,
-        inline: true,
-      },
-      {
         name: '📈 Optimization Tier',
-        value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}\nRecommended: Auto-scaling active`,
+        value: `Current: ${resourceStatus.optimizationTier}\nServer Count: ${actualServerCount}`,
         inline: true,
       },
       {
         name: '💡 Recommendations',
         value:
-          recommendations.slice(0, 3).join('\n') ||
-          '✅ System performance is good - continue monitoring',
+          resourceStatus.recommendations.slice(0, 3).join('\n') ||
+          '✅ Memory usage is healthy - continue monitoring',
         inline: false,
       },
     ],

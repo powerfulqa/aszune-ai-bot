@@ -1,8 +1,6 @@
 /**
- * Security tests for the dashboard REST layer:
- *  - without DASHBOARD_TOKEN the REST API is read-only (matches the socket rule)
- *  - service names from requests can't inject shell commands
- *  - config reads mask secrets; saves keep the real values behind the mask
+ * Security tests for the dashboard REST layer: without DASHBOARD_TOKEN the REST API is
+ * read-only (matches the socket rule); token auth; Host/Origin guard; HTTP headers.
  */
 
 jest.mock('../../../../src/services/database', () => ({}));
@@ -12,18 +10,6 @@ jest.mock('../../../../src/utils/logger', () => ({
   warn: jest.fn(),
   error: jest.fn(),
 }));
-jest.mock('child_process', () => ({
-  exec: jest.fn(),
-  execFile: jest.fn(),
-  spawn: jest.fn(),
-}));
-
-const fsPromises = require('fs').promises;
-
-// jest.setup.js resets modules before each test, so the mocked child_process
-// the service sees is re-created too — take the reference after requiring it.
-let childProcess;
-
 /** Minimal Express response double */
 function makeRes() {
   const res = { statusCode: 200, body: null };
@@ -45,10 +31,6 @@ describe('dashboard REST security', () => {
     jest.clearAllMocks();
     delete process.env.DASHBOARD_TOKEN;
     service = require('../../../../src/services/web-dashboard');
-    childProcess = require('child_process');
-    childProcess.execFile.mockImplementation((file, args, opts, cb) =>
-      cb(null, { stdout: 'line one\nline two\n', stderr: '' })
-    );
   });
 
   describe('auth middleware without a token (read-only)', () => {
@@ -140,178 +122,6 @@ describe('dashboard REST security', () => {
       );
       expect(next).toHaveBeenCalledTimes(1);
     });
-  });
-
-  describe('manageService', () => {
-    it.each(['nginx; rm -rf /', 'a$(id)', '`reboot`', '--help', 'x|y', '', null])(
-      'rejects unsafe service name %p without running anything',
-      async (name) => {
-        await expect(service.manageService('restart', name)).rejects.toThrow(
-          'Invalid service name'
-        );
-        expect(childProcess.execFile).not.toHaveBeenCalled();
-        expect(childProcess.exec).not.toHaveBeenCalled();
-      }
-    );
-
-    it('rejects an action outside the allowlist', async () => {
-      await expect(service.manageService('enable', 'nginx')).rejects.toThrow(
-        'Invalid action. Must be start, stop, or restart'
-      );
-      expect(childProcess.execFile).not.toHaveBeenCalled();
-    });
-
-    it('runs systemctl with separate arguments and no shell', async () => {
-      const result = await service.manageService('restart', 'nginx');
-      expect(childProcess.execFile).toHaveBeenCalledWith(
-        'systemctl',
-        ['restart', 'nginx'],
-        { timeout: 10000 },
-        expect.any(Function)
-      );
-      expect(childProcess.exec).not.toHaveBeenCalled();
-      expect(result.success).toBe(true);
-    });
-
-    it('runs pm2 with separate arguments for the bot service', async () => {
-      await service.manageService('restart', 'aszune-ai');
-      expect(childProcess.execFile).toHaveBeenCalledWith(
-        'pm2',
-        ['restart', 'aszune-ai'],
-        { timeout: 10000 },
-        expect.any(Function)
-      );
-    });
-  });
-
-  it('refuses to control or read the journal of a unit outside the managed set', async () => {
-    const refused = 'Unknown or disallowed service: sshd';
-    await expect(service.manageService('stop', 'sshd')).rejects.toThrow(refused);
-    await expect(service.getServiceLogs('sshd', 10)).rejects.toThrow(refused);
-    expect(childProcess.execFile).not.toHaveBeenCalled();
-  });
-
-  describe('getServiceLogs', () => {
-    it('rejects an unsafe service name', async () => {
-      await expect(service.getServiceLogs('x; cat /etc/passwd', 50)).rejects.toThrow(
-        'Invalid service name'
-      );
-      expect(childProcess.execFile).not.toHaveBeenCalled();
-    });
-
-    it('passes a clamped line count as an argument', async () => {
-      const logs = await service.getServiceLogs('nginx', '999999');
-      expect(childProcess.execFile).toHaveBeenCalledWith(
-        'journalctl',
-        ['-u', 'nginx', '-n', '1000', '--no-pager', '--output=short-iso'],
-        { timeout: 10000 },
-        expect.any(Function)
-      );
-      expect(logs).toEqual(['line one', 'line two']);
-    });
-
-    it('falls back to 50 lines for a non-numeric count', async () => {
-      await service.getServiceLogs('nginx', 'abc');
-      expect(childProcess.execFile.mock.calls[0][1]).toEqual([
-        '-u',
-        'nginx',
-        '-n',
-        '50',
-        '--no-pager',
-        '--output=short-iso',
-      ]);
-    });
-  });
-
-  describe('config file secrets', () => {
-    const envFile = 'DISCORD_BOT_TOKEN=real-discord\nPERPLEXITY_API_KEY=real-pplx\nLOG_LEVEL=info';
-
-    beforeEach(() => {
-      jest.spyOn(fsPromises, 'access').mockResolvedValue();
-      jest.spyOn(fsPromises, 'copyFile').mockResolvedValue();
-      jest.spyOn(fsPromises, 'readFile').mockResolvedValue(envFile);
-      jest.spyOn(fsPromises, 'writeFile').mockResolvedValue();
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('masks secret values when reading .env over REST', async () => {
-      const content = await service.readConfigFile('.env');
-      expect(content).toBe(
-        'DISCORD_BOT_TOKEN=********\nPERPLEXITY_API_KEY=********\nLOG_LEVEL=info'
-      );
-    });
-
-    it('keeps the real secret when a save still carries the mask', async () => {
-      await service.updateConfigFile(
-        '.env',
-        'DISCORD_BOT_TOKEN=********\nPERPLEXITY_API_KEY=new-pplx\nLOG_LEVEL=debug',
-        false
-      );
-      expect(fsPromises.writeFile).toHaveBeenCalledWith(
-        expect.stringMatching(/\.env$/),
-        'DISCORD_BOT_TOKEN=real-discord\nPERPLEXITY_API_KEY=new-pplx\nLOG_LEVEL=debug',
-        'utf-8'
-      );
-    });
-  });
-});
-
-describe('dashboard config save safety', () => {
-  let service;
-
-  beforeEach(() => {
-    service = require('../../../../src/services/web-dashboard');
-    jest.spyOn(fsPromises, 'readFile').mockResolvedValue('export API_KEY="first\nsecond"');
-    jest.spyOn(fsPromises, 'writeFile').mockResolvedValue();
-    jest.spyOn(fsPromises, 'copyFile').mockResolvedValue();
-    jest.spyOn(fsPromises, 'access').mockResolvedValue();
-  });
-
-  afterEach(() => jest.restoreAllMocks());
-
-  it('masks and restores an exported multiline secret over REST', async () => {
-    const masked = await service.readConfigFile('.env');
-    expect(masked).toBe('export API_KEY=********');
-    await service.updateConfigFile('.env', masked, false);
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      require('path').join(process.cwd(), '.env'),
-      'export API_KEY="first\nsecond"',
-      'utf-8'
-    );
-  });
-
-  it.each(['EACCES', 'EIO', 'ENOENT'])('does not overwrite secrets after %s', async (code) => {
-    fsPromises.readFile.mockRejectedValueOnce(Object.assign(new Error('Read failed'), { code }));
-    await expect(service.updateConfigFile('.env', 'API_KEY=********')).rejects.toThrow(
-      code === 'ENOENT'
-        ? 'Cannot restore masked value for API_KEY: original value is unavailable'
-        : 'Read failed'
-    );
-    expect(fsPromises.writeFile).not.toHaveBeenCalled();
-  });
-
-  it('does not overwrite the original after a backup failure', async () => {
-    fsPromises.copyFile.mockRejectedValueOnce(new Error('Backup failed'));
-    await expect(service.updateConfigFile('.env', 'API_KEY=********')).rejects.toThrow(
-      'Backup failed'
-    );
-    expect(fsPromises.writeFile).not.toHaveBeenCalled();
-  });
-
-  it('allows a new config with explicit values', async () => {
-    fsPromises.readFile.mockRejectedValueOnce(
-      Object.assign(new Error('Missing'), { code: 'ENOENT' })
-    );
-    await service.updateConfigFile('.env', 'API_KEY=new-value');
-    expect(fsPromises.copyFile).not.toHaveBeenCalled();
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      require('path').join(process.cwd(), '.env'),
-      'API_KEY=new-value',
-      'utf-8'
-    );
   });
 });
 

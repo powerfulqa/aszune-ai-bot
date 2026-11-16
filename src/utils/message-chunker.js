@@ -432,7 +432,8 @@ function chunkMessage(message, maxLength = 2000) {
   // Fix word breaks at chunk boundaries
   fixChunkBoundarySpacing(chunks);
 
-  // Add numbering to chunks for better user experience
+  // Number the parts of a split answer; a single message needs no "[1/1]".
+  if (chunks.length < 2) return chunks;
   return chunks.map((chunk, index) => `[${index + 1}/${chunks.length}] ${chunk}`);
 }
 

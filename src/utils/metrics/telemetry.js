@@ -11,6 +11,7 @@ const analyticsCore = require('./analytics-core');
 const perfMonitor = require('./perf-monitor');
 // Import shared verification state (PR 5 - unified state management)
 const verificationState = require('./verification-state');
+const logger = require('../logger');
 
 let _heartbeatTimer = null;
 let _retryCount = 0;
@@ -202,7 +203,9 @@ async function initialize(client) {
     }
 
     return success;
-  } catch {
+  } catch (error) {
+    // Visibility only: the outcome (unverified) is unchanged.
+    logger.warn(`Telemetry initialization failed: ${error.message}`);
     return false;
   }
 }

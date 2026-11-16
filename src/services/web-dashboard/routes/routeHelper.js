@@ -52,34 +52,8 @@ function wrapAsyncHandler(handler, context) {
   };
 }
 
-/**
- * Creates a simple GET handler that fetches data from a service method
- * @param {Object} service - Service instance
- * @param {string} methodName - Service method to call
- * @param {string} resultKey - Key to use in the response object
- * @param {string} context - Error context for logging
- * @returns {Function} Express route handler
- */
-function createSimpleGetHandler(service, methodName, resultKey, context) {
-  return wrapAsyncHandler(async () => {
-    const result = await service[methodName]();
-    return { [resultKey]: result };
-  }, context);
-}
-
-/**
- * Sends a validation error response
- * @param {Object} res - Express response object
- * @param {string} message - Error message
- */
-function sendValidationError(res, message) {
-  res.status(400).json(createErrorResponse(message, 400).body);
-}
-
 module.exports = {
   createApiResponse,
   createErrorResponse,
   wrapAsyncHandler,
-  createSimpleGetHandler,
-  sendValidationError,
 };

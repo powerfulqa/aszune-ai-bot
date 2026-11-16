@@ -7,10 +7,6 @@ jest.useFakeTimers();
 
 // Mock dependencies
 jest.mock('../../../src/utils/logger');
-jest.mock('../../../src/utils/discord-analytics', () => ({
-  generateDailyReport: jest.fn(),
-  generateServerInsights: jest.fn(),
-}));
 jest.mock('../../../src/services/database', () => ({
   getCommandUsageStats: jest.fn().mockReturnValue({
     totalCommands: 25,
@@ -37,22 +33,7 @@ jest.mock('../../../src/services/database', () => ({
     { value: 1100, timestamp: new Date().toISOString() },
   ]),
 }));
-jest.mock('../../../src/utils/performance-dashboard', () => ({
-  generateDashboardReport: jest.fn().mockResolvedValue({
-    overview: {
-      status: 'healthy',
-      memoryUsage: '128MB',
-    },
-    alerts: [],
-  }),
-  getRealTimeStatus: jest.fn().mockReturnValue({
-    uptime: { formatted: '2h 30m' },
-    memoryUsage: '128MB',
-  }),
-}));
-
 const { handleSlashCommand } = require('../../../src/commands/index');
-const DiscordAnalytics = require('../../../src/utils/discord-analytics');
 const { ErrorHandler } = require('../../../src/utils/error-handler');
 
 // Mock the conversation module
@@ -68,6 +49,8 @@ jest.mock('../../../src/utils/conversation', () => {
   };
   return jest.fn(() => mockInstance);
 });
+
+const NOW = '2026-11-16T12:00:00.000Z';
 
 describe('Analytics Command', () => {
   const mockInteraction = {
@@ -102,30 +85,8 @@ describe('Analytics Command', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Setup default successful mocks
-    DiscordAnalytics.generateDailyReport.mockResolvedValue({
-      summary: {
-        totalServers: 5,
-        totalUsers: 150,
-        totalCommands: 45,
-        successRate: 97.8,
-        errorRate: 2.2,
-        avgResponseTime: 1200,
-      },
-      commandStats: [
-        { command: 'chat', count: 20 },
-        { command: 'help', count: 15 },
-        { command: 'ping', count: 10 },
-      ],
-    });
-
-    DiscordAnalytics.generateServerInsights.mockResolvedValue({
-      recommendations: [
-        'Server activity is high during peak hours',
-        'Consider adding more moderation during weekends',
-      ],
-    });
+    // jest.setup.js restores real timers after every test, so pin the clock per test.
+    jest.useFakeTimers({ now: new Date(NOW) });
 
     ErrorHandler.handleError = jest.fn().mockReturnValue({
       message: 'An unexpected error occurred. Please try again later.',
@@ -148,7 +109,7 @@ describe('Analytics Command', () => {
             { name: '🤖 Bots', value: '1', inline: true },
           ],
           footer: { text: 'Aszai Bot Analytics' },
-          timestamp: expect.any(String),
+          timestamp: NOW,
         },
       ],
     });
@@ -170,7 +131,11 @@ describe('Analytics Command', () => {
     await handleSlashCommand(mockInteractionWithError);
 
     expect(mockInteractionWithError.deferReply).toHaveBeenCalled();
-    expect(ErrorHandler.handleError).toHaveBeenCalledWith(expect.any(Error), 'analytics_command');
+    expect(ErrorHandler.handleError).toHaveBeenCalledTimes(1);
+    expect(ErrorHandler.handleError).toHaveBeenCalledWith(
+      new TypeError("Cannot read properties of null (reading 'filter')"),
+      'analytics_command'
+    );
     expect(mockInteractionWithError.editReply).toHaveBeenCalledWith({
       embeds: [
         { color: 15548997, description: 'An unexpected error occurred. Please try again later.' },
@@ -178,43 +143,48 @@ describe('Analytics Command', () => {
     });
   });
 
-  test('should handle analytics with fallback calculations', async () => {
-    // Mock guild with members that would trigger fallback calculations
-    const mockInteractionFallback = {
-      ...mockInteraction,
-      deferReply: jest.fn(),
-      editReply: jest.fn(),
-      guild: {
-        id: 'test-guild-123',
-        memberCount: 100, // Large member count to trigger fallback calculations
-        members: {
-          fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
-          cache: {
-            filter: jest.fn().mockReturnValue({ size: 0 }), // No online members in cache
-            size: 100,
+  // Fetch fails and the cache holds no presences: 20% are assumed online, and
+  // 5% are assumed bots only above 10 members.
+  test.each([
+    [150, '30', '143', '7'],
+    [100, '20', '95', '5'],
+    [10, '2', '10', '0'],
+  ])(
+    'estimates from a member count of %i when nothing is cached',
+    async (memberCount, online, humans, bots) => {
+      const mockInteractionFallback = {
+        ...mockInteraction,
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+        guild: {
+          id: 'test-guild-123',
+          memberCount,
+          members: {
+            fetch: jest.fn().mockRejectedValue(new Error('Failed to fetch members')),
+            cache: { filter: jest.fn().mockReturnValue({ size: 0 }), size: memberCount },
           },
         },
-      },
-    };
+      };
 
-    await handleSlashCommand(mockInteractionFallback);
+      await handleSlashCommand(mockInteractionFallback);
 
-    expect(mockInteractionFallback.editReply).toHaveBeenCalledWith({
-      embeds: [
-        {
-          color: 0x5865f2,
-          title: '📊 Server Overview',
-          fields: [
-            { name: '🟢 Online now', value: '20', inline: true },
-            { name: '👥 Members', value: '95', inline: true },
-            { name: '🤖 Bots', value: '5', inline: true },
-          ],
-          footer: { text: 'Aszai Bot Analytics' },
-          timestamp: expect.any(String),
-        },
-      ],
-    });
-  });
+      expect(mockInteractionFallback.editReply).toHaveBeenCalledWith({
+        embeds: [
+          {
+            color: 0x5865f2,
+            title: '📊 Server Overview',
+            fields: [
+              { name: '🟢 Online now', value: online, inline: true },
+              { name: '👥 Members', value: humans, inline: true },
+              { name: '🤖 Bots', value: bots, inline: true },
+            ],
+            footer: { text: 'Aszai Bot Analytics' },
+            timestamp: NOW,
+          },
+        ],
+      });
+    }
+  );
 });
 
 describe('Stats Command', () => {
@@ -303,114 +273,5 @@ describe('Summary Command', () => {
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.reply).toHaveBeenCalledWith('No conversation history to summarize.');
-  });
-});
-
-describe('Dashboard Command', () => {
-  const mockInteraction = {
-    commandName: 'dashboard',
-    reply: jest.fn(),
-    deferReply: jest.fn(),
-    editReply: jest.fn(),
-    user: {
-      id: '123456789012345678', // Valid Discord snowflake format (18 digits)
-    },
-    guild: {
-      id: 'test-guild-123',
-      memberCount: 150,
-      members: {
-        fetch: jest.fn().mockResolvedValue(),
-        cache: {
-          filter: jest.fn().mockReturnValue({ size: 100 }),
-          size: 150,
-        },
-      },
-    },
-  };
-
-  test('should handle dashboard command successfully', async () => {
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.deferReply).toHaveBeenCalled();
-    expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      embeds: [
-        expect.objectContaining({
-          color: expect.any(Number),
-          title: '🖥️ Performance Dashboard',
-          fields: expect.arrayContaining([
-            expect.objectContaining({
-              name: '🚦 System Status',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '⚡ Performance',
-              value: expect.stringContaining('Response Time:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '📊 Activity',
-              value: expect.stringContaining('Servers: 1'),
-              inline: true,
-            }),
-          ]),
-          footer: { text: 'Aszai Bot Dashboard • Real-time data' },
-          timestamp: expect.any(String),
-        }),
-      ],
-    });
-  });
-});
-
-describe('Resources Command', () => {
-  const mockInteraction = {
-    commandName: 'resources',
-    reply: jest.fn(),
-    deferReply: jest.fn(),
-    editReply: jest.fn(),
-    user: {
-      id: '123456789012345678', // Valid Discord snowflake format (18 digits)
-    },
-  };
-
-  test('should handle resources command successfully', async () => {
-    await handleSlashCommand(mockInteraction);
-
-    expect(mockInteraction.deferReply).toHaveBeenCalled();
-    expect(mockInteraction.editReply).toHaveBeenCalledWith({
-      embeds: [
-        expect.objectContaining({
-          color: expect.any(Number),
-          title: '🔧 Resource Optimization',
-          description: '📊 Node.js process memory (heap) - see /cache for cached responses',
-          fields: expect.arrayContaining([
-            expect.objectContaining({
-              name: '💾 Memory Status',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '⚙️ Performance',
-              value: expect.stringContaining('Status:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '📈 Optimization Tier',
-              value: expect.stringContaining('Current:'),
-              inline: true,
-            }),
-            expect.objectContaining({
-              name: '💡 Recommendations',
-              value: expect.stringContaining('System performance is good'),
-              inline: false,
-            }),
-          ]),
-          footer: {
-            text: 'Total memory = used + free (heap allocated) | Free = available within allocated heap',
-          },
-          timestamp: expect.any(String),
-        }),
-      ],
-    });
   });
 });

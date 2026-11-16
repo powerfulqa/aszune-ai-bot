@@ -9,12 +9,11 @@ const config = require('../config/config');
 const { ErrorHandler } = require('../utils/error-handler');
 const { InputValidator } = require('../utils/input-validator');
 const { ApplicationCommandOptionType } = require('discord.js');
-const DiscordAnalytics = require('../utils/discord-analytics');
 const ResourceOptimizer = require('../utils/resource-optimizer');
-const PerformanceDashboard = require('../utils/performance-dashboard');
 const databaseService = require('../services/database');
 const reminderService = require('../services/reminder-service');
 const { getGuildMemberStats } = require('../utils/guild-member-stats');
+const { formatUptime } = require('../utils/system-info');
 const { diagCommand } = require('./diag');
 
 // Embed builders (extracted for maintainability)
@@ -190,7 +189,7 @@ Simply chat as normal to talk to the bot!`
       // Validate user ID
       const userIdValidation = InputValidator.validateUserId(userId);
       if (!userIdValidation.valid) {
-        return interaction.reply(`❌ Invalid user ID: ${userIdValidation.error}`);
+        return interaction.reply(errorEmbed(`Invalid user ID: ${userIdValidation.error}`));
       }
 
       await interaction.deferReply();
@@ -206,7 +205,7 @@ Simply chat as normal to talk to the bot!`
           userId: userId,
         });
         return interaction.editReply(
-          `❌ Error retrieving cache statistics: ${errorResponse.message}`
+          errorEmbed(`Error retrieving cache statistics: ${errorResponse.message}`)
         );
       }
     },
@@ -258,12 +257,11 @@ Simply chat as normal to talk to the bot!`
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const guild = interaction.guild;
-        const { _onlineCount, _botCount, _totalMembers, humanMembers } =
-          await getGuildMemberStats(guild);
-        const dashboardData = await PerformanceDashboard.generateDashboardReport();
-        const realTimeStatus = PerformanceDashboard.getRealTimeStatus();
-        const embed = buildDashboardEmbed(dashboardData, realTimeStatus, humanMembers);
+        const { humanMembers } = await getGuildMemberStats(interaction.guild);
+        const resourceStatus = ResourceOptimizer.monitorResources();
+        const serverCount = interaction.client?.guilds?.cache?.size || 1;
+        const uptime = formatUptime(process.uptime()).formatted;
+        const embed = buildDashboardEmbed(resourceStatus, uptime, humanMembers, serverCount);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching dashboard:', error);
@@ -281,14 +279,9 @@ Simply chat as normal to talk to the bot!`
     async execute(interaction) {
       try {
         await interaction.deferReply();
-        const resourceStatus = await ResourceOptimizer.monitorResources();
-        const analyticsData = await DiscordAnalytics.generateDailyReport();
-        const recommendations = await ResourceOptimizer.generateOptimizationRecommendations(
-          analyticsData,
-          { averageResponseTime: resourceStatus.performance.responseTime }
-        );
+        const resourceStatus = ResourceOptimizer.monitorResources();
         const actualServerCount = interaction.client?.guilds?.cache?.size || 1;
-        const embed = buildResourcesEmbed(resourceStatus, actualServerCount, recommendations);
+        const embed = buildResourcesEmbed(resourceStatus, actualServerCount);
         return interaction.editReply({ embeds: [embed] });
       } catch (error) {
         logger.error('Error fetching resource data:', error);

@@ -5,7 +5,7 @@ This directory contains project documentation and release notes for the Aszune A
 ## Current Release
 
 - **[v2.0.0 Release Notes](./RELEASE-NOTES-v2.0.0.md)** - Security, Perplexity API Enhancements,
-  Architecture (LATEST)
+  Architecture
 
 ## Code Quality & Standards
 
@@ -27,7 +27,7 @@ This directory contains project documentation and release notes for the Aszune A
 
 | Version                                             | Description                                     |
 | --------------------------------------------------- | ----------------------------------------------- |
-| [v2.0.0](./RELEASE-NOTES-v2.0.0.md)                 | Security, Perplexity API, Architecture (LATEST) |
+| [v2.0.0](./RELEASE-NOTES-v2.0.0.md)                 | Security, Perplexity API, Architecture |
 | [v1.11.0](./release-notes/RELEASE-NOTES-v1.11.0.md) | Enhanced Utility Commands                       |
 | [v1.10.0](./release-notes/RELEASE-NOTES-v1.10.0.md) | Code Quality & Documentation Cleanup            |
 | [v1.9.0](./release-notes/RELEASE-NOTES-v1.9.0.md)   | Dashboard Feature Suite                         |

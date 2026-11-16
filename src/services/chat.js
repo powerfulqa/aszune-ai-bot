@@ -510,10 +510,10 @@ async function handleChatMessage(message) {
     const totalTime = Date.now() - startTime;
     await trackChatPerformance('chat_response_time', totalTime, {
       userId,
-      messageLength: processedData?.messageContent?.length || 0,
+      messageLength: messageContent.length,
     });
   } catch (error) {
-    await handleChatError(error, startTime, null, message);
+    await handleChatError(error, startTime, processedData, message);
   } finally {
     stopTyping();
     if (processedData) usersInFlight.delete(processedData.userId);
