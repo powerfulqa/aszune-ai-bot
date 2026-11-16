@@ -1,13 +1,13 @@
 # Dashboard API Reference v1.9.0
 
-> **Current REST surface.** The logs, services, config and network REST endpoints were
-> removed; the dashboard UI uses Socket.IO events for them (`request_logs`, `clear_logs`,
-> `request_services`, `service_action`, `request_config`, `save_config`,
-> `request_network_status`, ... see `src/services/web-dashboard/handlers/`). The only
-> REST endpoints now are `GET /api/health`, `/api/metrics`, `/api/system`, `/api/version`,
-> `/api/database/*`, `/api/recommendations`, `GET /api/reminders`, `POST /api/control/restart`
-> and `POST /api/control/git-pull`. Reminders are created, edited and deleted over the socket,
-> not REST. Sections below that describe other endpoints are historical.
+> **Current REST surface.** The logs, services, config and network REST endpoints were removed; the
+> dashboard UI uses Socket.IO events for them (`request_logs`, `clear_logs`, `request_services`,
+> `service_action`, `request_config`, `save_config`, `request_network_status`, ... see
+> `src/services/web-dashboard/handlers/`). The only REST endpoints now are `GET /api/health`,
+> `/api/metrics`, `/api/system`, `/api/version`, `/api/database/*`, `/api/recommendations`,
+> `GET /api/reminders`, `POST /api/control/restart` and `POST /api/control/git-pull`. Reminders are
+> created, edited and deleted over the socket, not REST. Sections below that describe other
+> endpoints are historical.
 
 **Status:** Production Ready | **Version:** v1.9.0 | **Last Updated:** 2025-01-15
 
