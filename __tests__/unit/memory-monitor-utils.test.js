@@ -72,14 +72,17 @@ describe('Memory Monitor - Utils', () => {
   });
 
   it('should handle memory usage errors', () => {
+    const usageError = new Error('Memory usage failed');
     process.memoryUsage.mockImplementation(() => {
-      throw new Error('Memory usage failed');
+      throw usageError;
     });
 
     const errorSpy = jest.spyOn(ErrorHandler, 'handleError');
     const usage = memoryMonitor.getMemoryUsage();
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.any(Error), 'getting memory usage');
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0]).toEqual([usageError, 'getting memory usage']);
+    expect(errorSpy.mock.calls[0][0]).toBe(usageError);
     expect(usage).toEqual({});
   });
 

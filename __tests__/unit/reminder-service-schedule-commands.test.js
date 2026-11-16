@@ -16,21 +16,22 @@ describe('ReminderService command parsing', () => {
   });
 
   describe('setReminder', () => {
+    beforeEach(() => {
+      jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
+    });
+
     it('should parse "in X minutes" format', async () => {
       const createSpy = jest.spyOn(reminderService, 'createReminder').mockResolvedValue({ id: 1 });
 
       await reminderService.setReminder('user1', 'in 5 minutes', 'test message');
 
-      expect(createSpy).toHaveBeenCalledWith(
-        'user1',
-        expect.objectContaining({
-          message: 'test message',
-          scheduledTime: expect.any(String),
-          timezone: expect.any(String),
-          channelId: null,
-          serverId: null,
-        })
-      );
+      expect(createSpy).toHaveBeenCalledWith('user1', {
+        message: 'test message',
+        scheduledTime: '2026-11-16T12:05:00.000Z',
+        timezone: 'UTC',
+        channelId: null,
+        serverId: null,
+      });
     });
 
     it('should parse "in X hours" format', async () => {
@@ -38,16 +39,13 @@ describe('ReminderService command parsing', () => {
 
       await reminderService.setReminder('user1', 'in 2 hours', 'test message');
 
-      expect(createSpy).toHaveBeenCalledWith(
-        'user1',
-        expect.objectContaining({
-          message: 'test message',
-          scheduledTime: expect.any(String),
-          timezone: expect.any(String),
-          channelId: null,
-          serverId: null,
-        })
-      );
+      expect(createSpy).toHaveBeenCalledWith('user1', {
+        message: 'test message',
+        scheduledTime: '2026-11-16T14:00:00.000Z',
+        timezone: 'UTC',
+        channelId: null,
+        serverId: null,
+      });
     });
 
     it('should parse "tomorrow" format', async () => {
@@ -55,16 +53,13 @@ describe('ReminderService command parsing', () => {
 
       await reminderService.setReminder('user1', 'tomorrow', 'test message');
 
-      expect(createSpy).toHaveBeenCalledWith(
-        'user1',
-        expect.objectContaining({
-          message: 'test message',
-          scheduledTime: expect.any(String),
-          timezone: expect.any(String),
-          channelId: null,
-          serverId: null,
-        })
-      );
+      expect(createSpy).toHaveBeenCalledWith('user1', {
+        message: 'test message',
+        scheduledTime: '2026-11-17T12:00:00.000Z',
+        timezone: 'UTC',
+        channelId: null,
+        serverId: null,
+      });
     });
 
     it('should throw on unsupported format', async () => {

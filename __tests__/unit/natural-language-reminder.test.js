@@ -56,6 +56,29 @@ describe('Natural Language Reminder Processor', () => {
     });
   });
 
+  describe('reminders are only created on request', () => {
+    it.each([
+      'when does Starfield 2 come out',
+      'when is the new patch released',
+      'tell me what time it is',
+    ])('treats "%s" as a question, not a reminder request', (text) => {
+      expect(naturalLanguageReminderProcessor.isReminderRequest(text)).toBe(false);
+    });
+
+    it.each(['remind me when Starfield 2 comes out', 'let me know when the patch is released'])(
+      'treats "%s" as a reminder request',
+      (text) => {
+        expect(naturalLanguageReminderProcessor.isReminderRequest(text)).toBe(true);
+      }
+    );
+
+    it('does not turn a bare year into 1 January', () => {
+      expect(
+        naturalLanguageReminderProcessor.parseExtractedDate({ type: 'year', text: '2027' })
+      ).toBeNull();
+    });
+  });
+
   describe('extractEvent', () => {
     test('should extract event from reminder requests', () => {
       expect(

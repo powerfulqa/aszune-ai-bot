@@ -49,8 +49,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   without doing anything)
 - The dashboard config editor only handles `.env`, refuses keys that change how spawned programs
   load code (`NODE_OPTIONS`, `LD_*`, `GIT_*`, `PATH`, …) and masks secrets left in comment lines
-- Dashboard service control and service logs are limited to the bot's PM2 app and the units in
-  `DASHBOARD_SERVICES`; the restart button answers 409 when the bot is not running under PM2
+- Dashboard service control is limited to the bot's PM2 app; the restart button answers 409 when the
+  bot is not running under PM2
 - `/resources` no longer shows the host name, process ID and OS user
 - Tracking server: refuses to start with the example admin key, rate limits the beacon, and an
   address with a revoked instance is no longer auto-authorized (new registrations from it wait for
@@ -58,8 +58,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CI: third-party actions pinned to commit SHAs, read-only default token, test results uploaded to
   Codecov; `codecov.yml` adds project and patch (80%) status checks
 
+- A release question ("when does X come out?") is answered normally. A reminder is created only when
+  asked for ("remind me when X comes out"), and a bare year is no longer read as 1 January
+- The dashboard refuses further token attempts after 10 wrong ones from an address in a minute
+- `/dashboard` and `/resources` show only measured values (memory, uptime, server and member
+  counts); response time, error rate, command counts and "auto-scaling" lines were never recorded
+
 ### Fixed
 
+- Single-message answers no longer start with `[1/1]`
+- `__proto__` and `constructor` passed the dashboard's service-name allowlist
+- Chat error logs and metrics recorded the user as `unknown` and the message length as 0
 - Reminders that fell due while the bot was down were never delivered (the startup load skipped
   them)
 - "remind me in 2 hours to …" failed: the time and the message were read the wrong way round
@@ -99,6 +108,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
+- The dashboard REST routes the UI never called (`/api/config/*`, `/api/logs*`, `/api/network/*`,
+  `/api/services*`) and `DASHBOARD_SERVICES`; the same functions remain as socket events
+- `discord-analytics.js`, `performance-dashboard.js` and `performance-tracker.js`, which reported on
+  activity that nothing recorded
+- Unused dev dependencies `eslint-config-prettier` and `markdownlint-cli`
 - About 550 lines of unreachable code in `perplexity-secure.js` (a second file cache, duplicate
   retry logic, header helpers) and the tests that only covered it
 - Unused modules `pi-detector.js`, `debouncer.js` and `security-monitor.js`; the test helper

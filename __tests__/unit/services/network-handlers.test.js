@@ -20,7 +20,9 @@ jest.mock('../../../src/utils/system-info', () => ({
 }));
 
 const NetworkDetector = require('../../../src/services/network-detector');
-const { handleNetworkStatus } = require('../../../src/services/web-dashboard/handlers/networkHandlers');
+const {
+  handleNetworkStatus,
+} = require('../../../src/services/web-dashboard/handlers/networkHandlers');
 
 describe('networkHandlers.handleNetworkStatus (gateway detection regression)', () => {
   function makeDashboard() {

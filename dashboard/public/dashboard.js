@@ -225,8 +225,6 @@ class Dashboard {
   updateMetrics(data) {
     try {
       this.updateSystemMetrics(data);
-      this.updateAnalyticsMetrics(data);
-      this.updateResourcesMetrics(data);
       this.updateErrorLogs(data);
       this.updateCommandOutputs(data);
       this.fetchAndUpdateRecommendations();
@@ -374,19 +372,6 @@ class Dashboard {
     });
   }
 
-  updateAnalyticsMetrics(data) {
-    if (!data.analytics) return;
-
-    this._setText('analytics-servers', data.analytics.summary.totalServers);
-    this._setText('analytics-active-users', data.analytics.summary.totalUsers);
-    this._setText('analytics-total-members', data.analytics.summary.totalUsers);
-    this._setText('analytics-bots', '-');
-    this._setText('analytics-success-rate', `${data.analytics.summary.successRate}%`);
-    this._setText('analytics-error-rate', `${data.analytics.summary.errorRate}%`);
-    this._setText('analytics-response-time', `${data.analytics.summary.avgResponseTime}ms`);
-    this._setText('analytics-commands', data.analytics.summary.totalCommands);
-  }
-
   updateCommandOutputs(data) {
     // /stats command output - show system-wide stats as demo (no user context)
     if (data.database) {
@@ -401,11 +386,6 @@ class Dashboard {
     if (data.analytics) {
       const totalUsers = data.analytics.summary.totalUsers || 0;
       this._setText('cmd-analytics-users', totalUsers);
-      // Online members, bot count and success rate were invented (users × 0.2,
-      // 0, 100%); show them as not tracked rather than as real numbers.
-      this._setNotTracked('cmd-analytics-online');
-      this._setNotTracked('cmd-analytics-bots');
-      this._setNotTracked('cmd-analytics-success');
     }
 
     // /cache command output
@@ -419,12 +399,6 @@ class Dashboard {
     // /dashboard command output (performance dashboard)
     if (data.system) {
       this._setText('cmd-dashboard-status', 'Running');
-      const responseTime = data.resources?.performance?.responseTime;
-      if (Number.isFinite(responseTime) && responseTime > 0) {
-        this._setText('cmd-dashboard-response', `${responseTime}ms`);
-      } else {
-        this._setNotTracked('cmd-dashboard-response');
-      }
       this._setText('cmd-dashboard-memory', `${data.system.memory.usagePercent}%`);
       this._setText('cmd-dashboard-tier', data.resources?.optimizationTier || 'Standard');
     }
@@ -436,64 +410,7 @@ class Dashboard {
         'cmd-resources-usage',
         `${data.resources.memory.used}MB / ${data.resources.memory.free}MB`
       );
-      this._setText(
-        'cmd-resources-perf',
-        (data.resources.performance.status || 'Normal').toUpperCase()
-      );
-      this._setText('cmd-resources-response', `${data.resources.performance.responseTime}ms`);
     }
-  }
-
-  updateResourcesMetrics(data) {
-    if (!data.resources) return;
-
-    // Memory status
-    const memStatus = this.getStatusBadgeClass(data.resources.memory.status);
-    this._setText(
-      'resource-memory-status',
-      (data.resources.memory.status || 'Unknown').toUpperCase()
-    );
-    this._setClass('resource-memory-status', `value status-badge ${memStatus}`);
-
-    this._setText('resource-memory-used', `${data.resources.memory.used}MB`);
-    this._setText('resource-memory-free', `${data.resources.memory.free}MB`);
-    this._setText('resource-memory-percent', `${data.resources.memory.percentage}%`);
-
-    // Performance status
-    const perfStatus = this.getStatusBadgeClass(data.resources.performance.status);
-    this._setText(
-      'resource-performance-status',
-      (data.resources.performance.status || 'Unknown').toUpperCase()
-    );
-    this._setClass('resource-performance-status', `value status-badge ${perfStatus}`);
-
-    this._setText('resource-response-time', `${data.resources.performance.responseTime}ms`);
-    this._setText('resource-load', data.resources.performance.load || 'normal');
-    this._setText('resource-optimization-tier', data.resources.optimizationTier || 'Standard');
-  }
-
-  getStatusBadgeClass(status) {
-    const badgeMap = {
-      good: 'good',
-      optimal: 'good',
-      warning: 'acceptable',
-      acceptable: 'acceptable',
-      degraded: 'warning',
-      critical: 'critical',
-    };
-
-    if (!status || status === 'unknown') {
-      return 'acceptable';
-    }
-
-    const statusLower = status.toLowerCase();
-    for (const [key, badge] of Object.entries(badgeMap)) {
-      if (statusLower.includes(key)) {
-        return badge;
-      }
-    }
-
-    return 'acceptable';
   }
 
   async fetchAndUpdateRecommendations() {

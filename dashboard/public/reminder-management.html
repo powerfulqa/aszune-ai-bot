@@ -445,15 +445,6 @@
                 <label class="form-label" for="reminder-datetime">Scheduled Date & Time</label>
                 <input type="datetime-local" class="form-control" id="reminder-datetime" />
               </div>
-              <div class="form-field">
-                <label class="form-label" for="reminder-type">Reminder Type</label>
-                <select class="form-control" id="reminder-type">
-                  <option value="general">General Reminder</option>
-                  <option value="important">Important</option>
-                  <option value="follow-up">Follow-up</option>
-                  <option value="maintenance">Maintenance</option>
-                </select>
-              </div>
             </div>
             <div class="form-actions">
               <button class="btn-create" onclick="createReminder()">✓ Create Reminder</button>
@@ -658,7 +649,6 @@
 
         const message = document.getElementById('reminder-message').value;
         const datetime = document.getElementById('reminder-datetime').value;
-        const type = document.getElementById('reminder-type').value;
 
         const userId = document.getElementById('reminder-user').value.trim();
         const channelId = document.getElementById('reminder-channel').value.trim();
@@ -676,7 +666,6 @@
             // datetime-local has no timezone; convert here so the server does
             // not read it in its own.
             scheduledTime: new Date(datetime).toISOString(),
-            reminderType: type,
             channelId: channelId,
           },
           (response) => {

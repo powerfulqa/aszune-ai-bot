@@ -119,12 +119,7 @@ describe('Logger - Branch Coverage Tests', () => {
     await logger._ensureLogDirectory();
 
     // Verify error was logged
-    expect(consoleMock.error).toHaveBeenCalledWith(
-      'Failed to create log directory:',
-      expect.objectContaining({
-        message: 'Failed to create directory',
-      })
-    );
+    expect(consoleMock.error).toHaveBeenCalledWith('Failed to create log directory:', error);
   });
 
   test('rotates log file when size exceeds max', async () => {
@@ -133,13 +128,16 @@ describe('Logger - Branch Coverage Tests', () => {
     fsPromises.readdir.mockResolvedValue(['bot.log', 'bot.log.2022-01-01']);
     fsPromises.rename.mockResolvedValue(undefined);
 
+    jest.useFakeTimers({ now: new Date('2026-11-16T12:00:00.000Z') });
+
     await logger._rotateLogFileIfNeeded();
 
+    // The rotated name is the log file plus an ISO timestamp with ':' made filename-safe.
     expect(fsPromises.rename).toHaveBeenCalledTimes(1);
-    expect(fsPromises.rename).toHaveBeenCalledWith(logger.logFile, expect.any(String));
-
-    const rotatedName = fsPromises.rename.mock.calls[0][1];
-    expect(rotatedName).toContain('bot.log.');
+    expect(fsPromises.rename).toHaveBeenCalledWith(
+      logger.logFile,
+      `${logger.logFile}.2026-11-16T12-00-00.000Z`
+    );
   });
 
   test('handles custom log size limit', async () => {
@@ -230,12 +228,7 @@ describe('Logger - Branch Coverage Tests', () => {
     await logger._writeToFile('Test message that will fail to write');
 
     // Verify error was logged
-    expect(consoleMock.error).toHaveBeenCalledWith(
-      'Failed to write to log file:',
-      expect.objectContaining({
-        message: 'Failed to write file',
-      })
-    );
+    expect(consoleMock.error).toHaveBeenCalledWith('Failed to write to log file:', writeError);
   });
 
   test('handles errors during log rotation', async () => {
@@ -251,10 +244,7 @@ describe('Logger - Branch Coverage Tests', () => {
 
     await logger._rotateLogFileIfNeeded();
 
-    expect(consoleMock.error).toHaveBeenCalledWith(
-      'Failed to rotate log file:',
-      expect.objectContaining({ message: 'Rename failed' })
-    );
+    expect(consoleMock.error).toHaveBeenCalledWith('Failed to rotate log file:', renameError);
   });
 
   test('handles unlink errors during log cleanup', async () => {

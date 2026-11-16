@@ -43,7 +43,10 @@ const DEFAULT_TIMEOUT_MS = 10000;
  */
 function resolvePm2AppName(serviceName) {
   if (typeof serviceName !== 'string') return null;
-  return SERVICE_NAME_ALIASES[serviceName] || null;
+  // Own keys only: 'constructor' or '__proto__' must not resolve to inherited members
+  return Object.hasOwn(SERVICE_NAME_ALIASES, serviceName)
+    ? SERVICE_NAME_ALIASES[serviceName]
+    : null;
 }
 
 /**
@@ -75,7 +78,7 @@ async function runPm2ServiceAction(serviceName, action, options = {}) {
     timeout: DEFAULT_TIMEOUT_MS,
     ...options,
   });
-  return stdout || `Successfully ${action}ed ${appName}`;
+  return stdout || `pm2 ${action} ${appName} succeeded`;
 }
 
 /**
@@ -86,7 +89,7 @@ async function runPm2ServiceAction(serviceName, action, options = {}) {
  * @throws {Error} If the group is not allowlisted
  */
 async function runPm2QuickAction(group, options = {}) {
-  const args = QUICK_ACTION_ARGS[group];
+  const args = Object.hasOwn(QUICK_ACTION_ARGS, group) ? QUICK_ACTION_ARGS[group] : null;
   if (!args) {
     throw new Error(`Unknown quick action group: ${group}`);
   }

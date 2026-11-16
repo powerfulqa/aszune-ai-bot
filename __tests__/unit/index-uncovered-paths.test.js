@@ -170,7 +170,8 @@ describe('Index Uncovered Paths', () => {
 
     it('should handle registration error', async () => {
       const REST = require('discord.js').REST;
-      const mockPut = jest.fn().mockRejectedValue(new Error('REST Error'));
+      const restError = new Error('REST Error');
+      const mockPut = jest.fn().mockRejectedValue(restError);
       REST.mockImplementation(() => ({
         setToken: jest.fn().mockReturnThis(),
         put: mockPut,
@@ -178,17 +179,15 @@ describe('Index Uncovered Paths', () => {
 
       await index.registerSlashCommands();
 
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error registering slash commands:',
-        expect.any(Error)
-      );
+      expect(logger.error).toHaveBeenCalledWith('Error registering slash commands:', restError);
     });
   });
 
   describe('Shutdown Handling', () => {
     it('should handle shutdown errors gracefully', async () => {
       const webDashboardService = require('../../src/services/web-dashboard');
-      webDashboardService.stop.mockRejectedValue(new Error('Dashboard Stop Error'));
+      const stopError = new Error('Dashboard Stop Error');
+      webDashboardService.stop.mockRejectedValue(stopError);
 
       // Mock process.exit to prevent actual exit
       const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
@@ -197,7 +196,7 @@ describe('Index Uncovered Paths', () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         'Error shutting down web dashboard service:',
-        expect.any(Error)
+        stopError
       );
       expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Shutdown completed with'));
 

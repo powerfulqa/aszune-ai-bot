@@ -175,24 +175,31 @@ describe('Cache Command', () => {
   });
 
   test('should handle cache service throwing error gracefully', async () => {
+    const cacheError = new Error('Cache service unavailable');
     perplexityService.getCacheStats.mockImplementation(() => {
-      throw new Error('Cache service unavailable');
+      throw cacheError;
     });
 
     await handleSlashCommand(mockInteraction);
 
     expect(mockInteraction.deferReply).toHaveBeenCalled();
+    expect(ErrorHandler.handleError).toHaveBeenCalledTimes(1);
+    expect(ErrorHandler.handleError.mock.calls[0][0]).toBe(cacheError);
     expect(ErrorHandler.handleError).toHaveBeenCalledWith(
-      expect.any(Error),
+      cacheError,
       'cache statistics retrieval',
-      expect.objectContaining({
-        userId: '123456789012345678',
-      })
+      { userId: '123456789012345678' }
     );
 
-    expect(mockInteraction.editReply).toHaveBeenCalledWith(
-      expect.stringContaining('Error retrieving cache statistics')
-    );
+    expect(mockInteraction.editReply).toHaveBeenCalledWith({
+      embeds: [
+        {
+          color: '#ED4245',
+          description:
+            'Error retrieving cache statistics: An unexpected error occurred. Please try again later.',
+        },
+      ],
+    });
   });
 
   test('should handle invalid user ID gracefully', async () => {
@@ -203,9 +210,9 @@ describe('Cache Command', () => {
 
     await handleSlashCommand(invalidInteraction);
 
-    expect(invalidInteraction.reply).toHaveBeenCalledWith(
-      expect.stringContaining('❌ Invalid user ID')
-    );
+    expect(invalidInteraction.reply).toHaveBeenCalledWith({
+      embeds: [{ color: '#ED4245', description: 'Invalid user ID: User ID is required' }],
+    });
     expect(invalidInteraction.deferReply).not.toHaveBeenCalled();
   });
 

@@ -176,3 +176,31 @@ describe('destructive handler gating', () => {
     expect(socket.events.has('service_action')).toBe(true);
   });
 });
+
+describe('dashboard token guessing guard', () => {
+  it('refuses further attempts after 10 wrong tokens from one address in a minute', () => {
+    jest.resetModules();
+    process.env.DASHBOARD_TOKEN = 'correct-token-0123456789';
+    const service = require('../../../../src/services/web-dashboard');
+    service.authToken = 'correct-token-0123456789';
+    const middleware = service._createAuthMiddleware();
+    const call = (token) => {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+      middleware(
+        { method: 'GET', ip: '10.0.0.9', headers: { authorization: `Bearer ${token}` } },
+        res,
+        next
+      );
+      return { res, next };
+    };
+
+    for (let i = 0; i < 10; i++) expect(call('wrong').res.status).toHaveBeenCalledWith(401);
+
+    // Even the right token is refused until the minute is over
+    const blocked = call('correct-token-0123456789');
+    expect(blocked.res.status).toHaveBeenCalledWith(429);
+    expect(blocked.next).not.toHaveBeenCalled();
+    delete process.env.DASHBOARD_TOKEN;
+  });
+});
